@@ -1,0 +1,71 @@
+node_modules
+.next
+.next-*
+out
+.env*.local
+.DS_Store
+*.log
+.vercel
+.turbo
+uploads/
+prisma/dev.db
+prisma/dev.db-journal
+.env
+.env.*
+
+# Keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+
+# SSH keys
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Credentials
+credentials.json
+service-account*.json
+serviceAccount*.json
+secrets.json
+secret.*
+*.credentials
+
+# Cloud/provider secrets
+.aws/
+.gcloud/
+.azure/
+.firebase/
+
+# Local databases and data
+*.db
+*.sqlite
+*.sqlite3
+*.bak
+*.dump
+
+# Logs
+*.log
+logs/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Inventory/contact migrations and reproducible validation
+supabase/migrations/
+!supabase/migrations/202609040001_orders.sql
+!supabase/migrations/202609040002_payments.sql
+!supabase/migrations/202609060001_inventory_contact.sql
+/tests/
+/tests/**
+/docs/
+/patches/
+/scripts/
