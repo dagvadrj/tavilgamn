@@ -376,6 +376,20 @@ button:disabled { cursor: not-allowed; }
   .product-price { align-items: flex-start; }
   .product-view { border-radius: 10px; }
 }
+@keyframes viewer-loading-slide {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(310%); }
+}
+@keyframes viewer-drag-hand {
+  0%, 100% { transform: translateX(-7px) rotate(-8deg); }
+  50% { transform: translateX(7px) rotate(8deg); }
+}
+@keyframes product-photo-in {
+  from { opacity: .45; transform: scale(1.012); }
+  to { opacity: 1; transform: scale(1); }
+}
+.viewer-loading-bar { animation: viewer-loading-slide 1.15s ease-in-out infinite; }
+.viewer-drag-hand { animation: viewer-drag-hand 1.35s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }

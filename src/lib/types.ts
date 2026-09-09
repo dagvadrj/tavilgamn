@@ -37,6 +37,8 @@ export interface Product {
   };
   reviewCount: number;
   image: string;
+  /** Additional product gallery images; the primary image remains in `image`. */
+  images?: string[];
   badges?: string[];
   defaultColor: string;
   colors: ColorOption[];

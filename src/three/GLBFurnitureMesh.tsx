@@ -52,6 +52,7 @@ export interface GLBFurnitureMeshProps {
   d: number;
   h: number;
   selected?: boolean;
+  onReady?: () => void;
 }
 
 export function GLBFurnitureMesh({
@@ -62,6 +63,7 @@ export function GLBFurnitureMesh({
   d,
   h,
   selected,
+  onReady,
 }: GLBFurnitureMeshProps) {
   const [group, setGroup] = useState<THREE.Group | null>(null);
 
@@ -73,6 +75,7 @@ export function GLBFurnitureMesh({
       .then((group) => {
         if (!cancelled) {
           setGroup(group.clone(true));
+          onReady?.();
         }
       })
       .catch((error) => {
@@ -82,7 +85,7 @@ export function GLBFurnitureMesh({
     return () => {
       cancelled = true;
     };
-  }, [modelId, basePath, glbFile]);
+  }, [modelId, basePath, glbFile, onReady]);
 
   const normalizedModel = useMemo(() => {
     if (!group) return null;

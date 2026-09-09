@@ -20,6 +20,7 @@ const blank = (): Product => ({
   category: "sofa",
   description: "",
   image: "",
+  images: [],
   basePrice: 0,
   rating: 0,
   reviewCount: 0,
@@ -113,6 +114,7 @@ function ProductEditor({
 }) {
   const [draft, setDraft] = useState<Product>(() => structuredClone(product));
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [glbFile, setGlbFile] = useState<File | null>(null);
   const [glbMessage, setGlbMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -139,14 +141,13 @@ function ProductEditor({
         try {
           if (!Number.isSafeInteger(draft.stockQuantity) || draft.stockQuantity == null || draft.stockQuantity < 0 || draft.stockQuantity > MAX_STOCK_QUANTITY) throw new Error("Нөөцийн ширхэгийг 0–1,000,000 хооронд бүхэл тоогоор оруулна уу.");
           let image = draft.image;
-
-          if (imageFile) {
+          const uploadImage = async (file: File) => {
             if (
               !["image/jpeg", "image/png", "image/webp"].includes(
-                imageFile.type,
+                file.type,
               ) ||
-              imageFile.size === 0 ||
-              imageFile.size > 3 * 1024 * 1024
+              file.size === 0 ||
+              file.size > 3 * 1024 * 1024
             ) {
               throw new Error(
                 "JPG, PNG эсвэл WebP зураг сонгоно уу. Хэмжээ: 3 MB хүртэл.",
@@ -154,7 +155,7 @@ function ProductEditor({
             }
 
             const form = new FormData();
-            form.set("file", imageFile);
+            form.set("file", file);
 
             const upload = await authFetch(
               "/api/admin/images",
@@ -178,19 +179,29 @@ function ProductEditor({
               useAuth.getState().user?.id !== owner ||
               useAuth.getState().role !== "admin"
             ) {
-              return;
+              throw new Error("Админ нэвтрэлт өөрчлөгдсөн байна.");
             }
+            return result.url as string;
+          };
 
-            image = result.url;
-            field("image", image);
-            setImageFile(null);
+          if ((draft.images?.length ?? 0) + galleryFiles.length > 12) {
+            throw new Error("Нэмэлт зураг 12-оос олонгүй байна.");
           }
+
+          if (imageFile) image = await uploadImage(imageFile);
+          const uploadedGallery = await Promise.all(galleryFiles.map(uploadImage));
+          const images = [...new Set([...(draft.images ?? []), ...uploadedGallery])]
+            .filter((item) => item !== image);
+
+          setDraft((current) => ({...current, image, images}));
+          setImageFile(null);
+          setGalleryFiles([]);
           const response = await authFetch(
             "/api/admin/products",
             {
               method: create ? "POST" : "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...draft, image, expectedStockQuantity: product.stockQuantity ?? null }),
+              body: JSON.stringify({ ...draft, image, images, expectedStockQuantity: product.stockQuantity ?? null }),
             },
             owner,
           );
@@ -292,7 +303,34 @@ function ProductEditor({
               </p>
             )}
           </label>
+          <label className="text-sm">
+            Нэмэлт зургууд
+            <input
+              className="input mt-1"
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(event) => setGalleryFiles(Array.from(event.target.files ?? []))}
+            />
+            <span className="text-xs text-ink/60">
+              Нэг удаад олон зураг сонгож болно. Нийт 12 хүртэл, зураг бүр 3 MB-аас ихгүй.
+            </span>
+            {galleryFiles.length > 0 && <p className="mt-1 text-xs text-ink/60">Хадгалах зураг: {galleryFiles.map((file) => file.name).join(", ")}</p>}
+          </label>
         </div>
+        {(draft.images?.length ?? 0) > 0 && (
+          <div>
+            <p className="mb-2 text-sm">Одоогийн нэмэлт зургууд</p>
+            <div className="flex flex-wrap gap-3">
+              {draft.images?.map((url) => (
+                <div key={url} className="rounded-xl border border-ink/10 bg-white p-2">
+                  <Image src={url} alt="" width={92} height={70} className="h-[70px] w-[92px] rounded-lg object-cover" />
+                  <button type="button" className="mt-2 block min-h-10 w-full text-xs text-red-700 underline" onClick={() => field("images", draft.images?.filter((item) => item !== url) ?? [])}>Хасах</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {!create && (
           <div className="space-y-2">
             <label className="block text-sm">
@@ -640,5 +678,3 @@ function ProductEditor({
     </form>
   );
 }
-
-

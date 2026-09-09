@@ -72,29 +72,32 @@ export function parseProduct(value: unknown): Product {
     throw new CatalogInputError("Ангилал буруу байна.");
   }
 
-  const image = text(value.image, 2000);
-  const localImage = /^\/(?!\/)[^\\\s]+$/.test(image);
-  let remoteImage = false;
+  const imageUrl = (raw: unknown): string => {
+    const image = text(raw, 2000);
+    const localImage = /^\/(?!\/)[^\\\s]+$/.test(image);
+    let remoteImage = false;
 
-  try {
-    const url = new URL(image);
+    try {
+      const url = new URL(image);
+      remoteImage =
+        url.protocol === "https:" &&
+        !url.username &&
+        !url.password &&
+        ["images.unsplash.com", "res.cloudinary.com", "i.pravatar.cc"].includes(url.hostname);
+    } catch {}
 
-    remoteImage =
-      url.protocol === "https:" &&
-      !url.username &&
-      !url.password &&
-      [
-        "images.unsplash.com",
-        "res.cloudinary.com",
-        "i.pravatar.cc",
-      ].includes(url.hostname);
-  } catch {}
-
-  if (!localImage && !remoteImage) {
-    throw new CatalogInputError(
-      "Зургийн URL нь local зам, Unsplash эсвэл Cloudinary байх ёстой.",
-    );
+    if (!localImage && !remoteImage) {
+      throw new CatalogInputError(
+        "Зургийн URL нь local зам, Unsplash эсвэл Cloudinary байх ёстой.",
+      );
+    }
+    return image;
+  };
+  const image = imageUrl(value.image);
+  if (value.images != null && (!Array.isArray(value.images) || value.images.length > 12)) {
+    throw new CatalogInputError("Нэмэлт зураг 12-оос олонгүй байна.");
   }
+  const images = [...new Set((value.images ?? []).map(imageUrl))].filter((item) => item !== image);
 
   let colors: Product["colors"];
   let materials: Product["materials"];
@@ -187,6 +190,7 @@ export function parseProduct(value: unknown): Product {
     category: category as Product["category"],
     description: text(value.description, 10000, true),
     image,
+    images,
     basePrice,
     colors,
     materials,

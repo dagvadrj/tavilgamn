@@ -60,12 +60,19 @@ logs/
 Thumbs.db
 
 # Inventory/contact migrations and reproducible validation
-supabase/migrations/
+!supabase/migrations/
+supabase/migrations/*
 !supabase/migrations/202609040001_orders.sql
 !supabase/migrations/202609040002_payments.sql
 !supabase/migrations/202609060001_inventory_contact.sql
+!supabase/migrations/202609090001_product_gallery.sql
 /tests/
+!/tests/
 /tests/**
+!/tests/inventory-db.test.cjs
 /docs/
+!/docs/
+/docs/**
+!/docs/inventory-setup.md
 /patches/
 /scripts/

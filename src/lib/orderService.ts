@@ -3,7 +3,7 @@ import { parseModelColors, parseModelMaterials } from "./modelOptions";
 import { OrderInputError } from "./orderValidation";
 import { shippingFor, type OrderQuote, type OrderSelection } from "./orders";
 import { getSupabaseAdmin } from "./supabase/admin";
-import { productFromRow, FURNITURE_FIELDS, type FurnitureRow } from "./catalogServer";
+import { productFromRow, FURNITURE_ORDER_FIELDS, type FurnitureRow } from "./catalogServer";
 import { availableStock } from "./inventory";
 
 export async function quoteOrder(
@@ -16,7 +16,7 @@ export async function quoteOrder(
 
   const { data, error } = await supabase
     .from("furniture_models")
-    .select(FURNITURE_FIELDS)
+    .select(FURNITURE_ORDER_FIELDS)
     .in("product_id", ids);
 
   if (error) throw error;
