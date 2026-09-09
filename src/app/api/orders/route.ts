@@ -7,6 +7,7 @@ import { quoteOrder } from "@/lib/orderService";
 
 export const dynamic = "force-dynamic";
 const FIELDS = "id,status,currency,items,subtotal,shipping,total,delivery,created_at";
+const HISTORY_FIELDS = `${FIELDS},order_payments(method,state)`;
 const headers = { "Cache-Control": "no-store" };
 
 export async function GET(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const page = Math.max(0, Math.min(100000, Number(url.searchParams.get("page")) || 0));
     if (!Number.isInteger(page)) throw new OrderInputError("Хуудасны дугаар буруу байна.");
-    const { data, error } = await getSupabaseAdmin().from("orders").select(FIELDS)
+    const { data, error } = await getSupabaseAdmin().from("orders").select(HISTORY_FIELDS)
       .eq("user_id", auth.userId).order("created_at", { ascending: false }).order("id", { ascending: false })
       .range(page * 20, page * 20 + 20);
     if (error) throw error;

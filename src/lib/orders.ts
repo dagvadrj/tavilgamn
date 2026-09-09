@@ -18,6 +18,7 @@ export interface DeliveryAddress {
 
 export interface OrderLine extends OrderSelection {
   stockQuantity?: number;
+  image?: string;
   name: string;
   colorName: string;
   materialName: string;

@@ -4,6 +4,7 @@ import { readProduct, readProducts } from "@/lib/catalogServer";
 export const dynamic = "force-dynamic";
 import { ProductCustomizer } from "@/components/ProductCustomizer";
 import { ProductCard } from "@/components/ProductCard";
+import { hasAvailableStock } from "@/lib/inventory";
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const product = await readProduct(params.id);
@@ -20,11 +21,11 @@ export default async function ProductPage({
 }) {
   const product = await readProduct(params.id);
 
-  if (!product) notFound();
+  if (!product || !hasAvailableStock(product)) notFound();
 
   const related = (await readProducts())
     .filter(
-      (item) => item.category === product.category && item.id !== product.id,
+      (item) => hasAvailableStock(item) && item.category === product.category && item.id !== product.id,
     )
     .slice(0, 4);
   return (

@@ -6,11 +6,12 @@ import { STORES } from "@/lib/stores";
 import { INSPIRATION } from "@/lib/reviews";
 import { readProducts } from "@/lib/catalogServer";
 import { ProductCard } from "@/components/ProductCard";
+import { hasAvailableStock } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const products = await readProducts();
+  const products = (await readProducts()).filter(hasAvailableStock);
   const featured = [...products.filter(p => p.isBestSeller), ...products.filter(p => !p.isBestSeller)].slice(0, 8);
   const newArrivals = products.filter(p => p.isNew).slice(0, 4);
   return <div className="store-home">

@@ -83,6 +83,7 @@ export async function quoteOrder(
     return {
       ...item,
       name: product.name,
+      image: product.image,
       colorName: color.name,
       materialName: material.name,
       unitPrice,

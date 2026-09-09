@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { CATEGORIES, priceFor } from "@/lib/products";
 import { getProduct, useCatalog } from "@/store/catalog";
+import { hasAvailableStock } from "@/lib/inventory";
 import { CatalogStatus } from "@/components/CatalogStatus";
 import { useDesigns, ROOM_DIMENSIONS } from "@/store/designs";
 import { stockLabel } from "@/lib/inventory";
@@ -191,12 +192,12 @@ export function RoomPlanner() {
   const paletteItems = useMemo(
     () =>
       catalog.products.filter(
-        (product) => !product.model && product.category === paletteCat && product.name.toLowerCase().includes(query.trim().toLowerCase()),
+        (product) => hasAvailableStock(product) && !product.model && product.category === paletteCat && product.name.toLowerCase().includes(query.trim().toLowerCase()),
       ),
     [catalog.products, paletteCat, query],
   );
   const dbPaletteItems = useMemo(
-    () => dbModels.filter((m) => m.category === paletteCat && m.name.toLowerCase().includes(query.trim().toLowerCase())),
+    () => dbModels.filter((m) => hasAvailableStock(m) && m.category === paletteCat && m.name.toLowerCase().includes(query.trim().toLowerCase())),
     [dbModels, paletteCat, query],
   );
   if (catalog.loading || !catalog.ready) {
@@ -1297,4 +1298,3 @@ function PlannerSkeleton() {
     </div>
   );
 }
-

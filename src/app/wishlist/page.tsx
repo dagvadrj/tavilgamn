@@ -5,13 +5,14 @@ import { useWishlist } from "@/store/wishlist";
 import { getProduct, useCatalog } from "@/store/catalog";
 import { CatalogStatus } from "@/components/CatalogStatus";
 import { ProductCard } from "@/components/ProductCard";
+import { hasAvailableStock } from "@/lib/inventory";
 
 export default function WishlistPage() {
   const catalog = useCatalog();
   const items = useWishlist((s) => s.items);
   const products = items
     .map((i) => getProduct(i.productId))
-    .filter((p): p is NonNullable<typeof p> => Boolean(p));
+    .filter((p): p is NonNullable<typeof p> => p != null && hasAvailableStock(p));
 
   if (catalog.loading || !catalog.ready) {
     return (

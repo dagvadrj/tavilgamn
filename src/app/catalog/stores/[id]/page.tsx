@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, MapPin, Phone } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { getStore } from "@/lib/stores";
 import { CATEGORY_LABEL } from "@/lib/products";
 import { readProducts } from "@/lib/catalogServer";
+import { hasAvailableStock } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +25,8 @@ export default async function StorePage({
 
   if (!store) notFound();
 
-  const products = (await readProducts()).filter((product) =>
-    product.storeIds?.includes(store.id),
+  const products = (await readProducts()).filter(
+    (product) => hasAvailableStock(product) && product.storeIds?.includes(store.id),
   );
 
   const initials = store.name
@@ -49,9 +51,11 @@ export default async function StorePage({
         <div className="flex items-start gap-4">
           <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full border-2 border-[#293C32]/70 text-lg font-mono font-medium text-[#293C32]">
             {store.image ? (
-              <img
+              <Image
                 src={store.image}
                 alt={store.name}
+                width={64}
+                height={64}
                 className="h-16 w-16 rounded-full object-cover"
               />
             ) : (

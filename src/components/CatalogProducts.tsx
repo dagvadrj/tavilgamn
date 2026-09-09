@@ -6,6 +6,7 @@ import { useCatalog } from "@/store/catalog";
 import { CATEGORY_LABEL } from "@/lib/products";
 import { ProductCard } from "./ProductCard";
 import { CatalogStatus } from "./CatalogStatus";
+import { hasAvailableStock } from "@/lib/inventory";
 
 export function CatalogProducts({
   query,
@@ -21,14 +22,13 @@ export function CatalogProducts({
   const [sort, setSort] = useState(initialSort === "new" ? "new" : "featured");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [inStockOnly, setInStockOnly] = useState(false);
   useEffect(() => { setSort(initialSort === "new" ? "new" : "featured"); }, [initialSort]);
 
   const categoryKey = [...categories].sort().join(",");
 
   useEffect(() => {
     setPage(1);
-  }, [query, categoryKey, sort, minPrice, maxPrice, inStockOnly]);
+  }, [query, categoryKey, sort, minPrice, maxPrice]);
 
   if (catalog.loading || !catalog.ready) {
     return (
@@ -42,8 +42,8 @@ export function CatalogProducts({
 
   const filtered = catalog.products.filter(
     (product) =>
+      hasAvailableStock(product) &&
       (!categories.length || categories.includes(product.category)) &&
-      (!inStockOnly || product.inStock) &&
       (!minPrice || product.basePrice >= Number(minPrice)) &&
       (!maxPrice || product.basePrice <= Number(maxPrice)) &&
       `${product.name} ${product.description} ${CATEGORY_LABEL[product.category]}`
@@ -75,8 +75,7 @@ export function CatalogProducts({
           <span aria-hidden="true">–</span>
           <input type="number" min="0" inputMode="numeric" aria-label="Хамгийн их үнэ" placeholder="Дээд үнэ" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} className="h-11 w-full min-w-0 rounded-lg border border-[#e5e7df] bg-[#faf9f6] px-3 text-xs sm:w-28" />
         </div>
-        <label className="flex min-h-11 cursor-pointer items-center gap-2 text-xs sm:ml-auto"><input type="checkbox" checked={inStockOnly} onChange={e => setInStockOnly(e.target.checked)} className="h-4 w-4 accent-[#42634f]" />Зөвхөн бэлэн бараа</label>
-        {(minPrice || maxPrice || inStockOnly) && <button type="button" onClick={() => { setMinPrice(""); setMaxPrice(""); setInStockOnly(false); }} className="min-h-11 text-xs underline">Арилгах</button>}
+        {(minPrice || maxPrice) && <button type="button" onClick={() => { setMinPrice(""); setMaxPrice(""); }} className="min-h-11 text-xs underline sm:ml-auto">Арилгах</button>}
       </div>
       {minPrice && maxPrice && Number(minPrice) > Number(maxPrice) && <p role="status" className="mb-4 text-sm text-[#ad6547]">Дээд үнэ нь доод үнээс их байх ёстой.</p>}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">

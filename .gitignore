@@ -70,6 +70,7 @@ supabase/migrations/*
 !/tests/
 /tests/**
 !/tests/inventory-db.test.cjs
+!/tests/inventory.test.cjs
 /docs/
 !/docs/
 /docs/**

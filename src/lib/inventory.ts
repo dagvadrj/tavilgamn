@@ -8,6 +8,10 @@ export function availableStock(product: Pick<Product, "stockQuantity">): number 
     ? product.stockQuantity! : 0;
 }
 
+export function hasAvailableStock(product: Pick<Product, "stockQuantity">): boolean {
+  return availableStock(product) > 0;
+}
+
 export function stockLabel(product: Pick<Product, "stockQuantity">): string {
   if (product.stockQuantity == null) return "Нөөцийн тоог баталгаажуулж байна";
   return availableStock(product) > 0 ? `Үлдэгдэл: ${product.stockQuantity} ширхэг` : "Нөөц дууссан · 0 ширхэг";

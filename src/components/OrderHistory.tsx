@@ -1,14 +1,25 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { Search, RefreshCw, Package, ChevronLeft, ChevronRight, MapPin, CreditCard } from "lucide-react";
+import { Search, RefreshCw, Package, ChevronLeft, ChevronRight, MapPin, CreditCard, CalendarDays, ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/store/auth";
 import { authFetch } from "@/lib/authFetch";
-import { formatPrice } from "@/lib/format";
-import { ORDER_STATUS_LABEL, type OrderRecord } from "@/lib/orders";
+import { formatDateTime, formatPrice } from "@/lib/format";
+import { ORDER_STATUS_LABEL, type OrderRecord, type OrderStatus } from "@/lib/orders";
 import { PAYMENT_METHOD_LABEL, type PaymentMethod } from "@/lib/payments";
 
 type HistoryOrder = OrderRecord & { order_payments?: { method: PaymentMethod; state: string } | null };
+
+const userStatusTone: Record<OrderStatus, string> = {
+  pending_payment: "bg-[#FFF4E5] text-[#9A5B20]",
+  paid: "bg-[#EAF3EC] text-[#42634F]",
+  processing: "bg-[#EDF1F7] text-[#48617B]",
+  shipped: "bg-[#E8F2F4] text-[#356773]",
+  delivered: "bg-[#E8F4E9] text-[#35623C]",
+  cancelled: "bg-[#F8EAEA] text-[#9A4D4D]",
+};
+
+const shortOrderId = (id: string) => id.slice(0, 8).toUpperCase();
 export function OrderHistory({ admin = false }: { admin?: boolean }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
@@ -49,20 +60,62 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
     <nav className="admin-pagination" aria-label="Захиалгын хуудаслалт"><span aria-live="polite">Хуудас {page + 1}</span><button type="button" disabled={page===0 || loading} onClick={()=>{setPage(page-1);setQuery("");setStatus("");}}><ChevronLeft size={14} />Өмнөх</button><button type="button" disabled={!current?.hasMore || loading || !!error} onClick={()=>{setPage(page+1);setQuery("");setStatus("");}}>Дараах<ChevronRight size={14} /></button></nav>
   </div>;
   return <div className="mt-6">
-    <button className="mb-4 text-sm underline disabled:opacity-50" disabled={loading} onClick={load}>Шинэчлэх</button>
-    {error && <p role="alert" className="mb-4 text-sm text-red-700">{error}</p>}
-    {loading ? <p className="text-sm">Захиалга ачаалж байна…</p> : !error && !current?.orders.length ? <p className="rounded-lg border border-dashed p-6 text-sm">Одоогоор захиалга алга.</p> : <div className="space-y-4">{current?.orders.map((order) => <article key={order.id} className="rounded-lg border border-[#293C32]/15 bg-[#FFFFFF] p-5">
-      <p className="break-all font-mono text-xs">{order.id}</p>
-      <div className="mt-3 flex flex-wrap justify-between gap-3"><p>{new Date(order.created_at).toLocaleDateString("mn-MN")} · {order.items.reduce((sum, item) => sum + item.qty, 0)} ширхэг</p><p className="font-semibold">{formatPrice(order.total)}</p></div>
-      <p className="mt-2 text-sm text-[#42634F]">{ORDER_STATUS_LABEL[order.status]}</p>
-      {admin ? <>
-        <p className="mt-3 text-sm">{order.delivery.name} · {order.delivery.phone}<br />{order.delivery.address}</p>
-        <ul className="mt-3 text-sm">{order.items.map((item) => <li key={JSON.stringify([item.productId, item.color, item.material])}>{item.name} · {item.colorName} · {item.materialName} × {item.qty}</li>)}</ul>
-        {order.order_payments && <p className="mt-2 text-sm">{PAYMENT_METHOD_LABEL[order.order_payments.method]}{order.order_payments.state === "needs_review" ? " · Нэхэмжлэхийг шалгах шаардлагатай" : ""}</p>}
-        {order.status === "pending_payment" && order.order_payments?.method === "bank_transfer" && <TransferConfirmation order={order} onConfirmed={load} />}
-      </> : <Link className="mt-3 inline-block text-sm underline" href={`/orders/${order.id}`}>Дэлгэрэнгүй / төлбөр</Link>}
-    </article>)}</div>}
-    <div className="mt-4 flex gap-4"><button disabled={page === 0 || loading} className="text-sm underline disabled:opacity-40" onClick={() => setPage(page - 1)}>Өмнөх</button><span className="text-sm">{page + 1}</span><button disabled={!current?.hasMore || loading} className="text-sm underline disabled:opacity-40" onClick={() => setPage(page + 1)}>Дараах</button></div>
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+      <select
+        className="min-h-11 rounded-xl border border-[#293C32]/15 bg-white px-3 text-sm"
+        aria-label="Захиалгын төлөвөөр шүүх"
+        value={status}
+        onChange={(event) => setStatus(event.target.value)}
+      >
+        <option value="">Бүх төлөв</option>
+        {Object.entries(ORDER_STATUS_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+      </select>
+      <button className="btn-ghost !min-h-11 !px-4" disabled={loading} onClick={load}>
+        <RefreshCw className={loading ? "animate-spin" : ""} size={15} />
+        Шинэчлэх
+      </button>
+    </div>
+    {error && <div role="alert" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span>{error}</span><button className="underline" onClick={load}>Дахин оролдох</button></div>}
+    {loading ? (
+      <div className="grid min-h-36 place-items-center rounded-2xl border border-[#293C32]/10 bg-white text-sm text-[#6C726B]" role="status"><span className="flex items-center gap-2"><RefreshCw className="animate-spin" size={16} />Захиалгуудыг ачаалж байна…</span></div>
+    ) : !error && !visible.length ? (
+      <div className="shop-empty !py-12"><Package size={36} /><h3>{status ? "Энэ төлөвтэй захиалга алга" : "Одоогоор захиалга алга"}</h3><p>Сонгосон тавилгаа захиалсны дараа мэдээлэл энд харагдана.</p><Link href="/catalog" className="btn-primary">Тавилга үзэх</Link></div>
+    ) : (
+      <div className="space-y-4">
+        {visible.map((order) => {
+          const quantity = order.items.reduce((sum, item) => sum + item.qty, 0);
+          return <article key={order.id} className="overflow-hidden rounded-2xl border border-[#293C32]/10 bg-white shadow-[0_10px_35px_rgba(41,60,50,.04)]">
+            <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[#293C32]/10 bg-[#F8F7F3] px-5 py-4">
+              <div>
+                <p className="text-sm font-semibold text-[#293C32]" title={order.id}>Захиалга #{shortOrderId(order.id)}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-xs text-[#6C726B]"><CalendarDays size={13} />{formatDateTime(order.created_at)}</p>
+              </div>
+              <span className={`rounded-full px-3 py-1.5 text-xs font-medium ${userStatusTone[order.status]}`}>{ORDER_STATUS_LABEL[order.status]}</span>
+            </header>
+            <div className="grid gap-5 p-5 sm:grid-cols-[1fr_auto] sm:items-end">
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-[.08em] text-[#737D6C]">{quantity} ширхэг · {order.items.length} нэр төрөл</p>
+                <ul className="mt-3 space-y-2">
+                  {order.items.slice(0, 3).map((item) => <li key={JSON.stringify([item.productId, item.color, item.material])} className="flex justify-between gap-4 text-sm"><span className="min-w-0 truncate">{item.name} × {item.qty}</span><span className="shrink-0 tabular-nums text-[#6C726B]">{formatPrice(item.lineTotal)}</span></li>)}
+                </ul>
+                {order.items.length > 3 && <p className="mt-2 text-xs text-[#6C726B]">+{order.items.length - 3} нэр төрөл</p>}
+                <p className="mt-4 flex items-center gap-2 text-xs text-[#6C726B]"><CreditCard size={14} />{order.order_payments ? PAYMENT_METHOD_LABEL[order.order_payments.method] : order.status === "pending_payment" ? "Төлбөрийн арга сонгоогүй" : "Төлбөрийн мэдээлэл бүртгэгдээгүй"}</p>
+              </div>
+              <div className="sm:text-right">
+                <p className="text-xs text-[#6C726B]">Нийт дүн</p>
+                <p className="mt-1 text-xl font-semibold tabular-nums text-[#AD6547]">{formatPrice(order.total)}</p>
+                <Link className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#293C32]/15 px-4 text-sm font-medium transition hover:bg-[#293C32] hover:text-white" href={`/orders/${order.id}`}>Дэлгэрэнгүй {order.status === "pending_payment" ? "ба төлбөр" : "үзэх"}<ArrowUpRight size={15} /></Link>
+              </div>
+            </div>
+          </article>;
+        })}
+      </div>
+    )}
+    <nav className="mt-5 flex items-center justify-center gap-3" aria-label="Захиалгын хуудаслалт">
+      <button disabled={page === 0 || loading} className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-[#293C32]/15 px-3 text-sm disabled:opacity-40" onClick={() => setPage(page - 1)}><ChevronLeft size={15} />Өмнөх</button>
+      <span className="min-w-20 text-center text-sm text-[#6C726B]" aria-live="polite">Хуудас {page + 1}</span>
+      <button disabled={!current?.hasMore || loading} className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-[#293C32]/15 px-3 text-sm disabled:opacity-40" onClick={() => setPage(page + 1)}>Дараах<ChevronRight size={15} /></button>
+    </nav>
   </div>;
 }
 
