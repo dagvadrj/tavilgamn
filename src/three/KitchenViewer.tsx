@@ -3,8 +3,8 @@
 import { Component, useEffect, useMemo, type ReactNode } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { Edges, OrbitControls } from "@react-three/drei";
-import type { Texture } from "three";
-import { FINISHES, kitchenHeight, type Cabinet, type Kitchen } from "@/lib/kitchen";
+import { Shape, type Texture } from "three";
+import { FINISHES, cornerFootprint, kitchenHeight, kitchenPlan, type Cabinet, type Kitchen } from "@/lib/kitchen";
 import { createKitchenTexture } from "./kitchenTextures";
 
 type XYZ = [number, number, number];
@@ -106,17 +106,60 @@ function Worktop({ w, d, height, kind, surface }: {
   </group>;
 }
 
-function CameraFit({ width, height }: { width: number; height: number }) {
+function CornerSlab({ size, depth, y, thickness, surface, selected = false, overhang = false }: {
+  size: number; depth: number; y: number; thickness: number; surface: Surface; selected?: boolean; overhang?: boolean;
+}) {
+  const shape = useMemo(() => {
+    const points: [number, number][] = overhang
+      ? [[0, -0.01], [size + 0.01, -0.01], [size + 0.01, size], [size - depth - 0.025, size], [0, depth + 0.025]]
+      : cornerFootprint(size, depth);
+    const outline = new Shape();
+    points.forEach(([x, z], index) => { if (index === 0) outline.moveTo(x, z); else outline.lineTo(x, z); });
+    outline.closePath();
+    return outline;
+  }, [size, depth, overhang]);
+  return <mesh position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow={!selected} receiveShadow>
+    <extrudeGeometry args={[shape, { depth: thickness, bevelEnabled: false }]} />
+    {selected ? <meshBasicMaterial transparent opacity={0} depthWrite={false} /> : <meshStandardMaterial {...surface} />}
+    {selected && <Edges color="#426d59" />}
+  </mesh>;
+}
+
+function CornerBox({ size, depth, h, kitchen, surface, open }: {
+  size: number; depth: number; h: number; kitchen: Kitchen; surface: Surface; open: boolean;
+}) {
+  const inside: Surface = { color: "#e6e0d4", roughness: 0.85 };
+  const doorWidth = (size - depth) * Math.SQRT2;
+  return <group>
+    <Board size={[size, h, 0.018]} at={[size / 2, h / 2, 0.009]} surface={inside} />
+    <Board size={[0.018, h, size]} at={[size - 0.009, h / 2, size / 2]} surface={inside} />
+    <Board size={[0.018, h, depth]} at={[0.009, h / 2, depth / 2]} surface={surface} />
+    <Board size={[depth, h, 0.018]} at={[size - depth / 2, h / 2, size - 0.009]} surface={surface} />
+    {[0.018, h / 2, h].map(y => <CornerSlab key={y} size={size} depth={depth} y={y} thickness={0.018} surface={inside} />)}
+    <group position={[0, h / 2, depth]} rotation={[0, -Math.PI / 4, 0]}>
+      <group rotation={[0, open ? -Math.PI * 0.38 : 0, 0]}>
+        <group position={[doorWidth / 2, 0, 0.015]}><Front w={doorWidth - 0.006} h={h - 0.006} kitchen={kitchen} surface={surface} /></group>
+      </group>
+    </group>
+  </group>;
+}
+
+function CameraFit({ width, height, depth, mirrored, corner }: {
+  width: number; height: number; depth: number; mirrored: boolean; corner: boolean;
+}) {
   const { camera, size, invalidate } = useThree();
   useEffect(() => {
-    // Vertical and horizontal framing both matter on a narrow phone viewport.
     const aspect = size.width / Math.max(size.height, 1);
-    const distance = Math.max(height * 2, width / Math.max(aspect, 0.35) * 1.7, width * 1.15);
-    camera.position.set(width * 0.42, height * 0.65 + distance * 0.18, distance);
+    const halfFov = Math.min(19 * Math.PI / 180, Math.atan(Math.tan(19 * Math.PI / 180) * aspect));
+    const radius = Math.hypot(width, height, depth) / 2;
+    const distance = radius / Math.sin(halfFov) * 1.08;
+    // Look into the inside corner so both cabinet fronts remain visible.
+    camera.position.set(corner && !mirrored ? -0.7 : 0.7, 0.5, 1).normalize().multiplyScalar(distance);
+    camera.position.y += height / 2;
     camera.lookAt(0, height / 2, 0);
     camera.updateProjectionMatrix();
     invalidate();
-  }, [camera, size.width, size.height, width, height, invalidate]);
+  }, [camera, size.width, size.height, width, height, depth, mirrored, corner, invalidate]);
   return null;
 }
 
@@ -133,7 +176,9 @@ function KitchenScene({ kitchen, selected, onSelect, open }: ViewerProps) {
   const height = kitchen.height / 1000;
   const depth = kitchen.depth / 1000;
   const fullHeight = kitchenHeight(kitchen) / 1000;
-  let offset = -width / 2;
+  const plan = kitchenPlan(kitchen);
+  const footprintDepth = plan.depth / 1000;
+  const cornerSize = kitchen.cornerSize / 1000;
 
   return <>
     <color attach="background" args={["#eaece8"]} />
@@ -142,17 +187,18 @@ function KitchenScene({ kitchen, selected, onSelect, open }: ViewerProps) {
     <directionalLight position={[2, 6, 5]} intensity={2.2} castShadow
       shadow-mapSize={[1024, 1024]} shadow-camera-left={-5} shadow-camera-right={5}
       shadow-camera-top={5} shadow-camera-bottom={-5} shadow-bias={-0.0005} />
-    <CameraFit width={width} height={fullHeight} />
+    <CameraFit width={width} height={fullHeight} depth={footprintDepth} mirrored={plan.mirrored} corner={kitchen.layout === "l"} />
     <OrbitControls makeDefault target={[0, fullHeight / 2, 0]} minDistance={1} maxDistance={45}
       maxPolarAngle={Math.PI / 2 - 0.03} enablePan={false} />
-    <group position={[0, 0, -depth / 2]}>
+    <group position={[plan.mirrored ? width / 2 : -width / 2, 0, -footprintDepth / 2]} scale={[plan.mirrored ? -1 : 1, 1, 1]}>
       {kitchen.backsplash && <Board size={[width, kitchen.gap / 1000, 0.012]}
-        at={[0, height + kitchen.gap / 2000, -0.015]} surface={topSurface} />}
-      {kitchen.cabinets.map(cabinet => {
+        at={[width / 2, height + kitchen.gap / 2000, -0.015]} surface={topSurface} />}
+      {kitchen.backsplash && kitchen.layout === "l" && <Board size={[0.012, kitchen.gap / 1000, footprintDepth]}
+        at={[width + 0.015, height + kitchen.gap / 2000, footprintDepth / 2]} surface={topSurface} />}
+      {plan.placements.map(({ cabinet, x, z, rotation }) => {
         const w = cabinet.width / 1000;
-        const x = offset + w / 2;
-        offset += w;
-        return <group key={cabinet.id} position={[x, 0, 0]}
+        const upperKind = cabinet.upperKind && cabinet.upperKind !== "auto" ? cabinet.upperKind : w >= 0.6 ? "double" : "single";
+        return <group key={cabinet.id} position={[x / 1000, 0, z / 1000]} rotation={[0, rotation, 0]}
           onClick={event => { if (event.delta > 5) return; event.stopPropagation(); onSelect(cabinet.id); }}>
           <Board size={[w - 0.012, 0.1, depth - 0.07]} at={[0, 0.05, (depth - 0.07) / 2]}
             surface={{ color: "#4d504b", roughness: 0.8 }} />
@@ -163,7 +209,7 @@ function KitchenScene({ kitchen, selected, onSelect, open }: ViewerProps) {
           <Worktop w={w} d={depth} height={height} kind={cabinet.kind} surface={topSurface} />
           {cabinet.upper && <group position={[0, height + kitchen.gap / 1000, 0]}>
             <CabinetBox w={w} h={kitchen.upperHeight / 1000} d={kitchen.upperDepth / 1000}
-              kind={cabinet.kind === "open" ? "open" : w >= 0.6 ? "double" : "single"}
+              kind={upperKind}
               kitchen={kitchen} surface={{ ...surface, color: kitchen.upperColor }} open={open} />
           </group>}
           {selected === cabinet.id && <mesh position={[0, height / 2, depth / 2]}>
@@ -173,6 +219,19 @@ function KitchenScene({ kitchen, selected, onSelect, open }: ViewerProps) {
           </mesh>}
         </group>;
       })}
+      {kitchen.layout === "l" && <group position={[width - cornerSize, 0, 0]}
+        onClick={event => { if (event.delta > 5) return; event.stopPropagation(); onSelect("corner"); }}>
+        <CornerSlab size={cornerSize} depth={depth - 0.07} y={0.1} thickness={0.1}
+          surface={{ color: "#4d504b", roughness: 0.8 }} />
+        <group position={[0, 0.1, 0]}><CornerBox size={cornerSize} depth={depth} h={height - 0.13}
+          kitchen={kitchen} surface={surface} open={open} /></group>
+        <CornerSlab size={cornerSize} depth={depth} y={height} thickness={0.03} surface={topSurface} overhang />
+        {kitchen.cornerUpper && <group position={[0, height + kitchen.gap / 1000, 0]}>
+          <CornerBox size={cornerSize} depth={kitchen.upperDepth / 1000} h={kitchen.upperHeight / 1000}
+            kitchen={kitchen} surface={{ ...surface, color: kitchen.upperColor }} open={open} />
+        </group>}
+        {selected === "corner" && <CornerSlab size={cornerSize} depth={depth} y={height} thickness={height} surface={surface} selected />}
+      </group>}
     </group>
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.005, 0]} receiveShadow>
       <planeGeometry args={[30, 30]} /><meshStandardMaterial color="#e1e3dc" roughness={1} />
