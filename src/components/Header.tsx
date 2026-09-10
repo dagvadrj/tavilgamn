@@ -42,8 +42,10 @@ export function Header() {
         <Link href="/catalog" className={pathname === "/catalog" ? "active" : ""}><LayoutGrid size={16} /> Бүх тавилга</Link>
         {CATEGORIES.map(c => <Link key={c.id} href={"/catalog/" + c.id} className={pathname === "/catalog/" + c.id ? "active" : ""}>{c.name}</Link>)}
         <Link href="/planner" className="planner-link">Өрөөгөө төлөвлөх <ArrowUpRight size={15} /></Link>
+        <Link href="/kitchen" className={pathname === "/kitchen" ? "active" : ""}>Гал тогоо төлөвлөх <ArrowUpRight size={15} /></Link>
         {mounted && role === "admin" && <Link href="/admin">Удирдлага</Link>}
       </nav>
+      <Link href="/kitchen" className="flex min-h-11 items-center justify-center gap-2 border-t border-[#293C32]/10 text-sm text-[#42634F] md:hidden" aria-current={pathname === "/kitchen" ? "page" : undefined}>Гал тогоо төлөвлөх <ArrowUpRight size={15} /></Link>
     </header>
     <nav className="mobile-bottom-nav" aria-label="Доод үндсэн цэс">
       {links.map(({ href, label, icon: Icon, active, count }) => <Link key={href} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}><span className="nav-icon"><Icon size={22} strokeWidth={active ? 2 : 1.7} />{mounted && count > 0 && <span className="nav-count">{count > 99 ? "99+" : count}</span>}</span><span>{label}</span></Link>)}
