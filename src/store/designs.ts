@@ -1,7 +1,9 @@
 "use client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { RoomDesign, RoomSize, PlacedFurniture } from "@/lib/types";
+import type { RoomDesign, RoomSize, PlacedFurniture, RoomType } from "@/lib/types";
+import { activateDesignRoom, newDesignRoom, syncDesignRooms } from "@/lib/roomDesign";
+import { ROOM_TYPES } from "@/lib/roomGeometry";
 
 export const ROOM_DIMENSIONS: Record<RoomSize, { w: number; d: number }> = {
   "40": { w: 6.3, d: 6.3 },
@@ -20,35 +22,35 @@ interface DesignState {
   endEdit: () => void;
   undo: () => void;
   redo: () => void;
-  createNew: (size: RoomSize, name?: string) => void;
+  createNew: (size: RoomSize, name?: string, roomType?: RoomType) => void;
+  addRoom: (type: RoomType) => void;
+  selectRoom: (id: string) => void;
   loadDesign: (id: string) => void;
   saveCurrent: (name?: string) => void;
   deleteDesign: (id: string) => void;
   duplicateDesign: (id: string) => void;
   updatePieces: (pieces: PlacedFurniture[]) => void;
-  updateRoom: (patch: Partial<Pick<RoomDesign, "wallColor" | "floorColor" | "name" | "width" | "depth" | "size">>) => void;
+  updateRoom: (patch: Partial<Pick<RoomDesign, "wallColor" | "floorColor" | "name" | "width" | "depth" | "size" | "height" | "wallFeatures" | "columns" | "roomName" | "roomType">>) => void;
 }
 const createDesignId = () => `d_${crypto.randomUUID()}`;
 
-const cloneDesign = (design: RoomDesign): RoomDesign => ({
-  ...design,
-  pieces: design.pieces.map((piece) => ({ ...piece })),
-});
+const cloneDesign = syncDesignRooms;
   
-const blankDesign = (size: RoomSize, name = "Untitled Room"): RoomDesign => {
+const blankDesign = (size: RoomSize, name = "Untitled Room", roomType?: RoomType): RoomDesign => {
   const dims = ROOM_DIMENSIONS[size];
-  return {
+  return cloneDesign({
     id: createDesignId(),
     name,
     size,
-    width: dims.w,
-    depth: dims.d,
+    width: roomType ? ROOM_TYPES[roomType].width : dims.w,
+    depth: roomType ? ROOM_TYPES[roomType].depth : dims.d,
+    roomType: roomType ?? "living",
     wallColor: "#EFE6D6",
     floorColor: "#C9A37A",
     pieces: [],
     createdAt: Date.now(),
     updatedAt: Date.now(),
-  };
+  });
 };
 
 export const useDesigns = create<DesignState>()(
@@ -81,7 +83,22 @@ export const useDesigns = create<DesignState>()(
         if (!current || !future.length) return;
         set({ current: cloneDesign(future[0]), past: [...past, cloneDesign(current)].slice(-60), future: future.slice(1) });
       },
-      createNew: (size, name) => set({ current: blankDesign(size, name), past: [], future: [], transaction: null }),
+      createNew: (size, name, roomType) => set({ current: blankDesign(size, name, roomType), past: [], future: [], transaction: null }),
+      addRoom: (type) => {
+        get().endEdit();
+        const current = get().current;
+        if (!current) return;
+        const synced = cloneDesign(current);
+        const room = newDesignRoom(type, synced.rooms!);
+        const next = activateDesignRoom({ ...synced, rooms: [...synced.rooms!, room] }, room.id);
+        set({ current: { ...next, updatedAt: Date.now() }, past: [...get().past, cloneDesign(current)].slice(-60), future: [] });
+      },
+      selectRoom: (id) => {
+        get().endEdit();
+        const current = get().current;
+        if (!current || current.activeRoomId === id) return;
+        set({ current: activateDesignRoom(current, id) });
+      },
       loadDesign: (id) => {
   const design = get().designs.find((item) => item.id === id);
 
@@ -141,7 +158,7 @@ export const useDesigns = create<DesignState>()(
         const c = get().current;
         if (!c) return;
         if (JSON.stringify(c.pieces) === JSON.stringify(pieces)) return;
-        set({ current: { ...c, pieces, updatedAt: Date.now() },
+        set({ current: cloneDesign({ ...c, pieces, updatedAt: Date.now() }),
           ...(!get().transaction ? { past: [...get().past, cloneDesign(c)].slice(-60), future: [] } : {}),
         });
       },
@@ -149,12 +166,17 @@ export const useDesigns = create<DesignState>()(
         const c = get().current;
         if (!c) return;
         if (Object.entries(patch).every(([key, value]) => c[key as keyof RoomDesign] === value)) return;
-        set({ current: { ...c, ...patch, updatedAt: Date.now() },
+        set({ current: cloneDesign({ ...c, ...patch, updatedAt: Date.now() }),
           ...(!get().transaction ? { past: [...get().past, cloneDesign(c)].slice(-60), future: [] } : {}),
         });
       },
     }),
-    { name: "casa-designs-guest", partialize: ({ designs, current }) => ({ designs, current }) },
+    { name: "casa-designs-guest", partialize: ({ designs, current }) => ({ designs, current }),
+      merge: (persisted, state) => {
+        const saved = persisted as Partial<DesignState> | undefined;
+        return { ...state, designs: saved?.designs?.map(cloneDesign) ?? [], current: saved?.current ? cloneDesign(saved.current) : null };
+      },
+    },
   ),
 );
 export function setDesignOwner(userId: string | null) {
@@ -176,10 +198,10 @@ export function setDesignOwner(userId: string | null) {
       : null;
 
     if (Array.isArray(parsed?.state?.designs)) {
-      designs = parsed.state.designs;
+      designs = parsed.state.designs.map(cloneDesign);
     }
 
-    current = parsed?.state?.current ?? null;
+    current = parsed?.state?.current ? cloneDesign(parsed.state.current) : null;
   } catch {
     designs = [];
     current = null;

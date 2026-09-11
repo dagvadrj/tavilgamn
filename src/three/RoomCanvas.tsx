@@ -13,7 +13,8 @@ import {
   Edges,
   useCursor,
 } from "@react-three/drei";
-import type { RoomDesign, PlacedFurniture } from "@/lib/types";
+import type { RoomDesign, PlacedFurniture, RoomShape } from "@/lib/types";
+import { getRoomGeometry, polygonArea } from "@/lib/roomGeometry";
 import { FurnitureMesh } from "./FurnitureMesh";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import { InteriorModel } from "./InteriorModel";
@@ -61,6 +62,9 @@ export function RoomCanvas({
   customInterior,
 }: RoomCanvasProps) {
   const [isDraggingPiece, setIsDraggingPiece] = useState(false);
+  const bounds = getRoomGeometry(design).bounds;
+  const spanX = bounds.maxX - bounds.minX, spanZ = bounds.maxZ - bounds.minZ;
+  const centerX = (bounds.minX + bounds.maxX) / 2, centerZ = (bounds.minZ + bounds.maxZ) / 2;
   return (
     <Canvas
       shadows
@@ -82,7 +86,7 @@ export function RoomCanvas({
               position: [0, 14, 0.01],
               fov: 35,
               near: 0.1,
-              far: 100,
+              far: 300,
             }
           : {
               position: [
@@ -92,13 +96,13 @@ export function RoomCanvas({
               ],
               fov: 40,
               near: 0.1,
-              far: 100,
+              far: 300,
             }
       }
       className="!h-full !w-full"
       onPointerMissed={() => onSelect(null)}
     >
-      <CameraRig view={view} width={design.width} depth={design.depth} resetKey={resetKey} />
+      <CameraRig view={view} width={spanX} depth={spanZ} centerX={centerX} centerZ={centerZ} resetKey={resetKey} />
       <color attach="background" args={["#F1F0ED"]} />
       <hemisphereLight color="#FFFDF8" groundColor="#B7A58E" intensity={1.15} />
 
@@ -133,20 +137,20 @@ export function RoomCanvas({
           onLoaded={customInterior.onLoaded}
         />
       ) : (
-        <Room design={design} onSelect={onSelect} />
+        <Room design={design} onSelect={onSelect} view={view} />
       )}
 
       {!customInterior && gridEnabled && (
-        <FloorGrid width={design.width} depth={design.depth} />
+        <group position={[centerX, 0, centerZ]}><FloorGrid width={spanX} depth={spanZ} /></group>
       )}
-      {!customInterior && showDimensions && <RoomDimensions width={design.width} depth={design.depth} />}
+      {!customInterior && showDimensions && <group position={[centerX, 0, centerZ]}><RoomDimensions width={spanX} depth={spanZ} /></group>}
 
       {design.pieces.map((piece) => (
         <DraggablePiece
           key={piece.instanceId}
           piece={piece}
           allPieces={design.pieces}
-          roomDims={{ width: design.width, depth: design.depth }}
+          roomDims={design}
           selected={selected === piece.instanceId}
           onSelect={onSelect}
           onMove={onMove}
@@ -171,7 +175,7 @@ export function RoomCanvas({
         <OrbitControls
           makeDefault
           enabled={!locked && !isDraggingPiece}
-          target={[0, 0.7, 0]}
+          target={[centerX, 0.7, centerZ]}
           enablePan
           screenSpacePanning
           enableRotate
@@ -190,7 +194,7 @@ export function RoomCanvas({
         <MapControls
           makeDefault
           enabled={!locked && !isDraggingPiece}
-          target={[0, 0, 0]}
+          target={[centerX, 0, centerZ]}
           enableRotate={false}
           enablePan
           enableZoom
@@ -208,11 +212,15 @@ function CameraRig({
   view,
   width,
   depth,
+  centerX,
+  centerZ,
   resetKey,
 }: {
   view: "plan" | "perspective";
   width: number;
   depth: number;
+  centerX: number;
+  centerZ: number;
   resetKey: number;
 }) {
   const camera = useThree((state) => state.camera);
@@ -224,19 +232,19 @@ function CameraRig({
     const target = new THREE.Vector3();
 
     if (view === "plan") {
-      target.set(0, 0, 0);
+      target.set(centerX, 0, centerZ);
 
       camera.up.set(0, 0, -1);
       const aspect = size.width / Math.max(size.height, 1);
       const fov = (camera as THREE.PerspectiveCamera).fov || 40;
       const distance = Math.max(depth + 1.8, (width + 1.8) / aspect) / (2 * Math.tan(THREE.MathUtils.degToRad(fov / 2)));
-      camera.position.set(0, distance, 0.001);
+      camera.position.set(centerX, distance, centerZ + 0.001);
     } else {
-      target.set(0, 0.7, 0);
+      target.set(centerX, 0.7, centerZ);
 
       camera.up.set(0, 1, 0);
       const fit = Math.max(1, 0.95 / (size.width / Math.max(size.height, 1)));
-      camera.position.set(width * 0.78 * fit, roomSpan * 0.62 * fit, depth * 0.82 * fit);
+      camera.position.set(centerX + width * 0.78 * fit, roomSpan * 0.62 * fit, centerZ + depth * 0.82 * fit);
     }
 
     camera.lookAt(target);
@@ -255,7 +263,7 @@ function CameraRig({
       orbitControls.target.copy(target);
       orbitControls.update();
     }
-  }, [camera, controls, view, width, depth, resetKey, size.width, size.height]);
+  }, [camera, controls, view, width, depth, centerX, centerZ, resetKey, size.width, size.height]);
 
   return null;
 }
@@ -263,15 +271,26 @@ function CameraRig({
 function Room({
   design,
   onSelect,
+  view,
 }: {
   design: RoomDesign;
   onSelect: (id: string | null) => void;
+  view: "plan" | "perspective";
 }) {
-  const wallHeight = 2.7;
+  const wallHeight = design.height ?? 2.7;
   const wallThickness = 0.12;
   const floorThickness = 0.08;
   const baseboardHeight = 0.1;
   const baseboardDepth = 0.035;
+  const geometry = getRoomGeometry(design);
+  const floorShape = useMemo(() => {
+    const outer = geometry.loops.find(loop => polygonArea(loop) > 0)!;
+    const shape = new THREE.Shape(outer.map(point => new THREE.Vector2(point.x, point.z)));
+    for (const loop of geometry.loops.filter(points => polygonArea(points) < 0)) {
+      shape.holes.push(new THREE.Path(loop.map(point => new THREE.Vector2(point.x, point.z))));
+    }
+    return shape;
+  }, [geometry]);
 
   const floorTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
@@ -308,15 +327,12 @@ function Room({
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(
-      Math.max(design.width / 2.2, 1),
-      Math.max(design.depth / 2.2, 1),
-    );
+    texture.repeat.set(1 / 2.2, 1 / 2.2);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = 8;
 
     return texture;
-  }, [design.width, design.depth]);
+  }, []);
 
   useEffect(() => {
     return () => floorTexture?.dispose();
@@ -330,11 +346,11 @@ function Room({
     <group>
       {/* Floor slab */}
       <mesh
-        position={[0, -floorThickness / 2, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
         receiveShadow
         onPointerDown={clearSelection}
       >
-        <boxGeometry args={[design.width, floorThickness, design.depth]} />
+        <extrudeGeometry args={[floorShape, { depth: floorThickness, bevelEnabled: false }]} />
         <meshStandardMaterial
           map={floorTexture ?? undefined}
           color={design.floorColor}
@@ -343,65 +359,31 @@ function Room({
         />
       </mesh>
 
-      {/* Back wall */}
-      <mesh
-        position={[0, wallHeight / 2, -design.depth / 2 - wallThickness / 2]}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry
-          args={[design.width + wallThickness, wallHeight, wallThickness]}
-        />
-        <meshStandardMaterial
-          color={design.wallColor}
-          roughness={0.92}
-          metalness={0}
-        />
-      </mesh>
-
-      {/* Left wall */}
-      <mesh
-        position={[-design.width / 2 - wallThickness / 2, wallHeight / 2, 0]}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry
-          args={[wallThickness, wallHeight, design.depth + wallThickness]}
-        />
-        <meshStandardMaterial
-          color={design.wallColor}
-          roughness={0.92}
-          metalness={0}
-        />
-      </mesh>
-
-      {/* Back wall baseboard */}
-      <mesh
-        position={[
-          0,
-          baseboardHeight / 2,
-          -design.depth / 2 + baseboardDepth / 2,
-        ]}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry args={[design.width, baseboardHeight, baseboardDepth]} />
-        <meshStandardMaterial color="#F8F7F3" roughness={0.8} />
-      </mesh>
-
-      {/* Left wall baseboard */}
-      <mesh
-        position={[
-          -design.width / 2 + baseboardDepth / 2,
-          baseboardHeight / 2,
-          0,
-        ]}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry args={[baseboardDepth, baseboardHeight, design.depth]} />
-        <meshStandardMaterial color="#F8F7F3" roughness={0.8} />
-      </mesh>
+      {geometry.segments.filter(wall => !wall.hole).map((wall, index) => {
+        const x = (wall.a.x + wall.b.x) / 2, z = (wall.a.z + wall.b.z) / 2;
+        const onColumn = (design.columns ?? []).some(column => {
+          const left = column.x - design.width / 2, top = column.z - design.depth / 2;
+          return x >= left - 1e-6 && x <= left + column.width + 1e-6 && z >= top - 1e-6 && z <= top + column.depth + 1e-6;
+        });
+        if (onColumn) return null;
+        const height = view === "plan" || wall.nx < 0 || wall.nz < 0 ? 0.16 : wallHeight;
+        const rotation = -Math.atan2(wall.b.z - wall.a.z, wall.b.x - wall.a.x);
+        return <group key={index}>
+          <mesh position={[x - wall.nx * wallThickness / 2, height / 2, z - wall.nz * wallThickness / 2]} rotation={[0, rotation, 0]} castShadow receiveShadow>
+            <boxGeometry args={[wall.length, height, wallThickness]} />
+            <meshStandardMaterial color={design.wallColor} roughness={0.92} />
+          </mesh>
+          <mesh position={[x + wall.nx * baseboardDepth / 2, baseboardHeight / 2, z + wall.nz * baseboardDepth / 2]} rotation={[0, rotation, 0]} receiveShadow>
+            <boxGeometry args={[wall.length, baseboardHeight, baseboardDepth]} />
+            <meshStandardMaterial color="#F8F7F3" roughness={0.8} />
+          </mesh>
+        </group>;
+      })}
+      {(design.columns ?? []).map(column => <mesh key={column.id}
+        position={[column.x + column.width / 2 - design.width / 2, (view === "plan" ? 0.2 : wallHeight) / 2, column.z + column.depth / 2 - design.depth / 2]} castShadow receiveShadow>
+        <boxGeometry args={[column.width, view === "plan" ? 0.2 : wallHeight, column.depth]} />
+        <meshStandardMaterial color={design.wallColor} roughness={0.92} /><Edges color="#9a9c91" />
+      </mesh>)}
     </group>
   );
 }
@@ -534,7 +516,7 @@ function DraggablePiece({
   piece: PlacedFurniture;
   allPieces: PlacedFurniture[];
   onDragChange: (dragging: boolean) => void;
-  roomDims: { width: number; depth: number };
+  roomDims: RoomShape;
   selected: boolean;
   onSelect: (id: string | null) => void;
   onMove: (id: string, x: number, z: number) => void;

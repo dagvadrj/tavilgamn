@@ -84,13 +84,53 @@ export interface PlacedFurniture {
 
 export type RoomSize = "40" | "80" | "120";
 
-export interface RoomDesign {
+export type RoomType = "living" | "bedroom" | "kitchen" | "bathroom" | "office" | "other";
+export type RoomWall = "north" | "east" | "south" | "west";
+export interface WallFeature {
+  id: string;
+  wall: RoomWall;
+  kind: "inset" | "recess";
+  /** Metres from the wall's labelled starting corner, clockwise A → B → C → D. */
+  offset: number;
+  length: number;
+  depth: number;
+}
+export interface RoomColumn {
+  id: string;
+  /** Position of the column's top-left corner, measured from the base room's A corner. */
+  x: number;
+  z: number;
+  width: number;
+  depth: number;
+}
+export interface RoomShape {
+  width: number;
+  depth: number;
+  height?: number;
+  wallFeatures?: WallFeature[];
+  columns?: RoomColumn[];
+}
+export interface DesignRoom extends RoomShape {
+  id: string;
+  name: string;
+  type: RoomType;
+  wallColor: string;
+  floorColor: string;
+  pieces: PlacedFurniture[];
+}
+
+export interface RoomDesign extends RoomShape {
   id: string;
   name: string;
   size: RoomSize;
   /** room footprint width/depth in meters */
   width: number;
   depth: number;
+  /** The top-level room fields remain the active room for older planner integrations. */
+  activeRoomId?: string;
+  roomName?: string;
+  roomType?: RoomType;
+  rooms?: DesignRoom[];
   wallColor: string;
   floorColor: string;
   pieces: PlacedFurniture[];
