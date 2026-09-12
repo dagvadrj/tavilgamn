@@ -1,3 +1,4 @@
+import type { KitchenSnapshot } from "./kitchenAssembly";
 export type Category =
   | "sofa"
   | "wardrobe"
@@ -69,6 +70,8 @@ export interface WishlistItem {
 }
 
 export interface PlacedFurniture {
+  /** Immutable kitchen snapshot in authored mm; rendered once at scale 1. */
+  kitchen?: KitchenSnapshot;
   instanceId: string;
   productId: string;
   /** Set when this piece was added from a DB-uploaded OBJ model */

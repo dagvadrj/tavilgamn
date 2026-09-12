@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { OrderHistory } from "@/components/OrderHistory";
+import { SavedKitchenList } from "@/components/SavedKitchenList";
 import { useAuth } from "@/store/auth";
 import { useWishlist } from "@/store/wishlist";
 import { useDesigns } from "@/store/designs";
@@ -74,6 +75,7 @@ export default function AccountPage() {
           {role === "admin" && <Link href="/admin" className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"><LayoutGrid className="h-4 w-4" />Удирдлага</Link>}
           {[
             { href: "#designs", label: "Хадгалсан загвар", icon: LayoutGrid },
+            { href: "#kitchen-garniture", label: "Гал тогооны гарнитур", icon: LayoutGrid },
             { href: "#orders", label: "Захиалга", icon: Package },
             { href: "/wishlist", label: "Хүслийн жагсаалт", icon: Heart },
             { href: "#profile", label: "Профайл", icon: User },
@@ -180,6 +182,10 @@ export default function AccountPage() {
           )}
         </section>
 
+        <section id="kitchen-garniture" className="scroll-mt-24">
+          <h2 className="mb-5 text-3xl text-[#293C32]">Миний гал тогооны гарнитур</h2>
+          <SavedKitchenList />
+        </section>
         <section id="orders">
           <p className="font-mono text-xs uppercase tracking-wide text-[#737D6C]">
             Захиалгын түүх

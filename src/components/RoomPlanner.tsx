@@ -58,11 +58,17 @@ import {
   validateRoomShape,
 } from "@/lib/roomGeometry";
 import { RoomGeometryModal } from "./RoomGeometryModal";
+import { SavedKitchenList } from "./SavedKitchenList";
+import { useKitchens } from "@/store/kitchens";
+import { useAuth } from "@/store/auth";
+import { kitchenRoomPiece } from "@/lib/kitchenRoomPiece";
+import type { SavedKitchen } from "@/lib/kitchenAssembly";
 import { formatPrice, cn } from "@/lib/format";
 import {
   isPlacementValid,
   findFreePlacement,
   dimsFor,
+  pieceRects,
 } from "@/three/collision";
 import {
   getFurnitureMeasurements,
@@ -138,6 +144,8 @@ export function RoomPlanner() {
     endEdit,
   } = useDesigns();
   const catalog = useCatalog();
+  const kitchenLibrary = useKitchens(), kitchenUser = useAuth(state => state.user);
+  const handledKitchen = useRef<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<"plan" | "perspective">("perspective");
   const [snapEnabled, setSnapEnabled] = useState(true);
@@ -236,6 +244,30 @@ export function RoomPlanner() {
   useEffect(() => {
     if (!current) createNew("80", "Миний гэр", "living");
   }, [current, createNew]);
+
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("kitchen");
+    if (!id || handledKitchen.current === id || !current) return;
+    if (!kitchenUser) { setLeftOpen(true); return; }
+    if (kitchenLibrary.owner !== kitchenUser.id) return;
+    if (!kitchenLibrary.loaded) {
+      if (!kitchenLibrary.loading && !kitchenLibrary.error) void kitchenLibrary.refresh();
+      if (kitchenLibrary.error) setLeftOpen(true);
+      return;
+    }
+    handledKitchen.current = id;
+    const saved = kitchenLibrary.items.find(item => item.id === id);
+    const piece = saved && findFreePlacement(kitchenRoomPiece(saved, `p_${crypto.randomUUID()}`), current.pieces, current);
+    if (piece) {
+      updatePieces([...current.pieces, piece]); setSelected(piece.instanceId); setRightOpen(true);
+      setNotice("Гарнитурыг бодит хэмжээгээр өрөөнд байрлууллаа.");
+    } else {
+      setNotice(saved ? "Гарнитур багтах сул зай эсвэл таазны өндөр хүрэлцэхгүй байна. Өрөө, байрлалаа тохируулаад Өөрийн загвараас дахин нэмээрэй." : "Хадгалсан гарнитур олдсонгүй.");
+      setLeftOpen(true);
+    }
+    const url = new URL(window.location.href); url.searchParams.delete("kitchen");
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  }, [current, kitchenLibrary, kitchenUser, updatePieces]);
 
   useEffect(() => {
     return () => {
@@ -494,7 +526,7 @@ export function RoomPlanner() {
       )
     : null;
 
-  const selectedDetails = selectedProduct ?? selectedDbModel;
+  const selectedDetails = selectedPiece?.kitchen ? { name: selectedPiece.kitchen.name, basePrice: 0, colors: [], materials: [] } : selectedProduct ?? selectedDbModel;
   const measurements =
     showDimensions && selectedPiece && selectedDetails
       ? getFurnitureMeasurements(
@@ -674,6 +706,17 @@ export function RoomPlanner() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-3">
+          <section className="planner-kitchen-library">
+            <h3>Өөрийн загвар · гарнитур</h3>
+            <SavedKitchenList onPlace={(saved: SavedKitchen) => {
+              const piece = findFreePlacement(kitchenRoomPiece(saved, `p_${crypto.randomUUID()}`), current.pieces, current);
+              if (!piece) { setNotice("Гарнитур багтах сул зай эсвэл таазны өндөр хүрэлцэхгүй байна."); return; }
+              updatePieces([...current.pieces, piece]); setSelected(piece.instanceId); setLeftOpen(false);
+              setActivePreset(null); setLocalFile(null); setLocalUrl(null);
+              setNotice("Гарнитурыг бодит хэмжээгээр байрлууллаа.");
+            }} />
+            <Link className="btn-ghost mt-2" href="/kitchen"><Plus size={15} />Гарнитур үүсгэх</Link>
+          </section>
           {(catalog.loading || !catalog.ready) && (
             <CatalogStatus
               loading={catalog.loading}
@@ -1245,7 +1288,7 @@ export function RoomPlanner() {
               <div>
                 <p className="text-sm font-medium">{selectedDetails.name}</p>
                 <p className="mt-1 text-xs">
-                  {stockLabel(selectedProduct ?? selectedDbModel ?? {})}
+                  {selectedPiece.kitchen ? "Өөрийн гарнитур" : stockLabel(selectedProduct ?? selectedDbModel ?? {})}
                 </p>
                 <p className="font-mono text-xs text-[#6C726B]">
                   {selectedDetails.basePrice > 0
@@ -1345,6 +1388,7 @@ export function RoomPlanner() {
                 </button>
               </div>
             </div>
+            {selectedPiece.kitchen ? <p className="mt-4 text-xs leading-5">Бодит хэмжээгээр байрласан гарнитур. <Link className="underline" href={`/kitchen?design=${selectedPiece.kitchen.id}`}>Гарнитурын тохиргоог нээх →</Link><br />Зассан хувилбарыг хадгалж, Өөрийн загвараас дахин оруулна.</p> : <>
             <p className="label mb-2 mt-4">Өнгө</p>
 
             <div className="flex flex-wrap gap-1.5">
@@ -1403,6 +1447,7 @@ export function RoomPlanner() {
                 </button>
               ))}
             </div>
+            </>}
           </div>
         ) : (
           <div className="border-b border-[#293C32]/10 p-4 text-xs text-[#737D6C]">
@@ -1429,11 +1474,11 @@ export function RoomPlanner() {
               <span className="planner-object-number">{index + 1}</span>
               <span>
                 <strong>
-                  {getProduct(piece.productId)?.name ??
+                  {piece.kitchen?.name ?? getProduct(piece.productId)?.name ??
                     getDbPieceModel(piece)?.name ??
                     "Тавилга"}
                 </strong>
-                <small>{formatPrice(getPiecePrice(piece))}</small>
+                <small>{piece.kitchen ? "Өөрийн гарнитур · бодит хэмжээ" : formatPrice(getPiecePrice(piece))}</small>
               </span>
               <Move size={14} />
             </button>
@@ -1877,6 +1922,10 @@ function MiniTopDown({ design }: { design: RoomDesign }) {
         />
       ))}
       {design.pieces.map((p) => {
+        if (p.kitchen) return <g key={p.instanceId}>{pieceRects(p).map((r, i) => <rect key={i}
+          transform={`translate(${r.cx * scale} ${r.cz * scale}) rotate(${r.rot * 180 / Math.PI})`}
+          x={-r.w * scale / 2} y={-r.d * scale / 2} width={r.w * scale} height={r.d * scale}
+          fill={p.kitchen!.design.cabinets[0]?.color ?? "#bb915e"} stroke="#293c32" strokeWidth={.6} />)}</g>;
         const product = getProduct(p.productId);
         const dbModel = getDbModel(p.modelId ?? p.productId);
 

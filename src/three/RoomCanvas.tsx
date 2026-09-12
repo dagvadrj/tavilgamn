@@ -22,6 +22,8 @@ import { getProduct } from "@/store/catalog";
 import { getDbModel } from "@/lib/modelRegistry";
 import { isPlacementValid, snapToWall } from "./collision";
 import type { Measurement } from "@/lib/furnitureMeasurements";
+import { KitchenAssemblyMesh } from "./KitchenAssemblyMesh";
+import { dimsFor } from "./collision";
 import { FurnitureMeasurements } from "./FurnitureMeasurements";
 
 interface RoomCanvasProps {
@@ -565,9 +567,9 @@ function DraggablePiece({
     };
   }, [dragging, onDragChange, onEditEnd]);
 
-  if (!product && !dbModel) return null;
+  if (!product && !dbModel && !piece.kitchen) return null;
 
-  const dims = dbModel
+  const dims = piece.kitchen ? dimsFor(piece) : dbModel
     ? { w: dbModel.dimensionsW, d: dbModel.dimensionsD, h: dbModel.dimensionsH }
     : {
         w: product!.dimensions.w,
@@ -641,7 +643,7 @@ function DraggablePiece({
         (event.target as Element).releasePointerCapture?.(event.pointerId);
       }}
     >
-      {dbModel ? (
+      {piece.kitchen ? <KitchenAssemblyMesh kitchen={piece.kitchen.design} centered /> : dbModel ? (
         <GLBFurnitureMesh
           modelId={dbModel.fileModelId ?? dbModel.id}
           basePath={`/api/models/files/${dbModel.fileModelId ?? dbModel.id}/`}

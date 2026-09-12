@@ -2,6 +2,8 @@ import type { PlacedFurniture, RoomShape } from "@/lib/types";
 import { getRoomGeometry } from "@/lib/roomGeometry";
 import { getProduct } from "@/store/catalog";
 import { getDbModel } from "@/lib/modelRegistry";
+import { kitchenEnvelope } from "@/lib/kitchenAssembly";
+import { fitCountertops, cabinetAxes } from "@/lib/kitchenPlacement";
 
 interface Rect {
   cx: number;
@@ -12,6 +14,7 @@ interface Rect {
 }
 
 export const dimsFor = (piece: PlacedFurniture) => {
+  if (piece.kitchen) { const { w, d, h } = kitchenEnvelope(piece.kitchen.design); return { w, d, h }; }
   if (piece.modelId) {
     const m = getDbModel(piece.modelId);
     if (m) return { w: m.dimensionsW, d: m.dimensionsD, h: m.dimensionsH };
@@ -25,6 +28,24 @@ export const rectFor = (piece: PlacedFurniture): Rect => {
   // Three.js rotation about +Y maps local +X toward -Z.
   return { cx: piece.x, cz: piece.z, w, d, rot: -piece.rotation };
 };
+
+/** Each cabinet/top retains its footprint. The empty interior of an L is usable. */
+export function pieceRects(piece: PlacedFurniture): Rect[] {
+  if (!piece.kitchen) return [rectFor(piece)];
+  const design = piece.kitchen.design, bounds = kitchenEnvelope(design);
+  const parts: Array<{ width: number; depth: number; position: { x: number; z: number; rotation: number } }> = design.cabinets.map(c => {
+    const extra = c.opening === "open" || c.handleStyle === "push-open" ? 0 : c.handleStyle === "knob" ? 31 : 22;
+    const { front } = cabinetAxes(c.position.rotation);
+    return { width: c.width, depth: c.depth + extra, position: { ...c.position, x: c.position.x + front.x * extra / 2, z: c.position.z + front.z * extra / 2 } };
+  });
+  parts.push(...fitCountertops(design));
+  const cos = Math.cos(piece.rotation), sin = Math.sin(piece.rotation);
+  return parts.map(part => {
+    const x = (part.position.x - bounds.centerX) / 1000, z = (part.position.z - bounds.centerZ) / 1000;
+    return { cx: piece.x + x * cos + z * sin, cz: piece.z - x * sin + z * cos,
+      w: part.width / 1000, d: part.depth / 1000, rot: -piece.rotation - part.position.rotation };
+  });
+}
 
 /** SAT (Separating Axis Theorem) for two rotated rectangles on XZ plane. */
 export function rectsOverlap(a: Rect, b: Rect, allowContact = false): boolean {
@@ -74,7 +95,10 @@ export function isInsideRoom(candidate: PlacedFurniture, room: RoomShape): boole
   let geometry;
   try { geometry = getRoomGeometry(room); } catch { return false; }
   if (!geometry.connected || !geometry.simple) return false;
-  const r = rectFor(candidate);
+  return pieceRects(candidate).every(r => rectInsideGeometry(r, geometry));
+}
+
+function rectInsideGeometry(r: Rect, geometry: ReturnType<typeof getRoomGeometry>): boolean {
   if (![r.w, r.d].every(value => Number.isFinite(value) && value > 0)) return false;
   const cos = Math.cos(r.rot);
   const sin = Math.sin(r.rot);
@@ -96,10 +120,10 @@ export function isInsideRoom(candidate: PlacedFurniture, room: RoomShape): boole
 export function isPlacementValid(candidate: PlacedFurniture, others: PlacedFurniture[], room: RoomShape): boolean {
   if (!isInsideRoom(candidate, room)) return false;
   if (room.height !== undefined && dimsFor(candidate).h > room.height + 1e-6) return false;
-  const r = rectFor(candidate);
+  const rectangles = pieceRects(candidate);
   for (const other of others) {
     if (other.instanceId === candidate.instanceId) continue;
-    if (rectsOverlap(r, rectFor(other))) return false;
+    if (rectangles.some(r => pieceRects(other).some(o => rectsOverlap(r, o, true)))) return false;
   }
   return true;
 }
@@ -110,9 +134,18 @@ export function findFreePlacement(piece: PlacedFurniture, others: PlacedFurnitur
   let bounds;
   try { bounds = getRoomGeometry(room).bounds; } catch { return null; }
   const positions: { x: number; z: number }[] = [];
-  for (let x = bounds.minX; x <= bounds.maxX; x += 0.25) {
-    for (let z = bounds.minZ; z <= bounds.maxZ; z += 0.25) positions.push({ x, z });
+  const { w, d } = dimsFor(piece), cos = Math.abs(Math.cos(piece.rotation)), sin = Math.abs(Math.sin(piece.rotation));
+  const hx = (w * cos + d * sin) / 2, hz = (w * sin + d * cos) / 2;
+  // Include exact wall-aligned centres: a 0.25 m search grid misses snug fits.
+  const xs = new Set([piece.x, (bounds.minX + bounds.maxX) / 2, bounds.minX + hx, bounds.maxX - hx]);
+  const zs = new Set([piece.z, (bounds.minZ + bounds.maxZ) / 2, bounds.minZ + hz, bounds.maxZ - hz]);
+  for (const wall of getRoomGeometry(room).segments) {
+    if (wall.nx) xs.add(wall.a.x + wall.nx * hx);
+    if (wall.nz) zs.add(wall.a.z + wall.nz * hz);
   }
+  for (let x = bounds.minX; x <= bounds.maxX; x += .25) xs.add(x);
+  for (let z = bounds.minZ; z <= bounds.maxZ; z += .25) zs.add(z);
+  for (const x of xs) for (const z of zs) positions.push({ x, z });
   positions.sort((a, b) => (a.x - piece.x) ** 2 + (a.z - piece.z) ** 2 - ((b.x - piece.x) ** 2 + (b.z - piece.z) ** 2));
   for (const position of positions) {
     const candidate = { ...piece, ...position };

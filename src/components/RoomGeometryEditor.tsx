@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
-import type { RoomShape, RoomWall } from "@/lib/types";
-import { getRoomGeometry, ROOM_WALLS, roomPath, validateRoomShape } from "@/lib/roomGeometry";
+import type { RoomShape, RoomWall, PlacedFurniture } from "@/lib/types";
+import { RoomPlanPreview } from "./RoomPlanPreview";
+import { getRoomGeometry, ROOM_WALLS, validateRoomShape } from "@/lib/roomGeometry";
 
 function Millimetres({ label, value, onChange, min = 0, max = 20000 }: {
   label: string; value: number; onChange: (value: number) => void; min?: number; max?: number;
@@ -16,7 +17,7 @@ function Millimetres({ label, value, onChange, min = 0, max = 20000 }: {
 }
 
 export function RoomGeometryEditor({ room, onApply, onDone }: {
-  room: RoomShape; onApply: (shape: RoomShape) => string | null; onDone: () => void;
+  room: RoomShape & { pieces?: PlacedFurniture[] }; onApply: (shape: RoomShape) => string | null; onDone: () => void;
 }) {
   const [draft, setDraft] = useState<RoomShape>(() => ({ width: room.width, depth: room.depth, height: room.height ?? 2.7,
     wallFeatures: (room.wallFeatures ?? []).map(feature => ({ ...feature })), columns: (room.columns ?? []).map(column => ({ ...column })),
@@ -25,9 +26,6 @@ export function RoomGeometryEditor({ room, onApply, onDone }: {
   const problem = validateRoomShape(draft);
   const preview = room;
   const geometry = getRoomGeometry(preview);
-  const { bounds } = geometry;
-  const pad = Math.max(bounds.maxX - bounds.minX, bounds.maxZ - bounds.minZ) * 0.13;
-  const font = Math.max(bounds.maxX - bounds.minX, bounds.maxZ - bounds.minZ) / 15;
   const update = (patch: Partial<RoomShape>, keepOnError = false) => {
     // Apply this event's next value, never the state from the previous render.
     const next = { ...draft, ...patch };
@@ -46,16 +44,7 @@ export function RoomGeometryEditor({ room, onApply, onDone }: {
       <Millimetres label="BC · урт" value={draft.depth} min={1000} onChange={depth => update({ depth })} />
     </div>
     <Millimetres label="Ханын өндөр" value={draft.height ?? 2.7} min={2000} max={5000} onChange={height => update({ height })} />
-    <svg className="room-shape-preview" role="img" aria-label="Өрөөний хэлбэр дээрээс. A зүүн ард, B баруун ард, C баруун урд, D зүүн урд."
-      viewBox={`${bounds.minX - pad} ${bounds.minZ - pad} ${bounds.maxX - bounds.minX + pad * 2} ${bounds.maxZ - bounds.minZ + pad * 2}`}>
-      <path d={roomPath(preview)} fillRule="evenodd" />
-      {[
-        { label: "A", x: -preview.width / 2, z: -preview.depth / 2 - pad * 0.4 },
-        { label: "B", x: preview.width / 2, z: -preview.depth / 2 - pad * 0.4 },
-        { label: "C", x: preview.width / 2, z: preview.depth / 2 + pad * 0.6 },
-        { label: "D", x: -preview.width / 2, z: preview.depth / 2 + pad * 0.6 },
-      ].map(point => <text key={point.label} x={point.x} y={point.z} textAnchor="middle" fontSize={font}>{point.label}</text>)}
-    </svg>
+    <RoomPlanPreview room={preview} pieces={room.pieces} />
     <p className="room-shape-area">Ашиглах талбай: <strong>{geometry.area.toFixed(2)} м²</strong>{(error || problem) ? " · хэрэгжсэн хэлбэр" : ""}</p>
     <details className="room-wall-measurements"><summary>Ханын бүх хэсгийн хэмжээс · {geometry.segments.filter(segment => !segment.hole).length}</summary>
       <ol>{geometry.segments.filter(segment => !segment.hole).map((segment, index) => <li key={index}>

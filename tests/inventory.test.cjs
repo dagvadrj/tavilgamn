@@ -58,6 +58,7 @@ test("catalog outage leaves account and order controls available", () => {
   const React=require("react"),{renderToStaticMarkup}=require("react-dom/server");
   const state={user:{id:"fixture",name:"Fixture",email:"fixture@example.com"},role:"customer",initialized:true,initialize:async()=>{},signOut:async()=>{}};
   const Page=loadSource("src/app/account/page.tsx",{
+    "@/components/SavedKitchenList":{SavedKitchenList:()=>null},
     "next/navigation":{useRouter:()=>({replace(){},refresh(){}})},
     "@/store/auth":{useAuth:selector=>selector(state)},
     "@/lib/authFetch":{authFetch:async()=>{throw Error("Unused");}},

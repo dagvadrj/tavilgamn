@@ -3,7 +3,7 @@ import { ROOM_TYPES } from "./roomGeometry";
 
 export function cloneRoom(room: DesignRoom): DesignRoom {
   return { ...room, height: room.height ?? 2.7,
-    pieces: room.pieces.map(piece => ({ ...piece })),
+    pieces: room.pieces.map(piece => ({ ...piece, ...(piece.kitchen ? { kitchen: JSON.parse(JSON.stringify(piece.kitchen)) } : {}) })),
     wallFeatures: (room.wallFeatures ?? []).map(feature => ({ ...feature })),
     columns: (room.columns ?? []).map(column => ({ ...column })),
   };

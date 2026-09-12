@@ -104,6 +104,19 @@
 .planner-object-list small { display: block; color: #778077; font-size: 12px; margin-top: 3px; }
 .planner-object-number { display: grid; place-items: center; background: white; border-radius: 7px; width: 26px; height: 30px; flex-shrink: 0; font-size: 12px; }
 .planner-empty { padding: 18px 8px; color: #778077; font-size: 13px; line-height: 1.7; }
+.room-measured-plan { margin: 16px 0; border: 1px solid #dce1d5; border-radius: 14px; background: #f8f9f5; overflow: hidden; }
+.room-measured-plan figcaption { padding: 12px 14px 0; font-size: 13px; font-weight: 600; }
+.room-measured-plan svg { display: block; width: 100%; height: clamp(280px, 48vh, 460px); color: #293c32; }
+.room-measured-plan svg text { fill: #293c32; font-family: inherit; paint-order: stroke; stroke: #f8f9f5; stroke-width: 3px; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.room-plan-floor { fill: #e6ecdf; stroke: #4b6853; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.room-plan-column { fill: #ad9271; stroke: #725e42; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.room-plan-furniture { fill: #a9bdac; fill-opacity: .65; stroke: #52705b; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.room-plan-dimension line { stroke: #7c8d7a; stroke-width: .8; vector-effect: non-scaling-stroke; }
+.room-plan-corner { font-weight: 700; }
+.room-measured-plan > p, .room-measured-plan > ul { padding: 0 14px 12px; font-size: 11px; color: #69756c; line-height: 1.6; }
+.room-measured-plan > ul { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.planner-kitchen-library { border-bottom: 1px solid #dce1db; margin-bottom: 16px; padding-bottom: 16px; }
+.planner-kitchen-library > h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
 .planner-advanced { padding: 16px; border-bottom: 1px solid #dce1db; }
 .planner-advanced summary { cursor: pointer; font-size: 13px; font-weight: 600; }
 .planner-advanced-fields { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 16px; }

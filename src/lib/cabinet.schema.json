@@ -15,6 +15,9 @@
     "handleStyle": { "enum": ["bar", "knob", "push-open"] },
     "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
     "material": { "enum": ["matte", "wood", "gloss"] },
+    "finish": { "enum": ["matte", "gloss", "oak", "walnut", "marble", "concrete"] },
+    "frontStyle": { "enum": ["flat", "shaker", "glass"] },
+    "opening": { "enum": ["doors", "drawers", "open", "sink", "hob"] },
     "autoElevation": { "type": "boolean" },
     "fitToCeiling": { "type": "boolean" },
     "position": {
@@ -23,6 +26,9 @@
     }
   },
   "allOf": [
+    { "if": { "required": ["opening"], "properties": { "opening": { "const": "drawers" } } }, "then": { "properties": { "type": { "enum": ["base", "tall"] }, "drawerCount": { "minimum": 1 } } } },
+    { "if": { "required": ["opening"], "properties": { "opening": { "enum": ["sink", "open"] } } }, "then": { "properties": { "drawerCount": { "const": 0 } } } },
+    { "if": { "required": ["opening"], "properties": { "opening": { "enum": ["sink", "hob"] } } }, "then": { "properties": { "type": { "const": "base" }, "width": { "enum": [600, 800] } } } },
     { "if": { "properties": { "type": { "const": "base" } } }, "then": { "properties": { "height": { "minimum": 800, "maximum": 900 }, "depth": { "minimum": 550, "maximum": 650 } } } },
     { "if": { "properties": { "type": { "const": "wall" } } }, "then": { "properties": { "height": { "minimum": 400, "maximum": 1200 }, "depth": { "minimum": 250, "maximum": 450 }, "drawerCount": { "const": 0 } } }, "else": { "properties": { "position": { "properties": { "y": { "const": 0 } } } } } },
     { "if": { "properties": { "type": { "const": "tall" } } }, "then": { "properties": { "height": { "minimum": 1800, "maximum": 3500 }, "depth": { "minimum": 550, "maximum": 650 } } } },

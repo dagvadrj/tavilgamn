@@ -90,3 +90,10 @@ supabase/migrations/*
 /scripts/models/__pycache__/
 !/tests/kitchen-modular.test.cjs
 !/docs/kitchen-modular-mvp.md
+!supabase/migrations/20260912125410_kitchen_garnitures.sql
+!/tests/kitchen-integration.test.cjs
+!/tests/kitchen-library.test.cjs
+!/tests/kitchen-db.test.cjs
+!/tests/account-usability.test.cjs
+!/docs/kitchen-integration.md
+/supabase/.temp/
