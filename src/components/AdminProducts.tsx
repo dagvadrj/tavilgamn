@@ -1,4 +1,5 @@
 "use client";
+import { ModelLodInputs, type LodUploadFiles } from "./ModelLodInputs";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -116,6 +117,7 @@ function ProductEditor({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [glbFile, setGlbFile] = useState<File | null>(null);
+  const [lodFiles, setLodFiles] = useState<LodUploadFiles>({ medium: null, low: null });
   const [glbMessage, setGlbMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -349,6 +351,7 @@ function ProductEditor({
             <p className="text-xs text-ink/60">
               Одоогийн файл: {draft.model?.file ?? "GLB нэмээгүй"}
             </p>
+            <ModelLodInputs value={lodFiles} onChange={setLodFiles} />
 
             <button
               type="button"
@@ -372,6 +375,8 @@ function ProductEditor({
 
                   const form = new FormData();
                   form.set("glb", glbFile);
+                  if (lodFiles.medium) form.set("glbMedium", lodFiles.medium);
+                  if (lodFiles.low) form.set("glbLow", lodFiles.low);
                   form.set("expectedFile", draft.model?.file ?? "");
 
                   const response = await authFetch(
@@ -399,6 +404,7 @@ function ProductEditor({
                   field("model", data.model);
 
                   setGlbFile(null);
+                  setLodFiles({ medium: null, low: null });
                   await useCatalogStore.getState().refresh(true);
                   setGlbMessage("GLB файл солигдлоо.");
                 } catch (error) {

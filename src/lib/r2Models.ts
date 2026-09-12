@@ -9,6 +9,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { removeModelFiles } from "@/lib/cloudinaryModels";
+import { modelAssetPaths } from "@/lib/modelAssets";
 
 export class R2ModelError extends Error {}
 
@@ -46,7 +47,7 @@ function config() {
 
 export function r2ModelKey(value: string): string | null {
   const match =
-  /^r2:\/\/([a-z0-9-]+)\/(models\/[0-9a-f-]{36}\/model(?:-[0-9a-f-]{36})?\.glb)$/i.exec(
+  /^r2:\/\/([a-z0-9-]+)\/(models\/[0-9a-f-]{36}\/model(?:-[0-9a-f-]{36}(?:-[012])?)?\.glb)$/i.exec(
     value,
   );
 
@@ -67,7 +68,7 @@ export async function uploadR2Glb(
   }
 
   const { bucket, client } = config();
-  if (!/^model(?:-[0-9a-f-]{36})?\.glb$/i.test(fileName)) {
+  if (!/^model(?:-[0-9a-f-]{36}(?:-[012])?)?\.glb$/i.test(fileName)) {
   throw new R2ModelError("GLB файлын нэр буруу байна.");
 }
 
@@ -105,6 +106,13 @@ export async function r2DownloadUrl(value: string) {
     throw new R2ModelError("R2 файлын зам буруу байна.");
   }
 
+  const publicBase = process.env.R2_PUBLIC_BASE_URL;
+  if (publicBase) {
+    const url = new URL(publicBase);
+    if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) throw new R2ModelError("R2 public URL буруу байна.");
+    return `${url.href.replace(/\/$/, "")}/${key.split("/").map(encodeURIComponent).join("/")}`;
+  }
+
   const { bucket, client } = config();
 
   try {
@@ -130,7 +138,7 @@ export async function removeStoredModelFiles(
   const failures: unknown[] = [];
   const other: string[] = [];
 
-  for (const path of paths) {
+  for (const path of new Set(paths.flatMap(modelAssetPaths))) {
     if (!path.startsWith("r2:")) {
       other.push(path);
       continue;

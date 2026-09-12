@@ -11,7 +11,7 @@ interface Rect {
   rot: number;
 }
 
-const dimsFor = (piece: PlacedFurniture) => {
+export const dimsFor = (piece: PlacedFurniture) => {
   if (piece.modelId) {
     const m = getDbModel(piece.modelId);
     if (m) return { w: m.dimensionsW, d: m.dimensionsD, h: m.dimensionsH };

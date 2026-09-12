@@ -20,6 +20,15 @@
 .planner-room-caption { position: absolute; z-index: 10; top: 114px; left: 20px; display: flex; flex-direction: column; gap: 2px; pointer-events: none; }
 .planner-room-caption strong { font-size: 17px; font-weight: 650; }
 .planner-room-caption span { font-size: 12px; color: #626d64; }
+.planner-measure-readout { position: absolute; z-index: 10; top: 165px; left: 16px; display: flex; flex-direction: column; gap: 4px; max-width: min(310px, calc(100% - 32px)); padding: 9px 12px; border: 1px solid #dce1db; border-radius: 10px; background: #fffffff0; font-size: 11px; line-height: 1.6; pointer-events: none; }
+.planner-measure-readout strong { display: flex; align-items: center; gap: 6px; color: #2267a0; }
+.planner-measure-label { display: block; white-space: nowrap; padding: 4px 7px; border: 1px solid #fff8; border-radius: 5px; background: #293c32; color: #fff; font: 11px/1.5 system-ui, sans-serif; box-shadow: 0 2px 8px #0002; pointer-events: none; }
+.planner-measure-size { background: #2267a0; }
+.planner-measure-details { margin-top: 16px; padding: 12px; border: 1px solid #cbd9e5; border-radius: 10px; background: #f2f7fb; }
+.planner-measure-details h3 { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.planner-measure-details dl > div { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 12px; }
+.planner-measure-details dd { font-variant-numeric: tabular-nums; font-weight: 600; }
+.planner-measure-details p { margin-top: 8px; font-size: 11px; line-height: 1.6; color: #677369; }
 .planner-selection-toolbar { position: absolute; z-index: 20; left: 50%; bottom: 76px; transform: translateX(-50%); display: flex; align-items: center; gap: 5px; max-width: calc(100% - 24px); }
 .planner-selection-toolbar:has(button) { background: white; border: 1px solid #dce0db; padding: 5px; border-radius: 14px; box-shadow: 0 8px 30px #263a301a; }
 .planner-selection-toolbar button { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 9px; flex-shrink: 0; border-radius: 8px; font-size: 12px; min-height: 36px; }
@@ -51,6 +60,20 @@
 .room-shape-preview text { fill: #293c32; font-weight: 600; }
 .room-geometry-editor h3 { font-size: 14px; font-weight: 600; margin: 22px 0 8px; }
 .room-geometry-editor .planner-number span { font-size: 13px; }
+.room-geometry-trigger { display: flex; align-items: center; gap: 10px; width: 100%; padding: 14px 10px; border: 1px solid #cbd6c6; border-radius: 12px; background: #f2f5ee; text-align: left; }
+.room-geometry-trigger:hover { background: #e8eee2; }
+.room-geometry-trigger > svg { flex-shrink: 0; }
+.room-geometry-trigger > span { flex: 1; min-width: 0; }
+.room-geometry-trigger strong { display: block; font-size: 13px; line-height: 1.6; }
+.room-geometry-trigger small { display: block; margin-top: 5px; font-size: 11px; color: #677369; }
+.room-geometry-modal { position: fixed; inset: 0; margin: auto; width: min(620px, calc(100% - 24px)); max-width: none; max-height: calc(100dvh - 32px); padding: 0; border: 1px solid #d7dfd1; border-radius: 18px; background: #fafbf8; color: #293c32; box-shadow: 0 24px 80px #14261d40; }
+.room-geometry-modal[open] { display: flex; flex-direction: column; }
+.room-geometry-modal::backdrop { background: #18271f55; }
+.room-geometry-modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; padding: 16px 20px; border-bottom: 1px solid #dce1db; }
+.room-geometry-modal-header h2 { font-size: 17px; font-weight: 650; line-height: 1.5; }
+.room-geometry-modal-header button { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; border-radius: 10px; }
+.room-geometry-modal-header button:hover { background: #e8eee2; }
+.room-geometry-modal-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 20px 20px; }
 .room-shape-area { font-size: 13px; padding: 6px 0; }
 .room-shape-help { font-size: 12px; color: #677369; line-height: 1.75; margin: 10px 0; }
 .room-shape-feature { min-width: 0; border: 1px solid #d7dfd1; border-radius: 10px; padding: 12px; margin-top: 14px; background: #fafbf8; }
@@ -91,6 +114,7 @@
   .planner-drawer-closed { visibility: hidden; }
   .planner-view-toolbar { top: 58px; left: 12px; right: 12px; }
   .planner-room-caption { top: 162px; left: 16px; }
+  .planner-measure-readout { top: 209px; }
   .planner-mobile-toolbar > p { max-width: 35%; font-size: 12px; }
   .planner-drawer input { font-size: 16px; }
   .planner-start-hint { top: 51%; }

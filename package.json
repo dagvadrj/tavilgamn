@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "models:decoders": "node scripts/models/sync-decoders.mjs",
+    "models:pipeline": "node scripts/models/pipeline.mjs",
+    "models:compress": "node scripts/models/optimize-glb.mjs",
+    "models:fetch": "node --env-file=.env.local scripts/models/fetch-r2.mjs",
+    "predev": "npm run models:decoders",
+    "prebuild": "npm run models:decoders",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -31,6 +37,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
+    "@gltf-transform/cli": "4.5.0",
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

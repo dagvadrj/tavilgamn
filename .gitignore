@@ -77,3 +77,14 @@ supabase/migrations/*
 !/docs/inventory-setup.md
 /patches/
 /scripts/
+!/scripts/
+/scripts/*
+!/scripts/models/
+/model-work/
+/.tools/
+/public/decoders/
+!/docs/model-pipeline.md
+!/tests/model-pipeline.test.cjs
+!/tests/helpers/
+!/tests/helpers/load-source.cjs
+/scripts/models/__pycache__/

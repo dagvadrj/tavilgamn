@@ -22,7 +22,18 @@ import {
   X,
   Sparkles,
   Upload,
-  Undo2, Redo2, Ruler, Search, Download, Scan, Check, Move, ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
+  Undo2,
+  Redo2,
+  Ruler,
+  Search,
+  Download,
+  Scan,
+  Check,
+  Move,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react";
 import { CATEGORIES, priceFor } from "@/lib/products";
 import { getProduct, useCatalog } from "@/store/catalog";
@@ -40,10 +51,23 @@ import type {
   RoomShape,
   RoomType,
 } from "@/lib/types";
-import { getRoomGeometry, ROOM_TYPES, roomPath, validateRoomShape } from "@/lib/roomGeometry";
-import { RoomGeometryEditor } from "./RoomGeometryEditor";
+import {
+  getRoomGeometry,
+  ROOM_TYPES,
+  roomPath,
+  validateRoomShape,
+} from "@/lib/roomGeometry";
+import { RoomGeometryModal } from "./RoomGeometryModal";
 import { formatPrice, cn } from "@/lib/format";
-import { isPlacementValid, findFreePlacement } from "@/three/collision";
+import {
+  isPlacementValid,
+  findFreePlacement,
+  dimsFor,
+} from "@/three/collision";
+import {
+  getFurnitureMeasurements,
+  formatMeasurement,
+} from "@/lib/furnitureMeasurements";
 import "./room-planner.css";
 import { type DbModelInfo, getDbModel } from "@/lib/modelRegistry";
 
@@ -106,7 +130,12 @@ export function RoomPlanner() {
     duplicateDesign,
     updatePieces,
     updateRoom,
-    past, future, undo, redo, beginEdit, endEdit,
+    past,
+    future,
+    undo,
+    redo,
+    beginEdit,
+    endEdit,
   } = useDesigns();
   const catalog = useCatalog();
   const [selected, setSelected] = useState<string | null>(null);
@@ -115,6 +144,7 @@ export function RoomPlanner() {
   const [locked, setLocked] = useState(false);
   const [paletteCat, setPaletteCat] = useState<Category>("sofa");
   const [showCompare, setShowCompare] = useState(false);
+  const [showRoomGeometry, setShowRoomGeometry] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [saveName, setSaveName] = useState("");
   const [leftOpen, setLeftOpen] = useState(false);
@@ -137,7 +167,7 @@ export function RoomPlanner() {
   const [localScale, setLocalScale] = useState(1);
   const [query, setQuery] = useState("");
   const [gridEnabled, setGridEnabled] = useState(false);
-  const [showDimensions, setShowDimensions] = useState(true);
+  const [showDimensions, setShowDimensions] = useState(false);
   const [resetKey, setResetKey] = useState(0);
   const [notice, setNotice] = useState("");
   const [expanded, setExpanded] = useState(false);
@@ -152,14 +182,18 @@ export function RoomPlanner() {
     return () => window.clearTimeout(timer);
   }, [notice]);
   useEffect(() => {
-    if (selected && !current?.pieces.some(piece => piece.instanceId === selected)) setSelected(null);
+    if (
+      selected &&
+      !current?.pieces.some((piece) => piece.instanceId === selected)
+    )
+      setSelected(null);
   }, [current, selected]);
   useEffect(() => {
     setSelected(null);
     setActivePreset(null);
     setLocalFile(null);
     setLocalUrl(null);
-    setResetKey(key => key + 1);
+    setResetKey((key) => key + 1);
     const type = current?.roomType;
     if (type === "bedroom") setPaletteCat("bed");
     else if (type === "kitchen") setPaletteCat("dining-table");
@@ -169,11 +203,31 @@ export function RoomPlanner() {
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (target.closest("input, textarea, select, [contenteditable=true]")) return;
+      if (
+        target.closest(
+          "dialog, input, textarea, select, [contenteditable=true]",
+        )
+      )
+        return;
       const key = event.key.toLowerCase();
       const command = event.metaKey || event.ctrlKey;
-      const action = command ? (key === "z" ? (event.shiftKey ? "redo" : "undo") : key === "y" ? "redo" : key === "d" ? "duplicate" : key === "s" ? "save" : "") : key;
-      if (shortcuts.current[action]) { event.preventDefault(); shortcuts.current[action](); }
+      const action = command
+        ? key === "z"
+          ? event.shiftKey
+            ? "redo"
+            : "undo"
+          : key === "y"
+            ? "redo"
+            : key === "d"
+              ? "duplicate"
+              : key === "s"
+                ? "save"
+                : ""
+        : key;
+      if (shortcuts.current[action]) {
+        event.preventDefault();
+        shortcuts.current[action]();
+      }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -212,15 +266,28 @@ export function RoomPlanner() {
   const paletteItems = useMemo(
     () =>
       catalog.products.filter(
-        (product) => hasAvailableStock(product) && !product.model && product.category === paletteCat && product.name.toLowerCase().includes(query.trim().toLowerCase()),
+        (product) =>
+          hasAvailableStock(product) &&
+          !product.model &&
+          product.category === paletteCat &&
+          product.name.toLowerCase().includes(query.trim().toLowerCase()),
       ),
     [catalog.products, paletteCat, query],
   );
   const dbPaletteItems = useMemo(
-    () => dbModels.filter((m) => hasAvailableStock(m) && m.category === paletteCat && m.name.toLowerCase().includes(query.trim().toLowerCase())),
+    () =>
+      dbModels.filter(
+        (m) =>
+          hasAvailableStock(m) &&
+          m.category === paletteCat &&
+          m.name.toLowerCase().includes(query.trim().toLowerCase()),
+      ),
     [dbModels, paletteCat, query],
   );
-  if (!current) { shortcuts.current = {}; return <PlannerSkeleton />; }
+  if (!current) {
+    shortcuts.current = {};
+    return <PlannerSkeleton />;
+  }
 
   const addPiece = (productId: string) => {
     const product = getProduct(productId);
@@ -236,7 +303,12 @@ export function RoomPlanner() {
     };
     const room = current;
     const placed = findFreePlacement(piece, current.pieces, room);
-    if (!placed) { setNotice("Тавилга байрлуулах сул зай хүрэлцэхгүй байна. Өрөөг томруулах эсвэл байрлалаа өөрчилнө үү."); return; }
+    if (!placed) {
+      setNotice(
+        "Тавилга байрлуулах сул зай хүрэлцэхгүй байна. Өрөөг томруулах эсвэл байрлалаа өөрчилнө үү.",
+      );
+      return;
+    }
     updatePieces([...current.pieces, placed]);
     setSelected(placed.instanceId);
     setLeftOpen(false);
@@ -257,7 +329,10 @@ export function RoomPlanner() {
     };
     const room = current;
     const placed = findFreePlacement(piece, current.pieces, room);
-    if (!placed) { setNotice("Энэ загварыг байрлуулах сул зай хүрэлцэхгүй байна."); return; }
+    if (!placed) {
+      setNotice("Энэ загварыг байрлуулах сул зай хүрэлцэхгүй байна.");
+      return;
+    }
     updatePieces([...current.pieces, placed]);
     setSelected(placed.instanceId);
     setLeftOpen(false);
@@ -278,7 +353,10 @@ export function RoomPlanner() {
       rotation: (piece.rotation + Math.PI / 2) % (Math.PI * 2),
     };
     const room = current;
-    if (!isPlacementValid(rotated, current.pieces, room)) { setNotice("Эргүүлэхэд хана эсвэл бусад тавилгатай давхцаж байна."); return; }
+    if (!isPlacementValid(rotated, current.pieces, room)) {
+      setNotice("Эргүүлэхэд хана эсвэл бусад тавилгатай давхцаж байна.");
+      return;
+    }
 
     updatePieces(
       current.pieces.map((p) => (p.instanceId === selected ? rotated : p)),
@@ -299,11 +377,19 @@ export function RoomPlanner() {
       depth: dims.d,
     };
     const shapeError = validateRoomShape(resizedRoom);
-    if (shapeError) { setNotice(shapeError); return; }
+    if (shapeError) {
+      setNotice(shapeError);
+      return;
+    }
     const allPiecesValid = current.pieces.every((p) =>
       isPlacementValid(p, current.pieces, resizedRoom),
     );
-    if (!allPiecesValid) { setNotice("Энэ хэмжээнд тавилга багтахгүй байна. Эхлээд байрлалыг нь өөрчилнө үү."); return; }
+    if (!allPiecesValid) {
+      setNotice(
+        "Энэ хэмжээнд тавилга багтахгүй байна. Эхлээд байрлалыг нь өөрчилнө үү.",
+      );
+      return;
+    }
     updateRoom({ size, width: dims.w, depth: dims.d });
   };
 
@@ -358,15 +444,40 @@ export function RoomPlanner() {
     if (!current.pieces.length) return;
     let added = 0;
     let skipped = 0;
-    current.pieces.forEach(piece => {
+    current.pieces.forEach((piece) => {
       const product = getProduct(piece.productId);
-      if (!product?.inStock || !product.colors.some(c => c.id === piece.color) || !product.materials.some(m => m.id === piece.material)) { skipped++; return; }
-      const count = addToCart({ productId: product.id, name: product.name, image: product.image,
-        color: piece.color, material: piece.material, unitPrice: getPiecePrice(piece), qty: 1, stockQuantity: product.stockQuantity });
+      if (
+        !product?.inStock ||
+        !product.colors.some((c) => c.id === piece.color) ||
+        !product.materials.some((m) => m.id === piece.material)
+      ) {
+        skipped++;
+        return;
+      }
+      const count = addToCart({
+        productId: product.id,
+        name: product.name,
+        image: product.image,
+        color: piece.color,
+        material: piece.material,
+        unitPrice: getPiecePrice(piece),
+        qty: 1,
+        stockQuantity: product.stockQuantity,
+      });
       added += count;
       if (!count) skipped++;
     });
-    setNotice(added ? added + " тавилгыг сагсанд нэмлээ." + (skipped ? " " + skipped + " тавилга нөөц хүрэлцэхгүй эсвэл сонголт өөрчлөгдсөн тул нэмэгдсэнгүй." : "") : "Тавилга нэмэгдсэнгүй. Нөөц болон сагсны тоо ширхэгээ шалгана уу.");
+    setNotice(
+      added
+        ? added +
+            " тавилгыг сагсанд нэмлээ." +
+            (skipped
+              ? " " +
+                skipped +
+                " тавилга нөөц хүрэлцэхгүй эсвэл сонголт өөрчлөгдсөн тул нэмэгдсэнгүй."
+              : "")
+        : "Тавилга нэмэгдсэнгүй. Нөөц болон сагсны тоо ширхэгээ шалгана уу.",
+    );
   };
 
   const selectedPiece = selected
@@ -384,53 +495,129 @@ export function RoomPlanner() {
     : null;
 
   const selectedDetails = selectedProduct ?? selectedDbModel;
+  const measurements =
+    showDimensions && selectedPiece && selectedDetails
+      ? getFurnitureMeasurements(
+          current,
+          selectedPiece,
+          dimsFor(selectedPiece),
+        ).filter((item) => !(activePreset || localUrl) || item.kind === "size")
+      : [];
 
-  const transformSelected = (patch: Partial<Pick<PlacedFurniture, "x" | "z" | "rotation">>) => {
+  const transformSelected = (
+    patch: Partial<Pick<PlacedFurniture, "x" | "z" | "rotation">>,
+  ) => {
     if (!selectedPiece) return;
     const candidate = { ...selectedPiece, ...patch };
-    if (!isPlacementValid(candidate, current.pieces, current)) { setNotice("Энэ байрлалд хана эсвэл өөр тавилга байна."); return; }
-    updatePieces(current.pieces.map(piece => piece.instanceId === candidate.instanceId ? candidate : piece));
+    if (!isPlacementValid(candidate, current.pieces, current)) {
+      setNotice("Энэ байрлалд хана эсвэл өөр тавилга байна.");
+      return;
+    }
+    updatePieces(
+      current.pieces.map((piece) =>
+        piece.instanceId === candidate.instanceId ? candidate : piece,
+      ),
+    );
   };
   const duplicateSelected = () => {
     if (!selectedPiece) return;
-    const copy = findFreePlacement({ ...selectedPiece, instanceId: `p_${crypto.randomUUID()}` }, current.pieces, current);
-    if (!copy) { setNotice("Хуулбар байрлуулах зай хүрэлцэхгүй байна."); return; }
+    const copy = findFreePlacement(
+      { ...selectedPiece, instanceId: `p_${crypto.randomUUID()}` },
+      current.pieces,
+      current,
+    );
+    if (!copy) {
+      setNotice("Хуулбар байрлуулах зай хүрэлцэхгүй байна.");
+      return;
+    }
     updatePieces([...current.pieces, copy]);
     setSelected(copy.instanceId);
   };
-  const save = () => { endEdit(); saveCurrent(saveName.trim() || current.name.trim() || "Миний өрөө"); setSaveName(""); setNotice("Загварыг энэ төхөөрөмж дээр хадгаллаа."); };
-  const nudge = (x: number, z: number) => {
-    if (selectedPiece) transformSelected({ x: Math.round((selectedPiece.x + x) * 100) / 100, z: Math.round((selectedPiece.z + z) * 100) / 100 });
+  const save = () => {
+    endEdit();
+    saveCurrent(saveName.trim() || current.name.trim() || "Миний өрөө");
+    setSaveName("");
+    setNotice("Загварыг энэ төхөөрөмж дээр хадгаллаа.");
   };
-  shortcuts.current = { undo, redo, duplicate: duplicateSelected, save, r: rotateSelected, delete: removeSelected, backspace: removeSelected,
-    arrowup: () => nudge(0, -0.1), arrowdown: () => nudge(0, 0.1), arrowleft: () => nudge(-0.1, 0), arrowright: () => nudge(0.1, 0),
-    escape: () => { setSelected(null); setLeftOpen(false); setRightOpen(false); setExpanded(false); setShowCompare(false); },
+  const nudge = (x: number, z: number) => {
+    if (selectedPiece)
+      transformSelected({
+        x: Math.round((selectedPiece.x + x) * 100) / 100,
+        z: Math.round((selectedPiece.z + z) * 100) / 100,
+      });
+  };
+  shortcuts.current = {
+    undo,
+    redo,
+    duplicate: duplicateSelected,
+    save,
+    r: rotateSelected,
+    delete: removeSelected,
+    backspace: removeSelected,
+    arrowup: () => nudge(0, -0.1),
+    arrowdown: () => nudge(0, 0.1),
+    arrowleft: () => nudge(-0.1, 0),
+    arrowright: () => nudge(0.1, 0),
+    escape: () => {
+      setSelected(null);
+      setLeftOpen(false);
+      setRightOpen(false);
+      setExpanded(false);
+      setShowCompare(false);
+    },
   };
   const exportImage = () => {
     const canvas = workspaceRef.current?.querySelector("canvas");
-    if (!canvas) { setNotice("3D дүрслэл ачаалсны дараа дахин оролдоно уу."); return; }
+    if (!canvas) {
+      setNotice("3D дүрслэл ачаалсны дараа дахин оролдоно уу.");
+      return;
+    }
     try {
       const link = document.createElement("a");
       link.download = `${current.name.replace(/[^\p{L}\p{N} _-]/gu, "").slice(0, 80) || "room"}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
       setNotice("Өрөөний зургийг PNG хэлбэрээр татлаа.");
-    } catch { setNotice("Зураг татаж чадсангүй. Загвар бүрэн ачаалсны дараа дахин оролдоно уу."); }
+    } catch {
+      setNotice(
+        "Зураг татаж чадсангүй. Загвар бүрэн ачаалсны дараа дахин оролдоно уу.",
+      );
+    }
   };
   const geometry = getRoomGeometry(current);
   const applyRoomShape = (shape: RoomShape) => {
     const issue = validateRoomShape(shape);
     if (issue) return issue;
-    if (!current.pieces.every(piece => isPlacementValid(piece, current.pieces, shape))) return "Хана, товойлт эсвэл багана тавилгатай давхцаж байна. Эхлээд тавилгын байрлалыг өөрчилнө үү.";
+    if (
+      !current.pieces.every((piece) =>
+        isPlacementValid(piece, current.pieces, shape),
+      )
+    )
+      return "Хана, товойлт эсвэл багана тавилгатай давхцаж байна. Эхлээд тавилгын байрлалыг өөрчилнө үү.";
     updateRoom(shape);
-    setActivePreset(null); setLocalFile(null); setLocalUrl(null);
-    setNotice("Энэ өрөөний хэмжээ, ханын хэлбэрийг шинэчиллээ.");
+    setActivePreset(null);
+    setLocalFile(null);
+    setLocalUrl(null);
     return null;
   };
 
   return (
-    <div ref={workspaceRef} className={cn("room-planner-layout planner-workspace relative overflow-hidden xl:grid", expanded && "planner-expanded")}>
-      {notice && <div className="planner-notice" role="status"><Check size={17} /><span>{notice}</span><button aria-label="Мэдэгдэл хаах" onClick={() => setNotice("")}><X size={16} /></button></div>}
+    <div
+      ref={workspaceRef}
+      className={cn(
+        "room-planner-layout planner-workspace relative overflow-hidden xl:grid",
+        expanded && "planner-expanded",
+      )}
+    >
+      {notice && (
+        <div className="planner-notice" role="status">
+          <Check size={17} />
+          <span>{notice}</span>
+          <button aria-label="Мэдэгдэл хаах" onClick={() => setNotice("")}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
       {/* MOBILE TOOLBAR */}
       <div className="planner-mobile-toolbar absolute left-0 right-0 top-0 z-30 flex items-center justify-between border-b border-[#293C32]/10 bg-[#FAF9F6]/95 px-3 py-2 backdrop-blur xl:hidden">
         <button
@@ -456,8 +643,19 @@ export function RoomPlanner() {
         title="Тавилгын каталог"
       >
         <div className="border-b border-[#293C32]/10 p-4">
-          <div className="planner-panel-heading"><span>Тавилгын сан</span><small>Сонгоод өрөөндөө нэмээрэй</small></div>
-          <label className="planner-search"><Search size={17} /><input aria-label="Тавилга нэрээр хайх" placeholder="Тавилга хайх…" value={query} onChange={event => setQuery(event.target.value)} /></label>
+          <div className="planner-panel-heading">
+            <span>Тавилгын сан</span>
+            <small>Сонгоод өрөөндөө нэмээрэй</small>
+          </div>
+          <label className="planner-search">
+            <Search size={17} />
+            <input
+              aria-label="Тавилга нэрээр хайх"
+              placeholder="Тавилга хайх…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
           <div className="flex flex-wrap gap-1">
             {CATEGORIES.map((c) => (
               <button
@@ -476,9 +674,22 @@ export function RoomPlanner() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-3">
-          {(catalog.loading || !catalog.ready) && <CatalogStatus loading={catalog.loading} error={catalog.error} retry={() => void catalog.refresh()} />}
+          {(catalog.loading || !catalog.ready) && (
+            <CatalogStatus
+              loading={catalog.loading}
+              error={catalog.error}
+              retry={() => void catalog.refresh()}
+            />
+          )}
           <div className="grid gap-3">
-            {catalog.ready && !catalog.loading && !paletteItems.length && !dbPaletteItems.length && <p className="planner-empty">Энэ ангилалд тохирох тавилга олдсонгүй.</p>}
+            {catalog.ready &&
+              !catalog.loading &&
+              !paletteItems.length &&
+              !dbPaletteItems.length && (
+                <p className="planner-empty">
+                  Энэ ангилалд тохирох тавилга олдсонгүй.
+                </p>
+              )}
             {paletteItems.map((p) => (
               <button
                 key={p.id}
@@ -561,29 +772,149 @@ export function RoomPlanner() {
       <div className="relative h-full">
         <div className="planner-view-toolbar">
           <div className="planner-segment" aria-label="Харах горим">
-            <button aria-pressed={view === "plan"} onClick={() => setView("plan")}><LayoutGrid size={16} /> 2D</button>
-            <button aria-pressed={view === "perspective"} onClick={() => setView("perspective")}><Eye size={16} /> 3D</button>
+            <button
+              aria-pressed={view === "plan"}
+              onClick={() => setView("plan")}
+            >
+              <LayoutGrid size={16} /> 2D
+            </button>
+            <button
+              aria-pressed={view === "perspective"}
+              onClick={() => setView("perspective")}
+            >
+              <Eye size={16} /> 3D
+            </button>
           </div>
           <div className="planner-tool-group">
-            <button title="Буцаах (Ctrl+Z)" aria-label="Буцаах" disabled={!past.length} onClick={undo}><Undo2 size={18} /></button>
-            <button title="Дахин хийх (Ctrl+Shift+Z)" aria-label="Дахин хийх" disabled={!future.length} onClick={redo}><Redo2 size={18} /></button>
+            <button
+              title="Буцаах (Ctrl+Z)"
+              aria-label="Буцаах"
+              disabled={!past.length}
+              onClick={undo}
+            >
+              <Undo2 size={18} />
+            </button>
+            <button
+              title="Дахин хийх (Ctrl+Shift+Z)"
+              aria-label="Дахин хийх"
+              disabled={!future.length}
+              onClick={redo}
+            >
+              <Redo2 size={18} />
+            </button>
           </div>
           <div className="planner-tool-group">
-            <button title="25 см тор ба торонд тааруулах" aria-label="Торонд тааруулах" aria-pressed={gridEnabled} onClick={() => setGridEnabled(v => !v)}><LayoutGrid size={18} /></button>
-            <button title="Хананд наалдуулах" aria-label="Хананд наалдуулах" aria-pressed={snapEnabled} onClick={() => setSnapEnabled(v => !v)}><Magnet size={18} /></button>
-            <button title="Хэмжээсийн шугам" aria-label="Хэмжээс харуулах" aria-pressed={showDimensions} onClick={() => setShowDimensions(v => !v)}><Ruler size={18} /></button>
+            <button
+              title="25 см тор ба торонд тааруулах"
+              aria-label="Торонд тааруулах"
+              aria-pressed={gridEnabled}
+              onClick={() => setGridEnabled((v) => !v)}
+            >
+              <LayoutGrid size={18} />
+            </button>
+            <button
+              title="Хананд наалдуулах"
+              aria-label="Хананд наалдуулах"
+              aria-pressed={snapEnabled}
+              onClick={() => setSnapEnabled((v) => !v)}
+            >
+              <Magnet size={18} />
+            </button>
+            <button
+              title="Measure · тавилга сонгоод хэмжээ, зайг харах"
+              aria-label="Measure · хэмжих горим"
+              aria-pressed={showDimensions}
+              onClick={() => setShowDimensions((v) => !v)}
+            >
+              <Ruler size={18} />
+            </button>
           </div>
           <div className="planner-tool-group">
-            <button title="Камерын хөдөлгөөн түгжих" aria-label="Камер түгжих" aria-pressed={locked} onClick={() => setLocked(v => !v)}>{locked ? <Lock size={18} /> : <Unlock size={18} />}</button>
-            <button title="Камерыг эхний байрлалд" aria-label="Камер дахин төвлөрүүлэх" onClick={() => setResetKey(v => v + 1)}><Scan size={18} /></button>
-            <button title="Томруулах / буцаах" aria-label="Ажлын талбай томруулах" aria-pressed={expanded} onClick={() => setExpanded(v => !v)}><Maximize size={18} /></button>
+            <button
+              title="Камерын хөдөлгөөн түгжих"
+              aria-label="Камер түгжих"
+              aria-pressed={locked}
+              onClick={() => setLocked((v) => !v)}
+            >
+              {locked ? <Lock size={18} /> : <Unlock size={18} />}
+            </button>
+            <button
+              title="Камерыг эхний байрлалд"
+              aria-label="Камер дахин төвлөрүүлэх"
+              onClick={() => setResetKey((v) => v + 1)}
+            >
+              <Scan size={18} />
+            </button>
+            <button
+              title="Томруулах / буцаах"
+              aria-label="Ажлын талбай томруулах"
+              aria-pressed={expanded}
+              onClick={() => setExpanded((v) => !v)}
+            >
+              <Maximize size={18} />
+            </button>
           </div>
           <div className="planner-tool-group">
-            <button title="PNG зураг татах" aria-label="Зураг татах" onClick={exportImage}><Download size={18} /></button>
-            <button title="Хадгалах (Ctrl+S)" aria-label="Загвар хадгалах" onClick={save}><Save size={18} /></button>
+            <button
+              title="PNG зураг татах"
+              aria-label="Зураг татах"
+              onClick={exportImage}
+            >
+              <Download size={18} />
+            </button>
+            <button
+              title="Хадгалах (Ctrl+S)"
+              aria-label="Загвар хадгалах"
+              onClick={save}
+            >
+              <Save size={18} />
+            </button>
           </div>
         </div>
-        <div className="planner-room-caption"><strong>{current.roomName ?? "Зочны өрөө"} · {current.width} × {current.depth} м</strong><span>{geometry.area.toFixed(2)} м² ашиглах талбай · {current.pieces.length} тавилга</span></div>
+        <div className="planner-room-caption">
+          <strong>
+            {current.roomName ?? "Зочны өрөө"} · {current.width} ×{" "}
+            {current.depth} м
+          </strong>
+          <span>
+            {geometry.area.toFixed(2)} м² ашиглах талбай ·{" "}
+            {current.pieces.length} тавилга
+          </span>
+        </div>
+        {showDimensions && (
+          <div className="planner-measure-readout" role="status">
+            <strong>
+              <Ruler size={14} /> Measure · см
+            </strong>
+            {measurements.length ? (
+              <>
+                <span>{selectedDetails?.name ?? "Тавилга"}</span>
+                <span>
+                  {measurements
+                    .filter((item) => item.kind === "size")
+                    .map((item) => formatMeasurement(item.value))
+                    .join(" × ")}{" "}
+                  · өргөн × урт × өндөр
+                </span>
+                {measurements.find((item) => item.id === "ceiling") && (
+                  <span>
+                    Тааз хүртэл:{" "}
+                    {formatMeasurement(
+                      measurements.find((item) => item.id === "ceiling")!.value,
+                    )}
+                  </span>
+                )}
+                {(activePreset || localUrl) && (
+                  <span>
+                    Өөрийн 3D интерьерийн хана, таазны хэмжилт дэмжигдэхгүй.
+                  </span>
+                )}
+              </>
+            ) : (
+              <span>Хэмжих тавилга дээр дарна уу.</span>
+            )}
+          </div>
+        )}
 
         {/* preset loading status */}
         {(activePreset || localFile) && (
@@ -602,8 +933,21 @@ export function RoomPlanner() {
         <div className="planner-selection-toolbar">
           {selected && (
             <>
-              <button onClick={() => setRightOpen(true)} title="Сонгосон тавилгын тохиргоо" className="planner-selection-name"><Settings size={16} /><span>{selectedDetails?.name ?? "Тавилга"}</span></button>
-              <button onClick={duplicateSelected} aria-label="Сонгосон тавилгыг хуулах" title="Хуулах (Ctrl+D)"><Copy size={16} /></button>
+              <button
+                onClick={() => setRightOpen(true)}
+                title="Сонгосон тавилгын тохиргоо"
+                className="planner-selection-name"
+              >
+                <Settings size={16} />
+                <span>{selectedDetails?.name ?? "Тавилга"}</span>
+              </button>
+              <button
+                onClick={duplicateSelected}
+                aria-label="Сонгосон тавилгыг хуулах"
+                title="Хуулах (Ctrl+D)"
+              >
+                <Copy size={16} />
+              </button>
               <button
                 onClick={rotateSelected}
                 className="flex items-center gap-1.5 rounded-full bg-[#293C32] px-3 py-2 text-xs font-medium text-[#FFFFFF]"
@@ -638,7 +982,18 @@ export function RoomPlanner() {
           </button>
         </div>
 
-        {!current.pieces.length && !activePreset && !localFile && <div className="planner-start-hint"><Move size={20} /><strong>Өрөөгөө тохижуулж эхлээрэй</strong><span>Тавилга нэмээд чирж байрлуулна. Хэмжээсээ тохиргооноос өөрчилнө.</span><button onClick={() => setLeftOpen(true)}>Тавилга сонгох <Plus size={15} /></button></div>}
+        {!current.pieces.length && !activePreset && !localFile && (
+          <div className="planner-start-hint">
+            <Move size={20} />
+            <strong>Өрөөгөө тохижуулж эхлээрэй</strong>
+            <span>
+              Тавилга нэмээд чирж байрлуулна. Хэмжээсээ тохиргооноос өөрчилнө.
+            </span>
+            <button onClick={() => setLeftOpen(true)}>
+              Тавилга сонгох <Plus size={15} />
+            </button>
+          </div>
+        )}
 
         <div className="planner-canvas h-full w-full pt-10 xl:pt-0">
           <RoomCanvas
@@ -652,6 +1007,7 @@ export function RoomPlanner() {
             locked={locked}
             gridEnabled={gridEnabled}
             showDimensions={showDimensions}
+            measurements={measurements}
             resetKey={resetKey}
             onEditStart={beginEdit}
             onEditEnd={endEdit}
@@ -717,35 +1073,111 @@ export function RoomPlanner() {
               <Save className="h-3.5 w-3.5" />
             </button>
           </div>
-          <p className="planner-storage-note">Ажлын явц энэ төхөөрөмж дээр автоматаар үлдэнэ. Хадгалсан хувилбараа доороос нээнэ.</p>
+          <p className="planner-storage-note">
+            Ажлын явц энэ төхөөрөмж дээр автоматаар үлдэнэ. Хадгалсан хувилбараа
+            доороос нээнэ.
+          </p>
         </div>
 
         <div className="border-b border-[#293C32]/10 p-4">
           <section className="planner-rooms" aria-label="Өрөөнүүд">
-            <p className="label mb-3">Өрөөнүүд · {current.rooms?.length ?? 1}</p>
-            <label className="planner-number"><span>Тохируулах өрөө</span>
-              <select value={current.activeRoomId ?? ""} onChange={event => selectRoom(event.target.value)}>
-                {current.rooms?.map(room => <option value={room.id} key={room.id}>{room.name}</option>)}
+            <p className="label mb-3">
+              Өрөөнүүд · {current.rooms?.length ?? 1}
+            </p>
+            <label className="planner-number">
+              <span>Тохируулах өрөө</span>
+              <select
+                value={current.activeRoomId ?? ""}
+                onChange={(event) => selectRoom(event.target.value)}
+              >
+                {current.rooms?.map((room) => (
+                  <option value={room.id} key={room.id}>
+                    {room.name}
+                  </option>
+                ))}
               </select>
             </label>
-            <label className="planner-number"><span>Өрөөний нэр</span><input value={current.roomName ?? ""}
-              onFocus={beginEdit} onBlur={endEdit} onChange={event => updateRoom({ roomName: event.target.value })} /></label>
-            <label className="planner-number"><span>Өрөөний төрөл</span><select value={current.roomType ?? "living"}
-              onChange={event => updateRoom({ roomType: event.target.value as RoomType })}>
-              {Object.entries(ROOM_TYPES).map(([type, option]) => <option key={type} value={type}>{option.label}</option>)}
-            </select></label>
+            <label className="planner-number">
+              <span>Өрөөний нэр</span>
+              <input
+                value={current.roomName ?? ""}
+                onFocus={beginEdit}
+                onBlur={endEdit}
+                onChange={(event) =>
+                  updateRoom({ roomName: event.target.value })
+                }
+              />
+            </label>
+            <label className="planner-number">
+              <span>Өрөөний төрөл</span>
+              <select
+                value={current.roomType ?? "living"}
+                onChange={(event) =>
+                  updateRoom({ roomType: event.target.value as RoomType })
+                }
+              >
+                {Object.entries(ROOM_TYPES).map(([type, option]) => (
+                  <option key={type} value={type}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="planner-add-room">
-              <label className="planner-number"><span>Нэмэх өрөө</span><select value={newRoomType} onChange={event => setNewRoomType(event.target.value as RoomType)}>
-                {Object.entries(ROOM_TYPES).map(([type, option]) => <option key={type} value={type}>{option.label}</option>)}
-              </select></label>
-              <button type="button" className="btn-ghost" onClick={() => addRoom(newRoomType)}><Plus size={16} /> Нэмэх</button>
+              <label className="planner-number">
+                <span>Нэмэх өрөө</span>
+                <select
+                  value={newRoomType}
+                  onChange={(event) =>
+                    setNewRoomType(event.target.value as RoomType)
+                  }
+                >
+                  {Object.entries(ROOM_TYPES).map(([type, option]) => (
+                    <option key={type} value={type}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => addRoom(newRoomType)}
+              >
+                <Plus size={16} /> Нэмэх
+              </button>
             </div>
-            <p className="room-shape-help">Өрөө бүрийн хэмжээ, хана, өнгө, тавилга тусдаа хадгалагдана. Нэг төрлийн хэд хэдэн өрөө нэмж болно.</p>
-            {current.roomType === "kitchen" && <Link className="planner-kitchen-link" href="/kitchen">Гарнитур төлөвлөх <ArrowRight size={15} /></Link>}
+            <p className="room-shape-help">
+              Өрөө бүрийн хэмжээ, хана, өнгө, тавилга тусдаа хадгалагдана. Нэг
+              төрлийн хэд хэдэн өрөө нэмж болно.
+            </p>
+            {current.roomType === "kitchen" && (
+              <Link className="planner-kitchen-link" href="/kitchen">
+                Гарнитур төлөвлөх <ArrowRight size={15} />
+              </Link>
+            )}
           </section>
-          <p className="label mb-3">Өрөөний бодит хэмжээ, хэлбэр</p>
-          <RoomGeometryEditor key={JSON.stringify([current.id, current.activeRoomId, current.width, current.depth, current.height, current.wallFeatures, current.columns])}
-            room={current} onApply={applyRoomShape} />
+          <button
+            type="button"
+            className="room-geometry-trigger"
+            aria-haspopup="dialog"
+            onClick={() => setShowRoomGeometry(true)}
+          >
+            <Ruler size={20} />
+            <span>
+              <strong>Өрөөний бодит хэмжээ, хэлбэр</strong>
+              <small>
+                {Math.round(current.width * 1000)} ×{" "}
+                {Math.round(current.depth * 1000)} мм ·{" "}
+                {geometry.area.toFixed(2)} м²
+              </small>
+              <small>
+                Ханын хэсэг {current.wallFeatures?.length ?? 0} · Багана{" "}
+                {current.columns?.length ?? 0}
+              </small>
+            </span>
+            <ArrowRight size={17} />
+          </button>
           <p className="label mb-3 mt-5">Хана</p>
           <div className="flex flex-wrap gap-1.5">
             {WALL_COLORS.map((c) => (
@@ -796,7 +1228,7 @@ export function RoomPlanner() {
                   className="h-14 w-14 flex-shrink-0 rounded-lg object-cover"
                 />
               ) : selectedDbModel?.thumbnailFile ? (
-                  <Image
+                <Image
                   src={`/api/models/files/${selectedDbModel.fileModelId ?? selectedDbModel.id}/${selectedDbModel.thumbnailFile}`}
                   alt={selectedDbModel.name}
                   width={56}
@@ -812,7 +1244,9 @@ export function RoomPlanner() {
 
               <div>
                 <p className="text-sm font-medium">{selectedDetails.name}</p>
-                <p className="mt-1 text-xs">{stockLabel(selectedProduct ?? selectedDbModel ?? {})}</p>
+                <p className="mt-1 text-xs">
+                  {stockLabel(selectedProduct ?? selectedDbModel ?? {})}
+                </p>
                 <p className="font-mono text-xs text-[#6C726B]">
                   {selectedDetails.basePrice > 0
                     ? formatPrice(getPiecePrice(selectedPiece))
@@ -820,21 +1254,96 @@ export function RoomPlanner() {
                 </p>
               </div>
             </div>
+            {showDimensions && measurements.length > 0 && (
+              <section
+                className="planner-measure-details"
+                aria-label="Сонгосон тавилгын хэмжээс"
+              >
+                <h3>Хэмжээ ба зай · см</h3>
+                <dl>
+                  {measurements.map((item) => (
+                    <div key={item.id}>
+                      <dt>{item.label}</dt>
+                      <dd>{formatMeasurement(item.value)}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p>
+                  Ханын зайг тавилгын гадна хүрээнээс хэмжинэ. Багана урд нь
+                  байвал багана хүртэлх зай гарна.
+                </p>
+              </section>
+            )}
             <div className="planner-transform">
               <p className="label">Байрлал · өрөөний төвөөс</p>
               <div className="planner-fields">
-                <NumberControl label="X · метр" value={selectedPiece.x} min={geometry.bounds.minX} max={geometry.bounds.maxX} step={0.1} onCommit={x => transformSelected({ x })} />
-                <NumberControl label="Z · метр" value={selectedPiece.z} min={geometry.bounds.minZ} max={geometry.bounds.maxZ} step={0.1} onCommit={z => transformSelected({ z })} />
+                <NumberControl
+                  label="X · метр"
+                  value={selectedPiece.x}
+                  min={geometry.bounds.minX}
+                  max={geometry.bounds.maxX}
+                  step={0.1}
+                  onCommit={(x) => transformSelected({ x })}
+                />
+                <NumberControl
+                  label="Z · метр"
+                  value={selectedPiece.z}
+                  min={geometry.bounds.minZ}
+                  max={geometry.bounds.maxZ}
+                  step={0.1}
+                  onCommit={(z) => transformSelected({ z })}
+                />
               </div>
-              <NumberControl label="Эргэлт · градус" value={Math.round(selectedPiece.rotation * 180 / Math.PI * 100) / 100} min={0} max={360} step={15} onCommit={degrees => transformSelected({ rotation: degrees % 360 * Math.PI / 180 })} />
+              <NumberControl
+                label="Эргэлт · градус"
+                value={
+                  Math.round(((selectedPiece.rotation * 180) / Math.PI) * 100) /
+                  100
+                }
+                min={0}
+                max={360}
+                step={15}
+                onCommit={(degrees) =>
+                  transformSelected({
+                    rotation: ((degrees % 360) * Math.PI) / 180,
+                  })
+                }
+              />
               <div className="planner-nudge" aria-label="10 см шилжүүлэх">
-                <button aria-label="Зүүн тийш 10 см" onClick={() => nudge(-0.1, 0)}><ArrowLeft size={17} /></button>
-                <button aria-label="Хойш 10 см" onClick={() => nudge(0, -0.1)}><ArrowUp size={17} /></button>
+                <button
+                  aria-label="Зүүн тийш 10 см"
+                  onClick={() => nudge(-0.1, 0)}
+                >
+                  <ArrowLeft size={17} />
+                </button>
+                <button aria-label="Хойш 10 см" onClick={() => nudge(0, -0.1)}>
+                  <ArrowUp size={17} />
+                </button>
                 <span>10 см</span>
-                <button aria-label="Урагш 10 см" onClick={() => nudge(0, 0.1)}><ArrowDown size={17} /></button>
-                <button aria-label="Баруун тийш 10 см" onClick={() => nudge(0.1, 0)}><ArrowRight size={17} /></button>
+                <button aria-label="Урагш 10 см" onClick={() => nudge(0, 0.1)}>
+                  <ArrowDown size={17} />
+                </button>
+                <button
+                  aria-label="Баруун тийш 10 см"
+                  onClick={() => nudge(0.1, 0)}
+                >
+                  <ArrowRight size={17} />
+                </button>
               </div>
-              <div className="planner-fields"><button className="btn-ghost !px-2 !py-2" onClick={duplicateSelected}><Copy size={15} /> Хуулах</button><button className="btn-ghost !px-2 !py-2 text-red-700" onClick={removeSelected}><Trash2 size={15} /> Устгах</button></div>
+              <div className="planner-fields">
+                <button
+                  className="btn-ghost !px-2 !py-2"
+                  onClick={duplicateSelected}
+                >
+                  <Copy size={15} /> Хуулах
+                </button>
+                <button
+                  className="btn-ghost !px-2 !py-2 text-red-700"
+                  onClick={removeSelected}
+                >
+                  <Trash2 size={15} /> Устгах
+                </button>
+              </div>
             </div>
             <p className="label mb-2 mt-4">Өнгө</p>
 
@@ -902,92 +1411,151 @@ export function RoomPlanner() {
         )}
 
         <section className="planner-object-list">
-          <p className="label"><Layers size={15} /> Өрөөн дэх тавилга · {current.pieces.length}</p>
-          {!current.pieces.length && <p className="planner-empty">Одоогоор тавилга нэмээгүй байна.</p>}
-          {current.pieces.map((piece, index) => <button key={piece.instanceId} aria-pressed={selected === piece.instanceId} onClick={() => { setSelected(piece.instanceId); setRightOpen(true); }}><span className="planner-object-number">{index + 1}</span><span><strong>{getProduct(piece.productId)?.name ?? getDbPieceModel(piece)?.name ?? "Тавилга"}</strong><small>{formatPrice(getPiecePrice(piece))}</small></span><Move size={14} /></button>)}
-        </section>
-        <details className="planner-advanced"><summary>Нэмэлт · 3D файл оруулах</summary><div className="planner-advanced-fields">
-          <select
-            value={ROOM_DIMENSIONS[current.size].w === current.width && ROOM_DIMENSIONS[current.size].d === current.depth ? current.size : "custom"}
-            onChange={(e) => resizeRoom(e.target.value as RoomSize)}
-            className="rounded-full border border-[#293C32]/10 bg-white/90 px-3 py-2 text-xs font-medium backdrop-blur"
-          >
-            <option value="custom" disabled>Өөрийн хэмжээ · {current.width} × {current.depth} м</option>
-            {ROOM_OPTIONS.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          {allPresets.map((preset) => (
+          <p className="label">
+            <Layers size={15} /> Өрөөн дэх тавилга · {current.pieces.length}
+          </p>
+          {!current.pieces.length && (
+            <p className="planner-empty">Одоогоор тавилга нэмээгүй байна.</p>
+          )}
+          {current.pieces.map((piece, index) => (
             <button
-              key={preset.id}
-              onClick={() => togglePreset(preset)}
+              key={piece.instanceId}
+              aria-pressed={selected === piece.instanceId}
+              onClick={() => {
+                setSelected(piece.instanceId);
+                setRightOpen(true);
+              }}
+            >
+              <span className="planner-object-number">{index + 1}</span>
+              <span>
+                <strong>
+                  {getProduct(piece.productId)?.name ??
+                    getDbPieceModel(piece)?.name ??
+                    "Тавилга"}
+                </strong>
+                <small>{formatPrice(getPiecePrice(piece))}</small>
+              </span>
+              <Move size={14} />
+            </button>
+          ))}
+        </section>
+        <details className="planner-advanced">
+          <summary>Нэмэлт · 3D файл оруулах</summary>
+          <div className="planner-advanced-fields">
+            <select
+              value={
+                ROOM_DIMENSIONS[current.size].w === current.width &&
+                ROOM_DIMENSIONS[current.size].d === current.depth
+                  ? current.size
+                  : "custom"
+              }
+              onChange={(e) => resizeRoom(e.target.value as RoomSize)}
+              className="rounded-full border border-[#293C32]/10 bg-white/90 px-3 py-2 text-xs font-medium backdrop-blur"
+            >
+              <option value="custom" disabled>
+                Өөрийн хэмжээ · {current.width} × {current.depth} м
+              </option>
+              {ROOM_OPTIONS.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            {allPresets.map((preset) => (
+              <button
+                key={preset.id}
+                onClick={() => togglePreset(preset)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium backdrop-blur transition",
+                  activePreset?.id === preset.id
+                    ? "border-[#AD6547] bg-[#AD6547] text-[#FFFFFF]"
+                    : "border-[#293C32]/10 bg-white/90 text-[#6C726B]",
+                )}
+                title="GLB загварыг ачаалах"
+              >
+                <Sparkles className="h-3 w-3" />
+                {activePreset?.id === preset.id ? "Идэвхтэй" : preset.label}
+              </button>
+            ))}
+            <label
               className={cn(
-                "flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium backdrop-blur transition",
-                activePreset?.id === preset.id
+                "flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium backdrop-blur transition",
+                localFile
                   ? "border-[#AD6547] bg-[#AD6547] text-[#FFFFFF]"
                   : "border-[#293C32]/10 bg-white/90 text-[#6C726B]",
               )}
-              title="GLB загварыг ачаалах"
+              title="Компьютероосоо GLB файл сонгож турших"
             >
-              <Sparkles className="h-3 w-3" />
-              {activePreset?.id === preset.id ? "Идэвхтэй" : preset.label}
-            </button>
-          ))}
-          <label
-            className={cn(
-              "flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium backdrop-blur transition",
-              localFile
-                ? "border-[#AD6547] bg-[#AD6547] text-[#FFFFFF]"
-                : "border-[#293C32]/10 bg-white/90 text-[#6C726B]",
-            )}
-            title="Компьютероосоо GLB файл сонгож турших"
-          >
-            <Upload className="h-3 w-3" />
-            <span className="max-w-[110px] truncate">
-              {localFile ? localFile.name : "Локал GLB турших"}
-            </span>
-            <input
-              type="file"
-              accept=".glb,model/gltf-binary"
-              className="hidden"
-              onChange={(e) =>
-                handleLocalGlbSelect(e.target.files?.[0] ?? null)
-              }
-            />
-          </label>
-          {localFile && (
-            <>
+              <Upload className="h-3 w-3" />
+              <span className="max-w-[110px] truncate">
+                {localFile ? localFile.name : "Локал GLB турших"}
+              </span>
               <input
-                type="number"
-                step="0.01"
-                min="0.001"
-                value={localScale}
+                type="file"
+                accept=".glb,model/gltf-binary"
+                className="hidden"
                 onChange={(e) =>
-                  setLocalScale(Math.min(1000, Math.max(0.001, parseFloat(e.target.value) || 0.001)))
+                  handleLocalGlbSelect(e.target.files?.[0] ?? null)
                 }
-                title="Масштаб (scale)"
-                className="w-16 rounded-full border border-[#293C32]/10 bg-white/90 px-2 py-2 text-center text-xs font-mono backdrop-blur"
               />
-              <button
-                onClick={() => handleLocalGlbSelect(null)}
-                title="Локал файлыг цуцлах"
-                className="flex items-center gap-1 rounded-full border border-red-500/30 bg-red-50 px-2 py-2 text-xs font-medium text-red-700"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </>
-          )}
-        </div><p>Оруулсан GLB файл зөвхөн энэ удаагийн харагдацад ашиглагдана.</p></details>
-        <details className="planner-advanced"><summary>Гарын товчлол</summary><p>Ctrl / ⌘ + Z — буцаах<br />Ctrl / ⌘ + Shift + Z — дахин хийх<br />Ctrl / ⌘ + D — тавилга хуулах<br />Ctrl / ⌘ + S — хадгалах<br />Сумнууд — 10 см шилжүүлэх<br />R — 90° эргүүлэх · Delete — устгах<br />Esc — сонголт цуцлах</p></details>
+            </label>
+            {localFile && (
+              <>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.001"
+                  value={localScale}
+                  onChange={(e) =>
+                    setLocalScale(
+                      Math.min(
+                        1000,
+                        Math.max(0.001, parseFloat(e.target.value) || 0.001),
+                      ),
+                    )
+                  }
+                  title="Масштаб (scale)"
+                  className="w-16 rounded-full border border-[#293C32]/10 bg-white/90 px-2 py-2 text-center text-xs font-mono backdrop-blur"
+                />
+                <button
+                  onClick={() => handleLocalGlbSelect(null)}
+                  title="Локал файлыг цуцлах"
+                  className="flex items-center gap-1 rounded-full border border-red-500/30 bg-red-50 px-2 py-2 text-xs font-medium text-red-700"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </>
+            )}
+          </div>
+          <p>Оруулсан GLB файл зөвхөн энэ удаагийн харагдацад ашиглагдана.</p>
+        </details>
+        <details className="planner-advanced">
+          <summary>Гарын товчлол</summary>
+          <p>
+            Ctrl / ⌘ + Z — буцаах
+            <br />
+            Ctrl / ⌘ + Shift + Z — дахин хийх
+            <br />
+            Ctrl / ⌘ + D — тавилга хуулах
+            <br />
+            Ctrl / ⌘ + S — хадгалах
+            <br />
+            Сумнууд — 10 см шилжүүлэх
+            <br />R — 90° эргүүлэх · Delete — устгах
+            <br />
+            Esc — сонголт цуцлах
+          </p>
+        </details>
         <div className="p-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="label">Хадгалсан загвар · {designs.length}</p>
             {designs.length >= 2 && (
               <button
                 onClick={() => setShowCompare(true)}
-                disabled={designs.filter(design => compareIds.includes(design.id)).length < 2}
+                disabled={
+                  designs.filter((design) => compareIds.includes(design.id))
+                    .length < 2
+                }
                 title="Доороос 2–4 загвар сонгож харьцуулна"
                 className="text-xs font-medium text-[#AD6547] hover:underline"
               >
@@ -1016,7 +1584,8 @@ export function RoomPlanner() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{d.name}</p>
                     <p className="text-xs text-[#6C726B]">
-                      {d.rooms?.length ?? 1} өрөө · {d.roomName ?? "Зочны өрөө"} · {getRoomGeometry(d).area.toFixed(1)} м²
+                      {d.rooms?.length ?? 1} өрөө · {d.roomName ?? "Зочны өрөө"}{" "}
+                      · {getRoomGeometry(d).area.toFixed(1)} м²
                     </p>
                   </div>
                   <div className="flex flex-shrink-0 gap-1">
@@ -1076,6 +1645,16 @@ export function RoomPlanner() {
         </div>
       </Drawer>
 
+      {showRoomGeometry && (
+        <RoomGeometryModal
+          key={`${current.id}:${current.activeRoomId}`}
+          room={current}
+          onApply={applyRoomShape}
+          onClose={() => setShowRoomGeometry(false)}
+          beginEdit={beginEdit}
+          endEdit={endEdit}
+        />
+      )}
       {showCompare && (
         <CompareModal
           designs={designs.filter((d) => compareIds.includes(d.id))}
@@ -1112,19 +1691,37 @@ function Drawer({
     const previous = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const elements = () => Array.from(drawerRef.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input, select, summary, [tabindex="0"]') ?? []).filter(element => element.getClientRects().length);
+    const elements = () =>
+      Array.from(
+        drawerRef.current?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input, select, summary, [tabindex="0"]',
+        ) ?? [],
+      ).filter((element) => element.getClientRects().length);
     elements()[0]?.focus();
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { event.stopPropagation(); closeRef.current(); }
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        closeRef.current();
+      }
       if (event.key !== "Tab") return;
       const items = elements();
-      const first = items[0]; const last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
     };
     const drawer = drawerRef.current;
     drawer?.addEventListener("keydown", handleKey);
-    return () => { document.body.style.overflow = previousOverflow; drawer?.removeEventListener("keydown", handleKey); if (previous?.isConnected) previous.focus(); };
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      drawer?.removeEventListener("keydown", handleKey);
+      if (previous?.isConnected) previous.focus();
+    };
   }, [open]);
   return (
     <>
@@ -1158,7 +1755,9 @@ function Drawer({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="planner-drawer-body flex flex-1 flex-col">{children}</div>
+        <div className="planner-drawer-body flex flex-1 flex-col">
+          {children}
+        </div>
       </aside>
     </>
   );
@@ -1216,7 +1815,8 @@ function CompareModal({
                 <div className="p-5">
                   <p className="text-lg text-[#293C32]">{d.name}</p>
                   <p className="text-xs text-[#6C726B]">
-                    {d.roomName ?? "Зочны өрөө"} · {getRoomGeometry(d).area.toFixed(1)} м²
+                    {d.roomName ?? "Зочны өрөө"} ·{" "}
+                    {getRoomGeometry(d).area.toFixed(1)} м²
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                     <div>
@@ -1257,10 +1857,25 @@ function MiniTopDown({ design }: { design: RoomDesign }) {
       className="h-full w-full"
       preserveAspectRatio="xMidYMid meet"
     >
-      <path d={roomPath(design, scale)} fill={design.floorColor} fillRule="evenodd" stroke={design.wallColor} strokeWidth={4} />
-      {(design.columns ?? []).map(column => <rect key={column.id} x={(column.x - design.width / 2) * scale}
-        y={(column.z - design.depth / 2) * scale} width={column.width * scale} height={column.depth * scale}
-        fill={design.wallColor} stroke="#737b73" strokeWidth={1} />)}
+      <path
+        d={roomPath(design, scale)}
+        fill={design.floorColor}
+        fillRule="evenodd"
+        stroke={design.wallColor}
+        strokeWidth={4}
+      />
+      {(design.columns ?? []).map((column) => (
+        <rect
+          key={column.id}
+          x={(column.x - design.width / 2) * scale}
+          y={(column.z - design.depth / 2) * scale}
+          width={column.width * scale}
+          height={column.depth * scale}
+          fill={design.wallColor}
+          stroke="#737b73"
+          strokeWidth={1}
+        />
+      ))}
       {design.pieces.map((p) => {
         const product = getProduct(p.productId);
         const dbModel = getDbModel(p.modelId ?? p.productId);
@@ -1304,15 +1919,76 @@ function MiniTopDown({ design }: { design: RoomDesign }) {
   );
 }
 
-function NumberControl({ label, value, min, max, step, onCommit }: { label: string; value: number; min: number; max: number; step: number; onCommit: (value: number) => void }) {
+function NumberControl({
+  label,
+  value,
+  min,
+  max,
+  step,
+  onCommit,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onCommit: (value: number) => void;
+}) {
   const [draft, setDraft] = useState(String(value));
   const cancelled = useRef(false);
   useEffect(() => setDraft(String(value)), [value]);
-  return <label className="planner-number"><span>{label}</span><input type="number" min={min} max={max} step="any" value={draft} onChange={event => setDraft(event.target.value)} onKeyDown={event => {
-    if (event.key === "Enter") event.currentTarget.blur();
-    if (event.key === "Escape") { cancelled.current = true; setDraft(String(value)); event.currentTarget.blur(); }
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") { event.preventDefault(); setDraft(String(Math.max(min, Math.min(max, Math.round((Number(draft) + (event.key === "ArrowUp" ? step : -step)) * 100) / 100)))); }
-  }} onBlur={() => { const next = Number(draft); if (!cancelled.current && draft.trim() && Number.isFinite(next) && next >= min && next <= max) onCommit(next); cancelled.current = false; setDraft(String(value)); }} /></label>;
+  return (
+    <label className="planner-number">
+      <span>{label}</span>
+      <input
+        type="number"
+        min={min}
+        max={max}
+        step="any"
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") event.currentTarget.blur();
+          if (event.key === "Escape") {
+            cancelled.current = true;
+            setDraft(String(value));
+            event.currentTarget.blur();
+          }
+          if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+            event.preventDefault();
+            setDraft(
+              String(
+                Math.max(
+                  min,
+                  Math.min(
+                    max,
+                    Math.round(
+                      (Number(draft) +
+                        (event.key === "ArrowUp" ? step : -step)) *
+                        100,
+                    ) / 100,
+                  ),
+                ),
+              ),
+            );
+          }
+        }}
+        onBlur={() => {
+          const next = Number(draft);
+          if (
+            !cancelled.current &&
+            draft.trim() &&
+            Number.isFinite(next) &&
+            next >= min &&
+            next <= max
+          )
+            onCommit(next);
+          cancelled.current = false;
+          setDraft(String(value));
+        }}
+      />
+    </label>
+  );
 }
 
 function PlannerSkeleton() {

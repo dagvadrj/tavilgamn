@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { ModelOptionsError, parseModelColors, parseModelMaterials } from "@/lib/modelOptions";
-import { R2ModelError, uploadR2Glb, removeStoredModelFiles } from "@/lib/r2Models";
+import { R2ModelError, removeStoredModelFiles } from "@/lib/r2Models";
+import { readModelBundle, uploadModelBundle, ModelBundleError } from "@/lib/modelUploadBundle";
 import { CloudinaryModelError, uploadModelAsset } from "@/lib/cloudinaryModels";
 const BUCKET = "furniture-models";
 const MAX_GLB_SIZE = 50 * 1024 * 1024;
@@ -122,7 +123,8 @@ export async function POST(request: NextRequest) {
 
     const header = new DataView(await glbFile.slice(0, 12).arrayBuffer());
 if (header.byteLength !== 12 || header.getUint32(0, true) !== 0x46546c67 || header.getUint32(4, true) !== 2 || header.getUint32(8, true) !== glbFile.size) {  return NextResponse.json({ error: "Хүчинтэй GLB 2.0 файл сонгоно уу." }, { status: 400 }); }
-   const glbPath = await uploadR2Glb(glbFile, id);
+   const bundle = await readModelBundle(formData, glbFile);
+   const glbPath = await uploadModelBundle(bundle, id, supabase);
     uploadedPaths.push(glbPath);
 
     let thumbnailPath: string | null = null;
@@ -159,7 +161,7 @@ if (header.byteLength !== 12 || header.getUint32(0, true) !== 0x46546c67 || head
 
     return NextResponse.json(model, { status: 201 });
   } catch (error) {
-    if (error instanceof ModelOptionsError) {
+    if (error instanceof ModelOptionsError || error instanceof ModelBundleError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 

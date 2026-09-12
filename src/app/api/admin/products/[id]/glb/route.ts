@@ -1,10 +1,9 @@
-import { randomUUID } from "node:crypto";
+import { readModelBundle, uploadModelBundle, ModelBundleError } from "@/lib/modelUploadBundle";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   R2ModelError,
-  uploadR2Glb,
   removeStoredModelFiles,
 } from "@/lib/r2Models";
 
@@ -79,13 +78,9 @@ export async function POST(
       );
     }
 
-    const fileName = `model-${randomUUID()}.glb`;
-
-    const uploadedPath = await uploadR2Glb(
-      file,
-      model.id,
-      fileName,
-    );
+    const bundle = await readModelBundle(form, file);
+    const uploadedPath = await uploadModelBundle(bundle, model.id, db);
+    const fileName = uploadedPath.split("/").pop()!;
 
     const { data: changed, error } = await db.rpc(
       "replace_furniture_glb",
@@ -131,6 +126,7 @@ export async function POST(
       { headers },
     );
   } catch (error) {
+    if (error instanceof ModelBundleError) return fail(error.message, 400);
     return fail(
       error instanceof R2ModelError
         ? error.message

@@ -21,6 +21,8 @@ import { InteriorModel } from "./InteriorModel";
 import { getProduct } from "@/store/catalog";
 import { getDbModel } from "@/lib/modelRegistry";
 import { isPlacementValid, snapToWall } from "./collision";
+import type { Measurement } from "@/lib/furnitureMeasurements";
+import { FurnitureMeasurements } from "./FurnitureMeasurements";
 
 interface RoomCanvasProps {
   design: RoomDesign;
@@ -33,6 +35,7 @@ interface RoomCanvasProps {
   locked: boolean;
   gridEnabled?: boolean;
   showDimensions?: boolean;
+  measurements?: Measurement[];
   resetKey?: number;
   onEditStart?: () => void;
   onEditEnd?: () => void;
@@ -55,7 +58,8 @@ export function RoomCanvas({
   snapEnabled,
   locked,
   gridEnabled = false,
-  showDimensions = true,
+  showDimensions = false,
+  measurements = [],
   resetKey = 0,
   onEditStart,
   onEditEnd,
@@ -143,7 +147,8 @@ export function RoomCanvas({
       {!customInterior && gridEnabled && (
         <group position={[centerX, 0, centerZ]}><FloorGrid width={spanX} depth={spanZ} /></group>
       )}
-      {!customInterior && showDimensions && <group position={[centerX, 0, centerZ]}><RoomDimensions width={spanX} depth={spanZ} /></group>}
+      {!customInterior && showDimensions && !selected && <group position={[centerX, 0, centerZ]}><RoomDimensions width={spanX} depth={spanZ} /></group>}
+      {showDimensions && selected && <FurnitureMeasurements measurements={measurements} view={view} />}
 
       {design.pieces.map((piece) => (
         <DraggablePiece
@@ -157,6 +162,7 @@ export function RoomCanvas({
           onDragChange={setIsDraggingPiece}
           snapEnabled={snapEnabled}
           gridEnabled={gridEnabled}
+          measureMode={showDimensions}
           onEditStart={onEditStart}
           onEditEnd={onEditEnd}
         />
@@ -510,6 +516,7 @@ function DraggablePiece({
   onMove,
   snapEnabled,
   gridEnabled,
+  measureMode,
   onEditStart,
   onEditEnd,
 }: {
@@ -522,6 +529,7 @@ function DraggablePiece({
   onMove: (id: string, x: number, z: number) => void;
   snapEnabled: boolean;
   gridEnabled: boolean;
+  measureMode: boolean;
   onEditStart?: () => void;
   onEditEnd?: () => void;
 }) {
@@ -534,7 +542,7 @@ function DraggablePiece({
   const [dragging, setDragging] = useState(false);
   const [invalid, setInvalid] = useState(false);
 
-  useCursor(hovered || dragging, dragging ? "grabbing" : "grab", "default");
+  useCursor(hovered || dragging, measureMode ? "crosshair" : dragging ? "grabbing" : "grab", "default");
 
   useEffect(() => {
     if (!dragging) return;
@@ -595,6 +603,7 @@ function DraggablePiece({
         if (event.button !== 0) return;
         event.stopPropagation();
 
+        if (measureMode) { onSelect(piece.instanceId); return; }
         const point = intersectFloor(event.clientX, event.clientY);
         if (!point) return;
         onEditStart?.();
@@ -608,7 +617,7 @@ function DraggablePiece({
         (event.target as Element).setPointerCapture?.(event.pointerId);
       }}
       onPointerMove={(e) => {
-        if (!dragging) return;
+        if (!dragging || measureMode) return;
         const p = intersectFloor(e.clientX, e.clientY);
         if (!p) return;
         let candidate: PlacedFurniture = {
@@ -623,6 +632,7 @@ function DraggablePiece({
         if (ok) onMove(piece.instanceId, candidate.x, candidate.z);
       }}
       onPointerUp={(event) => {
+        if (!dragging) return;
         setDragging(false);
         onDragChange(false);
         onEditEnd?.();

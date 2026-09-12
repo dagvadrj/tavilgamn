@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { useThree } from "@react-three/fiber";
+import { createModelLoader } from "./modelLoader";
 
 export interface InteriorModelProps {
   /**
@@ -26,6 +28,7 @@ export function InteriorModel({
   onLoaded,
 }: InteriorModelProps) {
   const [obj, setObj] = useState<THREE.Group | null>(null);
+  const { gl } = useThree();
   const [failed, setFailed] = useState(false);
   const callbacks = useRef({ onError, onLoaded });
   callbacks.current = { onError, onLoaded };
@@ -38,6 +41,7 @@ export function InteriorModel({
   useEffect(() => {
     let cancelled = false;
     let loadedGroup: THREE.Group | null = null;
+    const decoder = createModelLoader(gl);
     setFailed(false);
     setObj(null);
 
@@ -58,7 +62,7 @@ export function InteriorModel({
     const load = async () => {
       try {
         const isAbsolute = /^(blob:|https?:|data:)/i.test(glbName);
-        const loader = new GLTFLoader();
+        const loader = decoder.loader;
         if (!isAbsolute) {
           loader.setPath(normalizedBase);
         }
@@ -96,8 +100,9 @@ export function InteriorModel({
     return () => {
       cancelled = true;
       if (loadedGroup) disposeGroup(loadedGroup);
+      decoder.draco.dispose(); decoder.ktx.dispose();
     };
-  }, [normalizedBase, glbName]);
+  }, [normalizedBase, glbName, gl]);
 
   if (failed || !obj) return null;
 

@@ -1,4 +1,5 @@
 "use client";
+import { ModelLodInputs, type LodUploadFiles } from "@/components/ModelLodInputs";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
@@ -134,6 +135,7 @@ function ModelsTab() {
 
   // Files
   const [glbFile, setGlbFile] = useState<File | null>(null);
+  const [lodFiles, setLodFiles] = useState<LodUploadFiles>({ medium: null, low: null });
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const glbRef = useRef<HTMLInputElement>(null);
   const thumbRef = useRef<HTMLInputElement>(null);
@@ -210,6 +212,7 @@ function ModelsTab() {
     setDimD("1.0");
     setDimH("1.0");
     setGlbFile(null);
+    setLodFiles({ medium: null, low: null });
     setThumbnail(null);
     setColors([{ name: "Үндсэн өнгө", hex: "#C9A37A", priceDelta: "0" }]);
     setSelMaterials([{ id: "wood", priceDelta: "0" }]);
@@ -275,6 +278,8 @@ function ModelsTab() {
       fd.append("colors", colorsJson);
       fd.append("materials", matsJson);
       fd.append("glb", glbFile);
+      if (lodFiles.medium) fd.append("glbMedium", lodFiles.medium);
+      if (lodFiles.low) fd.append("glbLow", lodFiles.low);
       if (thumbnail) fd.append("thumbnail", thumbnail);
 
       const {
@@ -558,6 +563,7 @@ function ModelsTab() {
               <p className="mt-1 text-xs text-ink/40">
                 Файлын дээд хэмжээ: 50 MB
               </p>
+              <ModelLodInputs value={lodFiles} onChange={setLodFiles} />
             </div>
 
             <div>
@@ -677,4 +683,3 @@ function ModelsTab() {
     </div>
   );
 }
-
