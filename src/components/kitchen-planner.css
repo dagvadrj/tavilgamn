@@ -1,4 +1,26 @@
 .kp { padding-top: 28px; padding-bottom: 48px; color: #293c32; }
+.km-mode-picker { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 24px; }
+.km-mode-picker button { min-height: 44px; padding: 10px 16px; border: 1px solid #cbd3c7; border-radius: 8px; font-size: 14px; }
+.km-mode-picker button[aria-pressed="true"] { background: #293c32; color: #fff; }
+.km-mode-picker button:focus-visible { outline: 2px solid #426d59; outline-offset: 3px; }
+.km-fields { display: grid; gap: 14px; border: 0; padding: 0; margin-top: 16px; min-width: 0; }
+.kp-settings .km-fields .kp-field + .kp-field { margin-top: 0; }
+.km-view-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.km-feedback { min-height: 46px; display: flex; align-items: center; padding: 10px 18px; background: #eef4eb; font-size: 14px; }
+.km-feedback.has-error { background: #fff0ef; color: #a82020; }
+.km-plan { width: 100%; height: 280px; margin-bottom: 16px; background: #f6f8f3; border-radius: 10px; }
+.km-room-outline { fill: #efede5; stroke: #687665; stroke-width: 4; vector-effect: non-scaling-stroke; }
+.km-plan-cabinet polygon { fill: #c6b291; stroke: #5c6654; stroke-width: 1.5; vector-effect: non-scaling-stroke; cursor: pointer; }
+.km-plan-cabinet.is-wall polygon { fill: #f7f4ed; fill-opacity: .8; stroke-dasharray: 5 3; }
+.km-plan-cabinet.is-selected polygon { stroke: #246847; stroke-width: 3; }
+.km-plan-cabinet.is-invalid polygon { stroke: #d62828; stroke-width: 3; fill: #e7a6a2; }
+.km-plan-cabinet polygon:focus-visible { outline: none; stroke: #246847; stroke-width: 5; }
+.km-plan-cabinet text { fill: #293c32; }
+.km-plan-cabinet line { stroke: #5c6654; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.km-details summary { min-height: 44px; display: list-item; cursor: pointer; font-size: 14px; line-height: 1.6; }
+.km-top-list { display: grid; gap: 10px; margin-top: 14px; font-size: 14px; }
+.km-delete { min-width: 44px; min-height: 44px; display: grid; place-items: center; border: 1px solid #dfe3db; border-radius: 8px; }
+.km-clearance, .km-empty { font-size: 14px; line-height: 1.6; }
 .kp *, .kp *::before, .kp *::after { box-sizing: border-box; }
 .kp button, .kp input, .kp select { font: inherit; }
 .kp button, .kp select, .kp input[type="color"], .kp input[type="checkbox"] { cursor: pointer; }

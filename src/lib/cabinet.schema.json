@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ModularCabinet v1 (millimetres, radians)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "type", "width", "height", "depth", "doorCount", "drawerCount", "handleStyle", "color", "material", "position", "autoElevation", "fitToCeiling"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "type": { "enum": ["base", "wall", "tall"] },
+    "width": { "enum": [300, 400, 600, 800] },
+    "height": { "type": "integer", "minimum": 400, "maximum": 3500 },
+    "depth": { "type": "integer", "minimum": 250, "maximum": 650 },
+    "doorCount": { "enum": [1, 2] },
+    "drawerCount": { "type": "integer", "minimum": 0, "maximum": 4 },
+    "handleStyle": { "enum": ["bar", "knob", "push-open"] },
+    "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "material": { "enum": ["matte", "wood", "gloss"] },
+    "autoElevation": { "type": "boolean" },
+    "fitToCeiling": { "type": "boolean" },
+    "position": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y", "z", "rotation"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number", "minimum": 0 }, "z": { "type": "number" }, "rotation": { "type": "number", "description": "Yaw in radians; front is local +Z" } }
+    }
+  },
+  "allOf": [
+    { "if": { "properties": { "type": { "const": "base" } } }, "then": { "properties": { "height": { "minimum": 800, "maximum": 900 }, "depth": { "minimum": 550, "maximum": 650 } } } },
+    { "if": { "properties": { "type": { "const": "wall" } } }, "then": { "properties": { "height": { "minimum": 400, "maximum": 1200 }, "depth": { "minimum": 250, "maximum": 450 }, "drawerCount": { "const": 0 } } }, "else": { "properties": { "position": { "properties": { "y": { "const": 0 } } } } } },
+    { "if": { "properties": { "type": { "const": "tall" } } }, "then": { "properties": { "height": { "minimum": 1800, "maximum": 3500 }, "depth": { "minimum": 550, "maximum": 650 } } } },
+    { "if": { "properties": { "width": { "enum": [300, 400] } } }, "then": { "properties": { "doorCount": { "const": 1 } } } }
+  ]
+}

@@ -10,6 +10,7 @@ import {
   type Cabinet, type CabinetKind, type DimensionKey, type Finish, type FrontStyle, type HandleStyle, type Kitchen, type RunId, type UpperKind,
 } from "@/lib/kitchen";
 import "./kitchen-planner.css";
+import { ModularKitchenPlanner } from "./ModularKitchenPlanner";
 
 const KitchenViewer = dynamic(() => import("@/three/KitchenViewer").then(module => module.KitchenViewer), {
   ssr: false,
@@ -79,6 +80,19 @@ function FloorPlan({ kitchen, selected, onSelect }: { kitchen: Kitchen; selected
 }
 
 export function KitchenPlanner() {
+  const [mode, setMode] = useState<"modular" | "classic">("modular");
+  const [classicVisited, setClassicVisited] = useState(false);
+  return <>
+    <div className="container-page km-mode-picker" role="group" aria-label="Гал тогооны төлөвлөх горим">
+      <button type="button" aria-pressed={mode === "modular"} onClick={() => setMode("modular")}>Модуль байрлуулах</button>
+      <button type="button" aria-pressed={mode === "classic"} onClick={() => { setClassicVisited(true); setMode("classic"); }}>Гарнитурын тохиргоо</button>
+    </div>
+    <div hidden={mode !== "modular"}><ModularKitchenPlanner active={mode === "modular"} /></div>
+    {classicVisited && <div hidden={mode !== "classic"}><ClassicKitchenPlanner active={mode === "classic"} /></div>}
+  </>;
+}
+
+function ClassicKitchenPlanner({ active }: { active: boolean }) {
   const [kitchen, setKitchen] = useState<Kitchen>(createKitchen);
   const [selectedId, setSelectedId] = useState("cabinet-1");
   const [activeRun, setActiveRun] = useState<RunId>("main");
@@ -179,7 +193,7 @@ export function KitchenPlanner() {
             <button type="button" aria-pressed={open} onClick={() => setOpen(!open)}>{open ? "Хаалгуудыг хаах" : "Хаалгуудыг нээх"}</button>
           </div>
           <div className="kp-canvas" aria-label="Гарнитурын 3D загвар">
-            <KitchenViewer kitchen={kitchen} selected={selectedId} onSelect={selectCabinet} open={open} />
+            {active && <KitchenViewer kitchen={kitchen} selected={selectedId} onSelect={selectCabinet} open={open} />}
           </div>
           <p className="kp-preview-hint">Чирж эргүүлнэ · Гүйлгэж ойртуулна · Шүүгээн дээр дарж сонгоно</p>
         </div>

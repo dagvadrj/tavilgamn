@@ -88,3 +88,5 @@ supabase/migrations/*
 !/tests/helpers/
 !/tests/helpers/load-source.cjs
 /scripts/models/__pycache__/
+!/tests/kitchen-modular.test.cjs
+!/docs/kitchen-modular-mvp.md
