@@ -2,7 +2,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { RoomDesign, RoomSize, PlacedFurniture, RoomType } from "@/lib/types";
-import { activateDesignRoom, newDesignRoom, syncDesignRooms } from "@/lib/roomDesign";
+import { activateDesignRoom, DEFAULT_FLOOR_MATERIAL, LEGACY_FLOOR_MATERIAL, newDesignRoom, syncDesignRooms } from "@/lib/roomDesign";
 import { ROOM_TYPES } from "@/lib/roomGeometry";
 
 export const ROOM_DIMENSIONS: Record<RoomSize, { w: number; d: number }> = {
@@ -30,7 +30,7 @@ interface DesignState {
   deleteDesign: (id: string) => void;
   duplicateDesign: (id: string) => void;
   updatePieces: (pieces: PlacedFurniture[]) => void;
-  updateRoom: (patch: Partial<Pick<RoomDesign, "wallColor" | "floorColor" | "name" | "width" | "depth" | "size" | "height" | "wallFeatures" | "columns" | "roomName" | "roomType">>) => void;
+  updateRoom: (patch: Partial<Pick<RoomDesign, "wallColor" | "floorColor" | "name" | "width" | "depth" | "size" | "height" | "wallFeatures" | "columns" | "roomName" | "roomType" | "openings" | "floorMaterial" | "wallMaterials" | "ceilingMaterial" | "lighting">>) => void;
 }
 const createDesignId = () => `d_${crypto.randomUUID()}`;
 
@@ -47,6 +47,7 @@ const blankDesign = (size: RoomSize, name = "Untitled Room", roomType?: RoomType
     roomType: roomType ?? "living",
     wallColor: "#EFE6D6",
     floorColor: "#C9A37A",
+    floorMaterial: DEFAULT_FLOOR_MATERIAL,
     pieces: [],
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -165,8 +166,14 @@ export const useDesigns = create<DesignState>()(
       updateRoom: (patch) => {
         const c = get().current;
         if (!c) return;
-        if (Object.entries(patch).every(([key, value]) => c[key as keyof RoomDesign] === value)) return;
-        set({ current: cloneDesign({ ...c, ...patch, updatedAt: Date.now() }),
+        const compatiblePatch = { ...patch };
+        // Older integrations edit a single colour; keep that action effective after migration.
+        if (patch.wallColor !== undefined && patch.wallMaterials === undefined) {
+          compatiblePatch.wallMaterials = Object.fromEntries(["north", "east", "south", "west"].map(wall => [wall, { mode: "color", color: patch.wallColor }]));
+        }
+        if (patch.floorColor !== undefined && patch.floorMaterial === undefined) compatiblePatch.floorMaterial = LEGACY_FLOOR_MATERIAL;
+        if (Object.entries(compatiblePatch).every(([key, value]) => JSON.stringify(c[key as keyof RoomDesign]) === JSON.stringify(value))) return;
+        set({ current: cloneDesign({ ...c, ...compatiblePatch, updatedAt: Date.now() }),
           ...(!get().transaction ? { past: [...get().past, cloneDesign(c)].slice(-60), future: [] } : {}),
         });
       },

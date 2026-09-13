@@ -34,6 +34,10 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
+  Paintbrush,
+  DoorOpen,
+  Lightbulb,
+  House,
 } from "lucide-react";
 import { CATEGORIES, priceFor } from "@/lib/products";
 import { getProduct, useCatalog } from "@/store/catalog";
@@ -50,14 +54,17 @@ import type {
   Material,
   RoomShape,
   RoomType,
+  RoomWall,
+  RoomOpening,
 } from "@/lib/types";
 import {
   getRoomGeometry,
   ROOM_TYPES,
   roomPath,
-  validateRoomShape,
 } from "@/lib/roomGeometry";
 import { RoomGeometryModal } from "./RoomGeometryModal";
+import { RoomEnvironmentPanel, type EnvironmentTab } from "./RoomEnvironmentPanel";
+import { createOpening, validateOpening, validateRoomOpenings } from "@/lib/roomOpenings";
 import { SavedKitchenList } from "./SavedKitchenList";
 import { useKitchens } from "@/store/kitchens";
 import { useAuth } from "@/store/auth";
@@ -86,23 +93,6 @@ const ROOM_OPTIONS: { id: RoomSize; label: string; sub: string }[] = [
   { id: "40", label: "40 м² орон сууц", sub: "6.3 × 6.3 м" },
   { id: "80", label: "80 м² орон сууц", sub: "8.9 × 8.9 м" },
   { id: "120", label: "120 м² байшин", sub: "11 × 11 м" },
-];
-
-const WALL_COLORS = [
-  "#EFE6D6",
-  "#F7F4EE",
-  "#D6CFC1",
-  "#A8B5A0",
-  "#1F2638",
-  "#3D2F26",
-];
-const FLOOR_COLORS = [
-  "#C9A37A",
-  "#8C6A4A",
-  "#D9C9A8",
-  "#6B4226",
-  "#3D2F26",
-  "#A8A8A8",
 ];
 
 interface CustomInterior {
@@ -147,6 +137,12 @@ export function RoomPlanner() {
   const kitchenLibrary = useKitchens(), kitchenUser = useAuth(state => state.user);
   const handledKitchen = useRef<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [environmentTab, setEnvironmentTab] = useState<EnvironmentTab>("surfaces");
+  const [surface, setSurface] = useState<"floor" | "wall" | "ceiling">("floor");
+  const [selectedWall, setSelectedWall] = useState<RoomWall | null>(null);
+  const [selectedOpening, setSelectedOpening] = useState<string | null>(null);
+  const [placementTemplate, setPlacementTemplate] = useState<string | null>(null);
+  const [showStartHint, setShowStartHint] = useState(true);
   const [view, setView] = useState<"plan" | "perspective">("perspective");
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [locked, setLocked] = useState(false);
@@ -198,6 +194,9 @@ export function RoomPlanner() {
   }, [current, selected]);
   useEffect(() => {
     setSelected(null);
+    setSelectedWall(null);
+    setSelectedOpening(null);
+    setPlacementTemplate(null);
     setActivePreset(null);
     setLocalFile(null);
     setLocalUrl(null);
@@ -208,6 +207,9 @@ export function RoomPlanner() {
     else if (type === "office") setPaletteCat("office");
     else setPaletteCat("sofa");
   }, [current?.id, current?.activeRoomId, current?.roomType]);
+  useEffect(() => {
+    if (selectedOpening && !current?.openings?.some(opening => opening.id === selectedOpening)) setSelectedOpening(null);
+  }, [current?.openings, selectedOpening]);
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -396,6 +398,11 @@ export function RoomPlanner() {
   };
 
   const removeSelected = () => {
+    if (selectedOpening) {
+      updateRoom({ openings: (current.openings ?? []).filter(opening => opening.id !== selectedOpening) });
+      setSelectedOpening(null);
+      return;
+    }
     if (!selected) return;
     updatePieces(current.pieces.filter((p) => p.instanceId !== selected));
     setSelected(null);
@@ -408,9 +415,14 @@ export function RoomPlanner() {
       width: dims.w,
       depth: dims.d,
     };
-    const shapeError = validateRoomShape(resizedRoom);
+    const shapeError = validateRoomOpenings(resizedRoom);
     if (shapeError) {
       setNotice(shapeError);
+      return;
+    }
+    const resizedGeometry = getRoomGeometry(resizedRoom);
+    if (current.lighting?.fixtures.some(fixture => fixture.x < resizedGeometry.bounds.minX || fixture.x > resizedGeometry.bounds.maxX || fixture.z < resizedGeometry.bounds.minZ || fixture.z > resizedGeometry.bounds.maxZ || resizedGeometry.voids.some(rect => fixture.x >= rect.minX && fixture.x <= rect.maxX && fixture.z >= rect.minZ && fixture.z <= rect.maxZ))) {
+      setNotice("Таазны гэрэл шинэ өрөөний гадна үлдэж байна. Эхлээд гэрлийн байрлалыг өөрчилнө үү.");
       return;
     }
     const allPiecesValid = current.pieces.every((p) =>
@@ -592,6 +604,9 @@ export function RoomPlanner() {
     arrowright: () => nudge(0.1, 0),
     escape: () => {
       setSelected(null);
+      setSelectedWall(null);
+      setSelectedOpening(null);
+      setPlacementTemplate(null);
       setLeftOpen(false);
       setRightOpen(false);
       setExpanded(false);
@@ -618,19 +633,55 @@ export function RoomPlanner() {
   };
   const geometry = getRoomGeometry(current);
   const applyRoomShape = (shape: RoomShape) => {
-    const issue = validateRoomShape(shape);
+    const next = { ...current, ...shape, openings: current.openings };
+    const issue = validateRoomOpenings(next);
     if (issue) return issue;
     if (
       !current.pieces.every((piece) =>
-        isPlacementValid(piece, current.pieces, shape),
+        isPlacementValid(piece, current.pieces, next),
       )
     )
       return "Хана, товойлт эсвэл багана тавилгатай давхцаж байна. Эхлээд тавилгын байрлалыг өөрчилнө үү.";
+    const nextGeometry = getRoomGeometry(next);
+    if (current.lighting?.fixtures.some(fixture => fixture.x < nextGeometry.bounds.minX || fixture.x > nextGeometry.bounds.maxX || fixture.z < nextGeometry.bounds.minZ || fixture.z > nextGeometry.bounds.maxZ || nextGeometry.voids.some(rect => fixture.x >= rect.minX && fixture.x <= rect.maxX && fixture.z >= rect.minZ && fixture.z <= rect.maxZ)))
+      return "Таазны гэрэл шинэ өрөөний гадна үлдэж байна. Эхлээд гэрлийн байрлалыг өөрчилнө үү.";
     updateRoom(shape);
     setActivePreset(null);
     setLocalFile(null);
     setLocalUrl(null);
     return null;
+  };
+
+  const selectOpening = (id: string | null) => {
+    setSelectedOpening(id);
+    if (id) { setSelected(null); setSelectedWall(current.openings?.find(item => item.id === id)?.wallId ?? null); setEnvironmentTab("openings"); }
+  };
+  const selectWall = (wall: RoomWall) => {
+    setSelectedWall(wall); setSelected(null); setSelectedOpening(null);
+  };
+  const changeOpening = (opening: RoomOpening) => {
+    const issue = validateOpening(current, opening);
+    if (issue) { setNotice(issue); return; }
+    updateRoom({ openings: (current.openings ?? []).map(item => item.id === opening.id ? opening : item) });
+    setSelectedWall(opening.wallId);
+  };
+  const addOpening = (templateId: string, wallId: RoomWall, position?: number) => {
+    const opening = createOpening(templateId, wallId, position ?? 0.5);
+    if (position === undefined && validateOpening(current, opening)) {
+      const positions = Array.from({ length: 99 }, (_, i) => (i + 1) / 100).sort((a, b) => Math.abs(a - 0.5) - Math.abs(b - 0.5));
+      const free = positions.find(candidate => !validateOpening(current, { ...opening, position: candidate }));
+      if (free !== undefined) opening.position = free;
+    }
+    const issue = validateOpening(current, opening);
+    if (issue) { setNotice(issue); return; }
+    updateRoom({ openings: [...(current.openings ?? []), opening] });
+    setActivePreset(null); setLocalFile(null); setLocalUrl(null);
+    setSelected(null); setSelectedOpening(opening.id); setSelectedWall(wallId);
+    setPlacementTemplate(null); setEnvironmentTab("openings"); setRightOpen(true);
+  };
+  const armPlacement = (templateId: string | null) => {
+    setPlacementTemplate(templateId); setSelected(null); setSelectedOpening(null);
+    if (templateId) { setActivePreset(null); setLocalFile(null); setLocalUrl(null); setRightOpen(false); }
   };
 
   return (
@@ -974,6 +1025,10 @@ export function RoomPlanner() {
 
         {/* right-side selection actions */}
         <div className="planner-selection-toolbar">
+          {selectedOpening && <>
+            <button onClick={() => { setEnvironmentTab("openings"); setRightOpen(true); }}><DoorOpen size={16} /> Хаалга, цонхны тохиргоо</button>
+            <button onClick={removeSelected} aria-label="Сонгосон нээлхийг устгах"><Trash2 size={16} /></button>
+          </>}
           {selected && (
             <>
               <button
@@ -1025,25 +1080,35 @@ export function RoomPlanner() {
           </button>
         </div>
 
-        {!current.pieces.length && !activePreset && !localFile && (
+        {showStartHint && !selectedWall && !current.pieces.length && !current.openings?.length && !activePreset && !localFile && !placementTemplate && (
           <div className="planner-start-hint">
+            <button className="planner-hint-dismiss" aria-label="Эхлэх зөвлөмжийг хаах" onClick={() => setShowStartHint(false)}><X size={15} /></button>
             <Move size={20} />
             <strong>Өрөөгөө тохижуулж эхлээрэй</strong>
             <span>
-              Тавилга нэмээд чирж байрлуулна. Хэмжээсээ тохиргооноос өөрчилнө.
+              Материал сонгож, хаалга цонх нэмээд тавилгаа чирж байрлуулна.
             </span>
             <button onClick={() => setLeftOpen(true)}>
               Тавилга сонгох <Plus size={15} />
             </button>
           </div>
         )}
+        <div className="room-camera-guide">{placementTemplate ? "Байрлуулах ханандаа дарна уу · Esc цуцлах" : view === "plan" ? "2D төлөвлөгөө · Чирж байрлуулах" : "360° эргүүлэх · Дугуйгаар ойртуулах · Хана автоматаар бүдгэрнэ"}</div>
 
         <div className="planner-canvas h-full w-full pt-10 xl:pt-0">
           <RoomCanvas
             key={`${current.id}-${current.activeRoomId ?? "room"}`}
             design={current}
             selected={selected}
-            onSelect={setSelected}
+            onSelect={id => { setSelected(id); if (id) { setSelectedOpening(null); setSelectedWall(null); setPlacementTemplate(null); setEnvironmentTab("room"); } }}
+            selectedWall={selectedWall}
+            onSelectWall={wall => { selectWall(wall); setSurface("wall"); setEnvironmentTab("surfaces"); setRightOpen(true); }}
+            selectedOpening={selectedOpening}
+            onSelectOpening={selectOpening}
+            onUpdateOpening={changeOpening}
+            placementTemplate={placementTemplate}
+            onPlaceOpening={(wall, position) => { if (placementTemplate) addOpening(placementTemplate, wall, position); }}
+            onPlacementError={setNotice}
             onMove={onMove}
             view={view}
             snapEnabled={snapEnabled}
@@ -1090,6 +1155,21 @@ export function RoomPlanner() {
         onClose={() => setRightOpen(false)}
         title="Тохиргоо"
       >
+        <nav className="room-environment-tabs" aria-label="Өрөөний тохиргооны хэсэг">
+          {([{ id: "room", label: "Өрөө", Icon: House }, { id: "surfaces", label: "Материал", Icon: Paintbrush },
+            { id: "openings", label: "Хаалга, цонх", Icon: DoorOpen }, { id: "lighting", label: "Гэрэл", Icon: Lightbulb }] as const).map(({ id, label, Icon }) =>
+            <button key={id} aria-pressed={environmentTab === id} onClick={() => { endEdit(); setEnvironmentTab(id); setPlacementTemplate(null); }}><Icon size={19} /><span>{label}</span></button>)}
+        </nav>
+        {environmentTab !== "room" && <>
+          {(activePreset || localFile) && <div className="room-custom-notice"><p>Өрөөг тохируулахын тулд үндсэн өрөө рүү шилжинэ үү.</p><button className="room-secondary-action" onClick={() => { setActivePreset(null); setLocalFile(null); setLocalUrl(null); }}>Үндсэн өрөөг харуулах</button></div>}
+          <RoomEnvironmentPanel key={`${current.id}:${current.activeRoomId}:${environmentTab}`} design={current} tab={environmentTab} surface={surface} onSurfaceChange={setSurface}
+            selectedWall={selectedWall} onSelectWall={selectWall} selectedOpening={selectedOpening} onSelectOpening={selectOpening}
+            placementTemplate={placementTemplate} onArmPlacement={armPlacement} onAddOpening={addOpening} onUpdateOpening={changeOpening}
+            onUpdate={patch => { updateRoom(patch); setShowStartHint(false); setActivePreset(null); setLocalFile(null); setLocalUrl(null); }}
+            onHeight={height => { if (!Number.isFinite(height) || height < 2.4 || height > 3) { setNotice("Таазны өндөр 240–300 см байна."); return; } const issue = applyRoomShape({ width: current.width, depth: current.depth, height }); if (issue) setNotice(issue); }}
+            onNotice={setNotice} beginEdit={beginEdit} endEdit={endEdit} />
+        </>}
+        <div hidden={environmentTab !== "room"}>
         <div className="border-b border-[#293C32]/10 p-4">
           <p className="label mb-2">Загвар</p>
           <input
@@ -1221,40 +1301,7 @@ export function RoomPlanner() {
             </span>
             <ArrowRight size={17} />
           </button>
-          <p className="label mb-3 mt-5">Хана</p>
-          <div className="flex flex-wrap gap-1.5">
-            {WALL_COLORS.map((c) => (
-              <button
-                key={c}
-                aria-label={`Ханын өнгө ${c}`}
-                aria-pressed={current.wallColor === c}
-                onClick={() => updateRoom({ wallColor: c })}
-                style={{ background: c }}
-                className={cn(
-                  "h-7 w-7 rounded-full border-2",
-                  current.wallColor === c ? "border-[#293C32]" : "border-white",
-                )}
-              />
-            ))}
-          </div>
-          <p className="label mb-3 mt-4">Шал</p>
-          <div className="flex flex-wrap gap-1.5">
-            {FLOOR_COLORS.map((c) => (
-              <button
-                key={c}
-                aria-label={`Шалны өнгө ${c}`}
-                aria-pressed={current.floorColor === c}
-                onClick={() => updateRoom({ floorColor: c })}
-                style={{ background: c }}
-                className={cn(
-                  "h-7 w-7 rounded-full border-2",
-                  current.floorColor === c
-                    ? "border-[#293C32]"
-                    : "border-white",
-                )}
-              />
-            ))}
-          </div>
+          <button className="room-secondary-action mt-4" onClick={() => setEnvironmentTab("surfaces")}><Paintbrush size={16} /> Шал, хана, таазны материал</button>
         </div>
 
         {selectedPiece && selectedDetails ? (
@@ -1687,6 +1734,7 @@ export function RoomPlanner() {
           >
             <Plus className="h-4 w-4" /> Шинэ загвар үүсгэх
           </button>
+        </div>
         </div>
       </Drawer>
 

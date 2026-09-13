@@ -95,5 +95,8 @@ supabase/migrations/*
 !/tests/kitchen-library.test.cjs
 !/tests/kitchen-db.test.cjs
 !/tests/account-usability.test.cjs
+!/tests/room-surfaces.test.cjs
+!/tests/room-structure.test.cjs
+!/docs/room-planner.md
 !/docs/kitchen-integration.md
 /supabase/.temp/

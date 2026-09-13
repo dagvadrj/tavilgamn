@@ -43,7 +43,10 @@ export function RoomGeometryEditor({ room, onApply, onDone }: {
       <Millimetres label="AB · өргөн" value={draft.width} min={1000} onChange={width => update({ width })} />
       <Millimetres label="BC · урт" value={draft.depth} min={1000} onChange={depth => update({ depth })} />
     </div>
-    <Millimetres label="Ханын өндөр" value={draft.height ?? 2.7} min={2000} max={5000} onChange={height => update({ height })} />
+    <Millimetres label="Ханын өндөр" value={draft.height ?? 2.7} min={2400} max={3000} onChange={height => {
+      if (height < 2.4 || height > 3) { setError("Таазны өндөр 2400–3000 мм байна."); return; }
+      update({ height });
+    }} />
     <RoomPlanPreview room={preview} pieces={room.pieces} />
     <p className="room-shape-area">Ашиглах талбай: <strong>{geometry.area.toFixed(2)} м²</strong>{(error || problem) ? " · хэрэгжсэн хэлбэр" : ""}</p>
     <details className="room-wall-measurements"><summary>Ханын бүх хэсгийн хэмжээс · {geometry.segments.filter(segment => !segment.hole).length}</summary>

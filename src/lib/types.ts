@@ -89,6 +89,46 @@ export type RoomSize = "40" | "80" | "120";
 
 export type RoomType = "living" | "bedroom" | "kitchen" | "bathroom" | "office" | "other";
 export type RoomWall = "north" | "east" | "south" | "west";
+export interface RoomOpening {
+  id: string;
+  kind: "door" | "window";
+  templateId: string;
+  wallId: RoomWall;
+  /** Centre measured clockwise along the wall, normalized to 0–1. */
+  position: number;
+  /** Clear opening dimensions, in metres. */
+  width: number;
+  height: number;
+  sillHeight: number;
+  hinge: "left" | "right";
+  swing: "inward" | "outward";
+  open: boolean;
+}
+export interface WallMaterial {
+  mode: "color" | "wallpaper";
+  color: string;
+  materialId?: string;
+}
+export interface CeilingFixture {
+  id: string;
+  /** Position in metres in the room's world coordinates. */
+  x: number;
+  z: number;
+  intensity: number;
+  color: string;
+}
+export interface RoomLighting {
+  mode: "day" | "evening";
+  ambient: number;
+  sunlight: number;
+  fixtures: CeilingFixture[];
+}
+export interface RoomSurfaces {
+  floorMaterial?: string;
+  wallMaterials?: Partial<Record<RoomWall, WallMaterial>>;
+  ceilingMaterial?: string;
+  lighting?: RoomLighting;
+}
 export interface WallFeature {
   id: string;
   wall: RoomWall;
@@ -112,8 +152,9 @@ export interface RoomShape {
   height?: number;
   wallFeatures?: WallFeature[];
   columns?: RoomColumn[];
+  openings?: RoomOpening[];
 }
-export interface DesignRoom extends RoomShape {
+export interface DesignRoom extends RoomShape, RoomSurfaces {
   id: string;
   name: string;
   type: RoomType;
@@ -122,7 +163,7 @@ export interface DesignRoom extends RoomShape {
   pieces: PlacedFurniture[];
 }
 
-export interface RoomDesign extends RoomShape {
+export interface RoomDesign extends RoomShape, RoomSurfaces {
   id: string;
   name: string;
   size: RoomSize;
