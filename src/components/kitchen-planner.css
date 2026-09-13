@@ -134,3 +134,8 @@
   .kp-two-columns, .kp-add-row { grid-template-columns: 1fr; }
   .kp-canvas { height: 300px; }
 }
+.km-export { width: 100%; }
+.km-export-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; }
+.km-export-actions button { display: inline-flex; align-items: center; gap: .4rem; }
+.km-export-actions small, .km-export p { color: #53614f; font-size: .82rem; }
+.km-export p { margin-top: .5rem; max-width: 65rem; }

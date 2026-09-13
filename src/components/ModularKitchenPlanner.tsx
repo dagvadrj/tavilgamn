@@ -12,6 +12,8 @@ import { applyKitchenAppearance, arrangeKitchen, cloneKitchen, createUnifiedKitc
 import { FINISHES, type FrontStyle } from "@/lib/kitchen";
 import { useAuth } from "@/store/auth";
 import { useKitchens } from "@/store/kitchens";
+import type { Group } from "three";
+import { KitchenExportButtons } from "./KitchenExportButtons";
 
 const Scene = dynamic(() => import("@/three/ModularKitchenScene").then(module => module.ModularKitchenScene), {
   ssr: false, loading: () => <p className="kp-viewer-message" role="status">3D загварыг бэлдэж байна…</p>,
@@ -53,6 +55,7 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
   const [ready, setReady] = useState(false), [saving, setSaving] = useState(false);
   const [name, setName] = useState("Миний гал тогоо"), [savedId, setSavedId] = useState("");
   const [open, setOpen] = useState(false);
+  const [exportRoot, setExportRoot] = useState<Group | null>(null);
   const [viewKey, setViewKey] = useState(0);
   const [scope, setScope] = useState<"all" | "base" | "wall" | "selected">("all");
   const initialRead = useRef(false);
@@ -185,6 +188,7 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
           router.push(`/kitchen?draft=${crypto.randomUUID()}`);
         } catch { router.push(`/kitchen?new=1&draft=${crypto.randomUUID()}`); }
       }}><Plus size={15} />Шинэ гарнитур</button>
+      <KitchenExportButtons root={exportRoot} name={name} disabled={busy || !kitchen.cabinets.length} />
     </section>
     <div className="km-layout-options" role="group" aria-label="Гарнитурын хэлбэр">
       {([["straight", "Шулуун"], ["l-right", "L · баруун булан"], ["l-left", "L · зүүн булан"]] as const).map(([layout, label]) =>
@@ -198,7 +202,7 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
             <button type="button" disabled={busy} aria-pressed={mode === "orbit"} onClick={() => setMode("orbit")}>Харах өнцөг</button>
             <button type="button" disabled={busy} aria-pressed={open} onClick={() => { setMode("orbit"); setOpen(!open); }}>{open ? "Хаалгуудыг хаах" : "Хаалгуудыг нээх"}</button>
           </div></div>
-        <div className="kp-canvas">{active && ready && <Scene key={viewKey} kitchen={kitchen} open={open} selectedId={selectedId} mode={saving ? "orbit" : mode} onSelect={setSelectedId}
+        <div className="kp-canvas">{active && ready && <Scene key={viewKey} exportRoot={setExportRoot} kitchen={kitchen} open={open} selectedId={selectedId} mode={saving ? "orbit" : mode} onSelect={setSelectedId}
           onStart={start} onMove={move} onEnd={() => finish()} onCancel={() => finish(true)} />}</div>
         <p className="kp-preview-hint">{mode === "move" ? "Шүүгээг чирж байрлуулна · Улаан хүрээ: байрлуулах боломжгүй · Esc: буцаах" : "Чирж харах өнцгийг эргүүлнэ · Гүйлгэж ойртуулна"}</p>
         <p className={`km-feedback ${issues.some(issue => issue.severity === "error") ? "has-error" : ""}`} role="status" aria-live="polite">

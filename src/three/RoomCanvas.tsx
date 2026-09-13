@@ -89,6 +89,7 @@ export function RoomCanvas({
   const bounds = getRoomGeometry(design).bounds;
   const spanX = bounds.maxX - bounds.minX, spanZ = bounds.maxZ - bounds.minZ;
   const centerX = (bounds.minX + bounds.maxX) / 2, centerZ = (bounds.minZ + bounds.maxZ) / 2;
+  const roomHeight = design.height ?? 2.7;
   return (
     <Canvas
       shadows
@@ -126,7 +127,7 @@ export function RoomCanvas({
       className="!h-full !w-full"
       onPointerMissed={() => { onSelect(null); onSelectOpening?.(null); }}
     >
-      <CameraRig view={view} width={spanX} depth={spanZ} centerX={centerX} centerZ={centerZ} resetKey={resetKey} />
+      <CameraRig view={view} width={spanX} depth={spanZ} height={roomHeight} centerX={centerX} centerZ={centerZ} resetKey={resetKey} />
       <color attach="background" args={["#F1F0ED"]} />
       <RoomLighting design={design} />
       <Environment resolution={64} frames={1}>
@@ -186,7 +187,7 @@ export function RoomCanvas({
         <OrbitControls
           makeDefault
           enabled={!locked && !isDraggingPiece}
-          target={[centerX, 0.7, centerZ]}
+          target={[centerX, roomHeight * 0.4, centerZ]}
           enablePan
           screenSpacePanning
           enableRotate
@@ -194,7 +195,7 @@ export function RoomCanvas({
           enableDamping
           dampingFactor={0.08}
           minDistance={0.8}
-          maxDistance={Math.max(30, Math.max(design.width, design.depth) * 8)}
+          maxDistance={Math.max(100, Math.max(spanX, spanZ) * 50)}
           minPolarAngle={0.025}
           maxPolarAngle={Math.PI / 2 - 0.015}
         />
@@ -221,6 +222,7 @@ function CameraRig({
   view,
   width,
   depth,
+  height,
   centerX,
   centerZ,
   resetKey,
@@ -228,6 +230,7 @@ function CameraRig({
   view: "plan" | "perspective";
   width: number;
   depth: number;
+  height: number;
   centerX: number;
   centerZ: number;
   resetKey: number;
@@ -237,7 +240,6 @@ function CameraRig({
   const size = useThree((state) => state.size);
 
   useEffect(() => {
-    const roomSpan = Math.max(width, depth);
     const target = new THREE.Vector3();
 
     if (view === "plan") {
@@ -249,11 +251,18 @@ function CameraRig({
       const distance = Math.max(depth + 1.8, (width + 1.8) / aspect) / (2 * Math.tan(THREE.MathUtils.degToRad(fov / 2)));
       camera.position.set(centerX, distance, centerZ + 0.001);
     } else {
-      target.set(centerX, 0.7, centerZ);
-
+      const targetHeight = height * 0.4;
+      target.set(centerX, targetHeight, centerZ);
       camera.up.set(0, 1, 0);
-      const fit = Math.max(1, 0.95 / (size.width / Math.max(size.height, 1)));
-      camera.position.set(centerX + width * 0.78 * fit, roomSpan * 0.62 * fit, centerZ + depth * 0.82 * fit);
+      // Fit the entire room, including the far upper corners, into both camera axes.
+      const aspect = size.width / Math.max(size.height, 1);
+      const verticalHalfFov = THREE.MathUtils.degToRad(((camera as THREE.PerspectiveCamera).fov || 40) / 2);
+      const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
+      const radius = Math.hypot(width / 2, depth / 2, Math.max(targetHeight, height - targetHeight));
+      const distance = radius / Math.sin(Math.min(verticalHalfFov, horizontalHalfFov)) * 1.08;
+      const direction = new THREE.Vector3(0.8, 0.68, 0.82).normalize();
+      camera.position.copy(target).addScaledVector(direction, distance);
+      camera.far = Math.max(300, distance * 4);
     }
 
     camera.lookAt(target);
@@ -272,7 +281,7 @@ function CameraRig({
       orbitControls.target.copy(target);
       orbitControls.update();
     }
-  }, [camera, controls, view, width, depth, centerX, centerZ, resetKey, size.width, size.height]);
+  }, [camera, controls, view, width, depth, height, centerX, centerZ, resetKey, size.width, size.height]);
 
   return null;
 }

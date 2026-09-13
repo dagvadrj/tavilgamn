@@ -244,7 +244,9 @@ export function RoomPlanner() {
   }, []);
 
   useEffect(() => {
-    if (!current) createNew("80", "Миний гэр", "living");
+    // The first hydration render can still hold the server's null snapshot.
+    // Read the live store before creating anything so persisted work survives reload.
+    if (!useDesigns.getState().current) createNew("80", "Миний гэр", "living");
   }, [current, createNew]);
 
   useEffect(() => {

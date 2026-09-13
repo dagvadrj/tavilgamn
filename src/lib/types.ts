@@ -96,7 +96,7 @@ export interface RoomOpening {
   wallId: RoomWall;
   /** Centre measured clockwise along the wall, normalized to 0–1. */
   position: number;
-  /** Clear opening dimensions, in metres. */
+  /** Wall cutout dimensions including the frame, in metres. */
   width: number;
   height: number;
   sillHeight: number;

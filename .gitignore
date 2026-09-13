@@ -100,3 +100,7 @@ supabase/migrations/*
 !/docs/room-planner.md
 !/docs/kitchen-integration.md
 /supabase/.temp/
+!/scripts/sketchup/
+/scripts/sketchup/__pycache__/
+!/tests/kitchen-export.test.cjs
+!/docs/kitchen-export.md

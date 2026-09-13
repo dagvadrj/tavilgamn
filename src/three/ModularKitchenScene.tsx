@@ -3,13 +3,14 @@
 import { Component, useEffect, useRef, type ReactNode } from "react";
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Edges, OrbitControls } from "@react-three/drei";
-import { Plane, Vector3 } from "three";
+import { Plane, Vector3, type Group } from "three";
 import { roomWalls, type CabinetPose, type ModularCabinet, type ModularKitchen } from "@/lib/kitchenCabinets";
 import { placementIssues } from "@/lib/kitchenPlacement";
 import { CabinetBody, KitchenTops } from "./KitchenAssemblyMesh";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 
 export interface ModularSceneProps {
+  exportRoot?: (root: Group | null) => void;
   open?: boolean; kitchen: ModularKitchen; selectedId: string | null; mode: "move" | "orbit";
   onSelect: (id: string) => void; onStart: (id: string) => void;
   onMove: (id: string, pose: CabinetPose) => void; onEnd: () => void; onCancel: () => void;
@@ -89,19 +90,21 @@ function Scene(props: ModularSceneProps) {
         <mesh raycast={() => {}}><boxGeometry args={[length, .6, .05]} /><meshStandardMaterial color="#a5afa1" transparent opacity={.3} depthWrite={false} /></mesh>
       </group>;
     })}
-    {kitchen.cabinets.map(cabinet => <group key={cabinet.id}
+    <group ref={props.exportRoot} name="Kitchen" userData={{ kitchenExport: true, units: "meters" }}>
+    {kitchen.cabinets.map(cabinet => <group key={cabinet.id} name={`Cabinet-${cabinet.id}`} userData={{ cabinetId: cabinet.id, cabinetType: cabinet.type }}
       position={[cabinet.position.x / 1000, cabinet.position.y / 1000, cabinet.position.z / 1000]} rotation={[0, cabinet.position.rotation, 0]}
       onPointerDown={event => start(event, cabinet)} onPointerMove={move}
       onPointerUp={event => { if (drag.current?.pointerId === event.pointerId) { event.stopPropagation(); finish(false); } }}
       onPointerCancel={event => { if (drag.current?.pointerId === event.pointerId) finish(true); }}>
       <CabinetBody cabinet={cabinet} open={props.open} />
-      {(selectedId === cabinet.id || invalid.has(cabinet.id)) && <mesh raycast={() => {}} position={[0, cabinet.height / 2000, 0]}>
+      {(selectedId === cabinet.id || invalid.has(cabinet.id)) && <mesh userData={{ exportExclude: true }} raycast={() => {}} position={[0, cabinet.height / 2000, 0]}>
         <boxGeometry args={[cabinet.width / 1000 + .003, cabinet.height / 1000 + .003, cabinet.depth / 1000 + .003]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         <Edges color={invalid.has(cabinet.id) ? "#d62828" : "#246847"} linewidth={2} raycast={() => {}} />
       </mesh>}
     </group>)}
     <KitchenTops kitchen={kitchen} />
+    </group>
   </>;
 }
 class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {

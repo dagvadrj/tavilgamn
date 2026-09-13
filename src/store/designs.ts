@@ -190,6 +190,9 @@ export function setDesignOwner(userId: string | null) {
   if (typeof window === "undefined") return;
 
   const storageName = `casa-designs-${userId ?? "guest"}`;
+  // Auth initialization and token refresh announce the same owner again. The
+  // already hydrated editor is authoritative, including an active drag and undo.
+  if (useDesigns.persist.getOptions().name === storageName && useDesigns.persist.hasHydrated()) return;
   let designs: RoomDesign[] = [];
   let current: RoomDesign | null = null;
 

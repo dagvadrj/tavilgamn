@@ -26,3 +26,5 @@ The `/planner` route keeps each room's surfaces, openings and fixtures in the ex
 ## Verification
 
 Run `node --test tests/*.test.cjs` and `node node_modules/typescript/bin/tsc --noEmit --incremental false`. The focused suites cover geometry/placement boundaries, multi-room persistence, history isolation, and true CSG holes and rebuilds. Use the planner in a browser to verify materials, 2D/3D, camera visibility, catalog placement, opening movement, door swing, lighting, save/reload and mobile drawers.
+
+Verified on 2026-09-13: 113 tests passed, TypeScript and ESLint passed, and the production build completed. Headless Chrome verified actual horizontal opening dragging (including one-step undo/redo), catalog drag/drop, surface controls, invalid-size rejection, door swing settings, fixtures, day/evening modes, reload persistence, responsive camera fit and mobile controls. The local preview is separate from the published website.

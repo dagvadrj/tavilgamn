@@ -224,6 +224,36 @@ test('legacy single-colour store edits remain effective and explicit material ed
   } finally { memory.restore(); }
 });
 
+test('same-owner auth initialization and token refresh preserve hydrated edits and active undo transactions', () => {
+  const persisted = new Map([['casa-designs-guest', JSON.stringify({ state: { designs: [], current: decorated() }, version: 0 })],
+    ['casa-designs-member', JSON.stringify({ state: { designs: [], current: decorated() }, version: 0 })]]);
+  const memory = memoryStore(persisted);
+  try {
+    const store = memory.useDesigns;
+    const hydrated = store.getState().current;
+    memory.setDesignOwner(null);
+    assert.equal(store.getState().current, hydrated);
+    assert.equal(store.getState().current.openings.length, 1);
+    for (const owner of [null, 'member']) {
+      memory.setDesignOwner(owner);
+      store.getState().updateRoom({ height: 2.85 });
+      store.getState().beginEdit();
+      const opening = store.getState().current.openings[0];
+      store.getState().updateRoom({ openings: [{ ...opening, position: .7 }] });
+      const before = store.getState();
+      memory.setDesignOwner(owner);
+      assert.equal(store.getState().current, before.current);
+      assert.equal(store.getState().transaction, before.transaction);
+      assert.equal(store.getState().past, before.past);
+      assert.equal(store.getState().current.height, 2.85);
+      assert.equal(store.getState().current.floorMaterial, 'parquet-walnut');
+      store.getState().endEdit();
+      store.getState().undo(); assert.equal(store.getState().current.openings[0].position, .5);
+      store.getState().undo(); assert.equal(store.getState().current.height, 2.7);
+    }
+  } finally { memory.restore(); }
+});
+
 test('measured plan shows doors, windows, real positions, dimensions, and opening direction', () => {
   const React = require('react');
   const { renderToStaticMarkup } = require('react-dom/server');
