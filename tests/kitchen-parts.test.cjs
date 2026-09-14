@@ -97,7 +97,7 @@ test('door and drawer finishes change independently without recoloring the cabin
     assert.ok(drawer.children[0].material.roughness < door.children[0].material.roughness);
     const sides = tree => meshes(tree.getObjectByName(`Cabinet-${c.id}`)).filter(mesh =>
       mesh.geometry.type === 'BoxGeometry' && Math.abs(mesh.geometry.parameters.width - .018) < 1e-9 &&
-      Math.abs(mesh.geometry.parameters.depth - c.depth / 1000) < 1e-9);
+      Math.abs(mesh.geometry.parameters.depth - (c.depth - 18) / 1000) < 1e-9);
     const originalSides = sides(originalScene), currentSides = sides(root);
     assert.equal(currentSides.length, 2);
     currentSides.forEach((mesh, index) => {

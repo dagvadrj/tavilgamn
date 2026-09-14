@@ -1,9 +1,10 @@
 import { FINISHES, type Finish } from "./kitchen";
 import type { ModularCabinet, ModularKitchen } from "./kitchenCabinets";
-import { applianceIssue, hasCooktop } from "./plitka";
+import { applianceIssue, COOKTOP_PRESETS, cooktopGeometry, hasCooktop } from "./plitka";
 import { placementIssues } from "./kitchenPlacement";
+import { cabinetFronts } from "./kitchenPanels";
 
-export type ComponentType = "sink" | "tap" | "oven" | "cooktop" | "door-front" | "drawer-front" | "handle" | "worktop" | "plinth" | "frame";
+export type ComponentType = "sink" | "tap" | "oven" | "cooktop" | "hood" | "refrigerator" | "door-front" | "drawer-front" | "handle" | "worktop" | "plinth" | "frame";
 /** Optional per-component overrides. Mounts/dimensions are derived, never arbitrary poses. */
 export type ComponentFinish = Finish | "steel" | "brass" | "ceramic" | "granite" | "matte-metal";
 export interface ComponentSize { width?: number; height?: number; depth?: number }
@@ -17,7 +18,7 @@ const metalMaterials = [
 ] as const;
 export function componentMaterials(type: ComponentType): readonly { id: ComponentFinish; label: string; color: string }[] {
   if (type === "sink") return [metalMaterials[0], { id: "ceramic", label: "Керамик", color: "#f2eee5" }, { id: "granite", label: "Чулуун нийлмэл", color: "#4c514c" }];
-  if (type === "tap" || type === "handle") return metalMaterials;
+  if (type === "tap" || type === "handle" || type === "hood" || type === "refrigerator") return metalMaterials;
   return ["door-front", "drawer-front", "worktop", "plinth", "frame"].includes(type) ? boardMaterials : [];
 }
 export function componentSurface(item: CabinetComponent) {
@@ -31,16 +32,22 @@ export function getComponentSize(c: ModularCabinet, item: CabinetComponent, kitc
   const drawerHeight = c.opening === "drawers" ? (c.height - toe) / drawers : 120;
   const sizes: Record<ComponentType, Required<ComponentSize>> = {
     sink: { width: 440, height: 150, depth: 340 }, tap: { width: 22, height: 260, depth: 160 },
-    oven: { width: 560, height: 590, depth: 540 }, cooktop: { width: 520, height: 46, depth: 440 },
-    "door-front": { width: c.width / c.doorCount - 4, height: c.height - toe - drawerHeight * drawers - 4, depth: 18 },
-    "drawer-front": { width: c.width - 4, height: drawerHeight - 4, depth: 18 },
+    oven: { width: 560, height: 590, depth: 540 }, cooktop: cooktopGeometry(c, item.model),
+    hood: { width: c.width, height: c.hoodMount === "wall" ? c.height : 80, depth: c.depth },
+    refrigerator: { width: c.width, height: c.height, depth: c.depth },
+    "door-front": { width: (c.corner ? c.width - c.depth : c.width) / c.doorCount - 2, height: c.height - toe - drawerHeight * drawers - 2, depth: 18 },
+    "drawer-front": { width: c.width - 2, height: drawerHeight - 2, depth: 18 },
     handle: item.model === "knob" ? { width: 30, height: 30, depth: 30 } : item.model === "push-open" ? { width: 0, height: 0, depth: 0 }
-      : { width: Math.min(140, (c.width / c.doorCount - 4) * .5), height: 14, depth: 22 },
+      : { width: Math.min(140, (c.width / c.doorCount - 2) * .5), height: 14, depth: 22 },
     worktop: { width: c.width, height: kitchen?.countertop.thickness ?? 30, depth: c.depth + (kitchen?.countertop.frontOverhang ?? 20) },
-    plinth: { width: c.width - 40, height: 80, depth: c.depth - 90 }, frame: { width: c.width, height: c.height, depth: c.depth },
+    plinth: { width: c.width, height: 80, depth: item.model === "legs" ? c.depth - 90 : 18 }, frame: { width: c.width, height: c.height, depth: c.depth },
   };
-  if (c.type === "tall" && c.opening === "oven" && item.type === "door-front") sizes["door-front"].height = Math.max(882, c.height - 1518) - 4;
-  return { ...sizes[item.type], ...item.size };
+  if (item.type === "door-front" || item.type === "drawer-front") {
+    const face = cabinetFronts(c).find(front => front.kind === item.type);
+    if (face) sizes[item.type] = { width: face.width, height: face.height, depth: 18 };
+  }
+  const { width, height, depth } = sizes[item.type];
+  return { width, height, depth, ...item.size };
 }
 export function componentSizeFields(c: ModularCabinet, item: CabinetComponent): { key: keyof ComponentSize; label: string; min: number; max: number }[] {
   if (item.type === "sink") return [
@@ -66,7 +73,7 @@ function componentSizeIssue(c: ModularCabinet, item: CabinetComponent): string |
   }
 }
 export const COMPONENT_LABELS: Record<ComponentType, string> = {
-  sink: "Угаалтуур", tap: "Холигч цорго", oven: "Зуух", cooktop: "Плитка", "door-front": "Хаалганы навч",
+  sink: "Угаалтуур", tap: "Холигч цорго", oven: "Зуух", cooktop: "Плитка", hood: "Утаа сорогч", refrigerator: "Хөргөгч", "door-front": "Хаалганы навч",
   "drawer-front": "Шургуулганы нүүр", handle: "Бариул", worktop: "Тавцан", plinth: "Хөл, суурь", frame: "Дотоод бүтэц",
 };
 export const COMPONENT_OPTIONS: ComponentOption[] = [
@@ -78,6 +85,13 @@ export const COMPONENT_OPTIONS: ComponentOption[] = [
   { type: "oven", model: "steel", label: "Ган хүрээтэй зуух", width: 600, minDepth: 580 },
   { type: "cooktop", model: "induction", label: "Индукцийн плитка", minWidth: 600 },
   { type: "cooktop", model: "ceramic", label: "Керамик плитка", minWidth: 600 },
+  ...(["induction", "ceramic"] as const).flatMap(model => COOKTOP_PRESETS.map(preset => ({
+    type: "cooktop" as const, model: `${model}-${preset.id}`, label: `${model === "induction" ? "Индукц" : "Керамик"} · ${preset.label}`, minWidth: preset.minWidth, minDepth: 550,
+  }))),
+  { type: "hood", model: "under-cabinet", label: "Шүүгээний доор", minWidth: 600 },
+  { type: "hood", model: "wall", label: "Шууд хананд", minWidth: 600 },
+  { type: "refrigerator", model: "top-bottom", label: "Дээр, доор хаалгатай" },
+  { type: "refrigerator", model: "side-by-side", label: "Зэрэгцээ хоёр том хаалгатай" },
   ...(["door-front", "drawer-front"] as const).flatMap(type => [
     { type, model: "flat", label: "Хавтгай" }, { type, model: "shaker", label: "Хүрээтэй" }, { type, model: "glass", label: "Шилэн" }]),
   { type: "handle", model: "bar", label: "Урт бариул" }, { type: "handle", model: "knob", label: "Товчин бариул" }, { type: "handle", model: "push-open", label: "Дарж нээх" },
@@ -87,7 +101,10 @@ export const COMPONENT_OPTIONS: ComponentOption[] = [
   { type: "frame", model: "standard", label: "18 мм хавтан" },
 ];
 export function componentTypes(c: ModularCabinet): ComponentType[] {
+  if (c.opening === "refrigerator") return ["refrigerator"];
+  if (c.opening === "hood" && c.hoodMount === "wall") return ["hood"];
   const types: ComponentType[] = [];
+  if (c.opening === "hood") types.push("hood");
   if (c.opening === "sink") types.push("sink", "tap");
   if (c.opening === "oven") types.push("oven");
   if (hasCooktop(c)) types.push("cooktop");
@@ -102,17 +119,19 @@ export function compatibleOptions(c: ModularCabinet, type: ComponentType) {
   if (!componentTypes(c).includes(type)) return [];
   return COMPONENT_OPTIONS.filter(o => o.type === type && (!o.width || o.width === c.width) &&
     (!o.minWidth || c.width >= o.minWidth) && (!o.minDepth || c.depth >= o.minDepth) &&
+    (type !== "hood" || o.model === c.hoodMount) &&
     !componentSizeIssue(c, compatibleReplacement(c, { ...c.components?.find(item => item.type === type), type, model: o.model })));
 }
 export function getComponents(c: ModularCabinet, kitchen?: ModularKitchen): CabinetComponent[] {
   return componentTypes(c).map(type => {
     const defaults: Record<ComponentType, string> = { sink: "single", tap: "square", oven: "black", cooktop: "induction",
+      hood: c.hoodMount ?? "under-cabinet", refrigerator: c.refrigeratorStyle ?? "top-bottom",
       "door-front": c.frontStyle ?? "flat", "drawer-front": c.frontStyle ?? "flat", handle: c.handleStyle,
       worktop: kitchen?.countertop.finish ?? "matte", plinth: "recessed", frame: "standard" };
     const override = c.components?.find(item => item.type === type);
     const woodFinish = c.finish ?? (c.material === "wood" ? "oak" : c.material === "gloss" ? "gloss" : "matte");
     const finish: ComponentFinish | undefined = ["door-front", "drawer-front", "frame"].includes(type) ? woodFinish
-      : type === "worktop" ? (override?.model ?? defaults.worktop) as Finish : ["sink", "tap", "handle"].includes(type) ? "steel" : type === "plinth" ? "matte" : undefined;
+      : type === "worktop" ? (override?.model ?? defaults.worktop) as Finish : ["sink", "tap", "handle", "hood", "refrigerator"].includes(type) ? "steel" : type === "plinth" ? "matte" : undefined;
     const color = ["door-front", "drawer-front"].includes(type) ? c.color : undefined;
     return { type, model: defaults[type], ...(finish ? { finish } : {}), ...(color ? { color } : {}), ...override };
   });
@@ -124,6 +143,7 @@ export function componentColor(c: ModularCabinet, item: CabinetComponent) {
     if (material) return material.color;
   }
   switch (item.type) {
+    case "hood": case "refrigerator": return "#b9c0c0";
     case "oven": return item.model === "steel" ? "#aeb5b3" : "#202726";
     case "cooktop": return "#191d20";
     case "tap": return "#3d413c";
@@ -148,7 +168,10 @@ export function parseComponents(c: ModularCabinet): CabinetComponent[] {
   });
 }
 export function withOpening(c: ModularCabinet, opening: ModularCabinet["opening"]): ModularCabinet {
-  const next = { ...c, opening, drawerCount: opening === "drawers" ? 3 : 0 };
+  const { hoodMount, refrigeratorStyle, ...rest } = c;
+  const next: ModularCabinet = { ...rest, opening, drawerCount: opening === "drawers" ? ([2, 3].includes(c.drawerCount) ? c.drawerCount : 3) : 0,
+    ...(opening === "hood" ? { hoodMount: hoodMount ?? "under-cabinet" } : {}),
+    ...(opening === "refrigerator" ? { refrigeratorStyle: refrigeratorStyle ?? "top-bottom", fitToCeiling: false } : {}) };
   return { ...next, ...(c.components ? { components: c.components.filter(item => componentTypes(next).includes(item.type)) } : {}) };
 }
 /** Atomic replacement/snap: invalid type, slot or collision leaves the original design intact. */
@@ -165,6 +188,7 @@ export function replaceComponent(kitchen: ModularKitchen, id: string, item: Cabi
   }
   let updated: ModularCabinet = { ...c, components: [...(c.components ?? []).filter(o => o.type !== item.type), item] };
   if (item.type === "handle") updated = { ...updated, handleStyle: item.model as ModularCabinet["handleStyle"] };
+  if (item.type === "refrigerator") updated = { ...updated, refrigeratorStyle: item.model as ModularCabinet["refrigeratorStyle"] };
   try { updated.components = parseComponents(updated); } catch (error) { return { kitchen, error: (error as Error).message }; }
   const next = { ...kitchen, cabinets: kitchen.cabinets.map(cabinet => cabinet.id === id ? updated : cabinet) };
   const error = applianceIssue(updated) || placementIssues(next).find(i => i.severity === "error")?.message;

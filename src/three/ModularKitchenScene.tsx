@@ -8,6 +8,7 @@ import { roomWalls, type CabinetPose, type ModularCabinet, type ModularKitchen }
 import { placementIssues } from "@/lib/kitchenPlacement";
 import { CabinetBody, KitchenTops } from "./KitchenAssemblyMesh";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
+import { fitBacksplashes } from "@/lib/kitchenBacksplash";
 
 export interface ModularSceneProps {
   exportRoot?: (root: Group | null) => void;
@@ -53,7 +54,7 @@ function Scene(props: ModularSceneProps) {
       gl.domElement.removeEventListener("lostpointercapture", lostCapture); cancel();
     };
   }, [gl]);
-  function start(event: ThreeEvent<PointerEvent>, cabinet: ModularCabinet) {
+  function start(event: ThreeEvent<PointerEvent>, cabinet: Pick<ModularCabinet, "id" | "position">) {
     if (event.button !== 0 || drag.current) return;
     event.stopPropagation(); props.onSelect(cabinet.id);
     if (mode !== "move") return;
@@ -90,7 +91,9 @@ function Scene(props: ModularSceneProps) {
         <mesh raycast={() => {}}><boxGeometry args={[length, .6, .05]} /><meshStandardMaterial color="#a5afa1" transparent opacity={.3} depthWrite={false} /></mesh>
       </group>;
     })}
-    <group ref={props.exportRoot} name="Kitchen" userData={{ kitchenExport: true, units: "meters" }}>
+    <group ref={props.exportRoot} name="Kitchen" userData={{ kitchenExport: true, units: "meters", authoringUnits: "millimeters" }}
+      onPointerMove={move} onPointerUp={event => { if (drag.current?.pointerId === event.pointerId) { event.stopPropagation(); finish(false); } }}
+      onPointerCancel={event => { if (drag.current?.pointerId === event.pointerId) finish(true); }}>
     {kitchen.cabinets.map(cabinet => <group key={cabinet.id} name={`Cabinet-${cabinet.id}`} userData={{ cabinetId: cabinet.id, cabinetType: cabinet.type }}
       position={[cabinet.position.x / 1000, cabinet.position.y / 1000, cabinet.position.z / 1000]} rotation={[0, cabinet.position.rotation, 0]}
       onPointerDown={event => start(event, cabinet)} onPointerMove={move}
@@ -103,7 +106,10 @@ function Scene(props: ModularSceneProps) {
         <Edges color={invalid.has(cabinet.id) ? "#d62828" : "#246847"} linewidth={2} raycast={() => {}} />
       </mesh>}
     </group>)}
-    <KitchenTops kitchen={kitchen} />
+    <KitchenTops kitchen={kitchen} onBacksplashPointerDown={(event, id) => {
+      const panel = fitBacksplashes(kitchen).find(item => item.id === id);
+      if (panel) start(event, panel);
+    }} />
     </group>
   </>;
 }

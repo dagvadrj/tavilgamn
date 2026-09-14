@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import {
   CABINET_DEFAULTS,
+  cabinetLabel,
   CABINET_WIDTHS,
   type ModularCabinet,
   type ModularKitchen,
@@ -44,6 +45,8 @@ function Thumbnail({
     sink: "M7 20h50v26H7z M12 25h40v16H12z M30 25v16",
     tap: "M25 51V19a10 10 0 0 1 20 0v7 M17 51h22 M45 26h6",
     oven: "M12 8h40v48H12z M17 23h30v25H17z M19 19h26 M19 13h3 M41 13h3",
+    hood: "M26 8h12v25l17 15H9l17-15z M9 48v6h46v-6 M18 51h20",
+    refrigerator: "M14 5h36v54H14z M14 25h36 M42 13v7 M42 31v14",
     cooktop:
       "M5 15h54v36H5z M13 27a6 6 0 1 0 12 0a6 6 0 1 0-12 0 M37 27a6 6 0 1 0 12 0a6 6 0 1 0-12 0 M13 42a6 6 0 1 0 12 0a6 6 0 1 0-12 0 M37 42a6 6 0 1 0 12 0a6 6 0 1 0-12 0",
     "door-front": "M15 7h34v50H15z M39 28v8",
@@ -168,7 +171,7 @@ const modelLabel = (item: CabinetComponent) =>
 const sizeLabel = (size: ReturnType<typeof getComponentSize>) =>
   size.width === 0 && size.height === 0
     ? "Бариулгүй нүүр"
-    : `${Math.round(size.width)} × ${Math.round(size.height)} × ${Math.round(size.depth)} мм`;
+    : `${Number(size.width.toFixed(3))} × ${Number(size.height.toFixed(3))} × ${Number(size.depth.toFixed(3))} мм`;
 
 export function KitchenOptionsPanel({
   cabinet,
@@ -304,7 +307,7 @@ export function KitchenOptionsPanel({
       aria-label="Сонгосон шүүгээний бүрэлдэхүүн"
     >
       <p className="kp-eyebrow">СОНГОСОН ШҮҮГЭЭ</p>
-      <h2>{CABINET_DEFAULTS[cabinet.type].label}</h2>
+      <h2>{cabinetLabel(cabinet)}</h2>
       <p className="kco-caption">
         {cabinet.width} × {cabinet.height} × {cabinet.depth} мм ·{" "}
         {selectedCabinet.components.length} бүрэлдэхүүн
@@ -633,7 +636,7 @@ export function KitchenOptionsPanel({
           ) : (
             <div className="kco-detail kco-overview" key="overview">
               <p className="kco-overview-heading">
-                {CABINET_DEFAULTS[cabinet.type].label}
+                {cabinetLabel(cabinet)}
               </p>
               <p className="kco-caption">
                 {cabinet.width} × {cabinet.height} × {cabinet.depth} мм

@@ -13,18 +13,19 @@ const collision = loadSource('src/three/collision.ts', mocks);
 const saved = design => ({ id: '12345678-1234-1234-1234-123456789abc', name: 'Миний гал тогоо', design });
 const near = (a, b) => assert.ok(Math.abs(a - b) < 0.00001, `${a} != ${b}`);
 
-test('unified design preserves appearance and IDs across all three layouts and JSON roundtrip', () => {
+test('unified design preserves appearance and IDs across four layouts and JSON roundtrip', () => {
   const base = model.createUnifiedKitchen();
   const schema = new (require('ajv'))().compile(JSON.parse(require('node:fs').readFileSync('src/lib/cabinet.schema.json','utf8')));
   for (const c of base.cabinets) assert.equal(schema(c),true,JSON.stringify(schema.errors));
   const styled = model.applyKitchenAppearance(base, null, { finish: 'walnut', handleStyle: 'knob', color: '#123456', frontStyle: 'shaker' });
   const selected = model.applyKitchenAppearance(styled, ['base-1'], { color: '#ffffff' });
   assert.equal(selected.cabinets.find(c => c.id === 'base-2').color, '#123456');
-  for (const layout of ['straight', 'l-left', 'l-right']) {
+  for (const layout of ['straight', 'l-left', 'l-right', 'double-side']) {
     const next = model.arrangeKitchen(selected, layout);
     assert.deepEqual(placement.placementIssues(next).filter(i => i.severity === 'error'), []);
     assert.deepEqual(model.parseKitchen(JSON.parse(JSON.stringify(next))), next);
-    assert.deepEqual(next.cabinets.map(c => [c.id, c.width, c.finish, c.handleStyle]), selected.cabinets.map(c => [c.id, c.width, c.finish, c.handleStyle]));
+    assert.deepEqual(next.cabinets.map(c => [c.id, c.finish, c.handleStyle]), selected.cabinets.map(c => [c.id, c.finish, c.handleStyle]));
+    for (const c of next.cabinets) assert.equal(c.width, c.corner ? c.type === 'base' ? 1000 : 800 : selected.cabinets.find(before => before.id === c.id).width);
   }
   assert.equal(base.cabinets[0].finish, 'oak');
 });

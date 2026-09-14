@@ -110,3 +110,8 @@ supabase/migrations/*
 
 !/tests/kitchen-parts.test.cjs
 !/docs/kitchen-parts.md
+!/tests/kitchen-precision-layout.test.cjs
+!/tests/kitchen-panel-geometry.test.cjs
+!/tests/kitchen-export-precision.test.cjs
+!/tests/kitchen-backsplash.test.cjs
+!/docs/kitchen-precision.md

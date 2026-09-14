@@ -7,7 +7,7 @@ const { loadSource } = require('./helpers/load-source.cjs');
 const { createCabinet, validateCabinet } = loadSource('src/lib/kitchenCabinets.ts');
 const { parseKitchen, kitchenEnvelope, applyKitchenAppearance } = loadSource('src/lib/kitchenAssembly.ts');
 const { componentTypes, compatibleOptions, getComponents, replaceComponent, snapAppliance, withOpening } = loadSource('src/lib/kitchenComponents.ts');
-const { ovenSlot, OVEN_BODY } = loadSource('src/lib/kitchenAppliances.ts');
+const { ovenSlot, OVEN_BODY } = loadSource('src/lib/plitka.ts');
 const { fitCountertops } = loadSource('src/lib/kitchenPlacement.ts');
 const schema = new (require('ajv'))({ allErrors: true }).compile(JSON.parse(readFileSync('src/lib/cabinet.schema.json', 'utf8')));
 const near = (a, b, message = '') => assert.ok(Math.abs(a - b) < 0.000001, `${message}: ${a} != ${b}`);

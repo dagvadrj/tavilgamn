@@ -4,11 +4,11 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, RotateCw, Trash2 } from "lucide-react";
-import { CABINET_DEFAULTS, CABINET_WIDTHS, createCabinet, validateCabinet,
+import { ArrowLeft, Plus, RotateCw, Trash2, LayoutPanelTop } from "lucide-react";
+import { CABINET_DEFAULTS, CABINET_WIDTHS, createCabinet, createHood, createRefrigerator, cabinetLabel, validateCabinet,
   type CabinetPose, type CabinetType, type CabinetWidth, type ModularCabinet, type ModularKitchen } from "@/lib/kitchenCabinets";
 import { cabinetAxes, cabinetCorners, findCabinetSpace, fitCountertops, placementIssues, proposeCabinetMove, resolveElevations, wallCabinetClearance } from "@/lib/kitchenPlacement";
-import { applyKitchenAppearance, arrangeKitchen, cloneKitchen, createUnifiedKitchen, kitchenEnvelope, parseKitchen } from "@/lib/kitchenAssembly";
+import { applyKitchenAppearance, arrangeKitchen, cloneKitchen, createUnifiedKitchen, kitchenEnvelope, parseKitchen, replaceCorner } from "@/lib/kitchenAssembly";
 import { FINISHES, type FrontStyle } from "@/lib/kitchen";
 import { useAuth } from "@/store/auth";
 import { useKitchens } from "@/store/kitchens";
@@ -16,6 +16,7 @@ import type { Group } from "three";
 import { KitchenOptionsPanel } from "./KitchenOptionsPanel";
 import { componentTypes, parseComponents, replaceComponent, withOpening, type CabinetComponent } from "@/lib/kitchenComponents";
 import { KitchenExportButtons } from "./KitchenExportButtons";
+import { fitBacksplashes, parseBacksplashSettings, type BacksplashPanel } from "@/lib/kitchenBacksplash";
 
 const Scene = dynamic(() => import("@/three/ModularKitchenScene").then(module => module.ModularKitchenScene), {
   ssr: false, loading: () => <p className="kp-viewer-message" role="status">3D загварыг бэлдэж байна…</p>,
@@ -24,12 +25,12 @@ function DimensionInput({ label, value, min, max, onCommit, disabled = false }: 
   label: string; value: number; min: number; max: number; disabled?: boolean; onCommit: (value: number) => void;
 }) {
   return <label className="kp-field"><span>{label}</span><span className="kp-number">
-    <input key={value} type="number" defaultValue={Math.round(value)} min={min} max={max} step={1} disabled={disabled}
+    <input key={value} type="number" defaultValue={value} min={min} max={max} step={0.001} disabled={disabled}
       onKeyDown={event => { if (event.key === "Enter") event.currentTarget.blur(); }}
       onBlur={event => {
         const next = event.currentTarget.valueAsNumber;
-        if (Number.isInteger(next) && next >= min && next <= max) onCommit(next);
-        event.currentTarget.value = String(Math.round(value));
+        if (Number.isFinite(next) && next >= min && next <= max) onCommit(next);
+        event.currentTarget.value = String(value);
       }} /><span>мм</span></span><small>{min}–{max} мм</small></label>;
 }
 function Plan({ kitchen, selectedId, onSelect }: { kitchen: ModularKitchen; selectedId: string | null; onSelect: (id: string) => void }) {
@@ -41,7 +42,7 @@ function Plan({ kitchen, selectedId, onSelect }: { kitchen: ModularKitchen; sele
       const { front } = cabinetAxes(cabinet.position.rotation);
       return <g key={cabinet.id} className={`km-plan-cabinet ${cabinet.type === "wall" ? "is-wall" : ""} ${errors.has(cabinet.id) ? "is-invalid" : ""} ${selectedId === cabinet.id ? "is-selected" : ""}`}>
         <polygon points={cabinetCorners(cabinet).map(p => `${p.x},${p.z}`).join(" ")} role="button" tabIndex={0}
-          aria-label={`${CABINET_DEFAULTS[cabinet.type].label}, ${cabinet.width} мм`} aria-pressed={selectedId === cabinet.id}
+          aria-label={`${cabinetLabel(cabinet)}, ${cabinet.width} мм`} aria-pressed={selectedId === cabinet.id}
           onClick={() => onSelect(cabinet.id)} onKeyDown={event => { if (["Enter", " "].includes(event.key)) { event.preventDefault(); onSelect(cabinet.id); } }} />
         <line x1={cabinet.position.x} y1={cabinet.position.z} x2={cabinet.position.x + front.x * cabinet.depth * .4}
           y2={cabinet.position.z + front.z * cabinet.depth * .4} pointerEvents="none" />
@@ -105,7 +106,7 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
   const dragBase = useRef<ModularKitchen | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>("base-1");
   const [mode, setMode] = useState<"move" | "orbit">("orbit");
-  const [addType, setAddType] = useState<CabinetType>("base");
+  const [addType, setAddType] = useState<CabinetType | "oven-base" | "oven-tall" | "hood-integrated" | "hood-wall" | "fridge-top" | "fridge-side">("base");
   const [addWidth, setAddWidth] = useState<CabinetWidth>(600);
   const [message, setMessage] = useState("");
   const [snapMessage, setSnapMessage] = useState("");
@@ -114,6 +115,7 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
   const selected = kitchen.cabinets.find(c => c.id === selectedId);
   const issues = useMemo(() => placementIssues(kitchen), [kitchen]);
   const tops = useMemo(() => fitCountertops(kitchen), [kitchen]);
+  const backsplashes = useMemo(() => fitBacksplashes(kitchen), [kitchen]);
   const clearance = selected ? wallCabinetClearance(selected, kitchen) : null;
   const bounds = kitchenEnvelope(kitchen), busy = dragging || saving || !ready;
   const appearanceIds = scope === "all" ? null : scope === "selected" ? [selectedId ?? ""] : design.cabinets.filter(c => scope === "wall" ? c.type === "wall" : c.type !== "wall").map(c => c.id);
@@ -137,22 +139,34 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
     next = resolveElevations(next);
     const invalid = next.cabinets.map(validateCabinet).find(Boolean);
     try { next.cabinets.forEach(c => { if (c.components) parseComponents(c); }); } catch (error) { setMessage((error as Error).message); return false; }
+    try { parseBacksplashSettings(next.backsplashSettings, next.room); } catch (error) { setMessage((error as Error).message); return false; }
     const problem = invalid || placementIssues(next).find(issue => issue.severity === "error")?.message;
     if (problem) { setMessage(problem); return false; }
     designRef.current = next; setDesign(next); setMessage(""); return true;
   }
   function selectCabinet(id: string) {
+    if (fitBacksplashes(kitchen).some(panel => panel.id === id)) {
+      setMessage("Ханын хавтанг чирж зөөнө. Өндөр, хэмжээ, нарийн байрлалыг Тавцан хэсгээс тохируулна.");
+      return;
+    }
     setSelectedId(id);
     if (window.matchMedia("(max-width: 760px)").matches) setComponentOverview(true);
   }
   function start(id: string) {
     if (busy) return;
     setOpen(false); setComponentOverview(false);
-    setSelectedId(id); dragBase.current = designRef.current; draftRef.current = designRef.current;
+    if (design.cabinets.some(c => c.id === id)) setSelectedId(id);
+    dragBase.current = designRef.current; draftRef.current = designRef.current;
     setDragging(true); setMessage("");
   }
   function move(id: string, pose: CabinetPose) {
     if (!dragBase.current) return;
+    const panels = fitBacksplashes(dragBase.current);
+    if (panels.some(panel => panel.id === id)) {
+      const next = { ...dragBase.current, backsplashSettings: { mode: "manual" as const, panels: panels.map(panel => panel.id === id ? { ...panel, position: pose } : panel) } };
+      draftRef.current = next; setPreview(next); setSnapMessage("Ханын хавтан · байрлалыг миллиметрээр тохируулж байна");
+      return;
+    }
     const result = proposeCabinetMove(dragBase.current, id, pose);
     draftRef.current = result.kitchen; setPreview(result.kitchen);
     setSnapMessage([result.wallId ? "Хананд таарлаа" : "", result.neighbourId ? "Шүүгээтэй зайгүй таарлаа" : ""].filter(Boolean).join(" · "));
@@ -190,11 +204,24 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
     commit(proposeCabinetMove(design, selected.id, { ...selected.position, ...patch }).kitchen);
   }
   function addCabinet() {
-    const cabinet = createCabinet(addType, crypto.randomUUID(), addWidth, design.room.height);
+    const id = crypto.randomUUID();
+    const cabinet = addType.startsWith("fridge") ? createRefrigerator(id, addType === "fridge-side" ? "side-by-side" : "top-bottom")
+      : addType.startsWith("hood") ? createHood(id, addType === "hood-integrated" ? "under-cabinet" : "wall", addWidth)
+      : addType.startsWith("oven") ? withOpening(createCabinet(addType === "oven-tall" ? "tall" : "base", id, 600, design.room.height), "oven")
+      : createCabinet(addType as CabinetType, id, addWidth, design.room.height);
     if (appearance) Object.assign(cabinet, { finish: appearance.finish, frontStyle: appearance.frontStyle, handleStyle: appearance.handleStyle, material: appearance.material, color: appearance.color });
     const next = findCabinetSpace(design, cabinet);
     if (!next) { setMessage("Энэ хэмжээтэй шүүгээ багтах сул ханын зай алга. Шүүгээ зөөх, хасах эсвэл өрөөг томруулна уу."); return; }
     if (commit(next)) setSelectedId(cabinet.id);
+  }
+  function replaceCabinet(cabinet: ModularCabinet) {
+    const next = resolveElevations({ ...design, cabinets: design.cabinets.map(c => c.id === cabinet.id ? cabinet : c) });
+    if (!placementIssues(next).some(issue => issue.severity === "error")) { commit(next); return; }
+    const fitted = findCabinetSpace({ ...design, cabinets: design.cabinets.filter(c => c.id !== cabinet.id) }, cabinet);
+    if (fitted) commit(fitted); else setMessage("Энэ төхөөрөмжийн хэмжээтэй сул зай алга.");
+  }
+  function updateBacksplash(id: string, patch: Partial<BacksplashPanel>) {
+    commit({ ...design, backsplashSettings: { mode: "manual", panels: fitBacksplashes(design).map(panel => panel.id === id ? { ...panel, ...patch } : panel) } });
   }
   return <main className="kp container-page">
     <header className="kp-heading"><div><p className="kp-eyebrow">ГАЛ ТОГОО ТӨЛӨВЛӨХ</p><h1>Гал тогоогоо өөрийнхөөрөө.</h1></div>
@@ -216,10 +243,12 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
       }}><Plus size={15} />Шинэ гарнитур</button>
       <KitchenExportButtons root={exportRoot} name={name} disabled={busy || !kitchen.cabinets.length} />
     </section>
-    <div className="km-layout-options" role="group" aria-label="Гарнитурын хэлбэр">
-      {([["straight", "Шулуун"], ["l-right", "L · баруун булан"], ["l-left", "L · зүүн булан"]] as const).map(([layout, label]) =>
-        <button key={layout} type="button" disabled={busy} onClick={() => { if (commit(arrangeKitchen(design, layout))) setViewKey(key => key + 1); }}>{label}</button>)}
-    </div>
+    <details className="km-layout-menu"><summary><LayoutPanelTop size={18} />Байрлал · {({ straight: "I · Шулуун", "l-right": "L · Баруун", "l-left": "L · Зүүн", "double-side": "Хоёр тал" } as const)[design.layout ?? "straight"]}</summary>
+      <div className="km-layout-options" role="group" aria-label="Гарнитурын хэлбэр">
+        {([["straight", "I · Шулуун"], ["l-right", "L · баруун булан"], ["l-left", "L · зүүн булан"], ["double-side", "Double side · Хоёр тал"]] as const).map(([layout, label]) =>
+          <button key={layout} type="button" disabled={busy} aria-pressed={(design.layout ?? "straight") === layout} onClick={event => { if (commit(arrangeKitchen(design, layout))) { setViewKey(key => key + 1); event.currentTarget.closest("details")?.removeAttribute("open"); } }}>{label}</button>)}
+      </div>
+    </details>
     <div className="kp-layout"><div className="kp-workspace">
       <section className="kp-preview" aria-label="Модуль шүүгээ байрлуулах">
         <div className="kp-preview-bar"><span>{Math.round(bounds.w * 1000)} × {Math.round(bounds.d * 1000)} × {Math.round(bounds.h * 1000)} мм · {kitchen.cabinets.length} шүүгээ</span>
@@ -239,7 +268,7 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
         <Plan kitchen={kitchen} selectedId={selectedId} onSelect={selectCabinet} />
         <div className="kp-module-list" role="group" aria-label="Шүүгээ сонгох">
           {kitchen.cabinets.map((cabinet, i) => <button key={cabinet.id} type="button" disabled={dragging} aria-pressed={selectedId === cabinet.id} onClick={() => selectCabinet(cabinet.id)}>
-            <span className="kp-module-number">{i + 1}</span><strong>{CABINET_DEFAULTS[cabinet.type].label}</strong><span>{cabinet.width} × {cabinet.height} × {cabinet.depth} мм</span>
+            <span className="kp-module-number">{i + 1}</span><strong>{cabinetLabel(cabinet)}</strong><span>{cabinet.width} × {cabinet.height} × {cabinet.depth} мм</span>
           </button>)}
         </div>
         {!kitchen.cabinets.length && <p className="km-empty">Эхний шүүгээгээ баруун талын сонголтоос нэмээрэй.</p>}
@@ -249,12 +278,16 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
           : <p className="kp-help">Доод шүүгээ нэмэхэд тавцан автоматаар үүснэ.</p>}
       </section>
     </div><aside className="kp-settings" aria-label="Шүүгээний тохиргоо">
-      {selected && <section className="kp-panel"><div className="kp-section-heading"><h2>{CABINET_DEFAULTS[selected.type].label}</h2>
+      {selected && <section className="kp-panel"><div className="kp-section-heading"><h2>{cabinetLabel(selected)}</h2>
         <button type="button" className="km-delete" disabled={busy} aria-label="Сонгосон шүүгээг устгах" onClick={() => {
           const next = { ...design, cabinets: design.cabinets.filter(c => c.id !== selected.id) };
           if (commit(next)) setSelectedId(next.cabinets[0]?.id ?? null);
         }}><Trash2 size={18} /></button></div>
         <fieldset className="km-fields" disabled={busy} key={selected.id}>
+          {selected.corner !== undefined && <label className="kp-field"><span>Булангийн төрөл</span><select value={selected.corner ? "corner" : "regular"} onChange={e => {
+            const corner = e.target.value === "corner";
+            updateCabinet(replaceCorner(selected, corner));
+          }}><option value="corner">Булангийн шүүгээ</option><option value="regular">Энгийн шүүгээ</option></select></label>}
           <label className="kp-field"><span>Шүүгээний загвар</span><select value={selected.opening ?? "doors"} onChange={e => {
             const opening = e.target.value as ModularCabinet["opening"];
             updateCabinet(withOpening(selected, opening));
@@ -262,22 +295,39 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
             {selected.type !== "wall" && <option value="drawers">Шургуулгатай</option>}
             {selected.type === "base" && <><option value="sink" disabled={selected.width < 600}>Угаалтууртай</option><option value="hob" disabled={selected.width < 600}>Зөвхөн плиткатай</option></>}
             {selected.type !== "wall" && <option value="oven" disabled={selected.width !== 600 || selected.depth < 580}>{selected.type === "base" ? "Плитка + суурилуулсан зуух" : "Дунд хэсэгт суурилуулсан зуух"}</option>}
+            {selected.opening === "refrigerator" && <option value="refrigerator">Хөргөгч</option>}
+            {selected.opening === "hood" && <option value="hood">Утаа сорогч</option>}
           </select></label>
+          {selected.opening === "drawers" && <label className="kp-field"><span>Шургуулга</span><select value={selected.drawerCount} onChange={e => updateCabinet({ drawerCount: Number(e.target.value) })}><option value={2}>2 шургуулга</option><option value={3}>3 шургуулга</option></select></label>}
+          {selected.opening === "oven" && <label className="kp-field"><span>Зуухны байрлал</span><select value={selected.type} onChange={e => {
+            const replacement = withOpening(createCabinet(e.target.value as "base" | "tall", selected.id, 600, design.room.height), "oven");
+            replaceCabinet({ ...replacement, finish: selected.finish, color: selected.color, components: selected.components, position: { ...selected.position, y: 0 } });
+          }}><option value="base">Тавцангийн доор · Worktop</option><option value="tall">Өндөр шүүгээнд · High cabinet</option></select></label>}
+          {selected.opening === "hood" && <label className="kp-field"><span>Утаа сорогчийн байрлал</span><select value={selected.hoodMount ?? "wall"} onChange={e => {
+            const replacement = createHood(selected.id, e.target.value as "under-cabinet" | "wall", selected.width);
+            const { front } = cabinetAxes(selected.position.rotation), offset = (replacement.depth - selected.depth) / 2;
+            replaceCabinet({ ...replacement, position: { ...selected.position, x: selected.position.x + front.x * offset, z: selected.position.z + front.z * offset } });
+          }}><option value="under-cabinet">Шүүгээний доор</option><option value="wall">Шууд хананд</option></select></label>}
+          {selected.opening === "refrigerator" && <label className="kp-field"><span>Хөргөгчийн хаалга</span><select value={selected.refrigeratorStyle ?? "top-bottom"} onChange={e => {
+            const replacement = createRefrigerator(selected.id, e.target.value as "top-bottom" | "side-by-side");
+            const { front } = cabinetAxes(selected.position.rotation), offset = (replacement.depth - selected.depth) / 2;
+            replaceCabinet({ ...replacement, position: { ...selected.position, x: selected.position.x + front.x * offset, z: selected.position.z + front.z * offset } });
+          }}><option value="top-bottom">Дээр, доор хоёр хаалгатай</option><option value="side-by-side">Зэрэгцээ хоёр том хаалгатай</option></select></label>}
           <details className="km-details"><summary>Хэмжээ, байрлал өөрчлөх</summary><div className="km-fields">
-          <label className="kp-field"><span>Өргөн</span><select value={selected.width} onChange={e => {
+          {selected.opening === "refrigerator" ? <DimensionInput label="Хөргөгчийн нийт өргөн" value={selected.width} min={450} max={1200} onCommit={width => updateCabinet({ width })} /> : <label className="kp-field"><span>Өргөн</span><select value={selected.width} onChange={e => {
             const width = Number(e.target.value) as CabinetWidth; updateCabinet({ width, doorCount: width < 600 ? 1 : selected.doorCount });
-          }}>{CABINET_WIDTHS.map(width => <option key={width} value={width}>{width} мм</option>)}</select></label>
-          <DimensionInput label="Өндөр" value={selected.height} min={CABINET_DEFAULTS[selected.type].heightRange[0]} max={CABINET_DEFAULTS[selected.type].heightRange[1]}
+          }}>{(selected.corner ? [selected.type === "wall" ? 800 : 1000] : CABINET_WIDTHS).map(width => <option key={width} value={width}>{width} мм</option>)}</select></label>}
+          <DimensionInput label="Өндөр" value={selected.height} min={selected.opening === "refrigerator" ? 1400 : selected.opening === "hood" ? 200 : CABINET_DEFAULTS[selected.type].heightRange[0]} max={selected.opening === "refrigerator" ? 2300 : CABINET_DEFAULTS[selected.type].heightRange[1]}
             disabled={selected.type === "tall" && selected.fitToCeiling} onCommit={height => updateCabinet({ height })} />
-          <DimensionInput label="Гүн" value={selected.depth} min={CABINET_DEFAULTS[selected.type].depthRange[0]} max={CABINET_DEFAULTS[selected.type].depthRange[1]} onCommit={depth => {
+          <DimensionInput label="Гүн" value={selected.depth} min={selected.opening === "refrigerator" ? 500 : CABINET_DEFAULTS[selected.type].depthRange[0]} max={selected.opening === "refrigerator" ? 900 : selected.opening === "hood" ? 600 : CABINET_DEFAULTS[selected.type].depthRange[1]} onCommit={depth => {
             const { front } = cabinetAxes(selected.position.rotation), delta = (depth - selected.depth) / 2;
             updateCabinet({ depth, position: { ...selected.position, x: selected.position.x + front.x * delta, z: selected.position.z + front.z * delta } });
           }} />
           <label className="kp-field"><span>Хаалганы тоо</span><select value={selected.doorCount} onChange={e => updateCabinet({ doorCount: Number(e.target.value) as 1 | 2 })}>
             <option value={1}>1 хаалга</option><option value={2} disabled={selected.width < 600}>2 хаалга</option></select></label>
-          {selected.type !== "wall" && !["sink", "open", "oven"].includes(selected.opening ?? "") && <label className="kp-field"><span>Шургуулганы тоо</span><select value={selected.drawerCount} onChange={e => updateCabinet({ drawerCount: Number(e.target.value) })}>
-            {(selected.opening === "drawers" ? [1, 2, 3, 4] : [0, 1, 2, 3, 4]).map(count => <option key={count} value={count}>{count}</option>)}</select></label>}
-          {selected.type === "tall" && <label className="kp-checkbox"><input type="checkbox" checked={selected.fitToCeiling} onChange={e => updateCabinet({ fitToCeiling: e.target.checked })} />Таазны өндөрт тааруулах</label>}
+          {selected.type !== "wall" && !["sink", "open", "oven", "drawers", "refrigerator"].includes(selected.opening ?? "") && <label className="kp-field"><span>Шургуулганы тоо</span><select value={selected.drawerCount} onChange={e => updateCabinet({ drawerCount: Number(e.target.value) })}>
+            {[0, 2, 3].map(count => <option key={count} value={count}>{count}</option>)}</select></label>}
+          {selected.type === "tall" && selected.opening !== "refrigerator" && <label className="kp-checkbox"><input type="checkbox" checked={selected.fitToCeiling} onChange={e => updateCabinet({ fitToCeiling: e.target.checked })} />Таазны өндөрт тааруулах</label>}
           {selected.type === "wall" && <>
             <label className="kp-checkbox"><input type="checkbox" checked={selected.autoElevation} onChange={e => updateCabinet({ autoElevation: e.target.checked })} />Тавцангаас өндрийг автоматаар тооцох</label>
             <DimensionInput label="Шалнаас доод ирмэг хүртэл" value={selected.position.y} min={0} max={kitchen.room.height - selected.height}
@@ -309,17 +359,36 @@ export function ModularKitchenPlanner({ active = true, queryString = "" }: { act
         <p className="kp-help">Сонгосон материал бүх заасан шүүгээнд шууд үйлчилнэ.</p>
       </fieldset></details>
       <details className="kp-panel km-details"><summary>Тавцан · нийт загвар</summary><fieldset className="km-fields" disabled={busy}>
+        <label className="kp-field"><span>Тавцангийн зузаан</span><select value={design.countertop.thickness} onChange={e => commit({ ...design, countertop: { ...design.countertop, thickness: Number(e.target.value) } })}>{[20, 28, 30, 38, 40].map(mm => <option key={mm} value={mm}>{mm} мм</option>)}</select></label>
+        <label className="kp-field"><span>Урд ирмэгийн илүү</span><select value={design.countertop.frontOverhang} onChange={e => commit({ ...design, countertop: { ...design.countertop, frontOverhang: Number(e.target.value) } })}>{[0, 20, 30, 50, 100].map(mm => <option key={mm} value={mm}>{mm} мм · 600 мм шүүгээнд {600 + mm} мм тавцан</option>)}</select></label>
         <div className="km-finishes" role="group" aria-label="Тавцангийн материал">{FINISHES.map(f => <button type="button" key={f.id} aria-pressed={design.countertop.finish === f.id} onClick={() => commit({ ...design, cabinets: design.cabinets.map(c => ({ ...c, ...(c.components ? { components: c.components.filter(item => item.type !== "worktop") } : {}) })), countertop: { ...design.countertop, finish: f.id, material: ["oak", "walnut"].includes(f.id) ? "wood" : f.id === "marble" ? "granite" : "laminate" } })}>
           <span style={{ background: f.color }} />{f.name}</button>)}</div>
         <label className="kp-checkbox"><input type="checkbox" checked={!!design.backsplash} onChange={e => commit({ ...design, backsplash: e.target.checked })} />Ханын хамгаалалтын хавтан</label>
+        {design.backsplash && <>
+          <label className="kp-field"><span>Ханын хавтангийн урт, байрлал</span><select value={design.backsplashSettings?.mode ?? "full-run"} onChange={e => commit({ ...design, backsplashSettings: { mode: e.target.value as "full-run" | "manual", panels: e.target.value === "manual" ? fitBacksplashes(design) : [] } })}><option value="full-run">Тавилгуудын нийт уртаар</option><option value="manual">Хэмжээ, байрлалыг өөрөө тохируулах</option></select></label>
+          {design.backsplashSettings?.mode === "manual" && backsplashes.map((panel, i) => <details key={panel.id} className="km-details"><summary>Ханын хавтан {i + 1} · {panel.width} × {panel.height} мм</summary><div className="km-fields">
+            <DimensionInput label="Урт" value={panel.width} min={100} max={8000} onCommit={width => updateBacksplash(panel.id, { width })} />
+            <DimensionInput label="Өндөр" value={panel.height} min={100} max={1500} onCommit={height => updateBacksplash(panel.id, { height })} />
+            <DimensionInput label="Зузаан" value={panel.thickness} min={6} max={40} onCommit={thickness => updateBacksplash(panel.id, { thickness })} />
+            <DimensionInput label="Зүүн хананаас төв (X)" value={panel.position.x} min={0} max={design.room.width} onCommit={x => updateBacksplash(panel.id, { position: { ...panel.position, x } })} />
+            <DimensionInput label="Арын хананаас төв (Z)" value={panel.position.z} min={0} max={design.room.depth} onCommit={z => updateBacksplash(panel.id, { position: { ...panel.position, z } })} />
+            <DimensionInput label="Шалнаас доод ирмэг" value={panel.position.y} min={0} max={design.room.height - panel.height} onCommit={y => updateBacksplash(panel.id, { position: { ...panel.position, y } })} />
+            <button type="button" className="btn-ghost" onClick={() => updateBacksplash(panel.id, { position: { ...panel.position, rotation: panel.position.rotation + Math.PI / 2 } })}><RotateCw size={16} />90° эргүүлэх</button>
+          </div></details>)}
+        </>}
       </fieldset></details>
-      <section className="kp-panel"><h2>Шүүгээ нэмэх</h2>
-        <div className="km-fields"><label className="kp-field"><span>Төрөл</span><select value={addType} disabled={busy} onChange={e => setAddType(e.target.value as CabinetType)}>
-          {Object.entries(CABINET_DEFAULTS).map(([type, spec]) => <option key={type} value={type}>{spec.label}</option>)}</select></label>
-          <label className="kp-field"><span>Өргөн</span><select value={addWidth} disabled={busy} onChange={e => setAddWidth(Number(e.target.value) as CabinetWidth)}>
-            {CABINET_WIDTHS.map(width => <option key={width} value={width}>{width / 10} см</option>)}</select></label>
-          <button type="button" className="kp-primary" onClick={addCabinet} disabled={busy || kitchen.cabinets.length >= 80}><Plus size={16} />Шүүгээ нэмэх</button></div>
-      </section>
+      <details className="kp-panel km-details km-add-menu"><summary><Plus size={17} />Шүүгээ, төхөөрөмж нэмэх</summary>
+        <div className="km-fields"><label className="kp-field"><span>Төрөл</span><select value={addType} disabled={busy} onChange={e => { setAddType(e.target.value as typeof addType); setAddWidth(600); }}>
+          <optgroup label="Шүүгээ">{Object.entries(CABINET_DEFAULTS).map(([type, spec]) => <option key={type} value={type}>{spec.label}</option>)}</optgroup>
+          <optgroup label="Зуух"><option value="oven-base">Тавцангийн доор</option><option value="oven-tall">Өндөр шүүгээнд</option></optgroup>
+          <optgroup label="Утаа сорогч"><option value="hood-integrated">Шүүгээний доор</option><option value="hood-wall">Шууд хананд</option></optgroup>
+          <optgroup label="Хөргөгч"><option value="fridge-top">Дээр, доор хаалгатай</option><option value="fridge-side">Зэрэгцээ хоёр том хаалгатай</option></optgroup>
+          </select></label>
+          {!addType.startsWith("fridge") && !addType.startsWith("oven") && <label className="kp-field"><span>Өргөн</span><select value={addWidth} disabled={busy} onChange={e => setAddWidth(Number(e.target.value) as CabinetWidth)}>
+            {CABINET_WIDTHS.filter(width => !addType.startsWith("hood") || width >= 600).map(width => <option key={width} value={width}>{width / 10} см</option>)}</select></label>
+          }
+          <button type="button" className="kp-primary" onClick={addCabinet} disabled={busy || kitchen.cabinets.length >= 80}><Plus size={16} />Нэмэх</button></div>
+      </details>
       <details className="kp-panel km-details"><summary>Өрөөний хэмжээ ба дээд шүүгээний зай</summary><fieldset className="km-fields" disabled={busy}>
         {([['width', 'Өрөөний өргөн', 2000, 8000], ['depth', 'Өрөөний урт', 2000, 8000], ['height', 'Таазны өндөр', 2200, 3500]] as const).map(([key, label, min, max]) =>
           <DimensionInput key={key} label={label} value={design.room[key]} min={min} max={max} onCommit={value => commit({ ...design, room: { ...design.room, [key]: value } })} />)}

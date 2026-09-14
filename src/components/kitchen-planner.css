@@ -136,6 +136,11 @@
 }
 .km-export { width: 100%; }
 .km-export-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; }
+.km-layout-menu { position: relative; margin: 18px 0; }
+.km-layout-menu > summary { display: inline-flex; align-items: center; gap: 9px; min-height: 46px; padding: 10px 16px; border: 1px solid #cad4c9; border-radius: 10px; background: white; cursor: pointer; }
+.km-layout-menu .km-layout-options { margin-top: 9px; }
+.km-layout-options button[aria-pressed="true"] { background: #293c32; color: white; }
+.km-add-menu > summary { display: flex; align-items: center; gap: 8px; }
 .km-export-actions button { display: inline-flex; align-items: center; gap: .4rem; }
 .km-export-actions small, .km-export p { color: #53614f; font-size: .82rem; }
 .km-export p { margin-top: .5rem; max-width: 65rem; }
