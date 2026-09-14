@@ -1,4 +1,4 @@
-import { cabinetFrontExtra } from "@/lib/kitchenAppliances";
+import { cabinetFrontExtra } from "@/lib/plitka";
 import type { PlacedFurniture, RoomShape } from "@/lib/types";
 import { getRoomGeometry } from "@/lib/roomGeometry";
 import { getProduct } from "@/store/catalog";

@@ -1,6 +1,6 @@
 import { FINISHES, type Finish } from "./kitchen";
 import type { ModularCabinet, ModularKitchen } from "./kitchenCabinets";
-import { applianceIssue, hasCooktop } from "./kitchenAppliances";
+import { applianceIssue, hasCooktop } from "./plitka";
 import { placementIssues } from "./kitchenPlacement";
 
 export type ComponentType = "sink" | "tap" | "oven" | "cooktop" | "door-front" | "drawer-front" | "handle" | "worktop" | "plinth" | "frame";

@@ -1,4 +1,4 @@
-import { cabinetFrontExtra, hasCooktop } from "./kitchenAppliances";
+import { cabinetFrontExtra, hasCooktop } from "./plitka";
 import { getComponents, getComponentSize, parseComponents } from "./kitchenComponents";
 import { FINISHES, type Finish, type FrontStyle } from "./kitchen";
 import { createCabinet, createModularKitchen, validateCabinet, type ModularCabinet, type ModularKitchen } from "./kitchenCabinets";

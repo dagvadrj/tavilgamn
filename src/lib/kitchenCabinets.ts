@@ -2,7 +2,7 @@
  * Position is the footprint centre and cabinet bottom. Local +Z is the front.
  * The old run-based Kitchen type remains supported by the existing configurator.
  */
-import { applianceIssue } from "./kitchenAppliances";
+import { applianceIssue } from "./plitka";
 import type { CabinetComponent } from "./kitchenComponents";
 import type { Finish, FrontStyle } from "./kitchen";
 export const CABINET_WIDTHS = [300, 400, 600, 800] as const;

@@ -1,4 +1,4 @@
-import { applianceIssue } from "./kitchenAppliances";
+import { applianceIssue } from "./plitka";
 import { roomWalls, type CabinetPose, type Countertop, type KitchenWall, type ModularCabinet, type ModularKitchen, type Point2 } from "./kitchenCabinets";
 
 const EPS = 0.01; // Contact is allowed; positive penetration over 0.01 mm is not.
