@@ -139,3 +139,64 @@
 .km-export-actions button { display: inline-flex; align-items: center; gap: .4rem; }
 .km-export-actions small, .km-export p { color: #53614f; font-size: .82rem; }
 .km-export p { margin-top: .5rem; max-width: 65rem; }
+
+.kco-caption { margin: 6px 0 16px; color: #69756c; font-size: 13px; line-height: 1.6; }
+.kco-list { display: grid; gap: 7px; }
+.kco-list > button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px; border: 1px solid #dde4d9; border-radius: 12px; background: #fff; text-align: left; transition: border-color 160ms, background 160ms; }
+.kco-list > button:hover { border-color: #668470; background: #f5f7f1; }
+.kco-list > button > span { flex: 1; min-width: 0; }
+.kco-list strong, .kco-list small { display: block; }
+.kco-list strong { font-size: 14px; font-weight: 500; }
+.kco-list small { color: #6b786b; font-size: 12px; margin-top: 4px; }
+.kco-thumbnail { width: 52px; height: 52px; flex: 0 0 52px; }
+.kco-category-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 16px; }
+.kco-category-nav button { flex-shrink: 0; padding: 9px 12px; min-height: 44px; border: 1px solid #dbe2d6; border-radius: 24px; font-size: 12px; }
+.kco-category-nav button[aria-pressed="true"] { background: #293c32; color: white; border-color: #293c32; }
+.kco-part { display: flex; align-items: center; gap: 14px; margin: 0 0 22px; }
+.kco-part p { font-size: 12px; color: #69756c; margin-top: 5px; }
+.kco-tabs { display: flex; padding: 4px; border-radius: 10px; background: #e9eee4; margin-bottom: 22px; }
+.kco-tabs button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; flex: 1; border-radius: 7px; font-size: 14px; }
+.kco-tabs button[aria-pressed="true"] { background: white; box-shadow: 0 2px 8px #293c3210; }
+.kco-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.kco-fields input[type="color"] { width: 100%; height: 46px; }
+.kco-replacements { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.kco-replacements button { display: grid; justify-items: start; gap: 10px; padding: 14px; border: 1px solid #dbe2d6; background: white; border-radius: 12px; text-align: left; }
+.kco-replacements button[aria-pressed="true"] { border-color: #426d59; box-shadow: inset 0 0 0 1px #426d59; }
+.kco-replacements strong { font-size: 14px; font-weight: 500; }
+.kco-replacements small { font-size: 12px; color: #69756c; }
+.kco-error { padding: 12px; margin-bottom: 16px; border-radius: 8px; background: #fff0e5; color: #743b23; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { .kco-list > button { transition: none; } }
+
+.kco-list .kco-dimension-caption { display: block; margin-top: 5px; color: #758173; font-size: 11px; line-height: 1.5; }
+.kco-back { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 2px; margin: -6px 0 10px; color: #47604f; font-size: 13px; }
+.kco-back:hover { color: #182f24; }
+.kco-detail { animation: kcs-content-in 160ms ease-out; }
+.kco-overview-heading { margin: 0; font-weight: 600; font-size: 19px; }
+.kco-overview-hint { margin: 0 0 18px; font-size: 13px; color: #69756c; }
+.kco-setting-group { margin: 0 0 20px; }
+.kco-setting-group h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+.kco-materials { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kco-materials button { display: flex; flex-direction: column; align-items: center; gap: 9px; min-width: 0; min-height: 86px; padding: 8px 6px; border: 1px solid #dce3d6; border-radius: 10px; background: white; text-align: center; font-size: 12px; line-height: 1.4; }
+.kco-materials button[aria-pressed="true"] { border-color: #426d59; background: #f0f4ec; box-shadow: inset 0 0 0 1px #426d59; }
+.kco-material-swatch { display: grid; place-items: center; width: 100%; height: 34px; border: 1px solid #00000012; border-radius: 5px; }
+.kco-material-swatch svg { background: white; border-radius: 50%; padding: 1px; color: #293c32; }
+.kco-material-oak, .kco-material-walnut { background-image: repeating-linear-gradient(88deg, transparent, #ffffff24 5px, #00000026 7px, transparent 10px); }
+.kco-material-marble { background-image: repeating-linear-gradient(25deg, transparent 0 13px, #878a8460 14px, transparent 17px); }
+.kco-material-concrete, .kco-material-granite { background-image: repeating-radial-gradient(circle at 20% 30%, #00000018 0 1px, transparent 1px 3px); }
+.kco-material-gloss, .kco-material-steel, .kco-material-brass, .kco-material-ceramic { background-image: linear-gradient(130deg, #ffffff66, transparent 40%, #00000010); }
+.kco-size-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px; }
+.kco-number { display: flex; align-items: center; min-width: 0; min-height: 46px; border: 1px solid #cbd3c7; border-radius: 8px; background: white; }
+.kco-number:focus-within { border-color: #426d59; box-shadow: 0 0 0 2px #426d5922; }
+.kco-number input { width: 100%; min-width: 0; min-height: 44px; padding: 9px 0 9px 10px; border: 0; border-radius: 8px; background: transparent; font-size: 16px; font-variant-numeric: tabular-nums; }
+.kco-number > span { padding: 0 10px 0 4px; color: #758173; font-size: 12px; }
+.kco-number input[aria-invalid="true"] { color: #843e23; }
+.kco-fields > .kp-field { margin-bottom: 22px; }
+.kco-search > div { display: flex; align-items: center; gap: 8px; padding: 0 12px; min-height: 46px; border: 1px solid #cbd3c7; border-radius: 9px; background: white; }
+.kco-search input { width: 100%; min-width: 0; min-height: 44px; border: 0; background: transparent; font-size: 16px; }
+.kco-search svg { flex-shrink: 0; color: #758173; }
+.kco-option-state { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #426d59; }
+.kco-empty { padding: 22px 16px; border: 1px dashed #cbd3c7; border-radius: 10px; color: #69756c; font-size: 13px; }
+.kco-part small { display: block; margin-top: 4px; color: #758173; font-size: 11px; }
+.kco-fields .kp-help { margin: 14px 0 0; }
+@media (max-width: 380px) { .kco-size-grid { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .kco-detail { animation: none; } }

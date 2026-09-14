@@ -1,3 +1,4 @@
+import { cabinetFrontExtra } from "@/lib/kitchenAppliances";
 import type { PlacedFurniture, RoomShape } from "@/lib/types";
 import { getRoomGeometry } from "@/lib/roomGeometry";
 import { getProduct } from "@/store/catalog";
@@ -34,7 +35,7 @@ export function pieceRects(piece: PlacedFurniture): Rect[] {
   if (!piece.kitchen) return [rectFor(piece)];
   const design = piece.kitchen.design, bounds = kitchenEnvelope(design);
   const parts: Array<{ width: number; depth: number; position: { x: number; z: number; rotation: number } }> = design.cabinets.map(c => {
-    const extra = c.opening === "open" || c.handleStyle === "push-open" ? 0 : c.handleStyle === "knob" ? 31 : 22;
+    const extra = cabinetFrontExtra(c);
     const { front } = cabinetAxes(c.position.rotation);
     return { width: c.width, depth: c.depth + extra, position: { ...c.position, x: c.position.x + front.x * extra / 2, z: c.position.z + front.z * extra / 2 } };
   });

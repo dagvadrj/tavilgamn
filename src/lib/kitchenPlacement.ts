@@ -1,3 +1,4 @@
+import { applianceIssue } from "./kitchenAppliances";
 import { roomWalls, type CabinetPose, type Countertop, type KitchenWall, type ModularCabinet, type ModularKitchen, type Point2 } from "./kitchenCabinets";
 
 const EPS = 0.01; // Contact is allowed; positive penetration over 0.01 mm is not.
@@ -99,10 +100,12 @@ export function wallCabinetClearance(cabinet: ModularCabinet, kitchen: ModularKi
   const below = kitchen.cabinets.filter(base => base.type === "base" && footprintsOverlap(cabinet, base));
   return cabinet.type === "wall" && below.length ? cabinet.position.y - Math.max(...below.map(base => base.position.y + base.height + kitchen.countertop.thickness)) : null;
 }
-export interface PlacementIssue { code: "overlap" | "outside" | "ceiling" | "wall" | "clearance"; ids: string[]; message: string; severity: "error" | "warning" }
+export interface PlacementIssue { code: "appliance" | "overlap" | "outside" | "ceiling" | "wall" | "clearance"; ids: string[]; message: string; severity: "error" | "warning" }
 export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
   const issues: PlacementIssue[] = [], walls = roomWalls(kitchen.room);
   for (const [index, cabinet] of kitchen.cabinets.entries()) {
+    const invalidAppliance = applianceIssue(cabinet);
+    if (invalidAppliance) issues.push({ code: "appliance", ids: [cabinet.id], message: invalidAppliance, severity: "error" });
     if (cabinetCorners(cabinet).some(p => p.x < -EPS || p.z < -EPS || p.x > kitchen.room.width + EPS || p.z > kitchen.room.depth + EPS))
       issues.push({ code: "outside", ids: [cabinet.id], message: "Шүүгээ өрөөний хилээс гарсан байна.", severity: "error" });
     if (cabinet.position.y < 0 || cabinet.position.y + cabinet.height + (cabinet.type === "base" ? kitchen.countertop.thickness : 0) > kitchen.room.height + EPS)
@@ -122,6 +125,10 @@ export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
  * Width is the sum of member widths; overhang extends only the front edge.
  */
 export function fitCountertops(kitchen: ModularKitchen): Countertop[] {
+  const surface = (c: ModularCabinet) => {
+    const component = c.components?.find(item => item.type === "worktop");
+    return { finish: ((component?.finish ?? component?.model) as Countertop["finish"]) ?? kitchen.countertop.finish, color: component?.color };
+  };
   const remaining = new Set(kitchen.cabinets.filter(c => c.type === "base"));
   const tops: Countertop[] = [];
   while (remaining.size) {
@@ -130,7 +137,7 @@ export function fitCountertops(kitchen: ModularKitchen): Countertop[] {
     const group = [first]; remaining.delete(first);
     for (let i = 0; i < group.length; i++) for (const other of remaining) {
       const member = group[i], delta = sub(other.position, member.position);
-      if (aligned(member, other) && Math.abs(member.height - other.height) < EPS && Math.abs(member.position.y - other.position.y) < EPS &&
+      if (JSON.stringify(surface(member)) === JSON.stringify(surface(other)) && aligned(member, other) && Math.abs(member.height - other.height) < EPS && Math.abs(member.position.y - other.position.y) < EPS &&
           Math.abs(member.depth - other.depth) < EPS && Math.abs(dot(delta, front)) < EPS &&
           Math.abs(Math.abs(dot(delta, right)) - (member.width + other.width) / 2) < EPS) {
         group.push(other); remaining.delete(other);
@@ -139,7 +146,7 @@ export function fitCountertops(kitchen: ModularKitchen): Countertop[] {
     const width = group.reduce((sum, item) => sum + item.width, 0);
     const left = Math.min(...group.map(item => dot(sub(item.position, first.position), right) - item.width / 2));
     const centre = left + width / 2, overhang = kitchen.countertop.frontOverhang;
-    tops.push({ ...kitchen.countertop, id: `top:${group.map(c => c.id).sort().join(":")}`, cabinetIds: group.map(c => c.id), width,
+    tops.push({ ...kitchen.countertop, ...surface(first), id: `top:${group.map(c => c.id).sort().join(":")}`, cabinetIds: group.map(c => c.id), width,
       depth: first.depth + overhang,
       position: { x: first.position.x + right.x * centre + front.x * overhang / 2,
         z: first.position.z + right.z * centre + front.z * overhang / 2,

@@ -2,6 +2,8 @@
  * Position is the footprint centre and cabinet bottom. Local +Z is the front.
  * The old run-based Kitchen type remains supported by the existing configurator.
  */
+import { applianceIssue } from "./kitchenAppliances";
+import type { CabinetComponent } from "./kitchenComponents";
 import type { Finish, FrontStyle } from "./kitchen";
 export const CABINET_WIDTHS = [300, 400, 600, 800] as const;
 export type CabinetWidth = (typeof CABINET_WIDTHS)[number];
@@ -26,11 +28,12 @@ export interface ModularCabinet {
   fitToCeiling: boolean;
   finish?: Finish;
   frontStyle?: FrontStyle;
-  opening?: "doors" | "drawers" | "open" | "sink" | "hob";
+  opening?: "doors" | "drawers" | "open" | "sink" | "hob" | "oven";
+  components?: CabinetComponent[];
 }
 export interface KitchenRoom { width: number; depth: number; height: number }
 export interface KitchenWall { id: string; start: Point2; end: Point2; inward: Point2 }
-export interface CountertopSettings { thickness: number; frontOverhang: number; material: "laminate" | "granite" | "wood"; finish?: Finish }
+export interface CountertopSettings { thickness: number; frontOverhang: number; material: "laminate" | "granite" | "wood"; finish?: Finish; color?: string }
 export interface Countertop extends CountertopSettings {
   id: string; cabinetIds: string[]; width: number; depth: number; position: CabinetPose;
 }
@@ -70,6 +73,7 @@ export function roomWalls(room: KitchenRoom): KitchenWall[] {
   ];
 }
 export function validateCabinet(cabinet: ModularCabinet): string | null {
+  if (cabinet.opening !== undefined && !["doors", "drawers", "open", "sink", "hob", "oven"].includes(cabinet.opening)) return "Шүүгээний загвар буруу байна.";
   const spec = CABINET_DEFAULTS[cabinet.type];
   if (!spec || !CABINET_WIDTHS.includes(cabinet.width)) return "Өргөн 300, 400, 600 эсвэл 800 мм байна.";
   if (!Number.isInteger(cabinet.height) || cabinet.height < spec.heightRange[0] || cabinet.height > spec.heightRange[1]) return `Өндөр ${spec.heightRange.join("–")} мм байна.`;
@@ -81,5 +85,5 @@ export function validateCabinet(cabinet: ModularCabinet): string | null {
   if (!Object.values(cabinet.position).every(Number.isFinite) || cabinet.position.y < 0) return "Байрлалын хэмжээ буруу байна.";
   if (cabinet.type !== "wall" && cabinet.position.y !== 0) return "Доод болон өндөр шүүгээ шалан дээр байрлана.";
   if (!/^#[0-9a-f]{6}$/i.test(cabinet.color) || !["matte", "wood", "gloss"].includes(cabinet.material) || !["bar", "knob", "push-open"].includes(cabinet.handleStyle)) return "Материалын утга буруу байна.";
-  return null;
+  return applianceIssue(cabinet);
 }

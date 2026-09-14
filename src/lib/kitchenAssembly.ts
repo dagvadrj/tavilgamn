@@ -1,3 +1,5 @@
+import { cabinetFrontExtra, hasCooktop } from "./kitchenAppliances";
+import { getComponents, getComponentSize, parseComponents } from "./kitchenComponents";
 import { FINISHES, type Finish, type FrontStyle } from "./kitchen";
 import { createCabinet, createModularKitchen, validateCabinet, type ModularCabinet, type ModularKitchen } from "./kitchenCabinets";
 import { cabinetAxes, cabinetCorners, fitCountertops, placementIssues, resolveElevations } from "./kitchenPlacement";
@@ -7,7 +9,7 @@ export type KitchenSnapshot = { id: string; name: string; design: ModularKitchen
 export const cloneKitchen = (kitchen: ModularKitchen): ModularKitchen => JSON.parse(JSON.stringify(kitchen));
 export function createUnifiedKitchen(): ModularKitchen {
   const kitchen = createModularKitchen();
-  const kinds = ["drawers", "sink", "doors", "hob", "doors"] as const;
+  const kinds = ["drawers", "sink", "doors", "oven", "doors"] as const;
   kitchen.cabinets = kinds.flatMap((opening, index) => {
     const base = createCabinet("base", `base-${index + 1}`);
     base.position.x = 500 + index * 600;
@@ -15,7 +17,7 @@ export function createUnifiedKitchen(): ModularKitchen {
     if (opening === "drawers") base.drawerCount = 3;
     const upper = createCabinet("wall", `wall-${index + 1}`);
     upper.position.x = base.position.x; upper.finish = "oak"; upper.color = "#e5d6bd"; upper.material = "wood";
-    return opening === "hob" ? [base] : [base, upper];
+    return opening === "oven" ? [base] : [base, upper];
   });
   kitchen.countertop.finish = "marble"; kitchen.backsplash = true;
   return resolveElevations(kitchen);
@@ -23,7 +25,7 @@ export function createUnifiedKitchen(): ModularKitchen {
 /** Closed, authored geometry bounds in mm. No viewer-dependent Box3 normalization. */
 export function kitchenEnvelope(kitchen: ModularKitchen) {
   const points = kitchen.cabinets.flatMap(c => {
-    const frontExtra = c.opening === "open" || c.handleStyle === "push-open" ? 0 : c.handleStyle === "knob" ? 31 : 22;
+    const frontExtra = cabinetFrontExtra(c);
     const { front } = cabinetAxes(c.position.rotation);
     return cabinetCorners({ ...c, depth: c.depth + frontExtra, position: { ...c.position,
       x: c.position.x + front.x * frontExtra / 2, z: c.position.z + front.z * frontExtra / 2 } });
@@ -36,7 +38,8 @@ export function kitchenEnvelope(kitchen: ModularKitchen) {
   const minX = Math.min(...points.map(p => p.x)), maxX = Math.max(...points.map(p => p.x));
   const minZ = Math.min(...points.map(p => p.z)), maxZ = Math.max(...points.map(p => p.z));
   const h = Math.max(...kitchen.cabinets.map(c => c.position.y + c.height), ...tops.map(t => t.position.y + t.thickness),
-    ...kitchen.cabinets.filter(c => c.opening === "sink").map(c => c.height + kitchen.countertop.thickness + 260),
+    ...kitchen.cabinets.filter(hasCooktop).map(c => c.height + kitchen.countertop.thickness + 3),
+    ...kitchen.cabinets.filter(c => c.opening === "sink").map(c => c.height + kitchen.countertop.thickness + getComponentSize(c, getComponents(c).find(item => item.type === "tap")!).height),
     ...(kitchen.backsplash ? tops.map(t => t.position.y + t.thickness + kitchen.wallClearance) : []));
   return { minX, maxX, minZ, maxZ, centerX: (minX + maxX) / 2, centerZ: (minZ + maxZ) / 2,
     w: (maxX - minX) / 1000, d: (maxZ - minZ) / 1000, h: h / 1000 };
@@ -44,7 +47,16 @@ export function kitchenEnvelope(kitchen: ModularKitchen) {
 export function applyKitchenAppearance(kitchen: ModularKitchen, ids: string[] | null,
   patch: Partial<Pick<ModularCabinet, "finish" | "color" | "handleStyle" | "frontStyle">>): ModularKitchen {
   return { ...kitchen, cabinets: kitchen.cabinets.map(c => ids && !ids.includes(c.id) ? c : {
-    ...c, ...patch, ...(patch.finish ? { material: patch.finish === "gloss" ? "gloss" as const : ["oak", "walnut"].includes(patch.finish) ? "wood" as const : "matte" as const } : {}),
+    ...c, ...patch, ...(c.components ? { components: c.components.map(item => {
+      if (["door-front", "drawer-front"].includes(item.type)) return { ...item,
+        ...(patch.frontStyle ? { model: patch.frontStyle } : {}), ...(patch.color ? { color: patch.color } : {}), ...(patch.finish ? { finish: patch.finish } : {}) };
+      if (item.type === "handle" && patch.handleStyle) {
+        if (patch.handleStyle === "bar") return { ...item, model: patch.handleStyle };
+        const { size: _size, ...rest } = item;
+        return { ...rest, model: patch.handleStyle };
+      }
+      return item;
+    }) } : {}), ...(patch.finish ? { material: patch.finish === "gloss" ? "gloss" as const : ["oak", "walnut"].includes(patch.finish) ? "wood" as const : "matte" as const } : {}),
   }) };
 }
 /** Rearrange this same collection, including its finishes and IDs. */
@@ -89,11 +101,11 @@ export function parseKitchen(value: unknown): ModularKitchen {
     if (!c || typeof c.id !== "string" || !c.id.length || c.id.length > 80 || ids.has(c.id) || !c.position || ![c.position.x, c.position.y, c.position.z, c.position.rotation].every(n => Number.isFinite(n) && Math.abs(n) <= 100000) || typeof c.autoElevation !== "boolean" || typeof c.fitToCeiling !== "boolean") throw new Error("Шүүгээний мэдээлэл буруу байна.");
     ids.add(c.id);
     const error = validateCabinet(c); if (error) throw new Error(error);
-    if ((c.finish !== undefined && !finishes.includes(c.finish)) || (c.frontStyle !== undefined && !["flat", "shaker", "glass"].includes(c.frontStyle)) || (c.opening !== undefined && !["doors", "drawers", "open", "sink", "hob"].includes(c.opening))) throw new Error("Хаалганы тохиргоо буруу байна.");
+    if ((c.finish !== undefined && !finishes.includes(c.finish)) || (c.frontStyle !== undefined && !["flat", "shaker", "glass"].includes(c.frontStyle)) || (c.opening !== undefined && !["doors", "drawers", "open", "sink", "hob", "oven"].includes(c.opening))) throw new Error("Хаалганы тохиргоо буруу байна.");
     if (["sink", "hob"].includes(c.opening ?? "") && (c.type !== "base" || c.width < 600)) throw new Error("Угаалтуур, плитка 600 мм-ээс өргөн доод шүүгээнд байрлана.");
     return { id: c.id, type: c.type, width: c.width, height: c.height, depth: c.depth, doorCount: c.doorCount, drawerCount: c.drawerCount, handleStyle: c.handleStyle, material: c.material, color: c.color,
       position: { x: c.position.x, y: c.position.y, z: c.position.z, rotation: c.position.rotation }, autoElevation: c.autoElevation, fitToCeiling: c.fitToCeiling,
-      ...(c.finish ? { finish: c.finish as Finish } : {}), ...(c.frontStyle ? { frontStyle: c.frontStyle as FrontStyle } : {}), ...(c.opening ? { opening: c.opening } : {}) };
+      ...(c.finish ? { finish: c.finish as Finish } : {}), ...(c.frontStyle ? { frontStyle: c.frontStyle as FrontStyle } : {}), ...(c.opening ? { opening: c.opening } : {}), ...(c.components !== undefined ? { components: parseComponents(c) } : {}) };
   });
   if (raw.countertop.finish !== undefined && !finishes.includes(raw.countertop.finish)) throw new Error("Тавцангийн материал буруу байна.");
   const next: ModularKitchen = { version: 1, room: { width: raw.room.width, depth: raw.room.depth, height: raw.room.height }, cabinets, wallClearance: raw.wallClearance,

@@ -1,0 +1,59 @@
+.kcs-sheet {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(460px, 100%);
+  max-width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-left: 1px solid #dfe3db;
+  background: #fbfaf6;
+  color: #293c32;
+  box-shadow: -12px 0 56px #172f2726;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+.kcs-sheet[open] { display: flex; flex-direction: column; animation: kcs-enter-side 180ms ease-out; }
+.kcs-sheet[data-interacted] { animation: none; }
+.kcs-sheet, .kcs-sheet *, .kcs-sheet *::before, .kcs-sheet *::after { box-sizing: border-box; }
+.kcs-sheet::backdrop { background: #1c302a66; animation: kcs-fade-in 180ms ease-out; }
+.kcs-sheet[data-closing] { animation: none; transform: translateX(100%); opacity: 0; pointer-events: none; }
+.kcs-sheet[data-closing]::backdrop { background: transparent; transition: background 180ms ease; }
+.kcs-sheet button, .kcs-sheet input, .kcs-sheet select { font: inherit; }
+.kcs-sheet button { cursor: pointer; }
+.kcs-sheet button:disabled { cursor: not-allowed; opacity: .45; }
+.kcs-sheet button:focus-visible, .kcs-sheet input:focus-visible, .kcs-sheet select:focus-visible, .kcs-sheet a:focus-visible {
+  outline: 2px solid #426d59;
+  outline-offset: 3px;
+}
+.kcs-grip { display: none; }
+.kcs-header { display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; gap: 16px; padding: 26px 24px 22px; border-bottom: 1px solid #e0e5dc; }
+.kcs-header > div { min-width: 0; }
+.kcs-eyebrow { margin: 0 0 7px; color: #718073; font-size: 10px; font-weight: 600; letter-spacing: .11em; }
+.kcs-header h2 { margin: 0; font-size: 22px; line-height: 1.3; font-weight: 600; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.kcs-header h2:focus { outline: none; }
+.kcs-close { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; flex: 0 0 auto; border: 1px solid #d8dfd3; border-radius: 50%; color: #293c32; background: #fff; }
+.kcs-close:hover { background: #eaf0e5; border-color: #b4c2ad; }
+.kcs-content { min-height: 0; flex: 1 1 auto; padding: 24px; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; }
+@keyframes kcs-enter-side { from { opacity: .6; transform: translateX(36px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes kcs-enter-bottom { from { opacity: .6; transform: translateY(48px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes kcs-fade-in { from { background: transparent; } to { background: #1c302a66; } }
+@media (max-width: 760px) {
+  .kcs-sheet { inset: auto 0 0; width: 100%; height: auto; max-height: 88vh; max-height: 88dvh; border: 1px solid #dfe3db; border-bottom: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -12px 48px #172f2726; transform: translateY(var(--kcs-drag-y, 0px)); }
+  .kcs-sheet[open] { animation-name: kcs-enter-bottom; }
+  .kcs-sheet[data-dragging] { animation: none; transition: none; }
+  .kcs-sheet[data-closing] { animation: none; transform: translateY(100%); }
+  .kcs-grip { display: grid; place-items: center; flex: 0 0 36px; width: 100%; min-height: 36px; padding: 0; border: 0; background: transparent; touch-action: none; cursor: grab; user-select: none; }
+  .kcs-grip:active { cursor: grabbing; }
+  .kcs-grip > span { width: 40px; height: 4px; border-radius: 4px; background: #a8b4a6; }
+  .kcs-grip:focus-visible { outline-offset: -5px; border-radius: 18px; }
+  .kcs-header { padding: 0 20px 18px; }
+  .kcs-header h2 { font-size: 21px; }
+  .kcs-content { padding: 20px 20px max(24px, env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kcs-sheet, .kcs-sheet[open], .kcs-sheet::backdrop, .kcs-sheet[data-closing]::backdrop, .kcs-content { animation: none; transition: none; }
+}

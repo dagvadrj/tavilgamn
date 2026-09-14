@@ -104,3 +104,9 @@ supabase/migrations/*
 /scripts/sketchup/__pycache__/
 !/tests/kitchen-export.test.cjs
 !/docs/kitchen-export.md
+
+!/tests/kitchen-components.test.cjs
+!/docs/kitchen-components.md
+
+!/tests/kitchen-parts.test.cjs
+!/docs/kitchen-parts.md
