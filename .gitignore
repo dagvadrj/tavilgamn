@@ -115,3 +115,5 @@ supabase/migrations/*
 !/tests/kitchen-export-precision.test.cjs
 !/tests/kitchen-backsplash.test.cjs
 !/docs/kitchen-precision.md
+!/tests/room-wall-editing.test.cjs
+!/tests/room-wall-interaction.test.cjs

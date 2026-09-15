@@ -1,0 +1,1297 @@
+{
+  "source": "Миний гал тогоо (3).glb",
+  "format": "GLB/glTF 2.0 object hierarchy",
+  "defaultScene": 0,
+  "counts": {
+    "scenes": 1,
+    "nodes": 18,
+    "meshes": 13,
+    "materials": 13,
+    "textures": 0,
+    "images": 0,
+    "animations": 0
+  },
+  "scenes": [
+    {
+      "index": 0,
+      "name": "AuxScene",
+      "objects": [
+        {
+          "index": 17,
+          "name": "Kitchen",
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "matrix": null,
+          "mesh": null,
+          "camera": null,
+          "extras": {
+            "kitchenExport": true,
+            "units": "meters",
+            "authoringUnits": "millimeters"
+          },
+          "children": [
+            {
+              "index": 16,
+              "name": "Cabinet-aaed5b1c-726a-4866-ac7f-0e86e73cc57d",
+              "translation": [
+                0,
+                0,
+                0
+              ],
+              "rotation": [
+                0,
+                0,
+                0,
+                1
+              ],
+              "scale": [
+                1,
+                1,
+                1
+              ],
+              "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                1.943,
+                0,
+                1.524,
+                1
+              ],
+              "mesh": null,
+              "camera": null,
+              "extras": {
+                "cabinetId": "aaed5b1c-726a-4866-ac7f-0e86e73cc57d",
+                "cabinetType": "tall"
+              },
+              "children": [
+                {
+                  "index": 15,
+                  "name": "Appliance-refrigerator-aaed5b1c-726a-4866-ac7f-0e86e73cc57d",
+                  "translation": [
+                    0,
+                    0,
+                    0
+                  ],
+                  "rotation": [
+                    0,
+                    0,
+                    0,
+                    1
+                  ],
+                  "scale": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "matrix": null,
+                  "mesh": null,
+                  "camera": null,
+                  "extras": {
+                    "appliance": "refrigerator",
+                    "cabinetId": "aaed5b1c-726a-4866-ac7f-0e86e73cc57d",
+                    "dimensionsMm": [
+                      600,
+                      1850,
+                      650
+                    ]
+                  },
+                  "children": [
+                    {
+                      "index": 0,
+                      "name": "Node_0",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0.925,
+                        -0.3075,
+                        1
+                      ],
+                      "mesh": {
+                        "index": 0,
+                        "name": "Mesh_0",
+                        "primitives": [
+                          {
+                            "index": 0,
+                            "mode": 4,
+                            "vertexCount": 24,
+                            "indexCount": 36,
+                            "attributes": {
+                              "POSITION": 0,
+                              "NORMAL": 1,
+                              "TEXCOORD_0": 2
+                            },
+                            "material": {
+                              "index": 0,
+                              "name": "Material_0",
+                              "baseColorFactor": [
+                                0.48514994004665124,
+                                0.5271151256969157,
+                                0.5271151256969157,
+                                1
+                              ],
+                              "metallicFactor": 0.6,
+                              "roughnessFactor": 0.7,
+                              "alphaMode": "OPAQUE",
+                              "doubleSided": false
+                            }
+                          }
+                        ]
+                      },
+                      "camera": null,
+                      "extras": {
+                        "sizeMm": [
+                          600,
+                          1850,
+                          35
+                        ],
+                        "positionMm": [
+                          0,
+                          925,
+                          -307.5
+                        ]
+                      },
+                      "children": []
+                    },
+                    {
+                      "index": 1,
+                      "name": "Node_1",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        -0.2825,
+                        0.925,
+                        -0.0155,
+                        1
+                      ],
+                      "mesh": {
+                        "index": 1,
+                        "name": "Mesh_1",
+                        "primitives": [
+                          {
+                            "index": 0,
+                            "mode": 4,
+                            "vertexCount": 24,
+                            "indexCount": 36,
+                            "attributes": {
+                              "POSITION": 4,
+                              "NORMAL": 5,
+                              "TEXCOORD_0": 6
+                            },
+                            "material": {
+                              "index": 1,
+                              "name": "Material_1",
+                              "baseColorFactor": [
+                                0.48514994004665124,
+                                0.5271151256969157,
+                                0.5271151256969157,
+                                1
+                              ],
+                              "metallicFactor": 0.6,
+                              "roughnessFactor": 0.7,
+                              "alphaMode": "OPAQUE",
+                              "doubleSided": false
+                            }
+                          }
+                        ]
+                      },
+                      "camera": null,
+                      "extras": {
+                        "sizeMm": [
+                          35,
+                          1850,
+                          549
+                        ],
+                        "positionMm": [
+                          -282.5,
+                          925,
+                          -15.5
+                        ]
+                      },
+                      "children": []
+                    },
+                    {
+                      "index": 2,
+                      "name": "Node_2",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0.2825,
+                        0.925,
+                        -0.0155,
+                        1
+                      ],
+                      "mesh": {
+                        "index": 2,
+                        "name": "Mesh_2",
+                        "primitives": [
+                          {
+                            "index": 0,
+                            "mode": 4,
+                            "vertexCount": 24,
+                            "indexCount": 36,
+                            "attributes": {
+                              "POSITION": 8,
+                              "NORMAL": 9,
+                              "TEXCOORD_0": 10
+                            },
+                            "material": {
+                              "index": 2,
+                              "name": "Material_2",
+                              "baseColorFactor": [
+                                0.48514994004665124,
+                                0.5271151256969157,
+                                0.5271151256969157,
+                                1
+                              ],
+                              "metallicFactor": 0.6,
+                              "roughnessFactor": 0.7,
+                              "alphaMode": "OPAQUE",
+                              "doubleSided": false
+                            }
+                          }
+                        ]
+                      },
+                      "camera": null,
+                      "extras": {
+                        "sizeMm": [
+                          35,
+                          1850,
+                          549
+                        ],
+                        "positionMm": [
+                          282.5,
+                          925,
+                          -15.5
+                        ]
+                      },
+                      "children": []
+                    },
+                    {
+                      "index": 3,
+                      "name": "Node_3",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0.0175,
+                        -0.0155,
+                        1
+                      ],
+                      "mesh": {
+                        "index": 3,
+                        "name": "Mesh_3",
+                        "primitives": [
+                          {
+                            "index": 0,
+                            "mode": 4,
+                            "vertexCount": 24,
+                            "indexCount": 36,
+                            "attributes": {
+                              "POSITION": 12,
+                              "NORMAL": 13,
+                              "TEXCOORD_0": 14
+                            },
+                            "material": {
+                              "index": 3,
+                              "name": "Material_3",
+                              "baseColorFactor": [
+                                0.7156935005005721,
+                                0.76052450467022,
+                                0.7379104087672317,
+                                1
+                              ],
+                              "metallicFactor": 0,
+                              "roughnessFactor": 0.7,
+                              "alphaMode": "OPAQUE",
+                              "doubleSided": false
+                            }
+                          }
+                        ]
+                      },
+                      "camera": null,
+                      "extras": {
+                        "sizeMm": [
+                          530,
+                          35,
+                          549
+                        ],
+                        "positionMm": [
+                          0,
+                          17.5,
+                          -15.5
+                        ]
+                      },
+                      "children": []
+                    },
+                    {
+                      "index": 4,
+                      "name": "Node_4",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        1.8325,
+                        -0.0155,
+                        1
+                      ],
+                      "mesh": {
+                        "index": 4,
+                        "name": "Mesh_4",
+                        "primitives": [
+                          {
+                            "index": 0,
+                            "mode": 4,
+                            "vertexCount": 24,
+                            "indexCount": 36,
+                            "attributes": {
+                              "POSITION": 16,
+                              "NORMAL": 17,
+                              "TEXCOORD_0": 18
+                            },
+                            "material": {
+                              "index": 4,
+                              "name": "Material_4",
+                              "baseColorFactor": [
+                                0.7156935005005721,
+                                0.76052450467022,
+                                0.7379104087672317,
+                                1
+                              ],
+                              "metallicFactor": 0,
+                              "roughnessFactor": 0.7,
+                              "alphaMode": "OPAQUE",
+                              "doubleSided": false
+                            }
+                          }
+                        ]
+                      },
+                      "camera": null,
+                      "extras": {
+                        "sizeMm": [
+                          530,
+                          35,
+                          549
+                        ],
+                        "positionMm": [
+                          0,
+                          1832.5,
+                          -15.5
+                        ]
+                      },
+                      "children": []
+                    },
+                    {
+                      "index": 5,
+                      "name": "Node_5",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0.37000000000000005,
+                        -0.0195,
+                        1
+                      ],
+                      "mesh": {
+                        "index": 5,
+                        "name": "Mesh_5",
+                        "primitives": [
+                          {
+                            "index": 0,
+                            "mode": 4,
+                            "vertexCount": 24,
+                            "indexCount": 36,
+                            "attributes": {
+                              "POSITION": 20,
+                              "NORMAL": 21,
+                              "TEXCOORD_0": 22
+                            },
+                            "material": {
+                              "index": 5,
+                              "name": "Material_5",
+                              "baseColorFactor": [
+                                0.55201140150344,
+                                0.6866853124288864,
+                                0.6795424696265424,
+                                1
+                              ],
+                              "metallicFactor": 0,
+                              "roughnessFactor": 0.15,
+                              "alphaMode": "OPAQUE",
+                              "doubleSided": false
+                            }
+                          }
+                        ]
+                      },
+                      "camera": null,
+                      "extras": {
+                        "sizeMm": [
+                          530,
+                          8,
+                          533
+                        ],
+                        "positionMm": [
+                          0,
+                          370,
+                          -19.5
+                        ]
+                      },
+                      "children": []
+                    },
+                    {
+                      "index": 6,
+                      "name": "Node_6",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0.7400000000000001,
+                        -0.0195,
+                        1
+                      ],
+                      "mesh": {
+                        "index": 6,
+                        "name": "Mesh_6",
+                        "primitives": [
+                          {
+                            "index": 0,
+                            "mode": 4,
+                            "vertexCount": 24,
+                            "indexCount": 36,
+                            "attributes": {
+                              "POSITION": 24,
+                              "NORMAL": 25,
+                              "TEXCOORD_0": 26
+                            },
+                            "material": {
+                              "index": 6,
+                              "name": "Material_6",
+                              "baseColorFactor": [
+                                0.55201140150344,
+                                0.6866853124288864,
+                                0.6795424696265424,
+                                1
+                              ],
+                              "metallicFactor": 0,
+                              "roughnessFactor": 0.15,
+                              "alphaMode": "OPAQUE",
+                              "doubleSided": false
+                            }
+                          }
+                        ]
+                      },
+                      "camera": null,
+                      "extras": {
+                        "sizeMm": [
+                          530,
+                          8,
+                          533
+                        ],
+                        "positionMm": [
+                          0,
+                          740,
+                          -19.5
+                        ]
+                      },
+                      "children": []
+                    },
+                    {
+                      "index": 7,
+                      "name": "Node_7",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        1.2025000000000001,
+                        -0.0195,
+                        1
+                      ],
+                      "mesh": {
+                        "index": 7,
+                        "name": "Mesh_7",
+                        "primitives": [
+                          {
+                            "index": 0,
+                            "mode": 4,
+                            "vertexCount": 24,
+                            "indexCount": 36,
+                            "attributes": {
+                              "POSITION": 28,
+                              "NORMAL": 29,
+                              "TEXCOORD_0": 30
+                            },
+                            "material": {
+                              "index": 7,
+                              "name": "Material_7",
+                              "baseColorFactor": [
+                                0.55201140150344,
+                                0.6866853124288864,
+                                0.6795424696265424,
+                                1
+                              ],
+                              "metallicFactor": 0,
+                              "roughnessFactor": 0.15,
+                              "alphaMode": "OPAQUE",
+                              "doubleSided": false
+                            }
+                          }
+                        ]
+                      },
+                      "camera": null,
+                      "extras": {
+                        "sizeMm": [
+                          530,
+                          8,
+                          533
+                        ],
+                        "positionMm": [
+                          0,
+                          1202.5,
+                          -19.5
+                        ]
+                      },
+                      "children": []
+                    },
+                    {
+                      "index": 8,
+                      "name": "Node_8",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        1.4800000000000002,
+                        -0.0195,
+                        1
+                      ],
+                      "mesh": {
+                        "index": 8,
+                        "name": "Mesh_8",
+                        "primitives": [
+                          {
+                            "index": 0,
+                            "mode": 4,
+                            "vertexCount": 24,
+                            "indexCount": 36,
+                            "attributes": {
+                              "POSITION": 32,
+                              "NORMAL": 33,
+                              "TEXCOORD_0": 34
+                            },
+                            "material": {
+                              "index": 8,
+                              "name": "Material_8",
+                              "baseColorFactor": [
+                                0.55201140150344,
+                                0.6866853124288864,
+                                0.6795424696265424,
+                                1
+                              ],
+                              "metallicFactor": 0,
+                              "roughnessFactor": 0.15,
+                              "alphaMode": "OPAQUE",
+                              "doubleSided": false
+                            }
+                          }
+                        ]
+                      },
+                      "camera": null,
+                      "extras": {
+                        "sizeMm": [
+                          530,
+                          8,
+                          533
+                        ],
+                        "positionMm": [
+                          0,
+                          1480,
+                          -19.5
+                        ]
+                      },
+                      "children": []
+                    },
+                    {
+                      "index": 11,
+                      "name": "Node_11",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        -0.298,
+                        0.6012500000000001,
+                        0.28400000000000003,
+                        1
+                      ],
+                      "mesh": null,
+                      "camera": null,
+                      "extras": null,
+                      "children": [
+                        {
+                          "index": 9,
+                          "name": "Node_9",
+                          "translation": [
+                            0,
+                            0,
+                            0
+                          ],
+                          "rotation": [
+                            0,
+                            0,
+                            0,
+                            1
+                          ],
+                          "scale": [
+                            1,
+                            1,
+                            1
+                          ],
+                          "matrix": [
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0.298,
+                            0,
+                            0,
+                            1
+                          ],
+                          "mesh": {
+                            "index": 9,
+                            "name": "Mesh_9",
+                            "primitives": [
+                              {
+                                "index": 0,
+                                "mode": 4,
+                                "vertexCount": 24,
+                                "indexCount": 36,
+                                "attributes": {
+                                  "POSITION": 36,
+                                  "NORMAL": 37,
+                                  "TEXCOORD_0": 38
+                                },
+                                "material": {
+                                  "index": 9,
+                                  "name": "Material_9",
+                                  "baseColorFactor": [
+                                    0.48514994004665124,
+                                    0.5271151256969157,
+                                    0.5271151256969157,
+                                    1
+                                  ],
+                                  "metallicFactor": 0.75,
+                                  "roughnessFactor": 0.28,
+                                  "alphaMode": "OPAQUE",
+                                  "doubleSided": false
+                                }
+                              }
+                            ]
+                          },
+                          "camera": null,
+                          "extras": {
+                            "sizeMm": [
+                              596,
+                              1200.5,
+                              50
+                            ],
+                            "positionMm": [
+                              298,
+                              0,
+                              0
+                            ]
+                          },
+                          "children": []
+                        },
+                        {
+                          "index": 10,
+                          "name": "Node_10",
+                          "translation": [
+                            0,
+                            0,
+                            0
+                          ],
+                          "rotation": [
+                            0,
+                            0,
+                            0,
+                            1
+                          ],
+                          "scale": [
+                            1,
+                            1,
+                            1
+                          ],
+                          "matrix": [
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0.556,
+                            0,
+                            0.03,
+                            1
+                          ],
+                          "mesh": {
+                            "index": 10,
+                            "name": "Mesh_10",
+                            "primitives": [
+                              {
+                                "index": 0,
+                                "mode": 4,
+                                "vertexCount": 24,
+                                "indexCount": 36,
+                                "attributes": {
+                                  "POSITION": 40,
+                                  "NORMAL": 41,
+                                  "TEXCOORD_0": 42
+                                },
+                                "material": {
+                                  "index": 10,
+                                  "name": "Material_10",
+                                  "baseColorFactor": [
+                                    0.11697066774917994,
+                                    0.15592646369776456,
+                                    0.13843161502267545,
+                                    1
+                                  ],
+                                  "metallicFactor": 0.85,
+                                  "roughnessFactor": 0.7,
+                                  "alphaMode": "OPAQUE",
+                                  "doubleSided": false
+                                }
+                              }
+                            ]
+                          },
+                          "camera": null,
+                          "extras": {
+                            "sizeMm": [
+                              15,
+                              400,
+                              22
+                            ],
+                            "positionMm": [
+                              556,
+                              0,
+                              30
+                            ]
+                          },
+                          "children": []
+                        }
+                      ]
+                    },
+                    {
+                      "index": 14,
+                      "name": "Node_14",
+                      "translation": [
+                        0,
+                        0,
+                        0
+                      ],
+                      "rotation": [
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "scale": [
+                        1,
+                        1,
+                        1
+                      ],
+                      "matrix": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        -0.298,
+                        1.5262499999999999,
+                        0.28400000000000003,
+                        1
+                      ],
+                      "mesh": null,
+                      "camera": null,
+                      "extras": null,
+                      "children": [
+                        {
+                          "index": 12,
+                          "name": "Node_12",
+                          "translation": [
+                            0,
+                            0,
+                            0
+                          ],
+                          "rotation": [
+                            0,
+                            0,
+                            0,
+                            1
+                          ],
+                          "scale": [
+                            1,
+                            1,
+                            1
+                          ],
+                          "matrix": [
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0.298,
+                            0,
+                            0,
+                            1
+                          ],
+                          "mesh": {
+                            "index": 11,
+                            "name": "Mesh_11",
+                            "primitives": [
+                              {
+                                "index": 0,
+                                "mode": 4,
+                                "vertexCount": 24,
+                                "indexCount": 36,
+                                "attributes": {
+                                  "POSITION": 44,
+                                  "NORMAL": 45,
+                                  "TEXCOORD_0": 46
+                                },
+                                "material": {
+                                  "index": 11,
+                                  "name": "Material_11",
+                                  "baseColorFactor": [
+                                    0.48514994004665124,
+                                    0.5271151256969157,
+                                    0.5271151256969157,
+                                    1
+                                  ],
+                                  "metallicFactor": 0.75,
+                                  "roughnessFactor": 0.28,
+                                  "alphaMode": "OPAQUE",
+                                  "doubleSided": false
+                                }
+                              }
+                            ]
+                          },
+                          "camera": null,
+                          "extras": {
+                            "sizeMm": [
+                              596,
+                              643.5,
+                              50
+                            ],
+                            "positionMm": [
+                              298,
+                              0,
+                              0
+                            ]
+                          },
+                          "children": []
+                        },
+                        {
+                          "index": 13,
+                          "name": "Node_13",
+                          "translation": [
+                            0,
+                            0,
+                            0
+                          ],
+                          "rotation": [
+                            0,
+                            0,
+                            0,
+                            1
+                          ],
+                          "scale": [
+                            1,
+                            1,
+                            1
+                          ],
+                          "matrix": [
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0.556,
+                            0,
+                            0.03,
+                            1
+                          ],
+                          "mesh": {
+                            "index": 12,
+                            "name": "Mesh_12",
+                            "primitives": [
+                              {
+                                "index": 0,
+                                "mode": 4,
+                                "vertexCount": 24,
+                                "indexCount": 36,
+                                "attributes": {
+                                  "POSITION": 48,
+                                  "NORMAL": 49,
+                                  "TEXCOORD_0": 50
+                                },
+                                "material": {
+                                  "index": 12,
+                                  "name": "Material_12",
+                                  "baseColorFactor": [
+                                    0.11697066774917994,
+                                    0.15592646369776456,
+                                    0.13843161502267545,
+                                    1
+                                  ],
+                                  "metallicFactor": 0.85,
+                                  "roughnessFactor": 0.7,
+                                  "alphaMode": "OPAQUE",
+                                  "doubleSided": false
+                                }
+                              }
+                            ]
+                          },
+                          "camera": null,
+                          "extras": {
+                            "sizeMm": [
+                              15,
+                              386.1,
+                              22
+                            ],
+                            "positionMm": [
+                              556,
+                              0,
+                              30
+                            ]
+                          },
+                          "children": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

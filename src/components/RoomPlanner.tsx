@@ -634,20 +634,27 @@ export function RoomPlanner() {
     }
   };
   const geometry = getRoomGeometry(current);
-  const applyRoomShape = (shape: RoomShape) => {
-    const next = { ...current, ...shape, openings: current.openings };
+  const applyRoomShape = (shape: RoomShape, contentShift?: { x: number; z: number }) => {
+    // Pointer samples can arrive within one render. Validate and update the
+    // latest room, including its already shifted contents, as one store write.
+    const latest = useDesigns.getState().current;
+    if (!latest) return "Өрөөг дахин нээнэ үү.";
+    const shifted = contentShift && (contentShift.x !== 0 || contentShift.z !== 0);
+    const pieces = shifted ? latest.pieces.map(piece => ({ ...piece, x: piece.x + contentShift.x, z: piece.z + contentShift.z })) : latest.pieces;
+    const lighting = shifted && latest.lighting ? { ...latest.lighting, fixtures: latest.lighting.fixtures.map(fixture => ({ ...fixture, x: fixture.x + contentShift.x, z: fixture.z + contentShift.z })) } : latest.lighting;
+    const next = { ...latest, ...shape, openings: shape.openings ?? latest.openings, pieces, lighting };
     const issue = validateRoomOpenings(next);
     if (issue) return issue;
     if (
-      !current.pieces.every((piece) =>
-        isPlacementValid(piece, current.pieces, next),
+      !pieces.every((piece) =>
+        isPlacementValid(piece, pieces, next),
       )
     )
       return "Хана, товойлт эсвэл багана тавилгатай давхцаж байна. Эхлээд тавилгын байрлалыг өөрчилнө үү.";
     const nextGeometry = getRoomGeometry(next);
-    if (current.lighting?.fixtures.some(fixture => fixture.x < nextGeometry.bounds.minX || fixture.x > nextGeometry.bounds.maxX || fixture.z < nextGeometry.bounds.minZ || fixture.z > nextGeometry.bounds.maxZ || nextGeometry.voids.some(rect => fixture.x >= rect.minX && fixture.x <= rect.maxX && fixture.z >= rect.minZ && fixture.z <= rect.maxZ)))
+    if (lighting?.fixtures.some(fixture => fixture.x < nextGeometry.bounds.minX || fixture.x > nextGeometry.bounds.maxX || fixture.z < nextGeometry.bounds.minZ || fixture.z > nextGeometry.bounds.maxZ || nextGeometry.voids.some(rect => fixture.x >= rect.minX && fixture.x <= rect.maxX && fixture.z >= rect.minZ && fixture.z <= rect.maxZ)))
       return "Таазны гэрэл шинэ өрөөний гадна үлдэж байна. Эхлээд гэрлийн байрлалыг өөрчилнө үү.";
-    updateRoom(shape);
+    updateRoom({ ...shape, openings: next.openings, pieces, lighting });
     setActivePreset(null);
     setLocalFile(null);
     setLocalUrl(null);
@@ -1267,7 +1274,12 @@ export function RoomPlanner() {
               <button
                 type="button"
                 className="btn-ghost"
-                onClick={() => addRoom(newRoomType)}
+                onClick={() => {
+                  addRoom(newRoomType);
+                  setLeftOpen(false);
+                  setRightOpen(false);
+                  setShowRoomGeometry(true);
+                }}
               >
                 <Plus size={16} /> Нэмэх
               </button>
@@ -1731,7 +1743,12 @@ export function RoomPlanner() {
 
         <div className="border-t border-[#293C32]/10 p-4">
           <button
-            onClick={() => createNew("80", "Шинэ загвар", "living")}
+            onClick={() => {
+              createNew("80", "Шинэ загвар", "living");
+              setLeftOpen(false);
+              setRightOpen(false);
+              setShowRoomGeometry(true);
+            }}
             className="btn-ghost w-full"
           >
             <Plus className="h-4 w-4" /> Шинэ загвар үүсгэх

@@ -1,6 +1,7 @@
 "use client";
+import type { ReactNode, Ref, SVGProps } from "react";
 import type { PlacedFurniture, RoomOpening, RoomShape } from "@/lib/types";
-import { getRoomGeometry, roomPath } from "@/lib/roomGeometry";
+import { getRoomGeometry, roomPath, type Bounds, type Point } from "@/lib/roomGeometry";
 import { openingWorldTransform, validateOpening } from "@/lib/roomOpenings";
 import { pieceRects } from "@/three/collision";
 
@@ -32,15 +33,21 @@ function OpeningPlanMark({ room, opening, index, font }: { room: RoomShape; open
   </g>;
 }
 
-export function RoomPlanPreview({ room, pieces = [] }: { room: RoomShape; pieces?: PlacedFurniture[] }) {
+export function RoomPlanPreview({ room, pieces = [], editing }: {
+  room: RoomShape; pieces?: PlacedFurniture[];
+  editing?: { overlay: ReactNode; bounds?: Bounds; offset?: Point; svgRef: Ref<SVGSVGElement>; svgProps: SVGProps<SVGSVGElement> };
+}) {
   const geometry = getRoomGeometry(room), b = geometry.bounds;
-  const span = Math.max(b.maxX - b.minX, b.maxZ - b.minZ), pad = span * .24, font = span / 32;
+  const viewport = editing?.bounds ?? b;
+  const span = Math.max(viewport.maxX - viewport.minX, viewport.maxZ - viewport.minZ), pad = span * .24, font = span / (editing ? 22 : 32);
   const label = (length: number) => `${Math.round(length * 1000)} мм`;
   const validOpenings = (room.openings ?? []).filter(opening => !validateOpening(room, opening));
-  return <figure className="room-measured-plan">
-    <figcaption>Өрөөний plan · дээрээс харах · мм</figcaption>
-    <svg role="img" aria-label={`Өрөө ${Math.round(room.width * 1000)} × ${Math.round(room.depth * 1000)} мм, хана, багана, хаалга, цонх, тавилгын бодит байрлал`}
-      viewBox={`${b.minX - pad} ${b.minZ - pad} ${b.maxX - b.minX + 2 * pad} ${b.maxZ - b.minZ + 2 * pad}`}>
+  return <figure className={`room-measured-plan${editing ? " room-measured-plan-editable" : ""}`}>
+    <figcaption>{editing ? "Ханыг чирж өрөөгөө төлөвлөх" : "Өрөөний plan · дээрээс харах · мм"}</figcaption>
+    <svg ref={editing?.svgRef} role={editing ? "group" : "img"} aria-label={`Өрөө ${Math.round(room.width * 1000)} × ${Math.round(room.depth * 1000)} мм, хана, багана, хаалга, цонх, тавилгын бодит байрлал`}
+      {...editing?.svgProps}
+      viewBox={`${viewport.minX - pad} ${viewport.minZ - pad} ${viewport.maxX - viewport.minX + 2 * pad} ${viewport.maxZ - viewport.minZ + 2 * pad}`}>
+      <g transform={editing?.offset ? `translate(${editing.offset.x} ${editing.offset.z})` : undefined}>
       <path className="room-plan-floor" d={roomPath(room)} fillRule="evenodd" />
       {(room.columns ?? []).map((c, i) => <g key={c.id}>
         <rect className="room-plan-column" x={c.x - room.width / 2} y={c.z - room.depth / 2} width={c.width} height={c.depth} />
@@ -69,6 +76,8 @@ export function RoomPlanPreview({ room, pieces = [] }: { room: RoomShape; pieces
         <text key={String(name)} x={Number(x)} y={Number(z)} dx={font / 3} dy={font} fontSize={font} className="room-plan-corner">{name}</text>)}
       <text x={(b.minX + b.maxX) / 2} y={b.minZ - pad * .76} textAnchor="middle" fontSize={font}>AB · {label(room.width)}</text>
       <text x={(b.minX + b.maxX) / 2} y={b.maxZ + pad * .8} textAnchor="middle" fontSize={font}>BC · {label(room.depth)} · Тааз {label(room.height ?? 2.7)}</text>
+      {editing?.overlay}
+      </g>
     </svg>
     <p>Б — багана · Ха — хаалга · Ц — цонх · Нум — хаалга нээгдэх чиглэл · Дугаартай дүрс — тавилга · Богино ханын хэмжээг доорх Х дугаараар харна.</p>
     {!!validOpenings.length && <ul>{validOpenings.map((opening, index) => <li key={opening.id}>{opening.kind === "door" ? "Ха" : "Ц"}{index + 1}: {label(opening.width)} × {label(opening.height)}{opening.kind === "window" ? ` · шалнаас ${label(opening.sillHeight)}` : ""}</li>)}</ul>}

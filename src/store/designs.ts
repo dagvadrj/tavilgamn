@@ -30,7 +30,7 @@ interface DesignState {
   deleteDesign: (id: string) => void;
   duplicateDesign: (id: string) => void;
   updatePieces: (pieces: PlacedFurniture[]) => void;
-  updateRoom: (patch: Partial<Pick<RoomDesign, "wallColor" | "floorColor" | "name" | "width" | "depth" | "size" | "height" | "wallFeatures" | "columns" | "roomName" | "roomType" | "openings" | "floorMaterial" | "wallMaterials" | "ceilingMaterial" | "lighting">>) => void;
+  updateRoom: (patch: Partial<Pick<RoomDesign, "wallColor" | "floorColor" | "name" | "width" | "depth" | "size" | "height" | "wallFeatures" | "columns" | "roomName" | "roomType" | "openings" | "floorMaterial" | "wallMaterials" | "ceilingMaterial" | "lighting" | "pieces">>) => void;
 }
 const createDesignId = () => `d_${crypto.randomUUID()}`;
 

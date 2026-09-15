@@ -72,8 +72,6 @@ export function replaceCorner(cabinet: ModularCabinet, enabled: boolean, side: "
     ...(cabinet.components ? { components: cabinet.components.filter(c => !["drawer-front", "handle", "door-front"].includes(c.type)) } : {}),
     position: { ...cabinet.position, x: cabinet.position.x + right.x * shift, z: cabinet.position.z + right.z * shift } };
 }
-/** Rearrange physical millimetres; no rescaling to fit a room. Existing appliance
- * modules keep their dimensions. A plain module supplies the default blind corner. */
 export function arrangeKitchen(kitchen: ModularKitchen, layout: KitchenLayout) {
   const next = cloneKitchen(kitchen), floor = next.cabinets.filter(c => c.type !== "wall"), upper = next.cabinets.filter(c => c.type === "wall");
   next.layout = layout;

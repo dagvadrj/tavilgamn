@@ -50,6 +50,7 @@ export interface ModularKitchen {
   layout?: KitchenLayout;
   wallClearance: number; countertop: CountertopSettings;
   backsplash?: boolean;
+
   backsplashSettings?: { mode: "full-run" | "manual"; panels: { id: string; width: number; height: number; thickness: number; position: CabinetPose }[] };
 }
 export const CABINET_DEFAULTS = {
@@ -100,7 +101,7 @@ export function createModularKitchen(): ModularKitchen {
   const wall = createCabinet("wall", "wall-1");
   wall.position.x = 500;
   return { version: 1, room: { width: 4000, depth: 3000, height: 2600 }, cabinets: [...bases, wall],
-    wallClearance: 550, countertop: { thickness: 30, frontOverhang: 20, material: "laminate" } };
+    wallClearance: 550, countertop: { thickness: 30, frontOverhang: 20, material: "wood" } };
 }
 export function roomWalls(room: KitchenRoom): KitchenWall[] {
   return [

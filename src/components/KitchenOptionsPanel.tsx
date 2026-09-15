@@ -635,9 +635,7 @@ export function KitchenOptionsPanel({
             </>
           ) : (
             <div className="kco-detail kco-overview" key="overview">
-              <p className="kco-overview-heading">
-                {cabinetLabel(cabinet)}
-              </p>
+              <p className="kco-overview-heading">{cabinetLabel(cabinet)}</p>
               <p className="kco-caption">
                 {cabinet.width} × {cabinet.height} × {cabinet.depth} мм
               </p>

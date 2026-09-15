@@ -115,6 +115,36 @@
 .room-plan-corner { font-weight: 700; }
 .room-measured-plan > p, .room-measured-plan > ul { padding: 0 14px 12px; font-size: 11px; color: #69756c; line-height: 1.6; }
 .room-measured-plan > ul { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.room-wall-plan { min-width: 0; }
+.room-wall-live { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; padding: 12px 14px; background: #e8eee2; border: 1px solid #cbd6c6; border-radius: 12px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.room-wall-live strong { font-size: 19px; font-weight: 650; }
+.room-measured-plan-editable { margin: 10px 0 0; }
+.room-measured-plan-editable svg { touch-action: none; user-select: none; -webkit-user-select: none; }
+.room-wall-handle { outline: none; }
+.room-wall-handle-x { cursor: ew-resize; }
+.room-wall-handle-z { cursor: ns-resize; }
+.room-wall-hit { stroke: transparent; stroke-width: 28px; vector-effect: non-scaling-stroke; pointer-events: stroke; }
+.room-wall-highlight { stroke: #4b6853; stroke-width: 3px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.room-wall-grip-hit { fill: transparent; }
+.room-wall-grip { fill: #fafbf8; stroke: #4b6853; stroke-width: 1.5px; vector-effect: non-scaling-stroke; }
+.room-wall-grip-arrow { fill: none; stroke: #42634f; stroke-width: 1.2px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.room-wall-handle:hover .room-wall-highlight, .room-wall-handle.is-selected .room-wall-highlight { stroke: #b26642; stroke-width: 4px; }
+.room-wall-handle:hover .room-wall-grip, .room-wall-handle.is-selected .room-wall-grip { fill: #f9eadf; stroke: #a55836; }
+.room-wall-grip:focus { outline: none; }
+.room-wall-grip:focus-visible { stroke: #234c85; stroke-width: 3px; }
+.room-wall-feedback { min-height: 52px; padding: 10px 2px; font-size: 12px; line-height: 1.6; color: #526650; }
+.room-wall-feedback.has-error { color: #8c4637; }
+.room-exact-dimensions { padding: 12px 0; border-top: 1px solid #dce1db; border-bottom: 1px solid #dce1db; }
+.room-exact-dimensions summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+.room-exact-dimensions[open] summary { margin-bottom: 10px; }
+@media (max-width: 540px) {
+  .room-geometry-modal { width: calc(100% - 12px); max-height: calc(100dvh - 16px); border-radius: 14px; }
+  .room-geometry-modal-header { padding: 10px 12px; }
+  .room-geometry-modal-header h2 { font-size: 15px; }
+  .room-geometry-modal-body { padding: 0 12px 16px; }
+  .room-measured-plan-editable svg { height: clamp(260px, 44dvh, 380px); }
+  .room-wall-live strong { font-size: 17px; }
+}
 .planner-kitchen-library { border-bottom: 1px solid #dce1db; margin-bottom: 16px; padding-bottom: 16px; }
 .planner-kitchen-library > h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
 .planner-advanced { padding: 16px; border-bottom: 1px solid #dce1db; }

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Check, Plus, Trash2 } from "lucide-react";
 import type { RoomShape, RoomWall, PlacedFurniture } from "@/lib/types";
-import { RoomPlanPreview } from "./RoomPlanPreview";
-import { getRoomGeometry, ROOM_WALLS, validateRoomShape } from "@/lib/roomGeometry";
+import { RoomWallPlan } from "./RoomWallPlan";
+import { getRoomGeometry, ROOM_WALLS, validateRoomShape, type Point } from "@/lib/roomGeometry";
 
 function Millimetres({ label, value, onChange, min = 0, max = 20000 }: {
   label: string; value: number; onChange: (value: number) => void; min?: number; max?: number;
@@ -17,7 +17,7 @@ function Millimetres({ label, value, onChange, min = 0, max = 20000 }: {
 }
 
 export function RoomGeometryEditor({ room, onApply, onDone }: {
-  room: RoomShape & { pieces?: PlacedFurniture[] }; onApply: (shape: RoomShape) => string | null; onDone: () => void;
+  room: RoomShape & { pieces?: PlacedFurniture[] }; onApply: (shape: RoomShape, contentShift?: Point) => string | null; onDone: () => void;
 }) {
   const [draft, setDraft] = useState<RoomShape>(() => ({ width: room.width, depth: room.depth, height: room.height ?? 2.7,
     wallFeatures: (room.wallFeatures ?? []).map(feature => ({ ...feature })), columns: (room.columns ?? []).map(column => ({ ...column })),
@@ -32,13 +32,22 @@ export function RoomGeometryEditor({ room, onApply, onDone }: {
     const issue = validateRoomShape(next) ?? onApply(next);
     if (!issue || !keepOnError) setDraft(next);
     setError(issue ?? "");
+    return issue;
   };
 
   return <form className="planner-room-form room-geometry-editor" onSubmit={event => {
     event.preventDefault();
     if (!problem && !error) onDone();
   }}>
-    <p className="room-shape-help">Зөв өөрчлөлт бүр өрөөнд шууд хэрэгжинэ. Алдаатай утга хэрэгжихгүй бөгөөд цонхыг хаахад орхигдоно.</p>
+    <RoomWallPlan room={preview} pieces={room.pieces} onChange={(next, contentShift) => {
+      const issue = validateRoomShape(next) ?? onApply(next, contentShift);
+      // Rejected drags already show feedback beside the plan. They do not
+      // make the retained valid draft invalid or block the Done button.
+      if (!issue) { setDraft(next); setError(""); }
+      return issue;
+    }} />
+    <details className="room-exact-dimensions" open>
+    <summary>Хэмжээг тоогоор оруулах · мм</summary>
     <div className="planner-fields">
       <Millimetres label="AB · өргөн" value={draft.width} min={1000} onChange={width => update({ width })} />
       <Millimetres label="BC · урт" value={draft.depth} min={1000} onChange={depth => update({ depth })} />
@@ -47,8 +56,8 @@ export function RoomGeometryEditor({ room, onApply, onDone }: {
       if (height < 2.4 || height > 3) { setError("Таазны өндөр 2400–3000 мм байна."); return; }
       update({ height });
     }} />
-    <RoomPlanPreview room={preview} pieces={room.pieces} />
-    <p className="room-shape-area">Ашиглах талбай: <strong>{geometry.area.toFixed(2)} м²</strong>{(error || problem) ? " · хэрэгжсэн хэлбэр" : ""}</p>
+    </details>
+    <p className="room-shape-help">Зөв өөрчлөлт бүр өрөөнд шууд хэрэгжинэ. Давхцал үүсвэл сүүлийн зөв хэмжээ хадгалагдана. Цонхыг хаасны дараа «Буцаах» үйлдлээр энэ засварыг буцааж болно.</p>
     <details className="room-wall-measurements"><summary>Ханын бүх хэсгийн хэмжээс · {geometry.segments.filter(segment => !segment.hole).length}</summary>
       <ol>{geometry.segments.filter(segment => !segment.hole).map((segment, index) => <li key={index}>
         <span>Х{index + 1}</span><strong>{Math.round(segment.length * 1000)} мм</strong>

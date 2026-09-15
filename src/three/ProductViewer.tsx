@@ -47,7 +47,7 @@ export function ProductViewer({
       <Canvas
         shadows
         dpr={[1, 1.5]}
-        camera={{ position: [3, 2, 3.5], fov: 35 }}
+        camera={{ position: [3, 2, 13.5], fov: 35 }}
         className="!h-full !w-full"
         frameloop="always"
       >

@@ -3,11 +3,12 @@
 import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import type { RoomShape, PlacedFurniture } from "@/lib/types";
+import type { Point } from "@/lib/roomGeometry";
 import { RoomGeometryEditor } from "./RoomGeometryEditor";
 
 export function RoomGeometryModal({ room, onApply, onClose, beginEdit, endEdit }: {
   room: RoomShape & { pieces?: PlacedFurniture[] };
-  onApply: (shape: RoomShape) => string | null;
+  onApply: (shape: RoomShape, contentShift?: Point) => string | null;
   onClose: () => void;
   beginEdit: () => void;
   endEdit: () => void;

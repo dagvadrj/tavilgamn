@@ -34,7 +34,10 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next-checkout/types/**/*.ts",
-    ".next-ui/types/**/*.ts"
+    ".next-ui/types/**/*.ts",
+    ".next-room-wall-dev/types/**/*.ts",
+    ".next-room-wall-build/types/**/*.ts",
+    ".next-room-wall-final/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
