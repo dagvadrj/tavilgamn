@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
       if (concurrent.data) return replay(concurrent.data);
     }
     if (error?.code === "P0004") throw new OrderInputError("Нөөц өөрчлөгдсөн байна. Сагс руу буцаж үлдэгдэл, тоо ширхэгээ шалгана уу.", 409);
+    if (error?.code === "P0008") throw new OrderInputError("Барааны дэлгүүрийн мэдээлэл өөрчлөгдсөн байна. Сагсаа шинэчлээд дахин оролдоно уу.", 409);
     if (error?.code === "P0005") {
       const updatedQuote = await quoteOrder(body.items, supabase);
       return NextResponse.json({ error: "Үнэ өөрчлөгдлөө. Шинэ үнийг шалгаад баталгаажуулна уу.", code: "PRICE_CHANGED", quote: updatedQuote }, { status: 409, headers });

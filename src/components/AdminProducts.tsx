@@ -4,9 +4,8 @@ import { ModelLodInputs, type LodUploadFiles } from "./ModelLodInputs";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Search, RefreshCw, Plus, Pencil, Box, ChevronLeft, ChevronRight, ArrowLeft, Save } from "lucide-react";
-import type { Product, Material } from "@/lib/types";
+import type { Product, Material, Store } from "@/lib/types";
 import { CATEGORIES, CATEGORY_LABEL } from "@/lib/products";
-import { STORES } from "@/lib/stores";
 import { useAuth } from "@/store/auth";
 import { useCatalog, useCatalogStore } from "@/store/catalog";
 import { authFetch } from "@/lib/authFetch";
@@ -121,8 +120,23 @@ function ProductEditor({
   const [glbMessage, setGlbMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stores, setStores] = useState<Store[]>([]);
+  const [storesError, setStoresError] = useState(false);
+  const [storesRefresh, setStoresRefresh] = useState(0);
   const editorRef = useRef<HTMLFormElement>(null);
   useEffect(() => { editorRef.current?.focus({ preventScroll: true }); }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    setStoresError(false);
+    authFetch("/api/admin/stores", { signal: controller.signal }, owner)
+      .then(async response => {
+        if (!response.ok) throw new Error("stores");
+        return response.json();
+      })
+      .then(result => { if (!controller.signal.aborted) setStores(result.stores); })
+      .catch(() => { if (!controller.signal.aborted) setStoresError(true); });
+    return () => controller.abort();
+  }, [owner, storesRefresh]);
 
   const field = <K extends keyof Product>(key: K, value: Product[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
@@ -657,7 +671,8 @@ function ProductEditor({
         <fieldset className="admin-field-section">
           <legend>Харагдах дэлгүүрүүд</legend>
           <p className="text-xs text-[#7b896c]">Дэлгүүрүүдийг чагталж сонгоорой. Сонгоогүй бараа нийт каталогт харагдана.</p>
-          <div className="admin-store-checkboxes">{STORES.map(store => <label key={store.id}><input type="checkbox" checked={(draft.storeIds ?? []).includes(store.id)} onChange={event => field("storeIds", event.target.checked ? [...(draft.storeIds ?? []), store.id] : (draft.storeIds ?? []).filter(id => id !== store.id))} />{store.name}</label>)}</div>
+          {storesError && <p role="alert">Дэлгүүрүүдийг ачаалж чадсангүй. <button type="button" className="underline" onClick={() => setStoresRefresh(value => value + 1)}>Дахин оролдох</button></p>}
+          <div className="admin-store-checkboxes">{stores.map(store => <label key={store.id}><input type="checkbox" checked={(draft.storeIds ?? []).includes(store.id)} onChange={event => field("storeIds", event.target.checked ? [...(draft.storeIds ?? []), store.id] : (draft.storeIds ?? []).filter(id => id !== store.id))} />{store.name}</label>)}</div>
         </fieldset>
       </fieldset>
 

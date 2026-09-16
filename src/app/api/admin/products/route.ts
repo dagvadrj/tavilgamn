@@ -6,7 +6,7 @@ import {
   CatalogInputError,
   parseProduct,
 } from "@/lib/catalogValidation";
-import { STORES } from "@/lib/stores";
+import { readStoreDirectory } from "@/lib/storeDirectory";
 
 export const dynamic = "force-dynamic";
 
@@ -53,9 +53,10 @@ async function save(request: NextRequest, create: boolean) {
         : {}),
     });
 
+    const stores = await readStoreDirectory({ includeInactive: true });
     if (
       product.storeIds?.some(
-        (id) => !STORES.some((store) => store.id === id),
+        (id) => !stores.some((store) => store.id === id),
       )
     ) {
       throw new CatalogInputError(

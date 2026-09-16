@@ -1,4 +1,5 @@
 import type { KitchenSnapshot } from "./kitchenAssembly";
+import type { StoreType } from "./storeTypes";
 export type Category =
   | "sofa"
   | "wardrobe"
@@ -210,6 +211,7 @@ export interface User {
 export interface Store {
   id: string;
   name: string;
+  storeType: StoreType;
   city: string;
   district: string;
   address: string;

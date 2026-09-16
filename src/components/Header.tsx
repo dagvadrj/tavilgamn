@@ -6,7 +6,8 @@ import { Heart, Search, ShoppingBag, UserRound, House, LayoutGrid, Armchair, Arr
 import { useCart } from "@/store/cart";
 import { useWishlist } from "@/store/wishlist";
 import { useAuth } from "@/store/auth";
-import { CATEGORIES } from "@/lib/products";
+import { STORE_TYPES } from "@/lib/storeTypes";
+import { CategoryMenu } from "./CategoryMenu";
 
 export function Header() {
   const pathname = usePathname();
@@ -16,7 +17,9 @@ export function Header() {
   const role = useAuth(s => s.role);
   const initialize = useAuth(s => s.initialize);
   const [mounted, setMounted] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   useEffect(() => { setMounted(true); void initialize(); }, [initialize]);
+  useEffect(() => { setCategoriesOpen(false); }, [pathname]);
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return null;
   const accountHref = mounted && user ? "/account" : "/login";
   const links = [
@@ -27,7 +30,7 @@ export function Header() {
     { href: accountHref, label: "Миний", icon: UserRound, active: ["/account", "/login", "/register"].includes(pathname) || pathname.startsWith("/orders"), count: 0 },
   ];
   return <>
-    <div className="store-announcement"><div className="shop-container"><span>Гэртээ тухтай. Өөрийнхөөрөө.</span><Link href="/about#stores"><MapPin size={13} /> Дэлгүүрүүдтэй танилцах <ArrowUpRight size={13} /></Link></div></div>
+    <div className="store-announcement"><div className="shop-container"><span>Гэртээ тухтай. Өөрийнхөөрөө.</span><Link href="/stores"><MapPin size={13} /> Дэлгүүрүүдтэй танилцах <ArrowUpRight size={13} /></Link></div></div>
     <header className="store-header">
       <div className="shop-container header-main">
         <Link href="/" className="brand" aria-label="Тавилга.mn — Нүүр"><span className="brand-icon"><Armchair size={23} strokeWidth={1.7} /></span>tavilga<span className="brand-dot">.</span>mn</Link>
@@ -39,17 +42,19 @@ export function Header() {
         <Link href="/planner" className="mobile-planner"><Armchair size={17} /> 3D өрөө</Link>
       </div>
       <nav className="shop-container desktop-nav" aria-label="Үндсэн цэс">
-        <Link href="/catalog" className={pathname === "/catalog" ? "active" : ""}><LayoutGrid size={16} /> Бүх тавилга</Link>
-        {CATEGORIES.map(c => <Link key={c.id} href={"/catalog/" + c.id} className={pathname === "/catalog/" + c.id ? "active" : ""}>{c.name}</Link>)}
+        <button type="button" className={`category-menu-trigger${categoriesOpen || pathname.startsWith("/catalog") ? " active" : ""}`} onClick={() => setCategoriesOpen(true)} aria-expanded={categoriesOpen} aria-controls="category-menu" aria-haspopup="dialog"><LayoutGrid size={16} /> Бүх ангилал</button>
+        {STORE_TYPES.map(type => <Link key={type.id} href={`/stores?type=${type.id}`}>{type.label}</Link>)}
         <Link href="/planner" className="planner-link">Өрөөгөө төлөвлөх <ArrowUpRight size={15} /></Link>
         <Link href="/kitchen" className={pathname === "/kitchen" ? "active" : ""}>Гал тогоо төлөвлөх <ArrowUpRight size={15} /></Link>
         {mounted && role === "admin" && <Link href="/admin">Удирдлага</Link>}
+        {mounted && role === "merchant" && <Link href="/merchant">Миний дэлгүүр</Link>}
       </nav>
       <Link href="/kitchen" className="flex min-h-11 items-center justify-center gap-2 border-t border-[#293C32]/10 text-sm text-[#42634F] md:hidden" aria-current={pathname === "/kitchen" ? "page" : undefined}>Гал тогоо төлөвлөх <ArrowUpRight size={15} /></Link>
     </header>
     <nav className="mobile-bottom-nav" aria-label="Доод үндсэн цэс">
-      {links.map(({ href, label, icon: Icon, active, count }) => <Link key={href} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}><span className="nav-icon"><Icon size={22} strokeWidth={active ? 2 : 1.7} />{mounted && count > 0 && <span className="nav-count">{count > 99 ? "99+" : count}</span>}</span><span>{label}</span></Link>)}
+      {links.map(({ href, label, icon: Icon, active, count }) => label === "Ангилал" ? <button key="categories" type="button" className={`mobile-category-trigger${active || categoriesOpen ? " active" : ""}`} onClick={() => setCategoriesOpen(true)} aria-expanded={categoriesOpen} aria-controls="category-menu" aria-haspopup="dialog"><span className="nav-icon"><Icon size={22} strokeWidth={active || categoriesOpen ? 2 : 1.7} /></span><span>{label}</span></button> : <Link key={href} href={href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}><span className="nav-icon"><Icon size={22} strokeWidth={active ? 2 : 1.7} />{mounted && count > 0 && <span className="nav-count">{count > 99 ? "99+" : count}</span>}</span><span>{label}</span></Link>)}
     </nav>
+    <CategoryMenu open={categoriesOpen} onClose={() => setCategoriesOpen(false)} merchant={mounted && role === "merchant"} admin={mounted && role === "admin"} />
   </>;
 }
 

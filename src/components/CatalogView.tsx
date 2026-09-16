@@ -6,19 +6,23 @@ import { CATEGORIES, CATEGORY_LABEL } from "@/lib/products";
 import type { Category } from "@/lib/types";
 import { cn } from "@/lib/format";
 import { CatalogProducts } from "./CatalogProducts";
+import { getRoomCatalogGroup } from "@/lib/catalogNavigation";
 
 export function CatalogView({
   initialCategory,
   initialQuery,
   initialSort,
+  initialRoom,
 }: {
   initialCategory?: Category;
   initialQuery?: string;
   initialSort?: string;
+  initialRoom?: string;
 }) {
+  const room = getRoomCatalogGroup(initialRoom);
   const [query, setQuery] = useState(initialQuery ?? "");
   const [categories, setCategories] = useState<Set<Category>>(
-    new Set(initialCategory ? [initialCategory] : []),
+    new Set(initialCategory ? [initialCategory] : room?.categories ?? []),
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
   useEffect(() => {
@@ -26,8 +30,9 @@ export function CatalogView({
   }, [initialQuery]);
 
   useEffect(() => {
-    setCategories(new Set(initialCategory ? [initialCategory] : []));
-  }, [initialCategory]);
+    setCategories(new Set(initialCategory ? [initialCategory] : room?.categories ?? []));
+  }, [initialCategory, room]);
+  const roomFilterActive = !initialCategory && room && categories.size === room.categories.length && room.categories.every(category => categories.has(category));
 
   const toggleCategory = (c: Category) => {
     const next = new Set(categories);
@@ -46,10 +51,10 @@ export function CatalogView({
         <div className="mt-3 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-3xl font-medium leading-tight tracking-tight sm:text-4xl">
-              {initialCategory ? CATEGORY_LABEL[initialCategory] : "Өөрт тохирох тавилгаа олоорой"}
+              {initialCategory ? CATEGORY_LABEL[initialCategory] : roomFilterActive ? room.label : "Өөрт тохирох тавилгаа олоорой"}
             </h1>
             <p className="mt-3 text-sm leading-6 text-[#6C726B]">
-              Загвар, өнгө, материалаа харьцуулж, өөрт тохирохыг сонгоорой.
+              {roomFilterActive ? room.description : "Загвар, өнгө, материалаа харьцуулж, өөрт тохирохыг сонгоорой."}
             </p>
           </div>
           <div className="relative w-full shrink-0 lg:w-80">

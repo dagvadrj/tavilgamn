@@ -12,7 +12,7 @@ import { setKitchenOwner } from "@/store/kitchens";
 import { rememberAuthDestination } from "@/lib/authRedirect";
 import { authErrorMessage } from "@/lib/authErrors";
 
-export type AuthRole = "customer" | "admin";
+export type AuthRole = "customer" | "merchant" | "admin";
 
 interface AuthResult {
   error: string | null;
@@ -77,7 +77,9 @@ async function resolveAuthUser(user: SupabaseUser | null) {
     role:
       data?.role === "admin"
         ? ("admin" as const)
-        : ("customer" as const),
+        : data?.role === "merchant"
+          ? ("merchant" as const)
+          : ("customer" as const),
   };
 }
 

@@ -117,3 +117,10 @@ supabase/migrations/*
 !/docs/kitchen-precision.md
 !/tests/room-wall-editing.test.cjs
 !/tests/room-wall-interaction.test.cjs
+!/tests/navigation-categories.test.cjs
+!/tests/merchant-ui.test.cjs
+!/tests/merchant-api.test.cjs
+!/tests/merchant-db.test.cjs
+!/tests/store-directory.test.cjs
+!/docs/merchant-stores.md
+!supabase/migrations/20260916072036_merchant_stores_roles.sql

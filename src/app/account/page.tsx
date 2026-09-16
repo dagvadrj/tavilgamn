@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   Maximize,
   Trash2,
+  Store,
 } from "lucide-react";
 import { OrderHistory } from "@/components/OrderHistory";
 import { SavedKitchenList } from "@/components/SavedKitchenList";
@@ -73,6 +74,7 @@ export default function AccountPage() {
         </div>
         <nav className="mt-4 space-y-1 text-sm">
           {role === "admin" && <Link href="/admin" className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"><LayoutGrid className="h-4 w-4" />Удирдлага</Link>}
+          {role === "merchant" && <Link href="/merchant" className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"><Store className="h-4 w-4" />Миний дэлгүүр</Link>}
           {[
             { href: "#designs", label: "Хадгалсан загвар", icon: LayoutGrid },
             { href: "#kitchen-garniture", label: "Гал тогооны гарнитур", icon: LayoutGrid },

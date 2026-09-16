@@ -3,15 +3,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, MapPin, Phone } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
-import { getStore } from "@/lib/stores";
+import { cache } from "react";
+import { readDirectoryStore } from "@/lib/storeDirectory";
+import { STORE_TYPES } from "@/lib/storeTypes";
 import { CATEGORY_LABEL } from "@/lib/products";
 import { readProducts } from "@/lib/catalogServer";
 import { hasAvailableStock } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";
 
-export function generateMetadata({ params }: { params: { id: string } }) {
-  const store = getStore(params.id);
+const getStore = cache(readDirectoryStore);
+
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const store = await getStore(params.id);
   if (!store) return {};
   return { title: `${store.name} — tavilga.mn` };
 }
@@ -21,7 +25,7 @@ export default async function StorePage({
 }: {
   params: { id: string };
 }) {
-  const store = getStore(params.id);
+  const store = await getStore(params.id);
 
   if (!store) notFound();
 
@@ -41,7 +45,7 @@ export default async function StorePage({
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
       <Link
-        href="/catalog"
+        href="/stores"
         className="mb-8 inline-flex items-center gap-2 text-sm text-[#737D6C] hover:text-[#293C32]"
       >
         <ArrowLeft className="h-4 w-4" /> Бүх дэлгүүрүүд
@@ -56,6 +60,7 @@ export default async function StorePage({
                 alt={store.name}
                 width={64}
                 height={64}
+                unoptimized
                 className="h-16 w-16 rounded-full object-cover"
               />
             ) : (
@@ -64,6 +69,7 @@ export default async function StorePage({
           </div>
           <div>
             <h1 className="text-4xl text-[#293C32]">{store.name}</h1>
+            <Link href={`/stores?type=${store.storeType}`} className="mt-2 inline-block text-xs font-medium text-[#42634F] underline underline-offset-4">{STORE_TYPES.find(type => type.id === store.storeType)?.label}</Link>
             <p className="mt-2 flex items-center gap-1.5 text-sm text-[#6C726B]">
               <MapPin className="h-4 w-4 shrink-0" />
               {store.address !== "-" ? store.address : location}

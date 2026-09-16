@@ -3,6 +3,7 @@ import type { Store } from "./types";
 export const STORES: Store[] = [
   {
     id: "top-mebel",
+    storeType: "retail",
     name: "Топ Мебель",
     city: "Улаанбаатар",
     district: "Баянзүрх дүүрэг",
@@ -17,6 +18,7 @@ export const STORES: Store[] = [
   },
   {
     id: "gobi-khangai-mebel",
+    storeType: "retail",
     name: "Говь Хангай мебель",
     city: "Улаанбаатар",
     district: "3, 4-р хороолол",
@@ -31,6 +33,7 @@ export const STORES: Store[] = [
   },
   {
     id: "mebel-town",
+    storeType: "retail",
     name: "Мебель Таун",
     city: "Улаанбаатар",
     district: "Мишээл Экспо төв",
@@ -45,6 +48,7 @@ export const STORES: Store[] = [
   },
   {
     id: "sunder-urguu-trade",
+    storeType: "factory",
     name: "Сүндэр Өргөө Трейд",
     city: "Улаанбаатар",
     district: "Баянзүрх дүүрэг",
@@ -59,6 +63,7 @@ export const STORES: Store[] = [
   },
   {
     id: "magnetto",
+    storeType: "factory",
     name: "Магнетто",
     city: "Улаанбаатар",
     district: "-",
@@ -73,6 +78,7 @@ export const STORES: Store[] = [
   },
   {
     id: "stolline-mongolia",
+    storeType: "retail",
     name: "Stolline дэлгүүр",
     city: "Улаанбаатар",
     district: "3, 4-р хороолол",
@@ -87,6 +93,7 @@ export const STORES: Store[] = [
   },
   {
     id: "tumen-tavilga",
+    storeType: "factory",
     name: "Түмэн тавилгын дэлгүүр",
     city: "Улаанбаатар",
     district: "-",
@@ -101,6 +108,7 @@ export const STORES: Store[] = [
   },
   {
     id: "khairyn-ger",
+    storeType: "factory",
     name: "Хайрын Гэр",
     city: "Улаанбаатар",
     district: "Хан-Уул дүүрэг",
@@ -115,6 +123,7 @@ export const STORES: Store[] = [
   },
   {
     id: "shine-songolt",
+    storeType: "retail",
     name: "Шинэ Сонголт брэнд тавилгын их дэлгүүр",
     city: "Улаанбаатар",
     district: "-",
@@ -129,6 +138,7 @@ export const STORES: Store[] = [
   },
   {
     id: "best-buidan",
+    storeType: "retail",
     name: "Бест Буйдан",
     city: "Улаанбаатар",
     district: "-",
@@ -143,6 +153,7 @@ export const STORES: Store[] = [
   },
   {
     id: "mungun-tavilga",
+    storeType: "retail",
     name: "Мөнгөн Тавилга",
     city: "Улаанбаатар",
     district: "Цэцэг төвийн худалдааны гудамж",
@@ -157,6 +168,7 @@ export const STORES: Store[] = [
   },
   {
     id: "badachi-trade",
+    storeType: "retail",
     name: "Бадачи Треид (Топмебель эх дэлгүүр)",
     city: "Улаанбаатар",
     district: "-",
@@ -171,6 +183,7 @@ export const STORES: Store[] = [
   },
   {
     id: "narnia-mebel",
+    storeType: "retail",
     name: "Нарниа Мебель",
     city: "Улаанбаатар",
     district: "-",
