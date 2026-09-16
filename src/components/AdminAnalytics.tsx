@@ -82,7 +82,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
   return <div>
     <div className="admin-page-heading"><div><span className="admin-eyebrow">ТАНЫ ДЭЛГҮҮР ӨНӨӨДӨР</span><h1>Ерөнхий тойм</h1><p>Сүүлийн 30 хоногийн захиалга, хүлээн авсан төлбөр.</p></div><button type="button" className="btn-ghost" disabled={loading} onClick={() => setRefresh(v => v + 1)}><RefreshCw size={15} />Шинэчлэх</button></div>
     {loading ? <div className="admin-loading" role="status"><RefreshCw size={22} /><p>Тойм мэдээллийг ачаалж байна…</p></div> : error ? <p role="alert" className="admin-error">{error}</p> : result && <>
-      <div className="admin-date-range"><CalendarDays size={15} /><span>{dateLabel(result.periodStart)} — {dateLabel(result.asOf)}</span><span>· Улаанбаатарын цагаар</span></div>
+      <div className="admin-date-range"><CalendarDays size={15} /><span>{dateLabel(result.periodStart)} — {dateLabel(result.asOf)}</span><span>· Улаанбаатарын цагаар </span></div>
       <div className="admin-metrics">
         <Metric icon={Wallet} label="Хүлээн авсан төлбөр" value={countLabel(result.grossReceived) + " ₮"} detail="30 хоног · Хүргэлтийн төлбөр багтсан" />
         <Metric icon={CircleCheck} label="Төлбөр баталгаажсан" value={countLabel(result.paymentsReceived)} detail="30 хоногт баталгаажсан захиалга" />
@@ -98,4 +98,3 @@ function AnalyticsPanel({ owner }: { owner: string }) {
 function Metric({icon: Icon, label, value, detail}: {icon: LucideIcon; label: string; value: string; detail: string}) {
   return <div className="admin-metric"><div className="admin-metric-top"><span>{label}</span><Icon size={21} strokeWidth={1.6} /></div><strong>{value}</strong><p>{detail}</p></div>;
 }
-
