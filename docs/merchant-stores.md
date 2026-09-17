@@ -10,7 +10,7 @@
 
 ## Data and permissions
 
-Apply `supabase/migrations/20260916072036_merchant_stores_roles.sql` through the normal database migration process before enabling merchant features. The migration does not grant merchant access to any existing account. An admin assigns the role; the merchant creates their store, with an immutable generated ID and one owner per store.
+Apply `supabase/migrations/20260916072036_merchant_stores_roles.sql` and then `20260916180746_merchant_checkout_lock.sql` through the normal database migration process. The base migration is already present in the connected project as verified on September 17; the checkout-lock follow-up is prepared locally and has not been applied by this task. Neither migration grants merchant access to any existing account. An admin assigns the role; the merchant creates their store, with an immutable generated ID and one owner per store.
 
 Public store cards include only public profile fields. The owner ID is not returned by `/api/stores`. Existing curated stores remain available; their IDs are not automatically assigned to accounts. The admin product editor includes active and inactive merchant stores so existing assignments can be preserved.
 
@@ -23,3 +23,5 @@ Checkout snapshots each merchant's own line items under the order transaction. H
 Focused tests: `node --test tests/navigation-categories.test.cjs tests/store-directory.test.cjs tests/merchant-ui.test.cjs tests/merchant-api.test.cjs tests/merchant-db.test.cjs`.
 
 Run the full existing test suite and TypeScript/build checks before release. Database tests use a disposable local PGlite database and do not grant real account permissions or write production orders.
+
+Verification on September 17: 208 tests passed, TypeScript and production build passed. Live read-only HTTP checks returned 200 for directory/type/room/detail pages and 401 for unauthenticated merchant APIs. A connected browser was unavailable, so interactive visual checks and a signed-in merchant flow against production have not been performed. Concurrent sessions are not simulated by PGlite; the checkout function takes non-blocking shared profile/store locks to preserve validation until commit and avoid waiting in the opposite order to product edits.

@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "models:decoders": "node scripts/models/sync-decoders.mjs",
-    "models:pipeline": "node scripts/models/pipeline.mjs",
+    "models:pipeline": "node --env-file=.env.local scripts/models/pipeline.mjs",
     "models:compress": "node scripts/models/optimize-glb.mjs",
     "models:fetch": "node --env-file=.env.local scripts/models/fetch-r2.mjs",
+    "models:fetch:2": "node --env-file=.env.local scripts/models/fetch-r2.mjs --output=model-work/source --limit=2",
+    "models:worker": "node --env-file=.env.local scripts/models/worker.mjs",
     "predev": "npm run models:decoders",
     "prebuild": "npm run models:decoders",
     "dev": "next dev",
@@ -18,7 +20,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1126.0",
-    "@aws-sdk/s3-request-presigner": "^3.1126.0",
+    "@aws-sdk/s3-request-presigner": "^3.1134.0",
     "@react-three/drei": "^9.114.0",
     "@react-three/fiber": "^8.17.10",
     "@supabase/server": "^1.5.2",

@@ -25,8 +25,8 @@ export async function PATCH(request: NextRequest) {
     if (auth.error) return auth.error;
     const raw = merchantObject(await request.json().catch(() => { throw new CatalogInputError("JSON буруу байна."); }));
     if (typeof raw.id !== "string" || !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(raw.id)
-      || !["processing", "shipped", "delivered"].includes(String(raw.status))
-      || !["pending", "processing", "shipped", "delivered"].includes(String(raw.expectedStatus))) throw new CatalogInputError("Захиалгын төлөв буруу байна.");
+      || typeof raw.status !== "string" || !["processing", "shipped", "delivered"].includes(raw.status)
+      || typeof raw.expectedStatus !== "string" || !["pending", "processing", "shipped", "delivered"].includes(raw.expectedStatus)) throw new CatalogInputError("Захиалгын төлөв буруу байна.");
     const { error } = await getSupabaseAdmin().rpc("update_merchant_order", {
       p_actor: auth.userId, p_order: raw.id, p_status: raw.status, p_expected_status: raw.expectedStatus,
     });

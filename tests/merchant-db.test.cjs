@@ -23,7 +23,7 @@ test("merchant isolation, atomic permissions and immutable order fulfillment", a
       colors jsonb not null,materials jsonb not null,in_stock boolean not null default true);
     grant all on public.furniture_models to service_role;
   `);
-  for (const file of ["202609040001_orders.sql", "202609040002_payments.sql", "202609060001_inventory_contact.sql", "202609090001_product_gallery.sql", "20260916072036_merchant_stores_roles.sql"]) {
+  for (const file of ["202609040001_orders.sql", "202609040002_payments.sql", "202609060001_inventory_contact.sql", "202609090001_product_gallery.sql", "20260916072036_merchant_stores_roles.sql", "20260916180746_merchant_checkout_lock.sql"]) {
     await db.exec(readFileSync(`supabase/migrations/${file}`, "utf8"));
   }
   const admin = randomUUID(), alice = randomUUID(), bob = randomUUID(), customer = randomUUID();

@@ -45,17 +45,30 @@ function config() {
   };
 }
 
-export function r2ModelKey(value: string): string | null {
-  const match =
-  /^r2:\/\/([a-z0-9-]+)\/(models\/[0-9a-f-]{36}\/model(?:-[0-9a-f-]{36}(?:-[012])?)?\.glb)$/i.exec(
-    value,
-  );
-
-  if (!match || match[1] !== process.env.R2_BUCKET_NAME) {
+export function r2ModelKey(
+  value: string,
+): string | null {
+  if (typeof value !== "string") {
     return null;
   }
 
-  return match[2];
+  const match =
+  /^r2:\/\/([a-z0-9-]+)\/(models\/([0-9a-f-]{36})\/(?:(?:source\/[0-9a-f-]{36}\.glb)|(?:lod\/[0-9a-f-]{36}\/(?:high|medium|low)\.glb)|(?:model(?:-[0-9a-f-]{36}(?:-[012])?)?\.glb)))$/i.exec(
+    value,
+  );
+
+  if (!match) {
+    return null;
+  }
+  const bucket = match[1];
+  const key = match[2];
+  
+  const configuredBucket = process.env.R2_BUCKET_NAME;
+  if (configuredBucket && bucket !== configuredBucket) {
+    return null;
+  }
+
+  return key;
 }
 
 export async function uploadR2Glb(
@@ -109,7 +122,9 @@ export async function r2DownloadUrl(value: string) {
   const publicBase = process.env.R2_PUBLIC_BASE_URL;
   if (publicBase) {
     const url = new URL(publicBase);
+
     if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) throw new R2ModelError("R2 public URL буруу байна.");
+    
     return `${url.href.replace(/\/$/, "")}/${key.split("/").map(encodeURIComponent).join("/")}`;
   }
 

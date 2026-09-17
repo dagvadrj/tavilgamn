@@ -1,7 +1,7 @@
 const KEY = "casa-auth-return";
 export function authDestination(search: string): string {
   const next = new URLSearchParams(search).get("next");
-  if (next === "/checkout" || next === "/admin") return next;
+  if (next === "/checkout" || next === "/admin" || next === "/merchant") return next;
   return "/account";
 }
 export function rememberAuthDestination(search: string): string {
@@ -10,7 +10,7 @@ export function rememberAuthDestination(search: string): string {
     if (next !== "/account") sessionStorage.setItem(KEY, next);
     else {
       const saved = sessionStorage.getItem(KEY);
-      if (saved === "/checkout" || saved === "/admin") return saved;
+      if (saved === "/checkout" || saved === "/admin" || saved === "/merchant") return saved;
     }
   } catch { /* Navigation still works without browser storage. */ }
   return next;

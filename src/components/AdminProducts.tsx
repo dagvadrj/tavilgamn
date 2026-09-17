@@ -1,9 +1,18 @@
 "use client";
-import { ModelLodInputs, type LodUploadFiles } from "./ModelLodInputs";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { Search, RefreshCw, Plus, Pencil, Box, ChevronLeft, ChevronRight, ArrowLeft, Save } from "lucide-react";
+import {
+  Search,
+  RefreshCw,
+  Plus,
+  Pencil,
+  Box,
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeft,
+  Save,
+} from "lucide-react";
 import type { Product, Material, Store } from "@/lib/types";
 import { CATEGORIES, CATEGORY_LABEL } from "@/lib/products";
 import { useAuth } from "@/store/auth";
@@ -13,6 +22,7 @@ import { formatPrice } from "@/lib/format";
 import { CatalogStatus } from "./CatalogStatus";
 
 import { stockLabel, MAX_STOCK_QUANTITY } from "@/lib/inventory";
+import { isNull } from "util";
 
 const blank = (): Product => ({
   id: "new",
@@ -76,29 +86,249 @@ function ProductList({
     create: boolean;
   } | null>(null);
 
-  const filtered = catalog.products.filter((product) =>
-    (!category || product.category === category) &&
-    (!stock || (stock === "available" ? product.inStock : !product.inStock)) &&
-    `${product.name} ${CATEGORY_LABEL[product.category]}`
-      .toLowerCase()
-      .includes(query.trim().toLowerCase()),
+  const filtered = catalog.products.filter(
+    (product) =>
+      (!category || product.category === category) &&
+      (!stock ||
+        (stock === "available" ? product.inStock : !product.inStock)) &&
+      `${product.name} ${CATEGORY_LABEL[product.category]}`
+        .toLowerCase()
+        .includes(query.trim().toLowerCase()),
   );
 
   const pages = Math.max(1, Math.ceil(filtered.length / 20));
   const currentPage = Math.min(page, pages);
   const items = filtered.slice((currentPage - 1) * 20, currentPage * 20);
 
-  return <div>
-    <div className="admin-page-heading"><div><span className="admin-eyebrow">БАРААНЫ УДИРДЛАГА</span><h1>Бүтээгдэхүүн</h1><p>{catalog.ready ? catalog.products.length + " бүтээгдэхүүн · Үнэ, нөөц, сонголтуудаа удирдах." : "Барааны мэдээлэл"}</p></div><div className="admin-actions"><button type="button" className="btn-ghost" onClick={onAddModel}><Box size={16} />3D загвар</button><button type="button" className="btn-primary" onClick={() => setEditing({product:blank(),create:true})}><Plus size={17} />Бараа нэмэх</button></div></div>
-    {editing ? <ProductEditor key={editing.create + "-" + editing.product.id} owner={owner} product={editing.product} create={editing.create} close={() => setEditing(null)} /> : <>
-      <div className="admin-toolbar"><label className="admin-search"><Search size={18} /><input aria-label="Бүтээгдэхүүн хайх" placeholder="Барааны нэрээр хайх…" value={query} onChange={e => {setQuery(e.target.value);setPage(1);}} /></label><select className="input" aria-label="Барааны ангилал" value={category} onChange={e=>{setCategory(e.target.value);setPage(1);}}><option value="">Бүх ангилал</option>{CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select><select className="input" aria-label="Нөөцийн төлөв" value={stock} onChange={e=>{setStock(e.target.value);setPage(1);}}><option value="">Бүх нөөц</option><option value="available">Нөөцтэй</option><option value="empty">Дууссан</option></select><button type="button" disabled={catalog.loading} className="btn-ghost" onClick={()=>void catalog.refresh()} aria-label="Бүтээгдэхүүн шинэчлэх"><RefreshCw size={16} /></button></div>
-      {catalog.loading || !catalog.ready ? <CatalogStatus loading={catalog.loading} error={catalog.error} retry={()=>void catalog.refresh()} /> : <>
-        <p className="admin-result-count">{filtered.length} илэрц{(query || category || stock) && <button type="button" className="ml-3 min-h-10 underline" onClick={()=>{setQuery("");setCategory("");setStock("");setPage(1);}}>Шүүлтүүр арилгах</button>}</p>
-        {!items.length ? <div className="admin-empty"><Box size={30} /><strong>Бүтээгдэхүүн олдсонгүй</strong><p>Хайх үг эсвэл шүүлтүүрээ өөрчлөөрэй.</p></div> : <div className="admin-panel"><table className="admin-data-table"><thead><tr>{["Бүтээгдэхүүн","Ангилал","Үндсэн үнэ","Нөөц","Үйлдэл"].map(label=><th key={label} scope="col">{label}</th>)}</tr></thead><tbody>{items.map(product=><tr key={product.id}><td data-label="Бүтээгдэхүүн"><div className="admin-product-name"><Image src={product.image} alt="" width={48} height={48} /><div><strong>{product.name}</strong><small>{product.model ? "3D загвартай" : "Энгийн бүтээгдэхүүн"}{product.isNew ? " · Шинэ" : product.isBestSeller ? " · Онцлох" : ""}</small></div></div></td><td data-label="Ангилал">{CATEGORY_LABEL[product.category]}</td><td data-label="Үнэ"><span className="whitespace-nowrap font-medium tabular-nums">{formatPrice(product.basePrice)}</span></td><td data-label="Нөөц"><span className={"admin-status " + (!product.inStock ? "low" : "")}>{stockLabel(product)}</span></td><td className="admin-row-action"><button type="button" className="admin-edit-button" aria-label={product.name + " засах"} onClick={()=>setEditing({product,create:false})}><Pencil size={13} />Засах</button></td></tr>)}</tbody></table></div>}
-        <nav className="admin-pagination" aria-label="Барааны хуудаслалт"><span aria-live="polite">Хуудас {currentPage} / {pages}</span><button type="button" disabled={currentPage===1} onClick={()=>setPage(currentPage-1)}><ChevronLeft size={14} />Өмнөх</button><button type="button" disabled={currentPage===pages} onClick={()=>setPage(currentPage+1)}>Дараах<ChevronRight size={14} /></button></nav>
-      </>}
-    </>}
-  </div>;
+  return (
+    <div>
+      <div className="admin-page-heading">
+        <div>
+          <span className="admin-eyebrow">БАРААНЫ УДИРДЛАГА</span>
+          <h1>Бүтээгдэхүүн</h1>
+          <p>
+            {catalog.ready
+              ? catalog.products.length +
+                " бүтээгдэхүүн · Үнэ, нөөц, сонголтуудаа удирдах."
+              : "Барааны мэдээлэл"}
+          </p>
+        </div>
+        <div className="admin-actions">
+          <button type="button" className="btn-ghost" onClick={onAddModel}>
+            <Box size={16} />
+            3D загвар
+          </button>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => setEditing({ product: blank(), create: true })}
+          >
+            <Plus size={17} />
+            Бараа нэмэх
+          </button>
+        </div>
+      </div>
+      {editing ? (
+        <ProductEditor
+          key={editing.create + "-" + editing.product.id}
+          owner={owner}
+          product={editing.product}
+          create={editing.create}
+          close={() => setEditing(null)}
+        />
+      ) : (
+        <>
+          <div className="admin-toolbar">
+            <label className="admin-search">
+              <Search size={18} />
+              <input
+                aria-label="Бүтээгдэхүүн хайх"
+                placeholder="Барааны нэрээр хайх…"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </label>
+            <select
+              className="input"
+              aria-label="Барааны ангилал"
+              value={category}
+              onChange={(e) => {
+                setCategory(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">Бүх ангилал</option>
+              {CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <select
+              className="input"
+              aria-label="Нөөцийн төлөв"
+              value={stock}
+              onChange={(e) => {
+                setStock(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">Бүх нөөц</option>
+              <option value="available">Нөөцтэй</option>
+              <option value="empty">Дууссан</option>
+            </select>
+            <button
+              type="button"
+              disabled={catalog.loading}
+              className="btn-ghost"
+              onClick={() => void catalog.refresh()}
+              aria-label="Бүтээгдэхүүн шинэчлэх"
+            >
+              <RefreshCw size={16} />
+            </button>
+          </div>
+          {catalog.loading || !catalog.ready ? (
+            <CatalogStatus
+              loading={catalog.loading}
+              error={catalog.error}
+              retry={() => void catalog.refresh()}
+            />
+          ) : (
+            <>
+              <p className="admin-result-count">
+                {filtered.length} илэрц
+                {(query || category || stock) && (
+                  <button
+                    type="button"
+                    className="ml-3 min-h-10 underline"
+                    onClick={() => {
+                      setQuery("");
+                      setCategory("");
+                      setStock("");
+                      setPage(1);
+                    }}
+                  >
+                    Шүүлтүүр арилгах
+                  </button>
+                )}
+              </p>
+              {!items.length ? (
+                <div className="admin-empty">
+                  <Box size={30} />
+                  <strong>Бүтээгдэхүүн олдсонгүй</strong>
+                  <p>Хайх үг эсвэл шүүлтүүрээ өөрчлөөрэй.</p>
+                </div>
+              ) : (
+                <div className="admin-panel">
+                  <table className="admin-data-table">
+                    <thead>
+                      <tr>
+                        {[
+                          "Бүтээгдэхүүн",
+                          "Ангилал",
+                          "Үндсэн үнэ",
+                          "Нөөц",
+                          "Үйлдэл",
+                        ].map((label) => (
+                          <th key={label} scope="col">
+                            {label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((product) => (
+                        <tr key={product.id}>
+                          <td data-label="Бүтээгдэхүүн">
+                            <div className="admin-product-name">
+                              <Image
+                                src={product.image}
+                                alt=""
+                                width={48}
+                                height={48}
+                              />
+                              <div>
+                                <strong>{product.name}</strong>
+                                <small>
+                                  {product.model
+                                    ? "3D загвартай"
+                                    : "Энгийн бүтээгдэхүүн"}
+                                  {product.isNew
+                                    ? " · Шинэ"
+                                    : product.isBestSeller
+                                      ? " · Онцлох"
+                                      : ""}
+                                </small>
+                              </div>
+                            </div>
+                          </td>
+                          <td data-label="Ангилал">
+                            {CATEGORY_LABEL[product.category]}
+                          </td>
+                          <td data-label="Үнэ">
+                            <span className="whitespace-nowrap font-medium tabular-nums">
+                              {formatPrice(product.basePrice)}
+                            </span>
+                          </td>
+                          <td data-label="Нөөц">
+                            <span
+                              className={
+                                "admin-status " +
+                                (!product.inStock ? "low" : "")
+                              }
+                            >
+                              {stockLabel(product)}
+                            </span>
+                          </td>
+                          <td className="admin-row-action">
+                            <button
+                              type="button"
+                              className="admin-edit-button"
+                              aria-label={product.name + " засах"}
+                              onClick={() =>
+                                setEditing({ product, create: false })
+                              }
+                            >
+                              <Pencil size={13} />
+                              Засах
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <nav className="admin-pagination" aria-label="Барааны хуудаслалт">
+                <span aria-live="polite">
+                  Хуудас {currentPage} / {pages}
+                </span>
+                <button
+                  type="button"
+                  disabled={currentPage === 1}
+                  onClick={() => setPage(currentPage - 1)}
+                >
+                  <ChevronLeft size={14} />
+                  Өмнөх
+                </button>
+                <button
+                  type="button"
+                  disabled={currentPage === pages}
+                  onClick={() => setPage(currentPage + 1)}
+                >
+                  Дараах
+                  <ChevronRight size={14} />
+                </button>
+              </nav>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  );
 }
 
 function ProductEditor({
@@ -116,7 +346,6 @@ function ProductEditor({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [glbFile, setGlbFile] = useState<File | null>(null);
-  const [lodFiles, setLodFiles] = useState<LodUploadFiles>({ medium: null, low: null });
   const [glbMessage, setGlbMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,17 +353,23 @@ function ProductEditor({
   const [storesError, setStoresError] = useState(false);
   const [storesRefresh, setStoresRefresh] = useState(0);
   const editorRef = useRef<HTMLFormElement>(null);
-  useEffect(() => { editorRef.current?.focus({ preventScroll: true }); }, []);
+  useEffect(() => {
+    editorRef.current?.focus({ preventScroll: true });
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     setStoresError(false);
     authFetch("/api/admin/stores", { signal: controller.signal }, owner)
-      .then(async response => {
+      .then(async (response) => {
         if (!response.ok) throw new Error("stores");
         return response.json();
       })
-      .then(result => { if (!controller.signal.aborted) setStores(result.stores); })
-      .catch(() => { if (!controller.signal.aborted) setStoresError(true); });
+      .then((result) => {
+        if (!controller.signal.aborted) setStores(result.stores);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setStoresError(true);
+      });
     return () => controller.abort();
   }, [owner, storesRefresh]);
 
@@ -155,13 +390,19 @@ function ProductEditor({
         setError(null);
 
         try {
-          if (!Number.isSafeInteger(draft.stockQuantity) || draft.stockQuantity == null || draft.stockQuantity < 0 || draft.stockQuantity > MAX_STOCK_QUANTITY) throw new Error("Нөөцийн ширхэгийг 0–1,000,000 хооронд бүхэл тоогоор оруулна уу.");
+          if (
+            !Number.isSafeInteger(draft.stockQuantity) ||
+            draft.stockQuantity == null ||
+            draft.stockQuantity < 0 ||
+            draft.stockQuantity > MAX_STOCK_QUANTITY
+          )
+            throw new Error(
+              "Нөөцийн ширхэгийг 0–1,000,000 хооронд бүхэл тоогоор оруулна уу.",
+            );
           let image = draft.image;
           const uploadImage = async (file: File) => {
             if (
-              !["image/jpeg", "image/png", "image/webp"].includes(
-                file.type,
-              ) ||
+              !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
               file.size === 0 ||
               file.size > 3 * 1024 * 1024
             ) {
@@ -205,11 +446,14 @@ function ProductEditor({
           }
 
           if (imageFile) image = await uploadImage(imageFile);
-          const uploadedGallery = await Promise.all(galleryFiles.map(uploadImage));
-          const images = [...new Set([...(draft.images ?? []), ...uploadedGallery])]
-            .filter((item) => item !== image);
+          const uploadedGallery = await Promise.all(
+            galleryFiles.map(uploadImage),
+          );
+          const images = [
+            ...new Set([...(draft.images ?? []), ...uploadedGallery]),
+          ].filter((item) => item !== image);
 
-          setDraft((current) => ({...current, image, images}));
+          setDraft((current) => ({ ...current, image, images }));
           setImageFile(null);
           setGalleryFiles([]);
           const response = await authFetch(
@@ -217,7 +461,12 @@ function ProductEditor({
             {
               method: create ? "POST" : "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...draft, image, images, expectedStockQuantity: product.stockQuantity ?? null }),
+              body: JSON.stringify({
+                ...draft,
+                image,
+                images,
+                expectedStockQuantity: product.stockQuantity ?? null,
+              }),
             },
             owner,
           );
@@ -244,10 +493,16 @@ function ProductEditor({
         }
       }}
     >
-      <button type="button" className="admin-edit-button" disabled={busy} onClick={close}><ArrowLeft size={14} />Жагсаалт руу буцах</button>
-      <h2>
-        {create ? "Шинэ бүтээгдэхүүн" : "Бүтээгдэхүүн засах"}
-      </h2>
+      <button
+        type="button"
+        className="admin-edit-button"
+        disabled={busy}
+        onClick={close}
+      >
+        <ArrowLeft size={14} />
+        Жагсаалт руу буцах
+      </button>
+      <h2>{create ? "Шинэ бүтээгдэхүүн" : "Бүтээгдэхүүн засах"}</h2>
 
       <fieldset disabled={busy} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -296,8 +551,26 @@ function ProductEditor({
 
           <label className="text-sm">
             Нөөцийн үлдэгдэл (ширхэг)
-            <input className="input mt-1" required type="number" min="0" max={MAX_STOCK_QUANTITY} step="1" value={draft.stockQuantity ?? ""} onChange={event => setDraft(current => ({...current, stockQuantity: event.target.valueAsNumber, inStock: event.target.valueAsNumber > 0}))} />
-            <span className="text-xs text-ink/60">Өнгө, материалын бүх сонголтын нийт боломжтой үлдэгдэл. 0 бол нөөцгүй.</span>
+            <input
+              className="input mt-1"
+              required
+              type="number"
+              min="0"
+              max={MAX_STOCK_QUANTITY}
+              step="1"
+              value={draft.stockQuantity ?? ""}
+              onChange={(event) =>
+                setDraft((current) => ({
+                  ...current,
+                  stockQuantity: event.target.valueAsNumber,
+                  inStock: event.target.valueAsNumber > 0,
+                }))
+              }
+            />
+            <span className="text-xs text-ink/60">
+              Өнгө, материалын бүх сонголтын нийт боломжтой үлдэгдэл. 0 бол
+              нөөцгүй.
+            </span>
           </label>
           <label className="text-sm">
             Барааны зураг
@@ -326,12 +599,20 @@ function ProductEditor({
               type="file"
               multiple
               accept="image/jpeg,image/png,image/webp"
-              onChange={(event) => setGalleryFiles(Array.from(event.target.files ?? []))}
+              onChange={(event) =>
+                setGalleryFiles(Array.from(event.target.files ?? []))
+              }
             />
             <span className="text-xs text-ink/60">
-              Нэг удаад олон зураг сонгож болно. Нийт 12 хүртэл, зураг бүр 3 MB-аас ихгүй.
+              Нэг удаад олон зураг сонгож болно. Нийт 12 хүртэл, зураг бүр 3
+              MB-аас ихгүй.
             </span>
-            {galleryFiles.length > 0 && <p className="mt-1 text-xs text-ink/60">Хадгалах зураг: {galleryFiles.map((file) => file.name).join(", ")}</p>}
+            {galleryFiles.length > 0 && (
+              <p className="mt-1 text-xs text-ink/60">
+                Хадгалах зураг:{" "}
+                {galleryFiles.map((file) => file.name).join(", ")}
+              </p>
+            )}
           </label>
         </div>
         {(draft.images?.length ?? 0) > 0 && (
@@ -339,9 +620,29 @@ function ProductEditor({
             <p className="mb-2 text-sm">Одоогийн нэмэлт зургууд</p>
             <div className="flex flex-wrap gap-3">
               {draft.images?.map((url) => (
-                <div key={url} className="rounded-xl border border-ink/10 bg-white p-2">
-                  <Image src={url} alt="" width={92} height={70} className="h-[70px] w-[92px] rounded-lg object-cover" />
-                  <button type="button" className="mt-2 block min-h-10 w-full text-xs text-red-700 underline" onClick={() => field("images", draft.images?.filter((item) => item !== url) ?? [])}>Хасах</button>
+                <div
+                  key={url}
+                  className="rounded-xl border border-ink/10 bg-white p-2"
+                >
+                  <Image
+                    src={url}
+                    alt=""
+                    width={92}
+                    height={70}
+                    className="h-[70px] w-[92px] rounded-lg object-cover"
+                  />
+                  <button
+                    type="button"
+                    className="mt-2 block min-h-10 w-full text-xs text-red-700 underline"
+                    onClick={() =>
+                      field(
+                        "images",
+                        draft.images?.filter((item) => item !== url) ?? [],
+                      )
+                    }
+                  >
+                    Хасах
+                  </button>
                 </div>
               ))}
             </div>
@@ -350,7 +651,7 @@ function ProductEditor({
         {!create && (
           <div className="space-y-2">
             <label className="block text-sm">
-              3D загварын GLB файл (50 MB хүртэл)
+              3D загварын эх GLB файл (200 MB хүртэл)
               <input
                 className="input mt-1"
                 type="file"
@@ -365,8 +666,10 @@ function ProductEditor({
             <p className="text-xs text-ink/60">
               Одоогийн файл: {draft.model?.file ?? "GLB нэмээгүй"}
             </p>
-            <ModelLodInputs value={lodFiles} onChange={setLodFiles} />
-
+            <p className="text-xs text-ink/60">
+              Original GLB файл сонгоно. High, Medium, Low хувилбарууд
+              автоматаар боловсруулагдана.
+            </p>
             <button
               type="button"
               className="btn-ghost"
@@ -379,51 +682,150 @@ function ProductEditor({
                 setGlbMessage(null);
 
                 try {
+                  // --------------------------------
+                  // 1. Local validation
+                  // --------------------------------
+
                   if (
                     !glbFile.name.toLowerCase().endsWith(".glb") ||
                     glbFile.size < 12 ||
-                    glbFile.size > 50 * 1024 * 1024
+                    glbFile.size > 200 * 1024 * 1024
                   ) {
-                    throw new Error("50 MB-аас ихгүй GLB файл сонгоно уу.");
-                  }
-
-                  const form = new FormData();
-                  form.set("glb", glbFile);
-                  if (lodFiles.medium) form.set("glbMedium", lodFiles.medium);
-                  if (lodFiles.low) form.set("glbLow", lodFiles.low);
-                  form.set("expectedFile", draft.model?.file ?? "");
-
-                  const response = await authFetch(
-                    `/api/admin/products/${draft.id}/glb`,
-                    {
-                      method: "POST",
-                      body: form,
-                    },
-                    owner,
-                  );
-
-                  const data = await response.json().catch(() => null);
-
-                  if (!response.ok || typeof data?.model?.file !== "string") {
-                    throw new Error(data?.error ?? "GLB солиход алдаа гарлаа.");
+                    throw new Error("200 MB-аас ихгүй GLB файл сонгоно уу.");
                   }
 
                   if (
                     useAuth.getState().user?.id !== owner ||
                     useAuth.getState().role !== "admin"
                   ) {
-                    return;
+                    throw new Error("Админ нэвтрэлт өөрчлөгдсөн байна.");
                   }
 
-                  field("model", data.model);
+                  // --------------------------------
+                  // 2. Presigned R2 upload URL авах
+                  // --------------------------------
+
+                  setGlbMessage("Upload бэлдэж байна…");
+
+                  const prepareResponse = await authFetch(
+                    "/api/admin/models/upload-url",
+                    {
+                      method: "POST",
+
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+
+                      body: JSON.stringify({
+                        productId: draft.id,
+                        fileName: glbFile.name,
+                        size: glbFile.size,
+                      }),
+                    },
+                    owner,
+                  );
+
+                  const prepareData = await prepareResponse
+                    .json()
+                    .catch(() => null);
+
+                  if (
+                    !prepareResponse.ok ||
+                    typeof prepareData?.uploadUrl !== "string" ||
+                    typeof prepareData?.sourcePath !== "string" ||
+                    typeof prepareData?.modelId !== "string"
+                  ) {
+                    throw new Error(
+                      prepareData?.error ?? "R2 upload URL үүсгэж чадсангүй.",
+                    );
+                  }
+
+                  // Upload эхлэхийн өмнө auth дахин шалгана.
+                  if (
+                    useAuth.getState().user?.id !== owner ||
+                    useAuth.getState().role !== "admin"
+                  ) {
+                    throw new Error("Админ нэвтрэлт өөрчлөгдсөн байна.");
+                  }
+
+                  // --------------------------------
+                  // 3. Browser -> Cloudflare R2
+                  // --------------------------------
+
+                  setGlbMessage("GLB файлыг Cloudflare R2 руу хуулж байна…");
+
+                  const r2Response = await fetch(prepareData.uploadUrl, {
+                    method: "PUT",
+
+                    headers: {
+                      "Content-Type": "model/gltf-binary",
+                    },
+
+                    body: glbFile,
+                  });
+
+                  if (!r2Response.ok) {
+                    throw new Error(
+                      `R2 upload амжилтгүй боллоо (${r2Response.status}).`,
+                    );
+                  }
+
+                  // --------------------------------
+                  // 4. R2 upload дууссаныг API-д хэлнэ
+                  // --------------------------------
+
+                  setGlbMessage(
+                    "Upload дууслаа. Боловсруулалтын дараалалд оруулж байна…",
+                  );
+
+                  const completeResponse = await authFetch(
+                    "/api/admin/models/upload-complete",
+                    {
+                      method: "POST",
+
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+
+                      body: JSON.stringify({
+                        modelId: prepareData.modelId,
+                        sourcePath: prepareData.sourcePath,
+                      }),
+                    },
+                    owner,
+                  );
+
+                  const completeData = await completeResponse
+                    .json()
+                    .catch(() => null);
+
+                  if (!completeResponse.ok) {
+                    throw new Error(
+                      completeData?.error ??
+                        "3D model processing эхлүүлж чадсангүй.",
+                    );
+                  }
+
+                  // --------------------------------
+                  // 5. UI reset
+                  // --------------------------------
 
                   setGlbFile(null);
-                  setLodFiles({ medium: null, low: null });
+
                   await useCatalogStore.getState().refresh(true);
-                  setGlbMessage("GLB файл солигдлоо.");
+
+                  setGlbMessage(
+                    "GLB амжилттай upload хийгдлээ. High, Medium, Low хувилбаруудыг боловсруулж байна.",
+                  );
                 } catch (error) {
+                  console.error("[AdminProducts GLB upload]", error);
+
+                  setGlbMessage(null);
+
                   setError(
-                    error instanceof Error ? error.message : "Алдаа гарлаа.",
+                    error instanceof Error
+                      ? error.message
+                      : "GLB upload хийхэд алдаа гарлаа.",
                   );
                 } finally {
                   setBusy(false);
@@ -670,9 +1072,43 @@ function ProductEditor({
 
         <fieldset className="admin-field-section">
           <legend>Харагдах дэлгүүрүүд</legend>
-          <p className="text-xs text-[#7b896c]">Дэлгүүрүүдийг чагталж сонгоорой. Сонгоогүй бараа нийт каталогт харагдана.</p>
-          {storesError && <p role="alert">Дэлгүүрүүдийг ачаалж чадсангүй. <button type="button" className="underline" onClick={() => setStoresRefresh(value => value + 1)}>Дахин оролдох</button></p>}
-          <div className="admin-store-checkboxes">{stores.map(store => <label key={store.id}><input type="checkbox" checked={(draft.storeIds ?? []).includes(store.id)} onChange={event => field("storeIds", event.target.checked ? [...(draft.storeIds ?? []), store.id] : (draft.storeIds ?? []).filter(id => id !== store.id))} />{store.name}</label>)}</div>
+          <p className="text-xs text-[#7b896c]">
+            Дэлгүүрүүдийг чагталж сонгоорой. Сонгоогүй бараа нийт каталогт
+            харагдана.
+          </p>
+          {storesError && (
+            <p role="alert">
+              Дэлгүүрүүдийг ачаалж чадсангүй.{" "}
+              <button
+                type="button"
+                className="underline"
+                onClick={() => setStoresRefresh((value) => value + 1)}
+              >
+                Дахин оролдох
+              </button>
+            </p>
+          )}
+          <div className="admin-store-checkboxes">
+            {stores.map((store) => (
+              <label key={store.id}>
+                <input
+                  type="checkbox"
+                  checked={(draft.storeIds ?? []).includes(store.id)}
+                  onChange={(event) =>
+                    field(
+                      "storeIds",
+                      event.target.checked
+                        ? [...(draft.storeIds ?? []), store.id]
+                        : (draft.storeIds ?? []).filter(
+                            (id) => id !== store.id,
+                          ),
+                    )
+                  }
+                />
+                {store.name}
+              </label>
+            ))}
+          </div>
         </fieldset>
       </fieldset>
 
