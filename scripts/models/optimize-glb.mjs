@@ -418,7 +418,7 @@ async function main() {
 
       if (json.images?.length) {
         const textureSize =
-          isLod && level === "low" ? Math.min(size, 1024) : size;
+          isLod && level === "low" ? Math.min(size, 2048) : size;
 
         await transform("resize", [
           "--width",
