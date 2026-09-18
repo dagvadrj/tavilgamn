@@ -3,11 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { ModelOptionsError, parseModelColors, parseModelMaterials } from "@/lib/modelOptions";
-import { R2ModelError, removeStoredModelFiles } from "@/lib/r2Models";
-import { readModelBundle, uploadModelBundle, ModelBundleError } from "@/lib/modelUploadBundle";
+import { removeStoredModelFiles } from "@/lib/r2Models";
 import { CloudinaryModelError, uploadModelAsset } from "@/lib/cloudinaryModels";
-const BUCKET = "furniture-models";
-const MAX_GLB_SIZE = 50 * 1024 * 1024;
 const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024;
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -48,8 +45,8 @@ export async function POST(request: NextRequest) {
     const dimensionsD = Number(formData.get("dimensionsD") ?? 1);
     const dimensionsH = Number(formData.get("dimensionsH") ?? 1);
 
-    const glbFile = formData.get("glb");
-    const thumbnailFile = formData.get("thumbnail");
+   const thumbnailFile =
+  formData.get("thumbnail");
 
     if (!name) {
       return NextResponse.json(
@@ -61,27 +58,6 @@ export async function POST(request: NextRequest) {
     if (!ALLOWED_CATEGORIES.has(category)) {
       return NextResponse.json(
         { error: "Тавилгын ангилал буруу байна" },
-        { status: 400 },
-      );
-    }
-
-    if (!(glbFile instanceof File) || glbFile.size === 0) {
-      return NextResponse.json(
-        { error: "GLB файл шаардлагатай" },
-        { status: 400 },
-      );
-    }
-
-    if (!glbFile.name.toLowerCase().endsWith(".glb")) {
-      return NextResponse.json(
-        { error: "Зөвхөн .glb файл оруулна уу" },
-        { status: 400 },
-      );
-    }
-
-    if (glbFile.size > MAX_GLB_SIZE) {
-      return NextResponse.json(
-        { error: "GLB файл 50 MB-аас их байж болохгүй" },
         { status: 400 },
       );
     }
@@ -121,11 +97,6 @@ export async function POST(request: NextRequest) {
 
     const id = randomUUID();
 
-    const header = new DataView(await glbFile.slice(0, 12).arrayBuffer());
-if (header.byteLength !== 12 || header.getUint32(0, true) !== 0x46546c67 || header.getUint32(4, true) !== 2 || header.getUint32(8, true) !== glbFile.size) {  return NextResponse.json({ error: "Хүчинтэй GLB 2.0 файл сонгоно уу." }, { status: 400 }); }
-   const bundle = await readModelBundle(formData, glbFile);
-   const glbPath = await uploadModelBundle(bundle, id, supabase);
-    uploadedPaths.push(glbPath);
 
     let thumbnailPath: string | null = null;
 
@@ -144,9 +115,16 @@ if (header.byteLength !== 12 || header.getUint32(0, true) !== 0x46546c67 || head
         category,
         description,
         base_price: Math.round(basePrice),
-        glb_path: glbPath,
-        thumbnail_path: thumbnailPath,
-        scale,
+        glb_path: null,
+source_glb_path: null,
+high_glb_path: null,
+medium_glb_path: null,
+low_glb_path: null,
+
+processing_status: "idle",
+processing_error: null,
+
+thumbnail_path: thumbnailPath, scale,
         dimensions_w: dimensionsW,
         dimensions_d: dimensionsD,
         dimensions_h: dimensionsH,
@@ -161,7 +139,7 @@ if (header.byteLength !== 12 || header.getUint32(0, true) !== 0x46546c67 || head
 
     return NextResponse.json(model, { status: 201 });
   } catch (error) {
-    if (error instanceof ModelOptionsError || error instanceof ModelBundleError) {
+    if (error instanceof ModelOptionsError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
@@ -176,8 +154,8 @@ if (header.byteLength !== 12 || header.getUint32(0, true) !== 0x46546c67 || head
     console.error("[models/upload]", error);
 
     return NextResponse.json(
-      { error: (error instanceof CloudinaryModelError || error instanceof R2ModelError) ? error.message : "Загвар upload хийхэд алдаа гарлаа" },
-      { status: (error instanceof CloudinaryModelError || error instanceof R2ModelError) ? 502 : 500 },
+      { error: (error instanceof CloudinaryModelError) ? error.message : "Загвар upload хийхэд алдаа гарлаа" },
+      { status: (error instanceof CloudinaryModelError) ? 502 : 500 },
     );
   }
 }

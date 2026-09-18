@@ -57,8 +57,8 @@ export function ProductViewer({
         {model ? (
           <GLBFurnitureMesh
             modelId={model.id}
-            basePath={`/api/models/files/${model.id}`}
-            glbFile="high.glb"
+            basePath={`/api/models/files/${model.id}/`}
+            glbFile={model.file}
             w={dimensions.w}
             d={dimensions.d}
             h={dimensions.h}

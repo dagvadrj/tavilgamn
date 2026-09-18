@@ -344,8 +344,12 @@ function ModelsTab() {
       return;
     }
 
-    if (glbFile.size > 50 * 1024 * 1024) {
-      setError("GLB файл 50 MB-аас их байж болохгүй.");
+    if (
+      !glbFile.name.toLowerCase().endsWith(".glb") ||
+      glbFile.size < 12 ||
+      glbFile.size > 200 * 1024 * 1024
+    ) {
+      setError("200 MB-аас ихгүй GLB файл сонгоно уу.");
       return;
     }
     if (colors.length === 0) {
@@ -401,7 +405,6 @@ function ModelsTab() {
       fd.append("dimensionsH", dimH);
       fd.append("colors", colorsJson);
       fd.append("materials", matsJson);
-      fd.append("glb", glbFile);
       if (thumbnail) fd.append("thumbnail", thumbnail);
 
       const {
@@ -419,10 +422,76 @@ function ModelsTab() {
         },
         body: fd,
       });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error ?? "Upload алдаа");
+
+      const model = await res.json().catch(() => null);
+
+      if (!res.ok || typeof model?.id !== "string") {
+        throw new Error(model?.error ?? "Загварын мэдээлэл хадгалж чадсангүй.");
       }
+
+      // 2. Presigned R2 URL авна
+      const prepareResponse = await fetch("/api/admin/models/upload-url", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          modelId: model.id,
+          fileName: glbFile.name,
+          size: glbFile.size,
+        }),
+      });
+
+      const prepareData = await prepareResponse.json().catch(() => null);
+
+      if (
+        !prepareResponse.ok ||
+        typeof prepareData?.uploadUrl !== "string" ||
+        typeof prepareData?.sourcePath !== "string"
+      ) {
+        throw new Error(
+          prepareData?.error ?? "R2 upload URL үүсгэж чадсангүй.",
+        );
+      }
+
+      // 3. Browser -> R2
+      const r2Response = await fetch(prepareData.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "model/gltf-binary",
+        },
+        body: glbFile,
+      });
+
+      if (!r2Response.ok) {
+        throw new Error(`R2 upload амжилтгүй (${r2Response.status}).`);
+      }
+
+      // 4. Worker queue-д оруулна
+      const completeResponse = await fetch(
+        "/api/admin/models/upload-complete",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            modelId: model.id,
+            sourcePath: prepareData.sourcePath,
+          }),
+        },
+      );
+
+      const completeData = await completeResponse.json().catch(() => null);
+
+      if (!completeResponse.ok) {
+        throw new Error(
+          completeData?.error ?? "3D model processing эхлүүлж чадсангүй.",
+        );
+      }
+
       resetForm();
       setSuccess(true);
       await load();
@@ -707,7 +776,7 @@ function ModelsTab() {
                     className="input !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-cream file:px-3 file:py-1 file:text-xs"
                   />
                   <p className="mt-1 text-xs text-ink/40">
-                    Файлын дээд хэмжээ: 50 MB
+                    Файлын дээд хэмжээ: 200 MB
                   </p>
                 </div>
 
