@@ -59,38 +59,118 @@ const materialNames: Record<Material, string> = {
   velvet: "Хилэн",
 };
 
-export function AdminProducts({ onAddModel }: { onAddModel: () => void }) {
+export function AdminProducts({
+  onAddModel,
+  initialProductId,
+}: {
+  onAddModel: () => void;
+  initialProductId?: string | null;
+}) {
   const userId = useAuth((state) => state.user?.id);
   const role = useAuth((state) => state.role);
 
   if (!userId || role !== "admin") return null;
 
-  return <ProductList key={userId} owner={userId} onAddModel={onAddModel} />;
+  return (
+    <ProductList
+      key={userId}
+      owner={userId}
+      onAddModel={onAddModel}
+      initialProductId={initialProductId}
+    />
+  );
 }
 
 function ProductList({
   owner,
   onAddModel,
+  initialProductId,
 }: {
   owner: string;
   onAddModel: () => void;
+  initialProductId?: string | null;
 }) {
   const catalog = useCatalog();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [stock, setStock] = useState("");
   const [page, setPage] = useState(1);
+  const [storeId, setStoreId] = useState("");
+  const [stores, setStores] = useState<Store[]>([]);
   const [editing, setEditing] = useState<{
     product: Product;
     create: boolean;
   } | null>(null);
+  useEffect(() => {
+    if (!initialProductId || !catalog.ready) {
+      return;
+    }
+
+    const product = catalog.products.find(
+      (item) => item.id === initialProductId,
+    );
+
+    if (product) {
+      setEditing({
+        product,
+        create: false,
+      });
+    }
+  }, [initialProductId, catalog.ready, catalog.products]);
+  useEffect(() => {
+    const controller = new AbortController();
+
+    authFetch(
+      "/api/admin/stores",
+      {
+        signal: controller.signal,
+      },
+      owner,
+    )
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(data?.error ?? "Дэлгүүрүүдийг ачаалж чадсангүй.");
+        }
+
+        return data;
+      })
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setStores(Array.isArray(data?.stores) ? data.stores : []);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setStores([]);
+        }
+      });
+
+    return () => controller.abort();
+  }, [owner]);
+
+  const storeMap = new Map(stores.map((store) => [store.id, store.name]));
+
+  const storeNames = (product: Product) => {
+    const ids = product.storeIds ?? [];
+
+    if (!ids.length) {
+      return "Дэлгүүр оноогоогүй";
+    }
+
+    return ids.map((id) => storeMap.get(id) ?? id).join(", ");
+  };
 
   const filtered = catalog.products.filter(
     (product) =>
+      (!storeId || product.storeIds?.includes(storeId)) &&
       (!category || product.category === category) &&
       (!stock ||
         (stock === "available" ? product.inStock : !product.inStock)) &&
-      `${product.name} ${CATEGORY_LABEL[product.category]}`
+      `${product.name} ${
+        CATEGORY_LABEL[product.category]
+      } ${storeNames(product)}`
         .toLowerCase()
         .includes(query.trim().toLowerCase()),
   );
@@ -152,6 +232,24 @@ function ProductList({
             </label>
             <select
               className="input"
+              aria-label="Дэлгүүрээр шүүх"
+              value={storeId}
+              onChange={(event) => {
+                setStoreId(event.target.value);
+
+                setPage(1);
+              }}
+            >
+              <option value="">Бүх дэлгүүр</option>
+
+              {stores.map((store) => (
+                <option key={store.id} value={store.id}>
+                  {store.name}
+                </option>
+              ))}
+            </select>
+            <select
+              className="input"
               aria-label="Барааны ангилал"
               value={category}
               onChange={(e) => {
@@ -199,12 +297,13 @@ function ProductList({
             <>
               <p className="admin-result-count">
                 {filtered.length} илэрц
-                {(query || category || stock) && (
+                {(query || storeId || category || stock) && (
                   <button
                     type="button"
                     className="ml-3 min-h-10 underline"
                     onClick={() => {
                       setQuery("");
+                      setStoreId("");
                       setCategory("");
                       setStock("");
                       setPage(1);
@@ -227,6 +326,7 @@ function ProductList({
                       <tr>
                         {[
                           "Бүтээгдэхүүн",
+                          "Дэлгүүр",
                           "Ангилал",
                           "Үндсэн үнэ",
                           "Нөөц",
@@ -263,6 +363,11 @@ function ProductList({
                                 </small>
                               </div>
                             </div>
+                          </td>
+                          <td data-label="Дэлгүүр">
+                            <span className="admin-product-store">
+                              {storeNames(product)}
+                            </span>
                           </td>
                           <td data-label="Ангилал">
                             {CATEGORY_LABEL[product.category]}

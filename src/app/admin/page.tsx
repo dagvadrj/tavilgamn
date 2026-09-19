@@ -3,8 +3,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { AdminMessages } from "@/components/AdminMessages";
+import {
+  AdminSidebar,
+  ADMIN_TABS,
+  type AdminTab,
+} from "@/components/AdminSidebar";
+import { AdminMerchants } from "@/components/AdminMerchants";
+import { AdminHeader } from "@/components/AdminHeader";
 import { stockLabel } from "@/lib/inventory";
 import { AdminAnalytics } from "@/components/AdminAnalytics";
+import { AdminModelRequests } from "@/components/AdminModelRequests";
 import {
   Mail,
   Box,
@@ -33,15 +41,8 @@ import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/format";
 import "./admin.css";
 
-const TABS = [
-  { id: "dashboard", label: "Ерөнхий тойм", short: "Тойм", icon: TrendingUp },
-  { id: "furniture", label: "Бүтээгдэхүүн", short: "Тавилга", icon: Box },
-  { id: "orders", label: "Захиалгууд", short: "Захиалга", icon: Package },
-  { id: "users", label: "Хэрэглэгчид", short: "Хэрэглэгч", icon: Users },
-  { id: "messages", label: "Ирсэн зурвас", short: "Зурвас", icon: Mail },
-  { id: "models", label: "3D загварууд", short: "3D загвар", icon: Layers },
-] as const;
-type Tab = (typeof TABS)[number]["id"];
+const TABS = ADMIN_TABS;
+type Tab = AdminTab;
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("dashboard");
@@ -50,6 +51,7 @@ export default function AdminPage() {
   const role = useAuth((s) => s.role);
   const initialized = useAuth((s) => s.initialized);
   const initializeAuth = useAuth((s) => s.initialize);
+  const [openProductId, setOpenProductId] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     void initializeAuth();
@@ -78,64 +80,17 @@ export default function AdminPage() {
   const active = TABS.find((t) => t.id === tab)!;
   return (
     <div className="admin-shell">
-      <aside className="admin-sidebar">
-        <Link href="/" className="admin-brand">
-          <span>
-            <Armchair size={24} />
-          </span>
-          tavilga.mn
-        </Link>
-        <p className="admin-sidebar-label">ДЭЛГҮҮРИЙН УДИРДЛАГА</p>
-        <nav aria-label="Удирдлагын үндсэн цэс">
-          {TABS.map((t) => (
-            <button
-              type="button"
-              key={t.id}
-              aria-current={tab === t.id ? "page" : undefined}
-              className={tab === t.id ? "active" : ""}
-              onClick={() => selectTab(t.id)}
-            >
-              <t.icon size={19} strokeWidth={1.7} />
-              <span>{t.label}</span>
-              {tab === t.id && <ChevronRight size={15} />}
-            </button>
-          ))}
-        </nav>
-        <div className="admin-sidebar-bottom">
-          <div className="admin-sidebar-note">
-            <ShieldCheck size={20} />
-            <div>
-              <strong>Нэг дороос удирдах</strong>
-              <p>Бараа, захиалга, хэрэглэгч.</p>
-            </div>
-          </div>
-          <Link href="/">
-            Дэлгүүр рүү очих <ArrowUpRight size={16} />
-          </Link>
-        </div>
-      </aside>
+      <AdminSidebar active={tab} onChange={selectTab} />
+
       <div className="admin-workspace">
-        <header className="admin-topbar">
-          <div className="admin-breadcrumb">
-            <span>Удирдлага</span>
-            <ChevronRight size={13} />
-            <strong>{active.label}</strong>
-          </div>
-          <div className="admin-topbar-actions">
-            <Link href="/" className="admin-store-link">
-              Дэлгүүр үзэх <ArrowUpRight size={15} />
-            </Link>
-            <Link href="/account" className="admin-profile">
-              <span className="admin-avatar">
-                {user.name.slice(0, 1).toUpperCase()}
-              </span>
-              <span>
-                <strong>{user.name}</strong>
-                <small>Администратор</small>
-              </span>
-            </Link>
-          </div>
-        </header>
+        <AdminHeader
+          userName={user.name}
+          activeLabel={active.label}
+          onProducts={() => selectTab("furniture")}
+          onOrders={() => selectTab("orders")}
+          onMessages={() => selectTab("messages")}
+        />
+
         <div
           className="admin-content"
           ref={panelRef}
@@ -143,33 +98,57 @@ export default function AdminPage() {
           aria-label={active.label}
         >
           {tab === "dashboard" && <AdminAnalytics />}
+          {tab === "merchants" && <AdminMerchants />}
+
           {tab === "furniture" && (
-            <AdminProducts onAddModel={() => selectTab("models")} />
+            <AdminProducts
+              onAddModel={() => selectTab("models")}
+              initialProductId={openProductId}
+            />
           )}
+
           {tab === "orders" && (
             <div>
               <div className="admin-page-heading">
                 <div>
                   <span className="admin-eyebrow">БОРЛУУЛАЛТ</span>
+
                   <h1>Захиалгууд</h1>
+
                   <p>Захиалгын мэдээлэл, төлбөрийн төлөвийг хянах.</p>
                 </div>
+
                 <span className="admin-heading-icon">
                   <Package size={25} strokeWidth={1.5} />
                 </span>
               </div>
+
               <OrderHistory admin />
             </div>
           )}
+
           {tab === "users" && <AdminUsers />}
+
           {tab === "messages" && <AdminMessages key={user.id} />}
-          {tab === "models" && <ModelsTab />}
+
+          {tab === "models" && (
+            <ModelsTab
+              owner={user.id}
+              onOpenProduct={(productId) => {
+                setOpenProductId(productId);
+                selectTab("furniture");
+              }}
+            />
+          )}
         </div>
+
         <footer className="admin-footer">
           <span>© {new Date().getFullYear()} tavilga.mn</span>
-          <span>Дэлгүүрийн удирдлага</span>
+
+          <span>Удирдлагын систем</span>
         </footer>
       </div>
+
       <nav className="admin-mobile-nav" aria-label="Удирдлагын доод цэс">
         {TABS.map((t) => (
           <button
@@ -182,6 +161,7 @@ export default function AdminPage() {
             <span>
               <t.icon size={21} strokeWidth={1.7} />
             </span>
+
             {t.short}
           </button>
         ))}
@@ -229,7 +209,14 @@ type ModelRecord = {
   createdAt: string;
 };
 
-function ModelsTab() {
+function ModelsTab({
+  owner,
+  onOpenProduct,
+}: {
+  owner: string;
+
+  onOpenProduct: (productId: string) => void;
+}) {
   const [modelQuery, setModelQuery] = useState("");
   const [pendingDelete, setPendingDelete] = useState<ModelRecord | null>(null);
   const [models, setModels] = useState<ModelRecord[]>([]);
@@ -535,6 +522,7 @@ function ModelsTab() {
 
   return (
     <div>
+      <AdminModelRequests owner={owner} onOpenProduct={onOpenProduct} />
       <div className="admin-page-heading">
         <div>
           <span className="admin-eyebrow">ӨРӨӨНИЙ ТӨЛӨВЛӨГЧ</span>
