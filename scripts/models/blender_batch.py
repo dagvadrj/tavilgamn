@@ -1280,7 +1280,7 @@ def process(
     )
 
     for level, target in [
-        ("high", target[0]),
+        ("high", targets[0]),
     ]:
         requested = target
 

@@ -337,6 +337,7 @@ async function main() {
   // --------------------------------
 
   for (const file of files) {
+    const before = await readFile(file);
     const json = readGlb(await readFile(file));
     if (
       [...(json.buffers ?? []), ...(json.images ?? [])].some(
