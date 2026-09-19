@@ -21,6 +21,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
+import { MerchantAnalytics } from "./MerchantAnalytics";
 import { useAuth } from "@/store/auth";
 import { authFetch } from "@/lib/authFetch";
 import type { Product, Store } from "@/lib/types";
@@ -144,8 +145,9 @@ function MerchantWorkspace({
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
-
-  const [tab, setTab] = useState<MerchantTab>("overview");
+  const [tab, setTab] = useState<"overview" | "store" | "products" | "orders">(
+    "overview",
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -219,6 +221,7 @@ function MerchantWorkspace({
         )
       ) : (
         <>
+          {tab === "overview" && <MerchantAnalytics owner={owner} />}
           {tab === "overview" && (
             <MerchantOverview
               owner={owner}
@@ -396,9 +399,9 @@ function MerchantOverview({
     <section className="merchant-overview">
       <div className="merchant-overview-heading">
         <div>
-          <span>MERCHANT DASHBOARD</span>
-          <h1>Сайн байна уу 👋</h1>
-          <p>{store.name}-ийн бүтээгдэхүүн болон нөөцийн өнөөгийн тойм.</p>
+          <span>Агуулах</span>
+          <h2>Нөөцийн тойм</h2>
+          <p>Бүтээгдэхүүн болон нөөцийн өнөөгийн мэдээлэл.</p>
         </div>
 
         <Link
@@ -1062,28 +1065,12 @@ function MerchantProductEditor({
             owner,
             {
               method: create ? "POST" : "PUT",
-
               headers: {
                 "Content-Type": "application/json",
               },
-
               body: JSON.stringify({
                 ...parsed,
-
                 modelRequested,
-
-                expectedStockQuantity: product.stockQuantity ?? null,
-              }),
-            },
-          );
-          await merchantRequest<{ id: string }>(
-            "/api/merchant/products",
-            owner,
-            {
-              method: create ? "POST" : "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                ...parsed,
                 expectedStockQuantity: product.stockQuantity ?? null,
               }),
             },
