@@ -3,7 +3,10 @@
 import { create } from "zustand";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import type { User } from "@/lib/types";
-import { supabase } from "@/lib/supabase/client";
+import {
+  isSupabaseConfigured,
+  supabase,
+} from "@/lib/supabase/client";
 import { setCartOwner } from "@/store/cart";
 import { setWishlistOwner } from "@/store/wishlist";
 import { setDesignOwner } from "@/store/designs";
@@ -89,6 +92,11 @@ export const useAuth = create<AuthState>((set) => ({
   initialized: false,
 
   initialize: async () => {
+    if (!isSupabaseConfigured) {
+      setLocalDataOwner(null);
+      set({ user: null, role: null, initialized: true });
+      return;
+    }
     const { data } = await supabase.auth.getSession();
     const resolved = await resolveAuthUser(
       data.session?.user ?? null,

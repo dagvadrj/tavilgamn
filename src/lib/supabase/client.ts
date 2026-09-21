@@ -4,15 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !publishableKey) {
-  throw new Error(
-    "Supabase-ийн public environment variables тохируулагдаагүй байна.",
-  );
-}
+export const isSupabaseConfigured = Boolean(supabaseUrl && publishableKey);
 
 export const supabase = createClient(
-  supabaseUrl,
-  publishableKey,
+  supabaseUrl ?? "http://127.0.0.1:54321",
+  publishableKey ?? "public-anon-key",
 );

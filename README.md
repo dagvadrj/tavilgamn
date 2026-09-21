@@ -11,7 +11,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Copy `.env.example` to `.env.local` and configure Supabase before starting.
+Copy `.env.example` to `.env.local`, then set `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from Supabase Project Settings > API
+before starting. `NEXT_PUBLIC_SUPABASE_ANON_KEY` is also accepted for older
+Supabase projects. Keep `SUPABASE_SECRET_KEY` server-only.
 For orders and payments, apply both SQL migrations in `supabase/migrations/`
 and follow [checkout and payment setup](docs/checkout-setup.md).
 

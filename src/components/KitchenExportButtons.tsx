@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import type { Group } from "three";
+import { KitchenARViewer } from "./KitchenARViewer";
 
 export function KitchenExportButtons({
   root,
@@ -94,6 +95,7 @@ export function KitchenExportButtons({
           </button>
         ))}
         <small>Бүх тавилга, материалтай · Шалгүй</small>
+        <KitchenARViewer root={root} name={name} disabled={disabled || !!working} />
       </div>
       {message && (
         <p role="status" aria-live="polite">
