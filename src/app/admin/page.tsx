@@ -1,15 +1,26 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { AdminMessages } from "@/components/AdminMessages";
+import {
+  AdminSidebar,
+  ADMIN_TABS,
+  type AdminTab,
+} from "@/components/AdminSidebar";
+import { AdminMerchants } from "@/components/AdminMerchants";
+import { AdminHeader } from "@/components/AdminHeader";
 import { stockLabel } from "@/lib/inventory";
 import { AdminAnalytics } from "@/components/AdminAnalytics";
+import { AdminModelRequests } from "@/components/AdminModelRequests";
 import {
   Mail,
   Box,
   Users,
   Package,
+  Download,
+  FileOutput,
+  LoaderCircle,
   TrendingUp,
   Upload,
   Layers,
@@ -33,15 +44,8 @@ import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/format";
 import "./admin.css";
 
-const TABS = [
-  { id: "dashboard", label: "Ерөнхий тойм", short: "Тойм", icon: TrendingUp },
-  { id: "furniture", label: "Бүтээгдэхүүн", short: "Тавилга", icon: Box },
-  { id: "orders", label: "Захиалгууд", short: "Захиалга", icon: Package },
-  { id: "users", label: "Хэрэглэгчид", short: "Хэрэглэгч", icon: Users },
-  { id: "messages", label: "Ирсэн зурвас", short: "Зурвас", icon: Mail },
-  { id: "models", label: "3D загварууд", short: "3D загвар", icon: Layers },
-] as const;
-type Tab = (typeof TABS)[number]["id"];
+const TABS = ADMIN_TABS;
+type Tab = AdminTab;
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("dashboard");
@@ -50,6 +54,7 @@ export default function AdminPage() {
   const role = useAuth((s) => s.role);
   const initialized = useAuth((s) => s.initialized);
   const initializeAuth = useAuth((s) => s.initialize);
+  const [openProductId, setOpenProductId] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     void initializeAuth();
@@ -78,64 +83,17 @@ export default function AdminPage() {
   const active = TABS.find((t) => t.id === tab)!;
   return (
     <div className="admin-shell">
-      <aside className="admin-sidebar">
-        <Link href="/" className="admin-brand">
-          <span>
-            <Armchair size={24} />
-          </span>
-          tavilga.mn
-        </Link>
-        <p className="admin-sidebar-label">ДЭЛГҮҮРИЙН УДИРДЛАГА</p>
-        <nav aria-label="Удирдлагын үндсэн цэс">
-          {TABS.map((t) => (
-            <button
-              type="button"
-              key={t.id}
-              aria-current={tab === t.id ? "page" : undefined}
-              className={tab === t.id ? "active" : ""}
-              onClick={() => selectTab(t.id)}
-            >
-              <t.icon size={19} strokeWidth={1.7} />
-              <span>{t.label}</span>
-              {tab === t.id && <ChevronRight size={15} />}
-            </button>
-          ))}
-        </nav>
-        <div className="admin-sidebar-bottom">
-          <div className="admin-sidebar-note">
-            <ShieldCheck size={20} />
-            <div>
-              <strong>Нэг дороос удирдах</strong>
-              <p>Бараа, захиалга, хэрэглэгч.</p>
-            </div>
-          </div>
-          <Link href="/">
-            Дэлгүүр рүү очих <ArrowUpRight size={16} />
-          </Link>
-        </div>
-      </aside>
+      <AdminSidebar active={tab} onChange={selectTab} />
+
       <div className="admin-workspace">
-        <header className="admin-topbar">
-          <div className="admin-breadcrumb">
-            <span>Удирдлага</span>
-            <ChevronRight size={13} />
-            <strong>{active.label}</strong>
-          </div>
-          <div className="admin-topbar-actions">
-            <Link href="/" className="admin-store-link">
-              Дэлгүүр үзэх <ArrowUpRight size={15} />
-            </Link>
-            <Link href="/account" className="admin-profile">
-              <span className="admin-avatar">
-                {user.name.slice(0, 1).toUpperCase()}
-              </span>
-              <span>
-                <strong>{user.name}</strong>
-                <small>Администратор</small>
-              </span>
-            </Link>
-          </div>
-        </header>
+        <AdminHeader
+          userName={user.name}
+          activeLabel={active.label}
+          onProducts={() => selectTab("furniture")}
+          onOrders={() => selectTab("orders")}
+          onMessages={() => selectTab("messages")}
+        />
+
         <div
           className="admin-content"
           ref={panelRef}
@@ -143,33 +101,57 @@ export default function AdminPage() {
           aria-label={active.label}
         >
           {tab === "dashboard" && <AdminAnalytics />}
+          {tab === "merchants" && <AdminMerchants />}
+
           {tab === "furniture" && (
-            <AdminProducts onAddModel={() => selectTab("models")} />
+            <AdminProducts
+              onAddModel={() => selectTab("models")}
+              initialProductId={openProductId}
+            />
           )}
+
           {tab === "orders" && (
             <div>
               <div className="admin-page-heading">
                 <div>
                   <span className="admin-eyebrow">БОРЛУУЛАЛТ</span>
+
                   <h1>Захиалгууд</h1>
+
                   <p>Захиалгын мэдээлэл, төлбөрийн төлөвийг хянах.</p>
                 </div>
+
                 <span className="admin-heading-icon">
                   <Package size={25} strokeWidth={1.5} />
                 </span>
               </div>
+
               <OrderHistory admin />
             </div>
           )}
+
           {tab === "users" && <AdminUsers />}
+
           {tab === "messages" && <AdminMessages key={user.id} />}
-          {tab === "models" && <ModelsTab />}
+
+          {tab === "models" && (
+            <ModelsTab
+              owner={user.id}
+              onOpenProduct={(productId) => {
+                setOpenProductId(productId);
+                selectTab("furniture");
+              }}
+            />
+          )}
         </div>
+
         <footer className="admin-footer">
           <span>© {new Date().getFullYear()} tavilga.mn</span>
-          <span>Дэлгүүрийн удирдлага</span>
+
+          <span>Удирдлагын систем</span>
         </footer>
       </div>
+
       <nav className="admin-mobile-nav" aria-label="Удирдлагын доод цэс">
         {TABS.map((t) => (
           <button
@@ -182,6 +164,7 @@ export default function AdminPage() {
             <span>
               <t.icon size={21} strokeWidth={1.7} />
             </span>
+
             {t.short}
           </button>
         ))}
@@ -228,8 +211,22 @@ type ModelRecord = {
   materials: string;
   createdAt: string;
 };
+type ExportState = {
+  status: "idle" | "queued" | "processing" | "ready" | "error";
 
-function ModelsTab() {
+  ready: boolean;
+
+  error: string | null;
+};
+
+function ModelsTab({
+  owner,
+  onOpenProduct,
+}: {
+  owner: string;
+
+  onOpenProduct: (productId: string) => void;
+}) {
   const [modelQuery, setModelQuery] = useState("");
   const [pendingDelete, setPendingDelete] = useState<ModelRecord | null>(null);
   const [models, setModels] = useState<ModelRecord[]>([]);
@@ -239,6 +236,13 @@ function ModelsTab() {
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [exportStates, setExportStates] = useState<Record<string, ExportState>>(
+    {},
+  );
+
+  const [exportingId, setExportingId] = useState<string | null>(null);
+
+  const [modelActionError, setModelActionError] = useState<string | null>(null);
 
   // Basic info
   const [name, setName] = useState("");
@@ -287,6 +291,177 @@ function ModelsTab() {
       setFetching(false);
     }
   };
+
+  const sessionToken = useCallback(async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      throw new Error("Admin хэрэглэгчээр нэвтрэх шаардлагатай.");
+    }
+
+    return session.access_token;
+  }, []);
+
+  const readExportStatus = useCallback(
+    async (modelId: string): Promise<ExportState> => {
+      const token = await sessionToken();
+
+      const response = await fetch(
+        `/api/admin/models/export?modelId=${encodeURIComponent(modelId)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+
+          cache: "no-store",
+        },
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.error ?? "Export төлөвийг уншиж чадсангүй.");
+      }
+
+      return {
+        status:
+          data?.status === "queued" ||
+          data?.status === "processing" ||
+          data?.status === "ready" ||
+          data?.status === "error"
+            ? data.status
+            : "idle",
+
+        ready: data?.ready === true,
+
+        error: typeof data?.error === "string" ? data.error : null,
+      };
+    },
+    [sessionToken],
+  );
+  const downloadModel = async (
+    modelId: string,
+    kind: "optimized" | "standard",
+  ) => {
+    setModelActionError(null);
+
+    try {
+      const token = await sessionToken();
+
+      const response = await fetch(
+        `/api/admin/models/download?modelId=${encodeURIComponent(
+          modelId,
+        )}&kind=${kind}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+
+          cache: "no-store",
+        },
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || typeof data?.url !== "string") {
+        throw new Error(data?.error ?? "GLB татах холбоос үүсгэж чадсангүй.");
+      }
+
+      window.location.assign(data.url);
+    } catch (reason) {
+      setModelActionError(
+        reason instanceof Error ? reason.message : "GLB татаж чадсангүй.",
+      );
+    }
+  };
+  const startStandardExport = async (modelId: string) => {
+    if (exportingId) return;
+
+    setExportingId(modelId);
+    setModelActionError(null);
+
+    try {
+      const token = await sessionToken();
+
+      const response = await fetch("/api/admin/models/export", {
+        method: "POST",
+
+        headers: {
+          Authorization: `Bearer ${token}`,
+
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          modelId,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error ?? "Standard GLB export эхлүүлж чадсангүй.",
+        );
+      }
+
+      const next = await readExportStatus(modelId);
+
+      setExportStates((current) => ({
+        ...current,
+        [modelId]: next,
+      }));
+    } catch (reason) {
+      setModelActionError(
+        reason instanceof Error
+          ? reason.message
+          : "Standard GLB export эхлүүлж чадсангүй.",
+      );
+    } finally {
+      setExportingId(null);
+    }
+  };
+
+  useEffect(() => {
+    const activeIds = Object.entries(exportStates)
+      .filter(
+        ([, state]) =>
+          state.status === "queued" || state.status === "processing",
+      )
+      .map(([id]) => id);
+
+    if (!activeIds.length) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const timer = window.setTimeout(async () => {
+      for (const modelId of activeIds) {
+        try {
+          const state = await readExportStatus(modelId);
+
+          if (!cancelled) {
+            setExportStates((current) => ({
+              ...current,
+
+              [modelId]: state,
+            }));
+          }
+        } catch {
+          // Дараагийн refresh дээр дахин шалгана.
+        }
+      }
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+
+      window.clearTimeout(timer);
+    };
+  }, [exportStates, readExportStatus]);
 
   useEffect(() => {
     void load();
@@ -344,8 +519,12 @@ function ModelsTab() {
       return;
     }
 
-    if (glbFile.size > 50 * 1024 * 1024) {
-      setError("GLB файл 50 MB-аас их байж болохгүй.");
+    if (
+      !glbFile.name.toLowerCase().endsWith(".glb") ||
+      glbFile.size < 12 ||
+      glbFile.size > 200 * 1024 * 1024
+    ) {
+      setError("200 MB-аас ихгүй GLB файл сонгоно уу.");
       return;
     }
     if (colors.length === 0) {
@@ -401,7 +580,6 @@ function ModelsTab() {
       fd.append("dimensionsH", dimH);
       fd.append("colors", colorsJson);
       fd.append("materials", matsJson);
-      fd.append("glb", glbFile);
       if (thumbnail) fd.append("thumbnail", thumbnail);
 
       const {
@@ -419,10 +597,76 @@ function ModelsTab() {
         },
         body: fd,
       });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error ?? "Upload алдаа");
+
+      const model = await res.json().catch(() => null);
+
+      if (!res.ok || typeof model?.id !== "string") {
+        throw new Error(model?.error ?? "Загварын мэдээлэл хадгалж чадсангүй.");
       }
+
+      // 2. Presigned R2 URL авна
+      const prepareResponse = await fetch("/api/admin/models/upload-url", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          modelId: model.id,
+          fileName: glbFile.name,
+          size: glbFile.size,
+        }),
+      });
+
+      const prepareData = await prepareResponse.json().catch(() => null);
+
+      if (
+        !prepareResponse.ok ||
+        typeof prepareData?.uploadUrl !== "string" ||
+        typeof prepareData?.sourcePath !== "string"
+      ) {
+        throw new Error(
+          prepareData?.error ?? "R2 upload URL үүсгэж чадсангүй.",
+        );
+      }
+
+      // 3. Browser -> R2
+      const r2Response = await fetch(prepareData.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "model/gltf-binary",
+        },
+        body: glbFile,
+      });
+
+      if (!r2Response.ok) {
+        throw new Error(`R2 upload амжилтгүй (${r2Response.status}).`);
+      }
+
+      // 4. Worker queue-д оруулна
+      const completeResponse = await fetch(
+        "/api/admin/models/upload-complete",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            modelId: model.id,
+            sourcePath: prepareData.sourcePath,
+          }),
+        },
+      );
+
+      const completeData = await completeResponse.json().catch(() => null);
+
+      if (!completeResponse.ok) {
+        throw new Error(
+          completeData?.error ?? "3D model processing эхлүүлж чадсангүй.",
+        );
+      }
+
       resetForm();
       setSuccess(true);
       await load();
@@ -466,6 +710,7 @@ function ModelsTab() {
 
   return (
     <div>
+      <AdminModelRequests owner={owner} onOpenProduct={onOpenProduct} />
       <div className="admin-page-heading">
         <div>
           <span className="admin-eyebrow">ӨРӨӨНИЙ ТӨЛӨВЛӨГЧ</span>
@@ -707,7 +952,7 @@ function ModelsTab() {
                     className="input !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-cream file:px-3 file:py-1 file:text-xs"
                   />
                   <p className="mt-1 text-xs text-ink/40">
-                    Файлын дээд хэмжээ: 50 MB
+                    Файлын дээд хэмжээ: 200 MB
                   </p>
                 </div>
 
@@ -784,6 +1029,11 @@ function ModelsTab() {
               {loadError}
             </p>
           )}
+          {modelActionError && (
+            <p className="admin-error" role="alert">
+              {modelActionError}
+            </p>
+          )}
           {models.length === 0 && !fetching && !loadError && (
             <p className="mt-4 rounded-xl bg-ink/5 p-4 text-sm text-ink/60">
               Одоогоор загвар байхгүй байна.
@@ -832,16 +1082,71 @@ function ModelsTab() {
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    aria-label={`${m.name} устгах`}
-                    onClick={() => setPendingDelete(m)}
-                    disabled={deletingId === m.id}
-                    className="flex-shrink-0 flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    {deletingId === m.id ? "Устгаж байна…" : "Устгах"}
-                  </button>
+                  <div className="admin-model-actions">
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      onClick={() => void downloadModel(m.id, "optimized")}
+                    >
+                      <Download size={14} />
+                      Optimized татах
+                    </button>
+
+                    {exportStates[m.id]?.ready ? (
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={() => void downloadModel(m.id, "standard")}
+                      >
+                        <Download size={14} />
+                        Standard татах
+                      </button>
+                    ) : exportStates[m.id]?.status === "queued" ||
+                      exportStates[m.id]?.status === "processing" ? (
+                      <button type="button" className="btn-ghost" disabled>
+                        <LoaderCircle size={14} className="animate-spin" />
+
+                        {exportStates[m.id]?.status === "queued"
+                          ? "Дараалалд…"
+                          : "Export хийж байна…"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={exportingId === m.id}
+                        onClick={() => void startStandardExport(m.id)}
+                      >
+                        {exportingId === m.id ? (
+                          <LoaderCircle size={14} className="animate-spin" />
+                        ) : (
+                          <FileOutput size={14} />
+                        )}
+                        Standard GLB
+                      </button>
+                    )}
+
+                    {exportStates[m.id]?.status === "error" && (
+                      <span
+                        className="admin-model-export-error"
+                        title={exportStates[m.id]?.error ?? undefined}
+                      >
+                        Export алдаа
+                      </span>
+                    )}
+
+                    <button
+                      type="button"
+                      aria-label={`${m.name} устгах`}
+                      onClick={() => setPendingDelete(m)}
+                      disabled={deletingId === m.id}
+                      className="admin-model-delete"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+
+                      {deletingId === m.id ? "Устгаж байна…" : "Устгах"}
+                    </button>
+                  </div>
                 </div>
               ))}
           </div>

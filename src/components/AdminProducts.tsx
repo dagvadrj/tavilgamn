@@ -22,7 +22,6 @@ import { formatPrice } from "@/lib/format";
 import { CatalogStatus } from "./CatalogStatus";
 
 import { stockLabel, MAX_STOCK_QUANTITY } from "@/lib/inventory";
-import { isNull } from "util";
 
 const blank = (): Product => ({
   id: "new",
@@ -60,38 +59,118 @@ const materialNames: Record<Material, string> = {
   velvet: "Хилэн",
 };
 
-export function AdminProducts({ onAddModel }: { onAddModel: () => void }) {
+export function AdminProducts({
+  onAddModel,
+  initialProductId,
+}: {
+  onAddModel: () => void;
+  initialProductId?: string | null;
+}) {
   const userId = useAuth((state) => state.user?.id);
   const role = useAuth((state) => state.role);
 
   if (!userId || role !== "admin") return null;
 
-  return <ProductList key={userId} owner={userId} onAddModel={onAddModel} />;
+  return (
+    <ProductList
+      key={userId}
+      owner={userId}
+      onAddModel={onAddModel}
+      initialProductId={initialProductId}
+    />
+  );
 }
 
 function ProductList({
   owner,
   onAddModel,
+  initialProductId,
 }: {
   owner: string;
   onAddModel: () => void;
+  initialProductId?: string | null;
 }) {
   const catalog = useCatalog();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [stock, setStock] = useState("");
   const [page, setPage] = useState(1);
+  const [storeId, setStoreId] = useState("");
+  const [stores, setStores] = useState<Store[]>([]);
   const [editing, setEditing] = useState<{
     product: Product;
     create: boolean;
   } | null>(null);
+  useEffect(() => {
+    if (!initialProductId || !catalog.ready) {
+      return;
+    }
+
+    const product = catalog.products.find(
+      (item) => item.id === initialProductId,
+    );
+
+    if (product) {
+      setEditing({
+        product,
+        create: false,
+      });
+    }
+  }, [initialProductId, catalog.ready, catalog.products]);
+  useEffect(() => {
+    const controller = new AbortController();
+
+    authFetch(
+      "/api/admin/stores",
+      {
+        signal: controller.signal,
+      },
+      owner,
+    )
+      .then(async (response) => {
+        const data = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(data?.error ?? "Дэлгүүрүүдийг ачаалж чадсангүй.");
+        }
+
+        return data;
+      })
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setStores(Array.isArray(data?.stores) ? data.stores : []);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setStores([]);
+        }
+      });
+
+    return () => controller.abort();
+  }, [owner]);
+
+  const storeMap = new Map(stores.map((store) => [store.id, store.name]));
+
+  const storeNames = (product: Product) => {
+    const ids = product.storeIds ?? [];
+
+    if (!ids.length) {
+      return "Дэлгүүр оноогоогүй";
+    }
+
+    return ids.map((id) => storeMap.get(id) ?? id).join(", ");
+  };
 
   const filtered = catalog.products.filter(
     (product) =>
+      (!storeId || product.storeIds?.includes(storeId)) &&
       (!category || product.category === category) &&
       (!stock ||
         (stock === "available" ? product.inStock : !product.inStock)) &&
-      `${product.name} ${CATEGORY_LABEL[product.category]}`
+      `${product.name} ${
+        CATEGORY_LABEL[product.category]
+      } ${storeNames(product)}`
         .toLowerCase()
         .includes(query.trim().toLowerCase()),
   );
@@ -153,6 +232,24 @@ function ProductList({
             </label>
             <select
               className="input"
+              aria-label="Дэлгүүрээр шүүх"
+              value={storeId}
+              onChange={(event) => {
+                setStoreId(event.target.value);
+
+                setPage(1);
+              }}
+            >
+              <option value="">Бүх дэлгүүр</option>
+
+              {stores.map((store) => (
+                <option key={store.id} value={store.id}>
+                  {store.name}
+                </option>
+              ))}
+            </select>
+            <select
+              className="input"
               aria-label="Барааны ангилал"
               value={category}
               onChange={(e) => {
@@ -200,12 +297,13 @@ function ProductList({
             <>
               <p className="admin-result-count">
                 {filtered.length} илэрц
-                {(query || category || stock) && (
+                {(query || storeId || category || stock) && (
                   <button
                     type="button"
                     className="ml-3 min-h-10 underline"
                     onClick={() => {
                       setQuery("");
+                      setStoreId("");
                       setCategory("");
                       setStock("");
                       setPage(1);
@@ -228,6 +326,7 @@ function ProductList({
                       <tr>
                         {[
                           "Бүтээгдэхүүн",
+                          "Дэлгүүр",
                           "Ангилал",
                           "Үндсэн үнэ",
                           "Нөөц",
@@ -264,6 +363,11 @@ function ProductList({
                                 </small>
                               </div>
                             </div>
+                          </td>
+                          <td data-label="Дэлгүүр">
+                            <span className="admin-product-store">
+                              {storeNames(product)}
+                            </span>
                           </td>
                           <td data-label="Ангилал">
                             {CATEGORY_LABEL[product.category]}
@@ -348,6 +452,22 @@ function ProductEditor({
   const [glbFile, setGlbFile] = useState<File | null>(null);
   const [glbMessage, setGlbMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  type FieldErrors = {
+    name?: string;
+    basePrice?: string;
+    stockQuantity?: string;
+    image?: string;
+    gallery?: string;
+    glb?: string;
+    description?: string;
+    w?: string;
+    d?: string;
+    h?: string;
+    colors?: string;
+    materials?: string;
+  };
+
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
   const [storesError, setStoresError] = useState(false);
@@ -385,20 +505,80 @@ function ProductEditor({
       onSubmit={async (event) => {
         event.preventDefault();
         if (busy) return;
+        if (glbFile) {
+          setFieldErrors((current) => ({
+            ...current,
+            glb: draft.model
+              ? "GLB файл сонгосон байна. Хадгалахаас өмнө “GLB солих” товчийг дарна уу."
+              : "GLB файл сонгосон байна. Хадгалахаас өмнө “GLB нэмэх” товчийг дарна уу.",
+          }));
+
+          return;
+        }
+        const nextErrors: FieldErrors = {};
+
+        if (!draft.name.trim()) {
+          nextErrors.name = "Бүтээгдэхүүний нэр оруулна уу.";
+        }
+
+        if (!Number.isFinite(draft.basePrice) || draft.basePrice < 0) {
+          nextErrors.basePrice = "Үнэ 0-ээс багагүй байна.";
+        }
+
+        if (
+          draft.stockQuantity == null ||
+          !Number.isSafeInteger(draft.stockQuantity) ||
+          draft.stockQuantity < 0 ||
+          draft.stockQuantity > MAX_STOCK_QUANTITY
+        ) {
+          nextErrors.stockQuantity =
+            "Нөөцийн тоо 0–1,000,000 хооронд бүхэл тоо байна.";
+        }
+
+        if (!Number.isFinite(draft.dimensions.w) || draft.dimensions.w <= 0) {
+          nextErrors.w = "Өргөн 0-ээс их байна.";
+        }
+
+        if (!Number.isFinite(draft.dimensions.d) || draft.dimensions.d <= 0) {
+          nextErrors.d = "Гүн 0-ээс их байна.";
+        }
+
+        if (!Number.isFinite(draft.dimensions.h) || draft.dimensions.h <= 0) {
+          nextErrors.h = "Өндөр 0-ээс их байна.";
+        }
+
+        if (!draft.image && !imageFile) {
+          nextErrors.image = "Барааны үндсэн зураг сонгоно уу.";
+        }
+
+        if ((draft.images?.length ?? 0) + galleryFiles.length > 12) {
+          nextErrors.gallery = "Нэмэлт зураг нийт 12-оос олонгүй байна.";
+        }
+
+        if (draft.colors.length === 0) {
+          nextErrors.colors = "Дор хаяж нэг өнгө шаардлагатай.";
+        }
+
+        if (draft.materials.length === 0) {
+          nextErrors.materials = "Дор хаяж нэг материал шаардлагатай.";
+        }
+
+        if (glbFile) {
+          nextErrors.glb = draft.model
+            ? "GLB файл сонгосон байна. Эхлээд “GLB солих” товчийг дарна уу."
+            : "GLB файл сонгосон байна. Эхлээд “GLB нэмэх” товчийг дарна уу.";
+        }
+
+        setFieldErrors(nextErrors);
+
+        if (Object.keys(nextErrors).length > 0) {
+          return;
+        }
 
         setBusy(true);
         setError(null);
 
         try {
-          if (
-            !Number.isSafeInteger(draft.stockQuantity) ||
-            draft.stockQuantity == null ||
-            draft.stockQuantity < 0 ||
-            draft.stockQuantity > MAX_STOCK_QUANTITY
-          )
-            throw new Error(
-              "Нөөцийн ширхэгийг 0–1,000,000 хооронд бүхэл тоогоор оруулна уу.",
-            );
           let image = draft.image;
           const uploadImage = async (file: File) => {
             if (
@@ -513,9 +693,19 @@ function ProductEditor({
               required
               maxLength={200}
               value={draft.name}
-              onChange={(event) => field("name", event.target.value)}
+              onChange={(event) => {
+                field("name", event.target.value);
+
+                setFieldErrors((current) => ({
+                  ...current,
+                  name: undefined,
+                }));
+              }}
             />
           </label>
+          {fieldErrors.name && (
+            <p className="mt-1 text-xs text-red-600">{fieldErrors.name}</p>
+          )}
 
           <label className="text-sm">
             Ангилал
@@ -543,11 +733,18 @@ function ProductEditor({
               min="0"
               step="1"
               value={draft.basePrice}
-              onChange={(event) =>
-                field("basePrice", event.target.valueAsNumber)
-              }
+              onChange={(event) => {
+                field("basePrice", event.target.valueAsNumber);
+                setFieldErrors((current) => ({
+                  ...current,
+                  basePrice: undefined,
+                }));
+              }}
             />
           </label>
+          {fieldErrors.basePrice && (
+            <p className="mt-1 text-xs text-red-600">{fieldErrors.basePrice}</p>
+          )}
 
           <label className="text-sm">
             Нөөцийн үлдэгдэл (ширхэг)
@@ -559,19 +756,31 @@ function ProductEditor({
               max={MAX_STOCK_QUANTITY}
               step="1"
               value={draft.stockQuantity ?? ""}
-              onChange={(event) =>
+              onChange={(event) => {
+                const value = event.target.valueAsNumber;
+
                 setDraft((current) => ({
                   ...current,
-                  stockQuantity: event.target.valueAsNumber,
-                  inStock: event.target.valueAsNumber > 0,
-                }))
-              }
+                  stockQuantity: value,
+                  inStock: value > 0,
+                }));
+
+                setFieldErrors((current) => ({
+                  ...current,
+                  stockQuantity: undefined,
+                }));
+              }}
             />
             <span className="text-xs text-ink/60">
               Өнгө, материалын бүх сонголтын нийт боломжтой үлдэгдэл. 0 бол
               нөөцгүй.
             </span>
           </label>
+          {fieldErrors.stockQuantity && (
+            <p className="mt-1 text-xs text-red-600">
+              {fieldErrors.stockQuantity}
+            </p>
+          )}
           <label className="text-sm">
             Барааны зураг
             <input
@@ -579,9 +788,14 @@ function ProductEditor({
               type="file"
               accept="image/jpeg,image/png,image/webp"
               required={!draft.image}
-              onChange={(event) =>
-                setImageFile(event.target.files?.[0] ?? null)
-              }
+              onChange={(event) => {
+                setImageFile(event.target.files?.[0] ?? null);
+
+                setFieldErrors((current) => ({
+                  ...current,
+                  image: undefined,
+                }));
+              }}
             />
             <span className="text-xs text-ink/60">
               JPG, PNG, WebP · 3 MB хүртэл. Хадгалах үед зураг шинэчлэгдэнэ.
@@ -599,9 +813,14 @@ function ProductEditor({
               type="file"
               multiple
               accept="image/jpeg,image/png,image/webp"
-              onChange={(event) =>
-                setGalleryFiles(Array.from(event.target.files ?? []))
-              }
+              onChange={(event) => {
+                setGalleryFiles(Array.from(event.target.files ?? []));
+
+                setFieldErrors((current) => ({
+                  ...current,
+                  gallery: undefined,
+                }));
+              }}
             />
             <span className="text-xs text-ink/60">
               Нэг удаад олон зураг сонгож болно. Нийт 12 хүртэл, зураг бүр 3
@@ -614,6 +833,9 @@ function ProductEditor({
               </p>
             )}
           </label>
+          {fieldErrors.gallery && (
+            <p className="mt-1 text-xs text-red-600">{fieldErrors.gallery}</p>
+          )}
         </div>
         {(draft.images?.length ?? 0) > 0 && (
           <div>
@@ -657,18 +879,34 @@ function ProductEditor({
                 type="file"
                 accept=".glb,model/gltf-binary"
                 onChange={(event) => {
-                  setGlbFile(event.target.files?.[0] ?? null);
+                  const file = event.target.files?.[0] ?? null;
+
+                  setGlbFile(file);
                   setGlbMessage(null);
+
+                  setFieldErrors((current) => ({
+                    ...current,
+                    glb: file
+                      ? draft.model
+                        ? "Шинэ GLB файл сонгосон байна. Эхлээд “GLB солих” товчийг дарна уу."
+                        : "GLB файл сонгосон байна. Эхлээд “GLB нэмэх” товчийг дарна уу."
+                      : undefined,
+                  }));
                 }}
               />
             </label>
+            {fieldErrors.glb && (
+              <p role="alert" className="text-xs text-red-600">
+                {fieldErrors.glb}
+              </p>
+            )}
 
             <p className="text-xs text-ink/60">
               Одоогийн файл: {draft.model?.file ?? "GLB нэмээгүй"}
             </p>
             <p className="text-xs text-ink/60">
-              Original GLB файл сонгоно. High, Medium, Low хувилбарууд
-              автоматаар боловсруулагдана.
+              Original GLB файл оруул. Web-д зориулсан хувилбар автоматаар
+              боловсруулагдана.
             </p>
             <button
               type="button"
@@ -811,22 +1049,28 @@ function ProductEditor({
                   // --------------------------------
 
                   setGlbFile(null);
+                  setFieldErrors((current) => ({
+                    ...current,
+                    glb: undefined,
+                  }));
 
                   await useCatalogStore.getState().refresh(true);
 
-                  setGlbMessage(
-                    "GLB амжилттай upload хийгдлээ. High, Medium, Low хувилбаруудыг боловсруулж байна.",
-                  );
+                  setGlbMessage("GLB амжилттай upload хийгдлээ.");
                 } catch (error) {
                   console.error("[AdminProducts GLB upload]", error);
 
                   setGlbMessage(null);
 
-                  setError(
+                  const message =
                     error instanceof Error
                       ? error.message
-                      : "GLB upload хийхэд алдаа гарлаа.",
-                  );
+                      : "GLB upload хийхэд алдаа гарлаа.";
+
+                  setFieldErrors((current) => ({
+                    ...current,
+                    glb: message,
+                  }));
                 } finally {
                   setBusy(false);
                 }
@@ -871,13 +1115,21 @@ function ProductEditor({
                 max="100"
                 step="any"
                 value={draft.dimensions[key]}
-                onChange={(event) =>
+                onChange={(event) => {
                   field("dimensions", {
                     ...draft.dimensions,
                     [key]: event.target.valueAsNumber,
-                  })
-                }
+                  });
+
+                  setFieldErrors((current) => ({
+                    ...current,
+                    [key]: undefined,
+                  }));
+                }}
               />
+              {fieldErrors[key] && (
+                <p className="mt-1 text-xs text-red-600">{fieldErrors[key]}</p>
+              )}
             </label>
           ))}
         </div>
@@ -1010,6 +1262,9 @@ function ProductEditor({
           >
             Өнгө нэмэх
           </button>
+          {fieldErrors.colors && (
+            <p className="text-xs text-red-600">{fieldErrors.colors}</p>
+          )}
         </fieldset>
 
         <fieldset className="space-y-2">
@@ -1068,6 +1323,9 @@ function ProductEditor({
               );
             },
           )}
+          {fieldErrors.materials && (
+            <p className="text-xs text-red-600">{fieldErrors.materials}</p>
+          )}
         </fieldset>
 
         <fieldset className="admin-field-section">
@@ -1119,9 +1377,14 @@ function ProductEditor({
       )}
 
       <div className="admin-editor-actions">
-        <button disabled={busy} className="btn-primary disabled:opacity-40">
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={busy || !!glbFile}
+        >
           <Save size={16} />
-          {busy ? "Хадгалж байна…" : "Хадгалах"}
+
+          {glbFile ? "Эхлээд GLB upload хийнэ үү" : "Хадгалах"}
         </button>
         <button
           type="button"

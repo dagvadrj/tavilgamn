@@ -224,7 +224,7 @@ async function main() {
 
       "texture-size": {
         type: "string",
-        default: "2048",
+        default: "4096",
       },
     },
   });
@@ -300,12 +300,6 @@ async function main() {
   for (const file of files) {
     const json = readGlb(await readFile(file));
 
-    if (triangleCount(json) > 30000) {
-      throw new Error(
-        `${file}: exceeds 30,000 triangles. Run Blender geometry stage first.`,
-      );
-    }
-
     if (
       [...(json.buffers ?? []), ...(json.images ?? [])].some(
         (item) => item.uri && !item.uri.startsWith("data:"),
@@ -316,35 +310,25 @@ async function main() {
 
     const level = path.basename(file, ".glb");
 
-    if (["high", "medium", "low"].includes(level)) {
-      const siblings = files
-        .filter((f) => path.dirname(f) === path.dirname(file))
-        .map((f) => path.basename(f));
-
-      if (
-        !["high.glb", "medium.glb", "low.glb"].every((f) =>
-          siblings.includes(f),
-        )
-      ) {
-        throw new Error(
-          `${file}: missing LOD sibling; check geometry validation report`,
-        );
-      }
-
-      const validation = JSON.parse(
-        await readFile(
-          path.join(path.dirname(file), "geometry-report.json"),
-          "utf8",
-        ),
+    if (level !== "high") {
+      throw new Error(`${file}: expected high.glb`);
+    }
+    const triangles = triangleCount(json);
+    if (triangles > 80000) {
+      throw new Error(
+        `${file}: exceeds 80,000 triangles ` +
+          `(actual: ${triangles.toLocaleString()})`,
       );
+    }
+    const validation = JSON.parse(
+      await readFile(
+        path.join(path.dirname(file), "geometry-report.json"),
+        "utf8",
+      ),
+    );
 
-      if (
-        !["high", "medium", "low"].every(
-          (key) => validation.levels[key]?.passed,
-        )
-      ) {
-        throw new Error(`${file}: geometry review has not passed`);
-      }
+    if (!validation.levels?.high?.passed) {
+      throw new Error(`${file}: high geometry review has not passed`);
     }
   }
 
@@ -354,12 +338,36 @@ async function main() {
 
   for (const file of files) {
     const before = await readFile(file);
-
-    const json = readGlb(before);
-
+    const json = readGlb(await readFile(file));
+    if (
+      [...(json.buffers ?? []), ...(json.images ?? [])].some(
+        (item) => item.uri && !item.uri.startsWith("data:"),
+      )
+    ) {
+      throw new Error(`${file}: GLB must embed all buffers/textures`);
+    }
     const level = path.basename(file, ".glb");
+    if (level !== "high") {
+      continue;
+    }
+    const triangles = triangleCount(json);
+    if (triangles > 80000) {
+      throw new Error(
+        `${file}: exceeds 80,000 triangles ` +
+          `(actual: ${triangles.toLocaleString()})`,
+      );
+    }
+    const validation = JSON.parse(
+      await readFile(
+        path.join(path.dirname(file), "geometry-report.json"),
+        "utf8",
+      ),
+    );
 
-    const isLod = ["high", "medium", "low"].includes(level);
+    if (!validation.levels.high?.passed) {
+      throw new Error(`${file}: geometry review has not passed`);
+    }
+    const filename = "high.glb";
 
     const relative = path.relative(inputRoot, path.dirname(file));
 
@@ -368,17 +376,6 @@ async function main() {
     await mkdir(destination, {
       recursive: true,
     });
-
-    // --------------------------------
-    // IMPORTANT:
-    // Keep LOD names:
-    //
-    // high.glb
-    // medium.glb
-    // low.glb
-    // --------------------------------
-
-    const filename = isLod ? `${level}.glb` : path.basename(file);
 
     const result = path.join(destination, filename);
 
@@ -406,10 +403,7 @@ async function main() {
         stage = next;
       };
 
-      // Remove duplicate data.
       await transform("dedup");
-
-      // Remove unused data.
       await transform("prune");
 
       // --------------------------------
@@ -417,44 +411,22 @@ async function main() {
       // --------------------------------
 
       if (json.images?.length) {
-        const textureSize =
-          isLod && level === "low" ? Math.min(size, 1024) : size;
+        const textureLimit = size;
 
         await transform("resize", [
           "--width",
-          String(textureSize),
-
+          String(textureLimit),
           "--height",
-          String(textureSize),
+          String(textureLimit),
         ]);
 
-        // Preserve normal/ORM
-        // quality with UASTC.
         await transform("uastc", [
-          "--slots",
-          "!{baseColorTexture,emissiveTexture}",
-
           "--level",
           "2",
-
           "--zstd",
           "18",
-
           "--jobs",
-          "2",
-        ]);
-
-        // Base color/emissive
-        // can use ETC1S.
-        await transform("etc1s", [
-          "--slots",
-          "{baseColorTexture,emissiveTexture}",
-
-          "--quality",
-          "180",
-
-          "--jobs",
-          "2",
+          "4",
         ]);
       }
 
@@ -468,16 +440,33 @@ async function main() {
 
         "--quantize-normal",
         "10",
+        "--quantize-texcoord",
+        "12",
       ]);
 
       const final = await readFile(stage);
 
       const info = readGlb(final);
 
-      if (
-        (info.images ?? []).some((image) => image.mimeType !== "image/ktx2")
-      ) {
-        throw new Error("Some textures were not converted to KTX2");
+      const failedTextures = (info.images ?? [])
+        .map((image, index) => ({
+          index,
+          name: image.name ?? null,
+          mimeType: image.mimeType ?? null,
+        }))
+        .filter((image) => image.mimeType !== "image/ktx2");
+
+      if (failedTextures.length) {
+        throw new Error(
+          `Some textures were not converted to KTX2: ${JSON.stringify(
+            failedTextures,
+          )}`,
+        );
+      }
+      if (!(info.extensionsUsed ?? []).includes("KHR_texture_basisu")) {
+        throw new Error(
+          "KHR_texture_basisu extension is missing after KTX2 compression",
+        );
       }
 
       // Validator may warn about
@@ -494,7 +483,7 @@ async function main() {
 
         file: path.relative(output, result),
 
-        level: isLod ? level : null,
+        level: "high",
 
         beforeBytes: before.length,
 

@@ -9,8 +9,6 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { removeModelFiles } from "@/lib/cloudinaryModels";
-import { modelAssetPaths } from "@/lib/modelAssets";
-
 export class R2ModelError extends Error {}
 
 function config() {
@@ -48,12 +46,8 @@ function config() {
 export function r2ModelKey(
   value: string,
 ): string | null {
-  if (typeof value !== "string") {
-    return null;
-  }
-
   const match =
-  /^r2:\/\/([a-z0-9-]+)\/(models\/([0-9a-f-]{36})\/(?:(?:source\/[0-9a-f-]{36}\.glb)|(?:lod\/[0-9a-f-]{36}\/(?:high|medium|low)\.glb)|(?:model(?:-[0-9a-f-]{36}(?:-[012])?)?\.glb)))$/i.exec(
+  /^r2:\/\/([a-z0-9-]+)\/(models\/[0-9a-f-]{36}\/(?:model(?:-[0-9a-f-]{36})?\.glb|lod\/[0-9a-f-]{36}\/high\.glb|standard\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.glb))$/i.exec(
     value,
   );
 
@@ -81,7 +75,11 @@ export async function uploadR2Glb(
   }
 
   const { bucket, client } = config();
-  if (!/^model(?:-[0-9a-f-]{36}(?:-[012])?)?\.glb$/i.test(fileName)) {
+  if (
+  !/^model(?:-[0-9a-f-]{36})?\.glb$/i.test(
+    fileName,
+  )
+) {
   throw new R2ModelError("GLB файлын нэр буруу байна.");
 }
 
@@ -112,7 +110,7 @@ const key = `models/${id}/${fileName}`;
   }
 }
 
-export async function r2DownloadUrl(value: string) {
+export async function r2DownloadUrl(value: string, downloadName?: string) {
   const key = r2ModelKey(value);
 
   if (!key) {
@@ -120,7 +118,7 @@ export async function r2DownloadUrl(value: string) {
   }
 
   const publicBase = process.env.R2_PUBLIC_BASE_URL;
-  if (publicBase) {
+  if (publicBase && !downloadName) {
     const url = new URL(publicBase);
 
     if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) throw new R2ModelError("R2 public URL буруу байна.");
@@ -136,6 +134,11 @@ export async function r2DownloadUrl(value: string) {
       new GetObjectCommand({
         Bucket: bucket,
         Key: key,
+
+        ResponseContentDisposition:
+          downloadName
+          ? `attachment; filename="${downloadName}"`
+          : undefined,
       }),
       {
         expiresIn: 600,
@@ -148,23 +151,26 @@ export async function r2DownloadUrl(value: string) {
 
 export async function removeStoredModelFiles(
   db: ReturnType<typeof getSupabaseAdmin>,
-  paths: string[],
+  Paths: string[],
 ) {
   const failures: unknown[] = [];
   const other: string[] = [];
 
-  for (const path of new Set(paths.flatMap(modelAssetPaths))) {
-    if (!path.startsWith("r2:")) {
-      other.push(path);
+  for (const storedPath of new Set(Paths)) {
+    if (!storedPath.startsWith("r2:")) {
+      other.push(storedPath);
       continue;
     }
 
     try {
-      const key = r2ModelKey(path);
+      const key = r2ModelKey(storedPath);
 
       if (!key) {
-        throw new Error("Invalid R2 object reference");
-      }
+        failures.push(new Error(
+       `Invalid R2 model path: ${storedPath}`,
+      ),
+    );
+      continue;}
 
       const { bucket, client } = config();
 

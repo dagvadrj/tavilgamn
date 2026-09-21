@@ -20,7 +20,7 @@ export function productFromRow(row: FurnitureRow): Product {
   const thumbnail = row.thumbnail_path?.split("/").pop();
   const product = parseProduct({
     id: row.product_id, name: row.name, category: row.category, description: row.description,
-    basePrice: Number(row.base_price), image: row.image_url || (thumbnail ? `/api/models/files/${row.id}/${thumbnail}` : "/textures/wood-color.jpg"),
+    basePrice: Number(row.base_price), image: row.image_url || (thumbnail ? `/api/models/files/${row.id}/${thumbnail}` : "/public/image.png"),
     images: row.images ?? [],
     colors: row.colors, materials: row.materials, defaultColor: row.default_color ?? row.colors[0]?.id,
     dimensions: {w: Number(row.dimensions_w), d: Number(row.dimensions_d), h: Number(row.dimensions_h)},
