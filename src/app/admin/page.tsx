@@ -218,6 +218,23 @@ type ExportState = {
 
   error: string | null;
 };
+type ModelSection = "requests" | "processing" | "ready" | "error";
+
+type ModelStatus = {
+  id: string;
+
+  processingStatus: "idle" | "queued" | "processing" | "ready" | "error";
+
+  processingError: string | null;
+
+  processingUpdatedAt: string | null;
+
+  exportStatus: "idle" | "queued" | "processing" | "ready" | "error";
+
+  exportError: string | null;
+
+  standardReady: boolean;
+};
 
 function ModelsTab({
   owner,
@@ -227,6 +244,11 @@ function ModelsTab({
 
   onOpenProduct: (productId: string) => void;
 }) {
+  const [modelSection, setModelSection] = useState<ModelSection>("requests");
+
+  const [modelStatuses, setModelStatuses] = useState<
+    Record<string, ModelStatus>
+  >({});
   const [modelQuery, setModelQuery] = useState("");
   const [pendingDelete, setPendingDelete] = useState<ModelRecord | null>(null);
   const [models, setModels] = useState<ModelRecord[]>([]);
@@ -289,6 +311,41 @@ function ModelsTab({
       );
     } finally {
       setFetching(false);
+    }
+  };
+  const loadModelStatuses = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error("Admin эрх шаардлагатай.");
+      }
+
+      const response = await fetch("/api/admin/models/status", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+
+        cache: "no-store",
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.error ?? "Model status ачаалсангүй.");
+      }
+
+      const next: Record<string, ModelStatus> = {};
+
+      for (const model of data.models ?? []) {
+        next[model.id] = model;
+      }
+
+      setModelStatuses(next);
+    } catch (reason) {
+      console.error("[models/status]", reason);
     }
   };
 
@@ -464,7 +521,7 @@ function ModelsTab({
   }, [exportStates, readExportStatus]);
 
   useEffect(() => {
-    void load();
+    void Promise.all([load(), loadModelStatuses()]);
   }, []);
 
   const addColor = () =>
@@ -707,10 +764,86 @@ function ModelsTab({
 
   const catLabel = (id: string) =>
     CATEGORY_OPTIONS.find((c) => c.id === id)?.name ?? id;
+  const filteredModels = models.filter((model) => {
+    const status = modelStatuses[model.id];
 
+    if (!status) {
+      return false;
+    }
+
+    if (modelSection === "processing") {
+      return (
+        status.processingStatus === "queued" ||
+        status.processingStatus === "processing"
+      );
+    }
+
+    if (modelSection === "ready") {
+      return status.processingStatus === "ready";
+    }
+
+    if (modelSection === "error") {
+      return status.processingStatus === "error";
+    }
+
+    return false;
+  });
+  const modelCounts = {
+    processing: Object.values(modelStatuses).filter(
+      (status) =>
+        status.processingStatus === "queued" ||
+        status.processingStatus === "processing",
+    ).length,
+
+    ready: Object.values(modelStatuses).filter(
+      (status) => status.processingStatus === "ready",
+    ).length,
+
+    error: Object.values(modelStatuses).filter(
+      (status) => status.processingStatus === "error",
+    ).length,
+  };
   return (
     <div>
-      <AdminModelRequests owner={owner} onOpenProduct={onOpenProduct} />
+      <div className="admin-model-tabs">
+        <button
+          type="button"
+          className={modelSection === "requests" ? "active" : ""}
+          onClick={() => setModelSection("requests")}
+        >
+          Requests
+        </button>
+
+        <button
+          type="button"
+          className={modelSection === "processing" ? "active" : ""}
+          onClick={() => setModelSection("processing")}
+        >
+          Processing
+          <span>{modelCounts.processing}</span>
+        </button>
+
+        <button
+          type="button"
+          className={modelSection === "ready" ? "active" : ""}
+          onClick={() => setModelSection("ready")}
+        >
+          Ready
+          <span>{modelCounts.ready}</span>
+        </button>
+
+        <button
+          type="button"
+          className={modelSection === "error" ? "active" : ""}
+          onClick={() => setModelSection("error")}
+        >
+          Error
+          <span>{modelCounts.error}</span>
+        </button>
+      </div>
+      {modelSection === "requests" && (
+        <AdminModelRequests owner={owner} onOpenProduct={onOpenProduct} />
+      )}
       <div className="admin-page-heading">
         <div>
           <span className="admin-eyebrow">ӨРӨӨНИЙ ТӨЛӨВЛӨГЧ</span>
@@ -721,437 +854,470 @@ function ModelsTab({
           <Layers size={25} strokeWidth={1.5} />
         </span>
       </div>
-      <div className="admin-model-layout">
-        <form onSubmit={handleSubmit} className="admin-model-form space-y-6">
-          <h2 className="flex items-center gap-2 text-base font-semibold">
-            <Plus size={18} />
-            Шинэ загвар нэмэх
-          </h2>
-          <fieldset disabled={uploading} className="min-w-0 space-y-6">
-            {/* — Үндсэн мэдээлэл — */}
-            <section>
-              <p className="label mb-3">Үндсэн мэдээлэл</p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label className="label mb-1 block">Нэр</label>
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Жишээ нь: Тавны буйдан"
-                    className="input"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="label mb-1 block">Ангилал</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="input"
-                  >
-                    {CATEGORY_OPTIONS.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <label className="block text-sm">
-                  Нөөцийн үлдэгдэл (ширхэг)
-                  <input
-                    className="input mt-2"
-                    type="number"
-                    required
-                    min="0"
-                    max="1000000"
-                    step="1"
-                    value={stockQuantity}
-                    onChange={(e) => setStockQuantity(e.target.value)}
-                  />
-                </label>
-                <div>
-                  <label className="label mb-1 block">Үндсэн үнэ (₮)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={basePrice}
-                    onChange={(e) => setBasePrice(e.target.value)}
-                    className="input"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="label mb-1 block">Тайлбар</label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={2}
-                    className="input resize-none"
-                    placeholder="Товч тайлбар…"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* — Хэмжээ — */}
-            <section>
-              <p className="label mb-3">Хэмжээ (метрээр) болон масштаб</p>
-              <div className="grid gap-4 sm:grid-cols-4">
-                <div>
-                  <label className="label mb-1 block">Өргөн (W)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={dimW}
-                    onChange={(e) => setDimW(e.target.value)}
-                    className="input"
-                  />
-                </div>
-                <div>
-                  <label className="label mb-1 block">Гүн (D)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={dimD}
-                    onChange={(e) => setDimD(e.target.value)}
-                    className="input"
-                  />
-                </div>
-                <div>
-                  <label className="label mb-1 block">Өндөр (H)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={dimH}
-                    onChange={(e) => setDimH(e.target.value)}
-                    className="input"
-                  />
-                </div>
-                <div>
-                  <label className="label mb-1 block">Scale</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={scale}
-                    onChange={(e) => setScale(e.target.value)}
-                    className="input"
-                  />
-                  <p className="mt-1 text-xs text-ink/40">мм→м: 0.001</p>
-                </div>
-              </div>
-            </section>
-
-            {/* — Өнгөнүүд — */}
-            <section>
-              <div className="mb-3 flex items-center justify-between">
-                <p className="label">Өнгөнүүд</p>
-                <button
-                  type="button"
-                  onClick={addColor}
-                  className="text-xs font-medium text-clay hover:underline"
-                >
-                  + Өнгө нэмэх
-                </button>
-              </div>
-              <div className="space-y-2">
-                {colors.map((c, i) => (
-                  <div key={i} className="admin-color-row">
+      {modelSection !== "requests" && (
+        <div className="admin-model-layout">
+          <form onSubmit={handleSubmit} className="admin-model-form space-y-6">
+            <h2 className="flex items-center gap-2 text-base font-semibold">
+              <Plus size={18} />
+              Шинэ загвар нэмэх
+            </h2>
+            <fieldset disabled={uploading} className="min-w-0 space-y-6">
+              {/* — Үндсэн мэдээлэл — */}
+              <section>
+                <p className="label mb-3">Үндсэн мэдээлэл</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="label mb-1 block">Нэр</label>
                     <input
-                      type="color"
-                      aria-label={`Өнгө ${i + 1}`}
-                      value={c.hex}
-                      onChange={(e) => updateColor(i, "hex", e.target.value)}
-                      className="h-9 w-12 cursor-pointer rounded-md border border-ink/10 p-0.5"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Жишээ нь: Тавны буйдан"
+                      className="input"
+                      required
                     />
+                  </div>
+                  <div>
+                    <label className="label mb-1 block">Ангилал</label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="input"
+                    >
+                      {CATEGORY_OPTIONS.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <label className="block text-sm">
+                    Нөөцийн үлдэгдэл (ширхэг)
                     <input
-                      value={c.name}
-                      aria-label={`Өнгө ${i + 1} нэр`}
-                      onChange={(e) => updateColor(i, "name", e.target.value)}
-                      placeholder="Нэр"
-                      className="input flex-1 !py-2 text-sm"
+                      className="input mt-2"
+                      type="number"
+                      required
+                      min="0"
+                      max="1000000"
+                      step="1"
+                      value={stockQuantity}
+                      onChange={(e) => setStockQuantity(e.target.value)}
                     />
+                  </label>
+                  <div>
+                    <label className="label mb-1 block">Үндсэн үнэ (₮)</label>
                     <input
                       type="number"
-                      value={c.priceDelta}
-                      aria-label={`Өнгө ${i + 1} нэмэлт үнэ`}
-                      onChange={(e) =>
-                        updateColor(i, "priceDelta", e.target.value)
-                      }
-                      placeholder="±₮"
-                      className="input w-20 !py-2 text-sm"
+                      min="0"
+                      value={basePrice}
+                      onChange={(e) => setBasePrice(e.target.value)}
+                      className="input"
                     />
-                    {colors.length > 1 && (
-                      <button
-                        type="button"
-                        aria-label={`Өнгө ${i + 1} хасах`}
-                        onClick={() => removeColor(i)}
-                        className="text-ink/30 hover:text-red-500"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
                   </div>
-                ))}
-              </div>
-            </section>
+                  <div className="sm:col-span-2">
+                    <label className="label mb-1 block">Тайлбар</label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={2}
+                      className="input resize-none"
+                      placeholder="Товч тайлбар…"
+                    />
+                  </div>
+                </div>
+              </section>
 
-            {/* — Материалууд — */}
-            <section>
-              <p className="label mb-3">Материалууд</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {MATERIAL_OPTIONS.map((opt) => {
-                  const sel = selMaterials.find((m) => m.id === opt.id);
-                  return (
-                    <div
-                      key={opt.id}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl border p-3 transition",
-                        sel ? "border-clay/40 bg-clay/5" : "border-ink/10",
-                      )}
-                    >
+              {/* — Хэмжээ — */}
+              <section>
+                <p className="label mb-3">Хэмжээ (метрээр) болон масштаб</p>
+                <div className="grid gap-4 sm:grid-cols-4">
+                  <div>
+                    <label className="label mb-1 block">Өргөн (W)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={dimW}
+                      onChange={(e) => setDimW(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="label mb-1 block">Гүн (D)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={dimD}
+                      onChange={(e) => setDimD(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="label mb-1 block">Өндөр (H)</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={dimH}
+                      onChange={(e) => setDimH(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="label mb-1 block">Scale</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={scale}
+                      onChange={(e) => setScale(e.target.value)}
+                      className="input"
+                    />
+                    <p className="mt-1 text-xs text-ink/40">мм→м: 0.001</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* — Өнгөнүүд — */}
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="label">Өнгөнүүд</p>
+                  <button
+                    type="button"
+                    onClick={addColor}
+                    className="text-xs font-medium text-clay hover:underline"
+                  >
+                    + Өнгө нэмэх
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {colors.map((c, i) => (
+                    <div key={i} className="admin-color-row">
                       <input
-                        type="checkbox"
-                        aria-label={opt.name}
-                        checked={!!sel}
-                        onChange={() => toggleMaterial(opt.id)}
-                        className="accent-clay h-4 w-4 cursor-pointer"
+                        type="color"
+                        aria-label={`Өнгө ${i + 1}`}
+                        value={c.hex}
+                        onChange={(e) => updateColor(i, "hex", e.target.value)}
+                        className="h-9 w-12 cursor-pointer rounded-md border border-ink/10 p-0.5"
                       />
-                      <span className="flex-1 text-sm">{opt.name}</span>
-                      {sel && (
-                        <input
-                          type="number"
-                          aria-label={`${opt.name} нэмэлт үнэ`}
-                          value={sel.priceDelta}
-                          onChange={(e) =>
-                            updateMatDelta(opt.id, e.target.value)
-                          }
-                          placeholder="±₮"
-                          className="input w-20 !py-1.5 text-xs"
-                        />
+                      <input
+                        value={c.name}
+                        aria-label={`Өнгө ${i + 1} нэр`}
+                        onChange={(e) => updateColor(i, "name", e.target.value)}
+                        placeholder="Нэр"
+                        className="input flex-1 !py-2 text-sm"
+                      />
+                      <input
+                        type="number"
+                        value={c.priceDelta}
+                        aria-label={`Өнгө ${i + 1} нэмэлт үнэ`}
+                        onChange={(e) =>
+                          updateColor(i, "priceDelta", e.target.value)
+                        }
+                        placeholder="±₮"
+                        className="input w-20 !py-2 text-sm"
+                      />
+                      {colors.length > 1 && (
+                        <button
+                          type="button"
+                          aria-label={`Өнгө ${i + 1} хасах`}
+                          onClick={() => removeColor(i)}
+                          className="text-ink/30 hover:text-red-500"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* — Файлууд — */}
-            <section>
-              <p className="label mb-3">Файлууд</p>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="label mb-1 block">GLB файл *</label>
-                  <input
-                    ref={glbRef}
-                    type="file"
-                    accept=".glb,model/gltf-binary"
-                    required
-                    onChange={(event) =>
-                      setGlbFile(event.target.files?.[0] ?? null)
-                    }
-                    className="input !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-cream file:px-3 file:py-1 file:text-xs"
-                  />
-                  <p className="mt-1 text-xs text-ink/40">
-                    Файлын дээд хэмжээ: 200 MB
-                  </p>
+                  ))}
                 </div>
+              </section>
 
-                <div>
-                  <label className="label mb-1 block">
-                    Thumbnail зураг{" "}
-                    <span className="font-normal text-ink/40">
-                      (каталогт харагдана)
-                    </span>
-                  </label>
-                  <input
-                    ref={thumbRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) =>
-                      setThumbnail(event.target.files?.[0] ?? null)
-                    }
-                    className="input !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-cream file:px-3 file:py-1 file:text-xs"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {error && (
-              <p role="alert" className="admin-error">
-                {error}
-              </p>
-            )}
-            {success && (
-              <p
-                role="status"
-                className="flex items-center gap-2 rounded-lg bg-sage/10 px-4 py-2 text-sm text-sage"
-              >
-                <CheckCircle className="h-4 w-4" /> Амжилттай хуулагдлаа
-              </p>
-            )}
-
-            <button type="submit" disabled={uploading} className="btn-primary">
-              <Upload className="h-4 w-4" />
-              {uploading ? "Загварыг оруулж байна…" : "Загвар хадгалах"}
-            </button>
-          </fieldset>
-        </form>
-
-        {/* Models list */}
-        <div className="admin-model-list">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold">
-              {fetching ? "Уншиж байна…" : `${models.length} загвар`}
-            </h2>
-            <button
-              type="button"
-              className="admin-edit-button"
-              disabled={fetching}
-              onClick={() => void load()}
-              aria-label="3D загварын жагсаалт шинэчлэх"
-            >
-              <RefreshCw size={15} />
-            </button>
-          </div>
-          <div className="admin-toolbar">
-            <label className="admin-search">
-              <Search size={17} />
-              <input
-                aria-label="3D загвар хайх"
-                placeholder="Загварын нэрээр хайх…"
-                value={modelQuery}
-                onChange={(e) => setModelQuery(e.target.value)}
-              />
-            </label>
-          </div>
-          {loadError && (
-            <p className="mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
-              {loadError}
-            </p>
-          )}
-          {modelActionError && (
-            <p className="admin-error" role="alert">
-              {modelActionError}
-            </p>
-          )}
-          {models.length === 0 && !fetching && !loadError && (
-            <p className="mt-4 rounded-xl bg-ink/5 p-4 text-sm text-ink/60">
-              Одоогоор загвар байхгүй байна.
-            </p>
-          )}
-          {modelQuery &&
-            !models.some((m) =>
-              m.name.toLowerCase().includes(modelQuery.trim().toLowerCase()),
-            ) && <div className="admin-empty">Тохирох загвар олдсонгүй.</div>}
-          <div className="admin-model-cards mt-3 space-y-3">
-            {models
-              .filter((m) =>
-                m.name.toLowerCase().includes(modelQuery.trim().toLowerCase()),
-              )
-              .map((m) => (
-                <div key={m.id} className="admin-model-card">
-                  <div className="flex items-center gap-4 min-w-0">
-                    {m.thumbnailFile ? (
-                      <Image
-                        src={`/api/models/files/${m.id}/${m.thumbnailFile}`}
-                        alt={m.name}
-                        width={56}
-                        height={56}
-                        unoptimized
-                        className="h-14 w-14 flex-shrink-0 rounded-lg object-cover bg-cream"
-                      />
-                    ) : (
-                      <div className="h-14 w-14 flex-shrink-0 rounded-lg bg-cream flex items-center justify-center">
-                        <Layers className="h-5 w-5 text-ink/30" />
+              {/* — Материалууд — */}
+              <section>
+                <p className="label mb-3">Материалууд</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {MATERIAL_OPTIONS.map((opt) => {
+                    const sel = selMaterials.find((m) => m.id === opt.id);
+                    return (
+                      <div
+                        key={opt.id}
+                        className={cn(
+                          "flex items-center gap-3 rounded-xl border p-3 transition",
+                          sel ? "border-clay/40 bg-clay/5" : "border-ink/10",
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          aria-label={opt.name}
+                          checked={!!sel}
+                          onChange={() => toggleMaterial(opt.id)}
+                          className="accent-clay h-4 w-4 cursor-pointer"
+                        />
+                        <span className="flex-1 text-sm">{opt.name}</span>
+                        {sel && (
+                          <input
+                            type="number"
+                            aria-label={`${opt.name} нэмэлт үнэ`}
+                            value={sel.priceDelta}
+                            onChange={(e) =>
+                              updateMatDelta(opt.id, e.target.value)
+                            }
+                            placeholder="±₮"
+                            className="input w-20 !py-1.5 text-xs"
+                          />
+                        )}
                       </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">{m.name}</p>
-                      <p className="mt-1 text-xs text-[#74806b]">
-                        {stockLabel(m)}
-                      </p>
-                      <p className="mt-0.5 text-xs text-ink/50">
-                        {catLabel(m.category)} · {m.dimensionsW}×{m.dimensionsD}
-                        ×{m.dimensionsH}м ·{" "}
-                        {m.basePrice > 0
-                          ? `₮${m.basePrice.toLocaleString()}`
-                          : "Үнэгүй"}
-                      </p>
-                      <p className="mt-0.5 text-xs text-ink/40">
-                        {m.glbFile} · scale {m.scale}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="admin-model-actions">
-                    <button
-                      type="button"
-                      className="btn-ghost"
-                      onClick={() => void downloadModel(m.id, "optimized")}
-                    >
-                      <Download size={14} />
-                      Optimized татах
-                    </button>
+                    );
+                  })}
+                </div>
+              </section>
 
-                    {exportStates[m.id]?.ready ? (
+              {/* — Файлууд — */}
+              <section>
+                <p className="label mb-3">Файлууд</p>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="label mb-1 block">GLB файл *</label>
+                    <input
+                      ref={glbRef}
+                      type="file"
+                      accept=".glb,model/gltf-binary"
+                      required
+                      onChange={(event) =>
+                        setGlbFile(event.target.files?.[0] ?? null)
+                      }
+                      className="input !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-cream file:px-3 file:py-1 file:text-xs"
+                    />
+                    <p className="mt-1 text-xs text-ink/40">
+                      Файлын дээд хэмжээ: 200 MB
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="label mb-1 block">
+                      Thumbnail зураг{" "}
+                      <span className="font-normal text-ink/40">
+                        (каталогт харагдана)
+                      </span>
+                    </label>
+                    <input
+                      ref={thumbRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) =>
+                        setThumbnail(event.target.files?.[0] ?? null)
+                      }
+                      className="input !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-cream file:px-3 file:py-1 file:text-xs"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {error && (
+                <p role="alert" className="admin-error">
+                  {error}
+                </p>
+              )}
+              {success && (
+                <p
+                  role="status"
+                  className="flex items-center gap-2 rounded-lg bg-sage/10 px-4 py-2 text-sm text-sage"
+                >
+                  <CheckCircle className="h-4 w-4" /> Амжилттай хуулагдлаа
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={uploading}
+                className="btn-primary"
+              >
+                <Upload className="h-4 w-4" />
+                {uploading ? "Загварыг оруулж байна…" : "Загвар хадгалах"}
+              </button>
+            </fieldset>
+          </form>
+          {/* Models list */}
+          <div className="admin-model-list">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold">
+                {fetching ? "Уншиж байна…" : `${filteredModels.length} загвар`}
+              </h2>
+              <button
+                type="button"
+                className="admin-edit-button"
+                disabled={fetching}
+                onClick={() => void Promise.all([load(), loadModelStatuses()])}
+                aria-label="3D загварын жагсаалт шинэчлэх"
+              >
+                <RefreshCw size={15} />
+              </button>
+            </div>
+            <div className="admin-toolbar">
+              <label className="admin-search">
+                <Search size={17} />
+                <input
+                  aria-label="3D загвар хайх"
+                  placeholder="Загварын нэрээр хайх…"
+                  value={modelQuery}
+                  onChange={(e) => setModelQuery(e.target.value)}
+                />
+              </label>
+            </div>
+            {loadError && (
+              <p className="mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+                {loadError}
+              </p>
+            )}
+            {modelActionError && (
+              <p className="admin-error" role="alert">
+                {modelActionError}
+              </p>
+            )}
+            {models.length === 0 && !fetching && !loadError && (
+              <p className="mt-4 rounded-xl bg-ink/5 p-4 text-sm text-ink/60">
+                Одоогоор загвар байхгүй байна.
+              </p>
+            )}
+            {modelQuery &&
+              !models.some((m) =>
+                m.name.toLowerCase().includes(modelQuery.trim().toLowerCase()),
+              ) && <div className="admin-empty">Тохирох загвар олдсонгүй.</div>}
+            <div className="admin-model-cards mt-3 space-y-3">
+              {filteredModels
+                .filter((m) =>
+                  m.name
+                    .toLowerCase()
+                    .includes(modelQuery.trim().toLowerCase()),
+                )
+                .map((m) => (
+                  <div key={m.id} className="admin-model-card">
+                    <div className="flex items-center gap-4 min-w-0">
+                      {m.thumbnailFile ? (
+                        <Image
+                          src={`/api/models/files/${m.id}/${m.thumbnailFile}`}
+                          alt={m.name}
+                          width={56}
+                          height={56}
+                          unoptimized
+                          className="h-14 w-14 flex-shrink-0 rounded-lg object-cover bg-cream"
+                        />
+                      ) : (
+                        <div className="h-14 w-14 flex-shrink-0 rounded-lg bg-cream flex items-center justify-center">
+                          <Layers className="h-5 w-5 text-ink/30" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{m.name}</p>
+                        <p className="mt-1 text-xs text-[#74806b]">
+                          {stockLabel(m)}
+                        </p>
+                        <p className="mt-0.5 text-xs text-ink/50">
+                          {catLabel(m.category)} · {m.dimensionsW}×
+                          {m.dimensionsD}×{m.dimensionsH}м ·{" "}
+                          {m.basePrice > 0
+                            ? `₮${m.basePrice.toLocaleString()}`
+                            : "Үнэгүй"}
+                        </p>
+                        <p className="mt-0.5 text-xs text-ink/40">
+                          {m.glbFile} · scale {m.scale}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="admin-model-actions">
                       <button
                         type="button"
                         className="btn-ghost"
-                        onClick={() => void downloadModel(m.id, "standard")}
+                        onClick={() => void downloadModel(m.id, "optimized")}
                       >
                         <Download size={14} />
-                        Standard татах
+                        Optimized татах
                       </button>
-                    ) : exportStates[m.id]?.status === "queued" ||
-                      exportStates[m.id]?.status === "processing" ? (
-                      <button type="button" className="btn-ghost" disabled>
-                        <LoaderCircle size={14} className="animate-spin" />
 
-                        {exportStates[m.id]?.status === "queued"
-                          ? "Дараалалд…"
-                          : "Export хийж байна…"}
-                      </button>
-                    ) : (
+                      {exportStates[m.id]?.ready ? (
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          onClick={() => void downloadModel(m.id, "standard")}
+                        >
+                          <Download size={14} />
+                          Standard татах
+                        </button>
+                      ) : exportStates[m.id]?.status === "queued" ||
+                        exportStates[m.id]?.status === "processing" ? (
+                        <button type="button" className="btn-ghost" disabled>
+                          <LoaderCircle size={14} className="animate-spin" />
+
+                          {exportStates[m.id]?.status === "queued"
+                            ? "Дараалалд…"
+                            : "Export хийж байна…"}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          disabled={exportingId === m.id}
+                          onClick={() => void startStandardExport(m.id)}
+                        >
+                          {exportingId === m.id ? (
+                            <LoaderCircle size={14} className="animate-spin" />
+                          ) : (
+                            <FileOutput size={14} />
+                          )}
+                          Standard GLB
+                        </button>
+                      )}
+                      {modelStatuses[m.id] && (
+                        <span
+                          className={`admin-model-state ${
+                            modelStatuses[m.id].processingStatus
+                          }`}
+                        >
+                          {modelStatuses[m.id].processingStatus === "queued"
+                            ? "Дараалалд"
+                            : modelStatuses[m.id].processingStatus ===
+                                "processing"
+                              ? "Боловсруулж байна"
+                              : modelStatuses[m.id].processingStatus === "ready"
+                                ? "Бэлэн"
+                                : modelStatuses[m.id].processingStatus ===
+                                    "error"
+                                  ? "Алдаа"
+                                  : "Хүлээгдэж байна"}
+                        </span>
+                      )}
+                      {modelSection === "error" &&
+                        modelStatuses[m.id]?.processingError && (
+                          <p className="admin-model-error-text">
+                            {modelStatuses[m.id].processingError}
+                          </p>
+                        )}
+
+                      {exportStates[m.id]?.status === "error" && (
+                        <span
+                          className="admin-model-export-error"
+                          title={exportStates[m.id]?.error ?? undefined}
+                        >
+                          Export алдаа
+                        </span>
+                      )}
+
                       <button
                         type="button"
-                        className="btn-ghost"
-                        disabled={exportingId === m.id}
-                        onClick={() => void startStandardExport(m.id)}
+                        aria-label={`${m.name} устгах`}
+                        onClick={() => setPendingDelete(m)}
+                        disabled={deletingId === m.id}
+                        className="admin-model-delete"
                       >
-                        {exportingId === m.id ? (
-                          <LoaderCircle size={14} className="animate-spin" />
-                        ) : (
-                          <FileOutput size={14} />
-                        )}
-                        Standard GLB
+                        <Trash2 className="h-3.5 w-3.5" />
+
+                        {deletingId === m.id ? "Устгаж байна…" : "Устгах"}
                       </button>
-                    )}
-
-                    {exportStates[m.id]?.status === "error" && (
-                      <span
-                        className="admin-model-export-error"
-                        title={exportStates[m.id]?.error ?? undefined}
-                      >
-                        Export алдаа
-                      </span>
-                    )}
-
-                    <button
-                      type="button"
-                      aria-label={`${m.name} устгах`}
-                      onClick={() => setPendingDelete(m)}
-                      disabled={deletingId === m.id}
-                      className="admin-model-delete"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-
-                      {deletingId === m.id ? "Устгаж байна…" : "Устгах"}
-                    </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
       {pendingDelete && (
         <div
           className="admin-dialog-backdrop"

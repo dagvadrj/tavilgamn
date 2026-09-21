@@ -26,10 +26,12 @@ export function KitchenARViewer({
   root,
   name,
   disabled,
+  onWorkingChange,
 }: {
   root: Group | null;
   name: string;
   disabled: boolean;
+  onWorkingChange?: (working: boolean) => void;
 }) {
   const [source, setSource] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
@@ -45,6 +47,7 @@ export function KitchenARViewer({
   async function openAR() {
     if (!root || disabled || working) return;
     setWorking(true);
+    onWorkingChange?.(true);
     setMessage("");
     try {
       await import("@google/model-viewer");
@@ -53,7 +56,7 @@ export function KitchenARViewer({
       const nextSource = URL.createObjectURL(
         new Blob([data], { type: "model/gltf-binary" }),
       );
-      setSource(previous => {
+      setSource((previous) => {
         if (previous) URL.revokeObjectURL(previous);
         return nextSource;
       });
@@ -65,11 +68,12 @@ export function KitchenARViewer({
       );
     } finally {
       setWorking(false);
+      onWorkingChange?.(false);
     }
   }
 
   function close() {
-    setSource(previous => {
+    setSource((previous) => {
       if (previous) URL.revokeObjectURL(previous);
       return null;
     });
@@ -112,8 +116,18 @@ export function KitchenARViewer({
         </p>
       )}
       {source && (
-        <div className="km-ar-dialog" role="dialog" aria-modal="true" aria-label={`${name} AR харах`}>
-          <button type="button" className="km-ar-close" onClick={close} aria-label="AR цонх хаах">
+        <div
+          className="km-ar-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${name} AR харах`}
+        >
+          <button
+            type="button"
+            className="km-ar-close"
+            onClick={close}
+            aria-label="AR цонх хаах"
+          >
             <X size={20} />
           </button>
           <model-viewer

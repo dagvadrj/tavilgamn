@@ -2961,3 +2961,107 @@ body:has(.admin-shell) #main-content {
 
   font-size: 8px;
 }
+.admin-model-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-bottom: 18px;
+
+  padding: 5px;
+
+  width: fit-content;
+
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+
+  background: #fff;
+}
+
+.admin-model-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  min-height: 36px;
+
+  padding: 0 13px;
+
+  border-radius: 8px;
+
+  color: #7b8573;
+
+  font-size: 10px;
+  font-weight: 550;
+}
+
+.admin-model-tabs button:hover {
+  background: #f5f7f2;
+}
+
+.admin-model-tabs button.active {
+  background: #26351f;
+  color: #fff;
+}
+
+.admin-model-tabs button span {
+  min-width: 18px;
+  height: 18px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 5px;
+
+  border-radius: 20px;
+
+  background: rgba(0, 0, 0, 0.07);
+
+  font-size: 8px;
+}
+
+.admin-model-tabs button.active span {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.admin-model-state {
+  display: inline-flex;
+
+  margin-top: 5px;
+
+  padding: 4px 7px;
+
+  border-radius: 20px;
+
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.admin-model-state.ready {
+  background: #edf5e8;
+  color: #577447;
+}
+
+.admin-model-state.processing,
+.admin-model-state.queued {
+  background: #fff5df;
+  color: #9a7428;
+}
+
+.admin-model-state.error {
+  background: #fff0ec;
+  color: #b1503c;
+}
+
+.admin-model-error-text {
+  max-width: 520px;
+
+  margin-top: 7px;
+
+  color: #b1503c;
+
+  font-size: 9px;
+
+  overflow-wrap: anywhere;
+}

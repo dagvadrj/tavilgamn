@@ -13,7 +13,7 @@ export function KitchenExportButtons({
   name: string;
   disabled: boolean;
 }) {
-  const [working, setWorking] = useState<"glb" | "skp" | null>(null);
+  const [working, setWorking] = useState<"glb" | "skp" | "ar" | null>(null);
   const [message, setMessage] = useState("");
   const lock = useRef(false),
     request = useRef<AbortController | null>(null);
@@ -94,8 +94,18 @@ export function KitchenExportButtons({
               : `${format.toUpperCase()} татах`}
           </button>
         ))}
+
         <small>Бүх тавилга, материалтай · Шалгүй</small>
-        <KitchenARViewer root={root} name={name} disabled={disabled || !!working} />
+        <KitchenARViewer
+          root={root}
+          name={name}
+          disabled={disabled || !!working}
+          onWorkingChange={(active) => {
+            lock.current = active;
+
+            setWorking(active ? "ar" : null);
+          }}
+        />
       </div>
       {message && (
         <p role="status" aria-live="polite">
