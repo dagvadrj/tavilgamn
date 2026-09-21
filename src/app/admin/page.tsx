@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { AdminMessages } from "@/components/AdminMessages";
 import {
   AdminSidebar,
@@ -18,6 +18,9 @@ import {
   Box,
   Users,
   Package,
+  Download,
+  FileOutput,
+  LoaderCircle,
   TrendingUp,
   Upload,
   Layers,
@@ -208,6 +211,13 @@ type ModelRecord = {
   materials: string;
   createdAt: string;
 };
+type ExportState = {
+  status: "idle" | "queued" | "processing" | "ready" | "error";
+
+  ready: boolean;
+
+  error: string | null;
+};
 
 function ModelsTab({
   owner,
@@ -226,6 +236,13 @@ function ModelsTab({
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [exportStates, setExportStates] = useState<Record<string, ExportState>>(
+    {},
+  );
+
+  const [exportingId, setExportingId] = useState<string | null>(null);
+
+  const [modelActionError, setModelActionError] = useState<string | null>(null);
 
   // Basic info
   const [name, setName] = useState("");
@@ -274,6 +291,177 @@ function ModelsTab({
       setFetching(false);
     }
   };
+
+  const sessionToken = useCallback(async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      throw new Error("Admin хэрэглэгчээр нэвтрэх шаардлагатай.");
+    }
+
+    return session.access_token;
+  }, []);
+
+  const readExportStatus = useCallback(
+    async (modelId: string): Promise<ExportState> => {
+      const token = await sessionToken();
+
+      const response = await fetch(
+        `/api/admin/models/export?modelId=${encodeURIComponent(modelId)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+
+          cache: "no-store",
+        },
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.error ?? "Export төлөвийг уншиж чадсангүй.");
+      }
+
+      return {
+        status:
+          data?.status === "queued" ||
+          data?.status === "processing" ||
+          data?.status === "ready" ||
+          data?.status === "error"
+            ? data.status
+            : "idle",
+
+        ready: data?.ready === true,
+
+        error: typeof data?.error === "string" ? data.error : null,
+      };
+    },
+    [sessionToken],
+  );
+  const downloadModel = async (
+    modelId: string,
+    kind: "optimized" | "standard",
+  ) => {
+    setModelActionError(null);
+
+    try {
+      const token = await sessionToken();
+
+      const response = await fetch(
+        `/api/admin/models/download?modelId=${encodeURIComponent(
+          modelId,
+        )}&kind=${kind}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+
+          cache: "no-store",
+        },
+      );
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || typeof data?.url !== "string") {
+        throw new Error(data?.error ?? "GLB татах холбоос үүсгэж чадсангүй.");
+      }
+
+      window.location.assign(data.url);
+    } catch (reason) {
+      setModelActionError(
+        reason instanceof Error ? reason.message : "GLB татаж чадсангүй.",
+      );
+    }
+  };
+  const startStandardExport = async (modelId: string) => {
+    if (exportingId) return;
+
+    setExportingId(modelId);
+    setModelActionError(null);
+
+    try {
+      const token = await sessionToken();
+
+      const response = await fetch("/api/admin/models/export", {
+        method: "POST",
+
+        headers: {
+          Authorization: `Bearer ${token}`,
+
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          modelId,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error ?? "Standard GLB export эхлүүлж чадсангүй.",
+        );
+      }
+
+      const next = await readExportStatus(modelId);
+
+      setExportStates((current) => ({
+        ...current,
+        [modelId]: next,
+      }));
+    } catch (reason) {
+      setModelActionError(
+        reason instanceof Error
+          ? reason.message
+          : "Standard GLB export эхлүүлж чадсангүй.",
+      );
+    } finally {
+      setExportingId(null);
+    }
+  };
+
+  useEffect(() => {
+    const activeIds = Object.entries(exportStates)
+      .filter(
+        ([, state]) =>
+          state.status === "queued" || state.status === "processing",
+      )
+      .map(([id]) => id);
+
+    if (!activeIds.length) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const timer = window.setTimeout(async () => {
+      for (const modelId of activeIds) {
+        try {
+          const state = await readExportStatus(modelId);
+
+          if (!cancelled) {
+            setExportStates((current) => ({
+              ...current,
+
+              [modelId]: state,
+            }));
+          }
+        } catch {
+          // Дараагийн refresh дээр дахин шалгана.
+        }
+      }
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+
+      window.clearTimeout(timer);
+    };
+  }, [exportStates, readExportStatus]);
 
   useEffect(() => {
     void load();
@@ -841,6 +1029,11 @@ function ModelsTab({
               {loadError}
             </p>
           )}
+          {modelActionError && (
+            <p className="admin-error" role="alert">
+              {modelActionError}
+            </p>
+          )}
           {models.length === 0 && !fetching && !loadError && (
             <p className="mt-4 rounded-xl bg-ink/5 p-4 text-sm text-ink/60">
               Одоогоор загвар байхгүй байна.
@@ -889,16 +1082,71 @@ function ModelsTab({
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    aria-label={`${m.name} устгах`}
-                    onClick={() => setPendingDelete(m)}
-                    disabled={deletingId === m.id}
-                    className="flex-shrink-0 flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    {deletingId === m.id ? "Устгаж байна…" : "Устгах"}
-                  </button>
+                  <div className="admin-model-actions">
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      onClick={() => void downloadModel(m.id, "optimized")}
+                    >
+                      <Download size={14} />
+                      Optimized татах
+                    </button>
+
+                    {exportStates[m.id]?.ready ? (
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={() => void downloadModel(m.id, "standard")}
+                      >
+                        <Download size={14} />
+                        Standard татах
+                      </button>
+                    ) : exportStates[m.id]?.status === "queued" ||
+                      exportStates[m.id]?.status === "processing" ? (
+                      <button type="button" className="btn-ghost" disabled>
+                        <LoaderCircle size={14} className="animate-spin" />
+
+                        {exportStates[m.id]?.status === "queued"
+                          ? "Дараалалд…"
+                          : "Export хийж байна…"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={exportingId === m.id}
+                        onClick={() => void startStandardExport(m.id)}
+                      >
+                        {exportingId === m.id ? (
+                          <LoaderCircle size={14} className="animate-spin" />
+                        ) : (
+                          <FileOutput size={14} />
+                        )}
+                        Standard GLB
+                      </button>
+                    )}
+
+                    {exportStates[m.id]?.status === "error" && (
+                      <span
+                        className="admin-model-export-error"
+                        title={exportStates[m.id]?.error ?? undefined}
+                      >
+                        Export алдаа
+                      </span>
+                    )}
+
+                    <button
+                      type="button"
+                      aria-label={`${m.name} устгах`}
+                      onClick={() => setPendingDelete(m)}
+                      disabled={deletingId === m.id}
+                      className="admin-model-delete"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+
+                      {deletingId === m.id ? "Устгаж байна…" : "Устгах"}
+                    </button>
+                  </div>
                 </div>
               ))}
           </div>

@@ -47,9 +47,9 @@ export function r2ModelKey(
   value: string,
 ): string | null {
   const match =
-    /^r2:\/\/([a-z0-9-]+)\/(models\/[0-9a-f-]{36}\/(?:model(?:-[0-9a-f-]{36})?\.glb|lod\/[0-9a-f-]{36}\/high\.glb))$/i.exec(
-      value,
-    );
+  /^r2:\/\/([a-z0-9-]+)\/(models\/[0-9a-f-]{36}\/(?:model(?:-[0-9a-f-]{36})?\.glb|lod\/[0-9a-f-]{36}\/high\.glb|standard\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.glb))$/i.exec(
+    value,
+  );
 
   if (!match) {
     return null;
@@ -110,7 +110,7 @@ const key = `models/${id}/${fileName}`;
   }
 }
 
-export async function r2DownloadUrl(value: string) {
+export async function r2DownloadUrl(value: string, downloadName?: string) {
   const key = r2ModelKey(value);
 
   if (!key) {
@@ -118,7 +118,7 @@ export async function r2DownloadUrl(value: string) {
   }
 
   const publicBase = process.env.R2_PUBLIC_BASE_URL;
-  if (publicBase) {
+  if (publicBase && !downloadName) {
     const url = new URL(publicBase);
 
     if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash) throw new R2ModelError("R2 public URL буруу байна.");
@@ -134,6 +134,11 @@ export async function r2DownloadUrl(value: string) {
       new GetObjectCommand({
         Bucket: bucket,
         Key: key,
+
+        ResponseContentDisposition:
+          downloadName
+          ? `attachment; filename="${downloadName}"`
+          : undefined,
       }),
       {
         expiresIn: 600,

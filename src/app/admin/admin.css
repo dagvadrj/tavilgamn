@@ -2902,3 +2902,62 @@ body:has(.admin-shell) #main-content {
     min-width: 760px;
   }
 }
+.admin-model-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  flex-shrink: 0;
+}
+
+.admin-model-actions .btn-ghost {
+  min-height: 34px;
+
+  padding: 0 10px;
+
+  font-size: 9px;
+}
+
+.admin-model-delete {
+  min-height: 34px;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 0 10px;
+
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+
+  color: #dc2626;
+
+  font-size: 9px;
+}
+
+.admin-model-delete:hover {
+  background: #fef2f2;
+}
+
+.admin-model-delete:disabled {
+  opacity: 0.5;
+
+  cursor: not-allowed;
+}
+
+.admin-model-export-error {
+  padding: 5px 8px;
+
+  border-radius: 8px;
+
+  background: #fef2f2;
+
+  color: #dc2626;
+
+  font-size: 8px;
+}
