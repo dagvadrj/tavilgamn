@@ -221,10 +221,17 @@ function Scene(props: ModularSceneProps) {
         }}
       >
         {kitchen.cabinets.map((cabinet) => {
-          const materialId =
+          const legacyMaterialId =
             cabinet.finish ??
             (cabinet.material === "wood" ? "oak" : cabinet.material);
-          const material = props.materialDefinitions?.[materialId];
+          const frontMaterial =
+            props.materialDefinitions?.[
+              cabinet.frontMaterialId ?? legacyMaterialId
+            ];
+          const carcassMaterial =
+            props.materialDefinitions?.[
+              cabinet.carcassMaterialId ?? legacyMaterialId
+            ];
           return (
             <group
               key={cabinet.id}
@@ -257,19 +264,16 @@ function Scene(props: ModularSceneProps) {
                   w={cabinet.width / 1000}
                   h={cabinet.height / 1000}
                   d={cabinet.depth / 1000}
-                  materialOverride={
-                    material
-                      ? {
-                          color: cabinet.color,
-                          roughness: material.roughness,
-                          metalness: material.metalness,
-                          texturePaths: material.texturePaths,
-                        }
-                      : undefined
-                  }
+                  frontMaterial={frontMaterial}
+                  frontColor={cabinet.color}
+                  carcassMaterial={carcassMaterial}
                 />
               ) : (
-                <CabinetBody cabinet={cabinet} open={props.open} />
+                <CabinetBody
+                  cabinet={cabinet}
+                  open={props.open}
+                  materialDefinitions={props.materialDefinitions}
+                />
               )}
               {(selectedId === cabinet.id || invalid.has(cabinet.id)) && (
                 <mesh
@@ -301,6 +305,7 @@ function Scene(props: ModularSceneProps) {
         })}
         <KitchenTops
           kitchen={kitchen}
+          materialDefinitions={props.materialDefinitions}
           onBacksplashPointerDown={(event, id) => {
             const panel = fitBacksplashes(kitchen).find(
               (item) => item.id === id,

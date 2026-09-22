@@ -17,6 +17,8 @@
     "color": {"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},
     "material": {"enum":["matte","wood","gloss"]},
     "finish": {"enum":["matte","gloss","oak","walnut","marble","concrete"]},
+    "frontMaterialId": {"type":"string","pattern":"^[a-z0-9][a-z0-9_-]{0,63}$"},
+    "carcassMaterialId": {"type":"string","pattern":"^[a-z0-9][a-z0-9_-]{0,63}$"},
     "frontStyle": {"enum":["flat","shaker","glass"]},
     "opening": {"enum":["doors","drawers","open","sink","hob","oven","hood","refrigerator"]},
     "hoodMount": {"enum":["under-cabinet","wall"]},

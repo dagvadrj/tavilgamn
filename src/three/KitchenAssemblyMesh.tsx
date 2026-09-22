@@ -2,6 +2,7 @@
 import { useEffect, useMemo } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { Path, Shape, type Texture } from "three";
+import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { cooktopGeometry, hasCooktop } from "@/lib/plitka";
 import {
   componentColor,
@@ -15,7 +16,11 @@ import type {
   ModularCabinet,
   ModularKitchen,
 } from "@/lib/kitchenCabinets";
-import { cabinetAxes, fitCountertops, fitPlinths } from "@/lib/kitchenPlacement";
+import {
+  cabinetAxes,
+  fitCountertops,
+  fitPlinths,
+} from "@/lib/kitchenPlacement";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import { fitBacksplashes } from "@/lib/kitchenBacksplash";
 import { createKitchenTexture } from "./kitchenTextures";
@@ -29,6 +34,9 @@ function Board({
   roughness = 0.7,
   metalness = 0,
   map,
+  normalMap,
+  roughnessMap,
+  metalnessMap,
 }: {
   size: XYZ;
   at: XYZ;
@@ -36,20 +44,42 @@ function Board({
   roughness?: number;
   metalness?: number;
   map?: Texture | null;
+  normalMap?: Texture | null;
+  roughnessMap?: Texture | null;
+  metalnessMap?: Texture | null;
 }) {
   return (
-    <mesh position={at} userData={{ sizeMm: size.map(value => Math.round(value * 1e9) / 1e6), positionMm: at.map(value => Math.round(value * 1e9) / 1e6) }} castShadow receiveShadow>
+    <mesh
+      position={at}
+      userData={{
+        sizeMm: size.map((value) => Math.round(value * 1e9) / 1e6),
+        positionMm: at.map((value) => Math.round(value * 1e9) / 1e6),
+      }}
+      castShadow
+      receiveShadow
+    >
       <boxGeometry args={size} />
       <meshStandardMaterial
         color={color}
         roughness={roughness}
         metalness={metalness}
         map={map}
+        normalMap={normalMap}
+        roughnessMap={roughnessMap}
+        metalnessMap={metalnessMap}
       />
     </mesh>
   );
 }
-function Top({ top, kitchen }: { top: Countertop; kitchen: ModularKitchen }) {
+function Top({
+  top,
+  kitchen,
+  materialDefinitions,
+}: {
+  top: Countertop;
+  kitchen: ModularKitchen;
+  materialDefinitions?: Record<string, KitchenMaterialDefinition>;
+}) {
   const finish =
     top.finish ??
     (top.material === "wood"
@@ -59,6 +89,7 @@ function Top({ top, kitchen }: { top: Countertop; kitchen: ModularKitchen }) {
         : "matte");
   const map = useMemo(() => createKitchenTexture(finish), [finish]);
   useEffect(() => () => map?.dispose(), [map]);
+  const definition = materialDefinitions?.[top.materialId ?? finish];
   const holes = useMemo(
     () =>
       kitchen.cabinets.filter(
@@ -120,8 +151,9 @@ function Top({ top, kitchen }: { top: Countertop; kitchen: ModularKitchen }) {
           args={[shape, { depth: top.thickness / 1000, bevelEnabled: false }]}
         />
         <meshStandardMaterial
-          color={top.color ?? finishInfo.color}
-          roughness={finishInfo.roughness}
+          color={top.color ?? definition?.baseColor ?? finishInfo.color}
+          roughness={definition?.roughness ?? finishInfo.roughness}
+          metalness={definition?.metalness ?? 0}
           map={map}
         />
       </mesh>
@@ -162,7 +194,11 @@ function CounterAppliance({
       {hob ? (
         <>
           <Board
-            size={[(hobSize.cutoutWidth - 2) / 1000, 0.044, (hobSize.cutoutDepth - 2) / 1000]}
+            size={[
+              (hobSize.cutoutWidth - 2) / 1000,
+              0.044,
+              (hobSize.cutoutDepth - 2) / 1000,
+            ]}
             at={[0, -0.022, 0]}
             color="#252a29"
           />
@@ -176,11 +212,19 @@ function CounterAppliance({
             [-1, 1].map((z) => (
               <mesh
                 key={`${x}:${z}`}
-                position={[x * hobSize.width / 4000, 0.003, z * hobSize.depth / 4000]}
+                position={[
+                  (x * hobSize.width) / 4000,
+                  0.003,
+                  (z * hobSize.depth) / 4000,
+                ]}
                 rotation={[-Math.PI / 2, 0, 0]}
               >
                 <ringGeometry
-                  args={[hob.model.startsWith("ceramic") ? 0.035 : 0.05, 0.053, 24]}
+                  args={[
+                    hob.model.startsWith("ceramic") ? 0.035 : 0.05,
+                    0.053,
+                    24,
+                  ]}
                 />
                 <meshStandardMaterial color="#929b98" />
               </mesh>
@@ -249,20 +293,66 @@ function CounterAppliance({
     </group>
   );
 }
-export function KitchenTops({ kitchen, onBacksplashPointerDown }: { kitchen: ModularKitchen; onBacksplashPointerDown?: (event: ThreeEvent<PointerEvent>, id: string) => void }) {
+export function KitchenTops({
+  kitchen,
+  materialDefinitions,
+  onBacksplashPointerDown,
+}: {
+  kitchen: ModularKitchen;
+  materialDefinitions?: Record<string, KitchenMaterialDefinition>;
+  onBacksplashPointerDown?: (
+    event: ThreeEvent<PointerEvent>,
+    id: string,
+  ) => void;
+}) {
   const tops = useMemo(() => fitCountertops(kitchen), [kitchen]);
   const plinths = useMemo(() => fitPlinths(kitchen), [kitchen]);
   const backsplashes = useMemo(() => fitBacksplashes(kitchen), [kitchen]);
   return (
     <>
       {tops.map((top) => (
-        <Top key={top.id} top={top} kitchen={kitchen} />
+        <Top
+          key={top.id}
+          top={top}
+          kitchen={kitchen}
+          materialDefinitions={materialDefinitions}
+        />
       ))}
-      {plinths.map(plinth => <FinishedBoard key={plinth.id} id={`Component-plinth-${plinth.cabinetIds[0]}`} width={plinth.width} height={plinth.height} depth={plinth.depth}
-        position={plinth.position} color={plinth.color} finish={plinth.finish} />)}
-      {backsplashes.map(panel => <FinishedBoard key={panel.id} id={panel.id} width={panel.width} height={panel.height} depth={panel.thickness}
-        onPointerDown={event => onBacksplashPointerDown?.(event, panel.id)}
-        position={panel.position} color={kitchen.countertop.color} finish={kitchen.countertop.finish ?? (kitchen.countertop.material === "wood" ? "oak" : kitchen.countertop.material === "granite" ? "marble" : "matte")} />)}
+      {plinths.map((plinth) => (
+        <FinishedBoard
+          key={plinth.id}
+          id={`Component-plinth-${plinth.cabinetIds[0]}`}
+          width={plinth.width}
+          height={plinth.height}
+          depth={plinth.depth}
+          position={plinth.position}
+          color={plinth.color}
+          finish={plinth.finish}
+        />
+      ))}
+      {backsplashes.map((panel) => (
+        <FinishedBoard
+          key={panel.id}
+          id={panel.id}
+          width={panel.width}
+          height={panel.height}
+          depth={panel.thickness}
+          onPointerDown={(event) => onBacksplashPointerDown?.(event, panel.id)}
+          position={panel.position}
+          color={kitchen.countertop.color}
+          materialDefinition={
+            materialDefinitions?.[kitchen.countertop.materialId ?? ""]
+          }
+          finish={
+            kitchen.countertop.finish ??
+            (kitchen.countertop.material === "wood"
+              ? "oak"
+              : kitchen.countertop.material === "granite"
+                ? "marble"
+                : "matte")
+          }
+        />
+      ))}
       {kitchen.cabinets
         .filter((c) => c.opening === "sink" || hasCooktop(c))
         .map((c) => (
@@ -271,26 +361,59 @@ export function KitchenTops({ kitchen, onBacksplashPointerDown }: { kitchen: Mod
     </>
   );
 }
-function FinishedBoard({ id, width, height, depth, position, color, finish = "matte", onPointerDown }: {
-  id: string; width: number; height: number; depth: number; position: ModularCabinet["position"]; color?: string; finish?: Countertop["finish"];
+function FinishedBoard({
+  id,
+  width,
+  height,
+  depth,
+  position,
+  color,
+  finish = "matte",
+  materialDefinition,
+  onPointerDown,
+}: {
+  id: string;
+  width: number;
+  height: number;
+  depth: number;
+  position: ModularCabinet["position"];
+  color?: string;
+  finish?: Countertop["finish"];
+  materialDefinition?: KitchenMaterialDefinition;
   onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
 }) {
   const map = useMemo(() => createKitchenTexture(finish), [finish]);
   useEffect(() => () => map?.dispose(), [map]);
-  const material = FINISHES.find(item => item.id === finish)!;
-  return <group name={id} onPointerDown={onPointerDown} position={[position.x / 1000, position.y / 1000, position.z / 1000]} rotation={[0, position.rotation, 0]}>
-    <Board size={[width / 1000, height / 1000, depth / 1000]} at={[0, height / 2000, 0]} map={map} color={color ?? material.color} roughness={material.roughness} />
-  </group>;
+  const material = FINISHES.find((item) => item.id === finish)!;
+  return (
+    <group
+      name={id}
+      onPointerDown={onPointerDown}
+      position={[position.x / 1000, position.y / 1000, position.z / 1000]}
+      rotation={[0, position.rotation, 0]}
+    >
+      <Board
+        size={[width / 1000, height / 1000, depth / 1000]}
+        at={[0, height / 2000, 0]}
+        map={map}
+        color={color ?? materialDefinition?.baseColor ?? material.color}
+        roughness={materialDefinition?.roughness ?? material.roughness}
+        metalness={materialDefinition?.metalness ?? 0}
+      />
+    </group>
+  );
 }
 /** Used verbatim by the editor and room planner; scale is always 1. */
 export function KitchenAssemblyMesh({
   kitchen,
   centered = false,
   open = false,
+  materialDefinitions,
 }: {
   kitchen: ModularKitchen;
   centered?: boolean;
   open?: boolean;
+  materialDefinitions?: Record<string, KitchenMaterialDefinition>;
 }) {
   const bounds = kitchenEnvelope(kitchen);
   return (
@@ -312,10 +435,17 @@ export function KitchenAssemblyMesh({
           ]}
           rotation={[0, c.position.rotation, 0]}
         >
-          <CabinetBody cabinet={c} open={open} />
+          <CabinetBody
+            cabinet={c}
+            open={open}
+            materialDefinitions={materialDefinitions}
+          />
         </group>
       ))}
-      <KitchenTops kitchen={kitchen} />
+      <KitchenTops
+        kitchen={kitchen}
+        materialDefinitions={materialDefinitions}
+      />
     </group>
   );
 }

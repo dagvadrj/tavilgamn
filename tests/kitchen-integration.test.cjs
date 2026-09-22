@@ -46,10 +46,12 @@ test("kitchen admin upload pins the correct category and protects its R2 handoff
   assert.match(completeRoute, /if \(auth\.error\)/);
 });
 
-test("Supabase materials are normalized and only recolor cabinet GLB surfaces", () => {
-  const { normalizeKitchenMaterials, isKitchenMaterialTarget } = loadSource(
-    "src/lib/kitchenMaterials.ts",
-  );
+test("Supabase materials are normalized and classify cabinet GLB surfaces", () => {
+  const {
+    normalizeKitchenMaterials,
+    isKitchenMaterialTarget,
+    kitchenCabinetSurface,
+  } = loadSource("src/lib/kitchenMaterials.ts");
   const materials = normalizeKitchenMaterials([
     {
       id: "oak",
@@ -82,6 +84,8 @@ test("Supabase materials are normalized and only recolor cabinet GLB surfaces", 
     },
   ]);
   assert.equal(isKitchenMaterialTarget("CABINET_FRONT", "Oak"), true);
+  assert.equal(kitchenCabinetSurface("CABINET_FRONT", "Oak"), "front");
+  assert.equal(kitchenCabinetSurface("Cabinet_Box", "Oak"), "carcass");
   assert.equal(isKitchenMaterialTarget("Appliance-Oven", "Steel"), false);
   assert.equal(isKitchenMaterialTarget("Door", "Glass"), false);
 
@@ -93,7 +97,8 @@ test("Supabase materials are normalized and only recolor cabinet GLB surfaces", 
   const scene = fs.readFileSync("src/three/ModularKitchenScene.tsx", "utf8");
   assert.match(route, /normalizeKitchenMaterials\(materials\.data\)/);
   assert.match(planner, /materialDefinitions=\{materialDefinitions\}/);
-  assert.match(scene, /materialOverride=\{material \?/);
+  assert.match(scene, /frontMaterial=\{frontMaterial\}/);
+  assert.match(scene, /carcassMaterial=\{carcassMaterial\}/);
 });
 
 test("admin kitchen materials validate input and use the existing protected table", () => {
@@ -251,7 +256,8 @@ test("admin texture upload is protected and GLB materials receive cached texture
   assert.match(component, /\/api\/admin\/kitchen-material-textures/);
   assert.match(glb, /acquireKitchenMaterialTextures/);
   assert.match(glb, /material\.normalMap = textures\.normal/);
-  assert.match(scene, /texturePaths: material\.texturePaths/);
+  assert.match(scene, /frontMaterial=\{frontMaterial\}/);
+  assert.match(scene, /carcassMaterial=\{carcassMaterial\}/);
 });
 
 test("texture upload merges the new Cloudinary URL into the existing material paths", async () => {
@@ -372,10 +378,13 @@ test("unified design preserves appearance and IDs across four layouts and JSON r
     assert.equal(schema(c), true, JSON.stringify(schema.errors));
   const styled = model.applyKitchenAppearance(base, null, {
     finish: "walnut",
+    frontMaterialId: "merchant_front_01",
+    carcassMaterialId: "merchant_carcass_01",
     handleStyle: "knob",
     color: "#123456",
     frontStyle: "shaker",
   });
+  styled.countertop.materialId = "merchant_countertop_01";
   const selected = model.applyKitchenAppearance(styled, ["base-1"], {
     color: "#ffffff",
   });
@@ -394,9 +403,22 @@ test("unified design preserves appearance and IDs across four layouts and JSON r
       next,
     );
     assert.deepEqual(
-      next.cabinets.map((c) => [c.id, c.finish, c.handleStyle]),
-      selected.cabinets.map((c) => [c.id, c.finish, c.handleStyle]),
+      next.cabinets.map((c) => [
+        c.id,
+        c.finish,
+        c.frontMaterialId,
+        c.carcassMaterialId,
+        c.handleStyle,
+      ]),
+      selected.cabinets.map((c) => [
+        c.id,
+        c.finish,
+        c.frontMaterialId,
+        c.carcassMaterialId,
+        c.handleStyle,
+      ]),
     );
+    assert.equal(next.countertop.materialId, "merchant_countertop_01");
     for (const c of next.cabinets)
       assert.equal(
         c.width,
@@ -419,6 +441,8 @@ test("JSON rejects invalid sizes, overlaps, duplicate IDs and unsupported applia
     (k) => (k.cabinets[1].opening = "sink"),
     (k) => (k.cabinets[0].position.rotation = NaN),
     (k) => (k.countertop.finish = "invalid"),
+    (k) => (k.cabinets[0].frontMaterialId = "../bad"),
+    (k) => (k.countertop.materialId = "Bad ID"),
     (k) => (k.cabinets = []),
   ]) {
     const next = model.cloneKitchen(k);

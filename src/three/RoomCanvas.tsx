@@ -14,7 +14,13 @@ import {
   Edges,
   useCursor,
 } from "@react-three/drei";
-import type { RoomDesign, PlacedFurniture, RoomShape, RoomWall, RoomOpening } from "@/lib/types";
+import type {
+  RoomDesign,
+  PlacedFurniture,
+  RoomShape,
+  RoomWall,
+  RoomOpening,
+} from "@/lib/types";
 import { getRoomGeometry } from "@/lib/roomGeometry";
 import { RoomStructure, RoomLighting } from "./RoomStructure";
 import { FurnitureMesh } from "./FurnitureMesh";
@@ -27,6 +33,10 @@ import type { Measurement } from "@/lib/furnitureMeasurements";
 import { KitchenAssemblyMesh } from "./KitchenAssemblyMesh";
 import { dimsFor } from "./collision";
 import { FurnitureMeasurements } from "./FurnitureMeasurements";
+import {
+  normalizeKitchenMaterials,
+  type KitchenMaterialDefinition,
+} from "@/lib/kitchenMaterials";
 
 interface RoomCanvasProps {
   selectedWall?: RoomWall | null;
@@ -86,9 +96,40 @@ export function RoomCanvas({
   onPlacementError,
 }: RoomCanvasProps) {
   const [isDraggingPiece, setIsDraggingPiece] = useState(false);
+  const [kitchenMaterials, setKitchenMaterials] = useState<
+    Record<string, KitchenMaterialDefinition>
+  >({});
+  const hasKitchen = design.pieces.some((piece) => piece.kitchen);
+  useEffect(() => {
+    if (!hasKitchen) return;
+    const controller = new AbortController();
+    fetch("/api/kitchen-modules", {
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then(async (response) =>
+        response.ok ? response.json() : Promise.reject(new Error("catalog")),
+      )
+      .then((result) =>
+        setKitchenMaterials(
+          Object.fromEntries(
+            normalizeKitchenMaterials(result.materials).map((material) => [
+              material.id,
+              material,
+            ]),
+          ),
+        ),
+      )
+      .catch((error) => {
+        if (error?.name !== "AbortError") setKitchenMaterials({});
+      });
+    return () => controller.abort();
+  }, [hasKitchen]);
   const bounds = getRoomGeometry(design).bounds;
-  const spanX = bounds.maxX - bounds.minX, spanZ = bounds.maxZ - bounds.minZ;
-  const centerX = (bounds.minX + bounds.maxX) / 2, centerZ = (bounds.minZ + bounds.maxZ) / 2;
+  const spanX = bounds.maxX - bounds.minX,
+    spanZ = bounds.maxZ - bounds.minZ;
+  const centerX = (bounds.minX + bounds.maxX) / 2,
+    centerZ = (bounds.minZ + bounds.maxZ) / 2;
   const roomHeight = design.height ?? 2.7;
   return (
     <Canvas
@@ -125,14 +166,38 @@ export function RoomCanvas({
             }
       }
       className="!h-full !w-full"
-      onPointerMissed={() => { onSelect(null); onSelectOpening?.(null); }}
+      onPointerMissed={() => {
+        onSelect(null);
+        onSelectOpening?.(null);
+      }}
     >
-      <CameraRig view={view} width={spanX} depth={spanZ} height={roomHeight} centerX={centerX} centerZ={centerZ} resetKey={resetKey} />
+      <CameraRig
+        view={view}
+        width={spanX}
+        depth={spanZ}
+        height={roomHeight}
+        centerX={centerX}
+        centerZ={centerZ}
+        resetKey={resetKey}
+      />
       <color attach="background" args={["#F1F0ED"]} />
       <RoomLighting design={design} />
       <Environment resolution={64} frames={1}>
-        <Lightformer form="rect" intensity={1.3} color="#ffffff" scale={[8, 6, 1]} position={[0, 5, -8]} />
-        <Lightformer form="rect" intensity={0.65} color="#fff1db" scale={[6, 6, 1]} position={[-6, 3, 0]} rotation={[0, Math.PI / 2, 0]} />
+        <Lightformer
+          form="rect"
+          intensity={1.3}
+          color="#ffffff"
+          scale={[8, 6, 1]}
+          position={[0, 5, -8]}
+        />
+        <Lightformer
+          form="rect"
+          intensity={0.65}
+          color="#fff1db"
+          scale={[6, 6, 1]}
+          position={[-6, 3, 0]}
+          rotation={[0, Math.PI / 2, 0]}
+        />
       </Environment>
       {customInterior ? (
         <InteriorModel
@@ -143,18 +208,37 @@ export function RoomCanvas({
           onLoaded={customInterior.onLoaded}
         />
       ) : (
-        <RoomStructure design={design} onSelect={onSelect} view={view}
-          selectedWall={selectedWall} onSelectWall={onSelectWall}
-          selectedOpening={selectedOpening} onSelectOpening={onSelectOpening} onUpdateOpening={onUpdateOpening}
-          placementTemplate={placementTemplate} onPlaceOpening={onPlaceOpening} onPlacementError={onPlacementError}
-          onDragChange={setIsDraggingPiece} onEditStart={onEditStart} onEditEnd={onEditEnd} />
+        <RoomStructure
+          design={design}
+          onSelect={onSelect}
+          view={view}
+          selectedWall={selectedWall}
+          onSelectWall={onSelectWall}
+          selectedOpening={selectedOpening}
+          onSelectOpening={onSelectOpening}
+          onUpdateOpening={onUpdateOpening}
+          placementTemplate={placementTemplate}
+          onPlaceOpening={onPlaceOpening}
+          onPlacementError={onPlacementError}
+          onDragChange={setIsDraggingPiece}
+          onEditStart={onEditStart}
+          onEditEnd={onEditEnd}
+        />
       )}
 
       {!customInterior && gridEnabled && (
-        <group position={[centerX, 0, centerZ]}><FloorGrid width={spanX} depth={spanZ} /></group>
+        <group position={[centerX, 0, centerZ]}>
+          <FloorGrid width={spanX} depth={spanZ} />
+        </group>
       )}
-      {!customInterior && showDimensions && !selected && <group position={[centerX, 0, centerZ]}><RoomDimensions width={spanX} depth={spanZ} /></group>}
-      {showDimensions && selected && <FurnitureMeasurements measurements={measurements} view={view} />}
+      {!customInterior && showDimensions && !selected && (
+        <group position={[centerX, 0, centerZ]}>
+          <RoomDimensions width={spanX} depth={spanZ} />
+        </group>
+      )}
+      {showDimensions && selected && (
+        <FurnitureMeasurements measurements={measurements} view={view} />
+      )}
 
       {design.pieces.map((piece) => (
         <DraggablePiece
@@ -171,6 +255,7 @@ export function RoomCanvas({
           measureMode={showDimensions}
           onEditStart={onEditStart}
           onEditEnd={onEditEnd}
+          kitchenMaterials={kitchenMaterials}
         />
       ))}
 
@@ -248,7 +333,9 @@ function CameraRig({
       camera.up.set(0, 0, -1);
       const aspect = size.width / Math.max(size.height, 1);
       const fov = (camera as THREE.PerspectiveCamera).fov || 40;
-      const distance = Math.max(depth + 1.8, (width + 1.8) / aspect) / (2 * Math.tan(THREE.MathUtils.degToRad(fov / 2)));
+      const distance =
+        Math.max(depth + 1.8, (width + 1.8) / aspect) /
+        (2 * Math.tan(THREE.MathUtils.degToRad(fov / 2)));
       camera.position.set(centerX, distance, centerZ + 0.001);
     } else {
       const targetHeight = height * 0.4;
@@ -256,10 +343,18 @@ function CameraRig({
       camera.up.set(0, 1, 0);
       // Fit the entire room, including the far upper corners, into both camera axes.
       const aspect = size.width / Math.max(size.height, 1);
-      const verticalHalfFov = THREE.MathUtils.degToRad(((camera as THREE.PerspectiveCamera).fov || 40) / 2);
+      const verticalHalfFov = THREE.MathUtils.degToRad(
+        ((camera as THREE.PerspectiveCamera).fov || 40) / 2,
+      );
       const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
-      const radius = Math.hypot(width / 2, depth / 2, Math.max(targetHeight, height - targetHeight));
-      const distance = radius / Math.sin(Math.min(verticalHalfFov, horizontalHalfFov)) * 1.08;
+      const radius = Math.hypot(
+        width / 2,
+        depth / 2,
+        Math.max(targetHeight, height - targetHeight),
+      );
+      const distance =
+        (radius / Math.sin(Math.min(verticalHalfFov, horizontalHalfFov))) *
+        1.08;
       const direction = new THREE.Vector3(0.8, 0.68, 0.82).normalize();
       camera.position.copy(target).addScaledVector(direction, distance);
       camera.far = Math.max(300, distance * 4);
@@ -268,11 +363,7 @@ function CameraRig({
     camera.lookAt(target);
     camera.updateProjectionMatrix();
 
-    if (
-      controls &&
-      "target" in controls &&
-      "update" in controls
-    ) {
+    if (controls && "target" in controls && "update" in controls) {
       const orbitControls = controls as {
         target: THREE.Vector3;
         update: () => void;
@@ -281,7 +372,19 @@ function CameraRig({
       orbitControls.target.copy(target);
       orbitControls.update();
     }
-  }, [camera, controls, view, width, depth, height, centerX, centerZ, resetKey, size.width, size.height]);
+  }, [
+    camera,
+    controls,
+    view,
+    width,
+    depth,
+    height,
+    centerX,
+    centerZ,
+    resetKey,
+    size.width,
+    size.height,
+  ]);
 
   return null;
 }
@@ -411,6 +514,7 @@ function DraggablePiece({
   measureMode,
   onEditStart,
   onEditEnd,
+  kitchenMaterials,
 }: {
   piece: PlacedFurniture;
   allPieces: PlacedFurniture[];
@@ -424,6 +528,7 @@ function DraggablePiece({
   measureMode: boolean;
   onEditStart?: () => void;
   onEditEnd?: () => void;
+  kitchenMaterials: Record<string, KitchenMaterialDefinition>;
 }) {
   const [hovered, setHovered] = useState(false);
   const { camera, raycaster, gl } = useThree();
@@ -434,7 +539,11 @@ function DraggablePiece({
   const [dragging, setDragging] = useState(false);
   const [invalid, setInvalid] = useState(false);
 
-  useCursor(hovered || dragging, measureMode ? "crosshair" : dragging ? "grabbing" : "grab", "default");
+  useCursor(
+    hovered || dragging,
+    measureMode ? "crosshair" : dragging ? "grabbing" : "grab",
+    "default",
+  );
 
   useEffect(() => {
     if (!dragging) return;
@@ -459,13 +568,19 @@ function DraggablePiece({
 
   if (!product && !dbModel && !piece.kitchen) return null;
 
-  const dims = piece.kitchen ? dimsFor(piece) : dbModel
-    ? { w: dbModel.dimensionsW, d: dbModel.dimensionsD, h: dbModel.dimensionsH }
-    : {
-        w: product!.dimensions.w,
-        d: product!.dimensions.d,
-        h: product!.dimensions.h,
-      };
+  const dims = piece.kitchen
+    ? dimsFor(piece)
+    : dbModel
+      ? {
+          w: dbModel.dimensionsW,
+          d: dbModel.dimensionsD,
+          h: dbModel.dimensionsH,
+        }
+      : {
+          w: product!.dimensions.w,
+          d: product!.dimensions.d,
+          h: product!.dimensions.h,
+        };
 
   const planeY = 0;
   const intersectFloor = (clientX: number, clientY: number) => {
@@ -484,7 +599,7 @@ function DraggablePiece({
       ref={groupRef}
       position={[piece.x, 0, piece.z]}
       rotation={[0, piece.rotation, 0]}
-      onClick={event => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
       onPointerOver={(event) => {
         event.stopPropagation();
         setHovered(true);
@@ -496,7 +611,10 @@ function DraggablePiece({
         if (event.button !== 0) return;
         event.stopPropagation();
 
-        if (measureMode) { onSelect(piece.instanceId); return; }
+        if (measureMode) {
+          onSelect(piece.instanceId);
+          return;
+        }
         const point = intersectFloor(event.clientX, event.clientY);
         if (!point) return;
         onEditStart?.();
@@ -518,7 +636,12 @@ function DraggablePiece({
           x: p.x + dragOffset.current.x,
           z: p.z + dragOffset.current.z,
         };
-        if (gridEnabled) candidate = { ...candidate, x: Math.round(candidate.x * 4) / 4, z: Math.round(candidate.z * 4) / 4 };
+        if (gridEnabled)
+          candidate = {
+            ...candidate,
+            x: Math.round(candidate.x * 4) / 4,
+            z: Math.round(candidate.z * 4) / 4,
+          };
         if (snapEnabled) candidate = snapToWall(candidate, roomDims);
         const ok = isPlacementValid(candidate, allPieces, roomDims);
         setInvalid(!ok);
@@ -534,7 +657,13 @@ function DraggablePiece({
         (event.target as Element).releasePointerCapture?.(event.pointerId);
       }}
     >
-      {piece.kitchen ? <KitchenAssemblyMesh kitchen={piece.kitchen.design} centered /> : dbModel ? (
+      {piece.kitchen ? (
+        <KitchenAssemblyMesh
+          kitchen={piece.kitchen.design}
+          centered
+          materialDefinitions={kitchenMaterials}
+        />
+      ) : dbModel ? (
         <GLBFurnitureMesh
           modelId={dbModel.fileModelId ?? dbModel.id}
           basePath={`/api/models/files/${dbModel.fileModelId ?? dbModel.id}/`}
@@ -577,4 +706,3 @@ function DraggablePiece({
     </group>
   );
 }
-

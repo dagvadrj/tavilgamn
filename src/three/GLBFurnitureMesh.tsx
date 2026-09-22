@@ -3,7 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import { Edges, Html } from "@react-three/drei";
 import * as THREE from "three";
-import { isKitchenMaterialTarget } from "@/lib/kitchenMaterials";
+import {
+  kitchenCabinetSurface,
+  type KitchenMaterialDefinition,
+} from "@/lib/kitchenMaterials";
 import {
   acquireKitchenMaterialTextures,
   type KitchenMaterialTextureSet,
@@ -24,12 +27,17 @@ export interface GLBFurnitureMeshProps {
   d: number;
   h: number;
   selected?: boolean;
+  /** @deprecated Use frontMaterial and carcassMaterial for kitchen models. */
   materialOverride?: {
     color: string;
     roughness: number;
     metalness: number;
     texturePaths?: Record<string, string>;
   };
+  frontMaterial?: KitchenMaterialDefinition;
+  frontColor?: string;
+  carcassMaterial?: KitchenMaterialDefinition;
+  carcassColor?: string;
   onReady?: () => void;
 }
 type Display = {
@@ -66,6 +74,10 @@ export function GLBFurnitureMesh({
   d,
   h,
   materialOverride,
+  frontMaterial,
+  frontColor,
+  carcassMaterial,
+  carcassColor,
   onReady,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
@@ -78,13 +90,10 @@ export function GLBFurnitureMesh({
   const [retry, setRetry] = useState(0);
   const base = basePath.endsWith("/") ? basePath : `${basePath}/`;
   const key = `${modelId}:${base}${glbFile}`;
-  const overrideColor = materialOverride?.color;
-  const overrideRoughness = materialOverride?.roughness;
-  const overrideMetalness = materialOverride?.metalness;
-  const baseColorTexture = materialOverride?.texturePaths?.baseColor;
-  const normalTexture = materialOverride?.texturePaths?.normal;
-  const roughnessTexture = materialOverride?.texturePaths?.roughness;
-  const metalnessTexture = materialOverride?.texturePaths?.metalness;
+  const front = frontMaterial ?? materialOverride;
+  const carcass = carcassMaterial ?? materialOverride;
+  const frontTexturePaths = front?.texturePaths;
+  const carcassTexturePaths = carcass?.texturePaths;
 
   useEffect(() => {
     let cancelled = false;
@@ -92,19 +101,17 @@ export function GLBFurnitureMesh({
     setDisplay(null);
 
     const lease = acquireModel(gl, base + glbFile);
-    const textureLease = acquireKitchenMaterialTextures({
-      ...(baseColorTexture ? { baseColor: baseColorTexture } : {}),
-      ...(normalTexture ? { normal: normalTexture } : {}),
-      ...(roughnessTexture ? { roughness: roughnessTexture } : {}),
-      ...(metalnessTexture ? { metalness: metalnessTexture } : {}),
-    });
+    const frontTextureLease = acquireKitchenMaterialTextures(frontTexturePaths);
+    const carcassTextureLease =
+      acquireKitchenMaterialTextures(carcassTexturePaths);
     let transferred = false;
 
     const load = async () => {
       try {
-        const [asset, textures] = await Promise.all([
+        const [asset, frontTextures, carcassTextures] = await Promise.all([
           lease.promise,
-          textureLease.promise,
+          frontTextureLease.promise,
+          carcassTextureLease.promise,
         ]);
         if (cancelled) return;
         const cloned = cloneModel(asset);
@@ -121,16 +128,35 @@ export function GLBFurnitureMesh({
               clonedMaterial.normalMap = null;
               clonedMaterial.aoMap = null;
               clonedMaterial.side = THREE.DoubleSide;
-              if (
-                overrideColor !== undefined &&
-                overrideRoughness !== undefined &&
-                overrideMetalness !== undefined &&
-                isKitchenMaterialTarget(object.name, clonedMaterial.name)
-              ) {
-                clonedMaterial.color.set(overrideColor);
-                clonedMaterial.roughness = overrideRoughness;
-                clonedMaterial.metalness = overrideMetalness;
-                applyTextureSet(clonedMaterial, textures);
+              const surface = kitchenCabinetSurface(
+                object.name,
+                clonedMaterial.name,
+              );
+              const definition =
+                surface === "front"
+                  ? front
+                  : surface === "carcass"
+                    ? carcass
+                    : undefined;
+              const color =
+                surface === "front"
+                  ? frontColor
+                  : surface === "carcass"
+                    ? carcassColor
+                    : undefined;
+              if (surface && definition) {
+                clonedMaterial.color.set(
+                  color ??
+                    ("baseColor" in definition
+                      ? definition.baseColor
+                      : definition.color),
+                );
+                clonedMaterial.roughness = definition.roughness;
+                clonedMaterial.metalness = definition.metalness;
+                applyTextureSet(
+                  clonedMaterial,
+                  surface === "front" ? frontTextures : carcassTextures,
+                );
               }
               clonedMaterial.needsUpdate = true;
             }
@@ -144,7 +170,8 @@ export function GLBFurnitureMesh({
           key,
           asset: cloned,
           release: () => {
-            textureLease.release();
+            frontTextureLease.release();
+            carcassTextureLease.release();
             lease.release();
           },
         };
@@ -159,7 +186,8 @@ export function GLBFurnitureMesh({
         }
       } finally {
         if (!transferred) {
-          textureLease.release();
+          frontTextureLease.release();
+          carcassTextureLease.release();
           lease.release();
         }
       }
@@ -174,13 +202,12 @@ export function GLBFurnitureMesh({
     glbFile,
     key,
     retry,
-    overrideColor,
-    overrideRoughness,
-    overrideMetalness,
-    baseColorTexture,
-    normalTexture,
-    roughnessTexture,
-    metalnessTexture,
+    front,
+    carcass,
+    frontColor,
+    carcassColor,
+    frontTexturePaths,
+    carcassTexturePaths,
   ]);
 
   useEffect(() => {

@@ -35,6 +35,9 @@ export interface ModularCabinet {
   autoElevation: boolean;
   fitToCeiling: boolean;
   finish?: Finish;
+  /** Catalog material ids. Legacy finish remains the fallback for older saved designs. */
+  frontMaterialId?: string;
+  carcassMaterialId?: string;
   frontStyle?: FrontStyle;
   opening?: "doors" | "drawers" | "open" | "sink" | "hob" | "oven" | "hood" | "refrigerator";
   hoodMount?: HoodMount;
@@ -45,7 +48,7 @@ export interface ModularCabinet {
 }
 export interface KitchenRoom { width: number; depth: number; height: number }
 export interface KitchenWall { id: string; start: Point2; end: Point2; inward: Point2 }
-export interface CountertopSettings { thickness: number; frontOverhang: number; material: "laminate" | "granite" | "wood"; finish?: Finish; color?: string }
+export interface CountertopSettings { thickness: number; frontOverhang: number; material: "laminate" | "granite" | "wood"; finish?: Finish; materialId?: string; color?: string }
 export interface Countertop extends CountertopSettings {
   id: string; cabinetIds: string[]; width: number; depth: number; position: CabinetPose;
 }

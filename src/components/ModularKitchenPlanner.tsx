@@ -389,15 +389,14 @@ export function ModularKitchenPlanner({
   const selectableMaterials = materialCatalog.length
     ? materialCatalog
     : FALLBACK_MATERIALS;
-  const frontMaterials = selectableMaterials.filter(
-    (material) =>
-      KNOWN_FINISH_IDS.has(material.id) &&
-      ["general", "front", "carcass"].includes(material.surfaceKind),
+  const frontMaterials = selectableMaterials.filter((material) =>
+    ["general", "front"].includes(material.surfaceKind),
   );
-  const countertopMaterials = selectableMaterials.filter(
-    (material) =>
-      KNOWN_FINISH_IDS.has(material.id) &&
-      ["general", "countertop"].includes(material.surfaceKind),
+  const carcassMaterials = selectableMaterials.filter((material) =>
+    ["general", "carcass"].includes(material.surfaceKind),
+  );
+  const countertopMaterials = selectableMaterials.filter((material) =>
+    ["general", "countertop"].includes(material.surfaceKind),
   );
   const materialDefinitions = useMemo(
     () =>
@@ -433,6 +432,17 @@ export function ModularKitchenPlanner({
   const appearance = design.cabinets.find(
     (c) => !appearanceIds || appearanceIds.includes(c.id),
   );
+  const legacyAppearanceMaterialId =
+    appearance?.finish ??
+    (appearance?.material === "wood" ? "oak" : appearance?.material);
+  const countertopMaterialId =
+    design.countertop.materialId ??
+    design.countertop.finish ??
+    (design.countertop.material === "wood"
+      ? "oak"
+      : design.countertop.material === "granite"
+        ? "marble"
+        : "matte");
   function style(patch: Parameters<typeof applyKitchenAppearance>[2]) {
     commit(applyKitchenAppearance(design, appearanceIds, patch));
   }
@@ -1474,20 +1484,52 @@ export function ModularKitchenPlanner({
                   <option value="selected">Сонгосон шүүгээ</option>
                 </select>
               </label>
+              <p className="kp-help">Фасад</p>
               <div
                 className="km-finishes"
                 role="group"
-                aria-label="Хаалганы материал"
+                aria-label="Фасадны материал"
               >
                 {frontMaterials.map((f) => (
                   <button
                     type="button"
                     key={f.id}
                     disabled={!appearance}
-                    aria-pressed={appearance?.finish === f.id}
-                    onClick={() =>
-                      style({ finish: f.id as Finish, color: f.baseColor })
+                    aria-pressed={
+                      (appearance?.frontMaterialId ??
+                        legacyAppearanceMaterialId) === f.id
                     }
+                    onClick={() =>
+                      style({
+                        frontMaterialId: f.id,
+                        color: f.baseColor,
+                        ...(KNOWN_FINISH_IDS.has(f.id)
+                          ? { finish: f.id as Finish }
+                          : {}),
+                      })
+                    }
+                  >
+                    <span style={{ background: f.baseColor }} />
+                    {f.name}
+                  </button>
+                ))}
+              </div>
+              <p className="kp-help">Шүүгээний их бие</p>
+              <div
+                className="km-finishes"
+                role="group"
+                aria-label="Шүүгээний их биеийн материал"
+              >
+                {carcassMaterials.map((f) => (
+                  <button
+                    type="button"
+                    key={f.id}
+                    disabled={!appearance}
+                    aria-pressed={
+                      (appearance?.carcassMaterialId ??
+                        legacyAppearanceMaterialId) === f.id
+                    }
+                    onClick={() => style({ carcassMaterialId: f.id })}
                   >
                     <span style={{ background: f.baseColor }} />
                     {f.name}
@@ -1593,7 +1635,7 @@ export function ModularKitchenPlanner({
                   <button
                     type="button"
                     key={f.id}
-                    aria-pressed={design.countertop.finish === f.id}
+                    aria-pressed={countertopMaterialId === f.id}
                     onClick={() =>
                       commit({
                         ...design,
@@ -1609,12 +1651,18 @@ export function ModularKitchenPlanner({
                         })),
                         countertop: {
                           ...design.countertop,
-                          finish: f.id as Finish,
-                          material: ["oak", "walnut"].includes(f.id)
-                            ? "wood"
-                            : f.id === "marble"
-                              ? "granite"
-                              : "laminate",
+                          materialId: f.id,
+                          color: f.baseColor,
+                          ...(KNOWN_FINISH_IDS.has(f.id)
+                            ? {
+                                finish: f.id as Finish,
+                                material: ["oak", "walnut"].includes(f.id)
+                                  ? ("wood" as const)
+                                  : f.id === "marble"
+                                    ? ("granite" as const)
+                                    : ("laminate" as const),
+                              }
+                            : {}),
                         },
                       })
                     }

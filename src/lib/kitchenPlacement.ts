@@ -174,7 +174,10 @@ function subtractBoard<T extends { id: string; width: number; depth: number; pos
 export function fitCountertops(kitchen: ModularKitchen): Countertop[] {
   const surface = (c: ModularCabinet) => {
     const component = c.components?.find(item => item.type === "worktop");
-    return { finish: ((component?.finish ?? component?.model) as Countertop["finish"]) ?? kitchen.countertop.finish, color: component?.color };
+    return {
+      finish: ((component?.finish ?? component?.model) as Countertop["finish"]) ?? kitchen.countertop.finish,
+      color: component?.color ?? kitchen.countertop.color,
+    };
   };
   const remaining = new Set(kitchen.cabinets.filter(c => c.type === "base"));
   const tops: Countertop[] = [];

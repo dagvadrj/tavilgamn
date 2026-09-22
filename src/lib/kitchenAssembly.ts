@@ -48,7 +48,7 @@ export function kitchenEnvelope(kitchen: ModularKitchen) {
     w: (maxX - minX) / 1000, d: (maxZ - minZ) / 1000, h: h / 1000 };
 }
 export function applyKitchenAppearance(kitchen: ModularKitchen, ids: string[] | null,
-  patch: Partial<Pick<ModularCabinet, "finish" | "color" | "handleStyle" | "frontStyle">>): ModularKitchen {
+  patch: Partial<Pick<ModularCabinet, "finish" | "frontMaterialId" | "carcassMaterialId" | "color" | "handleStyle" | "frontStyle">>): ModularKitchen {
   return { ...kitchen, cabinets: kitchen.cabinets.map(c => ids && !ids.includes(c.id) ? c : {
     ...c, ...patch, ...(c.components ? { components: c.components.map(item => {
       if (["door-front", "drawer-front"].includes(item.type)) return { ...item,
@@ -158,28 +158,35 @@ export function parseKitchen(value: unknown): ModularKitchen {
   if (!Number.isInteger(raw.wallClearance) || raw.wallClearance < 450 || raw.wallClearance > 600 || ![20, 28, 30, 38, 40].includes(raw.countertop.thickness) || !Number.isInteger(raw.countertop.frontOverhang) || raw.countertop.frontOverhang < 0 || raw.countertop.frontOverhang > 100 || !["laminate", "granite", "wood"].includes(raw.countertop.material)) throw new Error("Тавцангийн тохиргоо буруу байна.");
   if (raw.layout !== undefined && !["straight", "l-left", "l-right", "double-side"].includes(raw.layout)) throw new Error("Гал тогооны байрлал буруу байна.");
   const finishes = FINISHES.map(f => f.id), ids = new Set<string>();
+  const materialId = /^[a-z0-9][a-z0-9_-]{0,63}$/;
   const cabinets = raw.cabinets.map(c => {
     if (!c || typeof c.id !== "string" || !c.id.length || c.id.length > 80 || ids.has(c.id) || !c.position || ![c.position.x, c.position.y, c.position.z, c.position.rotation].every(n => Number.isFinite(n) && Math.abs(n) <= 100000) || typeof c.autoElevation !== "boolean" || typeof c.fitToCeiling !== "boolean") throw new Error("Шүүгээний мэдээлэл буруу байна.");
     ids.add(c.id);
     const error = validateCabinet(c); if (error) throw new Error(error);
     if ((c.finish !== undefined && !finishes.includes(c.finish)) || (c.frontStyle !== undefined && !["flat", "shaker", "glass"].includes(c.frontStyle)) || (c.opening !== undefined && !["doors", "drawers", "open", "sink", "hob", "oven", "hood", "refrigerator"].includes(c.opening))) throw new Error("Хаалганы тохиргоо буруу байна.");
+    if ((c.frontMaterialId !== undefined && !materialId.test(c.frontMaterialId)) ||
+      (c.carcassMaterialId !== undefined && !materialId.test(c.carcassMaterialId))) throw new Error("Шүүгээний материалын код буруу байна.");
     if ((c.corner !== undefined && typeof c.corner !== "boolean") || (c.cornerSide !== undefined && !["left", "right"].includes(c.cornerSide)) ||
       (c.hoodMount !== undefined && !["under-cabinet", "wall"].includes(c.hoodMount)) || (c.refrigeratorStyle !== undefined && !["top-bottom", "side-by-side"].includes(c.refrigeratorStyle))) throw new Error("Шүүгээний нэмэлт тохиргоо буруу байна.");
     if (c.opening === "sink" && (c.type !== "base" || c.width < 600)) throw new Error("Угаалтуур 600 мм-ээс өргөн доод шүүгээнд байрлана.");
     if (c.variantId !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(c.variantId)) throw new Error("Шүүгээний 3D variant ID буруу байна.");
     return { id: c.id, ...(c.variantId ? { variantId: c.variantId } : {}), type: c.type, width: c.width, height: c.height, depth: c.depth, doorCount: c.doorCount, drawerCount: c.drawerCount, handleStyle: c.handleStyle, material: c.material, color: c.color,
       position: { x: c.position.x, y: c.position.y, z: c.position.z, rotation: c.position.rotation }, autoElevation: c.autoElevation, fitToCeiling: c.fitToCeiling,
-      ...(c.finish ? { finish: c.finish as Finish } : {}), ...(c.frontStyle ? { frontStyle: c.frontStyle as FrontStyle } : {}), ...(c.opening ? { opening: c.opening } : {}),
+      ...(c.finish ? { finish: c.finish as Finish } : {}), ...(c.frontMaterialId ? { frontMaterialId: c.frontMaterialId } : {}),
+      ...(c.carcassMaterialId ? { carcassMaterialId: c.carcassMaterialId } : {}),
+      ...(c.frontStyle ? { frontStyle: c.frontStyle as FrontStyle } : {}), ...(c.opening ? { opening: c.opening } : {}),
       ...(c.corner !== undefined ? { corner: c.corner } : {}), ...(c.cornerSide ? { cornerSide: c.cornerSide } : {}),
       ...(c.hoodMount ? { hoodMount: c.hoodMount } : {}), ...(c.refrigeratorStyle ? { refrigeratorStyle: c.refrigeratorStyle } : {}),
       ...(c.components !== undefined ? { components: parseComponents(c) } : {}) };
   });
   if (raw.countertop.finish !== undefined && !finishes.includes(raw.countertop.finish)) throw new Error("Тавцангийн материал буруу байна.");
+  if (raw.countertop.materialId !== undefined && !materialId.test(raw.countertop.materialId)) throw new Error("Тавцангийн материалын код буруу байна.");
   if (raw.countertop.color !== undefined && !/^#[0-9a-f]{6}$/i.test(raw.countertop.color)) throw new Error("Тавцангийн өнгө буруу байна.");
   const backsplashSettings = parseBacksplashSettings(raw.backsplashSettings, raw.room);
   const next: ModularKitchen = { version: 1, room: { width: raw.room.width, depth: raw.room.depth, height: raw.room.height }, cabinets, wallClearance: raw.wallClearance,
     countertop: { thickness: raw.countertop.thickness, frontOverhang: raw.countertop.frontOverhang, material: raw.countertop.material,
-      ...(raw.countertop.finish ? { finish: raw.countertop.finish } : {}), ...(raw.countertop.color ? { color: raw.countertop.color } : {}) }, backsplash: raw.backsplash === true,
+      ...(raw.countertop.finish ? { finish: raw.countertop.finish } : {}), ...(raw.countertop.materialId ? { materialId: raw.countertop.materialId } : {}),
+      ...(raw.countertop.color ? { color: raw.countertop.color } : {}) }, backsplash: raw.backsplash === true,
     ...(raw.layout ? { layout: raw.layout } : {}), ...(backsplashSettings ? { backsplashSettings } : {}) };
   const issue = placementIssues(next).find(i => i.severity === "error"); if (issue) throw new Error(issue.message);
   return next;
