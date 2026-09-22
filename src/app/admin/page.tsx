@@ -13,6 +13,7 @@ import { AdminHeader } from "@/components/AdminHeader";
 import { stockLabel } from "@/lib/inventory";
 import { AdminAnalytics } from "@/components/AdminAnalytics";
 import { AdminModelRequests } from "@/components/AdminModelRequests";
+import { AdminKitchenDesigns } from "@/components/AdminKitchenDesigns";
 import {
   Mail,
   Box,
@@ -143,6 +144,8 @@ export default function AdminPage() {
               }}
             />
           )}
+
+          {tab === "kitchens" && <AdminKitchenDesigns owner={user.id} />}
         </div>
 
         <footer className="admin-footer">
@@ -181,6 +184,7 @@ const CATEGORY_OPTIONS = [
   { id: "office", name: "Оффисын тавилга" },
   { id: "tv-stand", name: "Телевизийн тавиур" },
   { id: "bookshelf", name: "Номын тавиур" },
+  { id: "kitchen-cabinet", name: "Гал тогооны шүүгээ" },
 ];
 
 const MATERIAL_OPTIONS = [

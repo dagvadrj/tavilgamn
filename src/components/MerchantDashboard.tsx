@@ -37,6 +37,7 @@ import { useCatalogStore } from "@/store/catalog";
 import { MerchantOrders } from "./MerchantOrders";
 import { MerchantShell } from "./MerchantShell";
 import type { MerchantTab } from "./MerchantSidebar";
+import { MerchantKitchenDesigns } from "./MerchantKitchenDesigns";
 
 const blankProduct = (): MerchantProduct => ({
   id: "new",
@@ -145,9 +146,7 @@ function MerchantWorkspace({
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
-  const [tab, setTab] = useState<"overview" | "store" | "products" | "orders">(
-    "overview",
-  );
+  const [tab, setTab] = useState<MerchantTab>("overview");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -246,6 +245,10 @@ function MerchantWorkspace({
           {tab === "products" && store && <MerchantProducts owner={owner} />}
 
           {tab === "orders" && store && <MerchantOrders owner={owner} />}
+
+          {tab === "kitchens" && store && (
+            <MerchantKitchenDesigns owner={owner} />
+          )}
         </>
       )}
     </MerchantShell>

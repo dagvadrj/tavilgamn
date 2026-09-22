@@ -11,6 +11,7 @@ import {
   Settings,
   Users,
   Store,
+  CookingPot,
 } from "lucide-react";
 
 export const ADMIN_TABS = [
@@ -55,6 +56,12 @@ export const ADMIN_TABS = [
     label: "3D загварууд",
     short: "3D",
     icon: Layers3,
+  },
+  {
+    id: "kitchens",
+    label: "Гал тогооны загварууд",
+    short: "Гал тогоо",
+    icon: CookingPot,
   },
 ] as const;
 

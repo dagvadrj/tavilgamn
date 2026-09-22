@@ -8,9 +8,15 @@ import {
   ShoppingBag,
   Store,
   ArrowUpRight,
+  CookingPot,
 } from "lucide-react";
 
-export type MerchantTab = "overview" | "products" | "orders" | "store";
+export type MerchantTab =
+  | "overview"
+  | "products"
+  | "orders"
+  | "kitchens"
+  | "store";
 
 const ITEMS: {
   id: MerchantTab;
@@ -20,6 +26,7 @@ const ITEMS: {
   { id: "overview", label: "Тойм", icon: LayoutDashboard },
   { id: "products", label: "Бараа", icon: Package },
   { id: "orders", label: "Захиалга", icon: ShoppingBag },
+  { id: "kitchens", label: "Гал тогоо", icon: CookingPot },
   { id: "store", label: "Дэлгүүр", icon: Store },
 ];
 
@@ -45,7 +52,10 @@ export function MerchantSidebar({
         {ITEMS.map((item) => {
           const Icon = item.icon;
           const disabled =
-            !hasStore && (item.id === "products" || item.id === "orders");
+            !hasStore &&
+            (item.id === "products" ||
+              item.id === "orders" ||
+              item.id === "kitchens");
 
           return (
             <button

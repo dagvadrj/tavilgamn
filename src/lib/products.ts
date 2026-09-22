@@ -45,6 +45,11 @@ export const CATEGORIES: { id: Category; name: string; image: string }[] = [
     image:
       "https://images.unsplash.com/photo-1594620302200-9a762244a156?auto=format&fit=crop&w=1200&q=80",
   },
+  {
+    id: "kitchen-cabinet",
+    name: "Гал тогооны шүүгээ",
+    image: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=80",
+  },
 ];
 
 export const CATEGORY_LABEL: Record<Category, string> = {
@@ -55,6 +60,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   bed: "Ор",
   "tv-stand": "Зурагтын тавиур",
   bookshelf: "Номын тавиур",
+  "kitchen-cabinet": "Гал тогооны шүүгээ",
 };
 
 export function priceFor(
