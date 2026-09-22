@@ -44,7 +44,7 @@ import {
   parseKitchen,
   replaceCorner,
 } from "@/lib/kitchenAssembly";
-import { FINISHES, type FrontStyle } from "@/lib/kitchen";
+import { FINISHES, type Finish, type FrontStyle } from "@/lib/kitchen";
 import { useAuth } from "@/store/auth";
 import { useKitchens } from "@/store/kitchens";
 import type { Group } from "three";
@@ -68,6 +68,25 @@ import {
   type KitchenCatalogModule,
   type KitchenCatalogVariant,
 } from "@/lib/kitchenModuleCatalog";
+import {
+  normalizeKitchenMaterials,
+  type KitchenMaterialDefinition,
+} from "@/lib/kitchenMaterials";
+
+const FALLBACK_MATERIALS: KitchenMaterialDefinition[] = FINISHES.map(
+  (finish) => ({
+    id: finish.id,
+    name: finish.name,
+    surfaceKind: (["marble", "concrete"] as string[]).includes(finish.id)
+      ? "countertop"
+      : "general",
+    baseColor: finish.color,
+    roughness: finish.roughness,
+    metalness: 0,
+    texturePaths: {},
+  }),
+);
+const KNOWN_FINISH_IDS = new Set<string>(FINISHES.map((finish) => finish.id));
 
 const Scene = dynamic(
   () =>
@@ -226,6 +245,9 @@ export function ModularKitchenPlanner({
   const [moduleCatalog, setModuleCatalog] = useState<KitchenCatalogModule[]>(
     [],
   );
+  const [materialCatalog, setMaterialCatalog] = useState<
+    KitchenMaterialDefinition[]
+  >([]);
   const [exportRoot, setExportRoot] = useState<Group | null>(null);
   const [viewKey, setViewKey] = useState(0);
   const [scope, setScope] = useState<"all" | "base" | "wall" | "selected">(
@@ -242,11 +264,15 @@ export function ModularKitchenPlanner({
       .then(async (response) =>
         response.ok ? response.json() : Promise.reject(new Error("catalog")),
       )
-      .then((result) =>
-        setModuleCatalog(Array.isArray(result.modules) ? result.modules : []),
-      )
+      .then((result) => {
+        setModuleCatalog(Array.isArray(result.modules) ? result.modules : []);
+        setMaterialCatalog(normalizeKitchenMaterials(result.materials));
+      })
       .catch((error) => {
-        if (error?.name !== "AbortError") setModuleCatalog([]);
+        if (error?.name !== "AbortError") {
+          setModuleCatalog([]);
+          setMaterialCatalog([]);
+        }
       });
     return () => controller.abort();
   }, [active]);
@@ -359,6 +385,26 @@ export function ModularKitchenPlanner({
         ),
       ),
     [moduleCatalog],
+  );
+  const selectableMaterials = materialCatalog.length
+    ? materialCatalog
+    : FALLBACK_MATERIALS;
+  const frontMaterials = selectableMaterials.filter(
+    (material) =>
+      KNOWN_FINISH_IDS.has(material.id) &&
+      ["general", "front", "carcass"].includes(material.surfaceKind),
+  );
+  const countertopMaterials = selectableMaterials.filter(
+    (material) =>
+      KNOWN_FINISH_IDS.has(material.id) &&
+      ["general", "countertop"].includes(material.surfaceKind),
+  );
+  const materialDefinitions = useMemo(
+    () =>
+      Object.fromEntries(
+        selectableMaterials.map((material) => [material.id, material]),
+      ),
+    [selectableMaterials],
   );
   const matchingVariants = useMemo(() => {
     if (!selected) return [] as KitchenCatalogVariant[];
@@ -872,6 +918,7 @@ export function ModularKitchenPlanner({
                   onEnd={() => finish()}
                   onCancel={() => finish(true)}
                   variantModels={variantModels}
+                  materialDefinitions={materialDefinitions}
                 />
               )}
             </div>
@@ -1432,15 +1479,17 @@ export function ModularKitchenPlanner({
                 role="group"
                 aria-label="Хаалганы материал"
               >
-                {FINISHES.map((f) => (
+                {frontMaterials.map((f) => (
                   <button
                     type="button"
                     key={f.id}
                     disabled={!appearance}
                     aria-pressed={appearance?.finish === f.id}
-                    onClick={() => style({ finish: f.id, color: f.color })}
+                    onClick={() =>
+                      style({ finish: f.id as Finish, color: f.baseColor })
+                    }
                   >
-                    <span style={{ background: f.color }} />
+                    <span style={{ background: f.baseColor }} />
                     {f.name}
                   </button>
                 ))}
@@ -1540,7 +1589,7 @@ export function ModularKitchenPlanner({
                 role="group"
                 aria-label="Тавцангийн материал"
               >
-                {FINISHES.map((f) => (
+                {countertopMaterials.map((f) => (
                   <button
                     type="button"
                     key={f.id}
@@ -1560,7 +1609,7 @@ export function ModularKitchenPlanner({
                         })),
                         countertop: {
                           ...design.countertop,
-                          finish: f.id,
+                          finish: f.id as Finish,
                           material: ["oak", "walnut"].includes(f.id)
                             ? "wood"
                             : f.id === "marble"
@@ -1570,7 +1619,7 @@ export function ModularKitchenPlanner({
                       })
                     }
                   >
-                    <span style={{ background: f.color }} />
+                    <span style={{ background: f.baseColor }} />
                     {f.name}
                   </button>
                 ))}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readKitchenModuleCatalog } from "@/lib/kitchenModuleCatalogServer";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { normalizeKitchenMaterials } from "@/lib/kitchenMaterials";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export async function GET() {
       db.from("material_definitions").select("id,name,surface_kind,base_color,roughness,metalness,texture_paths").eq("active", true).order("name"),
     ]);
     if (materials.error) throw materials.error;
-    return NextResponse.json({ modules, materials: materials.data ?? [] }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ modules, materials: normalizeKitchenMaterials(materials.data) }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "Kitchen catalog ачаалж чадсангүй." }, { status: 503 });
   }

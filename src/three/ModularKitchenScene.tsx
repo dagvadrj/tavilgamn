@@ -16,6 +16,7 @@ import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import { fitBacksplashes } from "@/lib/kitchenBacksplash";
 import type { KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
+import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 
 export interface ModularSceneProps {
   exportRoot?: (root: Group | null) => void;
@@ -29,6 +30,7 @@ export interface ModularSceneProps {
   onEnd: () => void;
   onCancel: () => void;
   variantModels?: Record<string, KitchenCatalogVariant>;
+  materialDefinitions?: Record<string, KitchenMaterialDefinition>;
 }
 function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
   const { camera, size } = useThree();
@@ -218,65 +220,84 @@ function Scene(props: ModularSceneProps) {
           if (drag.current?.pointerId === event.pointerId) finish(true);
         }}
       >
-        {kitchen.cabinets.map((cabinet) => (
-          <group
-            key={cabinet.id}
-            name={`Cabinet-${cabinet.id}`}
-            userData={{ cabinetId: cabinet.id, cabinetType: cabinet.type }}
-            position={[
-              cabinet.position.x / 1000,
-              cabinet.position.y / 1000,
-              cabinet.position.z / 1000,
-            ]}
-            rotation={[0, cabinet.position.rotation, 0]}
-            onPointerDown={(event) => start(event, cabinet)}
-            onPointerMove={move}
-            onPointerUp={(event) => {
-              if (drag.current?.pointerId === event.pointerId) {
-                event.stopPropagation();
-                finish(false);
-              }
-            }}
-            onPointerCancel={(event) => {
-              if (drag.current?.pointerId === event.pointerId) finish(true);
-            }}
-          >
-            {cabinet.variantId &&
-            props.variantModels?.[cabinet.variantId]?.glbFile ? (
-              <GLBFurnitureMesh
-                modelId={cabinet.variantId}
-                basePath={`/api/models/files/${cabinet.variantId}`}
-                glbFile={props.variantModels[cabinet.variantId].glbFile!}
-                w={cabinet.width / 1000}
-                h={cabinet.height / 1000}
-                d={cabinet.depth / 1000}
-              />
-            ) : (
-              <CabinetBody cabinet={cabinet} open={props.open} />
-            )}
-            {(selectedId === cabinet.id || invalid.has(cabinet.id)) && (
-              <mesh
-                userData={{ exportExclude: true }}
-                raycast={() => {}}
-                position={[0, cabinet.height / 2000, 0]}
-              >
-                <boxGeometry
-                  args={[
-                    cabinet.width / 1000 + 0.003,
-                    cabinet.height / 1000 + 0.003,
-                    cabinet.depth / 1000 + 0.003,
-                  ]}
+        {kitchen.cabinets.map((cabinet) => {
+          const materialId =
+            cabinet.finish ??
+            (cabinet.material === "wood" ? "oak" : cabinet.material);
+          const material = props.materialDefinitions?.[materialId];
+          return (
+            <group
+              key={cabinet.id}
+              name={`Cabinet-${cabinet.id}`}
+              userData={{ cabinetId: cabinet.id, cabinetType: cabinet.type }}
+              position={[
+                cabinet.position.x / 1000,
+                cabinet.position.y / 1000,
+                cabinet.position.z / 1000,
+              ]}
+              rotation={[0, cabinet.position.rotation, 0]}
+              onPointerDown={(event) => start(event, cabinet)}
+              onPointerMove={move}
+              onPointerUp={(event) => {
+                if (drag.current?.pointerId === event.pointerId) {
+                  event.stopPropagation();
+                  finish(false);
+                }
+              }}
+              onPointerCancel={(event) => {
+                if (drag.current?.pointerId === event.pointerId) finish(true);
+              }}
+            >
+              {cabinet.variantId &&
+              props.variantModels?.[cabinet.variantId]?.glbFile ? (
+                <GLBFurnitureMesh
+                  modelId={cabinet.variantId}
+                  basePath={`/api/models/files/${cabinet.variantId}`}
+                  glbFile={props.variantModels[cabinet.variantId].glbFile!}
+                  w={cabinet.width / 1000}
+                  h={cabinet.height / 1000}
+                  d={cabinet.depth / 1000}
+                  materialOverride={
+                    material
+                      ? {
+                          color: cabinet.color,
+                          roughness: material.roughness,
+                          metalness: material.metalness,
+                        }
+                      : undefined
+                  }
                 />
-                <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-                <Edges
-                  color={invalid.has(cabinet.id) ? "#d62828" : "#246847"}
-                  linewidth={2}
+              ) : (
+                <CabinetBody cabinet={cabinet} open={props.open} />
+              )}
+              {(selectedId === cabinet.id || invalid.has(cabinet.id)) && (
+                <mesh
+                  userData={{ exportExclude: true }}
                   raycast={() => {}}
-                />
-              </mesh>
-            )}
-          </group>
-        ))}
+                  position={[0, cabinet.height / 2000, 0]}
+                >
+                  <boxGeometry
+                    args={[
+                      cabinet.width / 1000 + 0.003,
+                      cabinet.height / 1000 + 0.003,
+                      cabinet.depth / 1000 + 0.003,
+                    ]}
+                  />
+                  <meshBasicMaterial
+                    transparent
+                    opacity={0}
+                    depthWrite={false}
+                  />
+                  <Edges
+                    color={invalid.has(cabinet.id) ? "#d62828" : "#246847"}
+                    linewidth={2}
+                    raycast={() => {}}
+                  />
+                </mesh>
+              )}
+            </group>
+          );
+        })}
         <KitchenTops
           kitchen={kitchen}
           onBacksplashPointerDown={(event, id) => {

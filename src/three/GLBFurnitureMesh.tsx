@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useThree } from "@react-three/fiber";
 import { Edges, Html } from "@react-three/drei";
 import * as THREE from "three";
+import { isKitchenMaterialTarget } from "@/lib/kitchenMaterials";
 
 import {
   acquireModel,
@@ -19,6 +20,7 @@ export interface GLBFurnitureMeshProps {
   d: number;
   h: number;
   selected?: boolean;
+  materialOverride?: { color: string; roughness: number; metalness: number };
   onReady?: () => void;
 }
 type Display = {
@@ -33,6 +35,7 @@ export function GLBFurnitureMesh({
   w,
   d,
   h,
+  materialOverride,
   onReady,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
@@ -45,6 +48,9 @@ export function GLBFurnitureMesh({
   const [retry, setRetry] = useState(0);
   const base = basePath.endsWith("/") ? basePath : `${basePath}/`;
   const key = `${modelId}:${base}${glbFile}`;
+  const overrideColor = materialOverride?.color;
+  const overrideRoughness = materialOverride?.roughness;
+  const overrideMetalness = materialOverride?.metalness;
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +78,16 @@ export function GLBFurnitureMesh({
               clonedMaterial.normalMap = null;
               clonedMaterial.aoMap = null;
               clonedMaterial.side = THREE.DoubleSide;
+              if (
+                overrideColor !== undefined &&
+                overrideRoughness !== undefined &&
+                overrideMetalness !== undefined &&
+                isKitchenMaterialTarget(object.name, clonedMaterial.name)
+              ) {
+                clonedMaterial.color.set(overrideColor);
+                clonedMaterial.roughness = overrideRoughness;
+                clonedMaterial.metalness = overrideMetalness;
+              }
               clonedMaterial.needsUpdate = true;
             }
             return clonedMaterial;
@@ -79,17 +95,6 @@ export function GLBFurnitureMesh({
           object.material = Array.isArray(object.material)
             ? clonedMaterials
             : clonedMaterials[0];
-
-          for (const material of materials) {
-            if (!(material instanceof THREE.MeshStandardMaterial)) {
-              continue;
-            }
-            material.normalMap = null;
-            material.aoMap = null;
-            material.side = THREE.DoubleSide;
-
-            material.needsUpdate = true;
-          }
         });
         const next: Display = {
           key,
@@ -113,7 +118,16 @@ export function GLBFurnitureMesh({
     return () => {
       cancelled = true;
     };
-  }, [gl, base, glbFile, key, retry]);
+  }, [
+    gl,
+    base,
+    glbFile,
+    key,
+    retry,
+    overrideColor,
+    overrideRoughness,
+    overrideMetalness,
+  ]);
 
   useEffect(() => {
     // Cached low/high promises may settle in the same React batch. Release even

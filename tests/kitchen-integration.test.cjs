@@ -46,6 +46,56 @@ test("kitchen admin upload pins the correct category and protects its R2 handoff
   assert.match(completeRoute, /if \(auth\.error\)/);
 });
 
+test("Supabase materials are normalized and only recolor cabinet GLB surfaces", () => {
+  const { normalizeKitchenMaterials, isKitchenMaterialTarget } = loadSource(
+    "src/lib/kitchenMaterials.ts",
+  );
+  const materials = normalizeKitchenMaterials([
+    {
+      id: "oak",
+      name: " Царс ",
+      surface_kind: "general",
+      base_color: "#bb915e",
+      roughness: "0.650",
+      metalness: "0",
+      texture_paths: {},
+    },
+    {
+      id: "bad color",
+      name: "Bad",
+      surface_kind: "general",
+      base_color: "red",
+      roughness: 1,
+      metalness: 0,
+      texture_paths: {},
+    },
+  ]);
+  assert.deepEqual(materials, [
+    {
+      id: "oak",
+      name: "Царс",
+      surfaceKind: "general",
+      baseColor: "#BB915E",
+      roughness: 0.65,
+      metalness: 0,
+      texturePaths: {},
+    },
+  ]);
+  assert.equal(isKitchenMaterialTarget("CABINET_FRONT", "Oak"), true);
+  assert.equal(isKitchenMaterialTarget("Appliance-Oven", "Steel"), false);
+  assert.equal(isKitchenMaterialTarget("Door", "Glass"), false);
+
+  const route = fs.readFileSync("src/app/api/kitchen-modules/route.ts", "utf8");
+  const planner = fs.readFileSync(
+    "src/components/ModularKitchenPlanner.tsx",
+    "utf8",
+  );
+  const scene = fs.readFileSync("src/three/ModularKitchenScene.tsx", "utf8");
+  assert.match(route, /normalizeKitchenMaterials\(materials\.data\)/);
+  assert.match(planner, /materialDefinitions=\{materialDefinitions\}/);
+  assert.match(scene, /materialOverride=\{material \?/);
+});
+
 test("unified design preserves appearance and IDs across four layouts and JSON roundtrip", () => {
   const base = model.createUnifiedKitchen();
   const schema = new (require("ajv"))().compile(
