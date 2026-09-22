@@ -12,7 +12,7 @@ import {
 import {
   CABINET_DEFAULTS,
   cabinetLabel,
-  CABINET_WIDTHS,
+  cabinetWidths,
   type ModularCabinet,
   type ModularKitchen,
 } from "@/lib/kitchenCabinets";
@@ -528,7 +528,7 @@ export function KitchenOptionsPanel({
                                 });
                               }}
                             >
-                              {CABINET_WIDTHS.map((width) => (
+                              {cabinetWidths(cabinet.type).map((width) => (
                                 <option key={width} value={width}>
                                   {width} мм
                                 </option>

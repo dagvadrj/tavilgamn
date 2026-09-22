@@ -129,6 +129,56 @@ test("kitchen GLB variant identity survives JSON while malformed IDs are rejecte
   assert.throws(() => model.parseKitchen(invalid));
 });
 
+test("catalog default replaces procedural cabinet while preserving explicit matching choice", () => {
+  const { applyKitchenCatalogVariants } = loadSource(
+    "src/lib/kitchenModuleCatalog.ts",
+  );
+  const kitchen = model.createUnifiedKitchen();
+  const first = "12345678-1234-4234-9234-123456789abc";
+  const second = "12345678-1234-4234-9234-123456789abd";
+  const modules = [
+    {
+      id: "m",
+      code: "BASE-600",
+      name: "Base 600",
+      cabinetType: "base",
+      widthMm: 600,
+      heightMm: 820,
+      depthMm: 600,
+      active: true,
+      variants: [
+        {
+          furnitureModelId: first,
+          opening: "drawers",
+          active: true,
+          isDefault: true,
+          glbFile: "high.glb",
+        },
+        {
+          furnitureModelId: second,
+          opening: "drawers",
+          active: true,
+          isDefault: false,
+          glbFile: "high.glb",
+        },
+      ],
+    },
+  ];
+  const automatic = applyKitchenCatalogVariants(kitchen, modules);
+  assert.equal(
+    automatic.cabinets.find((c) => c.opening === "drawers").variantId,
+    first,
+  );
+  const explicit = model.cloneKitchen(kitchen);
+  explicit.cabinets.find((c) => c.opening === "drawers").variantId = second;
+  assert.equal(
+    applyKitchenCatalogVariants(explicit, modules).cabinets.find(
+      (c) => c.opening === "drawers",
+    ).variantId,
+    second,
+  );
+});
+
 // Build actual Three geometries from the shared renderer without a browser or WebGL.
 // Texture generation and React effects are irrelevant to physical bounds.
 const { KitchenAssemblyMesh } = loadSource(

@@ -38,6 +38,14 @@ test("cabinet defaults and exported JSON schema agree for every width/type", () 
       assert.equal(validate(c), true, JSON.stringify(validate.errors));
       assert.equal(validateCabinet(c), null);
     }
+  const wideBase = createCabinet("base", "base-1000", 1000);
+  assert.equal(validate(wideBase), true, JSON.stringify(validate.errors));
+  assert.equal(validateCabinet(wideBase), null);
+  for (const type of ["wall", "tall"]) {
+    const unsupported = createCabinet(type, `${type}-1000`, 1000);
+    assert.equal(validate(unsupported), false);
+    assert.ok(validateCabinet(unsupported));
+  }
   for (const patch of [
     { width: 550 },
     { height: 790 },

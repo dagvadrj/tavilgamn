@@ -12,7 +12,7 @@ export async function GET() {
       db.from("material_definitions").select("id,name,surface_kind,base_color,roughness,metalness,texture_paths").eq("active", true).order("name"),
     ]);
     if (materials.error) throw materials.error;
-    return NextResponse.json({ modules, materials: materials.data ?? [] }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
+    return NextResponse.json({ modules, materials: materials.data ?? [] }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "Kitchen catalog ачаалж чадсангүй." }, { status: 503 });
   }

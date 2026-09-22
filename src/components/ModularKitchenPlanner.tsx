@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import {
   CABINET_DEFAULTS,
-  CABINET_WIDTHS,
+  cabinetWidths,
   createCabinet,
   createHood,
   createRefrigerator,
@@ -62,9 +62,11 @@ import {
   parseBacksplashSettings,
   type BacksplashPanel,
 } from "@/lib/kitchenBacksplash";
-import type {
-  KitchenCatalogModule,
-  KitchenCatalogVariant,
+import {
+  applyKitchenCatalogVariants,
+  matchingKitchenVariants,
+  type KitchenCatalogModule,
+  type KitchenCatalogVariant,
 } from "@/lib/kitchenModuleCatalog";
 
 const Scene = dynamic(
@@ -233,7 +235,10 @@ export function ModularKitchenPlanner({
   useEffect(() => {
     if (!active) return;
     const controller = new AbortController();
-    fetch("/api/kitchen-modules", { signal: controller.signal })
+    fetch("/api/kitchen-modules", {
+      signal: controller.signal,
+      cache: "no-store",
+    })
       .then(async (response) =>
         response.ok ? response.json() : Promise.reject(new Error("catalog")),
       )
@@ -317,6 +322,15 @@ export function ModularKitchenPlanner({
   }, [ready, draftKey, savedId, name, design]);
   const designRef = useRef(design);
   designRef.current = design;
+  useEffect(() => {
+    if (!ready || !moduleCatalog.some((module) => module.variants.length))
+      return;
+    setDesign((current) => {
+      const next = applyKitchenCatalogVariants(current, moduleCatalog);
+      if (next !== current) designRef.current = next;
+      return next;
+    });
+  }, [moduleCatalog, ready]);
   const [preview, setPreview] = useState<ModularKitchen | null>(null);
   const draftRef = useRef<ModularKitchen | null>(null);
   const dragBase = useRef<ModularKitchen | null>(null);
@@ -348,23 +362,12 @@ export function ModularKitchenPlanner({
   );
   const matchingVariants = useMemo(() => {
     if (!selected) return [] as KitchenCatalogVariant[];
-    const type = selected.corner ? "corner" : selected.type;
-    return moduleCatalog
-      .filter(
-        (module) =>
-          module.cabinetType === type &&
-          module.widthMm === selected.width &&
-          module.heightMm === selected.height &&
-          module.depthMm === selected.depth,
-      )
-      .flatMap((module) => module.variants)
-      .filter(
-        (variant) =>
-          variant.active &&
-          variant.glbFile &&
-          variant.opening === (selected.opening ?? "doors"),
-      );
+    return matchingKitchenVariants(moduleCatalog, selected);
   }, [moduleCatalog, selected]);
+  const sceneKitchen = useMemo(
+    () => applyKitchenCatalogVariants(kitchen, moduleCatalog),
+    [kitchen, moduleCatalog],
+  );
   const issues = useMemo(() => placementIssues(kitchen), [kitchen]);
   const tops = useMemo(() => fitCountertops(kitchen), [kitchen]);
   const backsplashes = useMemo(() => fitBacksplashes(kitchen), [kitchen]);
@@ -391,7 +394,9 @@ export function ModularKitchenPlanner({
     if (busy || !user) return;
     let checked: ModularKitchen;
     try {
-      checked = parseKitchen(design);
+      checked = parseKitchen(
+        applyKitchenCatalogVariants(design, moduleCatalog),
+      );
     } catch (error) {
       setMessage((error as Error).message);
       return;
@@ -415,7 +420,7 @@ export function ModularKitchenPlanner({
   }
   function commit(next: ModularKitchen): boolean {
     if (saving || !ready) return false;
-    next = resolveElevations(next);
+    next = applyKitchenCatalogVariants(resolveElevations(next), moduleCatalog);
     const invalid = next.cabinets.map(validateCabinet).find(Boolean);
     try {
       next.cabinets.forEach((c) => {
@@ -857,7 +862,7 @@ export function ModularKitchenPlanner({
                 <Scene
                   key={viewKey}
                   exportRoot={setExportRoot}
-                  kitchen={kitchen}
+                  kitchen={sceneKitchen}
                   open={open}
                   selectedId={selectedId}
                   mode={saving ? "orbit" : mode}
@@ -1046,7 +1051,9 @@ export function ModularKitchenPlanner({
                           });
                       }}
                     >
-                      <option value="">Стандарт үүсгэх дүрслэл</option>
+                      <option value="" disabled>
+                        GLB хувилбар сонгоно уу
+                      </option>
                       {selected.variantId &&
                         !matchingVariants.some(
                           (variant) =>
@@ -1207,7 +1214,7 @@ export function ModularKitchenPlanner({
                         >
                           {(selected.corner
                             ? [selected.type === "wall" ? 800 : 1000]
-                            : CABINET_WIDTHS
+                            : cabinetWidths(selected.type)
                           ).map((width) => (
                             <option key={width} value={width}>
                               {width} мм
@@ -1743,13 +1750,19 @@ export function ModularKitchenPlanner({
                       setAddWidth(Number(e.target.value) as CabinetWidth)
                     }
                   >
-                    {CABINET_WIDTHS.filter(
-                      (width) => !addType.startsWith("hood") || width >= 600,
-                    ).map((width) => (
-                      <option key={width} value={width}>
-                        {width / 10} см
-                      </option>
-                    ))}
+                    {cabinetWidths(
+                      addType.startsWith("hood")
+                        ? "wall"
+                        : (addType as CabinetType),
+                    )
+                      .filter(
+                        (width) => !addType.startsWith("hood") || width >= 600,
+                      )
+                      .map((width) => (
+                        <option key={width} value={width}>
+                          {width / 10} см
+                        </option>
+                      ))}
                   </select>
                 </label>
               )}

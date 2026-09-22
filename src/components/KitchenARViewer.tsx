@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Box, Loader2, X } from "lucide-react";
+import Link from "next/link";
 import type { Group } from "three";
 let modelViewerPromise: Promise<void> | null = null;
 
@@ -197,14 +198,14 @@ export function KitchenARViewer({
             interaction-prompt="auto"
             style={{ width: "100%", height: "100%" }}
           />
-          <button
-            type="button"
-            className="km-ar-launch"
+          <Link
+            href="/planner"
             onClick={() => void launchAR()}
+            className="km-ar-launch"
           >
             <Box size={18} />
             Өрөөндөө байрлуулж үзэх
-          </button>
+          </Link>
         </div>
       )}
     </>

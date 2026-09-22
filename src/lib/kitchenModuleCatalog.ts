@@ -43,6 +43,46 @@ export type KitchenModelCandidate = {
   linked: boolean;
 };
 
+type CabinetMatch = {
+  variantId?: string;
+  type: "base" | "wall" | "tall";
+  width: number;
+  height: number;
+  depth: number;
+  opening?: KitchenOpening;
+  corner?: boolean;
+};
+
+export function matchingKitchenVariants(modules: KitchenCatalogModule[], cabinet: CabinetMatch) {
+  const cabinetType = cabinet.corner ? "corner" : cabinet.type;
+  const opening = cabinet.opening ?? "doors";
+  return modules
+    .filter((module) => module.active && module.cabinetType === cabinetType && module.widthMm === cabinet.width && module.heightMm === cabinet.height && module.depthMm === cabinet.depth)
+    .flatMap((module) => module.variants)
+    .filter((variant) => variant.active && !!variant.glbFile && variant.opening === opening);
+}
+
+export function preferredKitchenVariant(modules: KitchenCatalogModule[], cabinet: CabinetMatch) {
+  const variants = matchingKitchenVariants(modules, cabinet);
+  return variants.find((variant) => variant.furnitureModelId === cabinet.variantId)
+    ?? variants.find((variant) => variant.isDefault)
+    ?? variants[0];
+}
+
+export function applyKitchenCatalogVariants<T extends { cabinets: CabinetMatch[] }>(kitchen: T, modules: KitchenCatalogModule[]): T {
+  if (!modules.some((module) => module.variants.length)) return kitchen;
+  let changed = false;
+  const cabinets = kitchen.cabinets.map((cabinet) => {
+    const preferred = preferredKitchenVariant(modules, cabinet);
+    if (preferred?.furnitureModelId === cabinet.variantId) return cabinet;
+    changed = true;
+    if (preferred) return { ...cabinet, variantId: preferred.furnitureModelId };
+    const { variantId: _variantId, ...withoutVariant } = cabinet;
+    return withoutVariant;
+  });
+  return changed ? { ...kitchen, cabinets } : kitchen;
+}
+
 export class KitchenModuleInputError extends Error {}
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
