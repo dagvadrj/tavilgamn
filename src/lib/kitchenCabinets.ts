@@ -5,7 +5,7 @@
 import { applianceIssue } from "./plitka";
 import type { CabinetComponent } from "./kitchenComponents";
 import type { Finish, FrontStyle } from "./kitchen";
-export const CABINET_WIDTHS = [300, 400, 600, 800] as const;
+export const CABINET_WIDTHS = [300, 400, 450, 500, 600, 700, 800, 900] as const;
 /** Cabinet presets stay discrete; appliances retain their measured integer footprint. */
 export type CabinetWidth = number;
 export type CabinetType = "base" | "wall" | "tall";
@@ -18,6 +18,8 @@ export type Point2 = { x: number; z: number };
 export type CabinetPose = Point2 & { y: number; rotation: number };
 export interface ModularCabinet {
   id: string;
+  /** Optional furniture_models-backed kitchen variant; dimensions remain authored here in mm. */
+  variantId?: string;
   type: CabinetType;
   width: CabinetWidth;
   height: number;
@@ -117,7 +119,7 @@ export function validateCabinet(cabinet: ModularCabinet): string | null {
   if (!spec) return "Шүүгээний төрөл буруу байна.";
   const fridge = cabinet.opening === "refrigerator", directHood = cabinet.opening === "hood" && cabinet.hoodMount === "wall";
   if (!Number.isInteger(cabinet.width) || (fridge ? cabinet.width < 450 || cabinet.width > 1200
-    : !([...CABINET_WIDTHS] as number[]).includes(cabinet.width) && !(cabinet.corner === true && cabinet.type === "base" && cabinet.width === 1000))) return fridge ? "Хөргөгчийн өргөн 450–1200 мм байна." : "Өргөн 300, 400, 600 эсвэл 800 мм; булангийн доод шүүгээ 1000 мм байж болно.";
+    : !([...CABINET_WIDTHS] as number[]).includes(cabinet.width) && !(cabinet.corner === true && cabinet.type === "base" && cabinet.width === 1000))) return fridge ? "Хөргөгчийн өргөн 450–1200 мм байна." : "Өргөн 300, 400, 450, 500, 600, 700, 800 эсвэл 900 мм; булангийн доод шүүгээ 1000 мм байж болно.";
   const heightRange = fridge ? REFRIGERATOR_LIMITS.height : directHood ? [200, 1200] : spec.heightRange;
   const depthRange = fridge ? REFRIGERATOR_LIMITS.depth : directHood ? [250, 600] : spec.depthRange;
   if (!Number.isInteger(cabinet.height) || cabinet.height < heightRange[0] || cabinet.height > heightRange[1]) return `Өндөр ${heightRange.join("–")} мм байна.`;

@@ -168,7 +168,7 @@ export function parseComponents(c: ModularCabinet): CabinetComponent[] {
   });
 }
 export function withOpening(c: ModularCabinet, opening: ModularCabinet["opening"]): ModularCabinet {
-  const { hoodMount, refrigeratorStyle, ...rest } = c;
+  const { hoodMount, refrigeratorStyle, variantId: _variantId, ...rest } = c;
   const next: ModularCabinet = { ...rest, opening, drawerCount: opening === "drawers" ? ([2, 3].includes(c.drawerCount) ? c.drawerCount : 3) : 0,
     ...(opening === "hood" ? { hoodMount: hoodMount ?? "under-cabinet" } : {}),
     ...(opening === "refrigerator" ? { refrigeratorStyle: refrigeratorStyle ?? "top-bottom", fitToCeiling: false } : {}) };

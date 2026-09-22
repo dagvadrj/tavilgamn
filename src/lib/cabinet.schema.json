@@ -6,6 +6,7 @@
   "required": ["id","type","width","height","depth","doorCount","drawerCount","handleStyle","color","material","position","autoElevation","fitToCeiling"],
   "properties": {
     "id": {"type":"string","minLength":1},
+    "variantId": {"type":"string","pattern":"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"},
     "type": {"enum":["base","wall","tall"]},
     "width": {"type":"integer","minimum":300,"maximum":1200},
     "height": {"type":"integer","minimum":200,"maximum":3500},
@@ -28,19 +29,19 @@
     "position": {"type":"object","additionalProperties":false,"required":["x","y","z","rotation"],"properties":{"x":{"type":"number"},"y":{"type":"number","minimum":0},"z":{"type":"number"},"rotation":{"type":"number","description":"Yaw in radians; front is local +Z"}}}
   },
   "allOf": [
-    {"if":{"required":["opening"],"properties":{"opening":{"const":"refrigerator"}}},"then":{"required":["refrigeratorStyle"],"properties":{"type":{"const":"tall"},"width":{"minimum":450,"maximum":1200},"height":{"minimum":1400,"maximum":2300},"depth":{"minimum":500,"maximum":900},"drawerCount":{"const":0},"fitToCeiling":{"const":false},"corner":{"const":false}}},"else":{"properties":{"width":{"enum":[300,400,600,800,1000]}}}},
-    {"if":{"required":["corner"],"properties":{"corner":{"const":true}}},"then":{"properties":{"type":{"enum":["base","wall"]},"opening":{"enum":["doors","open"]},"drawerCount":{"const":0}},"allOf":[{"if":{"properties":{"type":{"const":"base"}}},"then":{"properties":{"width":{"enum":[800,1000]}}},"else":{"properties":{"width":{"enum":[600,800]}}}}]},"else":{"if":{"not":{"required":["opening"],"properties":{"opening":{"const":"refrigerator"}}}},"then":{"properties":{"width":{"enum":[300,400,600,800]}}}}},
+    {"if":{"required":["opening"],"properties":{"opening":{"const":"refrigerator"}}},"then":{"required":["refrigeratorStyle"],"properties":{"type":{"const":"tall"},"width":{"minimum":450,"maximum":1200},"height":{"minimum":1400,"maximum":2300},"depth":{"minimum":500,"maximum":900},"drawerCount":{"const":0},"fitToCeiling":{"const":false},"corner":{"const":false}}},"else":{"properties":{"width":{"enum":[300,400,450,500,600,700,800,900,1000]}}}},
+    {"if":{"required":["corner"],"properties":{"corner":{"const":true}}},"then":{"properties":{"type":{"enum":["base","wall"]},"opening":{"enum":["doors","open"]},"drawerCount":{"const":0}},"allOf":[{"if":{"properties":{"type":{"const":"base"}}},"then":{"properties":{"width":{"enum":[800,1000]}}},"else":{"properties":{"width":{"enum":[600,800]}}}}]},"else":{"if":{"not":{"required":["opening"],"properties":{"opening":{"const":"refrigerator"}}}},"then":{"properties":{"width":{"enum":[300,400,450,500,600,700,800,900]}}}}},
     {"if":{"required":["hoodMount"]},"then":{"required":["opening"],"properties":{"opening":{"const":"hood"}}}},
     {"if":{"required":["refrigeratorStyle"]},"then":{"required":["opening"],"properties":{"opening":{"const":"refrigerator"}}}},
     {"if":{"required":["opening"],"properties":{"opening":{"const":"oven"}}},"then":{"properties":{"type":{"enum":["base","tall"]},"width":{"const":600},"depth":{"minimum":580},"drawerCount":{"const":0}}}},
-    {"if":{"required":["opening"],"properties":{"opening":{"const":"hood"}}},"then":{"required":["hoodMount"],"properties":{"type":{"const":"wall"},"width":{"enum":[600,800]},"drawerCount":{"const":0},"corner":{"const":false}}}},
+    {"if":{"required":["opening"],"properties":{"opening":{"const":"hood"}}},"then":{"required":["hoodMount"],"properties":{"type":{"const":"wall"},"width":{"enum":[600,700,800,900]},"drawerCount":{"const":0},"corner":{"const":false}}}},
     {"if":{"required":["opening"],"properties":{"opening":{"const":"drawers"}}},"then":{"properties":{"type":{"enum":["base","tall"]},"drawerCount":{"minimum":1}}}},
     {"if":{"required":["opening"],"properties":{"opening":{"enum":["sink","open"]}}},"then":{"properties":{"drawerCount":{"const":0}}}},
-    {"if":{"required":["opening"],"properties":{"opening":{"const":"sink"}}},"then":{"properties":{"type":{"const":"base"},"width":{"enum":[600,800]}}}},
-    {"if":{"required":["opening"],"properties":{"opening":{"const":"hob"}}},"then":{"properties":{"type":{"const":"base"},"width":{"enum":[400,600,800]}}}},
+    {"if":{"required":["opening"],"properties":{"opening":{"const":"sink"}}},"then":{"properties":{"type":{"const":"base"},"width":{"enum":[600,700,800,900]}}}},
+    {"if":{"required":["opening"],"properties":{"opening":{"const":"hob"}}},"then":{"properties":{"type":{"const":"base"},"width":{"enum":[400,450,500,600,700,800,900]}}}},
     {"if":{"properties":{"type":{"const":"base"}}},"then":{"properties":{"height":{"minimum":800,"maximum":900},"depth":{"minimum":550,"maximum":650}}}},
     {"if":{"properties":{"type":{"const":"wall"}}},"then":{"properties":{"drawerCount":{"const":0}},"allOf":[{"if":{"required":["opening","hoodMount"],"properties":{"opening":{"const":"hood"},"hoodMount":{"const":"wall"}}},"then":{"properties":{"height":{"minimum":200,"maximum":1200},"depth":{"minimum":250,"maximum":600}}},"else":{"properties":{"height":{"minimum":400,"maximum":1200},"depth":{"minimum":250,"maximum":450}}}}]},"else":{"properties":{"position":{"properties":{"y":{"const":0}}}}}},
     {"if":{"properties":{"type":{"const":"tall"}},"not":{"required":["opening"],"properties":{"opening":{"const":"refrigerator"}}}},"then":{"properties":{"height":{"minimum":1800,"maximum":3500},"depth":{"minimum":550,"maximum":650}}}},
-    {"if":{"properties":{"width":{"enum":[300,400]}},"not":{"required":["opening"],"properties":{"opening":{"const":"refrigerator"}}}},"then":{"properties":{"doorCount":{"const":1}}}}
+    {"if":{"properties":{"width":{"enum":[300,400,450,500]}},"not":{"required":["opening"],"properties":{"opening":{"const":"refrigerator"}}}},"then":{"properties":{"doorCount":{"const":1}}}}
   ]
 }

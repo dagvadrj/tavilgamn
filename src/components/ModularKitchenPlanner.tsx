@@ -62,6 +62,10 @@ import {
   parseBacksplashSettings,
   type BacksplashPanel,
 } from "@/lib/kitchenBacksplash";
+import type {
+  KitchenCatalogModule,
+  KitchenCatalogVariant,
+} from "@/lib/kitchenModuleCatalog";
 
 const Scene = dynamic(
   () =>
@@ -217,12 +221,30 @@ export function ModularKitchenPlanner({
     [savedId, setSavedId] = useState("");
   const [open, setOpen] = useState(false);
   const [componentOverview, setComponentOverview] = useState(false);
+  const [moduleCatalog, setModuleCatalog] = useState<KitchenCatalogModule[]>(
+    [],
+  );
   const [exportRoot, setExportRoot] = useState<Group | null>(null);
   const [viewKey, setViewKey] = useState(0);
   const [scope, setScope] = useState<"all" | "base" | "wall" | "selected">(
     "all",
   );
   const initialRead = useRef(false);
+  useEffect(() => {
+    if (!active) return;
+    const controller = new AbortController();
+    fetch("/api/kitchen-modules", { signal: controller.signal })
+      .then(async (response) =>
+        response.ok ? response.json() : Promise.reject(new Error("catalog")),
+      )
+      .then((result) =>
+        setModuleCatalog(Array.isArray(result.modules) ? result.modules : []),
+      )
+      .catch((error) => {
+        if (error?.name !== "AbortError") setModuleCatalog([]);
+      });
+    return () => controller.abort();
+  }, [active]);
   useEffect(() => {
     if (ready || initialRead.current) return;
     const query = new URLSearchParams(queryString),
@@ -315,6 +337,34 @@ export function ModularKitchenPlanner({
   const [dragging, setDragging] = useState(false);
   const kitchen = preview ?? design;
   const selected = kitchen.cabinets.find((c) => c.id === selectedId);
+  const variantModels = useMemo(
+    () =>
+      Object.fromEntries(
+        moduleCatalog.flatMap((module) =>
+          module.variants.map((variant) => [variant.furnitureModelId, variant]),
+        ),
+      ),
+    [moduleCatalog],
+  );
+  const matchingVariants = useMemo(() => {
+    if (!selected) return [] as KitchenCatalogVariant[];
+    const type = selected.corner ? "corner" : selected.type;
+    return moduleCatalog
+      .filter(
+        (module) =>
+          module.cabinetType === type &&
+          module.widthMm === selected.width &&
+          module.heightMm === selected.height &&
+          module.depthMm === selected.depth,
+      )
+      .flatMap((module) => module.variants)
+      .filter(
+        (variant) =>
+          variant.active &&
+          variant.glbFile &&
+          variant.opening === (selected.opening ?? "doors"),
+      );
+  }, [moduleCatalog, selected]);
   const issues = useMemo(() => placementIssues(kitchen), [kitchen]);
   const tops = useMemo(() => fitCountertops(kitchen), [kitchen]);
   const backsplashes = useMemo(() => fitBacksplashes(kitchen), [kitchen]);
@@ -471,6 +521,20 @@ export function ModularKitchenPlanner({
       };
     }
     const updated = { ...selected, ...patch };
+    if (
+      patch.variantId === undefined &&
+      [
+        "type",
+        "width",
+        "height",
+        "depth",
+        "opening",
+        "doorCount",
+        "drawerCount",
+        "corner",
+      ].some((key) => key in patch)
+    )
+      delete updated.variantId;
     if (updated.components)
       updated.components = updated.components.filter((item) =>
         componentTypes(updated).includes(item.type),
@@ -802,6 +866,7 @@ export function ModularKitchenPlanner({
                   onMove={move}
                   onEnd={() => finish()}
                   onCancel={() => finish(true)}
+                  variantModels={variantModels}
                 />
               )}
             </div>
@@ -963,6 +1028,49 @@ export function ModularKitchenPlanner({
                     )}
                   </select>
                 </label>
+                {(matchingVariants.length > 0 || selected.variantId) && (
+                  <label className="kp-field">
+                    <span>3D хувилбар</span>
+                    <select
+                      value={selected.variantId ?? ""}
+                      onChange={(event) => {
+                        const variant = variantModels[event.target.value];
+                        if (!variant) updateCabinet({ variantId: undefined });
+                        else
+                          updateCabinet({
+                            variantId: variant.furnitureModelId,
+                            opening: variant.opening,
+                            doorCount:
+                              variant.doorCount as ModularCabinet["doorCount"],
+                            drawerCount: variant.drawerCount,
+                          });
+                      }}
+                    >
+                      <option value="">Стандарт үүсгэх дүрслэл</option>
+                      {selected.variantId &&
+                        !matchingVariants.some(
+                          (variant) =>
+                            variant.furnitureModelId === selected.variantId,
+                        ) && (
+                          <option value={selected.variantId} disabled>
+                            Өмнөх GLB хувилбар боломжгүй
+                          </option>
+                        )}
+                      {matchingVariants.map((variant) => (
+                        <option
+                          key={variant.furnitureModelId}
+                          value={variant.furnitureModelId}
+                        >
+                          {variant.modelName}
+                        </option>
+                      ))}
+                    </select>
+                    <small>
+                      Бодит GLB сонговол хэмжээ өөрчлөхөд стандарт дүрслэл рүү
+                      буцна.
+                    </small>
+                  </label>
+                )}
                 {selected.opening === "drawers" && (
                   <label className="kp-field">
                     <span>Шургуулга</span>

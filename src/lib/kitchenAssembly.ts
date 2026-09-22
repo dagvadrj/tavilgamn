@@ -166,7 +166,8 @@ export function parseKitchen(value: unknown): ModularKitchen {
     if ((c.corner !== undefined && typeof c.corner !== "boolean") || (c.cornerSide !== undefined && !["left", "right"].includes(c.cornerSide)) ||
       (c.hoodMount !== undefined && !["under-cabinet", "wall"].includes(c.hoodMount)) || (c.refrigeratorStyle !== undefined && !["top-bottom", "side-by-side"].includes(c.refrigeratorStyle))) throw new Error("Шүүгээний нэмэлт тохиргоо буруу байна.");
     if (c.opening === "sink" && (c.type !== "base" || c.width < 600)) throw new Error("Угаалтуур 600 мм-ээс өргөн доод шүүгээнд байрлана.");
-    return { id: c.id, type: c.type, width: c.width, height: c.height, depth: c.depth, doorCount: c.doorCount, drawerCount: c.drawerCount, handleStyle: c.handleStyle, material: c.material, color: c.color,
+    if (c.variantId !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(c.variantId)) throw new Error("Шүүгээний 3D variant ID буруу байна.");
+    return { id: c.id, ...(c.variantId ? { variantId: c.variantId } : {}), type: c.type, width: c.width, height: c.height, depth: c.depth, doorCount: c.doorCount, drawerCount: c.drawerCount, handleStyle: c.handleStyle, material: c.material, color: c.color,
       position: { x: c.position.x, y: c.position.y, z: c.position.z, rotation: c.position.rotation }, autoElevation: c.autoElevation, fitToCeiling: c.fitToCeiling,
       ...(c.finish ? { finish: c.finish as Finish } : {}), ...(c.frontStyle ? { frontStyle: c.frontStyle as FrontStyle } : {}), ...(c.opening ? { opening: c.opening } : {}),
       ...(c.corner !== undefined ? { corner: c.corner } : {}), ...(c.cornerSide ? { cornerSide: c.cornerSide } : {}),
