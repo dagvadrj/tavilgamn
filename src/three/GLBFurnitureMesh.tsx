@@ -4,6 +4,10 @@ import { useThree } from "@react-three/fiber";
 import { Edges, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { isKitchenMaterialTarget } from "@/lib/kitchenMaterials";
+import {
+  acquireKitchenMaterialTextures,
+  type KitchenMaterialTextureSet,
+} from "./kitchenMaterialTextures";
 
 import {
   acquireModel,
@@ -20,7 +24,12 @@ export interface GLBFurnitureMeshProps {
   d: number;
   h: number;
   selected?: boolean;
-  materialOverride?: { color: string; roughness: number; metalness: number };
+  materialOverride?: {
+    color: string;
+    roughness: number;
+    metalness: number;
+    texturePaths?: Record<string, string>;
+  };
   onReady?: () => void;
 }
 type Display = {
@@ -28,6 +37,27 @@ type Display = {
   asset: LoadedModel;
   release: () => void;
 };
+function releaseDisplay(display: Display) {
+  display.asset.scene.traverse((object) => {
+    if (!(object instanceof THREE.Mesh)) return;
+    for (const material of Array.isArray(object.material)
+      ? object.material
+      : [object.material])
+      material.dispose();
+  });
+  disposeModelClone(display.asset);
+  display.release();
+}
+
+function applyTextureSet(
+  material: THREE.MeshStandardMaterial,
+  textures: KitchenMaterialTextureSet,
+) {
+  if (textures.baseColor) material.map = textures.baseColor;
+  if (textures.normal) material.normalMap = textures.normal;
+  if (textures.roughness) material.roughnessMap = textures.roughness;
+  if (textures.metalness) material.metalnessMap = textures.metalness;
+}
 export function GLBFurnitureMesh({
   modelId,
   basePath,
@@ -51,6 +81,10 @@ export function GLBFurnitureMesh({
   const overrideColor = materialOverride?.color;
   const overrideRoughness = materialOverride?.roughness;
   const overrideMetalness = materialOverride?.metalness;
+  const baseColorTexture = materialOverride?.texturePaths?.baseColor;
+  const normalTexture = materialOverride?.texturePaths?.normal;
+  const roughnessTexture = materialOverride?.texturePaths?.roughness;
+  const metalnessTexture = materialOverride?.texturePaths?.metalness;
 
   useEffect(() => {
     let cancelled = false;
@@ -58,11 +92,20 @@ export function GLBFurnitureMesh({
     setDisplay(null);
 
     const lease = acquireModel(gl, base + glbFile);
+    const textureLease = acquireKitchenMaterialTextures({
+      ...(baseColorTexture ? { baseColor: baseColorTexture } : {}),
+      ...(normalTexture ? { normal: normalTexture } : {}),
+      ...(roughnessTexture ? { roughness: roughnessTexture } : {}),
+      ...(metalnessTexture ? { metalness: metalnessTexture } : {}),
+    });
     let transferred = false;
 
     const load = async () => {
       try {
-        const asset = await lease.promise;
+        const [asset, textures] = await Promise.all([
+          lease.promise,
+          textureLease.promise,
+        ]);
         if (cancelled) return;
         const cloned = cloneModel(asset);
 
@@ -87,6 +130,7 @@ export function GLBFurnitureMesh({
                 clonedMaterial.color.set(overrideColor);
                 clonedMaterial.roughness = overrideRoughness;
                 clonedMaterial.metalness = overrideMetalness;
+                applyTextureSet(clonedMaterial, textures);
               }
               clonedMaterial.needsUpdate = true;
             }
@@ -99,7 +143,10 @@ export function GLBFurnitureMesh({
         const next: Display = {
           key,
           asset: cloned,
-          release: lease.release,
+          release: () => {
+            textureLease.release();
+            lease.release();
+          },
         };
         transferred = true;
         owned.current.add(next);
@@ -111,7 +158,10 @@ export function GLBFurnitureMesh({
           setError(true);
         }
       } finally {
-        if (!transferred) lease.release();
+        if (!transferred) {
+          textureLease.release();
+          lease.release();
+        }
       }
     };
     void load();
@@ -127,6 +177,10 @@ export function GLBFurnitureMesh({
     overrideColor,
     overrideRoughness,
     overrideMetalness,
+    baseColorTexture,
+    normalTexture,
+    roughnessTexture,
+    metalnessTexture,
   ]);
 
   useEffect(() => {
@@ -134,8 +188,7 @@ export function GLBFurnitureMesh({
     // clones whose intermediate state never reached a commit.
     for (const item of owned.current)
       if (item !== display) {
-        disposeModelClone(item.asset);
-        item.release();
+        releaseDisplay(item);
         owned.current.delete(item);
       }
   }, [display]);
@@ -143,8 +196,7 @@ export function GLBFurnitureMesh({
     const items = owned.current;
     return () => {
       for (const item of items) {
-        disposeModelClone(item.asset);
-        item.release();
+        releaseDisplay(item);
       }
       items.clear();
     };

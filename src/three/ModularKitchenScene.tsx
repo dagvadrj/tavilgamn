@@ -263,6 +263,7 @@ function Scene(props: ModularSceneProps) {
                           color: cabinet.color,
                           roughness: material.roughness,
                           metalness: material.metalness,
+                          texturePaths: material.texturePaths,
                         }
                       : undefined
                   }

@@ -8,6 +8,7 @@ import {
   Power,
   RefreshCw,
   Save,
+  Upload,
   X,
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
@@ -15,6 +16,7 @@ import {
   KITCHEN_SURFACE_KINDS,
   type AdminKitchenMaterialDefinition,
   type KitchenSurfaceKind,
+  type KitchenTextureKind,
 } from "@/lib/kitchenMaterials";
 
 type MaterialForm = {
@@ -29,6 +31,11 @@ type MaterialForm = {
   roughnessTexture: string;
   metalnessTexture: string;
 };
+type TextureFormKey =
+  | "baseColorTexture"
+  | "normalTexture"
+  | "roughnessTexture"
+  | "metalnessTexture";
 
 const emptyForm: MaterialForm = {
   id: "",
@@ -51,6 +58,38 @@ const surfaceLabels: Record<KitchenSurfaceKind, string> = {
   handle: "Бариул",
   appliance: "Цахилгаан хэрэгсэл",
 };
+
+const textureFields: Array<{
+  kind: KitchenTextureKind;
+  formKey: TextureFormKey;
+  label: string;
+  placeholder: string;
+}> = [
+  {
+    kind: "baseColor",
+    formKey: "baseColorTexture",
+    label: "Өнгөний texture",
+    placeholder: "oak-color.webp",
+  },
+  {
+    kind: "normal",
+    formKey: "normalTexture",
+    label: "Normal texture",
+    placeholder: "oak-normal.webp",
+  },
+  {
+    kind: "roughness",
+    formKey: "roughnessTexture",
+    label: "Roughness texture",
+    placeholder: "oak-roughness.webp",
+  },
+  {
+    kind: "metalness",
+    formKey: "metalnessTexture",
+    label: "Metalness texture",
+    placeholder: "metal-metalness.webp",
+  },
+];
 
 function formFor(material: AdminKitchenMaterialDefinition): MaterialForm {
   return {
@@ -143,20 +182,72 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
         owner,
       );
       const data = await response.json().catch(() => null);
-      if (!response.ok)
+      if (!response.ok || typeof data?.material?.id !== "string")
         throw new Error(data?.error ?? "Материал хадгалж чадсангүй.");
+      const saved = data.material as AdminKitchenMaterialDefinition;
+      setMaterials((current) =>
+        current.some((item) => item.id === saved.id)
+          ? current.map((item) => (item.id === saved.id ? saved : item))
+          : [...current, saved].sort((a, b) => a.name.localeCompare(b.name)),
+      );
+      setEditingId(saved.id);
+      setForm(formFor(saved));
       setMessage(
         editingId
           ? "Материалын өөрчлөлтийг хадгаллаа."
-          : "Шинэ материал нэмлээ.",
+          : "Шинэ материал нэмлээ. Одоо texture зургаа шууд оруулж болно.",
       );
-      reset();
-      await load();
     } catch (reason) {
       setError(
         reason instanceof Error
           ? reason.message
           : "Материал хадгалж чадсангүй.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function uploadTexture(kind: KitchenTextureKind, file: File) {
+    if (!editingId) {
+      setError("Эхлээд материалаа хадгална уу.");
+      return;
+    }
+    if (
+      !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+      file.size > 8 * 1024 * 1024
+    ) {
+      setError("Texture нь JPG, PNG эсвэл WebP, 8 MB-аас ихгүй байна.");
+      return;
+    }
+    setBusy(`texture:${kind}`);
+    setError(null);
+    setMessage(null);
+    try {
+      const body = new FormData();
+      body.set("materialId", editingId);
+      body.set("kind", kind);
+      body.set("file", file);
+      const response = await authFetch(
+        "/api/admin/kitchen-material-textures",
+        { method: "POST", body },
+        owner,
+      );
+      const data = await response.json().catch(() => null);
+      if (!response.ok || typeof data?.material?.id !== "string")
+        throw new Error(data?.error ?? "Texture зураг оруулж чадсангүй.");
+      const saved = data.material as AdminKitchenMaterialDefinition;
+      setMaterials((current) =>
+        current.map((item) => (item.id === saved.id ? saved : item)),
+      );
+      const field = textureFields.find((item) => item.kind === kind);
+      if (field) update(field.formKey, saved.texturePaths[kind] ?? "");
+      setMessage(`${field?.label ?? "Texture"} амжилттай орлоо.`);
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Texture зураг оруулж чадсангүй.",
       );
     } finally {
       setBusy(null);
@@ -340,67 +431,62 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
         </div>
         <details className="rounded-xl border border-black/10 bg-white p-3">
           <summary className="cursor-pointer text-sm font-medium">
-            Texture замууд (сонголттой)
+            Texture зургууд (сонголттой)
           </summary>
           <p className="mt-1 text-xs text-black/45">
-            HTTPS URL эсвэл /-ээр эхэлсэн дотоод зам оруулна.
+            {editingId
+              ? "JPG, PNG, WebP · зураг бүр 8 MB хүртэл. URL-г гараар оруулж бас болно."
+              : "Эхлээд материалаа нэмсний дараа texture upload идэвхжинэ."}
           </p>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <label className="label">
-              Өнгөний texture
-              <input
-                className="input mt-1 w-full"
-                type="text"
-                maxLength={2000}
-                placeholder="https://…/oak-color.webp"
-                value={form.baseColorTexture}
-                onChange={(event) =>
-                  update("baseColorTexture", event.target.value)
-                }
-              />
-            </label>
-            <label className="label">
-              Normal texture
-              <input
-                className="input mt-1 w-full"
-                type="text"
-                maxLength={2000}
-                placeholder="https://…/oak-normal.webp"
-                value={form.normalTexture}
-                onChange={(event) =>
-                  update("normalTexture", event.target.value)
-                }
-              />
-            </label>
-            <label className="label">
-              Roughness texture
-              <input
-                className="input mt-1 w-full"
-                type="text"
-                maxLength={2000}
-                placeholder="https://…/oak-roughness.webp"
-                value={form.roughnessTexture}
-                onChange={(event) =>
-                  update("roughnessTexture", event.target.value)
-                }
-              />
-            </label>
-            <label className="label">
-              Metalness texture
-              <input
-                className="input mt-1 w-full"
-                type="text"
-                maxLength={2000}
-                placeholder="https://…/metal-metalness.webp"
-                value={form.metalnessTexture}
-                onChange={(event) =>
-                  update("metalnessTexture", event.target.value)
-                }
-              />
-            </label>
+            {textureFields.map((field) => (
+              <div key={field.kind}>
+                <label
+                  className="label"
+                  htmlFor={`kitchen-${field.kind}-texture`}
+                >
+                  {field.label}
+                </label>
+                <div className="mt-1 flex gap-2">
+                  <input
+                    id={`kitchen-${field.kind}-texture`}
+                    className="input min-w-0 flex-1"
+                    type="text"
+                    maxLength={2000}
+                    placeholder={`https://…/${field.placeholder}`}
+                    value={form[field.formKey]}
+                    onChange={(event) =>
+                      update(field.formKey, event.target.value)
+                    }
+                  />
+                  <label
+                    className={`btn-ghost shrink-0 ${!editingId || !!busy ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                  >
+                    {busy === `texture:${field.kind}` ? (
+                      <LoaderCircle size={14} className="animate-spin" />
+                    ) : (
+                      <Upload size={14} />
+                    )}
+                    Upload
+                    <input
+                      className="sr-only"
+                      type="file"
+                      aria-label={`${field.label} upload`}
+                      accept="image/jpeg,image/png,image/webp"
+                      disabled={!editingId || !!busy}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        event.target.value = "";
+                        if (file) void uploadTexture(field.kind, file);
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
           </div>
         </details>
-        <button className="btn-primary" disabled={busy === "save"}>
+        <button className="btn-primary" disabled={!!busy}>
           {busy === "save" ? (
             <LoaderCircle size={15} className="animate-spin" />
           ) : editingId ? (

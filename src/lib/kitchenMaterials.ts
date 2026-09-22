@@ -31,7 +31,8 @@ export class KitchenMaterialInputError extends Error {}
 
 const ID = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const COLOR = /^#[0-9a-f]{6}$/i;
-const TEXTURE_KEYS = ["baseColor", "normal", "roughness", "metalness"] as const;
+export const KITCHEN_TEXTURE_KINDS = ["baseColor", "normal", "roughness", "metalness"] as const;
+export type KitchenTextureKind = (typeof KITCHEN_TEXTURE_KINDS)[number];
 const EXCLUDED_GLTF_SURFACES = [
   "appliance",
   "glass",
@@ -92,7 +93,7 @@ function readTexturePaths(value: unknown) {
   if (value == null) return {};
   if (typeof value !== "object" || Array.isArray(value)) throw new KitchenMaterialInputError("Texture мэдээлэл буруу байна.");
   const paths: Record<string, string> = {};
-  for (const key of TEXTURE_KEYS) {
+  for (const key of KITCHEN_TEXTURE_KINDS) {
     const raw = (value as Record<string, unknown>)[key];
     if (raw == null || raw === "") continue;
     if (typeof raw !== "string") throw new KitchenMaterialInputError(`${key} texture-ийн зам буруу байна.`);

@@ -206,6 +206,161 @@ test("admin kitchen materials validate input and use the existing protected tabl
   assert.match(page, /<AdminKitchenMaterials owner=\{owner\} \/>/);
 });
 
+test("admin texture upload is protected and GLB materials receive cached texture maps", async () => {
+  class MockTextureLoader {
+    setCrossOrigin(value) {
+      this.crossOrigin = value;
+      return this;
+    }
+    async loadAsync(url) {
+      const texture = new THREE.Texture();
+      texture.userData.url = url;
+      return texture;
+    }
+  }
+  const { acquireKitchenMaterialTextures } = loadSource(
+    "src/three/kitchenMaterialTextures.ts",
+    {
+      three: { ...THREE, TextureLoader: MockTextureLoader },
+    },
+  );
+  const lease = acquireKitchenMaterialTextures({
+    baseColor: "https://res.cloudinary.com/demo/image/upload/oak.webp",
+    normal: "https://res.cloudinary.com/demo/image/upload/oak-normal.webp",
+  });
+  const textures = await lease.promise;
+  assert.equal(textures.baseColor.colorSpace, THREE.SRGBColorSpace);
+  assert.equal(textures.normal.colorSpace, THREE.NoColorSpace);
+  assert.equal(textures.baseColor.flipY, false);
+  assert.equal(textures.baseColor.wrapS, THREE.RepeatWrapping);
+  lease.release();
+
+  const route = fs.readFileSync(
+    "src/app/api/admin/kitchen-material-textures/route.ts",
+    "utf8",
+  );
+  const component = fs.readFileSync(
+    "src/components/AdminKitchenMaterials.tsx",
+    "utf8",
+  );
+  const glb = fs.readFileSync("src/three/GLBFurnitureMesh.tsx", "utf8");
+  const scene = fs.readFileSync("src/three/ModularKitchenScene.tsx", "utf8");
+  assert.match(route, /requireAdmin\(request\)/);
+  assert.match(route, /from\("material_definitions"\)/);
+  assert.match(route, /casa-nova\/kitchen-materials/);
+  assert.match(component, /\/api\/admin\/kitchen-material-textures/);
+  assert.match(glb, /acquireKitchenMaterialTextures/);
+  assert.match(glb, /material\.normalMap = textures\.normal/);
+  assert.match(scene, /texturePaths: material\.texturePaths/);
+});
+
+test("texture upload merges the new Cloudinary URL into the existing material paths", async () => {
+  let updated;
+  const row = {
+    id: "oak",
+    name: "Царс",
+    surface_kind: "general",
+    base_color: "#BB915E",
+    roughness: 0.65,
+    metalness: 0,
+    texture_paths: {},
+    active: true,
+    created_at: "2026-01-01",
+    updated_at: "2026-01-02",
+  };
+  const db = {
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({
+            data: {
+              id: "oak",
+              texture_paths: {
+                normal: "https://res.cloudinary.com/demo/old.png",
+              },
+            },
+            error: null,
+          }),
+        }),
+      }),
+      update: (payload) => {
+        updated = payload;
+        return {
+          eq: () => ({
+            select: () => ({
+              single: async () => ({
+                data: { ...row, texture_paths: payload.texture_paths },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      },
+    }),
+  };
+  const route = loadSource(
+    "src/app/api/admin/kitchen-material-textures/route.ts",
+    {
+      "next/server": {
+        NextResponse: {
+          json: (body, init = {}) => ({
+            body,
+            status: init.status ?? 200,
+            headers: init.headers,
+          }),
+        },
+      },
+      "@/lib/supabase/requireAdmin": {
+        requireAdmin: async () => ({ userId: "admin", error: null }),
+      },
+      "@/lib/supabase/admin": { getSupabaseAdmin: () => db },
+    },
+  );
+  const form = new FormData();
+  form.set("materialId", "oak");
+  form.set("kind", "baseColor");
+  form.set("file", new File(["png"], "oak.png", { type: "image/png" }));
+  const originalFetch = global.fetch;
+  const originalCloudinary = [
+    process.env.CLOUDINARY_CLOUD_NAME,
+    process.env.CLOUDINARY_API_KEY,
+    process.env.CLOUDINARY_API_SECRET,
+  ];
+  process.env.CLOUDINARY_CLOUD_NAME = "demo";
+  process.env.CLOUDINARY_API_KEY = "key";
+  process.env.CLOUDINARY_API_SECRET = "secret";
+  global.fetch = async () => ({
+    ok: true,
+    json: async () => ({
+      secure_url: "https://res.cloudinary.com/demo/image/upload/oak.png",
+      public_id: "casa-nova/kitchen-materials/oak/baseColor",
+    }),
+  });
+  try {
+    const response = await route.POST({ formData: async () => form });
+    assert.equal(response.status, 201);
+    assert.deepEqual(updated.texture_paths, {
+      normal: "https://res.cloudinary.com/demo/old.png",
+      baseColor: "https://res.cloudinary.com/demo/image/upload/oak.png",
+    });
+    assert.equal(
+      response.body.material.texturePaths.baseColor,
+      "https://res.cloudinary.com/demo/image/upload/oak.png",
+    );
+  } finally {
+    global.fetch = originalFetch;
+    [
+      "CLOUDINARY_CLOUD_NAME",
+      "CLOUDINARY_API_KEY",
+      "CLOUDINARY_API_SECRET",
+    ].forEach((name, index) => {
+      const value = originalCloudinary[index];
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    });
+  }
+});
+
 test("unified design preserves appearance and IDs across four layouts and JSON roundtrip", () => {
   const base = model.createUnifiedKitchen();
   const schema = new (require("ajv"))().compile(
