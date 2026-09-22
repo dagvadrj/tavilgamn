@@ -1,5 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 const React = require("react");
 const THREE = require("three");
 const { renderToStaticMarkup } = require("react-dom/server");
@@ -19,6 +20,31 @@ const saved = (design) => ({
   design,
 });
 const near = (a, b) => assert.ok(Math.abs(a - b) < 0.00001, `${a} != ${b}`);
+
+test("kitchen admin upload pins the correct category and protects its R2 handoff", () => {
+  const component = fs.readFileSync(
+    "src/components/AdminKitchenModules.tsx",
+    "utf8",
+  );
+  const createRoute = fs.readFileSync(
+    "src/app/api/models/upload/route.ts",
+    "utf8",
+  );
+  const prepareRoute = fs.readFileSync(
+    "src/app/api/admin/models/upload-url/route.ts",
+    "utf8",
+  );
+  const completeRoute = fs.readFileSync(
+    "src/app/api/admin/models/upload-complete/route.ts",
+    "utf8",
+  );
+  assert.match(component, /form\.set\("category", "kitchen-cabinet"\)/);
+  assert.match(component, /Гал тогооны GLB нэмэх/);
+  assert.match(createRoute, /"kitchen-cabinet"/);
+  assert.match(prepareRoute, /body\?\.modelId/);
+  assert.match(prepareRoute, /if \(auth\.error\)/);
+  assert.match(completeRoute, /if \(auth\.error\)/);
+});
 
 test("unified design preserves appearance and IDs across four layouts and JSON roundtrip", () => {
   const base = model.createUnifiedKitchen();

@@ -82,7 +82,11 @@ export async function POST(
   let client: S3Client | null = null;
 
   try {
-    await requireAdmin(request);
+    const auth = await requireAdmin(request);
+
+    if (auth.error) {
+      return auth.error;
+    }
 
     const bucket =
       process.env.R2_BUCKET_NAME;

@@ -57,7 +57,11 @@ export async function POST(
   let client: S3Client | null = null;
 
   try {
-    await requireAdmin(request);
+    const auth = await requireAdmin(request);
+
+    if (auth.error) {
+      return auth.error;
+    }
 
     const bucket =
       process.env.R2_BUCKET_NAME;
@@ -76,6 +80,11 @@ export async function POST(
         ? body.productId.trim()
         : "";
 
+    const requestedModelId =
+      typeof body?.modelId === "string"
+        ? body.modelId.trim()
+        : "";
+
     const fileName =
       typeof body?.fileName === "string"
         ? body.fileName.trim()
@@ -85,18 +94,17 @@ export async function POST(
       Number(body?.size);
 
     // --------------------------------
-    // 1. Product ID шалгах
+    // 1. Model UUID эсвэл legacy product ID шалгах
     // --------------------------------
 
     if (
-      !/^[a-zA-Z0-9_-]{1,100}$/.test(
-        productId,
-      )
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestedModelId) &&
+      !/^[a-zA-Z0-9_-]{1,100}$/.test(productId)
     ) {
       return NextResponse.json(
         {
           error:
-            "Бүтээгдэхүүний ID буруу байна.",
+            "3D model эсвэл бүтээгдэхүүний ID буруу байна.",
         },
         {
           status: 400,
@@ -147,14 +155,16 @@ export async function POST(
     const db =
       getSupabaseAdmin();
 
+    const lookup = db
+      .from("furniture_models")
+      .select("id,product_id");
+
     const {
       data: model,
       error: modelError,
-    } = await db
-      .from("furniture_models")
-      .select("id,product_id")
-      .eq("product_id", productId)
-      .maybeSingle();
+    } = requestedModelId
+      ? await lookup.eq("id", requestedModelId).maybeSingle()
+      : await lookup.eq("product_id", productId).maybeSingle();
 
     if (modelError) {
       throw modelError;
