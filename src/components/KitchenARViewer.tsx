@@ -3,7 +3,60 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Loader2, X } from "lucide-react";
 import type { Group } from "three";
+let modelViewerPromise: Promise<void> | null = null;
 
+function loadModelViewer() {
+  if (typeof window === "undefined") {
+    return Promise.resolve();
+  }
+
+  if (customElements.get("model-viewer")) {
+    return Promise.resolve();
+  }
+
+  if (modelViewerPromise) {
+    return modelViewerPromise;
+  }
+
+  modelViewerPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[data-kitchen-model-viewer="true"]',
+    );
+
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+
+      existing.addEventListener(
+        "error",
+        () => reject(new Error("AR viewer ачаалж чадсангүй.")),
+        { once: true },
+      );
+
+      return;
+    }
+
+    const script = document.createElement("script");
+
+    script.type = "module";
+
+    script.src =
+      "https://ajax.googleapis.com/ajax/libs/model-viewer/4.3.1/model-viewer.min.js";
+
+    script.dataset.kitchenModelViewer = "true";
+
+    script.onload = () => resolve();
+
+    script.onerror = () => {
+      modelViewerPromise = null;
+
+      reject(new Error("AR viewer ачаалж чадсангүй."));
+    };
+
+    document.head.appendChild(script);
+  });
+
+  return modelViewerPromise;
+}
 type ModelViewerElement = HTMLElement & {
   activateAR?: () => Promise<void>;
   canActivateAR?: boolean;
@@ -50,7 +103,7 @@ export function KitchenARViewer({
     onWorkingChange?.(true);
     setMessage("");
     try {
-      await import("@google/model-viewer");
+      await loadModelViewer();
       const { encodeKitchenGlb } = await import("@/three/kitchenExport");
       const data = await encodeKitchenGlb(root);
       const nextSource = URL.createObjectURL(
