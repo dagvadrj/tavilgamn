@@ -8,7 +8,8 @@ export type Category =
   | "bed"
   | "tv-stand"
   | "bookshelf"
-  | "kitchen-cabinet";
+  | "kitchen-cabinet"
+  | "oven";
 
 export type Material = "wood" | "metal" | "fabric" | "leather" | "velvet";
 

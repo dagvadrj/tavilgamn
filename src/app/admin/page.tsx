@@ -185,6 +185,7 @@ const CATEGORY_OPTIONS = [
   { id: "tv-stand", name: "Телевизийн тавиур" },
   { id: "bookshelf", name: "Номын тавиур" },
   { id: "kitchen-cabinet", name: "Гал тогооны шүүгээ" },
+  { id: "oven", name: "Плитка" },
 ];
 
 const MATERIAL_OPTIONS = [

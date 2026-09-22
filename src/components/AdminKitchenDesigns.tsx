@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, EyeOff, RefreshCw, RotateCcw, X } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
 import type { KitchenDesignSummary } from "@/lib/kitchenMarketplace";
+import { AdminKitchenMaterials } from "./AdminKitchenMaterials";
 import { AdminKitchenModules } from "./AdminKitchenModules";
 
 type ReviewAction =
@@ -129,6 +130,7 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
         </p>
       )}
       <AdminKitchenModules owner={owner} />
+      <AdminKitchenMaterials owner={owner} />
       <div className="grid gap-4 xl:grid-cols-2">
         {visible.map((design) => (
           <article

@@ -22,7 +22,7 @@ export const ROOM_CATALOG_GROUPS: RoomCatalogGroup[] = [
   },
   {
     id: "dining", label: "Гал тогоо, хооллох хэсэг", description: "Нэг ширээний ард цуглах мөчүүд",
-    image: categoryImage("dining-table"), categories: ["dining-table", "kitchen-cabinet"],
+    image: categoryImage("dining-table"), categories: ["dining-table", "kitchen-cabinet", "oven"],
   },
   {
     id: "office", label: "Ажлын өрөө", description: "Ажиллах, суралцах орчноо бүрдүүлэх",

@@ -18,6 +18,7 @@ const ALLOWED_CATEGORIES = new Set([
   "tv-stand",
   "bookshelf",
   "kitchen-cabinet",
+  "oven",
 ]);
 
 export async function POST(request: NextRequest) {

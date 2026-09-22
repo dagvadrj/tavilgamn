@@ -50,6 +50,11 @@ export const CATEGORIES: { id: Category; name: string; image: string }[] = [
     name: "Гал тогооны шүүгээ",
     image: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=80",
   },
+  {
+    id: "oven",
+    name: "Плитка",
+    image: "https://images.unsplash.com/photo-1723902499494-47b2b8cc32cf?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  },
 ];
 
 export const CATEGORY_LABEL: Record<Category, string> = {
@@ -61,6 +66,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   "tv-stand": "Зурагтын тавиур",
   bookshelf: "Номын тавиур",
   "kitchen-cabinet": "Гал тогооны шүүгээ",
+  "oven": "Плитка"
 };
 
 export function priceFor(

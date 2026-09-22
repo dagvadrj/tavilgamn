@@ -96,6 +96,116 @@ test("Supabase materials are normalized and only recolor cabinet GLB surfaces", 
   assert.match(scene, /materialOverride=\{material \?/);
 });
 
+test("admin kitchen materials validate input and use the existing protected table", () => {
+  const {
+    KitchenMaterialInputError,
+    normalizeAdminKitchenMaterials,
+    parseKitchenMaterialInput,
+    parseKitchenMaterialState,
+  } = loadSource("src/lib/kitchenMaterials.ts");
+  assert.deepEqual(
+    parseKitchenMaterialInput({
+      id: " Dark_Oak ",
+      name: " Хар царс ",
+      surfaceKind: "front",
+      baseColor: "#6a4b32",
+      roughness: "0.72",
+      metalness: 0,
+      texturePaths: {
+        baseColor: "https://cdn.example.com/oak.webp",
+        normal: "",
+        injected: "https://bad.example.com/ignored",
+      },
+    }),
+    {
+      id: "dark_oak",
+      name: "Хар царс",
+      surfaceKind: "front",
+      baseColor: "#6A4B32",
+      roughness: 0.72,
+      metalness: 0,
+      texturePaths: { baseColor: "https://cdn.example.com/oak.webp" },
+    },
+  );
+  assert.throws(
+    () =>
+      parseKitchenMaterialInput({
+        id: "../oak",
+        name: "Oak",
+        surfaceKind: "general",
+        baseColor: "#000000",
+        roughness: 1,
+        metalness: 0,
+      }),
+    KitchenMaterialInputError,
+  );
+  assert.throws(
+    () =>
+      parseKitchenMaterialInput({
+        id: "oak",
+        name: "Oak",
+        surfaceKind: "general",
+        baseColor: "#000000",
+        roughness: 1.1,
+        metalness: 0,
+      }),
+    KitchenMaterialInputError,
+  );
+  assert.throws(
+    () =>
+      parseKitchenMaterialInput({
+        id: "oak",
+        name: "Oak",
+        surfaceKind: "general",
+        baseColor: "#000000",
+        roughness: 1,
+        metalness: 0,
+        texturePaths: { normal: "javascript:alert(1)" },
+      }),
+    KitchenMaterialInputError,
+  );
+  assert.deepEqual(parseKitchenMaterialState({ id: "OAK", active: false }), {
+    id: "oak",
+    active: false,
+  });
+  assert.equal(
+    normalizeAdminKitchenMaterials([
+      {
+        id: "oak",
+        name: "Oak",
+        surface_kind: "general",
+        base_color: "#aa8844",
+        roughness: 0.6,
+        metalness: 0,
+        texture_paths: {},
+        active: false,
+        created_at: "2026-01-01",
+        updated_at: "2026-01-02",
+      },
+    ])[0].active,
+    false,
+  );
+
+  const route = fs.readFileSync(
+    "src/app/api/admin/kitchen-materials/route.ts",
+    "utf8",
+  );
+  const component = fs.readFileSync(
+    "src/components/AdminKitchenMaterials.tsx",
+    "utf8",
+  );
+  const page = fs.readFileSync(
+    "src/components/AdminKitchenDesigns.tsx",
+    "utf8",
+  );
+  assert.match(route, /requireAdmin\(request\)/);
+  assert.match(route, /from\("material_definitions"\)/);
+  assert.doesNotMatch(route, /\.delete\(/);
+  assert.match(component, /method: editingId \? "PUT" : "POST"/);
+  assert.match(component, /method: "PATCH"/);
+  assert.match(page, /<AdminKitchenMaterials owner=\{owner\} \/>/);
+});
+
 test("unified design preserves appearance and IDs across four layouts and JSON roundtrip", () => {
   const base = model.createUnifiedKitchen();
   const schema = new (require("ajv"))().compile(
