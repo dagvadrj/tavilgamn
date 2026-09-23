@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -249,6 +249,13 @@ export function ModularKitchenPlanner({
     KitchenMaterialDefinition[]
   >([]);
   const [exportRoot, setExportRoot] = useState<Group | null>(null);
+  const captureKitchen = useRef<(() => Promise<Blob | null>) | null>(null);
+  const registerKitchenCapture = useCallback(
+    (capture: (() => Promise<Blob | null>) | null) => {
+      captureKitchen.current = capture;
+    },
+    [],
+  );
   const [viewKey, setViewKey] = useState(0);
   const [scope, setScope] = useState<"all" | "base" | "wall" | "selected">(
     "all",
@@ -464,15 +471,32 @@ export function ModularKitchenPlanner({
     const id = savedId || crypto.randomUUID();
     setSavedId(id);
     setSaving(true);
-    const saved = await library.save(id, name.trim(), checked);
-    setSaving(false);
-    if (saved) {
-      setMessage("Гарнитур таны бүртгэлд хадгалагдлаа.");
-      if (place) router.push(`/planner?kitchen=${saved.id}`);
-    } else
-      setMessage(
-        useKitchens.getState().error || "Хадгалж чадсангүй. Дахин оролдоно уу.",
-      );
+    try {
+      const saved = await library.save(id, name.trim(), checked);
+      if (saved) {
+        let image: Blob | null = null;
+        try {
+          image = (await captureKitchen.current?.()) ?? null;
+        } catch {
+          /* The JSON project is already safe. */
+        }
+        const thumbnail = image
+          ? await library.saveThumbnail(saved.id, image)
+          : null;
+        setMessage(
+          thumbnail
+            ? "Гарнитур болон 3D нүүр зураг хадгалагдлаа."
+            : "Гарнитур хадгалагдлаа. 3D нүүр зургийг энэ удаа хадгалж чадсангүй.",
+        );
+        if (place) router.push(`/planner?kitchen=${saved.id}`);
+      } else
+        setMessage(
+          useKitchens.getState().error ||
+            "Хадгалж чадсангүй. Дахин оролдоно уу.",
+        );
+    } finally {
+      setSaving(false);
+    }
   }
   function commit(next: ModularKitchen): boolean {
     if (saving || !ready) return false;
@@ -918,6 +942,7 @@ export function ModularKitchenPlanner({
                 <Scene
                   key={viewKey}
                   exportRoot={setExportRoot}
+                  capture={registerKitchenCapture}
                   kitchen={sceneKitchen}
                   open={open}
                   selectedId={selectedId}

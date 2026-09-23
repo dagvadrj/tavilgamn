@@ -14,7 +14,7 @@ export function cloudinaryImageUploadConfigured() {
   return Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
 }
 
-export async function uploadCloudinaryImage(file: Blob, publicId: string): Promise<CloudinaryImage> {
+export async function uploadCloudinaryImage(file: Blob, publicId: string, options: { overwrite?: boolean } = {}): Promise<CloudinaryImage> {
   const cloud = process.env.CLOUDINARY_CLOUD_NAME;
   const key = process.env.CLOUDINARY_API_KEY;
   const secret = process.env.CLOUDINARY_API_SECRET;
@@ -23,10 +23,11 @@ export async function uploadCloudinaryImage(file: Blob, publicId: string): Promi
   }
   const uploadParams: Record<string, string> = {
     allowed_formats: "jpg,jpeg,png,webp",
-    overwrite: "false",
+    overwrite: String(options.overwrite === true),
     public_id: publicId,
     timestamp: String(Math.floor(Date.now() / 1000)),
   };
+  if (options.overwrite) uploadParams.invalidate = "true";
   const signature = createHash("sha256")
     .update(Object.keys(uploadParams).sort().map((name) => `${name}=${uploadParams[name]}`).join("&") + secret)
     .digest("hex");

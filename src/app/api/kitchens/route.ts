@@ -5,7 +5,7 @@ import { parseKitchen } from "@/lib/kitchenAssembly";
 
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "no-store" };
-const columns = "id,name,design,created_at,updated_at";
+const columns = "id,name,design,thumbnail_url,created_at,updated_at";
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request); if (auth.error) return auth.error;
   const { data, error } = await getSupabaseAdmin().from("kitchen_garnitures").select(columns)

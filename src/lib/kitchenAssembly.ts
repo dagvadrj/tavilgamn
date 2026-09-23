@@ -5,7 +5,7 @@ import { createCabinet, createModularKitchen, validateCabinet, type KitchenLayou
 import { cabinetAxes, cabinetCorners, cabinetsOverlap, fitCountertops, placementIssues, resolveElevations } from "./kitchenPlacement";
 import { fitBacksplashes, parseBacksplashSettings } from "./kitchenBacksplash";
 
-export type SavedKitchen = { id: string; name: string; design: ModularKitchen; createdAt: string; updatedAt: string };
+export type SavedKitchen = { id: string; name: string; design: ModularKitchen; thumbnailUrl: string | null; createdAt: string; updatedAt: string };
 export type KitchenSnapshot = { id: string; name: string; design: ModularKitchen };
 export const cloneKitchen = (kitchen: ModularKitchen): ModularKitchen => JSON.parse(JSON.stringify(kitchen));
 export function createUnifiedKitchen(): ModularKitchen {

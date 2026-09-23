@@ -20,6 +20,7 @@ import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 
 export interface ModularSceneProps {
   exportRoot?: (root: Group | null) => void;
+  capture?: (capture: (() => Promise<Blob | null>) | null) => void;
   open?: boolean;
   kitchen: ModularKitchen;
   selectedId: string | null;
@@ -56,10 +57,10 @@ type CaptureTarget = {
   releasePointerCapture: (id: number) => void;
 };
 function Scene(props: ModularSceneProps) {
-  const { kitchen, selectedId, mode } = props;
+  const { capture: registerCapture, kitchen, selectedId, mode } = props;
   // Stable while dragging; layout selection remounts this view to frame the new layout.
   const focus = useRef(kitchenEnvelope(kitchen)).current;
-  const { gl } = useThree();
+  const { camera, gl, invalidate, scene } = useThree();
   const callbacks = useRef(props);
   callbacks.current = props;
   const drag = useRef<{
@@ -107,6 +108,31 @@ function Scene(props: ModularSceneProps) {
       cancel();
     };
   }, [gl]);
+  useEffect(() => {
+    if (!registerCapture) return;
+    const capture = async () => {
+      const hidden: { visible: boolean; object: { visible: boolean } }[] = [];
+      scene.traverse((object) => {
+        if (object.userData.exportExclude && object.visible) {
+          hidden.push({ object, visible: object.visible });
+          object.visible = false;
+        }
+      });
+      try {
+        gl.render(scene, camera);
+        return await new Promise<Blob | null>((resolve) =>
+          gl.domElement.toBlob(resolve, "image/webp", 0.88),
+        );
+      } finally {
+        hidden.forEach(({ object, visible }) => {
+          object.visible = visible;
+        });
+        invalidate();
+      }
+    };
+    registerCapture(capture);
+    return () => registerCapture(null);
+  }, [camera, gl, invalidate, registerCapture, scene]);
   function start(
     event: ThreeEvent<PointerEvent>,
     cabinet: Pick<ModularCabinet, "id" | "position">,
@@ -342,6 +368,7 @@ export function ModularKitchenScene(props: ModularSceneProps) {
       <Canvas
         dpr={[1, 1.5]}
         frameloop="demand"
+        gl={{ preserveDrawingBuffer: true }}
         camera={{ position: [4, 5, 6], fov: 45 }}
         fallback={
           <p className="kp-viewer-message">
