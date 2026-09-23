@@ -1,5 +1,5 @@
 import "server-only";
-import type { KitchenDesignSummary, KitchenRenderJobSummary } from "./kitchenMarketplace";
+import type { KitchenDesignSummary, KitchenRenderJobSummary, KitchenReviewHistoryItem, KitchenVersionHistoryItem } from "./kitchenMarketplace";
 import { getSupabaseAdmin } from "./supabase/admin";
 
 type Db = ReturnType<typeof getSupabaseAdmin>;
@@ -14,23 +14,28 @@ type VersionRow = {
   installation_included: boolean; warranty_months: number | null; service_areas: string[]; inclusions: string[];
   exclusions: string[]; cabinet_count: number; min_room_width_mm: number;
   min_room_depth_mm: number; max_height_mm: number;
+  created_at: string; submitted_at: string | null; approved_at: string | null;
 };
 
-async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], storeNames: Map<string, string>, includeRenderJobs = false) {
+async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], storeNames: Map<string, string>, includePrivateHistory = false) {
   if (!designs.length) return [];
   const chosen = new Map<string, VersionRow>();
   for (const version of versions) if (!chosen.has(version.design_id)) chosen.set(version.design_id, version);
   const ids = [...chosen.values()].map((version) => version.id);
-  const [{ data: media, error }, { data: jobs, error: jobsError }] = await Promise.all([
+  const [{ data: media, error }, { data: jobs, error: jobsError }, { data: reviews, error: reviewsError }] = await Promise.all([
     ids.length
       ? db.from("kitchen_design_media").select("id,version_id,kind,source,url,alt_text,is_primary,sort_order").in("version_id", ids).eq("status", "ready").order("sort_order", { ascending: true })
       : Promise.resolve({ data: [], error: null }),
-    includeRenderJobs && ids.length
+    includePrivateHistory && ids.length
       ? db.from("kitchen_render_jobs").select("id,version_id,status,input_image_url,prompt_snapshot,provider,model,output_media_id,error,created_at,started_at,finished_at").in("version_id", ids).order("created_at", { ascending: false }).limit(2000)
+      : Promise.resolve({ data: [], error: null }),
+    includePrivateHistory
+      ? db.from("kitchen_design_reviews").select("id,design_id,version_id,action,note,created_at").in("design_id", designs.map((design) => design.id)).order("created_at", { ascending: false }).limit(5000)
       : Promise.resolve({ data: [], error: null }),
   ]);
   if (error) throw error;
   if (jobsError) throw jobsError;
+  if (reviewsError) throw reviewsError;
   const mediaByVersion = new Map<string, KitchenDesignSummary["media"]>();
   for (const item of media ?? []) {
     const versionId = item.version_id as string;
@@ -52,6 +57,24 @@ async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], s
       finishedAt: item.finished_at as string | null });
     jobsByVersion.set(versionId, collection);
   }
+  const versionsByDesign = new Map<string, KitchenVersionHistoryItem[]>();
+  const publishedByDesign = new Map(designs.map((design) => [design.id, design.published_version_id]));
+  if (includePrivateHistory) for (const item of versions) {
+    const collection = versionsByDesign.get(item.design_id) ?? [];
+    collection.push({ id: item.id, versionNo: item.version_no, reviewStatus: item.review_status,
+      title: item.title, isPublished: publishedByDesign.get(item.design_id) === item.id,
+      createdAt: item.created_at, submittedAt: item.submitted_at, approvedAt: item.approved_at });
+    versionsByDesign.set(item.design_id, collection);
+  }
+  const reviewsByDesign = new Map<string, KitchenReviewHistoryItem[]>();
+  for (const item of reviews ?? []) {
+    const designId = item.design_id as string;
+    const collection = reviewsByDesign.get(designId) ?? [];
+    collection.push({ id: item.id as string, versionId: item.version_id as string | null,
+      action: item.action as KitchenReviewHistoryItem["action"], note: item.note as string,
+      createdAt: item.created_at as string });
+    reviewsByDesign.set(designId, collection);
+  }
   return designs.flatMap((design): KitchenDesignSummary[] => {
     const version = chosen.get(design.id);
     if (!version) return [];
@@ -71,12 +94,13 @@ async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], s
       roomWidthMm: version.min_room_width_mm, roomDepthMm: version.min_room_depth_mm,
       maxHeightMm: version.max_height_mm,
       thumbnailUrl: mediaByVersion.get(version.id)?.find((item) => item.kind === "thumbnail" && item.isPrimary)?.url ?? null,
-      media: mediaByVersion.get(version.id) ?? [], renderJobs: jobsByVersion.get(version.id) ?? [], updatedAt: design.updated_at,
+      media: mediaByVersion.get(version.id) ?? [], renderJobs: jobsByVersion.get(version.id) ?? [],
+      versions: versionsByDesign.get(design.id) ?? [], reviews: reviewsByDesign.get(design.id) ?? [], updatedAt: design.updated_at,
     }];
   });
 }
 
-const VERSION_FIELDS = "id,design_id,version_no,review_status,title,short_description,description,style,layout,tags,pricing_mode,price_from,lead_time_days,installation_included,warranty_months,service_areas,inclusions,exclusions,cabinet_count,min_room_width_mm,min_room_depth_mm,max_height_mm";
+const VERSION_FIELDS = "id,design_id,version_no,review_status,title,short_description,description,style,layout,tags,pricing_mode,price_from,lead_time_days,installation_included,warranty_months,service_areas,inclusions,exclusions,cabinet_count,min_room_width_mm,min_room_depth_mm,max_height_mm,created_at,submitted_at,approved_at";
 
 export async function readMerchantKitchenDesigns(actor: string, db = getSupabaseAdmin()) {
   const { data: store, error: storeError } = await db.from("merchant_stores").select("id,name,store_type,active").eq("owner_id", actor).maybeSingle();

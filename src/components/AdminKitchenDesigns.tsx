@@ -15,6 +15,7 @@ import { authFetch } from "@/lib/authFetch";
 import type { KitchenDesignSummary } from "@/lib/kitchenMarketplace";
 import { AdminKitchenMaterials } from "./AdminKitchenMaterials";
 import { AdminKitchenModules } from "./AdminKitchenModules";
+import { KitchenReviewTimeline } from "./KitchenReviewTimeline";
 
 type ReviewAction =
   | "approved"
@@ -296,6 +297,7 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                   </p>
                 </div>
               </details>
+              <KitchenReviewTimeline design={design} />
               {design.renderJobs.length > 0 && (
                 <div className="space-y-2 rounded-xl border border-violet-200 bg-violet-50 p-3">
                   <h3 className="flex items-center gap-2 text-sm font-medium text-violet-950">

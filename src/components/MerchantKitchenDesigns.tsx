@@ -20,6 +20,7 @@ import type {
   KitchenDesignSummary,
   KitchenVersionSaveMode,
 } from "@/lib/kitchenMarketplace";
+import { KitchenReviewTimeline } from "./KitchenReviewTimeline";
 
 type SavedKitchen = { id: string; name: string };
 type LoadResult = {
@@ -749,6 +750,7 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
                   <p className="text-sm text-black/60">
                     {design.shortDescription || "Тайлбар оруулаагүй"}
                   </p>
+                  <KitchenReviewTimeline design={design} />
                   {design.publicationStatus === "published" &&
                     design.publishedVersionId !== design.versionId && (
                       <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">

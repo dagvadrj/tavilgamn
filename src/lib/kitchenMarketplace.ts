@@ -28,6 +28,25 @@ export type KitchenRenderJobSummary = {
   finishedAt: string | null;
 };
 
+export type KitchenVersionHistoryItem = {
+  id: string;
+  versionNo: number;
+  reviewStatus: KitchenDesignReviewStatus;
+  title: string;
+  isPublished: boolean;
+  createdAt: string;
+  submittedAt: string | null;
+  approvedAt: string | null;
+};
+
+export type KitchenReviewHistoryItem = {
+  id: string;
+  versionId: string | null;
+  action: "approved" | "changes_requested" | "rejected" | "unpublished";
+  note: string;
+  createdAt: string;
+};
+
 export type KitchenDesignSummary = {
   id: string;
   storeId: string;
@@ -59,6 +78,8 @@ export type KitchenDesignSummary = {
   thumbnailUrl: string | null;
   media: Array<{ id: string; kind: "thumbnail" | "render" | "ai_render" | "photo" | "plan"; source: "system" | "merchant" | "ai"; url: string; altText: string; isPrimary: boolean }>;
   renderJobs: KitchenRenderJobSummary[];
+  versions: KitchenVersionHistoryItem[];
+  reviews: KitchenReviewHistoryItem[];
   updatedAt: string;
 };
 
