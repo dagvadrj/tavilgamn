@@ -8,6 +8,7 @@ import {
   LoaderCircle,
   RefreshCw,
   Send,
+  Sparkles,
   Store,
   Upload,
 } from "lucide-react";
@@ -69,6 +70,9 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
   const [serviceAreas, setServiceAreas] = useState("");
   const [inclusions, setInclusions] = useState("");
   const [exclusions, setExclusions] = useState("");
+  const [renderDirections, setRenderDirections] = useState<
+    Record<string, string>
+  >({});
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -188,6 +192,41 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "Үйлдэл амжилтгүй боллоо.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function requestRender(design: KitchenDesignSummary) {
+    const source =
+      design.media.find(
+        (item) => item.kind === "thumbnail" && item.isPrimary,
+      ) ?? design.media[0];
+    if (!source) return;
+    setBusy(`render:${design.id}`);
+    setError(null);
+    try {
+      await request(
+        `/api/merchant/kitchen-designs/${design.id}/renders`,
+        owner,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            versionId: design.versionId,
+            sourceMediaId: source.id,
+            direction: renderDirections[design.id] ?? "",
+          }),
+        },
+      );
+      setRenderDirections((current) => ({ ...current, [design.id]: "" }));
+      await load();
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "AI render хүсэлт үүсгэж чадсангүй.",
       );
     } finally {
       setBusy(null);
@@ -437,6 +476,105 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
                   <p className="text-sm text-black/60">
                     {design.shortDescription || "Тайлбар оруулаагүй"}
                   </p>
+                  {design.media.length > 1 && (
+                    <div className="flex gap-2 overflow-x-auto">
+                      {design.media
+                        .filter((item) => !item.isPrimary)
+                        .map((item) => (
+                          <div
+                            key={item.id}
+                            className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-black/5"
+                          >
+                            <Image
+                              src={item.url}
+                              alt={item.altText || design.title}
+                              fill
+                              className="object-cover"
+                            />
+                            <span className="absolute bottom-1 left-1 rounded bg-black/65 px-1.5 py-0.5 text-[9px] text-white">
+                              {item.source === "ai" ? "AI render" : item.kind}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                  {design.renderJobs.length > 0 && (
+                    <div className="space-y-1 rounded-xl bg-violet-50 p-3 text-xs text-violet-950">
+                      {design.renderJobs.slice(0, 3).map((job) => (
+                        <p key={job.id}>
+                          <strong>AI render:</strong>{" "}
+                          {job.status === "queued"
+                            ? "admin хүлээж байна"
+                            : job.status === "processing"
+                              ? "үүсгэж байна"
+                              : job.status === "completed"
+                                ? "бэлэн"
+                                : job.status === "failed"
+                                  ? "амжилтгүй"
+                                  : "цуцлагдсан"}
+                          {job.error && (
+                            <span className="block text-red-700">
+                              {job.error}
+                            </span>
+                          )}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                  {(["draft", "changes_requested"] as const).includes(
+                    design.reviewStatus as "draft" | "changes_requested",
+                  ) &&
+                    design.thumbnailUrl && (
+                      <details className="rounded-xl border border-violet-200 bg-violet-50/60 p-3">
+                        <summary className="cursor-pointer text-sm font-medium text-violet-950">
+                          <span className="inline-flex items-center gap-2">
+                            <Sparkles size={15} />
+                            AI бодит render хүсэх
+                          </span>
+                        </summary>
+                        <div className="mt-3 space-y-2">
+                          <textarea
+                            className="input min-h-20 w-full bg-white"
+                            maxLength={1000}
+                            placeholder="Жишээ: дулаан оройн гэрэл, царсан шал, минимал декор"
+                            value={renderDirections[design.id] ?? ""}
+                            onChange={(event) =>
+                              setRenderDirections((current) => ({
+                                ...current,
+                                [design.id]: event.target.value,
+                              }))
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={
+                              !!busy ||
+                              design.renderJobs.some(
+                                (job) =>
+                                  job.status === "queued" ||
+                                  job.status === "processing",
+                              )
+                            }
+                            onClick={() => void requestRender(design)}
+                          >
+                            {busy === `render:${design.id}` ? (
+                              <LoaderCircle
+                                className="animate-spin"
+                                size={15}
+                              />
+                            ) : (
+                              <Sparkles size={15} />
+                            )}
+                            Хүсэлт илгээх
+                          </button>
+                          <p className="text-xs text-black/45">
+                            Зургийн бүтцийг өөрчлөхгүй, зөвхөн гэрэл болон бодит
+                            материалын дүрслэлийг сайжруулна.
+                          </p>
+                        </div>
+                      </details>
+                    )}
                   <div className="flex flex-wrap gap-2">
                     {(["draft", "changes_requested"] as const).includes(
                       design.reviewStatus as "draft" | "changes_requested",

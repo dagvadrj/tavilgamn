@@ -2,7 +2,15 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Check, EyeOff, RefreshCw, RotateCcw, X } from "lucide-react";
+import {
+  Check,
+  EyeOff,
+  LoaderCircle,
+  RefreshCw,
+  RotateCcw,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
 import type { KitchenDesignSummary } from "@/lib/kitchenMarketplace";
 import { AdminKitchenMaterials } from "./AdminKitchenMaterials";
@@ -83,6 +91,30 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
         reason instanceof Error
           ? reason.message
           : "Шийдвэрийг хадгалж чадсангүй.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function generateRender(jobId: string) {
+    setBusy(`render:${jobId}`);
+    setError(null);
+    try {
+      const response = await authFetch(
+        `/api/admin/kitchen-render-jobs/${jobId}/generate`,
+        { method: "POST" },
+        owner,
+      );
+      const data = await response.json().catch(() => null);
+      if (!response.ok)
+        throw new Error(data?.error ?? "AI render үүсгэж чадсангүй.");
+      await load();
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "AI render үүсгэж чадсангүй.",
       );
     } finally {
       setBusy(null);
@@ -264,6 +296,46 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                   </p>
                 </div>
               </details>
+              {design.renderJobs.length > 0 && (
+                <div className="space-y-2 rounded-xl border border-violet-200 bg-violet-50 p-3">
+                  <h3 className="flex items-center gap-2 text-sm font-medium text-violet-950">
+                    <Sparkles size={15} />
+                    AI render хүсэлт
+                  </h3>
+                  {design.renderJobs.map((job) => (
+                    <div
+                      key={job.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white p-3 text-xs"
+                    >
+                      <div>
+                        <strong>{job.status}</strong>
+                        <span className="ml-2 text-black/45">{job.model}</span>
+                        <p className="mt-1 line-clamp-2 max-w-xl text-black/55">
+                          {job.prompt}
+                        </p>
+                        {job.error && (
+                          <p className="mt-1 text-red-700">{job.error}</p>
+                        )}
+                      </div>
+                      {job.status === "queued" && (
+                        <button
+                          type="button"
+                          className="btn-primary"
+                          disabled={!!busy}
+                          onClick={() => void generateRender(job.id)}
+                        >
+                          {busy === `render:${job.id}` ? (
+                            <LoaderCircle className="animate-spin" size={15} />
+                          ) : (
+                            <Sparkles size={15} />
+                          )}
+                          AI зураг үүсгэх
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
               {design.reviewStatus === "submitted" && (
                 <>
                   <textarea

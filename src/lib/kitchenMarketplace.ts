@@ -14,6 +14,20 @@ export type KitchenPublicationStatus =
   | "archived"
   | "suspended";
 
+export type KitchenRenderJobSummary = {
+  id: string;
+  status: "queued" | "processing" | "completed" | "failed" | "cancelled";
+  inputImageUrl: string | null;
+  prompt: string;
+  provider: string | null;
+  model: string | null;
+  outputMediaId: string | null;
+  error: string | null;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+};
+
 export type KitchenDesignSummary = {
   id: string;
   storeId: string;
@@ -44,6 +58,7 @@ export type KitchenDesignSummary = {
   maxHeightMm: number;
   thumbnailUrl: string | null;
   media: Array<{ id: string; kind: "thumbnail" | "render" | "ai_render" | "photo" | "plan"; source: "system" | "merchant" | "ai"; url: string; altText: string; isPrimary: boolean }>;
+  renderJobs: KitchenRenderJobSummary[];
   updatedAt: string;
 };
 
@@ -146,6 +161,23 @@ export function readKitchenDesignAction(value: unknown) {
     throw new KitchenMarketplaceInputError("Version ID буруу байна.");
   }
   return { action: value.action as "submit" | "publish" | "archive", versionId };
+}
+
+export function readKitchenRenderRequest(value: unknown) {
+  if (!record(value)) throw new KitchenMarketplaceInputError("AI render хүсэлт буруу байна.");
+  const versionId = text(value.versionId, "Version", 36);
+  const sourceMediaId = text(value.sourceMediaId, "Эх зураг", 36);
+  if (!UUID.test(versionId) || !UUID.test(sourceMediaId)) {
+    throw new KitchenMarketplaceInputError("Version эсвэл эх зургийн ID буруу байна.");
+  }
+  const direction = text(value.direction, "Render чиглэл", 1000, true);
+  const prompt = [
+    "Create a photorealistic interior design photograph from the supplied kitchen planner reference image.",
+    "Preserve the exact cabinet count, cabinet widths, appliance positions, kitchen layout, proportions, colors, materials, doors, drawers, handles, worktop and room geometry shown in the reference.",
+    "Improve only lighting, realistic material response, shadows and the surrounding lived-in interior context. Use a natural wide-angle architectural photography look. Do not add, remove, resize or move cabinets or appliances. Do not add text, logos, people or watermarks.",
+    direction ? `Merchant direction: ${direction}` : "Merchant direction: bright natural daylight, clean contemporary styling.",
+  ].join("\n");
+  return { versionId, sourceMediaId, prompt };
 }
 
 export function readKitchenReview(value: unknown) {
