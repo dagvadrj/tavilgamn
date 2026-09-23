@@ -195,6 +195,7 @@ function MerchantWorkspace({
       onChange={changeTab}
       userName={userName}
       storeName={store?.name ?? "Миний дэлгүүр"}
+      owner={owner}
       hasStore={Boolean(store)}
     >
       {!loaded ? (

@@ -1,16 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, ChevronDown, MessageSquare, Search } from "lucide-react";
+import { ChevronDown, MessageSquare, Search } from "lucide-react";
+import { MerchantNotifications } from "./MerchantNotifications";
 
 export function MerchantHeader({
   userName,
   storeName,
+  owner,
   onProducts,
+  onKitchens,
 }: {
   userName: string;
   storeName: string;
+  owner: string;
   onProducts: () => void;
+  onKitchens: () => void;
 }) {
   const initial = userName.trim().slice(0, 1).toUpperCase() || "M";
 
@@ -32,14 +37,7 @@ export function MerchantHeader({
           <kbd>⌘ K</kbd>
         </button>
 
-        <button
-          type="button"
-          className="merchant-header-icon"
-          aria-label="Мэдэгдэл"
-        >
-          <Bell size={19} strokeWidth={1.7} />
-          <span className="merchant-notification-dot" />
-        </button>
+        <MerchantNotifications owner={owner} onKitchens={onKitchens} />
 
         <button
           type="button"

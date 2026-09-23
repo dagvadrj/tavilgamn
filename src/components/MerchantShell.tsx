@@ -9,6 +9,7 @@ export function MerchantShell({
   onChange,
   userName,
   storeName,
+  owner,
   hasStore,
   children,
 }: {
@@ -16,6 +17,7 @@ export function MerchantShell({
   onChange: (tab: MerchantTab) => void;
   userName: string;
   storeName: string;
+  owner: string;
   hasStore: boolean;
   children: ReactNode;
 }) {
@@ -31,7 +33,9 @@ export function MerchantShell({
         <MerchantHeader
           userName={userName}
           storeName={storeName}
+          owner={owner}
           onProducts={() => onChange("products")}
+          onKitchens={() => onChange("kitchens")}
         />
 
         <main className="merchant-content">{children}</main>
