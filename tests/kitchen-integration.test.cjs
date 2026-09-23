@@ -21,6 +21,30 @@ const saved = (design) => ({
 });
 const near = (a, b) => assert.ok(Math.abs(a - b) < 0.00001, `${a} != ${b}`);
 
+test("kitchen marketplace exposes complete listing details without a duplicate data model", () => {
+  const server = fs.readFileSync("src/lib/kitchenMarketplaceServer.ts", "utf8");
+  const merchant = fs.readFileSync(
+    "src/components/MerchantKitchenDesigns.tsx",
+    "utf8",
+  );
+  const admin = fs.readFileSync(
+    "src/components/AdminKitchenDesigns.tsx",
+    "utf8",
+  );
+  const listing = fs.readFileSync("src/app/kitchens/page.tsx", "utf8");
+  const detail = fs.readFileSync("src/app/kitchens/[slug]/page.tsx", "utf8");
+  assert.match(server, /service_areas,inclusions,exclusions/);
+  assert.match(server, /readPublishedKitchenDesignBySlug/);
+  assert.match(server, /\.eq\("publication_status", "published"\)/);
+  assert.match(merchant, /serviceAreas: splitList\(serviceAreas\)/);
+  assert.match(merchant, /installationIncluded/);
+  assert.match(admin, /Marketplace дэлгэрэнгүй/);
+  assert.match(listing, /href=\{`\/kitchens\/\$\{design\.slug\}`\}/);
+  assert.match(detail, /AI бодит дүрслэл/);
+  assert.match(detail, /Үнэд багтсан/);
+  assert.match(detail, /Үйлдвэртэй холбогдох/);
+});
+
 test("kitchen admin upload pins the correct category and protects its R2 handoff", () => {
   const component = fs.readFileSync(
     "src/components/AdminKitchenModules.tsx",

@@ -35,6 +35,9 @@ export type KitchenDesignSummary = {
   leadTimeDays: number | null;
   installationIncluded: boolean;
   warrantyMonths: number | null;
+  serviceAreas: string[];
+  inclusions: string[];
+  exclusions: string[];
   cabinetCount: number;
   roomWidthMm: number;
   roomDepthMm: number;

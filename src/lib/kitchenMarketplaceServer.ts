@@ -11,7 +11,8 @@ type VersionRow = {
   id: string; design_id: string; version_no: number; review_status: KitchenDesignSummary["reviewStatus"];
   title: string; short_description: string; description: string; style: string; layout: string; tags: string[];
   pricing_mode: KitchenDesignSummary["pricingMode"]; price_from: number | string | null; lead_time_days: number | null;
-  installation_included: boolean; warranty_months: number | null; cabinet_count: number; min_room_width_mm: number;
+  installation_included: boolean; warranty_months: number | null; service_areas: string[]; inclusions: string[];
+  exclusions: string[]; cabinet_count: number; min_room_width_mm: number;
   min_room_depth_mm: number; max_height_mm: number;
 };
 
@@ -44,7 +45,11 @@ async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], s
       style: version.style, layout: version.layout, tags: Array.isArray(version.tags) ? version.tags : [],
       pricingMode: version.pricing_mode, priceFrom: version.price_from == null ? null : Number(version.price_from),
       leadTimeDays: version.lead_time_days, installationIncluded: version.installation_included,
-      warrantyMonths: version.warranty_months, cabinetCount: version.cabinet_count,
+      warrantyMonths: version.warranty_months,
+      serviceAreas: Array.isArray(version.service_areas) ? version.service_areas : [],
+      inclusions: Array.isArray(version.inclusions) ? version.inclusions : [],
+      exclusions: Array.isArray(version.exclusions) ? version.exclusions : [],
+      cabinetCount: version.cabinet_count,
       roomWidthMm: version.min_room_width_mm, roomDepthMm: version.min_room_depth_mm,
       maxHeightMm: version.max_height_mm,
       thumbnailUrl: mediaByVersion.get(version.id)?.find((item) => item.kind === "thumbnail" && item.isPrimary)?.url ?? null,
@@ -53,7 +58,7 @@ async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], s
   });
 }
 
-const VERSION_FIELDS = "id,design_id,version_no,review_status,title,short_description,description,style,layout,tags,pricing_mode,price_from,lead_time_days,installation_included,warranty_months,cabinet_count,min_room_width_mm,min_room_depth_mm,max_height_mm";
+const VERSION_FIELDS = "id,design_id,version_no,review_status,title,short_description,description,style,layout,tags,pricing_mode,price_from,lead_time_days,installation_included,warranty_months,service_areas,inclusions,exclusions,cabinet_count,min_room_width_mm,min_room_depth_mm,max_height_mm";
 
 export async function readMerchantKitchenDesigns(actor: string, db = getSupabaseAdmin()) {
   const { data: store, error: storeError } = await db.from("merchant_stores").select("id,name,store_type,active").eq("owner_id", actor).maybeSingle();
@@ -105,4 +110,21 @@ export async function readPublishedKitchenDesigns(db = getSupabaseAdmin()) {
   if (versionError) throw versionError;
   if (storeError) throw storeError;
   return summaries(db, designs, (versionRows ?? []) as VersionRow[], new Map((stores ?? []).map((store) => [store.id as string, store.name as string])));
+}
+
+export async function readPublishedKitchenDesignBySlug(slug: string, db = getSupabaseAdmin()) {
+  if (!/^[a-z0-9][a-z0-9-]{1,99}$/.test(slug)) return null;
+  const { data: designRow, error: designError } = await db.from("kitchen_designs")
+    .select("id,store_id,slug,publication_status,published_version_id,updated_at")
+    .eq("slug", slug).eq("publication_status", "published").maybeSingle();
+  if (designError) throw designError;
+  if (!designRow?.published_version_id) return null;
+  const [{ data: versionRow, error: versionError }, { data: store, error: storeError }] = await Promise.all([
+    db.from("kitchen_design_versions").select(VERSION_FIELDS).eq("id", designRow.published_version_id).maybeSingle(),
+    db.from("merchant_stores").select("id,name").eq("id", designRow.store_id).maybeSingle(),
+  ]);
+  if (versionError) throw versionError;
+  if (storeError) throw storeError;
+  if (!versionRow || !store) return null;
+  return (await summaries(db, [designRow as DesignRow], [versionRow as VersionRow], new Map([[store.id as string, store.name as string]])))[0] ?? null;
 }

@@ -21,6 +21,15 @@ type LoadResult = {
   designs: KitchenDesignSummary[];
 };
 
+const splitList = (value: string) => [
+  ...new Set(
+    value
+      .split(/[\n,]/)
+      .map((item) => item.trim())
+      .filter(Boolean),
+  ),
+];
+
 async function request<T>(
   path: string,
   owner: string,
@@ -46,9 +55,20 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
   const [kitchens, setKitchens] = useState<SavedKitchen[]>([]);
   const [sourceKitchenId, setSourceKitchenId] = useState("");
   const [title, setTitle] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
+  const [style, setStyle] = useState("modern");
+  const [pricingMode, setPricingMode] = useState<"fixed" | "from" | "quote">(
+    "quote",
+  );
   const [priceFrom, setPriceFrom] = useState("");
   const [leadTimeDays, setLeadTimeDays] = useState("");
+  const [warrantyMonths, setWarrantyMonths] = useState("");
+  const [installationIncluded, setInstallationIncluded] = useState(false);
+  const [tags, setTags] = useState("");
+  const [serviceAreas, setServiceAreas] = useState("");
+  const [inclusions, setInclusions] = useState("");
+  const [exclusions, setExclusions] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,23 +106,33 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
         body: JSON.stringify({
           sourceKitchenId,
           title,
-          shortDescription: description,
+          shortDescription,
           description,
-          style: "modern",
-          pricingMode: priceFrom ? "from" : "quote",
+          style,
+          pricingMode,
           priceFrom: priceFrom || null,
           leadTimeDays: leadTimeDays || null,
-          installationIncluded: false,
-          tags: [],
-          serviceAreas: [],
-          inclusions: [],
-          exclusions: [],
+          warrantyMonths: warrantyMonths || null,
+          installationIncluded,
+          tags: splitList(tags),
+          serviceAreas: splitList(serviceAreas),
+          inclusions: splitList(inclusions),
+          exclusions: splitList(exclusions),
         }),
       });
       setTitle("");
+      setShortDescription("");
       setDescription("");
+      setStyle("modern");
+      setPricingMode("quote");
       setPriceFrom("");
       setLeadTimeDays("");
+      setWarrantyMonths("");
+      setInstallationIncluded(false);
+      setTags("");
+      setServiceAreas("");
+      setInclusions("");
+      setExclusions("");
       await load();
     } catch (reason) {
       setError(
@@ -230,23 +260,63 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
               />
             </label>
             <label className="label lg:col-span-2">
-              Тайлбар
+              Товч тайлбар
               <textarea
-                className="input mt-1 min-h-24 w-full"
+                className="input mt-1 min-h-20 w-full"
                 maxLength={300}
+                value={shortDescription}
+                onChange={(e) => setShortDescription(e.target.value)}
+                placeholder="Жагсаалтын карт дээр харагдах 1–2 өгүүлбэр"
+              />
+            </label>
+            <label className="label lg:col-span-2">
+              Дэлгэрэнгүй тайлбар
+              <textarea
+                className="input mt-1 min-h-28 w-full"
+                maxLength={10000}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
             </label>
             <label className="label">
-              Эхлэх үнэ (₮)
+              Загварын стиль
+              <select
+                className="input mt-1 w-full"
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+              >
+                <option value="modern">Модерн</option>
+                <option value="classic">Классик</option>
+                <option value="minimal">Минимал</option>
+                <option value="industrial">Индастриал</option>
+                <option value="scandinavian">Скандинав</option>
+              </select>
+            </label>
+            <label className="label">
+              Үнийн төрөл
+              <select
+                className="input mt-1 w-full"
+                value={pricingMode}
+                onChange={(e) =>
+                  setPricingMode(e.target.value as "fixed" | "from" | "quote")
+                }
+              >
+                <option value="quote">Үнийн санал</option>
+                <option value="from">Эхлэх үнэ</option>
+                <option value="fixed">Тогтмол үнэ</option>
+              </select>
+            </label>
+            <label className="label">
+              Үнэ (₮)
               <input
                 className="input mt-1 w-full"
                 type="number"
                 min="0"
+                required={pricingMode !== "quote"}
+                disabled={pricingMode === "quote"}
                 value={priceFrom}
                 onChange={(e) => setPriceFrom(e.target.value)}
-                placeholder="Хоосон бол үнийн санал"
+                placeholder={pricingMode === "quote" ? "Үнийн санал авах" : "0"}
               />
             </label>
             <label className="label">
@@ -258,6 +328,65 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
                 max="365"
                 value={leadTimeDays}
                 onChange={(e) => setLeadTimeDays(e.target.value)}
+              />
+            </label>
+            <label className="label">
+              Баталгаат хугацаа (сар)
+              <input
+                className="input mt-1 w-full"
+                type="number"
+                min="0"
+                max="120"
+                value={warrantyMonths}
+                onChange={(e) => setWarrantyMonths(e.target.value)}
+              />
+            </label>
+            <label className="label flex items-center gap-3 pt-6">
+              <input
+                type="checkbox"
+                checked={installationIncluded}
+                onChange={(e) => setInstallationIncluded(e.target.checked)}
+              />
+              Угсралт үнэд багтсан
+            </label>
+            <label className="label">
+              Tag-ууд
+              <textarea
+                className="input mt-1 min-h-20 w-full"
+                maxLength={2000}
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                placeholder="модерн, царс, жижиг гал тогоо"
+              />
+            </label>
+            <label className="label">
+              Үйлчилгээний бүс
+              <textarea
+                className="input mt-1 min-h-20 w-full"
+                maxLength={5000}
+                value={serviceAreas}
+                onChange={(e) => setServiceAreas(e.target.value)}
+                placeholder="Улаанбаатар, Дархан"
+              />
+            </label>
+            <label className="label">
+              Үнэд багтсан
+              <textarea
+                className="input mt-1 min-h-24 w-full"
+                maxLength={5000}
+                value={inclusions}
+                onChange={(e) => setInclusions(e.target.value)}
+                placeholder="Мөр бүрт нэг зүйл"
+              />
+            </label>
+            <label className="label">
+              Үнэд багтаагүй
+              <textarea
+                className="input mt-1 min-h-24 w-full"
+                maxLength={5000}
+                value={exclusions}
+                onChange={(e) => setExclusions(e.target.value)}
+                placeholder="Цахилгаан хэрэгсэл, хүргэлт"
               />
             </label>
             <button

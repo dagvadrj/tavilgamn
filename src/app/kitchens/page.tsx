@@ -60,7 +60,14 @@ export default async function KitchenMarketplacePage() {
                   <p className="text-xs uppercase tracking-wider text-[#69756c]">
                     {design.storeName}
                   </p>
-                  <h2 className="mt-1 text-xl font-semibold">{design.title}</h2>
+                  <h2 className="mt-1 text-xl font-semibold">
+                    <Link
+                      href={`/kitchens/${design.slug}`}
+                      className="hover:text-[#42634f]"
+                    >
+                      {design.title}
+                    </Link>
+                  </h2>
                 </div>
                 <p className="line-clamp-2 text-sm text-black/60">
                   {design.shortDescription ||
@@ -93,6 +100,12 @@ export default async function KitchenMarketplacePage() {
                     </span>
                   )}
                 </div>
+                <Link
+                  href={`/kitchens/${design.slug}`}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[#293c32]/20 text-sm font-medium text-[#293c32]"
+                >
+                  Дэлгэрэнгүй <ArrowUpRight size={15} />
+                </Link>
               </div>
             </article>
           ))}

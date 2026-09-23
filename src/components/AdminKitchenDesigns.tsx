@@ -220,6 +220,50 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                   </dd>
                 </div>
               </dl>
+              <details className="rounded-xl border border-black/10 p-3 text-sm">
+                <summary className="cursor-pointer font-medium">
+                  Marketplace дэлгэрэнгүй
+                </summary>
+                <div className="mt-3 grid gap-3 text-black/65 sm:grid-cols-2">
+                  <p>
+                    <span className="block text-xs text-black/40">
+                      Стиль / зохион байгуулалт
+                    </span>
+                    {design.style} · {design.layout}
+                  </p>
+                  <p>
+                    <span className="block text-xs text-black/40">
+                      Баталгаа / угсралт
+                    </span>
+                    {design.warrantyMonths
+                      ? `${design.warrantyMonths} сар`
+                      : "Оруулаагүй"}{" "}
+                    · {design.installationIncluded ? "багтсан" : "багтаагүй"}
+                  </p>
+                  <p>
+                    <span className="block text-xs text-black/40">
+                      Үйлчилгээний бүс
+                    </span>
+                    {design.serviceAreas.join(", ") || "Оруулаагүй"}
+                  </p>
+                  <p>
+                    <span className="block text-xs text-black/40">Tag</span>
+                    {design.tags.join(", ") || "Оруулаагүй"}
+                  </p>
+                  <p>
+                    <span className="block text-xs text-black/40">
+                      Үнэд багтсан
+                    </span>
+                    {design.inclusions.join(", ") || "Оруулаагүй"}
+                  </p>
+                  <p>
+                    <span className="block text-xs text-black/40">
+                      Үнэд багтаагүй
+                    </span>
+                    {design.exclusions.join(", ") || "Оруулаагүй"}
+                  </p>
+                </div>
+              </details>
               {design.reviewStatus === "submitted" && (
                 <>
                   <textarea
