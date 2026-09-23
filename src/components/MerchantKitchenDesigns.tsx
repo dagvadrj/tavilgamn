@@ -4,16 +4,22 @@ import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import {
   CheckCircle2,
+  GitBranch,
   ImagePlus,
   LoaderCircle,
+  Pencil,
   RefreshCw,
   Send,
   Sparkles,
   Store,
   Upload,
+  X,
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
-import type { KitchenDesignSummary } from "@/lib/kitchenMarketplace";
+import type {
+  KitchenDesignSummary,
+  KitchenVersionSaveMode,
+} from "@/lib/kitchenMarketplace";
 
 type SavedKitchen = { id: string; name: string };
 type LoadResult = {
@@ -30,6 +36,47 @@ const splitList = (value: string) => [
       .filter(Boolean),
   ),
 ];
+type ListingForm = {
+  title: string;
+  shortDescription: string;
+  description: string;
+  style: string;
+  pricingMode: "fixed" | "from" | "quote";
+  priceFrom: string;
+  leadTimeDays: string;
+  warrantyMonths: string;
+  installationIncluded: boolean;
+  tags: string;
+  serviceAreas: string;
+  inclusions: string;
+  exclusions: string;
+};
+const listingForm = (design: KitchenDesignSummary): ListingForm => ({
+  title: design.title,
+  shortDescription: design.shortDescription,
+  description: design.description,
+  style: design.style,
+  pricingMode: design.pricingMode,
+  priceFrom: design.priceFrom == null ? "" : String(design.priceFrom),
+  leadTimeDays: design.leadTimeDays == null ? "" : String(design.leadTimeDays),
+  warrantyMonths:
+    design.warrantyMonths == null ? "" : String(design.warrantyMonths),
+  installationIncluded: design.installationIncluded,
+  tags: design.tags.join(", "),
+  serviceAreas: design.serviceAreas.join("\n"),
+  inclusions: design.inclusions.join("\n"),
+  exclusions: design.exclusions.join("\n"),
+});
+const listingPayload = (form: ListingForm) => ({
+  ...form,
+  priceFrom: form.priceFrom || null,
+  leadTimeDays: form.leadTimeDays || null,
+  warrantyMonths: form.warrantyMonths || null,
+  tags: splitList(form.tags),
+  serviceAreas: splitList(form.serviceAreas),
+  inclusions: splitList(form.inclusions),
+  exclusions: splitList(form.exclusions),
+});
 
 async function request<T>(
   path: string,
@@ -50,6 +97,198 @@ const reviewLabel: Record<KitchenDesignSummary["reviewStatus"], string> = {
   approved: "Зөвшөөрсөн",
   rejected: "Татгалзсан",
 };
+
+function VersionEditor({
+  design,
+  mode,
+  busy,
+  onCancel,
+  onSave,
+}: {
+  design: KitchenDesignSummary;
+  mode: KitchenVersionSaveMode;
+  busy: boolean;
+  onCancel: () => void;
+  onSave: (form: ListingForm) => void;
+}) {
+  const [form, setForm] = useState(() => listingForm(design));
+  const field = <K extends keyof ListingForm>(name: K, value: ListingForm[K]) =>
+    setForm((current) => ({ ...current, [name]: value }));
+  return (
+    <form
+      className="grid gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 md:grid-cols-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSave(form);
+      }}
+    >
+      <div className="md:col-span-2">
+        <h4 className="font-medium">
+          {mode === "edit"
+            ? `v${design.versionNo} мэдээлэл засах`
+            : `v${design.versionNo + 1} шинэ хувилбар`}
+        </h4>
+        <p className="text-xs text-black/50">
+          {mode === "edit"
+            ? "Одоогийн draft-ийн marketplace мэдээлэл шинэчлэгдэнэ."
+            : "Planner-т хадгалсан төслийн хамгийн сүүлийн snapshot болон thumbnail ашиглагдана. Нийтэд байгаа хувилбар солигдохгүй."}
+        </p>
+      </div>
+      <label className="label md:col-span-2">
+        Marketplace нэр
+        <input
+          className="input mt-1 w-full"
+          required
+          minLength={3}
+          maxLength={160}
+          value={form.title}
+          onChange={(e) => field("title", e.target.value)}
+        />
+      </label>
+      <label className="label md:col-span-2">
+        Товч тайлбар
+        <textarea
+          className="input mt-1 min-h-20 w-full"
+          maxLength={300}
+          value={form.shortDescription}
+          onChange={(e) => field("shortDescription", e.target.value)}
+        />
+      </label>
+      <label className="label md:col-span-2">
+        Дэлгэрэнгүй тайлбар
+        <textarea
+          className="input mt-1 min-h-28 w-full"
+          maxLength={10000}
+          value={form.description}
+          onChange={(e) => field("description", e.target.value)}
+        />
+      </label>
+      <label className="label">
+        Стиль
+        <select
+          className="input mt-1 w-full"
+          value={form.style}
+          onChange={(e) => field("style", e.target.value)}
+        >
+          <option value="modern">Модерн</option>
+          <option value="classic">Классик</option>
+          <option value="minimal">Минимал</option>
+          <option value="industrial">Индастриал</option>
+          <option value="scandinavian">Скандинав</option>
+        </select>
+      </label>
+      <label className="label">
+        Үнийн төрөл
+        <select
+          className="input mt-1 w-full"
+          value={form.pricingMode}
+          onChange={(e) =>
+            field("pricingMode", e.target.value as ListingForm["pricingMode"])
+          }
+        >
+          <option value="quote">Үнийн санал</option>
+          <option value="from">Эхлэх үнэ</option>
+          <option value="fixed">Тогтмол үнэ</option>
+        </select>
+      </label>
+      <label className="label">
+        Үнэ (₮)
+        <input
+          className="input mt-1 w-full"
+          type="number"
+          min="0"
+          required={form.pricingMode !== "quote"}
+          disabled={form.pricingMode === "quote"}
+          value={form.priceFrom}
+          onChange={(e) => field("priceFrom", e.target.value)}
+        />
+      </label>
+      <label className="label">
+        Үйлдвэрлэх хоног
+        <input
+          className="input mt-1 w-full"
+          type="number"
+          min="1"
+          max="365"
+          value={form.leadTimeDays}
+          onChange={(e) => field("leadTimeDays", e.target.value)}
+        />
+      </label>
+      <label className="label">
+        Баталгаа (сар)
+        <input
+          className="input mt-1 w-full"
+          type="number"
+          min="0"
+          max="120"
+          value={form.warrantyMonths}
+          onChange={(e) => field("warrantyMonths", e.target.value)}
+        />
+      </label>
+      <label className="label flex items-center gap-3 pt-6">
+        <input
+          type="checkbox"
+          checked={form.installationIncluded}
+          onChange={(e) => field("installationIncluded", e.target.checked)}
+        />
+        Угсралт үнэд багтсан
+      </label>
+      <label className="label">
+        Tag-ууд
+        <textarea
+          className="input mt-1 min-h-20 w-full"
+          value={form.tags}
+          onChange={(e) => field("tags", e.target.value)}
+        />
+      </label>
+      <label className="label">
+        Үйлчилгээний бүс
+        <textarea
+          className="input mt-1 min-h-20 w-full"
+          value={form.serviceAreas}
+          onChange={(e) => field("serviceAreas", e.target.value)}
+        />
+      </label>
+      <label className="label">
+        Үнэд багтсан
+        <textarea
+          className="input mt-1 min-h-20 w-full"
+          value={form.inclusions}
+          onChange={(e) => field("inclusions", e.target.value)}
+        />
+      </label>
+      <label className="label">
+        Үнэд багтаагүй
+        <textarea
+          className="input mt-1 min-h-20 w-full"
+          value={form.exclusions}
+          onChange={(e) => field("exclusions", e.target.value)}
+        />
+      </label>
+      <div className="flex flex-wrap gap-2 md:col-span-2">
+        <button className="btn-primary" disabled={busy}>
+          {busy ? (
+            <LoaderCircle className="animate-spin" size={15} />
+          ) : mode === "edit" ? (
+            <Pencil size={15} />
+          ) : (
+            <GitBranch size={15} />
+          )}
+          {mode === "edit" ? "Өөрчлөлт хадгалах" : "Шинэ version үүсгэх"}
+        </button>
+        <button
+          type="button"
+          className="btn-ghost"
+          disabled={busy}
+          onClick={onCancel}
+        >
+          <X size={15} />
+          Болих
+        </button>
+      </div>
+    </form>
+  );
+}
 
 export function MerchantKitchenDesigns({ owner }: { owner: string }) {
   const [data, setData] = useState<LoadResult | null>(null);
@@ -73,6 +312,10 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
   const [renderDirections, setRenderDirections] = useState<
     Record<string, string>
   >({});
+  const [editing, setEditing] = useState<{
+    designId: string;
+    mode: KitchenVersionSaveMode;
+  } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -227,6 +470,36 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
         reason instanceof Error
           ? reason.message
           : "AI render хүсэлт үүсгэж чадсангүй.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function saveVersion(
+    design: KitchenDesignSummary,
+    mode: KitchenVersionSaveMode,
+    form: ListingForm,
+  ) {
+    setBusy(`version:${design.id}`);
+    setError(null);
+    try {
+      await request(`/api/merchant/kitchen-designs/${design.id}`, owner, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          versionId: design.versionId,
+          mode,
+          ...listingPayload(form),
+        }),
+      });
+      setEditing(null);
+      await load();
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Загварын мэдээллийг хадгалж чадсангүй.",
       );
     } finally {
       setBusy(null);
@@ -476,6 +749,13 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
                   <p className="text-sm text-black/60">
                     {design.shortDescription || "Тайлбар оруулаагүй"}
                   </p>
+                  {design.publicationStatus === "published" &&
+                    design.publishedVersionId !== design.versionId && (
+                      <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+                        Marketplace дээр өмнөх зөвшөөрөгдсөн хувилбар хэвээр
+                        нийтлэгдэж байна. v{design.versionNo} нь шинэ draft.
+                      </p>
+                    )}
                   {design.media.length > 1 && (
                     <div className="flex gap-2 overflow-x-auto">
                       {design.media
@@ -579,6 +859,39 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
                     {(["draft", "changes_requested"] as const).includes(
                       design.reviewStatus as "draft" | "changes_requested",
                     ) && (
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={!!busy}
+                        onClick={() =>
+                          setEditing({ designId: design.id, mode: "edit" })
+                        }
+                      >
+                        <Pencil size={15} />
+                        Мэдээлэл засах
+                      </button>
+                    )}
+                    {(design.reviewStatus === "rejected" ||
+                      (design.publicationStatus === "published" &&
+                        design.publishedVersionId === design.versionId)) && (
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={!!busy}
+                        onClick={() =>
+                          setEditing({
+                            designId: design.id,
+                            mode: "new_version",
+                          })
+                        }
+                      >
+                        <GitBranch size={15} />
+                        Шинэ version
+                      </button>
+                    )}
+                    {(["draft", "changes_requested"] as const).includes(
+                      design.reviewStatus as "draft" | "changes_requested",
+                    ) && (
                       <label className="btn-ghost cursor-pointer">
                         <ImagePlus size={15} />
                         {design.thumbnailUrl
@@ -632,7 +945,7 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
                       </button>
                     )}
                     {design.reviewStatus === "approved" &&
-                      design.publicationStatus !== "published" && (
+                      design.publishedVersionId !== design.versionId && (
                         <button
                           type="button"
                           className="btn-primary"
@@ -640,7 +953,9 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
                           onClick={() => void action(design, "publish")}
                         >
                           <CheckCircle2 size={15} />
-                          Нийтлэх
+                          {design.publicationStatus === "published"
+                            ? "Шинэчлэлийг нийтлэх"
+                            : "Нийтлэх"}
                         </button>
                       )}
                     {design.publicationStatus !== "archived" && (
@@ -654,6 +969,18 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
                       </button>
                     )}
                   </div>
+                  {editing?.designId === design.id && (
+                    <VersionEditor
+                      key={`${design.versionId}:${editing.mode}`}
+                      design={design}
+                      mode={editing.mode}
+                      busy={busy === `version:${design.id}`}
+                      onCancel={() => setEditing(null)}
+                      onSave={(form) =>
+                        void saveVersion(design, editing.mode, form)
+                      }
+                    />
+                  )}
                 </div>
               </article>
             ))}

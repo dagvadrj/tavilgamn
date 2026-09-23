@@ -63,6 +63,7 @@ export type KitchenDesignSummary = {
 };
 
 export class KitchenMarketplaceInputError extends Error {}
+export type KitchenVersionSaveMode = "edit" | "new_version";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -108,12 +109,8 @@ export function kitchenDesignSlug(title: string) {
   return `${slug || "kitchen"}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
-export function parseKitchenMarketplaceDraft(value: unknown) {
+function parseKitchenMarketplaceDetails(value: unknown) {
   if (!record(value)) throw new KitchenMarketplaceInputError("Загварын мэдээлэл буруу байна.");
-  const sourceKitchenId = text(value.sourceKitchenId, "Эх загвар", 36);
-  if (!UUID.test(sourceKitchenId)) {
-    throw new KitchenMarketplaceInputError("Эх загварын ID буруу байна.");
-  }
   const title = text(value.title, "Загварын нэр", 160);
   const pricingMode = value.pricingMode ?? "quote";
   if (!(["fixed", "from", "quote"] as unknown[]).includes(pricingMode)) {
@@ -127,11 +124,7 @@ export function parseKitchenMarketplaceDraft(value: unknown) {
   if (!/^[a-z0-9][a-z0-9_-]*$/.test(style)) {
     throw new KitchenMarketplaceInputError("Загварын стиль буруу байна.");
   }
-  return {
-    sourceKitchenId,
-    title,
-    slug: kitchenDesignSlug(title),
-    payload: {
+  return { title, payload: {
       title,
       shortDescription: text(value.shortDescription, "Товч тайлбар", 300, true),
       description: text(value.description, "Дэлгэрэнгүй тайлбар", 10000, true),
@@ -145,8 +138,28 @@ export function parseKitchenMarketplaceDraft(value: unknown) {
       serviceAreas: stringList(value.serviceAreas, "Үйлчилгээний бүс", 50),
       inclusions: stringList(value.inclusions, "Багтсан зүйл", 50),
       exclusions: stringList(value.exclusions, "Багтаагүй зүйл", 50),
-    },
-  };
+    } };
+}
+
+export function parseKitchenMarketplaceDraft(value: unknown) {
+  if (!record(value)) throw new KitchenMarketplaceInputError("Загварын мэдээлэл буруу байна.");
+  const sourceKitchenId = text(value.sourceKitchenId, "Эх загвар", 36);
+  if (!UUID.test(sourceKitchenId)) {
+    throw new KitchenMarketplaceInputError("Эх загварын ID буруу байна.");
+  }
+  const details = parseKitchenMarketplaceDetails(value);
+  return { sourceKitchenId, title: details.title, slug: kitchenDesignSlug(details.title), payload: details.payload };
+}
+
+export function parseKitchenMarketplaceVersion(value: unknown) {
+  if (!record(value)) throw new KitchenMarketplaceInputError("Загварын мэдээлэл буруу байна.");
+  const versionId = text(value.versionId, "Version", 36);
+  if (!UUID.test(versionId)) throw new KitchenMarketplaceInputError("Version ID буруу байна.");
+  if (value.mode !== "edit" && value.mode !== "new_version") {
+    throw new KitchenMarketplaceInputError("Хадгалах төрөл буруу байна.");
+  }
+  const details = parseKitchenMarketplaceDetails(value);
+  return { versionId, mode: value.mode as KitchenVersionSaveMode, payload: details.payload };
 }
 
 export function readKitchenDesignAction(value: unknown) {
