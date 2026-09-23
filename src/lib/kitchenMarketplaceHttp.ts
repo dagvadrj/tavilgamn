@@ -19,6 +19,10 @@ export function kitchenMarketplaceError(error: unknown, fallback: string) {
             ? "Энэ загварт идэвхтэй AI render хүсэлт аль хэдийн байна."
           : code === "P0012"
             ? "Загварын төлөв өөрчлөгдсөн байна. Жагсаалтаа шинэчлээд дахин оролдоно уу."
+          : code === "P0013"
+            ? "Төсөл үүсгэх хүсэлт давхцлаа. Дахин оролдоно уу."
+          : code === "P0014"
+            ? "Нийтлэгдсэн загварын snapshot ашиглах боломжгүй байна."
           : fallback;
   const status = error instanceof KitchenMarketplaceInputError
     ? 400
@@ -31,6 +35,10 @@ export function kitchenMarketplaceError(error: unknown, fallback: string) {
           : code === "P0011"
             ? 409
           : code === "P0012"
+            ? 409
+          : code === "P0013"
+            ? 409
+          : code === "P0014"
             ? 409
           : 503;
   return NextResponse.json({ error: message }, { status, headers: kitchenPrivateHeaders });

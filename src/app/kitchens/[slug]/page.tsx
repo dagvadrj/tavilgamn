@@ -15,6 +15,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { readPublishedKitchenDesignBySlug } from "@/lib/kitchenMarketplaceServer";
+import { UseKitchenDesignButton } from "@/components/UseKitchenDesignButton";
 
 export const dynamic = "force-dynamic";
 
@@ -189,17 +190,21 @@ export default async function KitchenDesignPage({ params }: PageProps) {
             )}
           </div>
           <div className="grid gap-2">
+            <UseKitchenDesignButton
+              designId={design.id}
+              returnPath={`/kitchens/${design.slug}`}
+            />
             <Link
               href={`/catalog/stores/${design.storeId}`}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#293c32] px-5 text-sm font-medium text-white"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#293c32]/20 px-5 text-sm font-medium text-[#293c32]"
             >
               Үйлдвэртэй холбогдох <ArrowUpRight size={16} />
             </Link>
             <Link
-              href="/kitchen"
-              className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#293c32]/20 px-5 text-sm font-medium text-[#293c32]"
+              href="/kitchen?new=1"
+              className="inline-flex min-h-11 items-center justify-center text-sm font-medium text-[#293c32]/70 hover:text-[#293c32]"
             >
-              Өөрийн өрөөнд төлөвлөх
+              Шинээр төлөвлөх
             </Link>
           </div>
         </aside>

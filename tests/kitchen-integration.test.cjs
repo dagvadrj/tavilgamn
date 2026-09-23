@@ -43,6 +43,41 @@ test("kitchen marketplace exposes complete listing details without a duplicate d
   assert.match(detail, /AI бодит дүрслэл/);
   assert.match(detail, /Үнэд багтсан/);
   assert.match(detail, /Үйлдвэртэй холбогдох/);
+  assert.match(detail, /UseKitchenDesignButton/);
+  assert.match(
+    fs.readFileSync("src/components/UseKitchenDesignButton.tsx", "utf8"),
+    /Өөрийн төсөлд ашиглах/,
+  );
+});
+
+test("published kitchen copy validates ids and keeps an editable snapshot with provenance", () => {
+  const marketplace = loadSource("src/lib/kitchenMarketplace.ts");
+  const designId = "12345678-1234-4234-8234-123456789abc";
+  const projectId = "22345678-1234-4234-8234-123456789abc";
+  assert.deepEqual(
+    marketplace.readKitchenCloneRequest(designId, { projectId }),
+    { designId, projectId },
+  );
+  assert.throws(
+    () => marketplace.readKitchenCloneRequest("../private", { projectId }),
+    marketplace.KitchenMarketplaceInputError,
+  );
+  assert.throws(
+    () => marketplace.readKitchenCloneRequest(designId, { projectId: "bad" }),
+    marketplace.KitchenMarketplaceInputError,
+  );
+  const migration = fs.readFileSync(
+    "supabase/migrations/20260923164005_clone_published_kitchen_design.sql",
+    "utf8",
+  );
+  assert.match(migration, /publication_status='published'/);
+  assert.match(
+    migration,
+    /source_marketplace_design_id,source_marketplace_version_id/,
+  );
+  assert.match(migration, /Marketplace source is server managed/);
+  assert.match(migration, /on conflict\(user_id,id\) do nothing/);
+  assert.match(migration, /from public,anon,authenticated/);
 });
 
 test("AI kitchen renders persist a guarded job before generation and permanent media after it", () => {

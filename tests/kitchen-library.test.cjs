@@ -195,6 +195,52 @@ test("thumbnail upload checks ownership before Cloudinary and stores only its va
   });
   assert.equal((await response.json()).thumbnailUrl, updated.thumbnail_url);
 });
+test("published marketplace clone authenticates, validates and calls the atomic owner-bound RPC", async () => {
+  const designId = "12345678-1234-4234-8234-123456789abc";
+  const projectId = "22345678-1234-4234-8234-123456789abc";
+  const calls = [];
+  const kitchen = row("Marketplace хуулбар");
+  const db = {
+    rpc: async (name, payload) => {
+      calls.push([name, payload]);
+      return { data: kitchen, error: null };
+    },
+  };
+  const route = loadSource("src/app/api/kitchen-designs/[id]/clone/route.ts", {
+    "@/lib/supabase/requireUser": {
+      requireUser: async () => ({ userId: "verified-owner", error: null }),
+    },
+    "@/lib/supabase/admin": { getSupabaseAdmin: () => db },
+  });
+  const request = (body) =>
+    new NextRequest(`http://localhost/api/kitchen-designs/${designId}/clone`, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "content-type": "application/json" },
+    });
+  const response = await route.POST(request({ projectId, user_id: "victim" }), {
+    params: { id: designId },
+  });
+  assert.equal(response.status, 201);
+  assert.deepEqual(calls[0], [
+    "clone_published_kitchen_design",
+    {
+      p_actor: "verified-owner",
+      p_design: designId,
+      p_project: projectId,
+    },
+  ]);
+  assert.equal((await response.json()).kitchen.name, "Marketplace хуулбар");
+  assert.equal(
+    (
+      await route.POST(request({ projectId: "../bad" }), {
+        params: { id: designId },
+      })
+    ).status,
+    400,
+  );
+  assert.equal(calls.length, 1);
+});
 const deferred = () => {
   let resolve;
   const promise = new Promise((r) => (resolve = r));

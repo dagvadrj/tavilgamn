@@ -261,6 +261,7 @@ export function ModularKitchenPlanner({
     "all",
   );
   const initialRead = useRef(false);
+  const attemptedProjectRefresh = useRef(false);
   useEffect(() => {
     if (!active) return;
     const controller = new AbortController();
@@ -293,21 +294,28 @@ export function ModularKitchenPlanner({
         return;
       }
       if (library.owner !== user.id) return;
-      if (!library.loaded) {
-        if (!library.loading && !library.error) void library.refresh();
-        return;
-      }
       const saved = library.items.find((item) => item.id === id);
-      if (!saved) {
-        setMessage("Энэ гарнитур таны хадгалсан загварт олдсонгүй.");
+      if (saved) {
+        const next = cloneKitchen(saved.design);
+        setDesign(next);
+        designRef.current = next;
+        setName(saved.name);
+        setSavedId(saved.id);
+        setSelectedId(next.cabinets[0]?.id ?? null);
+        initialRead.current = true;
+        setReady(true);
         return;
       }
-      const next = cloneKitchen(saved.design);
-      setDesign(next);
-      designRef.current = next;
-      setName(saved.name);
-      setSavedId(saved.id);
-      setSelectedId(next.cabinets[0]?.id ?? null);
+      if (!library.loading && !attemptedProjectRefresh.current) {
+        attemptedProjectRefresh.current = true;
+        void library.refresh();
+        return;
+      }
+      if (library.loading || !library.loaded) {
+        return;
+      }
+      setMessage("Энэ гарнитур таны хадгалсан загварт олдсонгүй.");
+      return;
     } else {
       try {
         const fromGuest = !!user && query.get("importGuest") === "1";

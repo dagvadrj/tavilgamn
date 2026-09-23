@@ -230,3 +230,15 @@ export function readKitchenReview(value: unknown) {
     note: text(value.note, "Review тайлбар", 5000, true),
   };
 }
+
+export function readKitchenCloneRequest(designId: unknown, value: unknown) {
+  if (!record(value)) {
+    throw new KitchenMarketplaceInputError("Төсөл үүсгэх мэдээлэл буруу байна.");
+  }
+  const parsedDesignId = text(designId, "Design", 36);
+  const projectId = text(value.projectId, "Project", 36);
+  if (!UUID.test(parsedDesignId) || !UUID.test(projectId)) {
+    throw new KitchenMarketplaceInputError("Design эсвэл project ID буруу байна.");
+  }
+  return { designId: parsedDesignId, projectId };
+}

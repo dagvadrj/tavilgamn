@@ -52,7 +52,7 @@ function count(value: string) {
 export function MerchantAnalytics({ owner }: { owner: string }) {
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
 
