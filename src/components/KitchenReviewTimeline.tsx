@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Clock3, MessageSquareText } from "lucide-react";
 import type {
   KitchenDesignSummary,
@@ -31,9 +32,12 @@ const dateTime = (value: string) =>
 
 export function KitchenReviewTimeline({
   design,
+  defaultOpen = false,
 }: {
   design: KitchenDesignSummary;
+  defaultOpen?: boolean;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
   const versionNumber = new Map(
     design.versions.map((version) => [version.id, version.versionNo]),
   );
@@ -63,7 +67,11 @@ export function KitchenReviewTimeline({
         </div>
       )}
       {(design.versions.length > 0 || design.reviews.length > 0) && (
-        <details className="rounded-xl border border-black/10 p-3 text-sm">
+        <details
+          open={open}
+          onToggle={(event) => setOpen(event.currentTarget.open)}
+          className="rounded-xl border border-black/10 p-3 text-sm"
+        >
           <summary className="cursor-pointer font-medium">
             Version ба review түүх ({design.versions.length})
           </summary>

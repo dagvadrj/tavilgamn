@@ -291,7 +291,13 @@ function VersionEditor({
   );
 }
 
-export function MerchantKitchenDesigns({ owner }: { owner: string }) {
+export function MerchantKitchenDesigns({
+  owner,
+  focusedDesignId = null,
+}: {
+  owner: string;
+  focusedDesignId?: string | null;
+}) {
   const [data, setData] = useState<LoadResult | null>(null);
   const [kitchens, setKitchens] = useState<SavedKitchen[]>([]);
   const [sourceKitchenId, setSourceKitchenId] = useState("");
@@ -342,6 +348,24 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (
+      !focusedDesignId ||
+      !data?.designs.some((design) => design.id === focusedDesignId)
+    )
+      return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const card = document.getElementById(
+        `merchant-kitchen-${focusedDesignId}`,
+      );
+      card?.scrollIntoView({ behavior: "smooth", block: "center" });
+      card?.focus({ preventScroll: true });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [data?.designs, focusedDesignId]);
 
   async function createDraft(event: React.FormEvent) {
     event.preventDefault();
@@ -715,277 +739,286 @@ export function MerchantKitchenDesigns({ owner }: { owner: string }) {
             </button>
           </form>
           <div className="grid gap-4 xl:grid-cols-2">
-            {data?.designs.map((design) => (
-              <article
-                key={design.id}
-                className="overflow-hidden rounded-2xl border border-black/10 bg-white"
-              >
-                <div className="relative h-48 bg-[#f1efe9]">
-                  {design.thumbnailUrl ? (
-                    <Image
-                      src={design.thumbnailUrl}
-                      alt={design.title}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-black/35">
-                      <ImagePlus size={36} />
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-3 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold">{design.title}</h3>
-                      <p className="text-xs text-black/50">
-                        v{design.versionNo} · {design.cabinetCount} шүүгээ ·{" "}
-                        {design.roomWidthMm}×{design.roomDepthMm} мм
-                      </p>
-                    </div>
-                    <span className="rounded-full bg-black/5 px-2 py-1 text-xs">
-                      {reviewLabel[design.reviewStatus]}
-                    </span>
-                  </div>
-                  <p className="text-sm text-black/60">
-                    {design.shortDescription || "Тайлбар оруулаагүй"}
-                  </p>
-                  <KitchenReviewTimeline design={design} />
-                  {design.publicationStatus === "published" &&
-                    design.publishedVersionId !== design.versionId && (
-                      <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
-                        Marketplace дээр өмнөх зөвшөөрөгдсөн хувилбар хэвээр
-                        нийтлэгдэж байна. v{design.versionNo} нь шинэ draft.
-                      </p>
+            {data?.designs.map((design) => {
+              const isFocused = focusedDesignId === design.id;
+              return (
+                <article
+                  id={`merchant-kitchen-${design.id}`}
+                  key={design.id}
+                  tabIndex={-1}
+                  className={`overflow-hidden rounded-2xl border bg-white outline-none transition-shadow ${isFocused ? "border-[#315b43] ring-2 ring-[#315b43]/40 ring-offset-2" : "border-black/10"}`}
+                >
+                  <div className="relative h-48 bg-[#f1efe9]">
+                    {design.thumbnailUrl ? (
+                      <Image
+                        src={design.thumbnailUrl}
+                        alt={design.title}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-black/35">
+                        <ImagePlus size={36} />
+                      </div>
                     )}
-                  {design.media.length > 1 && (
-                    <div className="flex gap-2 overflow-x-auto">
-                      {design.media
-                        .filter((item) => !item.isPrimary)
-                        .map((item) => (
-                          <div
-                            key={item.id}
-                            className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-black/5"
-                          >
-                            <Image
-                              src={item.url}
-                              alt={item.altText || design.title}
-                              fill
-                              className="object-cover"
-                            />
-                            <span className="absolute bottom-1 left-1 rounded bg-black/65 px-1.5 py-0.5 text-[9px] text-white">
-                              {item.source === "ai" ? "AI render" : item.kind}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                  {design.renderJobs.length > 0 && (
-                    <div className="space-y-1 rounded-xl bg-violet-50 p-3 text-xs text-violet-950">
-                      {design.renderJobs.slice(0, 3).map((job) => (
-                        <p key={job.id}>
-                          <strong>AI render:</strong>{" "}
-                          {job.status === "queued"
-                            ? "admin хүлээж байна"
-                            : job.status === "processing"
-                              ? "үүсгэж байна"
-                              : job.status === "completed"
-                                ? "бэлэн"
-                                : job.status === "failed"
-                                  ? "амжилтгүй"
-                                  : "цуцлагдсан"}
-                          {job.error && (
-                            <span className="block text-red-700">
-                              {job.error}
-                            </span>
-                          )}
+                  </div>
+                  <div className="space-y-3 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold">{design.title}</h3>
+                        <p className="text-xs text-black/50">
+                          v{design.versionNo} · {design.cabinetCount} шүүгээ ·{" "}
+                          {design.roomWidthMm}×{design.roomDepthMm} мм
                         </p>
-                      ))}
+                      </div>
+                      <span className="rounded-full bg-black/5 px-2 py-1 text-xs">
+                        {reviewLabel[design.reviewStatus]}
+                      </span>
                     </div>
-                  )}
-                  {(["draft", "changes_requested"] as const).includes(
-                    design.reviewStatus as "draft" | "changes_requested",
-                  ) &&
-                    design.thumbnailUrl && (
-                      <details className="rounded-xl border border-violet-200 bg-violet-50/60 p-3">
-                        <summary className="cursor-pointer text-sm font-medium text-violet-950">
-                          <span className="inline-flex items-center gap-2">
-                            <Sparkles size={15} />
-                            AI бодит render хүсэх
-                          </span>
-                        </summary>
-                        <div className="mt-3 space-y-2">
-                          <textarea
-                            className="input min-h-20 w-full bg-white"
-                            maxLength={1000}
-                            placeholder="Жишээ: дулаан оройн гэрэл, царсан шал, минимал декор"
-                            value={renderDirections[design.id] ?? ""}
-                            onChange={(event) =>
-                              setRenderDirections((current) => ({
-                                ...current,
-                                [design.id]: event.target.value,
-                              }))
-                            }
-                          />
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={
-                              !!busy ||
-                              design.renderJobs.some(
-                                (job) =>
-                                  job.status === "queued" ||
-                                  job.status === "processing",
+                    <p className="text-sm text-black/60">
+                      {design.shortDescription || "Тайлбар оруулаагүй"}
+                    </p>
+                    <KitchenReviewTimeline
+                      key={`${design.id}:${isFocused}`}
+                      design={design}
+                      defaultOpen={isFocused}
+                    />
+                    {design.publicationStatus === "published" &&
+                      design.publishedVersionId !== design.versionId && (
+                        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+                          Marketplace дээр өмнөх зөвшөөрөгдсөн хувилбар хэвээр
+                          нийтлэгдэж байна. v{design.versionNo} нь шинэ draft.
+                        </p>
+                      )}
+                    {design.media.length > 1 && (
+                      <div className="flex gap-2 overflow-x-auto">
+                        {design.media
+                          .filter((item) => !item.isPrimary)
+                          .map((item) => (
+                            <div
+                              key={item.id}
+                              className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-black/5"
+                            >
+                              <Image
+                                src={item.url}
+                                alt={item.altText || design.title}
+                                fill
+                                className="object-cover"
+                              />
+                              <span className="absolute bottom-1 left-1 rounded bg-black/65 px-1.5 py-0.5 text-[9px] text-white">
+                                {item.source === "ai" ? "AI render" : item.kind}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                    {design.renderJobs.length > 0 && (
+                      <div className="space-y-1 rounded-xl bg-violet-50 p-3 text-xs text-violet-950">
+                        {design.renderJobs.slice(0, 3).map((job) => (
+                          <p key={job.id}>
+                            <strong>AI render:</strong>{" "}
+                            {job.status === "queued"
+                              ? "admin хүлээж байна"
+                              : job.status === "processing"
+                                ? "үүсгэж байна"
+                                : job.status === "completed"
+                                  ? "бэлэн"
+                                  : job.status === "failed"
+                                    ? "амжилтгүй"
+                                    : "цуцлагдсан"}
+                            {job.error && (
+                              <span className="block text-red-700">
+                                {job.error}
+                              </span>
+                            )}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {(["draft", "changes_requested"] as const).includes(
+                      design.reviewStatus as "draft" | "changes_requested",
+                    ) &&
+                      design.thumbnailUrl && (
+                        <details className="rounded-xl border border-violet-200 bg-violet-50/60 p-3">
+                          <summary className="cursor-pointer text-sm font-medium text-violet-950">
+                            <span className="inline-flex items-center gap-2">
+                              <Sparkles size={15} />
+                              AI бодит render хүсэх
+                            </span>
+                          </summary>
+                          <div className="mt-3 space-y-2">
+                            <textarea
+                              className="input min-h-20 w-full bg-white"
+                              maxLength={1000}
+                              placeholder="Жишээ: дулаан оройн гэрэл, царсан шал, минимал декор"
+                              value={renderDirections[design.id] ?? ""}
+                              onChange={(event) =>
+                                setRenderDirections((current) => ({
+                                  ...current,
+                                  [design.id]: event.target.value,
+                                }))
+                              }
+                            />
+                            <button
+                              type="button"
+                              className="btn-primary"
+                              disabled={
+                                !!busy ||
+                                design.renderJobs.some(
+                                  (job) =>
+                                    job.status === "queued" ||
+                                    job.status === "processing",
+                                )
+                              }
+                              onClick={() => void requestRender(design)}
+                            >
+                              {busy === `render:${design.id}` ? (
+                                <LoaderCircle
+                                  className="animate-spin"
+                                  size={15}
+                                />
+                              ) : (
+                                <Sparkles size={15} />
+                              )}
+                              Хүсэлт илгээх
+                            </button>
+                            <p className="text-xs text-black/45">
+                              Зургийн бүтцийг өөрчлөхгүй, зөвхөн гэрэл болон
+                              бодит материалын дүрслэлийг сайжруулна.
+                            </p>
+                          </div>
+                        </details>
+                      )}
+                    <div className="flex flex-wrap gap-2">
+                      {(["draft", "changes_requested"] as const).includes(
+                        design.reviewStatus as "draft" | "changes_requested",
+                      ) && (
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          disabled={!!busy}
+                          onClick={() =>
+                            setEditing({ designId: design.id, mode: "edit" })
+                          }
+                        >
+                          <Pencil size={15} />
+                          Мэдээлэл засах
+                        </button>
+                      )}
+                      {(design.reviewStatus === "rejected" ||
+                        (design.publicationStatus === "published" &&
+                          design.publishedVersionId === design.versionId)) && (
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          disabled={!!busy}
+                          onClick={() =>
+                            setEditing({
+                              designId: design.id,
+                              mode: "new_version",
+                            })
+                          }
+                        >
+                          <GitBranch size={15} />
+                          Шинэ version
+                        </button>
+                      )}
+                      {(["draft", "changes_requested"] as const).includes(
+                        design.reviewStatus as "draft" | "changes_requested",
+                      ) && (
+                        <label className="btn-ghost cursor-pointer">
+                          <ImagePlus size={15} />
+                          {design.thumbnailUrl
+                            ? "Thumbnail солих"
+                            : "Thumbnail нэмэх"}
+                          <input
+                            className="sr-only"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) =>
+                              void uploadMedia(
+                                design,
+                                e.target.files?.[0] ?? null,
+                                "thumbnail",
                               )
                             }
-                            onClick={() => void requestRender(design)}
-                          >
-                            {busy === `render:${design.id}` ? (
-                              <LoaderCircle
-                                className="animate-spin"
-                                size={15}
-                              />
-                            ) : (
-                              <Sparkles size={15} />
-                            )}
-                            Хүсэлт илгээх
-                          </button>
-                          <p className="text-xs text-black/45">
-                            Зургийн бүтцийг өөрчлөхгүй, зөвхөн гэрэл болон бодит
-                            материалын дүрслэлийг сайжруулна.
-                          </p>
-                        </div>
-                      </details>
-                    )}
-                  <div className="flex flex-wrap gap-2">
-                    {(["draft", "changes_requested"] as const).includes(
-                      design.reviewStatus as "draft" | "changes_requested",
-                    ) && (
-                      <button
-                        type="button"
-                        className="btn-ghost"
-                        disabled={!!busy}
-                        onClick={() =>
-                          setEditing({ designId: design.id, mode: "edit" })
-                        }
-                      >
-                        <Pencil size={15} />
-                        Мэдээлэл засах
-                      </button>
-                    )}
-                    {(design.reviewStatus === "rejected" ||
-                      (design.publicationStatus === "published" &&
-                        design.publishedVersionId === design.versionId)) && (
-                      <button
-                        type="button"
-                        className="btn-ghost"
-                        disabled={!!busy}
-                        onClick={() =>
-                          setEditing({
-                            designId: design.id,
-                            mode: "new_version",
-                          })
-                        }
-                      >
-                        <GitBranch size={15} />
-                        Шинэ version
-                      </button>
-                    )}
-                    {(["draft", "changes_requested"] as const).includes(
-                      design.reviewStatus as "draft" | "changes_requested",
-                    ) && (
-                      <label className="btn-ghost cursor-pointer">
-                        <ImagePlus size={15} />
-                        {design.thumbnailUrl
-                          ? "Thumbnail солих"
-                          : "Thumbnail нэмэх"}
-                        <input
-                          className="sr-only"
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          onChange={(e) =>
-                            void uploadMedia(
-                              design,
-                              e.target.files?.[0] ?? null,
-                              "thumbnail",
-                            )
-                          }
-                        />
-                      </label>
-                    )}
-                    {(["draft", "changes_requested"] as const).includes(
-                      design.reviewStatus as "draft" | "changes_requested",
-                    ) && (
-                      <label className="btn-ghost cursor-pointer">
-                        <ImagePlus size={15} />
-                        Render жишээ нэмэх
-                        <input
-                          className="sr-only"
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          onChange={(e) =>
-                            void uploadMedia(
-                              design,
-                              e.target.files?.[0] ?? null,
-                              "render",
-                            )
-                          }
-                        />
-                      </label>
-                    )}
-                    {(["draft", "changes_requested"] as const).includes(
-                      design.reviewStatus as "draft" | "changes_requested",
-                    ) && (
-                      <button
-                        type="button"
-                        className="btn-primary"
-                        disabled={!design.thumbnailUrl || !!busy}
-                        onClick={() => void action(design, "submit")}
-                      >
-                        <Send size={15} />
-                        Хяналтад илгээх
-                      </button>
-                    )}
-                    {design.reviewStatus === "approved" &&
-                      design.publishedVersionId !== design.versionId && (
+                          />
+                        </label>
+                      )}
+                      {(["draft", "changes_requested"] as const).includes(
+                        design.reviewStatus as "draft" | "changes_requested",
+                      ) && (
+                        <label className="btn-ghost cursor-pointer">
+                          <ImagePlus size={15} />
+                          Render жишээ нэмэх
+                          <input
+                            className="sr-only"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) =>
+                              void uploadMedia(
+                                design,
+                                e.target.files?.[0] ?? null,
+                                "render",
+                              )
+                            }
+                          />
+                        </label>
+                      )}
+                      {(["draft", "changes_requested"] as const).includes(
+                        design.reviewStatus as "draft" | "changes_requested",
+                      ) && (
                         <button
                           type="button"
                           className="btn-primary"
-                          disabled={!!busy}
-                          onClick={() => void action(design, "publish")}
+                          disabled={!design.thumbnailUrl || !!busy}
+                          onClick={() => void action(design, "submit")}
                         >
-                          <CheckCircle2 size={15} />
-                          {design.publicationStatus === "published"
-                            ? "Шинэчлэлийг нийтлэх"
-                            : "Нийтлэх"}
+                          <Send size={15} />
+                          Хяналтад илгээх
                         </button>
                       )}
-                    {design.publicationStatus !== "archived" && (
-                      <button
-                        type="button"
-                        className="btn-ghost"
-                        disabled={!!busy}
-                        onClick={() => void action(design, "archive")}
-                      >
-                        Архивлах
-                      </button>
+                      {design.reviewStatus === "approved" &&
+                        design.publishedVersionId !== design.versionId && (
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={!!busy}
+                            onClick={() => void action(design, "publish")}
+                          >
+                            <CheckCircle2 size={15} />
+                            {design.publicationStatus === "published"
+                              ? "Шинэчлэлийг нийтлэх"
+                              : "Нийтлэх"}
+                          </button>
+                        )}
+                      {design.publicationStatus !== "archived" && (
+                        <button
+                          type="button"
+                          className="btn-ghost"
+                          disabled={!!busy}
+                          onClick={() => void action(design, "archive")}
+                        >
+                          Архивлах
+                        </button>
+                      )}
+                    </div>
+                    {editing?.designId === design.id && (
+                      <VersionEditor
+                        key={`${design.versionId}:${editing.mode}`}
+                        design={design}
+                        mode={editing.mode}
+                        busy={busy === `version:${design.id}`}
+                        onCancel={() => setEditing(null)}
+                        onSave={(form) =>
+                          void saveVersion(design, editing.mode, form)
+                        }
+                      />
                     )}
                   </div>
-                  {editing?.designId === design.id && (
-                    <VersionEditor
-                      key={`${design.versionId}:${editing.mode}`}
-                      design={design}
-                      mode={editing.mode}
-                      busy={busy === `version:${design.id}`}
-                      onCancel={() => setEditing(null)}
-                      onSave={(form) =>
-                        void saveVersion(design, editing.mode, form)
-                      }
-                    />
-                  )}
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
             {data?.designs.length === 0 && (
               <p className="rounded-2xl border border-dashed border-black/15 p-8 text-sm text-black/55">
                 Marketplace draft хараахан байхгүй.

@@ -33,6 +33,10 @@ import { STORE_TYPES } from "@/lib/storeTypes";
 import { parseProduct } from "@/lib/catalogValidation";
 import { formatPrice } from "@/lib/format";
 import { MAX_STOCK_QUANTITY, stockLabel } from "@/lib/inventory";
+import {
+  merchantLocationPath,
+  readMerchantLocation,
+} from "@/lib/merchantNavigation";
 import { useCatalogStore } from "@/store/catalog";
 import { MerchantOrders } from "./MerchantOrders";
 import { MerchantShell } from "./MerchantShell";
@@ -147,6 +151,19 @@ function MerchantWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
   const [tab, setTab] = useState<MerchantTab>("overview");
+  const [focusedKitchenId, setFocusedKitchenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const syncLocation = () => {
+      const location = readMerchantLocation(window.location.search);
+      setTab(location.tab);
+      setFocusedKitchenId(location.designId);
+    };
+
+    syncLocation();
+    window.addEventListener("popstate", syncLocation);
+    return () => window.removeEventListener("popstate", syncLocation);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -182,11 +199,40 @@ function MerchantWorkspace({
 
   const changeTab = (next: MerchantTab) => {
     setTab(next);
+    setFocusedKitchenId(null);
+
+    window.history.pushState(
+      window.history.state,
+      "",
+      merchantLocationPath(
+        window.location.pathname,
+        window.location.search,
+        window.location.hash,
+        next,
+      ),
+    );
 
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
+  };
+
+  const openKitchen = (designId?: string) => {
+    setTab("kitchens");
+    setFocusedKitchenId(designId ?? null);
+
+    window.history.pushState(
+      window.history.state,
+      "",
+      merchantLocationPath(
+        window.location.pathname,
+        window.location.search,
+        window.location.hash,
+        "kitchens",
+        designId,
+      ),
+    );
   };
 
   return (
@@ -196,6 +242,7 @@ function MerchantWorkspace({
       userName={userName}
       storeName={store?.name ?? "Миний дэлгүүр"}
       owner={owner}
+      onOpenKitchen={openKitchen}
       hasStore={Boolean(store)}
     >
       {!loaded ? (
@@ -248,7 +295,10 @@ function MerchantWorkspace({
           {tab === "orders" && store && <MerchantOrders owner={owner} />}
 
           {tab === "kitchens" && store && (
-            <MerchantKitchenDesigns owner={owner} />
+            <MerchantKitchenDesigns
+              owner={owner}
+              focusedDesignId={focusedKitchenId}
+            />
           )}
         </>
       )}

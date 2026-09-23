@@ -15,7 +15,7 @@ export function MerchantHeader({
   storeName: string;
   owner: string;
   onProducts: () => void;
-  onKitchens: () => void;
+  onKitchens: (designId?: string) => void;
 }) {
   const initial = userName.trim().slice(0, 1).toUpperCase() || "M";
 

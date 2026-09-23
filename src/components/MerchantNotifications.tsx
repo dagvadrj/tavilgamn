@@ -22,7 +22,7 @@ export function MerchantNotifications({
   onKitchens,
 }: {
   owner: string;
-  onKitchens: () => void;
+  onKitchens: (designId?: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<MerchantNotification[]>(
@@ -142,7 +142,7 @@ export function MerchantNotifications({
   const openNotification = (notification: MerchantNotification) => {
     if (!notification.readAt) void markRead(notification.id);
     setOpen(false);
-    onKitchens();
+    onKitchens(notification.entityId ?? undefined);
   };
 
   return (

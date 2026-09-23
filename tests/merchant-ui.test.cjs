@@ -408,3 +408,42 @@ test("merchant notification API reads and updates only the authenticated merchan
     ),
   );
 });
+
+test("merchant kitchen notification links preserve an exact safe design target", () => {
+  const navigation = loadSource("src/lib/merchantNavigation.ts");
+  const designId = "22222222-2222-2222-2222-222222222222";
+  const path = navigation.merchantLocationPath(
+    "/merchant",
+    "?campaign=review",
+    "#workspace",
+    "kitchens",
+    designId,
+  );
+  assert.equal(
+    path,
+    `/merchant?campaign=review&tab=kitchens&design=${designId}#workspace`,
+  );
+  assert.deepEqual(
+    navigation.readMerchantLocation(`?tab=kitchens&design=${designId}`),
+    {
+      tab: "kitchens",
+      designId,
+    },
+  );
+  assert.deepEqual(
+    navigation.readMerchantLocation("?tab=kitchens&design=../../admin"),
+    {
+      tab: "kitchens",
+      designId: null,
+    },
+  );
+  assert.deepEqual(
+    navigation.readMerchantLocation(
+      "?tab=admin&design=22222222-2222-2222-2222-222222222222",
+    ),
+    {
+      tab: "overview",
+      designId: null,
+    },
+  );
+});
