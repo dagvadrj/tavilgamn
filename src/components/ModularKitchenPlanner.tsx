@@ -102,6 +102,13 @@ const Scene = dynamic(
     ),
   },
 );
+const KitchenRoomFitStatus = dynamic(
+  () =>
+    import("./KitchenRoomFitStatus").then(
+      (module) => module.KitchenRoomFitStatus,
+    ),
+  { ssr: false },
+);
 function DimensionInput({
   label,
   value,
@@ -815,6 +822,7 @@ export function ModularKitchenPlanner({
             </button>
           </p>
         )}
+        {ready && <KitchenRoomFitStatus kitchen={design} name={name} />}
         <button
           type="button"
           className="btn-ghost"

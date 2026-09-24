@@ -627,6 +627,50 @@
   display: inline-flex;
   align-items: center;
 }
+.km-room-fit {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #cbd3c7;
+  border-radius: 12px;
+  background: #f7f8f4;
+  color: #435047;
+}
+.km-room-fit-ok {
+  border-color: #a9c4b0;
+  background: #eef6ef;
+  color: #245239;
+}
+.km-room-fit-warning {
+  border-color: #e1c29d;
+  background: #fff7ed;
+  color: #743b23;
+}
+.km-room-fit > svg {
+  flex-shrink: 0;
+}
+.km-room-fit strong,
+.km-room-fit p {
+  display: block;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.km-room-fit p {
+  margin-top: 2px;
+  color: inherit;
+  opacity: 0.82;
+}
+.km-room-fit a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+}
 .km-layout-options {
   display: flex;
   flex-wrap: wrap;
@@ -716,6 +760,12 @@
   }
 }
 @media (max-width: 760px) {
+  .km-room-fit {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .km-room-fit a {
+    grid-column: 2;
+  }
   .kp-heading {
     align-items: start;
     flex-direction: column;

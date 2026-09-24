@@ -14,6 +14,7 @@ const mocks = {
   "@/lib/modelRegistry": { getDbModel: () => undefined },
 };
 const collision = loadSource("src/three/collision.ts", mocks);
+const roomFit = loadSource("src/lib/kitchenRoomFit.ts", mocks);
 const saved = (design) => ({
   id: "12345678-1234-1234-1234-123456789abc",
   name: "Миний гал тогоо",
@@ -1103,6 +1104,66 @@ test("exact fitting room accepts kitchen, undersized room and low ceiling reject
     true,
   );
   assert.ok(d > 0.6);
+});
+
+test("kitchen room preflight rotates exact fits and explains every blocked condition", () => {
+  const kitchen = saved(model.createUnifiedKitchen());
+  const { w, d, h } = collision.dimsFor(kitchenRoomPiece(kitchen, "measure"));
+  const rotated = roomFit.assessKitchenRoomFit(kitchen, [], {
+    width: Math.max(1, d),
+    depth: w,
+    height: h,
+  });
+  assert.equal(rotated.code, "fits");
+  near(Math.abs(rotated.placement.rotation), Math.PI / 2);
+  assert.match(rotated.message, /90°/);
+
+  const exactRoom = { width: w, depth: Math.max(1, d), height: h };
+  const occupied = roomFit.assessKitchenRoomFit(
+    kitchen,
+    [roomFit.findKitchenPlacement(kitchen, [], exactRoom, "existing")],
+    exactRoom,
+  );
+  assert.equal(occupied.code, "occupied");
+  assert.match(occupied.message, /тавилгууд/);
+
+  const ceiling = roomFit.assessKitchenRoomFit(kitchen, [], {
+    ...exactRoom,
+    height: h - 0.001,
+  });
+  assert.equal(ceiling.code, "ceiling");
+  assert.match(ceiling.message, /тааз/);
+
+  const structure = roomFit.assessKitchenRoomFit(kitchen, [], {
+    ...exactRoom,
+    columns: [
+      {
+        id: "wall",
+        x: 0,
+        z: 0,
+        width: exactRoom.width,
+        depth: exactRoom.depth,
+      },
+    ],
+  });
+  assert.equal(structure.code, "structure");
+  assert.match(structure.message, /багана/);
+
+  const footprint = roomFit.assessKitchenRoomFit(kitchen, [], {
+    width: 1,
+    depth: 1,
+    height: h,
+  });
+  assert.equal(footprint.code, "footprint");
+  assert.match(footprint.message, /өргөн эсвэл урт/);
+  assert.match(
+    fs.readFileSync("src/components/ModularKitchenPlanner.tsx", "utf8"),
+    /KitchenRoomFitStatus/,
+  );
+  assert.match(
+    fs.readFileSync("src/components/RoomPlanner.tsx", "utf8"),
+    /assessKitchenRoomFit/,
+  );
 });
 
 test("L empty corner remains usable while columns and furniture intersecting its cabinets reject placement", () => {
