@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { authFetch } from "@/lib/authFetch";
 import type { MerchantNotification } from "@/lib/merchantNotifications";
 
@@ -24,6 +25,7 @@ export function MerchantNotifications({
   owner: string;
   onKitchens: (designId?: string) => void;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<MerchantNotification[]>(
     [],
@@ -142,7 +144,8 @@ export function MerchantNotifications({
   const openNotification = (notification: MerchantNotification) => {
     if (!notification.readAt) void markRead(notification.id);
     setOpen(false);
-    onKitchens(notification.entityId ?? undefined);
+    if (notification.kind === "kitchen_quote") router.push(notification.href);
+    else onKitchens(notification.entityId ?? undefined);
   };
 
   return (

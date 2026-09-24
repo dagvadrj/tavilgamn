@@ -241,6 +241,121 @@ test("published marketplace clone authenticates, validates and calls the atomic 
   );
   assert.equal(calls.length, 1);
 });
+test("kitchen quote API validates contact and uses only the verified customer identity", async () => {
+  const designId = "12345678-1234-4234-8234-123456789abc";
+  const key = "22345678-1234-4234-8234-123456789abc";
+  const calls = [];
+  const db = {
+    rpc: async (name, payload) => {
+      calls.push([name, payload]);
+      return { data: { id: key, status: "submitted" }, error: null };
+    },
+  };
+  const route = loadSource("src/app/api/kitchen-designs/[id]/quotes/route.ts", {
+    "@/lib/supabase/requireUser": {
+      requireUser: async () => ({ userId: "verified-customer", error: null }),
+    },
+    "@/lib/supabase/admin": { getSupabaseAdmin: () => db },
+  });
+  const request = (body) =>
+    new NextRequest(`http://localhost/api/kitchen-designs/${designId}/quotes`, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "content-type": "application/json" },
+    });
+  const body = {
+    idempotencyKey: key,
+    name: " Test user ",
+    phone: "99112233",
+    email: "USER@example.com",
+    roomWidthMm: 4000,
+    roomDepthMm: 3000,
+    roomHeightMm: 2700,
+    message: "Oak front",
+    user_id: "victim",
+  };
+  const response = await route.POST(request(body), {
+    params: { id: designId },
+  });
+  assert.equal(response.status, 201);
+  assert.deepEqual(calls[0], [
+    "create_kitchen_quote_request",
+    {
+      p_actor: "verified-customer",
+      p_design: designId,
+      p_project: null,
+      p_idempotency: key,
+      p_contact: {
+        name: "Test user",
+        phone: "99112233",
+        email: "user@example.com",
+      },
+      p_room: { widthMm: 4000, depthMm: 3000, heightMm: 2700 },
+      p_message: "Oak front",
+    },
+  ]);
+  assert.equal(
+    (
+      await route.POST(request({ ...body, email: "bad" }), {
+        params: { id: designId },
+      })
+    ).status,
+    400,
+  );
+  assert.equal(calls.length, 1);
+});
+
+test("merchant quote API reads and updates through owner-bound RPCs", async () => {
+  const quoteId = "32345678-1234-4234-8234-123456789abc";
+  const calls = [];
+  const db = {
+    rpc: async (name, payload) => {
+      calls.push([name, payload]);
+      return {
+        data: name.startsWith("read_") ? [{ id: quoteId }] : null,
+        error: null,
+      };
+    },
+  };
+  const route = loadSource("src/app/api/merchant/kitchen-quotes/route.ts", {
+    "@/lib/supabase/requireMerchant": {
+      requireMerchant: async () => ({
+        userId: "verified-merchant",
+        error: null,
+      }),
+    },
+    "@/lib/supabase/admin": { getSupabaseAdmin: () => db },
+  });
+  const read = await route.GET(
+    new NextRequest("http://localhost/api/merchant/kitchen-quotes?page=0"),
+  );
+  assert.equal(read.status, 200);
+  assert.equal((await read.json()).quotes[0].id, quoteId);
+  const update = await route.PATCH(
+    new NextRequest("http://localhost/api/merchant/kitchen-quotes", {
+      method: "PATCH",
+      body: JSON.stringify({
+        id: quoteId,
+        status: "quoted",
+        expectedStatus: "reviewing",
+        quotedPrice: 4200000,
+        note: "Includes installation",
+      }),
+    }),
+  );
+  assert.equal(update.status, 200);
+  assert.deepEqual(calls[1], [
+    "update_merchant_kitchen_quote",
+    {
+      p_actor: "verified-merchant",
+      p_quote: quoteId,
+      p_status: "quoted",
+      p_expected_status: "reviewing",
+      p_price: 4200000,
+      p_note: "Includes installation",
+    },
+  ]);
+});
 const deferred = () => {
   let resolve;
   const promise = new Promise((r) => (resolve = r));

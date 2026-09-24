@@ -12,9 +12,11 @@ import {
   Maximize,
   Trash2,
   Store,
+  MessageSquareQuote,
 } from "lucide-react";
 import { OrderHistory } from "@/components/OrderHistory";
 import { SavedKitchenList } from "@/components/SavedKitchenList";
+import { KitchenQuoteHistory } from "@/components/KitchenQuoteHistory";
 import { useAuth } from "@/store/auth";
 import { useWishlist } from "@/store/wishlist";
 import { useDesigns } from "@/store/designs";
@@ -73,11 +75,36 @@ export default function AccountPage() {
           </button>
         </div>
         <nav className="mt-4 space-y-1 text-sm">
-          {role === "admin" && <Link href="/admin" className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"><LayoutGrid className="h-4 w-4" />Удирдлага</Link>}
-          {role === "merchant" && <Link href="/merchant" className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"><Store className="h-4 w-4" />Миний дэлгүүр</Link>}
+          {role === "admin" && (
+            <Link
+              href="/admin"
+              className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              Удирдлага
+            </Link>
+          )}
+          {role === "merchant" && (
+            <Link
+              href="/merchant"
+              className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"
+            >
+              <Store className="h-4 w-4" />
+              Миний дэлгүүр
+            </Link>
+          )}
           {[
             { href: "#designs", label: "Хадгалсан загвар", icon: LayoutGrid },
-            { href: "#kitchen-garniture", label: "Гал тогооны гарнитур", icon: LayoutGrid },
+            {
+              href: "#kitchen-garniture",
+              label: "Гал тогооны гарнитур",
+              icon: LayoutGrid,
+            },
+            {
+              href: "#kitchen-quotes",
+              label: "Үнийн хүсэлт",
+              icon: MessageSquareQuote,
+            },
             { href: "#orders", label: "Захиалга", icon: Package },
             { href: "/wishlist", label: "Хүслийн жагсаалт", icon: Heart },
             { href: "#profile", label: "Профайл", icon: User },
@@ -95,15 +122,30 @@ export default function AccountPage() {
       </aside>
 
       <div className="space-y-10">
-        <section id="profile" className="scroll-mt-24 rounded-lg border border-[#293C32]/10 bg-white p-6">
+        <section
+          id="profile"
+          className="scroll-mt-24 rounded-lg border border-[#293C32]/10 bg-white p-6"
+        >
           <h1 className="text-3xl text-[#293C32]">Профайл</h1>
           <dl className="mt-6 grid gap-5 text-sm sm:grid-cols-2">
-            <div><dt className="text-[#737D6C]">Нэр</dt><dd className="mt-1 font-medium">{user.name}</dd></div>
-            <div><dt className="text-[#737D6C]">Имэйл</dt><dd className="mt-1 break-all font-medium">{user.email}</dd></div>
+            <div>
+              <dt className="text-[#737D6C]">Нэр</dt>
+              <dd className="mt-1 font-medium">{user.name}</dd>
+            </div>
+            <div>
+              <dt className="text-[#737D6C]">Имэйл</dt>
+              <dd className="mt-1 break-all font-medium">{user.email}</dd>
+            </div>
           </dl>
         </section>
         <section id="designs">
-          {(catalog.loading || !catalog.ready) && <CatalogStatus loading={catalog.loading} error={catalog.error} retry={() => void catalog.refresh()} />}
+          {(catalog.loading || !catalog.ready) && (
+            <CatalogStatus
+              loading={catalog.loading}
+              error={catalog.error}
+              retry={() => void catalog.refresh()}
+            />
+          )}
           <div className="flex items-end justify-between">
             <div>
               <p className="font-mono text-xs uppercase tracking-wide text-[#737D6C]">
@@ -146,7 +188,10 @@ export default function AccountPage() {
                     <div>
                       <p className="font-medium">{d.name}</p>
                       <p className="mt-1 text-xs text-[#737D6C]">
-                        {d.pieces.length} тавилга · {catalog.ready ? formatPrice(total) : "Үнэ ачаалагдаагүй"}
+                        {d.pieces.length} тавилга ·{" "}
+                        {catalog.ready
+                          ? formatPrice(total)
+                          : "Үнэ ачаалагдаагүй"}
                       </p>
                       <p className="mt-1 text-xs text-[#737D6C]/70">
                         Сүүлд шинэчилсэн{" "}
@@ -167,7 +212,11 @@ export default function AccountPage() {
                       </Link>
                       <button
                         onClick={() => {
-                          if (window.confirm(`“${d.name}” загварыг устгах уу? Устгасан загварыг буцаах боломжгүй.`)) {
+                          if (
+                            window.confirm(
+                              `“${d.name}” загварыг устгах уу? Устгасан загварыг буцаах боломжгүй.`,
+                            )
+                          ) {
                             deleteDesign(d.id);
                           }
                         }}
@@ -185,8 +234,19 @@ export default function AccountPage() {
         </section>
 
         <section id="kitchen-garniture" className="scroll-mt-24">
-          <h2 className="mb-5 text-3xl text-[#293C32]">Миний гал тогооны гарнитур</h2>
+          <h2 className="mb-5 text-3xl text-[#293C32]">
+            Миний гал тогооны гарнитур
+          </h2>
           <SavedKitchenList />
+        </section>
+        <section id="kitchen-quotes" className="scroll-mt-24">
+          <p className="font-mono text-xs uppercase tracking-wide text-[#737D6C]">
+            Marketplace
+          </p>
+          <h2 className="mb-5 text-3xl text-[#293C32]">
+            Гал тогооны үнийн хүсэлт
+          </h2>
+          <KitchenQuoteHistory />
         </section>
         <section id="orders">
           <p className="font-mono text-xs uppercase tracking-wide text-[#737D6C]">
@@ -197,7 +257,13 @@ export default function AccountPage() {
         </section>
 
         <section id="wishlist">
-          {(catalog.loading || !catalog.ready) && <CatalogStatus loading={catalog.loading} error={catalog.error} retry={() => void catalog.refresh()} />}
+          {(catalog.loading || !catalog.ready) && (
+            <CatalogStatus
+              loading={catalog.loading}
+              error={catalog.error}
+              retry={() => void catalog.refresh()}
+            />
+          )}
           <p className="font-mono text-xs uppercase tracking-wide text-[#737D6C]">
             Хүслийн жагсаалт
           </p>

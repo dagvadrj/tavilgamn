@@ -1,6 +1,6 @@
 export type MerchantNotification = {
   id: string;
-  kind: "kitchen_review";
+  kind: "kitchen_review" | "kitchen_quote";
   title: string;
   body: string;
   href: string;
@@ -17,7 +17,7 @@ export function merchantNotificationFromRow(
 
   return {
     id: String(row.id),
-    kind: "kitchen_review",
+    kind: row.kind === "kitchen_quote" ? "kitchen_quote" : "kitchen_review",
     title: String(row.title),
     body: typeof row.body === "string" ? row.body : "",
     href: String(row.href),

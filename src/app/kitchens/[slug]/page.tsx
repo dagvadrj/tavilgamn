@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { readPublishedKitchenDesignBySlug } from "@/lib/kitchenMarketplaceServer";
 import { UseKitchenDesignButton } from "@/components/UseKitchenDesignButton";
+import { KitchenQuoteRequest } from "@/components/KitchenQuoteRequest";
 
 export const dynamic = "force-dynamic";
 
@@ -194,9 +195,18 @@ export default async function KitchenDesignPage({ params }: PageProps) {
               designId={design.id}
               returnPath={`/kitchens/${design.slug}`}
             />
+            <KitchenQuoteRequest
+              designId={design.id}
+              returnPath={`/kitchens/${design.slug}`}
+              defaultRoom={{
+                widthMm: design.roomWidthMm,
+                depthMm: design.roomDepthMm,
+                heightMm: Math.max(design.maxHeightMm, 2700),
+              }}
+            />
             <Link
               href={`/catalog/stores/${design.storeId}`}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#293c32]/20 px-5 text-sm font-medium text-[#293c32]"
+              className="inline-flex min-h-11 items-center justify-center gap-2 text-sm font-medium text-[#293c32]/70 hover:text-[#293c32]"
             >
               Үйлдвэртэй холбогдох <ArrowUpRight size={16} />
             </Link>

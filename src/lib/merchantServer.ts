@@ -20,7 +20,8 @@ export function merchantError(error: unknown, fallback: string) {
     : code === "P0002" ? "Мэдээлэл олдсонгүй. Жагсаалтаа шинэчилнэ үү."
     : code === "P0003" ? "Нөөц өөрчлөгдсөн байна. Жагсаалтаа шинэчлээд дахин засна уу."
     : code === "P0009" ? "Захиалгын төлөв өөрчлөгдсөн эсвэл төлбөр хүлээж байна. Жагсаалтаа шинэчилнэ үү."
+    : code === "P0015" ? "Үнийн хүсэлтийн төлөв өөрчлөгдсөн байна. Жагсаалтаа шинэчилнэ үү."
     : fallback;
-  const status = error instanceof CatalogInputError ? 400 : code === "42501" ? 403 : code === "P0002" ? 404 : code === "P0003" || code === "P0009" ? 409 : 503;
+  const status = error instanceof CatalogInputError ? 400 : code === "42501" ? 403 : code === "P0002" ? 404 : code === "P0003" || code === "P0009" || code === "P0015" ? 409 : 503;
   return NextResponse.json({ error: message }, { status, headers: merchantHeaders });
 }

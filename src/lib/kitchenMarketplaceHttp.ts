@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { CatalogInputError } from "./catalogValidation";
 import { KitchenMarketplaceInputError } from "./kitchenMarketplace";
 
 export const kitchenPrivateHeaders = { "Cache-Control": "private, no-store" };
@@ -7,7 +8,8 @@ export function kitchenMarketplaceError(error: unknown, fallback: string) {
   const code = error && typeof error === "object" && "code" in error
     ? String(error.code)
     : "";
-  const message = error instanceof KitchenMarketplaceInputError
+  const inputError = error instanceof KitchenMarketplaceInputError || error instanceof CatalogInputError;
+  const message = inputError
     ? error.message
     : code === "42501"
       ? "Энэ үйлдлийг зөвхөн идэвхтэй үйлдвэр эсвэл гар хийцийн дэлгүүр хийж болно."
@@ -24,7 +26,7 @@ export function kitchenMarketplaceError(error: unknown, fallback: string) {
           : code === "P0014"
             ? "Нийтлэгдсэн загварын snapshot ашиглах боломжгүй байна."
           : fallback;
-  const status = error instanceof KitchenMarketplaceInputError
+  const status = inputError
     ? 400
     : code === "42501"
       ? 403

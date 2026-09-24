@@ -3,6 +3,7 @@ export type MerchantLocationTab =
   | "products"
   | "orders"
   | "kitchens"
+  | "quotes"
   | "store";
 
 const MERCHANT_TABS = new Set<MerchantLocationTab>([
@@ -10,6 +11,7 @@ const MERCHANT_TABS = new Set<MerchantLocationTab>([
   "products",
   "orders",
   "kitchens",
+  "quotes",
   "store",
 ]);
 const UUID_PATTERN =

@@ -42,6 +42,7 @@ import { MerchantOrders } from "./MerchantOrders";
 import { MerchantShell } from "./MerchantShell";
 import type { MerchantTab } from "./MerchantSidebar";
 import { MerchantKitchenDesigns } from "./MerchantKitchenDesigns";
+import { MerchantKitchenQuotes } from "./MerchantKitchenQuotes";
 
 const blankProduct = (): MerchantProduct => ({
   id: "new",
@@ -293,6 +294,7 @@ function MerchantWorkspace({
           {tab === "products" && store && <MerchantProducts owner={owner} />}
 
           {tab === "orders" && store && <MerchantOrders owner={owner} />}
+          {tab === "quotes" && store && <MerchantKitchenQuotes owner={owner} />}
 
           {tab === "kitchens" && store && (
             <MerchantKitchenDesigns

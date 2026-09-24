@@ -9,6 +9,7 @@ import {
   Store,
   ArrowUpRight,
   CookingPot,
+  MessageSquareQuote,
 } from "lucide-react";
 
 export type MerchantTab =
@@ -16,6 +17,7 @@ export type MerchantTab =
   | "products"
   | "orders"
   | "kitchens"
+  | "quotes"
   | "store";
 
 const ITEMS: {
@@ -27,6 +29,7 @@ const ITEMS: {
   { id: "products", label: "Бараа", icon: Package },
   { id: "orders", label: "Захиалга", icon: ShoppingBag },
   { id: "kitchens", label: "Гал тогоо", icon: CookingPot },
+  { id: "quotes", label: "Үнийн хүсэлт", icon: MessageSquareQuote },
   { id: "store", label: "Дэлгүүр", icon: Store },
 ];
 
@@ -55,7 +58,8 @@ export function MerchantSidebar({
             !hasStore &&
             (item.id === "products" ||
               item.id === "orders" ||
-              item.id === "kitchens");
+              item.id === "kitchens" ||
+              item.id === "quotes");
 
           return (
             <button
