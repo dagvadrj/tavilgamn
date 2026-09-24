@@ -5,11 +5,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
+  ChevronDown,
+  House,
   Plus,
   RotateCw,
+  Save,
+  Settings2,
   Trash2,
   LayoutPanelTop,
+  X,
 } from "lucide-react";
 import {
   CABINET_DEFAULTS,
@@ -249,6 +253,7 @@ export function ModularKitchenPlanner({
     [savedId, setSavedId] = useState("");
   const [open, setOpen] = useState(false);
   const [componentOverview, setComponentOverview] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [moduleCatalog, setModuleCatalog] = useState<KitchenCatalogModule[]>(
     [],
   );
@@ -308,7 +313,7 @@ export function ModularKitchenPlanner({
         designRef.current = next;
         setName(saved.name);
         setSavedId(saved.id);
-        setSelectedId(next.cabinets[0]?.id ?? null);
+        setSelectedId(null);
         initialRead.current = true;
         setReady(true);
         return;
@@ -335,7 +340,7 @@ export function ModularKitchenPlanner({
             next = parseKitchen(draft.design);
           setDesign(next);
           designRef.current = next;
-          setSelectedId(next.cabinets[0]?.id ?? null);
+          setSelectedId(null);
           setName(
             typeof draft.name === "string"
               ? draft.name.slice(0, 100)
@@ -382,7 +387,7 @@ export function ModularKitchenPlanner({
   const [preview, setPreview] = useState<ModularKitchen | null>(null);
   const draftRef = useRef<ModularKitchen | null>(null);
   const dragBase = useRef<ModularKitchen | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>("base-1");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<"move" | "orbit">("orbit");
   const [addType, setAddType] = useState<
     | CabinetType
@@ -552,6 +557,7 @@ export function ModularKitchenPlanner({
       return;
     }
     setSelectedId(id);
+    setSettingsOpen(true);
     if (window.matchMedia("(max-width: 760px)").matches)
       setComponentOverview(true);
   }
@@ -759,147 +765,148 @@ export function ModularKitchenPlanner({
     });
   }
   return (
-    <main className="kp container-page">
-      <header className="kp-heading">
-        <div>
-          <p className="kp-eyebrow">ГАЛ ТОГОО ТӨЛӨВЛӨХ</p>
-          <h1>Гал тогоогоо өөрийнхөөрөө.</h1>
-        </div>
-        <Link href="/planner">
-          <ArrowLeft size={16} />
-          Өрөө төлөвлөх
+    <main className="kp kp-shell">
+      <header className="kp-planner-topbar">
+        <Link
+          href="/"
+          className="kp-planner-brand"
+          aria-label="Tavilga.mn нүүр"
+        >
+          <House size={18} /> <span>tavilga.mn</span>
         </Link>
-      </header>
-      <section
-        className="kp-panel km-save-panel"
-        aria-label="Гарнитур хадгалах"
-      >
-        <label className="kp-field">
-          <span>Загварын нэр</span>
-          <input
-            value={name}
-            maxLength={100}
-            disabled={busy}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </label>
-        {user ? (
-          <div className="km-save-actions">
+        <nav className="kp-planner-steps" aria-label="Төлөвлөх үе шат">
+          <Link href="/kitchen?new=1">Санал авах</Link>
+          <span className="is-active">3D төлөвлөх</span>
+          <span>Шалгах</span>
+          <span>Хадгалах</span>
+        </nav>
+        <div className="kp-top-actions">
+          <details className="km-layout-menu kp-top-menu">
+            <summary>
+              <LayoutPanelTop size={18} />
+              <span>Байрлал</span>
+              <ChevronDown size={15} />
+            </summary>
+            <div
+              className="km-layout-options"
+              role="group"
+              aria-label="Гарнитурын хэлбэр"
+            >
+              {(
+                [
+                  ["straight", "I · Шулуун"],
+                  ["l-right", "L · баруун булан"],
+                  ["l-left", "L · зүүн булан"],
+                  ["double-side", "Хоёр талт"],
+                ] as const
+              ).map(([layout, label]) => (
+                <button
+                  key={layout}
+                  type="button"
+                  disabled={busy}
+                  aria-pressed={(design.layout ?? "straight") === layout}
+                  onClick={(event) => {
+                    if (commit(arrangeKitchen(design, layout))) {
+                      setViewKey((key) => key + 1);
+                      event.currentTarget
+                        .closest("details")
+                        ?.removeAttribute("open");
+                    }
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </details>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedId(null);
+              setSettingsOpen(true);
+            }}
+          >
+            <Plus size={18} /> <span>Нэмэх</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedId(null);
+              setSettingsOpen(true);
+            }}
+          >
+            <Settings2 size={18} /> <span>Тохиргоо</span>
+          </button>
+          <label className="kp-project-name">
+            <span className="sr-only">Загварын нэр</span>
+            <input
+              value={name}
+              maxLength={100}
+              disabled={busy}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          {user ? (
             <button
-              className="kp-primary"
+              className="kp-save-button"
               disabled={busy}
               onClick={() => void save()}
             >
-              {saving ? "Хадгалж байна…" : "Хадгалах"}
+              <Save size={18} />{" "}
+              <span>{saving ? "Хадгалж байна…" : "Хадгалах"}</span>
             </button>
-            <button
-              className="kp-primary"
-              disabled={busy}
-              onClick={() => void save(true)}
+          ) : (
+            <Link
+              className="kp-save-button"
+              href={`/login?next=${encodeURIComponent(new URLSearchParams(queryString).has("design") ? `/kitchen?${queryString}` : "/kitchen?importGuest=1")}`}
             >
-              Хадгалаад өрөөнд байрлуулах
-            </button>
-            <Link href="/account#kitchen-garniture">Өөрийн гарнитурууд</Link>
-          </div>
-        ) : (
+              <Save size={18} /> <span>Нэвтэрч хадгалах</span>
+            </Link>
+          )}
+          <details className="kp-top-menu kp-more-menu">
+            <summary aria-label="Нэмэлт үйлдэл">•••</summary>
+            <div className="kp-more-content">
+              {user && (
+                <button type="button" onClick={() => void save(true)}>
+                  Хадгалаад өрөөнд байрлуулах
+                </button>
+              )}
+              <Link href="/kitchen?new=1">Шинэ гарнитур</Link>
+              {user && (
+                <Link href="/account#kitchen-garniture">
+                  Өөрийн гарнитурууд
+                </Link>
+              )}
+              {ready && <KitchenRoomFitStatus kitchen={design} name={name} />}
+              <KitchenExportButtons
+                root={exportRoot}
+                name={name}
+                disabled={busy || !kitchen.cabinets.length}
+              />
+            </div>
+          </details>
           <Link
-            href={`/login?next=${encodeURIComponent(new URLSearchParams(queryString).has("design") ? `/kitchen?${queryString}` : "/kitchen?importGuest=1")}`}
+            href="/planner"
+            className="kp-close-planner"
+            aria-label="Planner-оос гарах"
           >
-            Нэвтэрч гарнитураа хадгалах →
+            <X size={20} />
           </Link>
-        )}
-        {!ready && (
-          <p role="status">
-            Хадгалсан загварыг нээж байна…{" "}
-            <Link href="/kitchen">Шинээр эхлэх</Link>
-          </p>
-        )}
-        {library.error && (
-          <p role="alert">
-            {library.error}{" "}
+        </div>
+      </header>
+      {(!ready || library.error) && (
+        <div
+          className="kp-loading-strip"
+          role={library.error ? "alert" : "status"}
+        >
+          {library.error || "Хадгалсан загварыг нээж байна…"}
+          {library.error && (
             <button type="button" onClick={() => void library.refresh()}>
               Дахин оролдох
             </button>
-          </p>
-        )}
-        {ready && <KitchenRoomFitStatus kitchen={design} name={name} />}
-        <button
-          type="button"
-          className="btn-ghost"
-          disabled={busy}
-          onClick={() => {
-            const next = createUnifiedKitchen();
-            try {
-              localStorage.setItem(
-                draftKey,
-                JSON.stringify({
-                  id: "",
-                  name: "Миний гал тогоо",
-                  design: next,
-                }),
-              );
-              router.push(`/kitchen?draft=${crypto.randomUUID()}`);
-            } catch {
-              router.push(`/kitchen?new=1&draft=${crypto.randomUUID()}`);
-            }
-          }}
-        >
-          <Plus size={15} />
-          Шинэ гарнитур
-        </button>
-        <KitchenExportButtons
-          root={exportRoot}
-          name={name}
-          disabled={busy || !kitchen.cabinets.length}
-        />
-      </section>
-      <details className="km-layout-menu">
-        <summary>
-          <LayoutPanelTop size={18} />
-          Байрлал ·{" "}
-          {
-            (
-              {
-                straight: "I · Шулуун",
-                "l-right": "L · Баруун",
-                "l-left": "L · Зүүн",
-                "double-side": "Хоёр тал",
-              } as const
-            )[design.layout ?? "straight"]
-          }
-        </summary>
-        <div
-          className="km-layout-options"
-          role="group"
-          aria-label="Гарнитурын хэлбэр"
-        >
-          {(
-            [
-              ["straight", "I · Шулуун"],
-              ["l-right", "L · баруун булан"],
-              ["l-left", "L · зүүн булан"],
-              ["double-side", "Double side · Хоёр тал"],
-            ] as const
-          ).map(([layout, label]) => (
-            <button
-              key={layout}
-              type="button"
-              disabled={busy}
-              aria-pressed={(design.layout ?? "straight") === layout}
-              onClick={(event) => {
-                if (commit(arrangeKitchen(design, layout))) {
-                  setViewKey((key) => key + 1);
-                  event.currentTarget
-                    .closest("details")
-                    ?.removeAttribute("open");
-                }
-              }}
-            >
-              {label}
-            </button>
-          ))}
+          )}
         </div>
-      </details>
+      )}
       <div className="kp-layout">
         <div className="kp-workspace">
           <section className="kp-preview" aria-label="Модуль шүүгээ байрлуулах">
@@ -964,6 +971,11 @@ export function ModularKitchenPlanner({
                   selectedId={selectedId}
                   mode={saving ? "orbit" : mode}
                   onSelect={selectCabinet}
+                  onDeselect={() => {
+                    setSelectedId(null);
+                    setSettingsOpen(false);
+                    setComponentOverview(false);
+                  }}
                   onStart={start}
                   onMove={move}
                   onEnd={() => finish()}
@@ -988,7 +1000,7 @@ export function ModularKitchenPlanner({
                 "Хананд болон залгаа шүүгээнд автоматаар таарна."}
             </p>
           </section>
-          <section className="kp-panel">
+          <section className="kp-panel kp-reference-panel">
             <div className="kp-section-heading">
               <h2>Байрлал</h2>
               <span>Тасархай хүрээ: дээд шүүгээ</span>
@@ -1025,7 +1037,7 @@ export function ModularKitchenPlanner({
               </p>
             )}
           </section>
-          <section className="kp-panel">
+          <section className="kp-panel kp-reference-panel">
             <h2>Тавцангийн хэмжээ</h2>
             {tops.length ? (
               <ul className="km-top-list">
@@ -1046,7 +1058,24 @@ export function ModularKitchenPlanner({
             )}
           </section>
         </div>
-        <aside className="kp-settings" aria-label="Шүүгээний тохиргоо">
+        <aside
+          className={`kp-settings ${settingsOpen ? "is-open" : ""} ${selected ? "is-selected" : "is-tools"}`}
+          aria-label={
+            selected ? "Сонгосон шүүгээний тохиргоо" : "Гал тогооны хэрэгслүүд"
+          }
+        >
+          <div className="kp-settings-head">
+            <strong>
+              {selected ? cabinetLabel(selected) : "Planner хэрэгслүүд"}
+            </strong>
+            <button
+              type="button"
+              aria-label="Тохиргооны хэсгийг хаах"
+              onClick={() => setSettingsOpen(false)}
+            >
+              <X size={19} />
+            </button>
+          </div>
           {selected && (
             <section className="kp-panel">
               <div className="kp-section-heading">

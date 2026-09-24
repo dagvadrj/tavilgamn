@@ -26,6 +26,7 @@ export interface ModularSceneProps {
   selectedId: string | null;
   mode: "move" | "orbit";
   onSelect: (id: string) => void;
+  onDeselect?: () => void;
   onStart: (id: string) => void;
   onMove: (id: string, pose: CabinetPose) => void;
   onEnd: () => void;
@@ -370,6 +371,7 @@ export function ModularKitchenScene(props: ModularSceneProps) {
         frameloop="demand"
         gl={{ preserveDrawingBuffer: true }}
         camera={{ position: [4, 5, 6], fov: 45 }}
+        onPointerMissed={() => props.onDeselect?.()}
         fallback={
           <p className="kp-viewer-message">
             3D дэмжигдэхгүй байна. Доорх зураг, хэмжээсийг ашиглана уу.

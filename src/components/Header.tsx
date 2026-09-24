@@ -35,7 +35,12 @@ export function Header() {
   useEffect(() => {
     setCategoriesOpen(false);
   }, [pathname]);
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) return null;
+  if (
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
+    pathname === "/kitchen"
+  )
+    return null;
   const accountHref = mounted && user ? "/account" : "/login";
   const links = [
     {

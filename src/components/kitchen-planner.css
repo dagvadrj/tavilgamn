@@ -829,6 +829,695 @@
 .km-layout-menu .km-layout-options {
   margin-top: 9px;
 }
+
+/* Kitchen suggestion: a short decision flow before the detailed editor. */
+.ks-wizard {
+  min-height: 100dvh;
+  background: #f5f4ef;
+  color: #17251d;
+}
+.ks-header {
+  height: 64px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 20px;
+  padding: 0 clamp(18px, 4vw, 56px);
+  border-bottom: 1px solid #dfe3db;
+  background: #fff;
+}
+.ks-header button,
+.ks-header strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.ks-header button {
+  justify-self: start;
+  min-height: 44px;
+  font-size: 14px;
+}
+.ks-header > span {
+  justify-self: end;
+  color: #647168;
+  font-size: 13px;
+}
+.ks-question,
+.ks-summary {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: clamp(52px, 7vw, 92px) 0 64px;
+}
+.ks-question {
+  text-align: center;
+}
+.ks-eyebrow {
+  margin-bottom: 12px;
+  color: #52705f;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+.ks-question h1,
+.ks-summary h1 {
+  font-size: clamp(30px, 4vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+.ks-intro {
+  margin-top: 14px;
+  color: #647168;
+  font-size: 16px;
+  line-height: 1.65;
+}
+.ks-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 900px;
+  margin: 44px auto 32px;
+}
+.ks-choices.has-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 1100px;
+}
+.ks-choices > button {
+  position: relative;
+  min-height: 310px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 32px #24382c10;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.ks-choices > button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 40px #24382c1c;
+}
+.ks-choices > button.is-selected {
+  border-color: #2d6b4b;
+  box-shadow: 0 0 0 4px #dcece3;
+}
+.ks-choice-copy {
+  display: grid;
+  gap: 5px;
+  padding: 20px 22px 24px;
+}
+.ks-choice-copy strong {
+  font-size: 18px;
+}
+.ks-choice-copy small {
+  color: #647168;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.ks-check {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #cbd5ce;
+  border-radius: 50%;
+  color: transparent;
+  background: #fff;
+}
+.is-selected > .ks-check {
+  color: white;
+  border-color: #2d6b4b;
+  background: #2d6b4b;
+}
+.ks-next {
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 13px 24px;
+  border-radius: 999px;
+  background: #17251d;
+  color: #fff;
+  font-weight: 700;
+}
+.ks-diagram {
+  position: relative;
+  height: 220px;
+  display: block;
+  background: linear-gradient(#f4f2eb 0 78%, #ddd6c8 78%);
+}
+.ks-diagram i {
+  position: absolute;
+  display: block;
+  border: 2px solid #617269;
+  background: #fff;
+}
+.ks-diagram i:nth-child(1) {
+  left: 20%;
+  right: 20%;
+  bottom: 22%;
+  height: 36%;
+}
+.ks-diagram i:nth-child(2) {
+  left: 20%;
+  right: 20%;
+  bottom: 60%;
+  height: 18%;
+}
+.ks-diagram i:nth-child(3) {
+  left: 43%;
+  right: 43%;
+  bottom: 33%;
+  height: 17%;
+  background: #27332c;
+}
+.ks-oven-high i:nth-child(1) {
+  left: 35%;
+  right: 35%;
+  bottom: 15%;
+  height: 67%;
+}
+.ks-oven-high i:nth-child(3) {
+  left: 39%;
+  right: 39%;
+  bottom: 42%;
+  height: 22%;
+}
+.ks-hood-integrated i:nth-child(3) {
+  bottom: 55%;
+  height: 6%;
+  background: #59645e;
+}
+.ks-hood-wall i:nth-child(2) {
+  left: 38%;
+  right: 38%;
+  bottom: 55%;
+  height: 25%;
+}
+.ks-hood-wall i:nth-child(3) {
+  left: 30%;
+  right: 30%;
+  bottom: 48%;
+  height: 8%;
+}
+.ks-fridge-integrated i:nth-child(1),
+.ks-fridge-free i:nth-child(1) {
+  left: 34%;
+  right: 34%;
+  bottom: 16%;
+  height: 65%;
+}
+.ks-fridge-integrated i:nth-child(2) {
+  left: 34%;
+  right: 34%;
+  bottom: 48%;
+  height: 2%;
+}
+.ks-fridge-free i:nth-child(2) {
+  left: 49%;
+  right: 49%;
+  bottom: 16%;
+  height: 65%;
+}
+.ks-fridge-integrated i:nth-child(3),
+.ks-fridge-free i:nth-child(3) {
+  display: none;
+}
+.ks-layout-i i:nth-child(1) {
+  left: 16%;
+  right: 16%;
+  bottom: 39%;
+  height: 23%;
+}
+.ks-layout-l i:nth-child(1) {
+  left: 16%;
+  right: 38%;
+  bottom: 30%;
+  height: 21%;
+}
+.ks-layout-l i:nth-child(2) {
+  left: 55%;
+  right: 24%;
+  bottom: 30%;
+  height: 50%;
+}
+.ks-layout-double i:nth-child(1) {
+  left: 15%;
+  right: 58%;
+  bottom: 30%;
+  height: 50%;
+}
+.ks-layout-double i:nth-child(2) {
+  left: 58%;
+  right: 15%;
+  bottom: 30%;
+  height: 50%;
+}
+.ks-layout-i i:nth-child(2),
+.ks-layout-i i:nth-child(3),
+.ks-layout-l i:nth-child(3),
+.ks-layout-double i:nth-child(3),
+.ks-none i {
+  display: none;
+}
+.ks-none::after {
+  content: "Дараа нь нэмнэ";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #718078;
+  font-size: 14px;
+}
+.ks-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin: 42px 0 38px;
+}
+.ks-summary-grid article {
+  padding: 14px 14px 20px;
+  border: 1px solid #dfe3db;
+  border-radius: 16px;
+  background: #fff;
+}
+.ks-summary-visual {
+  height: 180px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #f3f2ed;
+}
+.ks-summary-visual > svg {
+  position: absolute;
+  z-index: 2;
+  color: #345944;
+}
+.ks-summary-visual .ks-diagram {
+  width: 100%;
+  height: 100%;
+  opacity: 0.38;
+}
+.ks-summary-grid article > p {
+  margin-top: 16px;
+  color: #647168;
+  font-size: 13px;
+}
+.ks-summary-grid h2 {
+  margin-top: 3px;
+  font-size: 17px;
+}
+.ks-summary-grid article > button {
+  margin-top: 18px;
+  min-height: 42px;
+  padding: 8px 15px;
+  border: 1px solid #aebbb3;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+/* Full-screen kitchen editor: all controls float over the 3D workspace. */
+.kp-shell {
+  width: 100%;
+  height: 100dvh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #e7e9e5;
+}
+.kp-planner-topbar {
+  position: relative;
+  z-index: 40;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #d7dcd5;
+  background: #fff;
+  box-shadow: 0 3px 16px #1d2c2310;
+}
+.kp-planner-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-right: 18px;
+  border-right: 1px solid #e1e5df;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.kp-planner-steps {
+  display: flex;
+  align-self: stretch;
+  gap: 4px;
+}
+.kp-planner-steps > * {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  color: #738078;
+  font-size: 13px;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+.kp-planner-steps .is-active {
+  color: #213d2e;
+  border-bottom-color: #2d6b4b;
+  font-weight: 700;
+}
+.kp-top-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.kp-top-actions > button,
+.kp-top-menu > summary,
+.kp-close-planner,
+.kp-save-button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 11px;
+  border: 1px solid #d7ddd8;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.kp-save-button {
+  color: #fff;
+  border-color: #2d6b4b;
+  background: #2d6b4b;
+}
+.kp-project-name input {
+  width: min(16vw, 180px);
+  min-height: 44px;
+  padding: 8px 11px;
+  border: 1px solid #d7ddd8;
+  border-radius: 8px;
+  background: #f8f9f7;
+}
+.kp-top-menu {
+  position: relative;
+}
+.kp-top-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.kp-top-menu > summary::-webkit-details-marker {
+  display: none;
+}
+.kp-top-menu .km-layout-options,
+.kp-more-content {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 260px;
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid #d8ded8;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 55px #20312828;
+}
+.kp-top-menu .km-layout-options button,
+.kp-more-content > button,
+.kp-more-content > a {
+  min-height: 42px;
+  padding: 9px 11px;
+  text-align: left;
+  border: 1px solid #e0e4df;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+}
+.kp-top-menu .km-layout-options button[aria-pressed="true"] {
+  color: #fff;
+  background: #293c32;
+}
+.kp-more-menu > summary {
+  width: 44px;
+  padding: 8px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+.kp-more-content {
+  width: min(360px, calc(100vw - 24px));
+}
+.kp-more-content .km-export {
+  margin-top: 5px;
+}
+.kp-loading-strip {
+  position: absolute;
+  z-index: 35;
+  top: 74px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #fff7ed;
+  box-shadow: 0 8px 24px #24352b20;
+  font-size: 13px;
+}
+.kp-shell .kp-layout {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: block;
+  overflow: hidden;
+}
+.kp-shell .kp-workspace {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.kp-shell .kp-preview {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+}
+.kp-shell .kp-canvas {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+.kp-shell .kp-preview-bar {
+  position: absolute;
+  z-index: 12;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  align-items: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  pointer-events: none;
+}
+.kp-shell .kp-preview-bar > span,
+.kp-shell .km-view-tools {
+  padding: 7px;
+  border: 1px solid #d5dcd5;
+  border-radius: 10px;
+  background: #ffffffeb;
+  box-shadow: 0 8px 26px #25342b16;
+  pointer-events: auto;
+}
+.kp-shell .kp-preview-bar > span {
+  min-height: 44px;
+  padding: 12px 14px;
+}
+.kp-shell .kp-preview-bar button {
+  min-height: 38px;
+  border: 0;
+}
+.kp-shell .kp-preview-hint {
+  position: absolute;
+  z-index: 10;
+  left: 14px;
+  bottom: 14px;
+  max-width: min(560px, calc(100% - 28px));
+  padding: 10px 14px;
+  border: 1px solid #d6ddd6;
+  border-radius: 9px;
+  background: #ffffffeb;
+}
+.kp-shell .km-feedback {
+  position: absolute;
+  z-index: 10;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  width: auto;
+  max-width: min(560px, calc(100% - 32px));
+  min-height: 40px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px #25342b18;
+}
+.kp-reference-panel {
+  display: none;
+}
+.kp-shell .kp-settings {
+  position: absolute;
+  z-index: 30;
+  top: 14px;
+  right: 14px;
+  bottom: 14px;
+  width: min(390px, calc(100% - 28px));
+  display: none;
+  align-content: start;
+  gap: 12px;
+  padding: 12px;
+  overflow: auto;
+  border: 1px solid #d9ded9;
+  border-radius: 14px;
+  background: #f8f9f7f5;
+  box-shadow: 0 20px 60px #2030272b;
+  backdrop-filter: blur(12px);
+}
+.kp-shell .kp-settings.is-open {
+  display: grid;
+}
+.kp-settings-head {
+  position: sticky;
+  z-index: 4;
+  top: -12px;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 6px 8px 10px;
+  border-bottom: 1px solid #dfe4df;
+  background: #f8f9f7fa;
+}
+.kp-settings-head button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+}
+.kp-settings.is-selected > details {
+  display: none;
+}
+.kp-settings.is-selected > .kp-panel:first-of-type {
+  margin-top: 0;
+}
+.kp-shell .kp-settings .kp-panel {
+  padding: 16px;
+}
+
+@media (max-width: 1100px) {
+  .kp-planner-steps {
+    display: none;
+  }
+  .kp-top-actions > button span,
+  .kp-save-button span,
+  .kp-top-menu > summary span {
+    display: none;
+  }
+  .kp-project-name input {
+    width: 150px;
+  }
+}
+@media (max-width: 760px) {
+  .ks-header {
+    grid-template-columns: 1fr auto;
+  }
+  .ks-header > span {
+    display: none;
+  }
+  .ks-header strong {
+    justify-self: end;
+  }
+  .ks-choices,
+  .ks-choices.has-three,
+  .ks-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .ks-choices > button {
+    min-height: 260px;
+  }
+  .ks-diagram {
+    height: 178px;
+  }
+  .kp-planner-topbar {
+    min-height: 60px;
+    padding: 7px 9px;
+    gap: 7px;
+  }
+  .kp-planner-brand {
+    padding-right: 9px;
+  }
+  .kp-planner-brand span {
+    display: none;
+  }
+  .kp-project-name {
+    display: none;
+  }
+  .kp-top-actions {
+    gap: 4px;
+  }
+  .kp-top-actions > button,
+  .kp-top-menu > summary,
+  .kp-close-planner,
+  .kp-save-button {
+    width: 42px;
+    padding: 7px;
+  }
+  .kp-shell .kp-preview-bar {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+  .kp-shell .kp-preview-bar > span {
+    display: none;
+  }
+  .kp-shell .km-view-tools {
+    margin-left: auto;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  .kp-shell .kp-settings {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    max-height: min(72dvh, 650px);
+  }
+  .kp-shell .km-feedback {
+    bottom: 62px;
+  }
+  .kp-shell .kp-preview-hint {
+    bottom: 8px;
+    font-size: 11px;
+  }
+}
 .km-layout-options button[aria-pressed="true"] {
   background: #293c32;
   color: white;

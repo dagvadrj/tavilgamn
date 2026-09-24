@@ -1,9 +1,10 @@
 "use client";
 import { ModularKitchenPlanner } from "./ModularKitchenPlanner";
 import { useAuth } from "@/store/auth";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import "./kitchen-planner.css";
+import { KitchenSuggestionWizard } from "./KitchenSuggestionWizard";
 
 export function KitchenPlanner() {
   return (
@@ -13,8 +14,16 @@ export function KitchenPlanner() {
   );
 }
 function Editor() {
-  const query = useSearchParams().toString();
-  const { user, initialized } = useAuth();
+  const params = useSearchParams();
+  const query = params.toString();
+  const { user, initialized, initialize } = useAuth();
+  useEffect(() => {
+    void initialize();
+  }, [initialize]);
+  const openEditor =
+    params.get("new") !== "1" &&
+    ["editor", "design", "draft", "importGuest"].some((key) => params.has(key));
+  if (!openEditor) return <KitchenSuggestionWizard />;
   if (!initialized)
     return (
       <p className="container-page py-10" role="status">
