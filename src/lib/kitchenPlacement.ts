@@ -121,7 +121,7 @@ export function resolveElevations(kitchen: ModularKitchen): ModularKitchen {
     if (cabinet.type === "base") return { ...cabinet, position: { ...cabinet.position, y: 0 } };
     if (!cabinet.autoElevation) return cabinet;
     const below = bases.filter(base => footprintsOverlap(cabinet, base));
-    const top = below.length ? Math.max(...below.map(base => base.height + base.position.y)) : 820;
+    const top = below.length ? Math.max(...below.map(base => base.height + base.position.y)) : 840;
     return { ...cabinet, position: { ...cabinet.position, y: top + kitchen.countertop.thickness + kitchen.wallClearance } };
   }) };
 }

@@ -81,8 +81,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         ? modules.filter(
             (module) =>
               Math.abs(module.widthMm - selectedModel.widthMm) <= 10 &&
-              Math.abs(module.heightMm - selectedModel.heightMm) <= 10 &&
-              Math.abs(module.depthMm - selectedModel.depthMm) <= 10,
+              Math.abs(module.depthMm - selectedModel.depthMm) <= 10 &&
+              Math.abs(module.heightMm - selectedModel.heightMm) <= 10,
           )
         : modules,
     [modules, selectedModel],
@@ -355,8 +355,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               <option value="">Сонгоно уу</option>
               {modules.map((module) => (
                 <option key={module.id} value={module.id}>
-                  {module.code} · {module.widthMm}×{module.heightMm}×
-                  {module.depthMm} мм
+                  {module.code} · {module.widthMm}×{module.depthMm}×
+                  {module.heightMm} мм
                 </option>
               ))}
             </select>
@@ -394,7 +394,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             <strong className="text-black/70">Ангилал:</strong> Гал тогооны
             шүүгээ · <strong className="text-black/70">Хэмжээ:</strong>{" "}
             {uploadModule
-              ? `${uploadModule.widthMm}×${uploadModule.heightMm}×${uploadModule.depthMm} мм`
+              ? `${uploadModule.widthMm}×${uploadModule.depthMm}×${uploadModule.heightMm} мм`
               : "Module сонгоно уу"}
           </div>
           <button
@@ -471,8 +471,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                   value={model.id}
                   disabled={!model.glbReady}
                 >
-                  {model.name} · {model.widthMm}×{model.heightMm}×
-                  {model.depthMm} {model.linked ? "· холбоотой" : ""}
+                  {model.name} · {model.widthMm}×{model.depthMm}×
+                  {model.heightMm} {model.linked ? "· холбоотой" : ""}
                   {!model.glbReady ? " · GLB бэлэн биш" : ""}
                 </option>
               ))}
@@ -565,8 +565,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           </button>
           {selectedModel && !matchingModules.length && (
             <p className="text-sm text-red-600 md:col-span-2 xl:col-span-4">
-              {selectedModel.widthMm}×{selectedModel.heightMm}×
-              {selectedModel.depthMm} мм хэмжээтэй module байхгүй. GLB
+              {selectedModel.widthMm}×{selectedModel.depthMm}×
+              {selectedModel.heightMm} мм хэмжээтэй module байхгүй. GLB
               бүтээгдэхүүний хэмжээг шалгана уу.
             </p>
           )}
@@ -588,7 +588,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                   <Box size={17} />
                   <strong>{module.code}</strong>
                   <span className="text-xs text-black/45">
-                    {module.widthMm}×{module.heightMm}×{module.depthMm}
+                    {module.widthMm}×{module.depthMm}×{module.heightMm}
                   </span>
                 </div>
                 <div className="mt-3 space-y-2">

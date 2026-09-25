@@ -960,7 +960,7 @@ test("catalog default replaces procedural cabinet while preserving explicit matc
       name: "Base 600",
       cabinetType: "base",
       widthMm: 600,
-      heightMm: 820,
+      heightMm: 840,
       depthMm: 600,
       active: true,
       variants: [

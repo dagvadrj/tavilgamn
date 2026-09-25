@@ -61,8 +61,8 @@ export interface ModularKitchen {
   backsplashSettings?: { mode: "full-run" | "manual"; panels: { id: string; width: number; height: number; thickness: number; position: CabinetPose }[] };
 }
 export const CABINET_DEFAULTS = {
-  base: { label: "Доод шүүгээ", height: 820, depth: 600, heightRange: [800, 900], depthRange: [550, 650] },
-  wall: { label: "Дээд шүүгээ", height: 720, depth: 350, heightRange: [400, 1200], depthRange: [250, 450] },
+  base: { label: "Доод шүүгээ", height: 840, depth: 600, heightRange: [800, 900], depthRange: [550, 650] },
+  wall: { label: "Дээд шүүгээ", height: 740, depth: 350, heightRange: [400, 1200], depthRange: [250, 450] },
   tall: { label: "Өндөр шүүгээ", height: 2600, depth: 600, heightRange: [1800, 3500], depthRange: [550, 650] },
 } as const;
 export const REFRIGERATOR_PRESETS = {
@@ -119,7 +119,9 @@ export function roomWalls(room: KitchenRoom): KitchenWall[] {
   ];
 }
 export function validateCabinet(cabinet: ModularCabinet): string | null {
-  if (cabinet.opening !== undefined && !["doors", "drawers", "open", "sink", "hob", "oven", "hood", "refrigerator"].includes(cabinet.opening)) return "Шүүгээний загвар буруу байна.";
+
+  if (cabinet.opening !== undefined && !["doors", "drawers", "open", "sink", "hob", "oven", "hood", "refrigerator"].includes(cabinet.opening)) 
+    return "Шүүгээний загвар буруу байна.";
   const spec = CABINET_DEFAULTS[cabinet.type];
   if (!spec) return "Шүүгээний төрөл буруу байна.";
   const fridge = cabinet.opening === "refrigerator", directHood = cabinet.opening === "hood" && cabinet.hoodMount === "wall";

@@ -63,7 +63,7 @@ export function matchingKitchenVariants(modules: KitchenCatalogModule[], cabinet
   const cabinetType = cabinet.corner ? "corner" : cabinet.type;
   const opening = cabinet.opening ?? "doors";
   return modules
-    .filter((module) => module.active && module.cabinetType === cabinetType && module.widthMm === cabinet.width && module.heightMm === cabinet.height && module.depthMm === cabinet.depth)
+    .filter((module) => module.active && module.cabinetType === cabinetType && module.widthMm === cabinet.width && module.depthMm === cabinet.depth && module.heightMm === cabinet.height)
     .flatMap((module) => module.variants)
     .filter((variant) => variant.active && !!variant.glbFile && variant.opening === opening);
 }
@@ -86,8 +86,8 @@ export function similarKitchenVariants(
         score:
           (variant.opening === opening ? 0 : 10_000) +
           Math.abs(module.widthMm - cabinet.width) * 4 +
-          Math.abs(module.heightMm - cabinet.height) * 2 +
           Math.abs(module.depthMm - cabinet.depth) * 2 +
+          Math.abs(module.heightMm - cabinet.height) * 2 +
           (variant.furnitureModelId === cabinet.variantId ? -20_000 : 0) +
           variant.sortOrder,
       })))

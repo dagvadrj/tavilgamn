@@ -44,7 +44,7 @@ export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}
   const modules: KitchenCatalogModule[] = (moduleRows ?? []).map((row) => ({
     id: row.id as string, code: row.code as string, name: row.name as string,
     cabinetType: row.cabinet_type as KitchenCatalogModule["cabinetType"], widthMm: Number(row.width_mm),
-    heightMm: Number(row.height_mm), depthMm: Number(row.depth_mm), active: Boolean(row.active),
+    depthMm: Number(row.depth_mm), heightMm: Number(row.height_mm), active: Boolean(row.active),
     variants: variants.get(row.id as string) ?? [],
   }));
   return modules;
@@ -61,6 +61,6 @@ export async function readKitchenModelCandidates(db: Db = getSupabaseAdmin()) {
   const linked = new Set((links ?? []).map((row) => row.furniture_model_id as string));
   return (rows ?? []).map((row): KitchenModelCandidate => ({ id: row.id as string, productId: row.product_id as string,
     name: row.name as string, widthMm: Math.round(Number(row.dimensions_w) * 1000),
-    heightMm: Math.round(Number(row.dimensions_h) * 1000), depthMm: Math.round(Number(row.dimensions_d) * 1000),
+    depthMm: Math.round(Number(row.dimensions_d) * 1000), heightMm: Math.round(Number(row.dimensions_h) * 1000),
     glbReady: Boolean(row.source_glb_path ?? row.glb_path), processingStatus: String(row.processing_status ?? "idle"), linked: linked.has(row.id as string) }));
 }

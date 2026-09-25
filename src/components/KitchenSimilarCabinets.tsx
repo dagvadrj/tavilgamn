@@ -131,7 +131,7 @@ export function KitchenSimilarCabinets({
                   {module.name} · {OPENING_LABELS[variant.opening]}
                 </small>
                 <small>
-                  {module.widthMm} × {module.heightMm} × {module.depthMm} мм
+                  {module.widthMm} × {module.depthMm} × {module.heightMm} мм
                 </small>
               </span>
               {current ? (
