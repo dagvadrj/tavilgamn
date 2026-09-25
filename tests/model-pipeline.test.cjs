@@ -10,6 +10,11 @@ const { modelLodFiles, modelAssetPaths, chooseModelLod } = loadSource(
 
 const { instanceRepeatedModules } = loadSource("src/three/instanceModules.ts");
 
+const { r2ModelKey } = loadSource("src/lib/r2Models.ts", {
+  "@/lib/supabase/admin": { getSupabaseAdmin: () => ({}) },
+  "@/lib/cloudinaryModels": { removeModelFiles: async () => {} },
+});
+
 const id = "11111111-2222-4333-8444-555555555555";
 
 test("high-only model assets stay single-file", () => {
@@ -26,6 +31,16 @@ test("high-only model assets stay single-file", () => {
   assert.deepEqual(modelAssetPaths(path), [path]);
 
   assert.equal(chooseModelLod(), "high");
+});
+
+test("R2 model validation accepts the direct kitchen source GLB", () => {
+  const source = `r2://bucket/models/${id}/source/${id}.glb`;
+
+  assert.equal(r2ModelKey(source), `models/${id}/source/${id}.glb`);
+  assert.equal(
+    r2ModelKey(`r2://bucket/models/${id}/source/not-a-uuid.glb`),
+    null,
+  );
 });
 
 test("instancing matches exact geometry/material and preserves nested world-space bounds", () => {

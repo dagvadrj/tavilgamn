@@ -29,15 +29,31 @@ export async function GET(
     if (!path) {
       return NextResponse.json({ error: "Файл олдсонгүй." }, { status: 404, headers });
     }
+    if (r2ModelKey(path)) {
+      const upstream = await fetch(await r2DownloadUrl(path), {
+        cache: "no-store",
+        signal: AbortSignal.timeout(120000),
+      });
+      if (!upstream.ok || !upstream.body) throw new Error(`R2 model fetch failed (${upstream.status})`);
+      const responseHeaders = new Headers({
+        "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=60",
+        "Content-Type": upstream.headers.get("content-type") ?? "model/gltf-binary",
+        "X-Content-Type-Options": "nosniff",
+      });
+      for (const name of ["content-length", "etag", "last-modified"]) {
+        const value = upstream.headers.get(name);
+        if (value) responseHeaders.set(name, value);
+      }
+      return new NextResponse(upstream.body, { status: 200, headers: responseHeaders });
+    }
     let destination: string;
-    if (r2ModelKey(path)) destination = await r2DownloadUrl(path);
-    else if (cloudinaryModelAsset(path)) destination = path;
+    if (cloudinaryModelAsset(path)) destination = path;
     else if (path === `${params.id}/${params.filename[0]}`) {
       destination = db.storage.from("furniture-models").getPublicUrl(path).data.publicUrl;
     } else throw new Error("Invalid stored file path");
-    return NextResponse.redirect(destination, { status: 307, headers: r2ModelKey(path) && process.env.R2_PUBLIC_BASE_URL
-      ? { "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=60" } : headers });
-  } catch {
+    return NextResponse.redirect(destination, { status: 307, headers });
+  } catch (error) {
+    console.error("[model file]", params.id, params.filename[0], error);
     return NextResponse.json({ error: "Файлыг ачаалж чадсангүй." }, { status: 503, headers });
   }
 }

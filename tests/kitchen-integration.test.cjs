@@ -517,6 +517,11 @@ test("kitchen admin upload pins the correct category and protects its R2 handoff
   );
   assert.match(catalog, /model\?\.source_glb_path \?\? model\?\.glb_path/);
   assert.match(filesRoute, /data\?\.source_glb_path/);
+  assert.match(filesRoute, /new NextResponse\(upstream\.body/);
+  assert.doesNotMatch(
+    filesRoute,
+    /NextResponse\.redirect\(destination[^\n]*r2ModelKey/,
+  );
 });
 
 test("Supabase materials are normalized and classify cabinet GLB surfaces", () => {
