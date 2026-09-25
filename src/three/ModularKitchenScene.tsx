@@ -202,32 +202,36 @@ function Scene(props: ModularSceneProps) {
         ]}
         position={[width / 2, 0.001, depth / 2]}
       />
-      {roomWalls(kitchen.room).map((wall) => {
-        const length =
-          Math.hypot(wall.end.x - wall.start.x, wall.end.z - wall.start.z) /
-          1000;
-        return (
-          <group
-            key={wall.id}
-            position={[
-              (wall.start.x + wall.end.x) / 2000 - wall.inward.x * 0.025,
-              0.3,
-              (wall.start.z + wall.end.z) / 2000 - wall.inward.z * 0.025,
-            ]}
-            rotation={[0, Math.atan2(wall.inward.x, wall.inward.z), 0]}
-          >
-            <mesh raycast={() => {}}>
-              <boxGeometry args={[length, 0.6, 0.05]} />
-              <meshStandardMaterial
-                color="#a5afa1"
-                transparent
-                opacity={0.3}
-                depthWrite={false}
-              />
-            </mesh>
-          </group>
-        );
-      })}
+      {roomWalls(kitchen.room)
+        .filter((wall) => wall.id !== "front")
+        .map((wall) => {
+          const length =
+            Math.hypot(wall.end.x - wall.start.x, wall.end.z - wall.start.z) /
+            1000;
+          const roomHeight = kitchen.room.height / 1000;
+          return (
+            <group
+              key={wall.id}
+              position={[
+                (wall.start.x + wall.end.x) / 2000 - wall.inward.x * 0.03,
+                roomHeight / 2,
+                (wall.start.z + wall.end.z) / 2000 - wall.inward.z * 0.03,
+              ]}
+              rotation={[0, Math.atan2(wall.inward.x, wall.inward.z), 0]}
+            >
+              <mesh raycast={() => {}} receiveShadow>
+                <boxGeometry args={[length, roomHeight, 0.06]} />
+                <meshStandardMaterial
+                  color={wall.id === "back" ? "#e6e4de" : "#d8ddd8"}
+                  roughness={0.95}
+                  transparent
+                  opacity={wall.id === "back" ? 0.84 : 0.22}
+                  depthWrite={wall.id === "back"}
+                />
+              </mesh>
+            </group>
+          );
+        })}
       <group
         ref={props.exportRoot}
         name="Kitchen"

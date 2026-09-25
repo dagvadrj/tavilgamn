@@ -43,6 +43,12 @@ export type KitchenModelCandidate = {
   linked: boolean;
 };
 
+export type SimilarKitchenVariant = {
+  module: KitchenCatalogModule;
+  variant: KitchenCatalogVariant;
+  score: number;
+};
+
 type CabinetMatch = {
   variantId?: string;
   type: "base" | "wall" | "tall";
@@ -60,6 +66,33 @@ export function matchingKitchenVariants(modules: KitchenCatalogModule[], cabinet
     .filter((module) => module.active && module.cabinetType === cabinetType && module.widthMm === cabinet.width && module.heightMm === cabinet.height && module.depthMm === cabinet.depth)
     .flatMap((module) => module.variants)
     .filter((variant) => variant.active && !!variant.glbFile && variant.opening === opening);
+}
+
+/** Nearby catalog products for the selected cabinet, ordered by compatibility. */
+export function similarKitchenVariants(
+  modules: KitchenCatalogModule[],
+  cabinet: CabinetMatch,
+  limit = 24,
+): SimilarKitchenVariant[] {
+  const cabinetType = cabinet.corner ? "corner" : cabinet.type;
+  const opening = cabinet.opening ?? "doors";
+  return modules
+    .filter((module) => module.active && module.cabinetType === cabinetType)
+    .flatMap((module) => module.variants
+      .filter((variant) => variant.active && !!variant.glbFile)
+      .map((variant) => ({
+        module,
+        variant,
+        score:
+          (variant.opening === opening ? 0 : 10_000) +
+          Math.abs(module.widthMm - cabinet.width) * 4 +
+          Math.abs(module.heightMm - cabinet.height) * 2 +
+          Math.abs(module.depthMm - cabinet.depth) * 2 +
+          (variant.furnitureModelId === cabinet.variantId ? -20_000 : 0) +
+          variant.sortOrder,
+      })))
+    .sort((a, b) => a.score - b.score || a.variant.modelName.localeCompare(b.variant.modelName))
+    .slice(0, Math.max(0, limit));
 }
 
 export function preferredKitchenVariant(modules: KitchenCatalogModule[], cabinet: CabinetMatch) {

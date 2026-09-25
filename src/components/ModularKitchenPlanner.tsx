@@ -6,7 +6,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronDown,
+  ClipboardCheck,
   House,
+  Layers3,
   Plus,
   RotateCw,
   Save,
@@ -53,6 +55,7 @@ import { useAuth } from "@/store/auth";
 import { useKitchens } from "@/store/kitchens";
 import type { Group } from "three";
 import { KitchenOptionsPanel } from "./KitchenOptionsPanel";
+import { KitchenSimilarCabinets } from "./KitchenSimilarCabinets";
 import {
   componentTypes,
   parseComponents,
@@ -68,7 +71,6 @@ import {
 } from "@/lib/kitchenBacksplash";
 import {
   applyKitchenCatalogVariants,
-  matchingKitchenVariants,
   type KitchenCatalogModule,
   type KitchenCatalogVariant,
 } from "@/lib/kitchenModuleCatalog";
@@ -254,6 +256,7 @@ export function ModularKitchenPlanner({
   const [open, setOpen] = useState(false);
   const [componentOverview, setComponentOverview] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [moduleCatalog, setModuleCatalog] = useState<KitchenCatalogModule[]>(
     [],
   );
@@ -432,10 +435,6 @@ export function ModularKitchenPlanner({
       ),
     [selectableMaterials],
   );
-  const matchingVariants = useMemo(() => {
-    if (!selected) return [] as KitchenCatalogVariant[];
-    return matchingKitchenVariants(moduleCatalog, selected);
-  }, [moduleCatalog, selected]);
   const sceneKitchen = useMemo(
     () => applyKitchenCatalogVariants(kitchen, moduleCatalog),
     [kitchen, moduleCatalog],
@@ -753,6 +752,61 @@ export function ModularKitchenPlanner({
     if (fitted) commit(fitted);
     else setMessage("Энэ төхөөрөмжийн хэмжээтэй сул зай алга.");
   }
+  function replaceWithCatalogVariant(
+    module: KitchenCatalogModule,
+    variant: KitchenCatalogVariant,
+  ) {
+    if (!selected || busy) return;
+    const { front } = cabinetAxes(selected.position.rotation);
+    const depthShift = (module.depthMm - selected.depth) / 2;
+    const replacement = withOpening(
+      createCabinet(
+        selected.type,
+        selected.id,
+        module.widthMm,
+        design.room.height,
+      ),
+      variant.opening,
+    );
+    const nextCabinet: ModularCabinet = {
+      ...replacement,
+      width: module.widthMm,
+      height: module.heightMm,
+      depth: module.depthMm,
+      doorCount: variant.doorCount === 2 && module.widthMm >= 600 ? 2 : 1,
+      drawerCount:
+        variant.opening === "drawers"
+          ? Math.max(1, Math.min(4, variant.drawerCount || 3))
+          : 0,
+      variantId: variant.furnitureModelId,
+      finish: selected.finish,
+      frontMaterialId: selected.frontMaterialId,
+      carcassMaterialId: selected.carcassMaterialId,
+      frontStyle: selected.frontStyle,
+      handleStyle: selected.handleStyle,
+      color: selected.color,
+      material: selected.material,
+      autoElevation: selected.type === "wall" && selected.autoElevation,
+      fitToCeiling: false,
+      corner: module.cabinetType === "corner",
+      cornerSide:
+        module.cabinetType === "corner"
+          ? (selected.cornerSide ?? "right")
+          : undefined,
+      position: {
+        ...selected.position,
+        x: selected.position.x + front.x * depthShift,
+        y: selected.type === "wall" ? selected.position.y : 0,
+        z: selected.position.z + front.z * depthShift,
+      },
+    };
+    const error = validateCabinet(nextCabinet);
+    if (error) {
+      setMessage(error);
+      return;
+    }
+    replaceCabinet(nextCabinet);
+  }
   function updateBacksplash(id: string, patch: Partial<BacksplashPanel>) {
     commit({
       ...design,
@@ -777,8 +831,18 @@ export function ModularKitchenPlanner({
         <nav className="kp-planner-steps" aria-label="Төлөвлөх үе шат">
           <Link href="/kitchen?new=1">Санал авах</Link>
           <span className="is-active">3D төлөвлөх</span>
-          <span>Шалгах</span>
-          <span>Хадгалах</span>
+          <button type="button" onClick={() => setReviewOpen(true)}>
+            Шалгах
+          </button>
+          {user ? (
+            <button type="button" disabled={busy} onClick={() => void save()}>
+              Хадгалах
+            </button>
+          ) : (
+            <Link href="/login?next=%2Fkitchen%3FimportGuest%3D1">
+              Хадгалах
+            </Link>
+          )}
         </nav>
         <div className="kp-top-actions">
           <details className="km-layout-menu kp-top-menu">
@@ -946,6 +1010,9 @@ export function ModularKitchenPlanner({
                   onClick={() => setComponentOverview(true)}
                 >
                   Бүрэлдэхүүн хэсгүүд
+                </button>
+                <button type="button" onClick={() => setReviewOpen(true)}>
+                  2D план
                 </button>
                 <button
                   type="button"
@@ -1160,51 +1227,6 @@ export function ModularKitchenPlanner({
                     )}
                   </select>
                 </label>
-                {(matchingVariants.length > 0 || selected.variantId) && (
-                  <label className="kp-field">
-                    <span>3D хувилбар</span>
-                    <select
-                      value={selected.variantId ?? ""}
-                      onChange={(event) => {
-                        const variant = variantModels[event.target.value];
-                        if (!variant) updateCabinet({ variantId: undefined });
-                        else
-                          updateCabinet({
-                            variantId: variant.furnitureModelId,
-                            opening: variant.opening,
-                            doorCount:
-                              variant.doorCount as ModularCabinet["doorCount"],
-                            drawerCount: variant.drawerCount,
-                          });
-                      }}
-                    >
-                      <option value="" disabled>
-                        GLB хувилбар сонгоно уу
-                      </option>
-                      {selected.variantId &&
-                        !matchingVariants.some(
-                          (variant) =>
-                            variant.furnitureModelId === selected.variantId,
-                        ) && (
-                          <option value={selected.variantId} disabled>
-                            Өмнөх GLB хувилбар боломжгүй
-                          </option>
-                        )}
-                      {matchingVariants.map((variant) => (
-                        <option
-                          key={variant.furnitureModelId}
-                          value={variant.furnitureModelId}
-                        >
-                          {variant.modelName}
-                        </option>
-                      ))}
-                    </select>
-                    <small>
-                      Бодит GLB сонговол хэмжээ өөрчлөхөд стандарт дүрслэл рүү
-                      буцна.
-                    </small>
-                  </label>
-                )}
                 {selected.opening === "drawers" && (
                   <label className="kp-field">
                     <span>Шургуулга</span>
@@ -1526,6 +1548,18 @@ export function ModularKitchenPlanner({
                 </details>
               </fieldset>
             </section>
+          )}
+          {selected && (
+            <KitchenSimilarCabinets
+              key={`similar-${selected.id}`}
+              cabinet={selected}
+              modules={moduleCatalog}
+              disabled={busy}
+              onVariant={replaceWithCatalogVariant}
+              onOpening={(opening) =>
+                updateCabinet(withOpening(selected, opening))
+              }
+            />
           )}
           {selected && (
             <KitchenOptionsPanel
@@ -1981,6 +2015,157 @@ export function ModularKitchenPlanner({
           </details>
         </aside>
       </div>
+      {reviewOpen && (
+        <section
+          className="kp-review-layer"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="kp-review-title"
+        >
+          <header className="kp-review-head">
+            <div>
+              <p>ТӨЛӨВЛӨГӨӨГ ШАЛГАХ</p>
+              <h2 id="kp-review-title">{name}</h2>
+            </div>
+            <button
+              type="button"
+              aria-label="Шалгах хэсгийг хаах"
+              onClick={() => setReviewOpen(false)}
+            >
+              <X size={21} />
+            </button>
+          </header>
+          <div className="kp-review-body">
+            <section
+              className="kp-review-plan"
+              aria-label="Гал тогооны 2D төлөвлөгөө"
+            >
+              <div className="kp-review-plan-title">
+                <span>
+                  <Layers3 size={18} /> Дээрээс харах төлөвлөгөө
+                </span>
+                <strong>
+                  {design.room.width} × {design.room.depth} мм
+                </strong>
+              </div>
+              <Plan
+                kitchen={kitchen}
+                selectedId={selectedId}
+                onSelect={(id) => {
+                  selectCabinet(id);
+                  setReviewOpen(false);
+                }}
+              />
+              <p>
+                Шүүгээ дээр дарвал 3D хэсэгт тухайн шүүгээний тохиргоо нээгдэнэ.
+              </p>
+            </section>
+            <aside
+              className="kp-review-summary"
+              aria-label="Төлөвлөгөөний тойм"
+            >
+              <div className="kp-review-summary-heading">
+                <ClipboardCheck size={22} />
+                <div>
+                  <p>Таны төлөвлөгөө</p>
+                  <strong>
+                    {issues.some((issue) => issue.severity === "error")
+                      ? "Засах зүйл байна"
+                      : "Байрлал зөв байна"}
+                  </strong>
+                </div>
+              </div>
+              <dl className="kp-review-stats">
+                <div>
+                  <dt>Доод шүүгээ</dt>
+                  <dd>
+                    {
+                      kitchen.cabinets.filter(
+                        (cabinet) => cabinet.type === "base",
+                      ).length
+                    }
+                  </dd>
+                </div>
+                <div>
+                  <dt>Дээд шүүгээ</dt>
+                  <dd>
+                    {
+                      kitchen.cabinets.filter(
+                        (cabinet) => cabinet.type === "wall",
+                      ).length
+                    }
+                  </dd>
+                </div>
+                <div>
+                  <dt>Өндөр шүүгээ</dt>
+                  <dd>
+                    {
+                      kitchen.cabinets.filter(
+                        (cabinet) => cabinet.type === "tall",
+                      ).length
+                    }
+                  </dd>
+                </div>
+                <div>
+                  <dt>Тавцан</dt>
+                  <dd>{tops.length}</dd>
+                </div>
+              </dl>
+              <div className="kp-review-dimensions">
+                <span>Нийт эзлэх хэмжээ</span>
+                <strong>
+                  {Math.round(bounds.w * 1000)} × {Math.round(bounds.d * 1000)}{" "}
+                  × {Math.round(bounds.h * 1000)} мм
+                </strong>
+              </div>
+              <div
+                className={`kp-review-issues ${issues.some((issue) => issue.severity === "error") ? "has-error" : ""}`}
+              >
+                <strong>
+                  {issues.length
+                    ? `${issues.length} анхаарах зүйл`
+                    : "Давхцал, өрөөний хязгаарын алдаа алга"}
+                </strong>
+                {issues.slice(0, 4).map((issue, index) => (
+                  <p key={`${issue.code}-${index}`}>{issue.message}</p>
+                ))}
+              </div>
+              <KitchenRoomFitStatus kitchen={design} name={name} />
+              <div className="kp-review-actions">
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  onClick={() => setReviewOpen(false)}
+                >
+                  3D рүү буцах
+                </button>
+                {user ? (
+                  <button
+                    type="button"
+                    className="kp-primary"
+                    disabled={busy}
+                    onClick={() => void save()}
+                  >
+                    <Save size={17} /> Хадгалах
+                  </button>
+                ) : (
+                  <Link
+                    className="kp-primary"
+                    href="/login?next=%2Fkitchen%3FimportGuest%3D1"
+                  >
+                    Нэвтэрч хадгалах
+                  </Link>
+                )}
+              </div>
+              <KitchenExportButtons
+                root={exportRoot}
+                name={name}
+                disabled={busy || !kitchen.cabinets.length}
+              />
+            </aside>
+          </div>
+        </section>
+      )}
       {message && (
         <div className="kp-error" role="alert">
           <span>{message}</span>
