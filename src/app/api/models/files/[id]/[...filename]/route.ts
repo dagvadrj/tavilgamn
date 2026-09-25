@@ -17,9 +17,13 @@ export async function GET(
   try {
     const db = getSupabaseAdmin();
     const { data, error } = await db.from("furniture_models")
-      .select("glb_path,thumbnail_path").eq("id", params.id).maybeSingle();
+      .select("glb_path,source_glb_path,thumbnail_path").eq("id", params.id).maybeSingle();
     if (error) throw error;
-    const path = [...(typeof data?.glb_path === "string" ? modelAssetPaths(data.glb_path) : []), data?.thumbnail_path].find(
+    const path = [
+      ...(typeof data?.source_glb_path === "string" ? [data.source_glb_path] : []),
+      ...(typeof data?.glb_path === "string" ? modelAssetPaths(data.glb_path) : []),
+      data?.thumbnail_path,
+    ].find(
       (value): value is string => typeof value === "string" && value.split("/").pop() === params.filename[0],
     );
     if (!path) {

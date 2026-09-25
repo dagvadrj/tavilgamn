@@ -1,12 +1,25 @@
 "use client";
 
 import { Component, useEffect, useRef, type ReactNode } from "react";
-import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
-import { Edges, OrbitControls } from "@react-three/drei";
-import { Plane, Vector3, type Group } from "three";
+import {
+  Canvas,
+  useFrame,
+  useThree,
+  type ThreeEvent,
+} from "@react-three/fiber";
+import { Edges, Grid, OrbitControls } from "@react-three/drei";
+import {
+  Plane,
+  Vector3,
+  type BufferGeometry,
+  type Group,
+  type Mesh,
+  type MeshStandardMaterial,
+} from "three";
 import {
   roomWalls,
   type CabinetPose,
+  type KitchenWall,
   type ModularCabinet,
   type ModularKitchen,
 } from "@/lib/kitchenCabinets";
@@ -17,6 +30,8 @@ import { fitBacksplashes } from "@/lib/kitchenBacksplash";
 import type { KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
+import { DEFAULT_FLOOR_MATERIAL } from "@/lib/roomDesign";
+import { useRoomMaterial } from "./roomMaterials";
 
 export interface ModularSceneProps {
   exportRoot?: (root: Group | null) => void;
@@ -52,6 +67,44 @@ function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
     camera.updateProjectionMatrix();
   }, [camera, focus, size.width, size.height]);
   return null;
+}
+function KitchenRoomWall({
+  wall,
+  height,
+}: {
+  wall: KitchenWall;
+  height: number;
+}) {
+  const mesh = useRef<Mesh<BufferGeometry, MeshStandardMaterial>>(null);
+  const x = (wall.start.x + wall.end.x) / 2000;
+  const z = (wall.start.z + wall.end.z) / 2000;
+  const length =
+    Math.hypot(wall.end.x - wall.start.x, wall.end.z - wall.start.z) / 1000;
+  useFrame(({ camera }) => {
+    if (!mesh.current) return;
+    const outside =
+      (camera.position.x - x) * wall.inward.x +
+        (camera.position.z - z) * wall.inward.z <
+      -0.06;
+    mesh.current.material.opacity = outside ? 0.065 : 1;
+    mesh.current.material.depthWrite = !outside;
+    mesh.current.castShadow = !outside;
+  });
+  return (
+    <group
+      position={[
+        x - wall.inward.x * 0.06,
+        height / 2,
+        z - wall.inward.z * 0.06,
+      ]}
+      rotation={[0, Math.atan2(wall.inward.x, wall.inward.z), 0]}
+    >
+      <mesh ref={mesh} raycast={() => {}} receiveShadow castShadow>
+        <boxGeometry args={[length, height, 0.12]} />
+        <meshStandardMaterial color="#efe6d6" roughness={0.92} transparent />
+      </mesh>
+    </group>
+  );
 }
 type CaptureTarget = {
   setPointerCapture: (id: number) => void;
@@ -176,12 +229,19 @@ function Scene(props: ModularSceneProps) {
   }
   const width = kitchen.room.width / 1000,
     depth = kitchen.room.depth / 1000;
+  const roomHeight = kitchen.room.height / 1000;
+  const floorMaterial = useRoomMaterial(
+    DEFAULT_FLOOR_MATERIAL,
+    width,
+    depth,
+    "#c9a37a",
+  );
   return (
     <>
       <CameraFit focus={focus} />
       <color attach="background" args={["#eaece8"]} />
       <ambientLight intensity={1.2} />
-      <directionalLight position={[2, 7, 4]} intensity={2.3} />
+      <directionalLight castShadow position={[2, 7, 4]} intensity={2.3} />
       <OrbitControls
         enabled={mode === "orbit"}
         target={[focus.centerX / 1000, focus.h / 2, focus.centerZ / 1000]}
@@ -189,49 +249,13 @@ function Scene(props: ModularSceneProps) {
         maxDistance={18}
         maxPolarAngle={Math.PI / 2.05}
       />
-      <mesh position={[width / 2, -0.015, depth / 2]} receiveShadow>
-        <boxGeometry args={[width, 0.03, depth]} />
-        <meshStandardMaterial color="#d8d5cd" />
+      <mesh position={[width / 2, -0.04, depth / 2]} receiveShadow>
+        <boxGeometry args={[width, 0.08, depth]} />
+        <meshStandardMaterial {...floorMaterial} />
       </mesh>
-      <gridHelper
-        args={[
-          Math.max(width, depth),
-          Math.max(kitchen.room.width, kitchen.room.depth) / 100,
-          "#9daba0",
-          "#c2c6bc",
-        ]}
-        position={[width / 2, 0.001, depth / 2]}
-      />
-      {roomWalls(kitchen.room)
-        .filter((wall) => wall.id !== "front")
-        .map((wall) => {
-          const length =
-            Math.hypot(wall.end.x - wall.start.x, wall.end.z - wall.start.z) /
-            1000;
-          const roomHeight = kitchen.room.height / 1000;
-          return (
-            <group
-              key={wall.id}
-              position={[
-                (wall.start.x + wall.end.x) / 2000 - wall.inward.x * 0.03,
-                roomHeight / 2,
-                (wall.start.z + wall.end.z) / 2000 - wall.inward.z * 0.03,
-              ]}
-              rotation={[0, Math.atan2(wall.inward.x, wall.inward.z), 0]}
-            >
-              <mesh raycast={() => {}} receiveShadow>
-                <boxGeometry args={[length, roomHeight, 0.06]} />
-                <meshStandardMaterial
-                  color={wall.id === "back" ? "#e6e4de" : "#d8ddd8"}
-                  roughness={0.95}
-                  transparent
-                  opacity={wall.id === "back" ? 0.84 : 0.22}
-                  depthWrite={wall.id === "back"}
-                />
-              </mesh>
-            </group>
-          );
-        })}
+      {roomWalls(kitchen.room).map((wall) => (
+        <KitchenRoomWall key={wall.id} wall={wall} height={roomHeight} />
+      ))}
       <group
         ref={props.exportRoot}
         name="Kitchen"
@@ -371,6 +395,7 @@ export function ModularKitchenScene(props: ModularSceneProps) {
   return (
     <SceneBoundary>
       <Canvas
+        shadows
         dpr={[1, 1.5]}
         frameloop="demand"
         gl={{ preserveDrawingBuffer: true }}

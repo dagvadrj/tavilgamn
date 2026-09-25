@@ -238,7 +238,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       if (glbInput.current) glbInput.current.value = "";
       if (thumbnailInput.current) thumbnailInput.current.value = "";
       setUploadSuccess(
-        "GLB хүлээн авлаа. Боловсруулалт дуусмагц доорх Kitchen GLB жагсаалтад идэвхжинэ.",
+        "GLB бэлэн боллоо. LOD үүсгэхгүйгээр эх файлаар нь шууд ашиглана.",
       );
       await load();
     } catch (reason) {

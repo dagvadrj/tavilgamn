@@ -503,6 +503,20 @@ test("kitchen admin upload pins the correct category and protects its R2 handoff
   assert.match(prepareRoute, /body\?\.modelId/);
   assert.match(prepareRoute, /if \(auth\.error\)/);
   assert.match(completeRoute, /if \(auth\.error\)/);
+  assert.match(completeRoute, /model\.category === "kitchen-cabinet"/);
+  assert.match(completeRoute, /glb_path: sourcePath/);
+  assert.match(completeRoute, /isKitchenCabinet\s*\? "ready"\s*:\s*"queued"/);
+  assert.match(component, /LOD үүсгэхгүйгээр эх файлаар нь шууд ашиглана/);
+  const catalog = fs.readFileSync(
+    "src/lib/kitchenModuleCatalogServer.ts",
+    "utf8",
+  );
+  const filesRoute = fs.readFileSync(
+    "src/app/api/models/files/[id]/[...filename]/route.ts",
+    "utf8",
+  );
+  assert.match(catalog, /model\?\.source_glb_path \?\? model\?\.glb_path/);
+  assert.match(filesRoute, /data\?\.source_glb_path/);
 });
 
 test("Supabase materials are normalized and classify cabinet GLB surfaces", () => {
