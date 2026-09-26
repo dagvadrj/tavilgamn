@@ -35,6 +35,7 @@ export type KitchenModelCandidate = {
   id: string;
   productId: string;
   name: string;
+  moduleCode: string | null;
   widthMm: number;
   heightMm: number;
   depthMm: number;
@@ -63,7 +64,7 @@ export function matchingKitchenVariants(modules: KitchenCatalogModule[], cabinet
   const cabinetType = cabinet.corner ? "corner" : cabinet.type;
   const opening = cabinet.opening ?? "doors";
   return modules
-    .filter((module) => module.active && module.cabinetType === cabinetType && module.widthMm === cabinet.width && module.depthMm === cabinet.depth && module.heightMm === cabinet.height)
+    .filter((module) => module.active && module.cabinetType === cabinetType && module.widthMm === cabinet.width && module.heightMm === cabinet.height && module.depthMm === cabinet.depth)
     .flatMap((module) => module.variants)
     .filter((variant) => variant.active && !!variant.glbFile && variant.opening === opening);
 }
@@ -86,8 +87,8 @@ export function similarKitchenVariants(
         score:
           (variant.opening === opening ? 0 : 10_000) +
           Math.abs(module.widthMm - cabinet.width) * 4 +
-          Math.abs(module.depthMm - cabinet.depth) * 2 +
           Math.abs(module.heightMm - cabinet.height) * 2 +
+          Math.abs(module.depthMm - cabinet.depth) * 2 +
           (variant.furnitureModelId === cabinet.variantId ? -20_000 : 0) +
           variant.sortOrder,
       })))
@@ -143,4 +144,13 @@ export function parseVariantState(value: unknown) {
   const raw = value as Record<string, unknown>;
   if (typeof raw.modelId !== "string" || !UUID.test(raw.modelId) || typeof raw.active !== "boolean") throw new KitchenModuleInputError("Variant төлөв буруу байна.");
   return { modelId: raw.modelId, active: raw.active };
+}
+
+export function parseKitchenModelDelete(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new KitchenModuleInputError("Устгах model-ийн мэдээлэл буруу байна.");
+  const modelId = typeof (value as Record<string, unknown>).modelId === "string"
+    ? (value as Record<string, unknown>).modelId as string
+    : "";
+  if (!UUID.test(modelId)) throw new KitchenModuleInputError("Устгах model ID буруу байна.");
+  return { modelId };
 }

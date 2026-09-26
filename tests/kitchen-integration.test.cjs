@@ -497,6 +497,14 @@ test("kitchen admin upload pins the correct category and protects its R2 handoff
     "src/app/api/admin/models/upload-complete/route.ts",
     "utf8",
   );
+  const moduleRoute = fs.readFileSync(
+    "src/app/api/admin/kitchen-modules/route.ts",
+    "utf8",
+  );
+  const catalogServer = fs.readFileSync(
+    "src/lib/kitchenModuleCatalogServer.ts",
+    "utf8",
+  );
   assert.match(component, /form\.set\("category", "kitchen-cabinet"\)/);
   assert.match(component, /Гал тогооны GLB нэмэх/);
   assert.match(createRoute, /"kitchen-cabinet"/);
@@ -522,6 +530,36 @@ test("kitchen admin upload pins the correct category and protects its R2 handoff
     filesRoute,
     /NextResponse\.redirect\(destination[^\n]*r2ModelKey/,
   );
+  assert.match(component, /1 хаалга \+ 1 шургуулгатай/);
+  assert.match(
+    component,
+    /selectedModel\.moduleCode \? module\.code === selectedModel\.moduleCode/,
+  );
+  assert.match(component, /method: "DELETE"/);
+  assert.match(moduleRoute, /export async function DELETE/);
+  assert.match(moduleRoute, /removeStoredModelFiles/);
+  assert.match(catalogServer, /linked\.get\(row\.id as string\)/);
+});
+
+test("mixed door and drawer presets remain valid and kitchen model deletion validates IDs", () => {
+  const { parseKitchenVariantInput, parseKitchenModelDelete } = loadSource(
+    "src/lib/kitchenModuleCatalog.ts",
+  );
+  const modelId = "12345678-1234-4234-9234-123456789abc";
+  const moduleId = "22345678-1234-4234-9234-123456789abc";
+  const parsed = parseKitchenVariantInput({
+    modelId,
+    moduleId,
+    opening: "drawers",
+    variantCode: "BASE-300-1-DOOR-1-DRAWER",
+    doorCount: 1,
+    drawerCount: 1,
+  });
+  assert.equal(parsed.payload.opening, "drawers");
+  assert.equal(parsed.payload.doorCount, 1);
+  assert.equal(parsed.payload.drawerCount, 1);
+  assert.deepEqual(parseKitchenModelDelete({ modelId }), { modelId });
+  assert.throws(() => parseKitchenModelDelete({ modelId: "../bad" }));
 });
 
 test("Supabase materials are normalized and classify cabinet GLB surfaces", () => {
@@ -960,7 +998,7 @@ test("catalog default replaces procedural cabinet while preserving explicit matc
       name: "Base 600",
       cabinetType: "base",
       widthMm: 600,
-      heightMm: 840,
+      heightMm: 820,
       depthMm: 600,
       active: true,
       variants: [

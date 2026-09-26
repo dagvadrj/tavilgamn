@@ -44,23 +44,30 @@ export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}
   const modules: KitchenCatalogModule[] = (moduleRows ?? []).map((row) => ({
     id: row.id as string, code: row.code as string, name: row.name as string,
     cabinetType: row.cabinet_type as KitchenCatalogModule["cabinetType"], widthMm: Number(row.width_mm),
-    depthMm: Number(row.depth_mm), heightMm: Number(row.height_mm), active: Boolean(row.active),
+    heightMm: Number(row.height_mm), depthMm: Number(row.depth_mm), active: Boolean(row.active),
     variants: variants.get(row.id as string) ?? [],
   }));
   return modules;
 }
 
 export async function readKitchenModelCandidates(db: Db = getSupabaseAdmin()) {
-  const [{ data: rows, error }, { data: links, error: linkError }] = await Promise.all([
-    db.from("furniture_models").select("id,product_id,name,dimensions_w,dimensions_h,dimensions_d,glb_path,source_glb_path,processing_status")
+  const [{ data: rows, error }, { data: links, error: linkError }, { data: moduleRows, error: moduleError }] = await Promise.all([
+    db.from("furniture_models").select("id,product_id,name,description,dimensions_w,dimensions_h,dimensions_d,glb_path,source_glb_path,processing_status")
       .eq("category", "kitchen-cabinet").order("created_at", { ascending: false }).limit(500),
-    db.from("kitchen_module_variants").select("furniture_model_id"),
+    db.from("kitchen_module_variants").select("furniture_model_id,module_id"),
+    db.from("kitchen_modules").select("id,code"),
   ]);
   if (error) throw error;
   if (linkError) throw linkError;
-  const linked = new Set((links ?? []).map((row) => row.furniture_model_id as string));
+  if (moduleError) throw moduleError;
+  const moduleCodes = new Map((moduleRows ?? []).map((row) => [row.id as string, row.code as string]));
+  const linked = new Map((links ?? []).map((row) => [row.furniture_model_id as string, moduleCodes.get(row.module_id as string) ?? null]));
   return (rows ?? []).map((row): KitchenModelCandidate => ({ id: row.id as string, productId: row.product_id as string,
-    name: row.name as string, widthMm: Math.round(Number(row.dimensions_w) * 1000),
-    depthMm: Math.round(Number(row.dimensions_d) * 1000), heightMm: Math.round(Number(row.dimensions_h) * 1000),
+    name: row.name as string,
+    moduleCode: linked.get(row.id as string)
+      ?? /^([A-Z0-9][A-Z0-9_-]{1,79}) kitchen module GLB$/.exec(String(row.description ?? ""))?.[1]
+      ?? null,
+    widthMm: Math.round(Number(row.dimensions_w) * 1000),
+    heightMm: Math.round(Number(row.dimensions_h) * 1000), depthMm: Math.round(Number(row.dimensions_d) * 1000),
     glbReady: Boolean(row.source_glb_path ?? row.glb_path), processingStatus: String(row.processing_status ?? "idle"), linked: linked.has(row.id as string) }));
 }

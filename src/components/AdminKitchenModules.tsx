@@ -8,12 +8,13 @@ import {
   LoaderCircle,
   Power,
   RefreshCw,
+  Trash2,
   Upload,
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
 import {
-  KITCHEN_OPENINGS,
   type KitchenCatalogModule,
+  type KitchenCatalogVariant,
   type KitchenModelCandidate,
   type KitchenOpening,
 } from "@/lib/kitchenModuleCatalog";
@@ -29,11 +30,154 @@ const openingLabel: Record<KitchenOpening, string> = {
   refrigerator: "Хөргөгч",
 };
 
+type VariantPreset = {
+  id: string;
+  label: string;
+  code: string;
+  opening: KitchenOpening;
+  doorCount: number;
+  drawerCount: number;
+  cabinetTypes: KitchenCatalogModule["cabinetType"][];
+  widthMm?: number;
+};
+
+const VARIANT_PRESETS: VariantPreset[] = [
+  {
+    id: "door-1",
+    label: "1 хаалгатай",
+    code: "1-DOOR",
+    opening: "doors",
+    doorCount: 1,
+    drawerCount: 0,
+    cabinetTypes: ["base", "wall", "tall", "corner"],
+  },
+  {
+    id: "door-2",
+    label: "2 хаалгатай",
+    code: "2-DOORS",
+    opening: "doors",
+    doorCount: 2,
+    drawerCount: 0,
+    cabinetTypes: ["base", "wall", "tall", "corner"],
+  },
+  {
+    id: "door-1-drawer-1",
+    label: "1 хаалга + 1 шургуулгатай",
+    code: "1-DOOR-1-DRAWER",
+    opening: "drawers",
+    doorCount: 1,
+    drawerCount: 1,
+    cabinetTypes: ["base", "tall"],
+  },
+  {
+    id: "drawers-2",
+    label: "2 шургуулгатай",
+    code: "2-DRAWERS",
+    opening: "drawers",
+    doorCount: 0,
+    drawerCount: 2,
+    cabinetTypes: ["base"],
+  },
+  {
+    id: "drawers-3",
+    label: "3 шургуулгатай",
+    code: "3-DRAWERS",
+    opening: "drawers",
+    doorCount: 0,
+    drawerCount: 3,
+    cabinetTypes: ["base"],
+  },
+  {
+    id: "drawers-4",
+    label: "4 шургуулгатай",
+    code: "4-DRAWERS",
+    opening: "drawers",
+    doorCount: 0,
+    drawerCount: 4,
+    cabinetTypes: ["base"],
+  },
+  {
+    id: "open",
+    label: "Задгай тавиур",
+    code: "OPEN",
+    opening: "open",
+    doorCount: 0,
+    drawerCount: 0,
+    cabinetTypes: ["base", "wall", "tall", "corner"],
+  },
+  {
+    id: "sink",
+    label: "Угаалтуурын модуль",
+    code: "SINK",
+    opening: "sink",
+    doorCount: 0,
+    drawerCount: 0,
+    cabinetTypes: ["base"],
+  },
+  {
+    id: "hob",
+    label: "Плитканы модуль",
+    code: "HOB",
+    opening: "hob",
+    doorCount: 0,
+    drawerCount: 0,
+    cabinetTypes: ["base"],
+  },
+  {
+    id: "oven",
+    label: "Зуухны модуль",
+    code: "OVEN",
+    opening: "oven",
+    doorCount: 0,
+    drawerCount: 0,
+    cabinetTypes: ["base", "tall"],
+    widthMm: 600,
+  },
+  {
+    id: "hood",
+    label: "Утаа сорогчийн модуль",
+    code: "HOOD",
+    opening: "hood",
+    doorCount: 0,
+    drawerCount: 0,
+    cabinetTypes: ["wall"],
+  },
+  {
+    id: "refrigerator",
+    label: "Хөргөгчийн модуль",
+    code: "REFRIGERATOR",
+    opening: "refrigerator",
+    doorCount: 0,
+    drawerCount: 0,
+    cabinetTypes: ["tall"],
+  },
+];
+
+const presetsFor = (module?: KitchenCatalogModule) =>
+  !module
+    ? VARIANT_PRESETS
+    : VARIANT_PRESETS.filter(
+        (preset) =>
+          preset.cabinetTypes.includes(module.cabinetType) &&
+          (preset.widthMm === undefined || preset.widthMm === module.widthMm),
+      );
+const variantLabel = (
+  variant: Pick<KitchenCatalogVariant, "opening" | "doorCount" | "drawerCount">,
+) =>
+  variant.doorCount > 0 && variant.drawerCount > 0
+    ? `${variant.doorCount} хаалга + ${variant.drawerCount} шургуулга`
+    : variant.opening === "doors"
+      ? `${variant.doorCount} хаалгатай`
+      : variant.opening === "drawers"
+        ? `${variant.drawerCount} шургуулгатай`
+        : openingLabel[variant.opening];
+
 export function AdminKitchenModules({ owner }: { owner: string }) {
   const [modules, setModules] = useState<KitchenCatalogModule[]>([]);
   const [models, setModels] = useState<KitchenModelCandidate[]>([]);
   const [modelId, setModelId] = useState("");
   const [moduleId, setModuleId] = useState("");
+  const [presetId, setPresetId] = useState("door-1");
   const [opening, setOpening] = useState<KitchenOpening>("doors");
   const [variantCode, setVariantCode] = useState("");
   const [doorCount, setDoorCount] = useState(1);
@@ -80,15 +224,22 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       selectedModel
         ? modules.filter(
             (module) =>
+              (selectedModel.moduleCode
+                ? module.code === selectedModel.moduleCode
+                : true) &&
               Math.abs(module.widthMm - selectedModel.widthMm) <= 10 &&
-              Math.abs(module.depthMm - selectedModel.depthMm) <= 10 &&
-              Math.abs(module.heightMm - selectedModel.heightMm) <= 10,
+              Math.abs(module.heightMm - selectedModel.heightMm) <= 10 &&
+              Math.abs(module.depthMm - selectedModel.depthMm) <= 10,
           )
         : modules,
     [modules, selectedModel],
   );
   const selectedModule = modules.find((module) => module.id === moduleId);
   const uploadModule = modules.find((module) => module.id === uploadModuleId);
+  const availablePresets = useMemo(
+    () => presetsFor(selectedModule),
+    [selectedModule],
+  );
 
   useEffect(() => {
     if (
@@ -98,17 +249,27 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       setModuleId(matchingModules[0]?.id ?? "");
   }, [matchingModules, moduleId, selectedModel]);
   useEffect(() => {
-    if (selectedModule)
-      setVariantCode(`${selectedModule.code}-${opening}`.toUpperCase());
-    setDrawerCount(opening === "drawers" ? 3 : 0);
-    setDoorCount(
-      opening === "open"
-        ? 0
-        : selectedModule && selectedModule.widthMm >= 600
-          ? 2
-          : 1,
-    );
-  }, [opening, selectedModule]);
+    if (!selectedModule) return;
+    const preset =
+      availablePresets.find((item) => item.id === presetId) ??
+      availablePresets[0];
+    if (!preset) return;
+    if (preset.id !== presetId) setPresetId(preset.id);
+    setOpening(preset.opening);
+    setDoorCount(preset.doorCount);
+    setDrawerCount(preset.drawerCount);
+    setVariantCode(`${selectedModule.code}-${preset.code}`);
+  }, [availablePresets, presetId, selectedModule]);
+
+  function choosePreset(value: string) {
+    const preset = availablePresets.find((item) => item.id === value);
+    if (!preset) return;
+    setPresetId(preset.id);
+    setOpening(preset.opening);
+    setDoorCount(preset.doorCount);
+    setDrawerCount(preset.drawerCount);
+    if (selectedModule) setVariantCode(`${selectedModule.code}-${preset.code}`);
+  }
 
   async function uploadModel(event: React.FormEvent) {
     event.preventDefault();
@@ -231,6 +392,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           completed?.error ?? "GLB боловсруулалтыг эхлүүлж чадсангүй.",
         );
 
+      const uploadedModelId = model.id as string;
+      const uploadedModuleId = uploadModule.id;
       setUploadName("");
       setUploadModuleId("");
       setUploadGlb(null);
@@ -241,6 +404,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         "GLB бэлэн боллоо. LOD үүсгэхгүйгээр эх файлаар нь шууд ашиглана.",
       );
       await load();
+      setModelId(uploadedModelId);
+      setModuleId(uploadedModuleId);
     } catch (reason) {
       setUploadError(
         reason instanceof Error
@@ -318,6 +483,48 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     }
   }
 
+  async function deleteModel(model: KitchenModelCandidate) {
+    if (
+      !window.confirm(
+        `“${model.name}” kitchen GLB-г бүр мөсөн устгах уу? Холбогдсон variant мөн сална.`,
+      )
+    )
+      return;
+    setBusy(`delete:${model.id}`);
+    setError(null);
+    setUploadSuccess(null);
+    try {
+      const response = await authFetch(
+        "/api/admin/kitchen-modules",
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ modelId: model.id }),
+        },
+        owner,
+      );
+      const data = await response.json().catch(() => null);
+      if (!response.ok)
+        throw new Error(data?.error ?? "Kitchen GLB устгаж чадсангүй.");
+      if (modelId === model.id) {
+        setModelId("");
+        setModuleId("");
+      }
+      setUploadSuccess(
+        data?.warning ?? "Kitchen GLB болон холбогдсон variant устлаа.",
+      );
+      await load();
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Kitchen GLB устгаж чадсангүй.",
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <>
       <section className="space-y-4 rounded-2xl border border-black/10 bg-white p-5">
@@ -355,8 +562,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               <option value="">Сонгоно уу</option>
               {modules.map((module) => (
                 <option key={module.id} value={module.id}>
-                  {module.code} · {module.widthMm}×{module.depthMm}×
-                  {module.heightMm} мм
+                  {module.code} · {module.widthMm}×{module.heightMm}×
+                  {module.depthMm} мм
                 </option>
               ))}
             </select>
@@ -394,7 +601,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             <strong className="text-black/70">Ангилал:</strong> Гал тогооны
             шүүгээ · <strong className="text-black/70">Хэмжээ:</strong>{" "}
             {uploadModule
-              ? `${uploadModule.widthMm}×${uploadModule.depthMm}×${uploadModule.heightMm} мм`
+              ? `${uploadModule.widthMm}×${uploadModule.heightMm}×${uploadModule.depthMm} мм`
               : "Module сонгоно уу"}
           </div>
           <button
@@ -471,8 +678,9 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                   value={model.id}
                   disabled={!model.glbReady}
                 >
-                  {model.name} · {model.widthMm}×{model.depthMm}×
-                  {model.heightMm} {model.linked ? "· холбоотой" : ""}
+                  {model.name} · {model.moduleCode ?? "module тодорхойгүй"} ·{" "}
+                  {model.widthMm}×{model.heightMm}×{model.depthMm}{" "}
+                  {model.linked ? "· холбоотой" : ""}
                   {!model.glbReady ? " · GLB бэлэн биш" : ""}
                 </option>
               ))}
@@ -495,17 +703,15 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             </select>
           </label>
           <label className="label">
-            Хувилбар
+            Хийцийн хувилбар
             <select
               className="input mt-1 w-full"
-              value={opening}
-              onChange={(event) =>
-                setOpening(event.target.value as KitchenOpening)
-              }
+              value={presetId}
+              onChange={(event) => choosePreset(event.target.value)}
             >
-              {KITCHEN_OPENINGS.map((value) => (
-                <option key={value} value={value}>
-                  {openingLabel[value]}
+              {availablePresets.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.label}
                 </option>
               ))}
             </select>
@@ -522,28 +728,10 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               }
             />
           </label>
-          <label className="label">
-            Хаалга
-            <input
-              className="input mt-1 w-full"
-              type="number"
-              min="0"
-              max="2"
-              value={doorCount}
-              onChange={(event) => setDoorCount(Number(event.target.value))}
-            />
-          </label>
-          <label className="label">
-            Шургуулга
-            <input
-              className="input mt-1 w-full"
-              type="number"
-              min="0"
-              max="4"
-              value={drawerCount}
-              onChange={(event) => setDrawerCount(Number(event.target.value))}
-            />
-          </label>
+          <div className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs text-black/55">
+            <strong className="text-black/70">Хаалга:</strong> {doorCount} ·{" "}
+            <strong className="text-black/70">Шургуулга:</strong> {drawerCount}
+          </div>
           <label className="flex items-center gap-2 self-end pb-3 text-sm">
             <input
               type="checkbox"
@@ -565,12 +753,42 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           </button>
           {selectedModel && !matchingModules.length && (
             <p className="text-sm text-red-600 md:col-span-2 xl:col-span-4">
-              {selectedModel.widthMm}×{selectedModel.depthMm}×
-              {selectedModel.heightMm} мм хэмжээтэй module байхгүй. GLB
+              {selectedModel.widthMm}×{selectedModel.heightMm}×
+              {selectedModel.depthMm} мм хэмжээтэй module байхгүй. GLB
               бүтээгдэхүүний хэмжээг шалгана уу.
             </p>
           )}
         </form>
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+          {models.map((model) => (
+            <div
+              key={model.id}
+              className="flex items-center justify-between gap-3 rounded-xl border border-black/10 bg-white p-3 text-xs"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-medium">{model.name}</p>
+                <p className="text-black/50">
+                  {model.moduleCode ?? "Module тодорхойгүй"} · {model.widthMm}×
+                  {model.heightMm}×{model.depthMm} мм
+                  {model.linked ? " · variant-тай" : " · холбоогүй"}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn-ghost !min-h-8 !px-2 text-red-600"
+                disabled={busy === `delete:${model.id}`}
+                onClick={() => void deleteModel(model)}
+              >
+                {busy === `delete:${model.id}` ? (
+                  <LoaderCircle size={13} className="animate-spin" />
+                ) : (
+                  <Trash2 size={13} />
+                )}
+                Устгах
+              </button>
+            </div>
+          ))}
+        </div>
         {!models.length && (
           <p className="rounded-xl border border-dashed border-black/15 p-5 text-sm text-black/55">
             Kitchen GLB байхгүй. Дээрх хэсгээс эхний GLB-ээ шууд нэмнэ үү.
@@ -588,7 +806,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                   <Box size={17} />
                   <strong>{module.code}</strong>
                   <span className="text-xs text-black/45">
-                    {module.widthMm}×{module.depthMm}×{module.heightMm}
+                    {module.widthMm}×{module.heightMm}×{module.depthMm}
                   </span>
                 </div>
                 <div className="mt-3 space-y-2">
@@ -602,8 +820,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                           {variant.modelName}
                         </p>
                         <p className="text-black/50">
-                          {openingLabel[variant.opening]} ·{" "}
-                          {variant.variantCode}
+                          {variantLabel(variant)} · {variant.variantCode}
                           {variant.isDefault ? " · default" : ""}
                         </p>
                       </div>
