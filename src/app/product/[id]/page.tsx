@@ -6,8 +6,9 @@ import { ProductCustomizer } from "@/components/ProductCustomizer";
 import { ProductCard } from "@/components/ProductCard";
 import { hasAvailableStock } from "@/lib/inventory";
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  const product = await readProduct(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const product = await readProduct(id);
 
   if (!product) return {};
 
@@ -17,9 +18,10 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 export default async function ProductPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const product = await readProduct(params.id);
+  const { id } = await params;
+  const product = await readProduct(id);
 
   if (!product || !hasAvailableStock(product)) notFound();
 

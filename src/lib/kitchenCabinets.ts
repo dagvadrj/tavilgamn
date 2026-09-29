@@ -65,6 +65,8 @@ export const CABINET_DEFAULTS = {
   wall: { label: "Дээд шүүгээ", height: 740, depth: 350, heightRange: [400, 1200], depthRange: [250, 450] },
   tall: { label: "Өндөр шүүгээ", height: 2600, depth: 600, heightRange: [1800, 3500], depthRange: [550, 650] },
 } as const;
+export const DEFAULT_WALL_CLEARANCE = 550;
+export const DEFAULT_COUNTERTOP_THICKNESS = 30;
 export const REFRIGERATOR_PRESETS = {
   "top-bottom": { label: "Дээр, доор хаалгатай", width: 600, height: 1850, depth: 650 },
   "side-by-side": { label: "Зэрэгцээ хоёр том хаалгатай", width: 900, height: 1800, depth: 700 },
@@ -83,7 +85,17 @@ export function createCabinet(type: CabinetType, id: string, width: CabinetWidth
   return { id, type, width, height: type === "tall" ? ceiling : CABINET_DEFAULTS[type].height,
     depth: CABINET_DEFAULTS[type].depth, doorCount: width >= 600 ? 2 : 1, drawerCount: 0,
     handleStyle: "bar", color: type === "wall" ? "#ece8df" : "#b99165", material: type === "wall" ? "matte" : "wood",
-    position: { x: width / 2, y: type === "wall" ? 1400 : 0, z: CABINET_DEFAULTS[type].depth / 2, rotation: 0 },
+    position: {
+      x: width / 2,
+      y:
+        type === "wall"
+          ? CABINET_DEFAULTS.base.height +
+            DEFAULT_COUNTERTOP_THICKNESS +
+            DEFAULT_WALL_CLEARANCE
+          : 0,
+      z: CABINET_DEFAULTS[type].depth / 2,
+      rotation: 0,
+    },
     autoElevation: type === "wall", fitToCeiling: type === "tall" };
 }
 export function createRefrigerator(id: string, style: RefrigeratorStyle = "top-bottom"): ModularCabinet {
@@ -108,7 +120,7 @@ export function createModularKitchen(): ModularKitchen {
   const wall = createCabinet("wall", "wall-1");
   wall.position.x = 500;
   return { version: 1, room: { width: 4000, depth: 3000, height: 2600 }, cabinets: [...bases, wall],
-    wallClearance: 550, countertop: { thickness: 30, frontOverhang: 20, material: "wood" } };
+    wallClearance: DEFAULT_WALL_CLEARANCE, countertop: { thickness: DEFAULT_COUNTERTOP_THICKNESS, frontOverhang: 20, material: "wood" } };
 }
 export function roomWalls(room: KitchenRoom): KitchenWall[] {
   return [

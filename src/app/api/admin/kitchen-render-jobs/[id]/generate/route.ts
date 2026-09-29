@@ -18,19 +18,20 @@ function trustedSource(value: string) {
   catch { return null; }
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const routeParams = await params;
   let actor = "";
   let claimed = false;
   try {
     const auth = await requireAdmin(request);
     if (auth.error) return auth.error;
     actor = auth.userId;
-    if (!UUID.test(params.id)) return NextResponse.json({ error: "Render job ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
+    if (!UUID.test(routeParams.id)) return NextResponse.json({ error: "Render job ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
     if (!process.env.OPENAI_API_KEY || !cloudinaryImageUploadConfigured()) {
       return NextResponse.json({ error: "OPENAI_API_KEY эсвэл Cloudinary тохиргоо дутуу байна." }, { status: 503, headers: kitchenPrivateHeaders });
     }
     const db = getSupabaseAdmin();
-    const { data, error } = await db.rpc("claim_kitchen_render", { p_actor: actor, p_job: params.id });
+    const { data, error } = await db.rpc("claim_kitchen_render", { p_actor: actor, p_job: routeParams.id });
     if (error) throw error;
     const job = data as ClaimedJob;
     claimed = true;
@@ -64,22 +65,22 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
     const bytes = Buffer.from(encoded, "base64");
     if (!bytes.length || bytes.length > 25 * 1024 * 1024) throw new Error("OPENAI_IMAGE_INVALID");
-    const image = await uploadCloudinaryImage(new Blob([new Uint8Array(bytes)], { type: "image/webp" }), `casa-nova/kitchen-renders/${params.id}`);
+    const image = await uploadCloudinaryImage(new Blob([new Uint8Array(bytes)], { type: "image/webp" }), `casa-nova/kitchen-renders/${routeParams.id}`);
     const metadata = { provider: "openai", model: job.model, providerRequestId: requestId,
       usage: result?.usage ?? null, size: "1536x1024", quality: "medium", outputFormat: "webp",
       cloudinaryPublicId: image.publicId, format: image.format, bytes: image.bytes };
     const { data: mediaId, error: completeError } = await db.rpc("complete_kitchen_render", {
-      p_actor: actor, p_job: params.id, p_url: image.url, p_alt: "AI бодит дүрслэл",
+      p_actor: actor, p_job: routeParams.id, p_url: image.url, p_alt: "AI бодит дүрслэл",
       p_width: image.width, p_height: image.height, p_metadata: metadata,
     });
     if (completeError) throw completeError;
-    return NextResponse.json({ id: params.id, status: "completed", mediaId, url: image.url }, { headers: kitchenPrivateHeaders });
+    return NextResponse.json({ id: routeParams.id, status: "completed", mediaId, url: image.url }, { headers: kitchenPrivateHeaders });
   } catch (error) {
     if (claimed && actor) {
       const message = error instanceof Error ? error.message.slice(0, 5000) : "Generation failed";
       try {
         await getSupabaseAdmin().rpc("fail_kitchen_render", {
-          p_actor: actor, p_job: params.id, p_error: message, p_metadata: { failedAt: new Date().toISOString() },
+          p_actor: actor, p_job: routeParams.id, p_error: message, p_metadata: { failedAt: new Date().toISOString() },
         });
       } catch { /* Preserve the original generation error. */ }
     }

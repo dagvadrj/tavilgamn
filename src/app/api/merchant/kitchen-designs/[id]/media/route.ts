@@ -12,11 +12,12 @@ const TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const KINDS = new Set(["thumbnail", "render", "photo", "plan"]);
 const MAX_SIZE = 8 * 1024 * 1024;
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const routeParams = await params;
   try {
     const auth = await requireMerchant(request);
     if (auth.error) return auth.error;
-    if (!UUID.test(params.id)) return NextResponse.json({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
+    if (!UUID.test(routeParams.id)) return NextResponse.json({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
     const form = await request.formData();
     const file = form.get("file");
     const versionId = form.get("versionId");
@@ -30,8 +31,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     const db = getSupabaseAdmin();
     const [{ data: design }, { data: editable }] = await Promise.all([
-      db.from("kitchen_designs").select("store_id").eq("id", params.id).eq("created_by", auth.userId).maybeSingle(),
-      db.from("kitchen_design_versions").select("id").eq("id", versionId).eq("design_id", params.id)
+      db.from("kitchen_designs").select("store_id").eq("id", routeParams.id).eq("created_by", auth.userId).maybeSingle(),
+      db.from("kitchen_design_versions").select("id").eq("id", versionId).eq("design_id", routeParams.id)
         .in("review_status", ["draft", "changes_requested"]).maybeSingle(),
     ]);
     if (!design || !editable) return NextResponse.json({ error: "Энэ хувилбарт зураг нэмэх эрхгүй байна." }, { status: 403, headers: kitchenPrivateHeaders });
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const uploadParams: Record<string, string> = {
       allowed_formats: "jpg,png,webp",
       overwrite: "false",
-      public_id: `casa-nova/kitchens/${params.id}/${randomUUID()}`,
+      public_id: `casa-nova/kitchens/${routeParams.id}/${randomUUID()}`,
       timestamp: String(Math.floor(Date.now() / 1000)),
     };
     const signature = createHash("sha256")
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const url = new URL(image.secure_url);
     if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com") throw new Error("UPLOAD_FAILED");
     const { data: mediaId, error } = await db.rpc("add_kitchen_design_media", {
-      p_actor: auth.userId, p_design: params.id, p_version: versionId, p_kind: kind,
+      p_actor: auth.userId, p_design: routeParams.id, p_version: versionId, p_kind: kind,
       p_url: url.href, p_alt: String(form.get("alt") ?? "").slice(0, 300),
       p_primary: isPrimary, p_width: Number.isInteger(image.width) ? image.width : null,
       p_height: Number.isInteger(image.height) ? image.height : null,

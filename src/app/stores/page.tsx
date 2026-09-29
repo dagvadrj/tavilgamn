@@ -9,8 +9,9 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Дэлгүүрүүд — tavilga.mn" };
 const typeIcons = { factory: Factory, handmade: Hammer, retail: StoreIcon };
 
-export default async function StoresPage({ searchParams }: { searchParams: { type?: string } }) {
-  const selected = isStoreType(searchParams.type) ? searchParams.type : undefined;
+export default async function StoresPage({ searchParams }: { searchParams: Promise<{ type?: string }> }) {
+  const { type } = await searchParams;
+  const selected = isStoreType(type) ? type : undefined;
   const activeType = STORE_TYPES.find(type => type.id === selected);
   const directory = await readStoreDirectory();
   const stores = directory.filter(store => !selected || store.storeType === selected);

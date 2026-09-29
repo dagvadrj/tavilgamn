@@ -6,25 +6,26 @@ import { modelAssetPaths } from "@/lib/modelAssets";
 export const dynamic = "force-dynamic";
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string; filename: string[] } },
+  { params }: { params: Promise<{ id: string; filename: string[] }> },
 ) {
+  const routeParams = await params;
   const headers = { "Cache-Control": "no-store" };
-  if (!/^[0-9a-f-]{36}$/i.test(params.id) || params.filename.length !== 1 ||
-      !/^[a-zA-Z0-9._-]+$/.test(params.filename[0]) ||
-      [".", ".."].includes(params.filename[0])) {
+  if (!/^[0-9a-f-]{36}$/i.test(routeParams.id) || routeParams.filename.length !== 1 ||
+      !/^[a-zA-Z0-9._-]+$/.test(routeParams.filename[0]) ||
+      [".", ".."].includes(routeParams.filename[0])) {
     return NextResponse.json({ error: "Файлын зам буруу байна." }, { status: 400, headers });
   }
   try {
     const db = getSupabaseAdmin();
     const { data, error } = await db.from("furniture_models")
-      .select("glb_path,source_glb_path,thumbnail_path").eq("id", params.id).maybeSingle();
+      .select("glb_path,source_glb_path,thumbnail_path").eq("id", routeParams.id).maybeSingle();
     if (error) throw error;
     const path = [
       ...(typeof data?.source_glb_path === "string" ? [data.source_glb_path] : []),
       ...(typeof data?.glb_path === "string" ? modelAssetPaths(data.glb_path) : []),
       data?.thumbnail_path,
     ].find(
-      (value): value is string => typeof value === "string" && value.split("/").pop() === params.filename[0],
+      (value): value is string => typeof value === "string" && value.split("/").pop() === routeParams.filename[0],
     );
     if (!path) {
       return NextResponse.json({ error: "Файл олдсонгүй." }, { status: 404, headers });
@@ -48,12 +49,12 @@ export async function GET(
     }
     let destination: string;
     if (cloudinaryModelAsset(path)) destination = path;
-    else if (path === `${params.id}/${params.filename[0]}`) {
+    else if (path === `${routeParams.id}/${routeParams.filename[0]}`) {
       destination = db.storage.from("furniture-models").getPublicUrl(path).data.publicUrl;
     } else throw new Error("Invalid stored file path");
     return NextResponse.redirect(destination, { status: 307, headers });
   } catch (error) {
-    console.error("[model file]", params.id, params.filename[0], error);
+    console.error("[model file]", routeParams.id, routeParams.filename[0], error);
     return NextResponse.json({ error: "Файлыг ачаалж чадсангүй." }, { status: 503, headers });
   }
 }

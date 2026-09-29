@@ -20,7 +20,7 @@ import { KitchenQuoteRequest } from "@/components/KitchenQuoteRequest";
 
 export const dynamic = "force-dynamic";
 
-type PageProps = { params: { slug: string } };
+type PageProps = { params: Promise<{ slug: string }> };
 const getDesign = cache((slug: string) =>
   readPublishedKitchenDesignBySlug(slug).catch(() => null),
 );
@@ -28,7 +28,8 @@ const getDesign = cache((slug: string) =>
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
-  const design = await getDesign(params.slug);
+  const { slug } = await params;
+  const design = await getDesign(slug);
   if (!design) return { title: "Гал тогооны загвар олдсонгүй — tavilga.mn" };
   return {
     title: `${design.title} — tavilga.mn`,
@@ -51,7 +52,8 @@ function mediaLabel(kind: string, source: string) {
 }
 
 export default async function KitchenDesignPage({ params }: PageProps) {
-  const design = await getDesign(params.slug);
+  const { slug } = await params;
+  const design = await getDesign(slug);
   if (!design) notFound();
   const primary =
     design.media.find((item) => item.isPrimary) ?? design.media[0];

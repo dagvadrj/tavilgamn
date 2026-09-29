@@ -11,14 +11,15 @@ export const dynamic = "force-dynamic";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const routeParams = await params;
   try {
     const auth = await requireUser(request);
     if (auth.error) return auth.error;
 
     const input = readKitchenCloneRequest(
-      params.id,
+      routeParams.id,
       await request.json().catch(() => null),
     );
     const { data, error } = await getSupabaseAdmin().rpc(

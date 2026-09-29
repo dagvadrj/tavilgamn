@@ -74,7 +74,7 @@ test("initial layout is valid and counter width sums all four base cabinets", ()
   assert.equal(tops.length, 1);
   assert.equal(tops[0].width, 2400);
   assert.equal(tops[0].depth, 620);
-  assert.equal(tops[0].position.y, 820);
+  assert.equal(tops[0].position.y, 840);
   assert.equal(tops[0].thickness, 30);
   assert.equal(wallCabinetClearance(k.cabinets[4], k), 550);
 });

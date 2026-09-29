@@ -60,12 +60,8 @@ logs/
 .DS_Store
 Thumbs.db
 
-/supabase/migrations/
-/tests/
 /docs/
 /patches/
-/scripts/
-/scripts/*
 /model-work/
 /.tools/
 /public/decoders/

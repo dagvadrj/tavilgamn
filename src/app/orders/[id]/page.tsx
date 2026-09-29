@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import {
   ArrowLeft,
   Check,
@@ -57,7 +57,8 @@ const PAYMENT_STATE_LABEL: Record<PaymentView["state"], string> = {
   paid: "Төлбөр баталгаажсан",
 };
 
-export default function OrderPage({ params }: { params: { id: string } }) {
+export default function OrderPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const userId = useAuth((state) => state.user?.id);
   const initialized = useAuth((state) => state.initialized);
   const [result, setResult] = useState<{
@@ -81,7 +82,7 @@ export default function OrderPage({ params }: { params: { id: string } }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await authFetch(`/api/orders/${params.id}`);
+      const response = await authFetch(`/api/orders/${id}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Захиалга олдсонгүй.");
       if (useAuth.getState().user?.id !== userId) return;
@@ -96,7 +97,7 @@ export default function OrderPage({ params }: { params: { id: string } }) {
     } finally {
       if (useAuth.getState().user?.id === userId) setLoading(false);
     }
-  }, [params.id, userId]);
+  }, [id, userId]);
 
   useEffect(() => {
     setResult(null);
@@ -134,7 +135,7 @@ export default function OrderPage({ params }: { params: { id: string } }) {
   }, [userId]);
 
   const current =
-    result && result.owner === userId && result.order.id === params.id
+    result && result.owner === userId && result.order.id === id
       ? result
       : null;
 
@@ -143,7 +144,7 @@ export default function OrderPage({ params }: { params: { id: string } }) {
     setBusy(true);
     setError(null);
     try {
-      const response = await authFetch(`/api/orders/${params.id}/payment`, {
+      const response = await authFetch(`/api/orders/${id}/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ method }),
@@ -191,7 +192,7 @@ export default function OrderPage({ params }: { params: { id: string } }) {
           <h1>Захиалгаа үзэхийн тулд нэвтэрнэ үү</h1>
           <p>Нэвтэрсний дараа энэ захиалгын мэдээлэл рүү буцаж орно.</p>
           <Link
-            href={`/login?next=${encodeURIComponent(`/orders/${params.id}`)}`}
+            href={`/login?next=${encodeURIComponent(`/orders/${id}`)}`}
             className="btn-primary"
           >
             Нэвтрэх

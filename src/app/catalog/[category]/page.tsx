@@ -9,19 +9,25 @@ export function generateStaticParams() {
   return CATEGORIES.map((c) => ({ category: c.id }));
 }
 
-export function generateMetadata({ params }: { params: { category: string } }) {
-  if (!VALID.has(params.category as Category)) return {};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ category: string }>;
+}) {
+  const { category } = await params;
+  if (!VALID.has(category as Category)) return {};
   return {
-    title: `${CATEGORY_LABEL[params.category as Category]} — tavilga.mn`,
+    title: `${CATEGORY_LABEL[category as Category]} — tavilga.mn`,
   };
 }
 
-export default function CategoryPage({
+export default async function CategoryPage({
   params,
 }: {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }) {
-  if (!VALID.has(params.category as Category)) notFound();
-  const category = params.category as Category;
+  const { category: categoryParam } = await params;
+  if (!VALID.has(categoryParam as Category)) notFound();
+  const category = categoryParam as Category;
   return <CatalogView initialCategory={category} />;
 }

@@ -17,7 +17,7 @@ test('displayed component dimensions come from the same authored faces and plint
   assert.equal(getComponentSize(c,getComponents(c).find(p=>p.type==='plinth')).depth,18);
   const hood=createHood('hood','under-cabinet');
   assert.equal(getComponentSize(hood,getComponents(hood).find(p=>p.type==='hood')).height,80);
-  assert.equal(getComponentSize(hood,getComponents(hood).find(p=>p.type==='door-front')).height,638);
+  assert.equal(getComponentSize(hood,getComponents(hood).find(p=>p.type==='door-front')).height,658);
 });
 
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-6, `${a} != ${b}`);

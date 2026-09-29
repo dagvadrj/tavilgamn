@@ -2,16 +2,17 @@ import { CatalogView } from "@/components/CatalogView";
 
 export const metadata = { title: "Каталог — tavilga.mn" };
 
-export default function CatalogPage({
+export default async function CatalogPage({
   searchParams,
 }: {
-  searchParams: { q?: string; focus?: string; sort?: string; room?: string };
+  searchParams: Promise<{ q?: string; focus?: string; sort?: string; room?: string }>;
 }) {
+  const filters = await searchParams;
   return (
     <CatalogView
-      initialQuery={searchParams.q ?? (searchParams.focus ? "" : undefined)}
-      initialSort={searchParams.sort}
-      initialRoom={searchParams.room}
+      initialQuery={filters.q ?? (filters.focus ? "" : undefined)}
+      initialSort={filters.sort}
+      initialRoom={filters.room}
     />
   );
 }

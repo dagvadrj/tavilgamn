@@ -68,7 +68,7 @@ test("published kitchen copy validates ids and keeps an editable snapshot with p
     marketplace.KitchenMarketplaceInputError,
   );
   const migration = fs.readFileSync(
-    "supabase/migrations/20260923164005_clone_published_kitchen_design.sql",
+    "supabase/migrations/20260923084924_clone_published_kitchen_design.sql",
     "utf8",
   );
   assert.match(migration, /publication_status='published'/);
@@ -108,7 +108,7 @@ test("AI kitchen renders persist a guarded job before generation and permanent m
     "utf8",
   );
   const migration = fs.readFileSync(
-    "supabase/migrations/20260923094000_kitchen_ai_render_workflow.sql",
+    "supabase/migrations/20260923024337_kitchen_ai_render_workflow.sql",
     "utf8",
   );
   assert.match(merchantRoute, /requireMerchant\(request\)/);
@@ -134,7 +134,7 @@ test("planner captures its clean 3D canvas and persists it as the project thumbn
     "utf8",
   );
   const migration = fs.readFileSync(
-    "supabase/migrations/20260923110000_kitchen_project_thumbnails.sql",
+    "supabase/migrations/20260923032130_kitchen_project_thumbnails.sql",
     "utf8",
   );
   assert.match(scene, /preserveDrawingBuffer: true/);
@@ -142,7 +142,7 @@ test("planner captures its clean 3D canvas and persists it as the project thumbn
   assert.match(scene, /object\.userData\.exportExclude/);
   assert.match(planner, /library\.saveThumbnail\(saved\.id, image\)/);
   assert.match(route, /requireUser\(request\)/);
-  assert.match(route, /kitchen-projects\/\$\{params\.id\}/);
+  assert.match(route, /kitchen-projects\/\$\{routeParams\.id\}/);
   assert.match(route, /thumbnail_url: image\.url/);
   assert.match(migration, /copy_kitchen_project_thumbnail_to_marketplace/);
   assert.match(migration, /'thumbnail','system'/);
@@ -196,7 +196,7 @@ test("merchant edits only an open draft and creates a guarded version after publ
     "utf8",
   );
   const migration = fs.readFileSync(
-    "supabase/migrations/20260923123000_kitchen_marketplace_version_editing.sql",
+    "supabase/migrations/20260923035533_kitchen_marketplace_version_editing.sql",
     "utf8",
   );
   assert.match(route, /export async function PUT/);
@@ -533,7 +533,7 @@ test("kitchen admin upload pins the correct category and protects its R2 handoff
   assert.match(component, /1 хаалга \+ 1 шургуулгатай/);
   assert.match(
     component,
-    /selectedModel\.moduleCode \? module\.code === selectedModel\.moduleCode/,
+    /selectedModel\.moduleCode\s*\?\s*module\.code === selectedModel\.moduleCode/,
   );
   assert.match(component, /method: "DELETE"/);
   assert.match(moduleRoute, /export async function DELETE/);
@@ -998,7 +998,7 @@ test("catalog default replaces procedural cabinet while preserving explicit matc
       name: "Base 600",
       cabinetType: "base",
       widthMm: 600,
-      heightMm: 820,
+      heightMm: 840,
       depthMm: 600,
       active: true,
       variants: [
@@ -1107,11 +1107,11 @@ test("shared 3D mesh matches declared millimetres including handles, taps and ro
   const k = model.createUnifiedKitchen();
   k.backsplash = false;
   k.cabinets = k.cabinets.filter((c) => c.opening === "sink");
-  near(model.kitchenEnvelope(k).h, 1.11);
+  near(model.kitchenEnvelope(k).h, 1.13);
   const rendered = scene(
     React.createElement(KitchenAssemblyMesh, { kitchen: k }),
   );
-  near(new THREE.Box3().setFromObject(rendered).max.y, 1.11);
+  near(new THREE.Box3().setFromObject(rendered).max.y, 1.13);
 });
 
 test("room snapshot survives saved-design mutation and room cloning without scaling", () => {

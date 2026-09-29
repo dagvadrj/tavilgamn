@@ -5,8 +5,9 @@ import { removeStoredModelFiles } from "@/lib/r2Models";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const routeParams = await params;
   const adminAuth = await requireAdmin(request);
 
   if (adminAuth.error) {
@@ -18,7 +19,7 @@ export async function DELETE(
     const { data: model, error: findError } = await supabase
     .from("furniture_models")
     .select("glb_path, thumbnail_path")
-  .eq("id", params.id)
+  .eq("id", routeParams.id)
 .maybeSingle();
 if (findError) throw findError;
 if (!model) { 
@@ -27,7 +28,7 @@ if (!model) {
 const {error: deleteError} = await supabase
 .from("furniture_models")
 .delete()
-.eq("id", params.id);
+.eq("id", routeParams.id);
 
 if (deleteError?.code === "P0007") return NextResponse.json({error:"Захиалгад орсон барааг устгах боломжгүй. Барааны үлдэгдлийг шинэчилнэ үү."},{status:409});
 if (deleteError) throw deleteError;

@@ -14,8 +14,9 @@ export const dynamic = "force-dynamic";
 
 const getStore = cache(readDirectoryStore);
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
-  const store = await getStore(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const store = await getStore(id);
   if (!store) return {};
   return { title: `${store.name} — tavilga.mn` };
 }
@@ -23,9 +24,10 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
 export default async function StorePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const store = await getStore(params.id);
+  const { id } = await params;
+  const store = await getStore(id);
 
   if (!store) notFound();
 

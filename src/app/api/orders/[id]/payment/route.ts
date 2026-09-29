@@ -6,14 +6,15 @@ import { isPaymentMethod } from "@/lib/payments";
 import { createPayment, PaymentConfigError, validatePaymentConfig } from "@/lib/payments/providers";
 export const dynamic = "force-dynamic";
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const routeParams = await params;
   try {
     const auth = await requireUser(request);
     if (auth.error) return auth.error;
     const { method } = await request.json();
     if (!isPaymentMethod(method)) return NextResponse.json({ error: "Төлбөрийн аргаа сонгоно уу." }, { status: 400 });
     const supabase = getSupabaseAdmin();
-    const { data: order, error } = await supabase.from("orders").select("id,total,status").eq("id", params.id).eq("user_id", auth.userId).maybeSingle();
+    const { data: order, error } = await supabase.from("orders").select("id,total,status").eq("id", routeParams.id).eq("user_id", auth.userId).maybeSingle();
     if (error) throw error;
     if (!order) return NextResponse.json({ error: "Захиалга олдсонгүй." }, { status: 404 });
     if (order.status !== "pending_payment") return NextResponse.json({ error: "Энэ захиалга төлбөр хүлээж буй төлөвт биш байна." }, { status: 409 });

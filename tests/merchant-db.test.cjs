@@ -20,10 +20,31 @@ test("merchant isolation, atomic permissions and immutable order fulfillment", a
       name text not null,category text not null,description text not null default '',base_price bigint not null default 0,
       glb_path text not null,thumbnail_path text,scale double precision not null default 1,
       dimensions_w double precision not null,dimensions_d double precision not null,dimensions_h double precision not null,
-      colors jsonb not null,materials jsonb not null,in_stock boolean not null default true);
+      colors jsonb not null,materials jsonb not null,in_stock boolean not null default true,
+      processing_status text not null default 'idle',updated_at timestamptz not null default now());
     grant all on public.furniture_models to service_role;
   `);
-  for (const file of ["202609040001_orders.sql", "202609040002_payments.sql", "202609060001_inventory_contact.sql", "202609090001_product_gallery.sql", "20260916072036_merchant_stores_roles.sql", "20260916180746_merchant_checkout_lock.sql"]) {
+  for (const file of [
+    "202609040001_orders.sql",
+    "202609040002_payments.sql",
+    "202609060001_inventory_contact.sql",
+    "202609090001_product_gallery.sql",
+    "20260916072036_merchant_stores_roles.sql",
+    "20260916180746_merchant_checkout_lock.sql",
+    "20260918000000_model_processing_pipeline_recovery.sql",
+    "20260919125623_merchant_commission_featured_and_3d_requests.sql",
+    "20260919125700_index_model_request_store_fk.sql",
+    "20260919125726_snapshot_merchant_commission_on_orders.sql",
+    "20260919130629_merchant_product_3d_request_save.sql",
+    "20260919132734_admin_merchant_control_and_model_requests.sql",
+    "20260919132808_merchant_overview_money_as_text.sql",
+    "20260919140758_admin_marketplace_analytics.sql",
+    "20260919141455_public_featured_merchants.sql",
+    "20260919143412_merchant_dashboard_analytics.sql",
+    "20260919143446_fix_merchant_dashboard_inventory_columns.sql",
+    "20260921082632_model_standard_export_queue.sql",
+    "20260921082826_harden_and_reuse_model_exports.sql",
+  ]) {
     await db.exec(readFileSync(`supabase/migrations/${file}`, "utf8"));
   }
   const admin = randomUUID(), alice = randomUUID(), bob = randomUUID(), customer = randomUUID();
