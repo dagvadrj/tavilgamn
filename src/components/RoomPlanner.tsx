@@ -74,6 +74,7 @@ import { useAuth } from "@/store/auth";
 import { assessKitchenRoomFit } from "@/lib/kitchenRoomFit";
 import type { SavedKitchen } from "@/lib/kitchenAssembly";
 import { formatPrice, cn } from "@/lib/format";
+import { modelDeliveryUrl, prefetchModel } from "@/lib/modelPrefetch";
 import {
   isPlacementValid,
   findFreePlacement,
@@ -987,6 +988,21 @@ export function RoomPlanner() {
               <button
                 key={m.id}
                 onClick={() => addModelPiece(m)}
+                onPointerEnter={() =>
+                  void prefetchModel(
+                    modelDeliveryUrl(m.fileModelId ?? m.id, m.glbFile),
+                  )
+                }
+                onFocus={() =>
+                  void prefetchModel(
+                    modelDeliveryUrl(m.fileModelId ?? m.id, m.glbFile),
+                  )
+                }
+                onTouchStart={() =>
+                  void prefetchModel(
+                    modelDeliveryUrl(m.fileModelId ?? m.id, m.glbFile),
+                  )
+                }
                 className="group flex gap-3 rounded-lg border border-[#AD6547]/30 bg-white p-2 text-left transition hover:border-[#AD6547]/60"
               >
                 <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-[#EEEEE7]">

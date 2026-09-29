@@ -10,12 +10,61 @@ const { modelLodFiles, modelAssetPaths, chooseModelLod } = loadSource(
 
 const { instanceRepeatedModules } = loadSource("src/three/instanceModules.ts");
 
+const { modelDeliveryUrl } = loadSource("src/lib/modelPrefetch.ts");
+
+const { selectCanvasPerformance } = loadSource(
+  "src/three/canvasPerformance.ts",
+);
+
 const { r2ModelKey } = loadSource("src/lib/r2Models.ts", {
   "@/lib/supabase/admin": { getSupabaseAdmin: () => ({}) },
   "@/lib/cloudinaryModels": { removeModelFiles: async () => {} },
 });
 
 const id = "11111111-2222-4333-8444-555555555555";
+
+test("delivery URL safely encodes model identifiers and filenames", () => {
+  assert.equal(
+    modelDeliveryUrl("model id", "delivery model.glb"),
+    "/api/models/files/model%20id/delivery%20model.glb",
+  );
+});
+
+test("3D canvas quality protects mobile and constrained devices", () => {
+  assert.deepEqual(
+    selectCanvasPerformance({ narrow: false, reducedMotion: false }),
+    {
+      dpr: [1, 1.5],
+      shadows: true,
+      contactShadows: true,
+      autoRotate: true,
+    },
+  );
+
+  assert.deepEqual(
+    selectCanvasPerformance({
+      narrow: true,
+      reducedMotion: false,
+      hardwareConcurrency: 4,
+      deviceMemory: 4,
+    }),
+    {
+      dpr: 1,
+      shadows: false,
+      contactShadows: false,
+      autoRotate: false,
+    },
+  );
+
+  assert.equal(
+    selectCanvasPerformance({
+      narrow: false,
+      reducedMotion: false,
+      saveData: true,
+    }).shadows,
+    false,
+  );
+});
 
 test("delivery model assets stay single-file", () => {
   const high = "model-11111111-2222-4333-8444-555555555555.glb";

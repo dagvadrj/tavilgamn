@@ -39,6 +39,7 @@ export interface GLBFurnitureMeshProps {
   carcassMaterial?: KitchenMaterialDefinition;
   carcassColor?: string;
   onReady?: () => void;
+  onError?: () => void;
 }
 type Display = {
   key: string;
@@ -79,10 +80,11 @@ export function GLBFurnitureMesh({
   carcassMaterial,
   carcassColor,
   onReady,
+  onError,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
-  const callbacks = useRef({ onReady });
-  callbacks.current = { onReady };
+  const callbacks = useRef({ onReady, onError });
+  callbacks.current = { onReady, onError };
   const [display, setDisplay] = useState<Display | null>(null);
   const owned = useRef(new Set<Display>());
 
@@ -183,6 +185,7 @@ export function GLBFurnitureMesh({
         console.error("[GlbFurnitureMesh]", error);
         if (!cancelled) {
           setError(true);
+          callbacks.current.onError?.();
         }
       } finally {
         if (!transferred) {

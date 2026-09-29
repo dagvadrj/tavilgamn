@@ -10,6 +10,7 @@ import {
   type KitchenCatalogVariant,
   type KitchenOpening,
 } from "@/lib/kitchenModuleCatalog";
+import { prefetchModel } from "@/lib/modelPrefetch";
 
 const OPENING_LABELS: Record<KitchenOpening, string> = {
   doors: "Хаалгатай",
@@ -117,6 +118,15 @@ export function KitchenSimilarCabinets({
               disabled={disabled || current}
               aria-pressed={current}
               onClick={() => onVariant(module, variant)}
+              onPointerEnter={() => {
+                if (variant.glbUrl) void prefetchModel(variant.glbUrl);
+              }}
+              onFocus={() => {
+                if (variant.glbUrl) void prefetchModel(variant.glbUrl);
+              }}
+              onTouchStart={() => {
+                if (variant.glbUrl) void prefetchModel(variant.glbUrl);
+              }}
             >
               <span className="ksc-image">
                 {variant.thumbnailUrl ? (

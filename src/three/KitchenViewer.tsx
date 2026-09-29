@@ -6,6 +6,7 @@ import { Edges, OrbitControls } from "@react-three/drei";
 import { Shape, type Texture } from "three";
 import { FINISHES, cornerFootprint, kitchenHeight, kitchenPlan, type Cabinet, type Kitchen } from "@/lib/kitchen";
 import { createKitchenTexture } from "./kitchenTextures";
+import { useCanvasPerformance } from "./canvasPerformance";
 
 type XYZ = [number, number, number];
 type Surface = { color: string; map?: Texture | null; roughness?: number; metalness?: number };
@@ -252,8 +253,9 @@ class ViewerBoundary extends Component<{ children: ReactNode }, { failed: boolea
 }
 
 export function KitchenViewer(props: ViewerProps) {
+  const performance = useCanvasPerformance();
   return <ViewerBoundary>
-    <Canvas shadows dpr={[1, 1.5]} frameloop="demand" camera={{ position: [3, 2, 6], fov: 38 }}
+    <Canvas shadows={performance.shadows} dpr={performance.dpr} frameloop="demand" camera={{ position: [3, 2, 6], fov: 38 }}
       fallback={<p className="kp-viewer-message">Энэ төхөөрөмж 3D дүрслэлийг дэмжихгүй байна. Доорх шүүгээний жагсаалтыг ашиглана уу.</p>}>
       <KitchenScene {...props} />
     </Canvas>

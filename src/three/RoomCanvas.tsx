@@ -37,6 +37,7 @@ import {
   normalizeKitchenMaterials,
   type KitchenMaterialDefinition,
 } from "@/lib/kitchenMaterials";
+import { useCanvasPerformance } from "./canvasPerformance";
 
 interface RoomCanvasProps {
   selectedWall?: RoomWall | null;
@@ -95,6 +96,7 @@ export function RoomCanvas({
   onPlaceOpening,
   onPlacementError,
 }: RoomCanvasProps) {
+  const performance = useCanvasPerformance();
   const [isDraggingPiece, setIsDraggingPiece] = useState(false);
   const [kitchenMaterials, setKitchenMaterials] = useState<
     Record<string, KitchenMaterialDefinition>
@@ -133,8 +135,8 @@ export function RoomCanvas({
   const roomHeight = design.height ?? 2.7;
   return (
     <Canvas
-      shadows
-      dpr={[1, 1.5]}
+      shadows={performance.shadows}
+      dpr={performance.dpr}
       gl={{
         antialias: true,
         alpha: false,
@@ -259,7 +261,7 @@ export function RoomCanvas({
         />
       ))}
 
-      {view === "perspective" && (
+      {view === "perspective" && performance.contactShadows && (
         <ContactShadows
           position={[0, 0.006, 0]}
           opacity={0.24}

@@ -24,6 +24,7 @@ import { useCart } from "@/store/cart";
 import { useWishlist } from "@/store/wishlist";
 
 import { availableStock, quantityLimit, stockLabel } from "@/lib/inventory";
+import { modelDeliveryUrl, prefetchModel } from "@/lib/modelPrefetch";
 
 const ProductViewer = dynamic(
   () => import("@/three/ProductViewer").then((m) => m.ProductViewer),
@@ -48,12 +49,17 @@ export function ProductCustomizer({ product }: { product: Product }) {
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(galleryImages[0]);
   const [viewerReady, setViewerReady] = useState(false);
+  const [viewerError, setViewerError] = useState(false);
   const [showViewerHint, setShowViewerHint] = useState(false);
   const [added, setAdded] = useState(false);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
+  useEffect(() => {
+    if (!product.model) return;
+    void prefetchModel(modelDeliveryUrl(product.model.id, product.model.file));
+  }, [product.model]);
   useEffect(() => {
     setAdded(false);
   }, [color, material, qty]);
@@ -82,8 +88,14 @@ export function ProductCustomizer({ product }: { product: Product }) {
   const selectedMaterial = product.materials.find((m) => m.id === material);
   const colorHex = selectedColor?.hex ?? "#C9A37A";
   const handleViewerReady = useCallback(() => {
+    setViewerError(false);
     setViewerReady(true);
     setShowViewerHint(true);
+  }, []);
+  const handleViewerError = useCallback(() => {
+    setViewerError(true);
+    setViewerReady(true);
+    setShowViewerHint(false);
   }, []);
 
   const onAdd = () => {
@@ -146,6 +158,7 @@ export function ProductCustomizer({ product }: { product: Product }) {
                 material={material}
                 dimensions={product.dimensions}
                 onReady={handleViewerReady}
+                onError={handleViewerError}
               />
               <div
                 className={cn(
@@ -169,6 +182,14 @@ export function ProductCustomizer({ product }: { product: Product }) {
                   </div>
                 </div>
               </div>
+              {viewerError && (
+                <p
+                  className="pointer-events-none absolute inset-x-4 bottom-4 z-20 rounded-xl bg-white/95 px-4 py-3 text-center text-sm text-[#8A4D38] shadow-lg"
+                  role="status"
+                >
+                  3D загвар ачаалагдсангүй. Дэлгэц дээрх дахин ачаалах товчийг ашиглана уу.
+                </p>
+              )}
               <div
                 className={cn(
                   "pointer-events-none absolute inset-0 z-20 flex items-center justify-center transition-opacity duration-500",

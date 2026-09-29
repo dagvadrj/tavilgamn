@@ -8,6 +8,7 @@ import {
   type ThreeEvent,
 } from "@react-three/fiber";
 import { Edges, Grid, OrbitControls } from "@react-three/drei";
+import { useCanvasPerformance } from "./canvasPerformance";
 import {
   Plane,
   Vector3,
@@ -392,11 +393,12 @@ class SceneBoundary extends Component<
   }
 }
 export function ModularKitchenScene(props: ModularSceneProps) {
+  const performance = useCanvasPerformance();
   return (
     <SceneBoundary>
       <Canvas
-        shadows
-        dpr={[1, 1.5]}
+        shadows={performance.shadows}
+        dpr={performance.dpr}
         frameloop="demand"
         gl={{ preserveDrawingBuffer: true }}
         camera={{ position: [4, 5, 6], fov: 45 }}

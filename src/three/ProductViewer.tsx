@@ -8,6 +8,7 @@ import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import type { Product } from "@/lib/types";
 
 import { stockLabel } from "@/lib/inventory";
+import { useCanvasPerformance } from "./canvasPerformance";
 
 interface ProductViewerProps {
   stockQuantity?: number | null;
@@ -17,6 +18,7 @@ interface ProductViewerProps {
   material: Material;
   dimensions: { w: number; d: number; h: number };
   onReady?: () => void;
+  onError?: () => void;
 }
 
 function ViewerReady({ onReady }: { onReady?: () => void }) {
@@ -35,7 +37,9 @@ export function ProductViewer({
   dimensions,
   model,
   onReady,
+  onError,
 }: ProductViewerProps) {
+  const performance = useCanvasPerformance();
   return (
     <div className="relative h-full w-full">
       <p
@@ -45,11 +49,11 @@ export function ProductViewer({
         {stockLabel({ stockQuantity })}
       </p>
       <Canvas
-        shadows
-        dpr={[1, 1.5]}
+        shadows={performance.shadows}
+        dpr={performance.dpr}
         camera={{ position: [3, 2, 13.5], fov: 35 }}
         className="!h-full !w-full"
-        frameloop="always"
+        frameloop={performance.autoRotate ? "always" : "demand"}
       >
         <color attach="background" args={["#EFE6D6"]} />
         <ambientLight intensity={0.55} />
@@ -63,6 +67,7 @@ export function ProductViewer({
             d={dimensions.d}
             h={dimensions.h}
             onReady={onReady}
+            onError={onError}
           />
         ) : (
           <>
@@ -77,19 +82,21 @@ export function ProductViewer({
             <ViewerReady onReady={onReady} />
           </>
         )}
-        <ContactShadows
-          position={[0, -0.01, 0]}
-          opacity={0.35}
-          scale={10}
-          blur={2.5}
-          far={4}
-        />
+        {performance.contactShadows && (
+          <ContactShadows
+            position={[0, -0.01, 0]}
+            opacity={0.35}
+            scale={10}
+            blur={2.5}
+            far={4}
+          />
+        )}
         <Environment preset="apartment" />
         <OrbitControls
           enablePan={false}
           minDistance={2}
           maxDistance={8}
-          autoRotate
+          autoRotate={performance.autoRotate}
           autoRotateSpeed={0.45}
           makeDefault
         />
