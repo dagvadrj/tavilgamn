@@ -28,7 +28,7 @@ export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}
   const variants = new Map<string, KitchenCatalogVariant[]>();
   for (const row of variantRows ?? []) {
     const model = models.get(row.furniture_model_id as string);
-    const kitchenGlbPath = model?.source_glb_path ?? model?.glb_path;
+    const kitchenGlbPath = model?.processing_status === "ready" ? model?.glb_path : null;
     if (!model || model.category !== "kitchen-cabinet" || (!options.admin && !kitchenGlbPath)) continue;
     const value: KitchenCatalogVariant = {
       furnitureModelId: model.id as string, productId: model.product_id as string, modelName: model.name as string,
@@ -69,5 +69,5 @@ export async function readKitchenModelCandidates(db: Db = getSupabaseAdmin()) {
       ?? null,
     widthMm: Math.round(Number(row.dimensions_w) * 1000),
     heightMm: Math.round(Number(row.dimensions_h) * 1000), depthMm: Math.round(Number(row.dimensions_d) * 1000),
-    glbReady: Boolean(row.source_glb_path ?? row.glb_path), processingStatus: String(row.processing_status ?? "idle"), linked: linked.has(row.id as string) }));
+    glbReady: row.processing_status === "ready" && Boolean(row.glb_path), processingStatus: String(row.processing_status ?? "idle"), linked: linked.has(row.id as string) }));
 }

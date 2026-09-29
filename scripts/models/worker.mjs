@@ -101,17 +101,20 @@ function sourceKeyFromPath(sourcePath, modelId, jobId) {
 
   return `models/${modelId}/source/` + `${jobId}.glb`;
 }
-function highKeyFromPath(highPath, modelId, processingJobId) {
+function deliveryKeyFromPath(deliveryPath, modelId, processingJobId) {
   const expected =
     `r2://${R2_BUCKET_NAME}/` +
-    `models/${modelId}/lod/` +
-    `${processingJobId}/high.glb`;
+    `models/${modelId}/delivery/` +
+    `${processingJobId}/model-${processingJobId}.glb`;
 
-  if (highPath !== expected) {
-    throw new Error("High GLB path does not match current processing job.");
+  if (deliveryPath !== expected) {
+    throw new Error("Delivery GLB path does not match current processing job.");
   }
 
-  return `models/${modelId}/lod/` + `${processingJobId}/high.glb`;
+  return (
+    `models/${modelId}/delivery/` +
+    `${processingJobId}/model-${processingJobId}.glb`
+  );
 }
 
 async function run(executable, args) {
@@ -302,6 +305,10 @@ async function processJob(model) {
       pipelineArgs.push(`--ktx-bin=${process.env.KTX_BIN}`);
     }
 
+    pipelineArgs.push(
+      `--max-triangles=${process.env.MODEL_MAX_TRIANGLES ?? "4000000"}`,
+    );
+
     await run(process.execPath, pipelineArgs);
 
     // --------------------------------
@@ -310,20 +317,11 @@ async function processJob(model) {
 
     const compressed = path.join(buildDirectory, "compressed", modelId);
 
-    const levels = ["high"];
+    const deliveryFile = path.join(compressed, "delivery.glb");
+    const deliveryInfo = await stat(deliveryFile);
 
-    const localFiles = {};
-
-    for (const level of levels) {
-      const file = path.join(compressed, `${level}.glb`);
-
-      const info = await stat(file);
-
-      if (!info.isFile() || info.size < 12) {
-        throw new Error(`Missing compressed ${level}.glb`);
-      }
-
-      localFiles[level] = file;
+    if (!deliveryInfo.isFile() || deliveryInfo.size < 12) {
+      throw new Error("Missing compressed delivery.glb");
     }
 
     // --------------------------------
@@ -334,17 +332,11 @@ async function processJob(model) {
     // cache-safe immutable build.
     // --------------------------------
 
-    const finalPaths = {};
-
-    for (const level of levels) {
-      const key = `models/${modelId}/lod/` + `${jobId}/${level}.glb`;
-
-      finalPaths[level] = await uploadGlb(localFiles[level], key);
-
-      uploadedKeys.push(key);
-
-      console.log(`[worker] uploaded ${level}.glb`);
-    }
+    const deliveryKey =
+      `models/${modelId}/delivery/` + `${jobId}/model-${jobId}.glb`;
+    const deliveryPath = await uploadGlb(deliveryFile, deliveryKey);
+    uploadedKeys.push(deliveryKey);
+    console.log("[worker] uploaded delivery model.glb");
 
     // --------------------------------
     // 5. Atomic publish
@@ -362,9 +354,10 @@ async function processJob(model) {
     const { data: updated, error: updateError } = await db
       .from("furniture_models")
       .update({
-        glb_path: finalPaths.high,
+        glb_path: deliveryPath,
 
-        high_glb_path: finalPaths.high,
+        // Kept during the schema transition for older admin/export code.
+        high_glb_path: deliveryPath,
 
         medium_glb_path: null,
 
@@ -530,13 +523,13 @@ async function processExportJob(model) {
 
   if (
     model.processing_status !== "ready" ||
-    typeof model.high_glb_path !== "string"
+    typeof model.glb_path !== "string"
   ) {
     throw new Error("Optimized GLB is not ready.");
   }
 
-  const highKey = highKeyFromPath(
-    model.high_glb_path,
+  const deliveryKey = deliveryKeyFromPath(
+    model.glb_path,
     modelId,
     processingJobId,
   );
@@ -559,7 +552,7 @@ async function processExportJob(model) {
   try {
     console.log(`\n[worker] EXPORT START ${modelId}`);
 
-    await downloadSource(highKey, inputFile);
+    await downloadSource(deliveryKey, inputFile);
 
     const args = [
       path.join(ROOT, "scripts/models/export-standard-glb.mjs"),

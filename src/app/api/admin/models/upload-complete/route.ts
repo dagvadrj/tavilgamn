@@ -197,7 +197,7 @@ export async function POST(
       error: modelError,
     } = await db
       .from("furniture_models")
-      .select("id,category")
+      .select("id")
       .eq("id", modelId)
       .maybeSingle();
 
@@ -216,12 +216,6 @@ export async function POST(
       );
     }
 
-    // Kitchen cabinet GLB-үүд planner-д яг upload хийсэн source
-    // файлаараа орно. Гал тогоонд LOD үүсгэхгүй; бусад ангилал
-    // одоогийн worker pipeline-аа хэвээр ашиглана.
-    const isKitchenCabinet =
-      model.category === "kitchen-cabinet";
-
     const now =
       new Date().toISOString();
 
@@ -234,19 +228,11 @@ export async function POST(
         source_glb_path:
           sourcePath,
 
-        ...(isKitchenCabinet
-          ? {
-              glb_path: sourcePath,
-            }
-          : {}),
-
         processing_job_id:
           uploadId,
 
         processing_status:
-          isKitchenCabinet
-            ? "ready"
-            : "queued",
+          "queued",
 
         processing_error:
           null,
@@ -270,8 +256,7 @@ export async function POST(
     return NextResponse.json({
       ok: true,
 
-      directSource:
-        isKitchenCabinet,
+      directSource: false,
 
       modelId:
         queued.id,

@@ -74,7 +74,7 @@ export async function GET(
           "furniture_models",
         )
         .select(
-          "processing_status,high_glb_path,export_status,standard_glb_path",
+          "processing_status,glb_path,export_status,standard_glb_path",
         )
         .eq(
           "id",
@@ -88,7 +88,7 @@ export async function GET(
 
     const path =
       kind === "optimized"
-        ? data?.high_glb_path
+        ? data?.glb_path
         : data?.standard_glb_path;
 
     const ready =

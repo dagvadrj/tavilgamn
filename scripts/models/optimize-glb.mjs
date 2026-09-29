@@ -224,7 +224,12 @@ async function main() {
 
       "texture-size": {
         type: "string",
-        default: "4096",
+        default: "2048",
+      },
+
+      "max-triangles": {
+        type: "string",
+        default: "4000000",
       },
     },
   });
@@ -245,8 +250,14 @@ async function main() {
 
   const size = Number(values["texture-size"]);
 
+  const maxTriangles = Number(values["max-triangles"]);
+
   if (![512, 1024, 2048, 4096].includes(size)) {
     throw new Error("texture-size must be 512/1024/2048/4096");
+  }
+
+  if (!Number.isInteger(maxTriangles) || maxTriangles < 10000) {
+    throw new Error("max-triangles must be an integer >= 10000");
   }
 
   const env = Object.fromEntries(
@@ -310,13 +321,13 @@ async function main() {
 
     const level = path.basename(file, ".glb");
 
-    if (level !== "high") {
-      throw new Error(`${file}: expected high.glb`);
+    if (level !== "delivery") {
+      throw new Error(`${file}: expected delivery.glb`);
     }
     const triangles = triangleCount(json);
-    if (triangles > 80000) {
+    if (triangles > maxTriangles) {
       throw new Error(
-        `${file}: exceeds 80,000 triangles ` +
+        `${file}: exceeds ${maxTriangles.toLocaleString()} triangles ` +
           `(actual: ${triangles.toLocaleString()})`,
       );
     }
@@ -327,8 +338,8 @@ async function main() {
       ),
     );
 
-    if (!validation.levels?.high?.passed) {
-      throw new Error(`${file}: high geometry review has not passed`);
+    if (!validation.delivery?.passed || !validation.preservedGeometry) {
+      throw new Error(`${file}: delivery geometry validation has not passed`);
     }
   }
 
@@ -347,13 +358,13 @@ async function main() {
       throw new Error(`${file}: GLB must embed all buffers/textures`);
     }
     const level = path.basename(file, ".glb");
-    if (level !== "high") {
+    if (level !== "delivery") {
       continue;
     }
     const triangles = triangleCount(json);
-    if (triangles > 80000) {
+    if (triangles > maxTriangles) {
       throw new Error(
-        `${file}: exceeds 80,000 triangles ` +
+        `${file}: exceeds ${maxTriangles.toLocaleString()} triangles ` +
           `(actual: ${triangles.toLocaleString()})`,
       );
     }
@@ -364,10 +375,10 @@ async function main() {
       ),
     );
 
-    if (!validation.levels.high?.passed) {
-      throw new Error(`${file}: geometry review has not passed`);
+    if (!validation.delivery?.passed || !validation.preservedGeometry) {
+      throw new Error(`${file}: delivery geometry validation has not passed`);
     }
-    const filename = "high.glb";
+    const filename = "delivery.glb";
 
     const relative = path.relative(inputRoot, path.dirname(file));
 
@@ -420,21 +431,24 @@ async function main() {
           String(textureLimit),
         ]);
 
-        await transform("uastc", [
-          "--level",
-          "2",
-          "--zstd",
-          "18",
+        await transform("etc1s", [
+          "--quality",
+          "192",
+          "--compression",
+          "4",
           "--jobs",
           "4",
         ]);
       }
 
       // --------------------------------
-      // Draco mesh compression LAST
+      // Meshopt is the single geometry codec used by the web delivery asset.
       // --------------------------------
 
-      await transform("draco", [
+      await transform("meshopt", [
+        "--level",
+        "high",
+
         "--quantize-position",
         "14",
 
@@ -468,9 +482,14 @@ async function main() {
           "KHR_texture_basisu extension is missing after KTX2 compression",
         );
       }
+      if (!(info.extensionsUsed ?? []).includes("EXT_meshopt_compression")) {
+        throw new Error(
+          "EXT_meshopt_compression extension is missing after Meshopt compression",
+        );
+      }
 
       // Validator may warn about
-      // Draco/KTX2 extensions, but
+      // Meshopt/KTX2 extensions, but
       // non-zero exit remains failure.
       await run(process.execPath, [cli, "validate", stage], env);
 
@@ -483,7 +502,7 @@ async function main() {
 
         file: path.relative(output, result),
 
-        level: "high",
+        variant: "delivery",
 
         beforeBytes: before.length,
 

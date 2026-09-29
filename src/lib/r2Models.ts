@@ -47,7 +47,7 @@ export function r2ModelKey(
   value: string,
 ): string | null {
   const match =
-  /^r2:\/\/([a-z0-9-]+)\/(models\/[0-9a-f-]{36}\/(?:model(?:-[0-9a-f-]{36})?\.glb|source\/[0-9a-f-]{36}\.glb|lod\/[0-9a-f-]{36}\/high\.glb|standard\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.glb))$/i.exec(
+  /^r2:\/\/([a-z0-9-]+)\/(models\/[0-9a-f-]{36}\/(?:model(?:-[0-9a-f-]{36})?\.glb|source\/[0-9a-f-]{36}\.glb|delivery\/[0-9a-f-]{36}\/model-[0-9a-f-]{36}\.glb|lod\/[0-9a-f-]{36}\/high\.glb|standard\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.glb))$/i.exec(
     value,
   );
 
@@ -56,6 +56,13 @@ export function r2ModelKey(
   }
   const bucket = match[1];
   const key = match[2];
+
+  const delivery =
+    /\/delivery\/([0-9a-f-]{36})\/model-([0-9a-f-]{36})\.glb$/i.exec(key);
+
+  if (delivery && delivery[1].toLowerCase() !== delivery[2].toLowerCase()) {
+    return null;
+  }
   
   const configuredBucket = process.env.R2_BUCKET_NAME;
   if (configuredBucket && bucket !== configuredBucket) {

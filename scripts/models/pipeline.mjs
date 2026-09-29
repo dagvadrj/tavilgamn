@@ -13,7 +13,7 @@ const { values } = parseArgs({
     output: { type: "string" },
     blender: { type: "string" },
     "ktx-bin": { type: "string" },
-    high: { type: "string", default: "80000" },
+    "max-triangles": { type: "string", default: "4000000" },
   },
 });
 if (!values.input || !values.output)
@@ -67,8 +67,9 @@ try {
     source,
     "--output",
     path.join(output, "geometry"),
-    "--high",
-    values.high,
+    "--preserve-geometry",
+    "--max-triangles",
+    values["max-triangles"],
   ]);
   await run(process.execPath, [
     path.join(root, "scripts/models/optimize-glb.mjs"),
@@ -76,6 +77,8 @@ try {
     path.join(output, "geometry"),
     "--output",
     path.join(output, "compressed"),
+    "--max-triangles",
+    values["max-triangles"],
     ...(ktx ? ["--ktx-bin", ktx] : []),
   ]);
 } catch (error) {

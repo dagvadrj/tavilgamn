@@ -169,6 +169,46 @@ def import_asset(source):
     return sources
 
 
+def import_delivery_asset(source):
+    """Import without applying transforms or breaking shared mesh instances."""
+
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    suffix = source.suffix.lower()
+
+    if suffix == ".fbx":
+        bpy.ops.import_scene.fbx(filepath=str(source))
+    elif suffix == ".obj":
+        bpy.ops.wm.obj_import(filepath=str(source))
+    else:
+        bpy.ops.import_scene.gltf(filepath=str(source))
+
+    meshes = [
+        obj
+        for obj in bpy.context.scene.objects
+        if obj.type == "MESH"
+    ]
+
+    if not meshes:
+        raise ValueError("No mesh objects found.")
+
+    if any(
+        obj.animation_data
+        or obj.data.shape_keys
+        or obj.modifiers
+        or any(
+            modifier.type == "ARMATURE"
+            for modifier in obj.modifiers
+        )
+        for obj in meshes
+    ):
+        raise ValueError(
+            "Animated, skinned, morph, or modifier-based assets require "
+            "a separate artist-reviewed pipeline."
+        )
+
+    return meshes
+
+
 def mesh_surface(mesh):
     mesh.calc_loop_triangles()
 
@@ -450,9 +490,7 @@ def render_views(
         0.65,
     )
 
-    scene.display.shading.show_backface_culling = (
-        True
-    )
+    scene.display.shading.show_backface_culling = False
 
     camera_data = bpy.data.cameras.new(
         "Validation camera"
@@ -566,27 +604,31 @@ def compare_views(
             mb,
         )
 
+        if not np.any(union):
+            ious.append(1.0)
+            errors.append(0.0)
+            continue
+
+        intersection = np.logical_and(
+            ma,
+            mb,
+        )
+
         ious.append(
             float(
-                np.logical_and(
-                    ma,
-                    mb,
-                ).sum()
-                / max(
-                    1,
-                    union.sum(),
-                )
+                intersection.sum()
+                / union.sum()
             )
+        )
+
+        difference = np.abs(
+            a[:, :3] * a[:, 3:4]
+            - b[:, :3] * b[:, 3:4]
         )
 
         errors.append(
             float(
-                np.abs(
-                    a[:, :3]
-                    * a[:, 3:4]
-                    - b[:, :3]
-                    * b[:, 3:4]
-                )[union].mean()
+                difference[union].mean()
             )
         )
 
@@ -1476,6 +1518,97 @@ def process(
         )
 
 
+def process_delivery(
+    source,
+    destination,
+    max_triangles,
+):
+    """Normalize an asset without changing its authored mesh density."""
+
+    destination.mkdir(
+        parents=True,
+        exist_ok=False,
+    )
+
+    objects = import_delivery_asset(source)
+    counts = [triangle_count(obj.data) for obj in objects]
+    total = sum(counts)
+
+    unique_meshes = {obj.data for obj in objects}
+    unique_total = sum(
+        triangle_count(mesh)
+        for mesh in unique_meshes
+    )
+
+    if total > max_triangles:
+        raise ValueError(
+            f"Asset has {total:,} triangles; "
+            f"delivery limit is {max_triangles:,}. "
+            "Reduce the source mesh before upload."
+        )
+
+    vertices = [
+        obj.matrix_world @ vertex.co
+        for obj in objects
+        for vertex in obj.data.vertices
+    ]
+    minimum = Vector(
+        tuple(min(v[i] for v in vertices) for i in range(3))
+    )
+    maximum = Vector(
+        tuple(max(v[i] for v in vertices) for i in range(3))
+    )
+
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in objects:
+        obj.select_set(True)
+
+    bpy.context.scene["pipelineBounds"] = {
+        "min": [minimum.x, minimum.z, -maximum.y],
+        "max": [maximum.x, maximum.z, -minimum.y],
+    }
+    bpy.context.scene["pipelineAssetId"] = hashlib.sha256(
+        source.read_bytes()
+    ).hexdigest()
+
+    output_file = destination / "delivery.glb"
+    bpy.ops.export_scene.gltf(
+        filepath=str(output_file),
+        export_format="GLB",
+        use_selection=True,
+        export_extras=True,
+        export_animations=False,
+        export_yup=True,
+        export_texcoords=True,
+        export_normals=True,
+        export_tangents=True,
+    )
+
+    report = {
+        "source": str(source),
+        "sourceTriangles": total,
+        "uniqueTriangles": unique_total,
+        "placedTriangles": total,
+        "unit": "triangles",
+        "preservedGeometry": True,
+        "maxTriangles": max_triangles,
+        "delivery": {
+            "passed": True,
+            "triangles": total,
+        },
+    }
+    (destination / "geometry-report.json").write_text(
+        json.dumps(report, indent=2),
+        encoding="utf-8",
+    )
+
+    print(
+        f"[geometry] {source.name} delivery: "
+        f"{unique_total:,} unique / {total:,} placed triangles preserved",
+        flush=True,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -1497,6 +1630,17 @@ def main():
         default=80000,
     )
 
+    parser.add_argument(
+        "--preserve-geometry",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--max-triangles",
+        type=int,
+        default=4000000,
+    )
+
     args = parser.parse_args(
         sys.argv[
             sys.argv.index("--") + 1:
@@ -1504,16 +1648,22 @@ def main():
     )
 
     if (
-        not 10000
-        <= args.high
-        <= 100000
-        or not 4
-        <= args.high
+        not args.preserve_geometry
+        and (
+            not 10000
+            <= args.high
+            <= 100000
+            or not 4
+            <= args.high
+        )
     ):
         parser.error(
             "Require high=10000..100000"
-            "and "
-            "4 <= low <= medium <= high"
+        )
+
+    if not 10000 <= args.max_triangles <= 5000000:
+        parser.error(
+            "Require max-triangles=10000..5000000"
         )
 
     source_root = (
@@ -1570,13 +1720,18 @@ def main():
         )
 
         try:
-            process(
-                source,
-                output_root / relative,
-                [
-                    args.high,
-                ],
-            )
+            if args.preserve_geometry:
+                process_delivery(
+                    source,
+                    output_root / relative,
+                    args.max_triangles,
+                )
+            else:
+                process(
+                    source,
+                    output_root / relative,
+                    [args.high],
+                )
 
         except Exception as error:
             failed.append(

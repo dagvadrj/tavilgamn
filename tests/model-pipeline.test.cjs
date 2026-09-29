@@ -17,8 +17,8 @@ const { r2ModelKey } = loadSource("src/lib/r2Models.ts", {
 
 const id = "11111111-2222-4333-8444-555555555555";
 
-test("high-only model assets stay single-file", () => {
-  const high = "high.glb";
+test("delivery model assets stay single-file", () => {
+  const high = "model-11111111-2222-4333-8444-555555555555.glb";
 
   assert.deepEqual(modelLodFiles(high), {
     high,
@@ -26,7 +26,7 @@ test("high-only model assets stay single-file", () => {
 
   assert.equal(modelLodFiles("high.obj"), null);
 
-  const path = `r2://bucket/models/${id}/lod/${id}/high.glb`;
+  const path = `r2://bucket/models/${id}/delivery/${id}/model-${id}.glb`;
 
   assert.deepEqual(modelAssetPaths(path), [path]);
 
@@ -39,6 +39,23 @@ test("R2 model validation accepts the direct kitchen source GLB", () => {
   assert.equal(r2ModelKey(source), `models/${id}/source/${id}.glb`);
   assert.equal(
     r2ModelKey(`r2://bucket/models/${id}/source/not-a-uuid.glb`),
+    null,
+  );
+});
+
+test("R2 model validation accepts only job-addressed delivery GLBs", () => {
+  const delivery =
+    `r2://bucket/models/${id}/delivery/${id}/model-${id}.glb`;
+
+  assert.equal(
+    r2ModelKey(delivery),
+    `models/${id}/delivery/${id}/model-${id}.glb`,
+  );
+
+  assert.equal(
+    r2ModelKey(
+      `r2://bucket/models/${id}/delivery/${id}/model-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee.glb`,
+    ),
     null,
   );
 });
@@ -157,6 +174,12 @@ test("loader shares requests, limits concurrency, retries failures and retains a
   }
 
   class Loader {
+    setMeshoptDecoder(decoder) {
+      assert.ok(decoder);
+
+      return this;
+    }
+
     setDRACOLoader() {
       return this;
     }
@@ -210,6 +233,10 @@ test("loader shares requests, limits concurrency, retries failures and retains a
 
       "three/examples/jsm/loaders/KTX2Loader.js": {
         KTX2Loader: Decoder,
+      },
+
+      "three/examples/jsm/libs/meshopt_decoder.module.js": {
+        MeshoptDecoder: { ready: Promise.resolve() },
       },
 
       "three/examples/jsm/utils/SkeletonUtils.js": {

@@ -401,7 +401,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       if (glbInput.current) glbInput.current.value = "";
       if (thumbnailInput.current) thumbnailInput.current.value = "";
       setUploadSuccess(
-        "GLB бэлэн боллоо. LOD үүсгэхгүйгээр эх файлаар нь шууд ашиглана.",
+        "GLB upload дууслаа. Web-д зориулсан Meshopt + KTX2 хувилбарыг боловсруулж байна.",
       );
       await load();
       setModelId(uploadedModelId);

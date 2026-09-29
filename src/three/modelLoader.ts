@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { instanceRepeatedModules } from "./instanceModules";
 export interface LoadedModel { scene: THREE.Group; bounds: THREE.Box3 }
@@ -19,7 +20,14 @@ function schedule<T>(task: () => Promise<T>): Promise<T> {
 export function createModelLoader(renderer: THREE.WebGLRenderer) {
   const draco = new DRACOLoader().setDecoderPath("/decoders/draco/").setWorkerLimit(2);
   const ktx = new KTX2Loader().setTranscoderPath("/decoders/basis/").setWorkerLimit(2).detectSupport(renderer);
-  return { loader: new GLTFLoader().setDRACOLoader(draco).setKTX2Loader(ktx), draco, ktx };
+  return {
+    loader: new GLTFLoader()
+      .setDRACOLoader(draco)
+      .setKTX2Loader(ktx)
+      .setMeshoptDecoder(MeshoptDecoder),
+    draco,
+    ktx,
+  };
 }
 function disposeModel(model: LoadedModel) {
   const resources = new Set<{ dispose: () => void }>();

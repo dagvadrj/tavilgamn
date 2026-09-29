@@ -18,11 +18,12 @@ export async function GET(
   try {
     const db = getSupabaseAdmin();
     const { data, error } = await db.from("furniture_models")
-      .select("glb_path,source_glb_path,thumbnail_path").eq("id", routeParams.id).maybeSingle();
+      .select("glb_path,thumbnail_path,processing_status").eq("id", routeParams.id).maybeSingle();
     if (error) throw error;
     const path = [
-      ...(typeof data?.source_glb_path === "string" ? [data.source_glb_path] : []),
-      ...(typeof data?.glb_path === "string" ? modelAssetPaths(data.glb_path) : []),
+      ...(data?.processing_status === "ready" && typeof data?.glb_path === "string"
+        ? modelAssetPaths(data.glb_path)
+        : []),
       data?.thumbnail_path,
     ].find(
       (value): value is string => typeof value === "string" && value.split("/").pop() === routeParams.filename[0],
@@ -37,7 +38,9 @@ export async function GET(
       });
       if (!upstream.ok || !upstream.body) throw new Error(`R2 model fetch failed (${upstream.status})`);
       const responseHeaders = new Headers({
-        "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=60",
+        "Cache-Control": path.includes("/delivery/")
+          ? "public, max-age=31536000, s-maxage=31536000, immutable"
+          : "public, max-age=300, s-maxage=300, stale-while-revalidate=60",
         "Content-Type": upstream.headers.get("content-type") ?? "model/gltf-binary",
         "X-Content-Type-Options": "nosniff",
       });
