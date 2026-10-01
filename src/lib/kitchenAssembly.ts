@@ -4,8 +4,9 @@ import { FINISHES, type Finish, type FrontStyle } from "./kitchen";
 import { createCabinet, createModularKitchen, validateCabinet, type KitchenLayout, type ModularCabinet, type ModularKitchen } from "./kitchenCabinets";
 import { cabinetAxes, cabinetCorners, cabinetsOverlap, fitCountertops, placementIssues, resolveElevations } from "./kitchenPlacement";
 import { fitBacksplashes, parseBacksplashSettings } from "./kitchenBacksplash";
+import { parseKitchenExtras } from "./kitchenExtras";
 
-export type SavedKitchen = { id: string; name: string; design: ModularKitchen; thumbnailUrl: string | null; createdAt: string; updatedAt: string };
+export type SavedKitchen = { id: string; name: string; design: ModularKitchen; revision?: number; thumbnailUrl: string | null; createdAt: string; updatedAt: string };
 export type KitchenSnapshot = { id: string; name: string; design: ModularKitchen };
 export const cloneKitchen = (kitchen: ModularKitchen): ModularKitchen => JSON.parse(JSON.stringify(kitchen));
 export function createUnifiedKitchen(): ModularKitchen {
@@ -32,6 +33,7 @@ export function kitchenEnvelope(kitchen: ModularKitchen) {
       x: c.position.x + front.x * frontExtra / 2, z: c.position.z + front.z * frontExtra / 2 } });
   });
   const tops = fitCountertops(kitchen);
+  for (const extra of kitchen.extras ?? []) points.push(...cabinetCorners(extra));
   for (const top of tops) {
     points.push(...cabinetCorners({ ...kitchen.cabinets[0], width: top.width as ModularCabinet["width"], depth: top.depth, position: top.position }));
   }
@@ -40,7 +42,7 @@ export function kitchenEnvelope(kitchen: ModularKitchen) {
   if (!points.length) return { minX: 0, maxX: 0, minZ: 0, maxZ: 0, centerX: 0, centerZ: 0, w: 0, d: 0, h: 0 };
   const minX = Math.min(...points.map(p => p.x)), maxX = Math.max(...points.map(p => p.x));
   const minZ = Math.min(...points.map(p => p.z)), maxZ = Math.max(...points.map(p => p.z));
-  const h = Math.max(...kitchen.cabinets.map(c => c.position.y + c.height), ...tops.map(t => t.position.y + t.thickness),
+  const h = Math.max(...kitchen.cabinets.map(c => c.position.y + c.height), ...(kitchen.extras ?? []).map(e=>e.height), ...tops.map(t => t.position.y + t.thickness),
     ...kitchen.cabinets.filter(hasCooktop).map(c => c.height + kitchen.countertop.thickness + 3),
     ...kitchen.cabinets.filter(c => c.opening === "sink").map(c => c.height + kitchen.countertop.thickness + getComponentSize(c, getComponents(c).find(item => item.type === "tap")!).height),
     ...backsplashes.map(panel => panel.position.y + panel.height));
@@ -105,7 +107,9 @@ export function arrangeKitchen(kitchen: ModularKitchen, layout: KitchenLayout) {
       along += c.width;
     }
   };
-  const main = floor.slice(0, split), returning = floor.slice(split), mainWidth = main.reduce((sum, c) => sum + c.width, 0);
+  const sideCount = Math.max(1, Math.floor(floor.length / 3));
+  const mainCount = layout === "u" && floor.length >= 3 ? floor.length - 2 * sideCount : split;
+  const main = floor.slice(0, mainCount), returning = floor.slice(mainCount), mainWidth = main.reduce((sum, c) => sum + c.width, 0);
   placeRun(main, "back", layout === "l-left" ? 0 : layout === "l-right" ? next.room.width - mainWidth : 200);
   if (returning.length) placeRun(returning, layout === "double-side" ? "front" : layout === "l-left" ? "left" : "right", isL ? Math.max(0, ...main.map(c => c.depth)) : 200);
   const mainIds = new Set(main.map(c => c.id));
@@ -116,6 +120,20 @@ export function arrangeKitchen(kitchen: ModularKitchen, layout: KitchenLayout) {
   const upperWidth = upperMain.reduce((sum, c) => sum + c.width, 0);
   placeRun(upperMain, "back", layout === "l-left" ? 0 : layout === "l-right" ? next.room.width - upperWidth : 200);
   if (upperReturn.length) placeRun(upperReturn, layout === "double-side" ? "front" : layout === "l-left" ? "left" : "right", isL ? Math.max(0, ...upperMain.map(c => c.depth)) : 200);
+  if (layout === "u") {
+    const left = returning.slice(0, sideCount), right = returning.slice(sideCount);
+    const inset = Math.max(0, ...main.map(c => c.depth));
+    placeRun(main, "back", Math.max(0, (next.room.width - mainWidth) / 2));
+    placeRun(left, "left", inset);
+    placeRun(right, "right", inset);
+    for (const wall of upper) {
+      const support = floor.find(c => c.id === supportIds.get(wall.id));
+      if (!support) continue;
+      const { front } = cabinetAxes(support.position.rotation), setback = (wall.depth - support.depth) / 2;
+      wall.position = { ...wall.position, rotation: support.position.rotation,
+        x: support.position.x + front.x * setback, z: support.position.z + front.z * setback };
+    }
+  }
   // A hood follows its cooker, even when upper and lower corner widths differ.
   for (const hood of upper.filter(c => c.opening === "hood")) {
     const originalHood = kitchen.cabinets.find(c => c.id === hood.id)!;
@@ -156,7 +174,7 @@ export function parseKitchen(value: unknown): ModularKitchen {
   if (raw.version !== 1 || !raw.room || !raw.countertop || !Array.isArray(raw.cabinets) || !raw.cabinets.length || raw.cabinets.length > 80) throw new Error("1–80 шүүгээтэй загвар байна.");
   if (![raw.room.width, raw.room.depth].every(n => Number.isInteger(n) && n >= 2000 && n <= 8000) || !Number.isInteger(raw.room.height) || raw.room.height < 2200 || raw.room.height > 3500) throw new Error("Өрөөний хэмжээ буруу байна.");
   if (!Number.isInteger(raw.wallClearance) || raw.wallClearance < 450 || raw.wallClearance > 600 || ![20, 28, 30, 38, 40].includes(raw.countertop.thickness) || !Number.isInteger(raw.countertop.frontOverhang) || raw.countertop.frontOverhang < 0 || raw.countertop.frontOverhang > 100 || !["laminate", "granite", "wood"].includes(raw.countertop.material)) throw new Error("Тавцангийн тохиргоо буруу байна.");
-  if (raw.layout !== undefined && !["straight", "l-left", "l-right", "double-side"].includes(raw.layout)) throw new Error("Гал тогооны байрлал буруу байна.");
+  if (raw.layout !== undefined && !["straight", "l-left", "l-right", "u", "double-side"].includes(raw.layout)) throw new Error("Гал тогооны байрлал буруу байна.");
   const finishes = FINISHES.map(f => f.id), ids = new Set<string>();
   const materialId = /^[a-z0-9][a-z0-9_-]{0,63}$/;
   const cabinets = raw.cabinets.map(c => {
@@ -183,11 +201,12 @@ export function parseKitchen(value: unknown): ModularKitchen {
   if (raw.countertop.materialId !== undefined && !materialId.test(raw.countertop.materialId)) throw new Error("Тавцангийн материалын код буруу байна.");
   if (raw.countertop.color !== undefined && !/^#[0-9a-f]{6}$/i.test(raw.countertop.color)) throw new Error("Тавцангийн өнгө буруу байна.");
   const backsplashSettings = parseBacksplashSettings(raw.backsplashSettings, raw.room);
+  const extras = parseKitchenExtras(raw.extras, ids, raw.room);
   const next: ModularKitchen = { version: 1, room: { width: raw.room.width, depth: raw.room.depth, height: raw.room.height }, cabinets, wallClearance: raw.wallClearance,
     countertop: { thickness: raw.countertop.thickness, frontOverhang: raw.countertop.frontOverhang, material: raw.countertop.material,
       ...(raw.countertop.finish ? { finish: raw.countertop.finish } : {}), ...(raw.countertop.materialId ? { materialId: raw.countertop.materialId } : {}),
       ...(raw.countertop.color ? { color: raw.countertop.color } : {}) }, backsplash: raw.backsplash === true,
-    ...(raw.layout ? { layout: raw.layout } : {}), ...(backsplashSettings ? { backsplashSettings } : {}) };
+    ...(raw.layout ? { layout: raw.layout } : {}), ...(extras ? { extras } : {}), ...(backsplashSettings ? { backsplashSettings } : {}) };
   const issue = placementIssues(next).find(i => i.severity === "error"); if (issue) throw new Error(issue.message);
   return next;
 }

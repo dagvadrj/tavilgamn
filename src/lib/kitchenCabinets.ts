@@ -3,6 +3,7 @@
  * The old run-based Kitchen type remains supported by the existing configurator.
  */
 import { applianceIssue } from "./plitka";
+import type { KitchenExtra } from "./kitchenExtras";
 import type { CabinetComponent } from "./kitchenComponents";
 import type { Finish, FrontStyle } from "./kitchen";
 export const CABINET_WIDTHS = [300, 400, 450, 500, 600, 700, 800, 900] as const;
@@ -11,7 +12,7 @@ export const cabinetWidths = (type: CabinetType) => type === "base" ? BASE_CABIN
 /** Cabinet presets stay discrete; appliances retain their measured integer footprint. */
 export type CabinetWidth = number;
 export type CabinetType = "base" | "wall" | "tall";
-export type KitchenLayout = "straight" | "l-right" | "l-left" | "double-side";
+export type KitchenLayout = "straight" | "l-right" | "l-left" | "u" | "double-side";
 export type HoodMount = "under-cabinet" | "wall";
 export type RefrigeratorStyle = "top-bottom" | "side-by-side";
 export type CabinetHandle = "bar" | "knob" | "push-open";
@@ -54,6 +55,7 @@ export interface Countertop extends CountertopSettings {
 }
 export interface ModularKitchen {
   version: 1; room: KitchenRoom; cabinets: ModularCabinet[];
+  extras?: KitchenExtra[];
   layout?: KitchenLayout;
   wallClearance: number; countertop: CountertopSettings;
   backsplash?: boolean;

@@ -35,7 +35,7 @@ The shop's merchant workspace deliberately retains shop navigation.
 | Store directory / home | storeDirectory; FeaturedMerchants | stores, stores/featured | merchant_stores | none |
 | Account / login / register | account route; authFetch/authErrors | protected routes use requireUser | auth.users, profiles | auth |
 | Room planner | components/RoomPlanner; features/room-planner/hooks and components | products, models, kitchens | furniture_models; kitchen_garnitures for imported kitchens | designs, catalog |
-| Kitchen editor | KitchenPlanner/ModularKitchenPlanner; features/kitchen-planner; kitchenAssembly/Placement | kitchen-modules, kitchens, kitchens/[id]/thumbnail | kitchen_modules, kitchen_module_variants, material_definitions, kitchen_garnitures | kitchens |
+| Kitchen editor | KitchenPlanner/ModularKitchenPlanner; features/kitchen-planner; kitchenAssembly/Placement/Extras/Bom; editorHistory | kitchen-modules, products, kitchens, kitchens/[id]/thumbnail, kitchens/[id]/versions | kitchen_modules, kitchen_module_variants, material_definitions, kitchen_garnitures, kitchen_garniture_versions | kitchens; catalog; in-memory undo/redo |
 | Kitchen marketplace | (shop)/kitchens routes; kitchenMarketplaceServer and validation | kitchen-designs, merchant/kitchen-designs/*, admin/kitchen-designs | kitchen_designs, kitchen_design_versions, kitchen_design_media, kitchen_design_reviews, kitchen_render_jobs | editor projects remain in kitchens |
 | Kitchen quotation | kitchenQuotes validation; merchant/customer panels | kitchen-designs/[id]/quotes, kitchen-quotes, merchant/kitchen-quotes | kitchen_quote_requests | none |
 | Merchant workspace | MerchantDashboard; merchantServer/Validation | merchant/store, products, orders, analytics, notifications | merchant_stores, furniture_models, merchant_order_fulfillments, user_notifications | auth |
@@ -65,7 +65,7 @@ requirement that every legacy component be rewritten in one release.
   enforcement is a generated migration snapshot tested against the manifest,
   not an independently edited catalog. A category change requires a new migration.
 - Persisted room designs: store/designs per-user browser storage. Kitchen account
-  projects: kitchen_garnitures via store/kitchens. Local kitchen drafts are recovery
+  projects: kitchen_garnitures via store/kitchens, immutable snapshots in kitchen_garniture_versions. New wizard drafts have isolated UUID-suffixed recovery keys. Local kitchen drafts are recovery
   data, not another public catalog.
 - Immutable orders, published design versions, quotation snapshots and room
   imports intentionally retain historical copies. They must not be updated when

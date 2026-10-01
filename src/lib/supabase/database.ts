@@ -3,6 +3,7 @@ import type { Database as Generated } from "./database.types";
 // The generator cannot represent SQL NULL in function arguments. These named
 // arguments intentionally accept NULL in the SQL bodies. Do not widen every RPC.
 type NullableArgs = {
+  save_kitchen_project: "p_expected_revision";
   review_kitchen_design: "p_version";
   create_kitchen_quote_request: "p_project";
   admin_update_merchant_settings: "p_featured_rank";

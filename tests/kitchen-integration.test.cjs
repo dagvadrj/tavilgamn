@@ -140,7 +140,9 @@ test("planner captures its clean 3D canvas and persists it as the project thumbn
   assert.match(scene, /preserveDrawingBuffer: true/);
   assert.match(scene, /toBlob\(resolve, "image\/webp"/);
   assert.match(scene, /object\.userData\.exportExclude/);
-  assert.match(planner, /library\.saveThumbnail\(saved\.id, image\)/);
+  assert.match(planner, /library\.saveThumbnail\(saved\.id, image,\s*saved\.revision\)/);
+  assert.match(scene,/object\.userData\.deliveryPending/);
+  assert.match(scene,/if\(pending\)return null/);
   assert.match(route, /requireUser\(request\)/);
   assert.match(route, /kitchen-projects\/\$\{routeParams\.id\}/);
   assert.match(route, /thumbnail_url: image\.url/);

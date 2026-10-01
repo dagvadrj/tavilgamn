@@ -11,7 +11,7 @@ import { withOpening } from "./kitchenComponents";
 export type OvenPreference = "under-worktop" | "high-cabinet";
 export type HoodPreference = "integrated" | "wall" | "none";
 export type RefrigeratorPreference = "integrated" | "freestanding" | "none";
-export type SuggestionLayout = "straight" | "l-right" | "double-side";
+export type SuggestionLayout = "straight" | "l-right" | "u" | "double-side";
 
 export interface KitchenSuggestionPreferences {
   oven: OvenPreference;
@@ -82,5 +82,10 @@ export function createSuggestedKitchen(
     kitchen.cabinets.push(refrigerator);
   }
 
+  // The wizard must not produce an out-of-room straight run with tall appliances.
+  if (preferences.layout === "straight") {
+    const span = kitchen.cabinets.filter(c => c.type !== "wall").reduce((sum, c) => sum + c.width, 0);
+    kitchen.room.width = Math.max(kitchen.room.width, span + 400);
+  }
   return arrangeKitchen(kitchen, preferences.layout as KitchenLayout);
 }

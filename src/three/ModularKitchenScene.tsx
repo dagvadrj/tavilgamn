@@ -34,6 +34,7 @@ import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { DEFAULT_FLOOR_MATERIAL } from "@/lib/roomDesign";
 import { useRoomMaterial } from "./roomMaterials";
+import { KitchenExtraMesh } from "./KitchenExtraMesh";
 
 export interface ModularSceneProps {
   exportRoot?: (root: Group | null) => void;
@@ -167,6 +168,9 @@ function Scene(props: ModularSceneProps) {
   useEffect(() => {
     if (!registerCapture) return;
     const capture = async () => {
+      let pending=false;
+      scene.traverse(object=>{if(object.userData.deliveryPending&&!object.userData.exportExclude)pending=true;});
+      if(pending)return null; // Never persist a preview/placeholder as a completed thumbnail.
       const hidden: { visible: boolean; object: { visible: boolean } }[] = [];
       scene.traverse((object) => {
         if (object.userData.exportExclude && object.visible) {
@@ -365,6 +369,11 @@ function Scene(props: ModularSceneProps) {
             </group>
           );
         })}
+        {(kitchen.extras ?? []).map(extra => <group key={extra.id} name={`Extra-${extra.id}`}
+          position={[extra.position.x/1000,0,extra.position.z/1000]} rotation={[0,extra.position.rotation,0]}
+          onPointerDown={event=>start(event,extra)}>
+          <KitchenExtraMesh extra={extra} selected={selectedId===extra.id}/>
+        </group>)}
         <KitchenTops
           kitchen={kitchen}
           materialDefinitions={props.materialDefinitions}

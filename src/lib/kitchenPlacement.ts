@@ -12,7 +12,8 @@ export const cabinetAxes = (rotation: number) => {
   return { right: { x: cos, z: -sin }, front: { x: sin, z: cos } };
 };
 const aligned = (a: ModularCabinet, b: ModularCabinet) => Math.cos(a.position.rotation - b.position.rotation) > 1 - 1e-8;
-export function cabinetCorners(cabinet: ModularCabinet): Point2[] {
+type Footprint = Pick<ModularCabinet, "width" | "depth" | "height" | "position">;
+export function cabinetCorners(cabinet: Footprint): Point2[] {
   const { right, front } = cabinetAxes(cabinet.position.rotation);
   return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([x, z]) => ({
     x: cabinet.position.x + x * right.x * cabinet.width / 2 + z * front.x * cabinet.depth / 2,
@@ -20,7 +21,7 @@ export function cabinetCorners(cabinet: ModularCabinet): Point2[] {
   }));
 }
 /** Separating axis test for rotated footprints. A shared edge is not overlap. */
-export function footprintsOverlap(a: ModularCabinet, b: ModularCabinet): boolean {
+export function footprintsOverlap(a: Footprint, b: Footprint): boolean {
   const cornersA = cabinetCorners(a), cornersB = cabinetCorners(b);
   const axesA = cabinetAxes(a.position.rotation), axesB = cabinetAxes(b.position.rotation);
   return [axesA.right, axesA.front, axesB.right, axesB.front].every(axis => {
@@ -28,7 +29,7 @@ export function footprintsOverlap(a: ModularCabinet, b: ModularCabinet): boolean
     return Math.min(Math.max(...ap), Math.max(...bp)) - Math.max(Math.min(...ap), Math.min(...bp)) > EPS;
   });
 }
-export function cabinetsOverlap(a: ModularCabinet, b: ModularCabinet): boolean {
+export function cabinetsOverlap(a: Footprint, b: Footprint): boolean {
   return Math.min(a.position.y + a.height, b.position.y + b.height) - Math.max(a.position.y, b.position.y) > EPS && footprintsOverlap(a, b);
 }
 function wallFrame(wall: KitchenWall) {
@@ -146,6 +147,14 @@ export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
       issues.push({ code: "clearance", ids: [cabinet.id], message: `Тавцангаас дээд шүүгээ хүртэл ${Math.round(clearance)} мм; тохируулах зай 450–600 мм.`, severity: clearance < 450 ? "error" : "warning" });
     for (const other of kitchen.cabinets.slice(index + 1)) if (cabinetsOverlap(cabinet, other))
       issues.push({ code: "overlap", ids: [cabinet.id, other.id], message: "Шүүгээнүүд давхцаж байна.", severity: "error" });
+  }
+  for (const [index, extra] of (kitchen.extras ?? []).entries()) {
+    if (cabinetCorners(extra).some(p => p.x < -EPS || p.z < -EPS || p.x > kitchen.room.width + EPS || p.z > kitchen.room.depth + EPS))
+      issues.push({code:"outside",ids:[extra.id],message:"Нэмэлт тавилга өрөөний хилээс гарсан байна.",severity:"error"});
+    if (extra.height > kitchen.room.height || extra.position.y !== 0)
+      issues.push({code:"ceiling",ids:[extra.id],message:"Нэмэлт тавилга шал/таазны хязгаараас гарсан байна.",severity:"error"});
+    for (const other of [...kitchen.cabinets,...(kitchen.extras ?? []).slice(index+1)]) if (cabinetsOverlap(extra,other))
+      issues.push({code:"overlap",ids:[extra.id,other.id],message:"Нэмэлт тавилга шүүгээ эсвэл өөр тавилгатай давхцаж байна.",severity:"error"});
   }
   return issues;
 }

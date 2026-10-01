@@ -514,12 +514,51 @@ export type Database = {
           },
         ]
       }
+      kitchen_garniture_versions: {
+        Row: {
+          created_at: string
+          design: Json
+          kitchen_id: string
+          name: string
+          revision: number
+          thumbnail_url: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          design: Json
+          kitchen_id: string
+          name: string
+          revision: number
+          thumbnail_url?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          design?: Json
+          kitchen_id?: string
+          name?: string
+          revision?: number
+          thumbnail_url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kitchen_garniture_versions_user_id_kitchen_id_fkey"
+            columns: ["user_id", "kitchen_id"]
+            isOneToOne: false
+            referencedRelation: "kitchen_garnitures"
+            referencedColumns: ["user_id", "id"]
+          },
+        ]
+      }
       kitchen_garnitures: {
         Row: {
           created_at: string
           design: Json
           id: string
           name: string
+          revision: number
           source_marketplace_design_id: string | null
           source_marketplace_version_id: string | null
           thumbnail_url: string | null
@@ -531,6 +570,7 @@ export type Database = {
           design: Json
           id: string
           name: string
+          revision?: number
           source_marketplace_design_id?: string | null
           source_marketplace_version_id?: string | null
           thumbnail_url?: string | null
@@ -542,6 +582,7 @@ export type Database = {
           design?: Json
           id?: string
           name?: string
+          revision?: number
           source_marketplace_design_id?: string | null
           source_marketplace_version_id?: string | null
           thumbnail_url?: string | null
@@ -1624,6 +1665,16 @@ export type Database = {
           p_payload: Json
         }
         Returns: undefined
+      }
+      save_kitchen_project: {
+        Args: {
+          p_actor: string
+          p_design: Json
+          p_expected_revision?: number
+          p_id: string
+          p_name: string
+        }
+        Returns: Json
       }
       save_merchant_product: {
         Args: {

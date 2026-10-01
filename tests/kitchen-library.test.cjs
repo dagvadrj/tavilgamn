@@ -16,6 +16,11 @@ function api(owner, error = null) {
   const calls = [];
   let value = row();
   const db = {
+    rpc: async (name,payload)=>{
+      assert.equal(name,'save_kitchen_project');calls.push(['rpc',payload]);
+      value={...value,user_id:payload.p_actor,id:payload.p_id,name:payload.p_name,design:payload.p_design,revision:1};
+      return {data:value,error};
+    },
     from(table) {
       assert.equal(table, "kitchen_garnitures");
       const chain = {
@@ -95,9 +100,9 @@ test("save roundtrip preserves poses and materials and ignores caller-supplied o
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("Cache-Control"), "no-store");
   assert.deepEqual((await response.json()).kitchen.design, design);
-  assert.equal(calls[0][1].user_id, "verified-owner");
-  assert.equal(calls[0][1].name, "Гал тогоо");
-  assert.deepEqual(calls[0][2], { onConflict: "user_id,id" });
+  assert.equal(calls[0][1].p_actor, "verified-owner");
+  assert.equal(calls[0][1].p_name, "Гал тогоо");
+  assert.equal(calls[0][1].p_expected_revision, null);
   await route.GET(
     new NextRequest("http://localhost/api/kitchens?user_id=victim"),
   );
@@ -131,6 +136,27 @@ test("invalid kitchen and oversized body never write; database failure never rep
   );
   assert.equal(failed.status, 503);
   assert.doesNotMatch(await failed.text(), /private SQL/);
+});
+test('stale saves return a safe conflict rather than overwriting; expected revision validation precedes writes',async()=>{
+  const {route,calls}=api('owner',{code:'40001',message:'private SQL'});
+  const response=await route.PUT(put({id,name:'New',design:createUnifiedKitchen(),expectedRevision:3}));
+  assert.equal(response.status,409);assert.equal(calls[0][1].p_expected_revision,3);
+  assert.doesNotMatch(await response.text(),/private SQL/);
+  const safe=api('owner');
+  assert.equal((await safe.route.PUT(put({id,name:'x',design:createUnifiedKitchen(),expectedRevision:-1}))).status,400);
+  assert.deepEqual(safe.calls,[]);
+});
+test('version history list and detail are owner-scoped and validate UUID/revision before querying',async()=>{
+  const calls=[];
+  const chain={select(value){calls.push(['select',value]);return this;},eq(...args){calls.push(['eq',...args]);return this;},order(){return this;},limit:async()=>({data:[{revision:2}],error:null}),maybeSingle:async()=>({data:null,error:null})};
+  const route=loadSource('src/app/api/kitchens/[id]/versions/route.ts',{
+    '@/lib/supabase/requireUser':{requireUser:async()=>({userId:'verified-owner'})},
+    '@/lib/supabase/admin':{getSupabaseAdmin:()=>({from:()=>chain})}
+  });
+  const get=(suffix='',target=id)=>route.GET(new NextRequest(`http://localhost/api/kitchens/${target}/versions${suffix}`),{params:{id:target}});
+  assert.equal((await get('?revision=0')).status,400);assert.equal((await get('','bad-id')).status,400);assert.equal(calls.length,0);
+  assert.equal((await get()).status,200);assert.ok(calls.some(c=>c[1]==='user_id'&&c[2]==='verified-owner'));assert.doesNotMatch(calls[0][1],/design/);
+  assert.equal((await get('?revision=2')).status,404);
 });
 test("thumbnail upload checks ownership before Cloudinary and stores only its validated URL", async () => {
   let uploaded = false,
@@ -194,6 +220,23 @@ test("thumbnail upload checks ownership before Cloudinary and stores only its va
     thumbnail_url: "https://res.cloudinary.com/demo/image/upload/project.webp",
   });
   assert.equal((await response.json()).thumbnailUrl, updated.thumbnail_url);
+});
+test('thumbnail race guard refuses stale captures and isolates each revision image URL',async()=>{
+  let uploaded=false,revision=2,matching=true,publicId;
+  const conditions=[];
+  const chain={select(){return this;},eq(...args){conditions.push(args);return this;},update(){return this;},
+    maybeSingle:async()=>({data:conditions.some(c=>c[0]==='revision')?(matching?{id}:null):{id,revision},error:null})};
+  const route=loadSource('src/app/api/kitchens/[id]/thumbnail/route.ts',{
+    '@/lib/supabase/requireUser':{requireUser:async()=>({userId:'owner'})},
+    '@/lib/supabase/admin':{getSupabaseAdmin:()=>({from:()=>chain})},
+    '@/lib/cloudinaryImageUpload':{uploadCloudinaryImage:async(file,key)=>{uploaded=true;publicId=key;return {url:'https://res.cloudinary.com/demo/image/upload/v2.webp'};}}
+  });
+  const post=async(target)=>{conditions.length=0;const form=new FormData();form.set('file',new File(['x'.repeat(200)],'kitchen.webp',{type:'image/webp'}));form.set('revision',String(target));
+    return route.POST(new NextRequest(`http://localhost/api/kitchens/${id}/thumbnail`,{method:'POST',body:form}),{params:{id}});};
+  assert.equal((await post(1)).status,409);assert.equal(uploaded,false);
+  assert.equal((await post(2)).status,200);assert.equal(publicId,`casa-nova/kitchen-projects/${id}/v2`);
+  assert.ok(conditions.some(c=>c[0]==='revision'&&c[1]===2));
+  matching=false;assert.equal((await post(2)).status,409);
 });
 test("published marketplace clone authenticates, validates and calls the atomic owner-bound RPC", async () => {
   const designId = "12345678-1234-4234-8234-123456789abc";

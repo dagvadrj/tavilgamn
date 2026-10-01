@@ -22,6 +22,7 @@ import {
   fitPlinths,
 } from "@/lib/kitchenPlacement";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
+import { KitchenExtraMesh } from "./KitchenExtraMesh";
 import { fitBacksplashes } from "@/lib/kitchenBacksplash";
 import { createKitchenTexture } from "./kitchenTextures";
 import { CabinetBody } from "./KitchenCabinetBody";
@@ -442,6 +443,8 @@ export function KitchenAssemblyMesh({
           />
         </group>
       ))}
+      {(kitchen.extras ?? []).map(extra=><group key={extra.id} name={`Extra-${extra.id}`}
+        position={[extra.position.x/1000,0,extra.position.z/1000]} rotation={[0,extra.position.rotation,0]}><KitchenExtraMesh extra={extra}/></group>)}
       <KitchenTops
         kitchen={kitchen}
         materialDefinitions={materialDefinitions}

@@ -1,0 +1,48 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const {readFileSync}=require('node:fs');
+const {randomUUID}=require('node:crypto');
+const {PGlite}=require('@electric-sql/pglite');
+test('version snapshots backfill, stay owner-private and immutable; CAS rejects stale saves, restore makes a new revision',async t=>{
+  const db=new PGlite();t.after(()=>db.close());
+  await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;
+    create schema auth;create table auth.users(id uuid primary key);
+    create function auth.uid() returns uuid language sql as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+    grant usage on schema auth to authenticated;grant execute on function auth.uid() to authenticated;`);
+  await db.exec(readFileSync('supabase/migrations/20260912125410_kitchen_garnitures.sql','utf8'));
+  await db.exec('alter table kitchen_garnitures add column thumbnail_url text');
+  const a=randomUUID(),b=randomUUID(),id=randomUUID();
+  await db.query('insert into auth.users values($1),($2)',[a,b]);
+  await db.query("insert into kitchen_garnitures(user_id,id,name,design,thumbnail_url) values($1,$2,'First','{}','old-image')",[a,id]);
+  await db.exec(readFileSync('supabase/migrations/20261001164907_kitchen_project_versions.sql','utf8'));
+  assert.equal((await db.query('select count(*)::int n from kitchen_garniture_versions')).rows[0].n,1);
+  await db.exec('set role service_role');
+  const save=async(owner,name,design,expected)=>(await db.query('select save_kitchen_project($1,$2,$3,$4,$5) value',[owner,id,name,JSON.stringify(design),expected])).rows[0].value;
+  assert.equal((await save(a,'Second',{cabinet:2},1)).revision,2);
+  await assert.rejects(save(a,'Stale',{},1),{code:'40001'});
+  assert.equal((await save(a,'Second',{cabinet:2},2)).revision,2);
+  assert.equal((await save(a,'First',{},2)).revision,3);
+  assert.equal((await save(b,'Other owner',{},0)).revision,1);
+  await db.exec('reset role');
+  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[a]);
+  await db.exec('set role authenticated');
+  assert.deepEqual((await db.query('select name,revision,thumbnail_url from kitchen_garniture_versions order by revision')).rows,
+    [{name:'First',revision:1,thumbnail_url:'old-image'},{name:'Second',revision:2,thumbnail_url:null},{name:'First',revision:3,thumbnail_url:null}]);
+  await assert.rejects(db.query("update kitchen_garniture_versions set name='Forged'"),{code:'42501'});
+  await assert.rejects(save(a,'Forbidden RPC',{},3),{code:'42501'});
+  // Legacy authenticated writes are still secured and snapshotted, even forged revisions.
+  await db.query("update kitchen_garnitures set name='Legacy',revision=999 where id=$1",[id]);
+  assert.equal((await db.query('select max(revision) revision from kitchen_garniture_versions')).rows[0].revision,4);
+  await db.query("update kitchen_garnitures set thumbnail_url='new-image' where id=$1",[id]);
+  assert.equal((await db.query('select count(*)::int n from kitchen_garniture_versions')).rows[0].n,4);
+  assert.equal((await db.query('select thumbnail_url from kitchen_garniture_versions where revision=4')).rows[0].thumbnail_url,'new-image');
+  await db.exec('reset role;set role anon');
+  await assert.rejects(db.query('select * from kitchen_garniture_versions'),{code:'42501'});
+  await db.exec('reset role');
+  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[b]);
+  await db.exec('set role authenticated');
+  assert.equal((await db.query('select * from kitchen_garniture_versions')).rows.length,1);
+  await db.query('delete from kitchen_garnitures where id=$1',[id]);
+  await db.exec('reset role');
+  assert.equal((await db.query('select count(*)::int n from kitchen_garniture_versions')).rows[0].n,4);
+});

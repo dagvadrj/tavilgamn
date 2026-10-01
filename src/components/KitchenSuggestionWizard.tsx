@@ -126,6 +126,12 @@ const QUESTIONS: Question[] = [
         diagram: "layout-l",
       },
       {
+        value: "u",
+        title: "U хэлбэр",
+        description: "Гурван ханын дагуу",
+        diagram: "layout-u",
+      },
+      {
         value: "double-side",
         title: "Хоёр талт",
         description: "Эсрэг хоёр ханын дагуу",
@@ -170,7 +176,8 @@ export function KitchenSuggestionWizard() {
 
   function continueToPlanner() {
     const design = createSuggestedKitchen(preferences);
-    const draftKey = `tavilga-kitchen-draft-${user?.id ?? "guest"}`;
+    const draftId=crypto.randomUUID();
+    const draftKey = `tavilga-kitchen-draft-${user?.id ?? "guest"}-${draftId}`;
     try {
       localStorage.setItem(
         draftKey,
@@ -179,7 +186,7 @@ export function KitchenSuggestionWizard() {
     } catch {
       // The editor still opens with its safe default if storage is unavailable.
     }
-    router.replace(`/kitchen?editor=1&draft=${crypto.randomUUID()}`);
+    router.replace(`/kitchen?editor=1&draft=${draftId}`);
   }
 
   return (
@@ -203,7 +210,7 @@ export function KitchenSuggestionWizard() {
           <h1>{question.title}</h1>
           <p className="ks-intro">{question.description}</p>
           <div
-            className={`ks-choices ${question.choices.length === 3 ? "has-three" : ""}`}
+            className={`ks-choices ${question.choices.length >= 3 ? "has-three" : ""}`}
           >
             {question.choices.map((choice) => {
               const selected = preferences[question.key] === choice.value;

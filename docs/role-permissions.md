@@ -9,6 +9,7 @@ independent defenses. Roles are read from profiles, not browser UI or user_metad
 | Read published kitchen designs | Yes | Yes | Yes | Yes | published version/media only |
 | Edit room / local kitchen draft | Local only | Own browser data | Own browser data | Own browser data | client editor, no role elevation |
 | Save/read/delete account kitchen | No | Own only | Own only | Own only | requireUser + user_id predicates |
+| Read/restore editor project versions | No | Own only | Own only | Own only | owner-filtered API + SELECT RLS; restore saves a new revision through service-only CAS RPC |
 | Create kitchen quote / read own requests | No | Own only | Own only | Own only | requireUser + actor-bound RPC |
 | Checkout / read/pay order | No | Own only | Own only | Own only | requireUser + order owner; server prices |
 | Read/write merchant store | No | No | Own active store | No implicit merchant access | requireMerchant + RPC profile/owner locks |

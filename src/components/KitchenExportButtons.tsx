@@ -15,9 +15,17 @@ export function KitchenExportButtons({
 }) {
   const [working, setWorking] = useState<"glb" | "skp" | "ar" | null>(null);
   const [message, setMessage] = useState("");
+  const [skpAvailable,setSkpAvailable]=useState(false);
   const lock = useRef(false),
     request = useRef<AbortController | null>(null);
   useEffect(() => () => request.current?.abort(), []);
+  useEffect(()=>{
+    const controller=new AbortController();
+    fetch('/api/kitchen/export/skp',{signal:controller.signal,cache:'no-store'}).then(async response=>{
+      if(response.ok)setSkpAvailable((await response.json()).available===true);
+    }).catch(()=>{});
+    return ()=>controller.abort();
+  },[]);
   async function exportFile(format: "glb" | "skp") {
     if (!root || disabled || lock.current) return;
     lock.current = true;
@@ -81,7 +89,7 @@ export function KitchenExportButtons({
             key={format}
             type="button"
             className="btn-ghost"
-            disabled={disabled || !root || !!working}
+            disabled={disabled || !root || !!working || (format==='skp'&&!skpAvailable)}
             onClick={() => void exportFile(format)}
           >
             {working === format ? (
@@ -96,6 +104,7 @@ export function KitchenExportButtons({
         ))}
 
         <small>Бүх тавилга, материалтай · Шалгүй</small>
+        {!skpAvailable&&<small>SKP сервер холбогдоогүй. GLB-г SketchUp-д import хийгээд .skp болгон хадгална.</small>}
         <KitchenARViewer
           root={root}
           name={name}

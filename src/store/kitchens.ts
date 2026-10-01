@@ -7,13 +7,16 @@ import type { ModularKitchen } from "@/lib/kitchenCabinets";
 interface KitchenState {
   owner: string | null; items: SavedKitchen[]; loading: boolean; loaded: boolean; error: string;
   refresh: () => Promise<void>;
-  save: (id: string, name: string, design: ModularKitchen) => Promise<SavedKitchen | null>;
-  saveThumbnail: (id: string, file: Blob) => Promise<string | null>;
+  save: (id: string, name: string, design: ModularKitchen, expectedRevision?:number) => Promise<SavedKitchen | null>;
+  versions: (id:string,before?:number) => Promise<KitchenVersionSummary[]>;
+  version: (id:string,revision:number) => Promise<{name:string;design:ModularKitchen}>;
+  saveThumbnail: (id: string, file: Blob, revision?:number) => Promise<string | null>;
   remove: (id: string) => Promise<boolean>;
 }
+export type KitchenVersionSummary={revision:number;name:string;created_at:string;thumbnail_url:string|null};
 let generation = 0, listRequest = 0;
-function readSaved(row: { id: string; name: string; design: unknown; thumbnail_url?: unknown; created_at: string; updated_at: string }): SavedKitchen {
-  return { id: row.id, name: row.name, design: parseKitchen(row.design), thumbnailUrl: typeof row.thumbnail_url === "string" ? row.thumbnail_url : null, createdAt: row.created_at, updatedAt: row.updated_at };
+function readSaved(row: { id: string; name: string; design: unknown; revision?:number; thumbnail_url?: unknown; created_at: string; updated_at: string }): SavedKitchen {
+  return { id: row.id, name: row.name, design: parseKitchen(row.design), revision:row.revision??1, thumbnailUrl: typeof row.thumbnail_url === "string" ? row.thumbnail_url : null, createdAt: row.created_at, updatedAt: row.updated_at };
 }
 async function authenticatedSession(owner: string) {
   const { data } = await supabase.auth.getSession();
@@ -41,24 +44,37 @@ export const useKitchens = create<KitchenState>((set, get) => ({
       if (epoch === generation && requestId === listRequest) set({ loading: false, error: error instanceof Error ? error.message : "Ачаалж чадсангүй." });
     }
   },
-  save: async (id, name, design) => {
+  save: async (id, name, design, expectedRevision) => {
     const owner = get().owner, epoch = generation;
     if (!owner) { set({ error: "Хадгалахын тулд нэвтэрнэ үү." }); return null; }
     // Prevent a stale list response overwriting this successful save.
     ++listRequest; set({ error: "", loading: false });
     try {
-      const result = readSaved((await request(owner, { method: "PUT", body: JSON.stringify({ id, name, design }) })).kitchen);
+      const result = readSaved((await request(owner, { method: "PUT", body: JSON.stringify({ id, name, design, expectedRevision:expectedRevision??get().items.find(item=>item.id===id)?.revision??0 }) })).kitchen);
       if (epoch !== generation) return null;
       ++listRequest;
       set({ items: [result, ...get().items.filter(item => item.id !== id)], loading: false }); return result;
     } catch (error) { if (epoch === generation) set({ error: error instanceof Error ? error.message : "Хадгалж чадсангүй." }); return null; }
   },
-  saveThumbnail: async (id, file) => {
+  versions: async(id,before)=>{
+    const owner=get().owner,epoch=generation;if(!owner)throw new Error('Нэвтэрнэ үү.');
+    const body=await request(owner,{},`/${encodeURIComponent(id)}/versions${before?`?before=${before}`:''}`);
+    if(epoch!==generation)throw new Error('Хэрэглэгч өөрчлөгдсөн.');
+    return body.versions;
+  },
+  version: async(id,revision)=>{
+    const owner=get().owner,epoch=generation;if(!owner)throw new Error('Нэвтэрнэ үү.');
+    const body=await request(owner,{},`/${encodeURIComponent(id)}/versions?revision=${revision}`);
+    if(epoch!==generation)throw new Error('Хэрэглэгч өөрчлөгдсөн.');
+    return {name:body.version.name,design:parseKitchen(body.version.design)};
+  },
+  saveThumbnail: async (id, file, revision) => {
     const owner = get().owner, epoch = generation;
     if (!owner) return null;
     try {
       const session = await authenticatedSession(owner);
       const form = new FormData(); form.set("file", file, "kitchen.webp");
+      if(revision!==undefined)form.set('revision',String(revision));
       const response = await fetch(`/api/kitchens/${encodeURIComponent(id)}/thumbnail`, {
         method: "POST", body: form, cache: "no-store", headers: { Authorization: `Bearer ${session.access_token}` },
       });

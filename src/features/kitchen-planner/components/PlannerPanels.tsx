@@ -67,7 +67,7 @@ export function Plan({
   return (
     <svg
       className="km-plan"
-      viewBox={`-150 -150 ${kitchen.room.width + 300} ${kitchen.room.depth + 300}`}
+      viewBox={`-200 -200 ${kitchen.room.width + 450} ${kitchen.room.depth + 400}`}
       role="group"
       aria-label="Модуль шүүгээний дээрээс харах зураг"
     >
@@ -78,6 +78,9 @@ export function Plan({
         height={kitchen.room.depth}
         className="km-room-outline"
       />
+      <text x={kitchen.room.width/2} y={-60} textAnchor="middle" fontSize={70}>{kitchen.room.width} мм</text>
+      <text x={kitchen.room.width+80} y={kitchen.room.depth/2} textAnchor="middle" fontSize={70}
+        transform={`rotate(90 ${kitchen.room.width+80} ${kitchen.room.depth/2})`}>{kitchen.room.depth} мм</text>
       {cabinets.map((cabinet) => {
         const { front } = cabinetAxes(cabinet.position.rotation);
         return (
@@ -121,6 +124,12 @@ export function Plan({
           </g>
         );
       })}
+      {(kitchen.extras ?? []).map(extra=><g key={extra.id} className={`km-plan-cabinet ${selectedId===extra.id ? "is-selected" : ""}`}>
+        <polygon points={cabinetCorners(extra).map(p=>`${p.x},${p.z}`).join(" ")} role="button" tabIndex={0}
+          aria-label={`${extra.name}, ${extra.width} мм`} aria-pressed={selectedId===extra.id} onClick={()=>onSelect(extra.id)}
+          onKeyDown={e=>{if(["Enter"," "].includes(e.key)){e.preventDefault();onSelect(extra.id);}}}/>
+        <text x={extra.position.x} y={extra.position.z} textAnchor="middle" fontSize={70} pointerEvents="none">{extra.width}</text>
+      </g>)}
     </svg>
   );
 }

@@ -7,7 +7,7 @@ import { parseKitchen } from "@/lib/kitchenAssembly";
 
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "no-store" };
-const columns = "id,name,design,thumbnail_url,created_at,updated_at";
+const columns = "id,name,design,thumbnail_url,revision,created_at,updated_at";
 export async function GET(request: NextRequest) {
   const auth = await requireUser(request); if (auth.error) return auth.error;
   const { data, error } = await getSupabaseAdmin().from("kitchen_garnitures").select(columns)
@@ -25,9 +25,12 @@ export async function PUT(request: NextRequest) {
     const design = parseKitchen(body.design);
     // The authenticated owner is never taken from request JSON. Composite key
     // makes another user's ID unable to overwrite or transfer their row.
-    const { data, error } = await getSupabaseAdmin().from("kitchen_garnitures").upsert({
-      user_id: auth.userId, id: body.id, name: body.name.trim(), design: toJson(design),
-    }, { onConflict: "user_id,id" }).select(columns).single();
+    if (body.expectedRevision !== undefined && (!Number.isSafeInteger(body.expectedRevision) || body.expectedRevision < 0)) throw new Error("Хувилбарын дугаар буруу байна.");
+    const { data, error } = await getSupabaseAdmin().rpc("save_kitchen_project", {
+      p_actor: auth.userId, p_id: body.id, p_name: body.name.trim(), p_design: toJson(design),
+      p_expected_revision: body.expectedRevision ?? null,
+    });
+    if (error?.code === "40001") return apiErrorResponse({ error: "Өөр tab энэ загварыг шинэчилсэн байна. Өөрчлөлтөө алдахгүйн тулд шинэ хуулбар болгон хадгалах эсвэл хамгийн сүүлийн загвараа дахин нээнэ үү." }, { status: 409, headers });
     if (error) return apiErrorResponse({ error: "Хадгалж чадсангүй. Загвар тань редакторт хэвээр байна." }, { status: 503, headers });
     return NextResponse.json({ kitchen: data }, { headers });
   } catch (error) { return apiErrorResponse({ error: error instanceof Error ? error.message : "Загварын өгөгдөл буруу байна." }, { status: 400, headers }); }

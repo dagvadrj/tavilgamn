@@ -205,7 +205,7 @@ Marketplace identity, store owner, slug and pointer to published version.
 
 ### kitchen_garnitures
 
-User-owned editable kitchen projects; kitchens API and kitchen library store.
+User-owned editable kitchen projects; kitchens API and kitchen library store. `revision` is database-managed; save_kitchen_project performs an atomic expected-revision check. Changes to name/design create a new snapshot; thumbnail-only updates do not.
 
 | Column | Generated row type |
 |---|---|
@@ -218,6 +218,23 @@ User-owned editable kitchen projects; kitchens API and kitchen library store.
 | `thumbnail_url` | `string | null` |
 | `updated_at` | `string` |
 | `user_id` | `string` |
+| `revision` | `number` |
+
+### kitchen_garniture_versions
+
+Owner-private editor snapshots, separate from published marketplace versions. Primary key `(user_id,kitchen_id,revision)`; compound foreign key cascades only with explicit project deletion. Owner can read; only the non-exposed snapshot trigger writes version content. Restoring creates a normal new save, never rewrites history.
+
+| Column | Generated row type |
+|---|---|
+| `user_id` | `string` |
+| `kitchen_id` | `string` |
+| `revision` | `number` |
+| `name` | `string` |
+| `design` | `Json` |
+| `thumbnail_url` | `string | null` |
+| `created_at` | `string` |
+
+Editor JSON version 1 optionally contains `extras`: validated product snapshots with mm dimensions, floor poses, category/material/color and safe model filenames. Server pricing is not stored in the client design; BOM reads current public catalog prices and explicitly flags unknown rates.
 
 ### kitchen_module_variants
 
