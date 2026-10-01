@@ -86,6 +86,7 @@ import {
   formatMeasurement,
 } from "@/lib/furnitureMeasurements";
 import "./room-planner.css";
+import "@/features/planner/components/planner-studio.css";
 import { type DbModelInfo, getDbModel } from "@/lib/modelRegistry";
 
 const RoomCanvas = dynamic(
@@ -819,10 +820,28 @@ export function RoomPlanner() {
     <div
       ref={workspaceRef}
       className={cn(
-        "room-planner-layout planner-workspace relative overflow-hidden xl:grid",
+        "room-planner-layout planner-workspace planner-studio relative overflow-hidden xl:grid",
         expanded && "planner-expanded",
       )}
     >
+      <header className="studio-header room-studio-header">
+        <Link href="/" className="studio-brand" aria-label="Tavilga.mn нүүр">
+          <House size={19}/><span>tavilga.mn</span>
+        </Link>
+        <div className="studio-heading"><span>Өрөөний студи</span><small>Таны орон зай, таны загвар</small></div>
+        <nav className="studio-switch" aria-label="Planner сонгох">
+          <span aria-current="page">Өрөө</span>
+          <Link href="/kitchen">Гал тогоо</Link>
+        </nav>
+        <div className="studio-file-actions">
+          <button type="button" title="PNG зураг татах" aria-label="Зураг татах" onClick={exportImage}>
+            <Download size={17}/><span>Зураг</span>
+          </button>
+          <button type="button" className="studio-primary" title="Хадгалах (Ctrl+S)" aria-label="Загвар хадгалах" onClick={save}>
+            <Save size={17}/><span>Хадгалах</span>
+          </button>
+        </div>
+      </header>
       {notice && (
         <div className="planner-notice" role="status">
           <Check size={17} />
@@ -858,8 +877,8 @@ export function RoomPlanner() {
       >
         <div className="border-b border-[#293C32]/10 p-4">
           <div className="planner-panel-heading">
-            <span>Тавилгын сан</span>
-            <small>Сонгоод өрөөндөө нэмээрэй</small>
+            <span><LayoutGrid size={18}/> Тавилгын сан</span>
+            <small>Орон зайгаа бүтээх бүх сонголт</small>
           </div>
           <label className="planner-search">
             <Search size={17} />
@@ -870,10 +889,11 @@ export function RoomPlanner() {
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
-          <div className="flex flex-wrap gap-1">
+          <div className="studio-categories" role="group" aria-label="Тавилгын ангилал">
             {CATEGORIES.map((c) => (
               <button
                 key={c.id}
+                aria-pressed={paletteCat === c.id}
                 onClick={() => setPaletteCat(c.id)}
                 className={cn(
                   "rounded-full px-3 py-1 text-xs transition",
@@ -887,7 +907,7 @@ export function RoomPlanner() {
             ))}
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-3">
+        <div className="studio-catalog-scroll flex-1 overflow-y-auto p-3">
           <details className="planner-kitchen-library">
             <summary>Өөрийн загвар · гарнитур</summary>
             <SavedKitchenList
@@ -926,7 +946,7 @@ export function RoomPlanner() {
               retry={() => void catalog.refresh()}
             />
           )}
-          <div className="grid gap-3">
+          <div className="studio-catalog-list grid gap-3">
             {catalog.ready &&
               !catalog.loading &&
               !paletteItems.length &&
@@ -1038,7 +1058,7 @@ export function RoomPlanner() {
       </Drawer>
 
       {/* CENTER: canvas */}
-      <div className="relative h-full">
+      <div className="planner-stage relative h-full">
         <div className="planner-view-toolbar">
           <div className="planner-segment" aria-label="Харах горим">
             <button
@@ -1101,22 +1121,6 @@ export function RoomPlanner() {
             </button>
             </div>
           </details>
-          <div className="planner-tool-group planner-file-actions">
-            <button
-              title="PNG зураг татах"
-              aria-label="Зураг татах"
-              onClick={exportImage}
-            >
-              <Download size={18} /><span>Зураг</span>
-            </button>
-            <button
-              title="Хадгалах (Ctrl+S)"
-              aria-label="Загвар хадгалах"
-              onClick={save}
-            >
-              <Save size={18} /><span>Хадгалах</span>
-            </button>
-          </div>
         </div>
         <ViewportControls onAction={navigateView} plan={view === "plan"} disabled={locked}
           extra={<>

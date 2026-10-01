@@ -16,6 +16,13 @@ change, project deletion or asset changes in this update.
 - Accessible button names retained when responsive labels hide; camera menu
   closes on outside pointer press or Escape. No additional UI dependency.
 - Tiny kitchen screens use a two-row toolbar so the exit button is not clipped.
+- Follow-up studio redesign: shared dark-green project bar, pale-green primary
+  save action, framed desktop canvas/sidebars, two-column category selectors,
+  quieter product cards and a styled Dining/Extras search panel. Room image/save
+  actions now live in the persistent header rather than over the 3D canvas.
+  Kitchen uses the same project-bar colors, project naming and inspector style.
+  Decorative blur was removed from the kitchen inspector; no new dependency,
+  rendering loop, database field or asset was introduced for this redesign.
 - Blender-style mouse input on both scenes: middle-button drag orbits, Shift +
   middle pans, Ctrl/Cmd + middle dollies, and the rolling wheel still zooms.
   In room 2D, plain/Shift-middle pan instead of rotating. Left click/drag belongs
@@ -48,9 +55,10 @@ state updates were introduced for orbit/mouse movement.
   camera dock. Kitchen zoom/top/front/pan/rotate work; cabinet count and undo
   state stay unchanged. Escape closes its camera menu.
 - Responsive screenshots checked at desktop 1440×900 and phone 390×844.
-  Kitchen additionally checked at 320×700: toolbar scroll width equals 320,
-  including a visible exit button. Room 320px treatment has compact 2D/3D
-  labels; its directly observed phone viewport was 390px.
+  Both planners additionally checked at 320×700. Kitchen toolbar scroll width
+  equals 320, including a visible exit button. Room header/view controls and
+  camera dock fit; its catalog/settings drawers open and close at 390px, and
+  changing a category updates the visible list and pressed state.
 - Screenshots: `room-planner-ui.png`, `kitchen-planner-ui.png`.
 
 This is local browser verification, not an iPhone GPU/FPS benchmark. Existing

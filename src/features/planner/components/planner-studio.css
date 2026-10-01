@@ -1,0 +1,145 @@
+/* Shared studio chrome. No filters over the WebGL canvas or new animation loops. */
+.planner-studio {
+  --studio-ink: #24372f;
+  --studio-muted: #718078;
+  --studio-line: #e1e6df;
+  --studio-paper: #ffffff;
+  --studio-shell: #e8ece6;
+  --studio-accent: #d7edb8;
+  color: var(--studio-ink);
+  font-family: inherit;
+}
+.studio-header, .planner-studio .kp-planner-topbar {
+  background: #20372c;
+  color: #fff;
+  border: 0;
+  box-shadow: none;
+}
+.studio-header { display: flex; align-items: center; gap: 22px; padding: 0 22px; }
+.studio-brand { display: flex; align-items: center; gap: 9px; font-size: 17px; font-weight: 750; letter-spacing: -.5px; }
+.studio-brand > svg, .planner-studio .kp-planner-brand > svg { color: var(--studio-accent); }
+.studio-heading { display: flex; flex-direction: column; gap: 3px; padding-left: 20px; border-left: 1px solid #ffffff24; white-space: nowrap; }
+.studio-heading > span { font-size: 13px; font-weight: 600; }
+.studio-heading small { font-size: 10px; color: #bccbc1; }
+.studio-switch { display: flex; gap: 4px; margin-left: auto; padding: 4px; background: #ffffff0c; border-radius: 10px; font-size: 12px; }
+.studio-switch > * { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 14px; border-radius: 7px; color: #c2cec6; }
+.studio-switch [aria-current] { background: #ffffff18; color: #fff; }
+.studio-switch a:hover { background: #ffffff12; color: #fff; }
+.studio-file-actions { display: flex; gap: 8px; }
+.studio-file-actions button { min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 13px; border: 1px solid #ffffff24; border-radius: 10px; color: #fff; font-size: 12px; }
+.studio-file-actions button:hover { background: #ffffff15; }
+.studio-file-actions .studio-primary { color: #20372c; background: var(--studio-accent); border-color: var(--studio-accent); font-weight: 700; }
+.studio-file-actions .studio-primary:hover { background: #e4f4ce; }
+.planner-studio :focus-visible { outline: 2px solid #a9c787; outline-offset: 3px; }
+.planner-studio .planner-drawer-body, .planner-studio .kp-settings { scrollbar-width: thin; scrollbar-color: #bcc8bb transparent; }
+.planner-studio .viewport-zoom, .planner-studio .viewport-more > summary, .planner-studio .viewport-extra { border-color: #d8e1d5; box-shadow: 0 4px 15px #20372c0c; border-radius: 12px; }
+.planner-studio .viewport-more[open] > summary { background: #20372c; border-color: #20372c; }
+.planner-studio .viewport-popover { border-radius: 14px; border-color: #d8e1d5; }
+.planner-studio .viewport-popover p { letter-spacing: .02em; color: #546c5c; }
+.planner-studio button { transition: background-color 140ms, border-color 140ms, color 140ms; }
+
+/* Room: a persistent project bar, with three framed workspace columns. */
+.planner-workspace.planner-studio { padding: 76px 12px 12px; gap: 12px; grid-template-columns: 286px minmax(0, 1fr) 310px; background: var(--studio-shell); }
+.room-studio-header { position: absolute; inset: 0 0 auto; z-index: 40; height: 64px; }
+.planner-studio .planner-stage { min-width: 0; min-height: 0; overflow: hidden; border: 1px solid #d9e0d4; border-radius: 18px; }
+.planner-studio .planner-drawer { border: 1px solid var(--studio-line); border-radius: 18px; background: #fff; }
+.planner-studio .planner-panel-heading { margin-bottom: 18px; font-size: 17px; }
+.planner-studio .planner-panel-heading > span { display: flex; align-items: center; gap: 9px; }
+.planner-studio .planner-panel-heading svg { color: #638a52; }
+.planner-studio .planner-panel-heading small { font-size: 11px; margin-left: 27px; color: var(--studio-muted); }
+.planner-studio .planner-search { background: #f3f6f0; border: 1px solid #e8ede4; border-radius: 11px; min-height: 44px; }
+.planner-studio .planner-search input { font-size: 12px; }
+.studio-categories { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.studio-categories button { border: 1px solid #e6ebe2; border-radius: 8px; background: #fff; min-height: 34px; padding: 7px 5px; font-size: 10px; color: #647565; }
+.studio-categories button[aria-pressed="true"] { background: #edf4e5; color: #355531; border-color: #b9ccaa; font-weight: 650; }
+.studio-catalog-scroll { overflow-x: hidden; }
+.studio-catalog-list { gap: 8px; grid-template-columns: minmax(0, 1fr); }
+.studio-catalog-list > button { min-width: 0; width: 100%; padding: 10px; border-radius: 12px; border-color: #e4e9e0; gap: 9px; }
+.studio-catalog-list > button:hover { background: #f7faf3; border-color: #b9ccaa; }
+.studio-catalog-list > button > div:first-child { background: #f1f3ed; }
+.studio-catalog-list > button > div:last-child { width: 24px; height: 24px; flex-shrink: 0; background: #edf4e5; color: #4c7043; }
+.studio-catalog-list p { font-family: inherit; }
+.studio-catalog-list p:first-child { font-size: 12px; }
+.planner-studio .planner-kitchen-library > summary { font-size: 11px; background: #f6f8f3; border: 1px dashed #c8d5bf; border-radius: 10px; }
+.planner-studio .room-environment-tabs { background: #fff; padding: 10px 8px; gap: 4px; }
+.planner-studio .room-environment-tabs button { border-radius: 10px; min-height: 58px; font-size: 9px; }
+.planner-studio .room-environment-tabs button[aria-pressed="true"] { background: #edf4e5; color: #355531; box-shadow: none; }
+.planner-studio .room-panel-intro { padding-top: 20px; }
+.planner-studio .room-panel-intro h3 { font-size: 16px; letter-spacing: -.3px; }
+.planner-studio .room-material-sample { border-radius: 10px; }
+.planner-studio .planner-view-toolbar { top: 12px; left: 12px; right: 12px; }
+.planner-studio .planner-tools-menu { margin-left: auto; }
+.planner-studio .planner-tools-popover { left: auto; right: 0; }
+.planner-studio .planner-tools-menu > summary { min-height: 50px; border-radius: 12px; }
+.planner-studio .planner-room-caption { top: 76px; left: 14px; background: #ffffffd9; border: 0; box-shadow: none; padding: 10px 12px; }
+.planner-studio .planner-room-caption strong { font-size: 12px; }
+.planner-studio .planner-room-caption span { font-size: 10px; }
+.planner-studio .planner-budget-bar { padding: 12px 14px; border-radius: 12px; border-color: #d9e2d3; }
+.planner-studio .planner-budget-bar strong { font-size: 17px; letter-spacing: -.4px; }
+.planner-studio .planner-budget-bar button:not(:disabled) { background: #20372c; color: #fff; padding: 9px 12px; border-radius: 8px; }
+.planner-studio .room-camera-guide { background: #ffffffb8; border-radius: 8px; font-size: 9px; }
+.planner-studio .planner-measure-readout { top: 142px; }
+
+/* Kitchen: same project bar and inspector, retaining its full-canvas workflow. */
+.planner-studio.kp-shell { background: var(--studio-shell); }
+.planner-studio .kp-planner-topbar { min-height: 64px; padding: 10px 20px; gap: 14px; flex-shrink: 0; }
+.planner-studio .kp-planner-brand { color: #fff; border: 0; padding-right: 0; font-size: 17px; letter-spacing: -.5px; }
+.planner-studio .kp-planner-steps { display: none; }
+.planner-studio .kp-top-actions > button, .planner-studio .kp-top-menu > summary, .planner-studio .kp-close-planner { color: #dce6de; background: #ffffff0b; border-color: #ffffff20; min-height: 40px; }
+.planner-studio .kp-top-actions > .kp-top-menu { margin: 0; }
+.planner-studio .kp-top-actions > button:hover:not(:disabled), .planner-studio .kp-top-menu > summary:hover, .planner-studio .kp-close-planner:hover { background: #ffffff19; }
+.planner-studio .kp-project-name input { background: #ffffff0b; color: #fff; border-color: #ffffff20; min-height: 40px; }
+.planner-studio .kp-top-actions > .kp-save-button { background: var(--studio-accent); color: #20372c; border-color: var(--studio-accent); font-weight: 700; }
+.planner-studio .kp-top-actions > .kp-save-button:hover:not(:disabled) { background: #e4f4ce; }
+.planner-studio .kp-top-menu .km-layout-options, .planner-studio .kp-more-content { color: var(--studio-ink); }
+.planner-studio .kp-layout { margin: 12px; border: 1px solid #d9e0d4; border-radius: 18px; }
+.planner-studio .kp-preview-bar > span { font-size: 11px; border-radius: 12px; box-shadow: none; border: 1px solid #e0e7db; }
+.planner-studio .km-view-tools { border-color: #d8e1d5; box-shadow: 0 4px 15px #20372c08; }
+.planner-studio .kp-settings { border-radius: 14px; border-color: #d8e1d5; box-shadow: 0 8px 32px #20372c12; }
+.planner-studio .kp-settings-head { border-color: var(--studio-line); background: #f4f7ef; border-radius: 10px; font-size: 14px; }
+.planner-studio .kp-settings { backdrop-filter: none; background: #fff; }
+.planner-studio .kp-settings > details { border: 1px solid #e1e7da; box-shadow: none; border-radius: 12px; background: #f8faf5; }
+.planner-studio .kp-settings > details > summary { font-size: 12px; }
+.planner-studio .studio-extras-panel { background: #fff; border-color: #e1e7da; }
+.studio-extras-panel h2 { font-size: 15px; margin-bottom: 14px; }
+.studio-extras-tabs { display: flex; gap: 4px; padding: 4px; background: #f0f4eb; border-radius: 9px; margin-bottom: 14px; }
+.planner-studio .studio-extras-tabs > button { flex: 1; font-size: 12px; min-height: 40px; border-radius: 6px; }
+.studio-extras-tabs > button[aria-pressed="true"] { background: #fff; box-shadow: 0 2px 6px #20372c0c; color: #355531; }
+.studio-extras-panel .kp-field { font-size: 11px; display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.studio-extras-panel .kp-field input { background: #f5f8f1; min-height: 42px; font-size: 14px; }
+.studio-extras-panel .km-extras-list > button { font-size: 12px; border-radius: 10px; min-width: 0; }
+.studio-extras-panel .km-extras-list > button:hover:not(:disabled) { background: #f7faf3; border-color: #b9ccaa; }
+.studio-extras-panel .km-extras-list img { width: 64px; height: 64px; flex-shrink: 0; background: #f0f4eb; }
+.studio-extras-panel .km-extras-list small { font-size: 10px; margin-top: 5px; }
+.planner-studio .kp-settings input, .planner-studio .kp-settings select { border-radius: 8px; }
+.planner-studio .kp-preview-hint, .planner-studio .km-feedback { box-shadow: none; border: 1px solid #ffffffa8; }
+@media (min-width: 761px) {
+  .planner-studio.kp-shell:has(.kp-settings.is-open) .kp-preview-bar { right: 420px; flex-wrap: wrap; }
+  .planner-studio.kp-shell:has(.kp-settings.is-open) .km-feedback { right: 420px; }
+}
+
+@media (max-width: 1390px) { .kitchen-studio-heading { display: none; } }
+@media (max-width: 1279px) {
+  .planner-workspace.planner-studio { padding: 64px 0 0; }
+  .planner-studio .planner-stage { border: 0; border-radius: 0; }
+  .planner-studio .planner-mobile-toolbar { top: 64px; min-height: 48px; background: #fff; border-color: var(--studio-line); backdrop-filter: none; }
+  .planner-studio .planner-view-toolbar { top: 60px; }
+  .planner-studio .planner-room-caption { top: 124px; }
+  .planner-studio .planner-measure-readout { top: 190px; }
+  .planner-studio .planner-drawer { top: 64px; border-radius: 0; }
+}
+@media (max-width: 760px) {
+  .studio-header { gap: 8px; padding: 0 12px; }
+  .studio-brand { font-size: 15px; }
+  .studio-heading, .studio-switch { display: none; }
+  .studio-file-actions { margin-left: auto; gap: 6px; }
+  .studio-file-actions button { min-width: 40px; padding: 8px; }
+  .studio-file-actions button > span { display: none; }
+  .planner-studio .kp-planner-topbar { padding: 8px; min-height: 60px; gap: 7px; }
+  .planner-studio .kp-top-actions { gap: 4px; }
+  .planner-studio .kp-top-actions > button, .planner-studio .kp-top-menu > summary, .planner-studio .kp-close-planner { min-height: 42px; }
+  .planner-studio .kp-layout { margin: 0; border: 0; border-radius: 0; }
+  .planner-studio .kp-preview-hint { font-size: 10px; }
+}
+@media (max-width: 359px) { .planner-studio .kp-planner-topbar { min-height: 102px; } }
+@media (prefers-reduced-motion: reduce) { .planner-studio button { transition: none; } }

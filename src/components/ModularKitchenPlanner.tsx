@@ -7,6 +7,7 @@ import { extraFromProduct, findExtraSpace, parseKitchenExtras, type KitchenExtra
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
 import { ProjectReport } from "@/features/kitchen-planner/components/ProjectReport";
 import { ViewportControls } from "@/features/planner/components/ViewportControls";
+import "@/features/planner/components/planner-studio.css";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { VersionHistory } from "@/features/kitchen-planner/components/VersionHistory";
 import { useCatalog } from "@/store/catalog";
@@ -751,7 +752,7 @@ export function ModularKitchenPlanner({
     });
   }
   return (
-    <main className="kp kp-shell">
+    <main className="kp kp-shell planner-studio">
       <header className="kp-planner-topbar">
         <Link
           href="/"
@@ -760,6 +761,7 @@ export function ModularKitchenPlanner({
         >
           <House size={18} /> <span>tavilga.mn</span>
         </Link>
+        <div className="studio-heading kitchen-studio-heading"><span>Гал тогооны студи</span><small>Зохиох · тохируулах · бүтээх</small></div>
         <nav className="kp-planner-steps" aria-label="Төлөвлөх үе шат">
           <Link href="/kitchen?new=1">Санал авах</Link>
           <span className="is-active">3D төлөвлөх</span>

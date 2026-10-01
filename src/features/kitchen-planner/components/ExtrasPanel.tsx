@@ -10,7 +10,7 @@ export function ExtrasPanel({ products, selected, room, disabled, error, loading
 }) {
   const [tab,setTab]=useState<"dining"|"extra">("dining"),[query,setQuery]=useState("");
   const options=products.filter(p=>EXTRA_CATEGORIES.includes(p.category)&&((p.category==="dining-table")===(tab==="dining"))&&p.name.toLowerCase().includes(query.toLowerCase()));
-  return <section className="kp-panel" aria-label="Dining болон нэмэлт тавилга">
+  return <section className="kp-panel studio-extras-panel" aria-label="Dining болон нэмэлт тавилга">
     {selected ? <fieldset disabled={disabled} className="km-fields"><h2>{selected.name}</h2><p>{selected.width} × {selected.height} × {selected.depth} мм</p>
       <DimensionInput label="Нэмэлт тавилгын X" value={selected.position.x} min={0} max={room.width} onCommit={x=>onChange({...selected,position:{...selected.position,x}})}/>
       <DimensionInput label="Нэмэлт тавилгын Z" value={selected.position.z} min={0} max={room.depth} onCommit={z=>onChange({...selected,position:{...selected.position,z}})}/>
@@ -22,7 +22,7 @@ export function ExtrasPanel({ products, selected, room, disabled, error, loading
         </select></label>
       </>}
       <button type="button" onClick={onDuplicate}>Нэмэлт тавилгыг хувилах</button><button type="button" onClick={onDelete}>Нэмэлт тавилгыг устгах</button>
-    </fieldset> : <><h2>Dining / Extras каталог</h2><div role="group" aria-label="Нэмэлт каталогийн төрөл"><button type="button" aria-pressed={tab==="dining"} onClick={()=>setTab("dining")}>Хоолны ширээ</button><button type="button" aria-pressed={tab==="extra"} onClick={()=>setTab("extra")}>Нэмэлт тавилга</button></div>
+    </fieldset> : <><h2>Тавилгын каталог</h2><div className="studio-extras-tabs" role="group" aria-label="Нэмэлт каталогийн төрөл"><button type="button" aria-pressed={tab==="dining"} onClick={()=>setTab("dining")}>Хоолны ширээ</button><button type="button" aria-pressed={tab==="extra"} onClick={()=>setTab("extra")}>Нэмэлт тавилга</button></div>
       <label className="kp-field">Тавилга хайх <input type="search" value={query} onChange={e=>setQuery(e.target.value)}/></label>
       {error ? <p role="alert">{error}</p> : loading ? <p role="status">Каталог ачаалж байна…</p> : !options.length ? <p>Энэ төрлийн бүтээгдэхүүн каталогт алга.</p> : null}
       <div className="km-extras-list">{options.map(product=><button type="button" key={product.id} disabled={disabled} aria-label={`Нэмэх: ${product.name}`} onClick={()=>onAdd(product)}>
