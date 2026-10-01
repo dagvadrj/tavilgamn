@@ -9,6 +9,7 @@ import {
 } from "@react-three/fiber";
 import { Edges, Grid, OrbitControls } from "@react-three/drei";
 import { useCanvasPerformance } from "./canvasPerformance";
+import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import {
   Plane,
   Vector3,
@@ -413,6 +414,7 @@ export function ModularKitchenScene(props: ModularSceneProps) {
           </p>
         }
       >
+        <CanvasDiagnostics scene="modular-kitchen" />
         <Scene {...props} />
       </Canvas>
     </SceneBoundary>

@@ -68,6 +68,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string) {
   if (pool.idle) clearTimeout(pool.idle);
   const owner = pool;
   let entry = owner.entries.get(url);
+  const cacheHit = Boolean(entry?.ready);
   if (!entry) {
     const queuedAt = performance.now();
     entry = { refs: 0, used: Date.now(), promise: Promise.resolve(null as unknown as LoadedModel) };
@@ -114,7 +115,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string) {
   }
   entry.refs++; entry.used = Date.now();
   const leased = entry; let released = false;
-  return { promise: entry.promise, release() {
+  return { promise: entry.promise, cacheHit, release() {
     if (released) return;
     released = true; leased.refs--; leased.used = Date.now(); trim(owner, renderer);
   } };

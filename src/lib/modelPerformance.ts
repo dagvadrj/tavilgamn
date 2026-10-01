@@ -8,9 +8,13 @@ export type ModelPerformanceMetric = {
   loadDecodeMs: number;
   resourceDurationMs: number | null;
   encodedBodySize: number | null;
+  totalReadyMs?: number;
+  cacheHit?: boolean;
 };
 
 const reported = new Set<string>();
+const recent: ModelPerformanceMetric[] = [];
+export function getRecentModelMetrics() { return recent.slice(); }
 
 export function reportModelPerformance(metric: ModelPerformanceMetric) {
   if (typeof window === "undefined") return;
@@ -20,11 +24,15 @@ export function reportModelPerformance(metric: ModelPerformanceMetric) {
     readyMs: Math.round(metric.readyMs),
     queueMs: Math.round(metric.queueMs),
     loadDecodeMs: Math.round(metric.loadDecodeMs),
+    totalReadyMs: metric.totalReadyMs === undefined ? undefined : Math.round(metric.totalReadyMs),
     resourceDurationMs:
       metric.resourceDurationMs === null
         ? null
         : Math.round(metric.resourceDurationMs),
   };
+
+  recent.push(detail);
+  if (recent.length > 50) recent.shift();
 
   window.dispatchEvent(
     new CustomEvent<ModelPerformanceMetric>("tavilga:model-performance", {
@@ -35,6 +43,7 @@ export function reportModelPerformance(metric: ModelPerformanceMetric) {
   const key = `${detail.variant}:${detail.asset}`;
   if (reported.has(key)) return;
   reported.add(key);
+  if (reported.size > 500) reported.delete(reported.values().next().value!);
 
   const configured = Number(
     process.env.NEXT_PUBLIC_MODEL_METRICS_SAMPLE_RATE ?? "0.1",

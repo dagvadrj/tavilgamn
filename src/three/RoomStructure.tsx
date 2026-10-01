@@ -10,6 +10,7 @@ import { openingWorldTransform } from "@/lib/roomOpenings";
 import { createWallGeometry, type WallCut } from "./wallCsg";
 import { useRoomMaterial } from "./roomMaterials";
 import { OpeningMesh } from "./OpeningMesh";
+import { animateToward } from "./demandAnimation";
 
 const WALL_THICKNESS = 0.12;
 const noRaycast = () => {};
@@ -81,12 +82,14 @@ function RoomWallMesh({ segment, ...props }: RoomStructureProps & { segment: Roo
     return pieces;
   }, [segment.length, cutKey]);
 
-  useFrame(({ camera }, delta) => {
+  useFrame(({ camera, invalidate }, delta) => {
     const mesh = meshRef.current;
     if (!mesh) return;
     const outside = (camera.position.x - x) * segment.nx + (camera.position.z - z) * segment.nz < -0.06;
     const faded = view === "plan" || outside;
-    mesh.material.opacity = THREE.MathUtils.damp(mesh.material.opacity, faded ? 0.065 : 1, 12, delta);
+    const animation = animateToward(mesh.material.opacity, faded ? 0.065 : 1, 12, delta);
+    mesh.material.opacity = animation.value;
+    if (animation.moving) invalidate();
     mesh.material.depthWrite = !faded;
     mesh.castShadow = !faded;
   });

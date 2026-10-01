@@ -3,6 +3,7 @@ import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { PerformanceDiagnosticsLoader } from "@/components/PerformanceDiagnosticsLoader";
 
 const sans = Inter({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({
         <Header />
         <main id="main-content" className="min-w-0 flex-1">{children}</main>
         <Footer />
+        <PerformanceDiagnosticsLoader />
       </body>
     </html>
   );

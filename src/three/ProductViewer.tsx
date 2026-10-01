@@ -9,6 +9,7 @@ import type { Product } from "@/lib/types";
 
 import { stockLabel } from "@/lib/inventory";
 import { useCanvasPerformance } from "./canvasPerformance";
+import { CanvasDiagnostics } from "./CanvasDiagnostics";
 
 interface ProductViewerProps {
   stockQuantity?: number | null;
@@ -55,6 +56,7 @@ export function ProductViewer({
         className="!h-full !w-full"
         frameloop={performance.autoRotate ? "always" : "demand"}
       >
+        <CanvasDiagnostics scene="product" />
         <color attach="background" args={["#EFE6D6"]} />
         <ambientLight intensity={0.55} />
         <directionalLight castShadow intensity={1.1} position={[5, 8, 5]} />

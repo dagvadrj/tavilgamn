@@ -72,6 +72,7 @@ function harness(patch = {}) {
       metrics: { queueMs: 0, loadDecodeMs: 10, resourceDurationMs: 8, encodedBodySize: 100 } });
   }
   return { props, requests, metrics, released, root, flush, resolve,
+    updateProps(patch) { Object.assign(props, patch); dirty = true; },
     get tree() { return tree; },
     primitive: () => find(tree, "primitive"),
     draw() {
@@ -172,4 +173,21 @@ test("non-deferred cabinets outside the camera still upgrade to high for whole-a
   run.resolve(1); await run.flush();
   assert.equal(run.tree.props.userData.deliveryPending, false);
   run.unmount();
+});
+
+test("deselecting a room piece does not restart its progressive loading", async () => {
+  const originalWindow = global.window;
+  global.window = { location: { origin: "https://shop.example" } };
+  const run = harness({ deferUntilVisible: true, selected: true });
+  try {
+    await run.flush(); run.resolve(0); await run.flush(); run.draw(); await run.flush();
+    run.updateProps({ selected: false });
+    await run.flush();
+    assert.equal(run.requests.length, 2);
+    run.resolve(1); await run.flush(); run.draw();
+    run.updateProps({ selected: true }); await run.flush();
+    run.updateProps({ selected: false }); await run.flush();
+    assert.equal(run.requests.length, 2, "selection changes must not reacquire the same assets");
+    assert.equal(run.tree.props.userData.deliveryPending, false);
+  } finally { run.unmount(); global.window = originalWindow; }
 });

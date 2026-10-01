@@ -7,6 +7,7 @@ import { Shape, type Texture } from "three";
 import { FINISHES, cornerFootprint, kitchenHeight, kitchenPlan, type Cabinet, type Kitchen } from "@/lib/kitchen";
 import { createKitchenTexture } from "./kitchenTextures";
 import { useCanvasPerformance } from "./canvasPerformance";
+import { CanvasDiagnostics } from "./CanvasDiagnostics";
 
 type XYZ = [number, number, number];
 type Surface = { color: string; map?: Texture | null; roughness?: number; metalness?: number };
@@ -257,6 +258,7 @@ export function KitchenViewer(props: ViewerProps) {
   return <ViewerBoundary>
     <Canvas shadows={performance.shadows} dpr={performance.dpr} frameloop="demand" camera={{ position: [3, 2, 6], fov: 38 }}
       fallback={<p className="kp-viewer-message">Энэ төхөөрөмж 3D дүрслэлийг дэмжихгүй байна. Доорх шүүгээний жагсаалтыг ашиглана уу.</p>}>
+      <CanvasDiagnostics scene="kitchen" />
       <KitchenScene {...props} />
     </Canvas>
   </ViewerBoundary>;

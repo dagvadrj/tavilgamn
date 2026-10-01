@@ -64,8 +64,10 @@ export async function POST(request: NextRequest) {
     const validBytes =
       metric?.encodedBodySize === null ||
       finite(metric?.encodedBodySize, 250 * 1024 * 1024);
+    const validTotal = metric?.totalReadyMs === undefined || finite(metric.totalReadyMs, 600_000);
+    const validCache = metric?.cacheHit === undefined || typeof metric.cacheHit === "boolean";
 
-    if (!validAsset || !validVariant || !validTiming || !validResource || !validBytes) {
+    if (!validAsset || !validVariant || !validTiming || !validResource || !validBytes || !validTotal || !validCache) {
       return Response.json({ error: "Invalid metric" }, { status: 400, headers });
     }
 
@@ -77,6 +79,8 @@ export async function POST(request: NextRequest) {
       loadDecodeMs: metric.loadDecodeMs,
       resourceDurationMs: metric.resourceDurationMs,
       encodedBodySize: metric.encodedBodySize,
+      totalReadyMs: metric.totalReadyMs,
+      cacheHit: metric.cacheHit,
     }));
     return new Response(null, { status: 204, headers });
   } catch {

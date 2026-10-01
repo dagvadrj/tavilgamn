@@ -6,6 +6,7 @@ import { Edges, Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { RoomDesign, RoomOpening } from "@/lib/types";
 import { openingWorldTransform, validateOpening, wallLength } from "@/lib/roomOpenings";
+import { animateToward } from "./demandAnimation";
 
 const noRaycast = () => {};
 type CaptureTarget = { setPointerCapture?: (id: number) => void; releasePointerCapture?: (id: number) => void };
@@ -14,8 +15,13 @@ function DoorLeaf({ width, height, hinge, swing, open }: { width: number; height
   const ref = useRef<THREE.Group>(null);
   const side = hinge === "left" ? 1 : -1;
   const angle = (open ? Math.PI * 0.47 : 0) * (swing === "inward" ? -1 : 1) * side;
-  useFrame((_, delta) => {
-    if (ref.current) ref.current.rotation.y = THREE.MathUtils.damp(ref.current.rotation.y, angle, 9, delta);
+  const invalidate = useThree(state => state.invalidate);
+  useEffect(() => { invalidate(); }, [angle, invalidate]);
+  useFrame((state, delta) => {
+    if (!ref.current) return;
+    const animation = animateToward(ref.current.rotation.y, angle, 9, delta);
+    ref.current.rotation.y = animation.value;
+    if (animation.moving) state.invalidate();
   });
   return <group ref={ref} position={[-side * width / 2, 0, -0.025]}>
     <mesh position={[side * width / 2, height / 2, 0]} castShadow receiveShadow>
@@ -123,15 +129,19 @@ export function OpeningMesh(props: OpeningMeshProps) {
     };
   }, [opening.kind, opening.templateId, selected]);
 
-  useFrame(({ camera }, delta) => {
+  useFrame(({ camera, invalidate }, delta) => {
     const normalX = Math.sin(transform.rotation), normalZ = Math.cos(transform.rotation);
     ghosted.current = props.view !== "plan" && (camera.position.x - transform.x) * normalX + (camera.position.z - transform.z) * normalZ < -0.06;
     const fade = ghosted.current ? selected ? 0.78 : 0.09 : 1;
+    let moving = false;
     for (const { mesh, material, opacity, castShadow } of visualMeshes.current) {
-      material.opacity = THREE.MathUtils.damp(material.opacity, opacity * fade, 12, delta);
+      const animation = animateToward(material.opacity, opacity * fade, 12, delta);
+      material.opacity = animation.value;
+      moving ||= animation.moving;
       material.depthWrite = !ghosted.current && !(material instanceof THREE.MeshPhysicalMaterial);
       mesh.castShadow = castShadow && !ghosted.current;
     }
+    if (moving) invalidate();
   });
 
   const projectPosition = (clientX: number, clientY: number) => {

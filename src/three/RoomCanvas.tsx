@@ -38,6 +38,7 @@ import {
   type KitchenMaterialDefinition,
 } from "@/lib/kitchenMaterials";
 import { useCanvasPerformance } from "./canvasPerformance";
+import { CanvasDiagnostics } from "./CanvasDiagnostics";
 
 interface RoomCanvasProps {
   selectedWall?: RoomWall | null;
@@ -137,6 +138,7 @@ export function RoomCanvas({
     <Canvas
       shadows={performance.shadows}
       dpr={performance.dpr}
+      frameloop="demand"
       gl={{
         antialias: true,
         alpha: false,
@@ -173,6 +175,7 @@ export function RoomCanvas({
         onSelectOpening?.(null);
       }}
     >
+      <CanvasDiagnostics scene="room" />
       <CameraRig
         view={view}
         width={spanX}
@@ -325,6 +328,7 @@ function CameraRig({
   const camera = useThree((state) => state.camera);
   const controls = useThree((state) => state.controls);
   const size = useThree((state) => state.size);
+  const invalidate = useThree((state) => state.invalidate);
 
   useEffect(() => {
     const target = new THREE.Vector3();
@@ -374,6 +378,7 @@ function CameraRig({
       orbitControls.target.copy(target);
       orbitControls.update();
     }
+    invalidate();
   }, [
     camera,
     controls,
@@ -386,6 +391,7 @@ function CameraRig({
     resetKey,
     size.width,
     size.height,
+    invalidate,
   ]);
 
   return null;

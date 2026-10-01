@@ -99,8 +99,12 @@ export function GLBFurnitureMesh({
     matrix: new THREE.Matrix4(),
     bounds: new THREE.Box3(),
   });
-  const [seen, setSeen] = useState(!deferUntilVisible);
+  const [seen, setSeen] = useState(!deferUntilVisible || selected);
   const enabled = seen || selected || !deferUntilVisible;
+  useEffect(() => {
+    // Selection can start an off-screen asset; deselection must not restart it.
+    if (enabled) setSeen(true);
+  }, [enabled]);
   useFrame(({ camera }) => {
     if ((enabled && !pendingPreviewDraw.current) || !root.current) return;
     const { frustum, matrix, bounds } = visibility.current;
@@ -145,6 +149,7 @@ export function GLBFurnitureMesh({
     let readyShown = false;
     let assetPrepared = false;
     let releaseRenderWait: (() => void) | undefined;
+    const startedAt = performance.now();
     setError(false);
     setDisplay(null);
 
@@ -241,10 +246,12 @@ export function GLBFurnitureMesh({
                 asset: new URL(url, window.location.origin).pathname,
                 variant: next.variant,
                 readyMs: performance.now() - requestedAt,
-                queueMs: asset.metrics.queueMs,
-                loadDecodeMs: asset.metrics.loadDecodeMs,
-                resourceDurationMs: asset.metrics.resourceDurationMs,
-                encodedBodySize: asset.metrics.encodedBodySize,
+                totalReadyMs: performance.now() - startedAt,
+                cacheHit: lease.cacheHit,
+                queueMs: lease.cacheHit ? 0 : asset.metrics.queueMs,
+                loadDecodeMs: lease.cacheHit ? 0 : asset.metrics.loadDecodeMs,
+                resourceDurationMs: lease.cacheHit ? 0 : asset.metrics.resourceDurationMs,
+                encodedBodySize: lease.cacheHit ? 0 : asset.metrics.encodedBodySize,
               });
               if (!readyShown) {
                 readyShown = true;
