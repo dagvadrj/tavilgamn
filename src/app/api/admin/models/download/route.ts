@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import {
   NextRequest,
   NextResponse,
@@ -53,7 +54,7 @@ export async function GET(
         kind ?? "",
       )
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "Download хүсэлт буруу байна.",
@@ -102,7 +103,7 @@ export async function GET(
       !ready ||
       typeof path !== "string"
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "Файл хараахан бэлэн болоогүй байна.",
@@ -125,7 +126,7 @@ export async function GET(
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           "GLB татах холбоос үүсгэж чадсангүй.",

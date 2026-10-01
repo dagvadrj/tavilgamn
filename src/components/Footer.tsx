@@ -1,16 +1,8 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Armchair, ArrowUpRight } from "lucide-react";
 import { CATEGORIES } from "@/lib/products";
 export function Footer() {
-  const pathname = usePathname();
-  if (
-    pathname === "/admin" ||
-    pathname.startsWith("/admin/") ||
-    pathname === "/kitchen"
-  )
-    return null;
   return (
     <footer className="store-footer">
       <div className="shop-container footer-main">

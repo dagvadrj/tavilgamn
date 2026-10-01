@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import {
   NextRequest,
   NextResponse,
@@ -234,7 +235,7 @@ export async function GET(
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           "Marketplace аналитик мэдээллийг ачаалж чадсангүй.",

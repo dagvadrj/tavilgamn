@@ -15,12 +15,12 @@ Copy `.env.example` to `.env.local`, then set `NEXT_PUBLIC_SUPABASE_URL` and
 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from Supabase Project Settings > API
 before starting. `NEXT_PUBLIC_SUPABASE_ANON_KEY` is also accepted for older
 Supabase projects. Keep `SUPABASE_SECRET_KEY` server-only.
-For orders and payments, apply both SQL migrations in `supabase/migrations/`
+For orders and payments, apply the versioned SQL migrations in `supabase/migrations/`
 and follow [checkout and payment setup](docs/checkout-setup.md).
 
 ## Stack
 
-- **Next.js 14** (App Router) + **TypeScript**
+- **Next.js 15.5** (App Router) + **TypeScript**
 - **Tailwind CSS** for styling
 - **Three.js + React Three Fiber + drei** for 3D
 - **Zustand** for state (cart, wishlist, auth, saved designs)
@@ -42,6 +42,14 @@ and follow [checkout and payment setup](docs/checkout-setup.md).
 
 ## Architecture notes
 
+Phase 1 reference: [architecture and feature dependencies](docs/architecture.md),
+[data dictionary](docs/data-dictionary.md), [role permissions](docs/role-permissions.md)
+and [verification record](docs/phase1-verification.md).
+
+Store and planner routes use separate layout groups without changing public URLs.
+Store profiles come only from `merchant_stores`; category metadata derives from
+`src/lib/catalogCategories.ts`. Both Supabase clients use generated schema types.
+
 - All product metadata and integer inventory (`in_stock`) live in Supabase `furniture_models`. `src/lib/products.ts` contains category labels and price helpers only. Apply [the catalog/inventory migration](docs/inventory-setup.md) before running this version. GLB files use the configured R2/Supabase storage.
 - Supabase authenticates users; `profiles.role` controls admin access. Cart, wishlist and room designs use per-user browser storage.
 - Orders, delivery details and item price snapshots are stored in Supabase through Next.js API routes. Prices and availability are checked on the server.
@@ -51,7 +59,7 @@ and follow [checkout and payment setup](docs/checkout-setup.md).
 
 ## Backend
 
-The active backend is `src/app/api` with Supabase. The `backend/` folder contains
-an earlier NestJS plan only; it is not an executable backend workspace.
+The active backend is `src/app/api` with Supabase. There is no separate NestJS
+backend workspace in this repository.
 
 Run `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` to validate changes.

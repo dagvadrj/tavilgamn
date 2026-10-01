@@ -1,3 +1,4 @@
+import { toJson } from "@/lib/supabase/json";
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -61,11 +62,11 @@ if (typeof modelRequested !== "boolean") {
   "save_merchant_product_v2",
   {
     p_actor: auth.userId,
-    p_data: product,
+    p_data: toJson(product),
     p_create: create,
     p_model_requested: modelRequested,
     p_expected_stock:
-      create ? null : raw.expectedStockQuantity,
+      create || raw.expectedStockQuantity === null ? null : Number(raw.expectedStockQuantity),
   },
 );
     if (error) throw error;

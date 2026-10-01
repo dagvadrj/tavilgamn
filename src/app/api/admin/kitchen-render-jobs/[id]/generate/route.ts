@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { Buffer } from "node:buffer";
 import { NextRequest, NextResponse } from "next/server";
 import { cloudinaryImageUploadConfigured, uploadCloudinaryImage } from "@/lib/cloudinaryImageUpload";
@@ -26,9 +27,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const auth = await requireAdmin(request);
     if (auth.error) return auth.error;
     actor = auth.userId;
-    if (!UUID.test(routeParams.id)) return NextResponse.json({ error: "Render job ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
+    if (!UUID.test(routeParams.id)) return apiErrorResponse({ error: "Render job ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
     if (!process.env.OPENAI_API_KEY || !cloudinaryImageUploadConfigured()) {
-      return NextResponse.json({ error: "OPENAI_API_KEY эсвэл Cloudinary тохиргоо дутуу байна." }, { status: 503, headers: kitchenPrivateHeaders });
+      return apiErrorResponse({ error: "OPENAI_API_KEY эсвэл Cloudinary тохиргоо дутуу байна." }, { status: 503, headers: kitchenPrivateHeaders });
     }
     const db = getSupabaseAdmin();
     const { data, error } = await db.rpc("claim_kitchen_render", { p_actor: actor, p_job: routeParams.id });

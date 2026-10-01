@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "./database";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const publishableKey =
@@ -9,7 +10,7 @@ const publishableKey =
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && publishableKey);
 
-export const supabase = createClient(
+export const supabase = createClient<Database>(
   supabaseUrl ?? "http://127.0.0.1:54321",
   publishableKey ?? "public-anon-key",
 );

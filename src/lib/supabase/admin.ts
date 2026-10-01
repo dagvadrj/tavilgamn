@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "./database";
 
 export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -10,7 +11,7 @@ export function getSupabaseAdmin() {
     throw new Error("Supabase environment variables тохируулагдаагүй байна.");
   }
 
-  return createClient(url, secretKey, {
+  return createClient<Database>(url, secretKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

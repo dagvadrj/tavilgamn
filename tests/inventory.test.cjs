@@ -57,7 +57,7 @@ test("contact endpoint only reports success when the database confirms storage",
 test("catalog outage leaves account and order controls available", () => {
   const React=require("react"),{renderToStaticMarkup}=require("react-dom/server");
   const state={user:{id:"fixture",name:"Fixture",email:"fixture@example.com"},role:"customer",initialized:true,initialize:async()=>{},signOut:async()=>{}};
-  const Page=loadSource("src/app/account/page.tsx",{
+  const Page=loadSource("src/app/(shop)/account/page.tsx",{
     "@/components/SavedKitchenList":{SavedKitchenList:()=>null},
     "next/navigation":{useRouter:()=>({replace(){},refresh(){}})},
     "@/store/auth":{useAuth:selector=>selector(state)},
@@ -87,6 +87,8 @@ test("furniture_models row is the sole source of catalog metadata and integer in
   const product=productFromRow(row);
   assert.equal(product.id,"old-product-link");assert.equal(product.model.id,row.id);assert.equal(product.stockQuantity,4);assert.equal(product.inStock,true);
   assert.equal(productFromRow({...row,in_stock:0}).inStock,false);
+  assert.equal(productFromRow({...row,default_color:null}).defaultColor,"oak");
+  assert.throws(()=>productFromRow({...row,default_color:null,colors:[]}),/сонголт|жагсаалт/i);
   assert.throws(()=>productFromRow({...row,in_stock:true}),/migration/i);
   for (const processing_status of ["idle", "queued", "processing", "error"]) {
     const incomplete = productFromRow({...row,processing_status,glb_path:"r2://test/source/not%20published.usdz"});

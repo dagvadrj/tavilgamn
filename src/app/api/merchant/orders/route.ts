@@ -1,3 +1,4 @@
+import { jsonArray } from "@/lib/supabase/json";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireMerchant } from "@/lib/supabase/requireMerchant";
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     if (!Number.isInteger(page) || page < 0 || page > 100000) throw new CatalogInputError("Хуудасны дугаар буруу байна.");
     const { data, error } = await getSupabaseAdmin().rpc("read_merchant_orders", { p_actor: auth.userId, p_page: page });
     if (error) throw error;
-    return NextResponse.json({ orders: (data ?? []).slice(0, 20), hasMore: (data?.length ?? 0) > 20 }, { headers: merchantHeaders });
+    return NextResponse.json({ orders: jsonArray(data).slice(0, 20), hasMore: jsonArray(data).length > 20 }, { headers: merchantHeaders });
   } catch (error) { return merchantError(error, "Захиалгуудыг ачаалж чадсангүй."); }
 }
 

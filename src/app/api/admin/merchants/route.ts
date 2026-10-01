@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           "Merchant мэдээллийг ачаалж чадсангүй.",
@@ -77,7 +78,7 @@ export async function PATCH(
       typeof body !== "object" ||
       typeof body.id !== "string"
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "Merchant мэдээлэл буруу байна.",
@@ -97,7 +98,7 @@ export async function PATCH(
       commissionBps < 300 ||
       commissionBps > 500
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "Commission 3%–5% хооронд байна.",
@@ -121,7 +122,7 @@ if (isFeatured) {
     !Number.isInteger(rank) ||
     rank < 1
   ) {
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           "Featured merchant-ийн эрэмбэ 1-ээс эхэлнэ.",
@@ -137,7 +138,7 @@ if (isFeatured) {
 }
 
     if (typeof body.active !== "boolean") {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "Merchant төлөв буруу байна.",
@@ -168,7 +169,7 @@ if (isFeatured) {
           "duplicate key",
         )
       ) {
-        return NextResponse.json(
+        return apiErrorResponse(
           {
             error:
               "Featured эрэмбэ давхцаж байна.",
@@ -190,7 +191,7 @@ if (isFeatured) {
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           "Merchant тохиргоог хадгалж чадсангүй.",

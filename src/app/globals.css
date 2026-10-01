@@ -1079,7 +1079,7 @@ button:disabled {
   html {
     scroll-padding-top: 130px;
   }
-  body {
+  .shop-shell {
     padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
   .shop-container {
@@ -1524,8 +1524,8 @@ button:disabled {
 }
 
 .room-planner-layout {
-  height: calc(100dvh - 166px);
-  min-height: 480px;
+  height: 100dvh;
+  min-height: 0;
   grid-template-columns: minmax(210px, 280px) minmax(0, 1fr) minmax(
       210px,
       270px
@@ -1538,8 +1538,8 @@ button:disabled {
 }
 @media (max-width: 767px) {
   .room-planner-layout {
-    height: calc(100dvh - 230px - env(safe-area-inset-bottom));
-    min-height: 360px;
+    height: 100dvh;
+    min-height: 0;
   }
 }
 .auth-shell {

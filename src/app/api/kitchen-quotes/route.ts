@@ -1,3 +1,4 @@
+import { jsonArray } from "@/lib/supabase/json";
 import { NextRequest, NextResponse } from "next/server";
 import { CatalogInputError } from "@/lib/catalogValidation";
 import {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     );
     if (error) throw error;
     return NextResponse.json(
-      { quotes: (data ?? []).slice(0, 20), hasMore: (data?.length ?? 0) > 20 },
+      { quotes: jsonArray(data).slice(0, 20), hasMore: jsonArray(data).length > 20 },
       { headers: kitchenPrivateHeaders },
     );
   } catch (error) {

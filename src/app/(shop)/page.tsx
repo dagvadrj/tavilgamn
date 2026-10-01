@@ -9,7 +9,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/products";
-import { STORES } from "@/lib/stores";
+import { readStoreDirectory } from "@/lib/storeDirectory";
 import { INSPIRATION } from "@/lib/reviews";
 import { readProducts } from "@/lib/catalogServer";
 import { ProductCard } from "@/components/ProductCard";
@@ -19,7 +19,8 @@ import { FeaturedMerchants } from "@/components/FeaturedMerchants";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const products = (await readProducts()).filter(hasAvailableStock);
+  const [catalog, stores] = await Promise.all([readProducts(), readStoreDirectory()]);
+  const products = catalog.filter(hasAvailableStock);
   const featured = [
     ...products.filter((p) => p.isBestSeller),
     ...products.filter((p) => !p.isBestSeller),
@@ -270,7 +271,7 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="store-grid">
-          {STORES.slice(0, 4).map((s) => (
+          {stores.slice(0, 4).map((s) => (
             <Link
               key={s.id}
               href={"/catalog/stores/" + s.id}

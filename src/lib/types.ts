@@ -1,15 +1,7 @@
 import type { KitchenSnapshot } from "./kitchenAssembly";
 import type { StoreType } from "./storeTypes";
-export type Category =
-  | "sofa"
-  | "wardrobe"
-  | "dining-table"
-  | "office"
-  | "bed"
-  | "tv-stand"
-  | "bookshelf"
-  | "kitchen-cabinet"
-  | "oven";
+export type { Category } from "./catalogCategories";
+import type { Category } from "./catalogCategories";
 
 export type Material = "wood" | "metal" | "fabric" | "leather" | "velvet";
 
@@ -222,5 +214,4 @@ export interface Store {
   categories: Category[];
   description: string;
   image: string;
-  productIds: string[];
 }

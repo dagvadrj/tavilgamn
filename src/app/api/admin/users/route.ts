@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
     const rawPage = new URL(request.url).searchParams.get("page") ?? "1";
 
     if (!/^[1-9]\d{0,5}$/.test(rawPage)) {
-      return NextResponse.json(
+      return apiErrorResponse(
         { error: "Хуудасны дугаар буруу байна." },
         { status: 400, headers },
       );
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       { error: "Хэрэглэгчдийн мэдээллийг ачаалж чадсангүй." },
       { status: 503, headers },
     );

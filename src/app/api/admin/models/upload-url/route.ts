@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { randomUUID } from "node:crypto";
 
 import {
@@ -101,7 +102,7 @@ export async function POST(
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestedModelId) &&
       !/^[a-zA-Z0-9_-]{1,100}$/.test(productId)
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "3D model эсвэл бүтээгдэхүүний ID буруу байна.",
@@ -121,7 +122,7 @@ export async function POST(
         .toLowerCase()
         .endsWith(".glb")
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "Зөвхөн GLB файл оруулна.",
@@ -137,7 +138,7 @@ export async function POST(
       size < 12 ||
       size > MAX_GLB_SIZE
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "GLB файл 200 MB-аас ихгүй байна.",
@@ -171,7 +172,7 @@ export async function POST(
     }
 
     if (!model) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "Энэ бүтээгдэхүүнд 3D model олдсонгүй.",
@@ -241,7 +242,7 @@ export async function POST(
       error,
     );
 
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           error instanceof Error

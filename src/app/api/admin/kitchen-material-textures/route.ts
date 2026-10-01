@@ -1,3 +1,5 @@
+import { toJson } from "@/lib/supabase/json";
+import { apiErrorResponse } from "@/lib/api/errors";
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -15,7 +17,7 @@ const MAX_SIZE = 8 * 1024 * 1024;
 const TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const headers = { "Cache-Control": "private, no-store" };
 const columns = "id,name,surface_kind,base_color,roughness,metalness,texture_paths,active,created_at,updated_at";
-const fail = (error: string, status: number) => NextResponse.json({ error }, { status, headers });
+const fail = (error: string, status: number) => apiErrorResponse({ error }, { status, headers });
 
 function isTextureKind(value: string): value is KitchenTextureKind {
   return (KITCHEN_TEXTURE_KINDS as readonly string[]).includes(value);
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
     const texturePaths = current.texture_paths && typeof current.texture_paths === "object" && !Array.isArray(current.texture_paths)
       ? { ...current.texture_paths as Record<string, unknown>, [kind]: url.href }
       : { [kind]: url.href };
-    const { data, error } = await db.from("material_definitions").update({ texture_paths: texturePaths })
+    const { data, error } = await db.from("material_definitions").update({ texture_paths: toJson(texturePaths) })
       .eq("id", materialId).select(columns).single();
     if (error) throw error;
     return NextResponse.json({ material: normalizeAdminKitchenMaterials([data])[0] }, { status: 201, headers });

@@ -25,22 +25,14 @@ export function Header() {
   const wishCount = useWishlist((s) => s.items.length);
   const user = useAuth((s) => s.user);
   const role = useAuth((s) => s.role);
-  const initialize = useAuth((s) => s.initialize);
   const [mounted, setMounted] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   useEffect(() => {
     setMounted(true);
-    void initialize();
-  }, [initialize]);
+  }, []);
   useEffect(() => {
     setCategoriesOpen(false);
   }, [pathname]);
-  if (
-    pathname === "/admin" ||
-    pathname.startsWith("/admin/") ||
-    pathname === "/kitchen"
-  )
-    return null;
   const accountHref = mounted && user ? "/account" : "/login";
   const links = [
     {

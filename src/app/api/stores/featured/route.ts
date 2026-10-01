@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
@@ -29,7 +30,7 @@ export async function GET() {
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           "Онцлох дэлгүүрүүдийг ачаалж чадсангүй.",

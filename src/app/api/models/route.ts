@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
@@ -47,7 +48,7 @@ export async function GET() {
   } catch (error) {
     console.error("[models/get]", error);
 
-    return NextResponse.json(
+    return apiErrorResponse(
       { error: "Мэдээлэл авахад алдаа гарлаа" },
       { status: 500 },
     );

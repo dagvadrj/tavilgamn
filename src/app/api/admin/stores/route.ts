@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { readStoreDirectory } from "@/lib/storeDirectory";
@@ -10,6 +11,6 @@ export async function GET(request: NextRequest) {
     if (auth.error) return auth.error;
     return NextResponse.json({ stores: await readStoreDirectory({ includeInactive: true }) }, { headers });
   } catch {
-    return NextResponse.json({ error: "Дэлгүүрүүдийг ачаалж чадсангүй." }, { status: 503, headers });
+    return apiErrorResponse({ error: "Дэлгүүрүүдийг ачаалж чадсангүй." }, { status: 503, headers });
   }
 }

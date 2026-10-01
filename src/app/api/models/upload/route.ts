@@ -1,3 +1,5 @@
+import { toJson } from "@/lib/supabase/json";
+import { apiErrorResponse } from "@/lib/api/errors";
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     const rawStock = formData.get("stockQuantity");
     const stockQuantity = typeof rawStock === "string" && rawStock.trim() !== "" ? Number(rawStock) : NaN;
-    if (!Number.isSafeInteger(stockQuantity) || stockQuantity < 0 || stockQuantity > 1_000_000) return NextResponse.json({ error: "Нөөцийн тоо 0–1,000,000 хооронд бүхэл тоо байна." }, { status: 400 });
+    if (!Number.isSafeInteger(stockQuantity) || stockQuantity < 0 || stockQuantity > 1_000_000) return apiErrorResponse({ error: "Нөөцийн тоо 0–1,000,000 хооронд бүхэл тоо байна." }, { status: 400 });
     const basePrice = Number(formData.get("basePrice") ?? 0);
     const scale = Number(formData.get("scale") ?? 0.001);
     const dimensionsW = Number(formData.get("dimensionsW") ?? 1);
@@ -51,14 +53,14 @@ export async function POST(request: NextRequest) {
   formData.get("thumbnail");
 
     if (!name) {
-      return NextResponse.json(
+      return apiErrorResponse(
         { error: "Загварын нэр шаардлагатай" },
         { status: 400 },
       );
     }
 
     if (!ALLOWED_CATEGORIES.has(category)) {
-      return NextResponse.json(
+      return apiErrorResponse(
         { error: "Тавилгын ангилал буруу байна" },
         { status: 400 },
       );
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
       (!["image/jpeg", "image/png", "image/webp"].includes(thumbnailFile.type) ||
         thumbnailFile.size > MAX_THUMBNAIL_SIZE)
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         { error: "Thumbnail нь JPG, PNG, WebP зураг, 10 MB-аас ихгүй байх ёстой" },
         { status: 400 },
       );
@@ -88,7 +90,7 @@ export async function POST(request: NextRequest) {
       !Number.isFinite(dimensionsH) ||
       dimensionsH <= 0
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         { error: "Үнэ, хэмжээ эсвэл scale буруу байна" },
         { status: 400 },
       );
@@ -128,8 +130,8 @@ thumbnail_path: thumbnailPath, scale,
         dimensions_w: dimensionsW,
         dimensions_d: dimensionsD,
         dimensions_h: dimensionsH,
-        colors,
-        materials,
+        colors: toJson(colors),
+        materials: toJson(materials),
         in_stock: stockQuantity,
       })
       .select()
@@ -140,7 +142,7 @@ thumbnail_path: thumbnailPath, scale,
     return NextResponse.json(model, { status: 201 });
   } catch (error) {
     if (error instanceof ModelOptionsError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return apiErrorResponse({ error: error.message }, { status: 400 });
     }
 
     if (uploadedPaths.length > 0) {
@@ -153,7 +155,7 @@ thumbnail_path: thumbnailPath, scale,
 
     console.error("[models/upload]", error);
 
-    return NextResponse.json(
+    return apiErrorResponse(
       { error: (error instanceof CloudinaryModelError) ? error.message : "Загвар upload хийхэд алдаа гарлаа" },
       { status: (error instanceof CloudinaryModelError) ? 502 : 500 },
     );

@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import {
   HeadObjectCommand,
   S3Client,
@@ -118,7 +119,7 @@ export async function POST(
         modelId,
       )
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error: "3D model ID буруу байна.",
         },
@@ -157,7 +158,7 @@ export async function POST(
         }),
       );
     } catch {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "R2 дээр upload хийсэн GLB олдсонгүй.",
@@ -175,7 +176,7 @@ export async function POST(
       bytes < 12 ||
       bytes > MAX_GLB_SIZE
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "Upload хийсэн GLB-ийн хэмжээ буруу байна.",
@@ -206,7 +207,7 @@ export async function POST(
     }
 
     if (!model) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error: "3D model олдсонгүй.",
         },
@@ -273,7 +274,7 @@ export async function POST(
       error,
     );
 
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           error instanceof Error

@@ -1,3 +1,5 @@
+import { toJson } from "@/lib/supabase/json";
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { parseKitchenMarketplaceVersion, readKitchenDesignAction } from "@/lib/kitchenMarketplace";
 import { kitchenMarketplaceError, kitchenPrivateHeaders } from "@/lib/kitchenMarketplaceHttp";
@@ -12,11 +14,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const auth = await requireMerchant(request);
     if (auth.error) return auth.error;
-    if (!UUID.test(routeParams.id)) return NextResponse.json({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
+    if (!UUID.test(routeParams.id)) return apiErrorResponse({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
     const version = parseKitchenMarketplaceVersion(await request.json().catch(() => null));
     const { data, error } = await getSupabaseAdmin().rpc("save_kitchen_marketplace_version", {
       p_actor: auth.userId, p_design: routeParams.id, p_version: version.versionId,
-      p_mode: version.mode, p_payload: version.payload,
+      p_mode: version.mode, p_payload: toJson(version.payload),
     });
     if (error) throw error;
     return NextResponse.json(data, { headers: kitchenPrivateHeaders });
@@ -30,7 +32,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   try {
     const auth = await requireMerchant(request);
     if (auth.error) return auth.error;
-    if (!UUID.test(routeParams.id)) return NextResponse.json({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
+    if (!UUID.test(routeParams.id)) return apiErrorResponse({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
     const command = readKitchenDesignAction(await request.json().catch(() => null));
     const db = getSupabaseAdmin();
     const call = command.action === "submit"

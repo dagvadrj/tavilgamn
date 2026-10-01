@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import {
   KitchenMaterialInputError,
@@ -20,7 +21,7 @@ function fail(error: unknown, fallback: string) {
       : code === "42501" ? "Admin эрх шаардлагатай."
         : code === "PGRST116" ? "Материал олдсонгүй." : fallback;
   const status = error instanceof KitchenMaterialInputError ? 400 : code === "23505" ? 409 : code === "42501" ? 403 : code === "PGRST116" ? 404 : 503;
-  return NextResponse.json({ error: message }, { status, headers });
+  return apiErrorResponse({ error: message }, { status, headers });
 }
 
 function toRow(input: ReturnType<typeof parseKitchenMaterialInput>) {

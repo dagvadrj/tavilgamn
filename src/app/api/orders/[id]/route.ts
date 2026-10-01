@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/supabase/requireUser";
@@ -12,12 +13,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .select("id,status,currency,items,subtotal,shipping,total,delivery,created_at")
       .eq("id", routeParams.id).eq("user_id", auth.userId).maybeSingle();
     if (error) throw error;
-    if (!order) return NextResponse.json({ error: "Захиалга олдсонгүй." }, { status: 404 });
+    if (!order) return apiErrorResponse({ error: "Захиалга олдсонгүй." }, { status: 404 });
     const { data: payment, error: paymentError } = await supabase.from("order_payments")
       .select("method,state,instructions").eq("order_id", routeParams.id).maybeSingle();
     if (paymentError) throw paymentError;
     return NextResponse.json({ order, payment }, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ error: "Захиалга ачаалж чадсангүй." }, { status: 503 });
+    return apiErrorResponse({ error: "Захиалга ачаалж чадсангүй." }, { status: 503 });
   }
 }

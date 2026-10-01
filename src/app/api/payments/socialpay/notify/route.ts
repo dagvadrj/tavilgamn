@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { verifyPayment, verifySocialpayNotification } from "@/lib/payments/providers";
@@ -22,6 +23,6 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Төлбөрийн мэдэгдэл баталгаажсангүй." }, { status: 503 });
+    return apiErrorResponse({ error: "Төлбөрийн мэдэгдэл баталгаажсангүй." }, { status: 503 });
   }
 }

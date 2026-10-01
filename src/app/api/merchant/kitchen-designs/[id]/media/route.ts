@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { kitchenMarketplaceError, kitchenPrivateHeaders } from "@/lib/kitchenMarketplaceHttp";
@@ -17,16 +18,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const auth = await requireMerchant(request);
     if (auth.error) return auth.error;
-    if (!UUID.test(routeParams.id)) return NextResponse.json({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
+    if (!UUID.test(routeParams.id)) return apiErrorResponse({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
     const form = await request.formData();
     const file = form.get("file");
     const versionId = form.get("versionId");
     const kind = String(form.get("kind") ?? "thumbnail");
     const isPrimary = String(form.get("isPrimary") ?? "false") === "true";
     if (!(file instanceof File) || !file.size || !TYPES.has(file.type)) throw new Error("INVALID_FILE");
-    if (file.size > MAX_SIZE) return NextResponse.json({ error: "Зураг 8 MB-аас ихгүй байна." }, { status: 413, headers: kitchenPrivateHeaders });
+    if (file.size > MAX_SIZE) return apiErrorResponse({ error: "Зураг 8 MB-аас ихгүй байна." }, { status: 413, headers: kitchenPrivateHeaders });
     if (typeof versionId !== "string" || !UUID.test(versionId) || !KINDS.has(kind)) {
-      return NextResponse.json({ error: "Зургийн мэдээлэл буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
+      return apiErrorResponse({ error: "Зургийн мэдээлэл буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
     }
 
     const db = getSupabaseAdmin();
@@ -35,16 +36,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       db.from("kitchen_design_versions").select("id").eq("id", versionId).eq("design_id", routeParams.id)
         .in("review_status", ["draft", "changes_requested"]).maybeSingle(),
     ]);
-    if (!design || !editable) return NextResponse.json({ error: "Энэ хувилбарт зураг нэмэх эрхгүй байна." }, { status: 403, headers: kitchenPrivateHeaders });
+    if (!design || !editable) return apiErrorResponse({ error: "Энэ хувилбарт зураг нэмэх эрхгүй байна." }, { status: 403, headers: kitchenPrivateHeaders });
     const { data: store } = await db.from("merchant_stores").select("id").eq("id", design.store_id)
       .eq("owner_id", auth.userId).eq("active", true).in("store_type", ["factory", "handmade"]).maybeSingle();
-    if (!store) return NextResponse.json({ error: "Энэ дэлгүүр marketplace-д загвар нийтлэх эрхгүй байна." }, { status: 403, headers: kitchenPrivateHeaders });
+    if (!store) return apiErrorResponse({ error: "Энэ дэлгүүр marketplace-д загвар нийтлэх эрхгүй байна." }, { status: 403, headers: kitchenPrivateHeaders });
 
     const cloud = process.env.CLOUDINARY_CLOUD_NAME;
     const key = process.env.CLOUDINARY_API_KEY;
     const secret = process.env.CLOUDINARY_API_SECRET;
     if (!cloud || !/^[a-zA-Z0-9_-]+$/.test(cloud) || !key || !secret) {
-      return NextResponse.json({ error: "Зураг хадгалах тохиргоо дутуу байна." }, { status: 503, headers: kitchenPrivateHeaders });
+      return apiErrorResponse({ error: "Зураг хадгалах тохиргоо дутуу байна." }, { status: 503, headers: kitchenPrivateHeaders });
     }
     const uploadParams: Record<string, string> = {
       allowed_formats: "jpg,png,webp",
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ id: mediaId, url: url.href }, { status: 201, headers: kitchenPrivateHeaders });
   } catch (error) {
     if (error instanceof Error && error.message === "INVALID_FILE") {
-      return NextResponse.json({ error: "JPG, PNG эсвэл WebP зураг сонгоно уу." }, { status: 400, headers: kitchenPrivateHeaders });
+      return apiErrorResponse({ error: "JPG, PNG эсвэл WebP зураг сонгоно уу." }, { status: 400, headers: kitchenPrivateHeaders });
     }
     return kitchenMarketplaceError(error, "Зургийг хадгалж чадсангүй.");
   }

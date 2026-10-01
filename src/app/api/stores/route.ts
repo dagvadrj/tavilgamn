@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextResponse } from "next/server";
 import { readStoreDirectory } from "@/lib/storeDirectory";
 
@@ -7,6 +8,6 @@ export async function GET() {
   try {
     return NextResponse.json({ stores: await readStoreDirectory() }, { headers });
   } catch {
-    return NextResponse.json({ error: "Дэлгүүрүүдийг ачаалж чадсангүй." }, { status: 503, headers });
+    return apiErrorResponse({ error: "Дэлгүүрүүдийг ачаалж чадсангүй." }, { status: 503, headers });
   }
 }

@@ -1,4 +1,4 @@
-.planner-workspace { background: #f1f0ed; color: #293c32; grid-template-columns: 256px minmax(0, 1fr) 292px; min-height: 580px; }
+.planner-workspace { background: #f1f0ed; color: #293c32; grid-template-columns: 256px minmax(0, 1fr) 292px; height: 100dvh; min-height: 0; }
 .planner-workspace.planner-expanded { position: fixed; inset: 0; z-index: 100; height: 100dvh; min-height: 0; }
 .planner-workspace button { touch-action: manipulation; }
 .planner-workspace button:disabled { cursor: not-allowed; opacity: .35; }
@@ -153,7 +153,7 @@
 .planner-advanced p { font-size: 12px; color: #778077; line-height: 1.9; margin-top: 12px; }
 @media (min-width: 1280px) { .planner-drawer { height: 100%; } .planner-start-hint button { display: none; } }
 @media (max-width: 1279px) {
-  .planner-workspace { display: block; height: calc(100dvh - 166px); min-height: 520px; }
+  .planner-workspace { display: block; height: 100dvh; min-height: 0; }
   .planner-drawer-closed { visibility: hidden; }
   .planner-view-toolbar { top: 58px; left: 12px; right: 12px; }
   .planner-room-caption { top: 162px; left: 16px; }
@@ -163,7 +163,7 @@
   .planner-start-hint { top: 51%; }
 }
 @media (max-width: 767px) {
-  .planner-workspace { height: calc(100dvh - 220px - env(safe-area-inset-bottom)); min-height: 510px; }
+  .planner-workspace { height: 100dvh; min-height: 0; }
   .planner-view-toolbar { gap: 4px; }
   .planner-view-toolbar button { min-width: 34px; height: 36px; }
   .planner-room-caption { top: 161px; }

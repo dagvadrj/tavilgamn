@@ -1,3 +1,5 @@
+import { toJson } from "@/lib/supabase/json";
+import { apiErrorResponse } from "@/lib/api/errors";
 import { createHash } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase/requireUser";
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
     if (auth.error) return auth.error;
     const body = parseOrderBody(await request.json());
     const supabase = getSupabaseAdmin();
-    const requestHash = createHash("sha256").update(JSON.stringify({ items: body.items, delivery: body.delivery, expectedTotal: body.expectedTotal })).digest("hex");
+    const requestHash = createHash("sha256").update(JSON.stringify({ items: body.items, delivery: toJson(body.delivery), expectedTotal: body.expectedTotal })).digest("hex");
     const findExisting = () => supabase.from("orders").select(`${FIELDS},request_hash`)
       .eq("user_id", auth.userId).eq("idempotency_key", body.idempotencyKey).maybeSingle();
     const replay = (row: Record<string, unknown>) => {
@@ -47,12 +49,12 @@ export async function POST(request: NextRequest) {
 
     const quote = await quoteOrder(body.items, supabase);
     if (quote.total !== body.expectedTotal) {
-      return NextResponse.json({ error: "Үнэ өөрчлөгдсөн байна. Шинэ үнийг шалгаад баталгаажуулна уу.", code: "PRICE_CHANGED", quote }, { status: 409, headers });
+      return apiErrorResponse({ error: "Үнэ өөрчлөгдсөн байна. Шинэ үнийг шалгаад баталгаажуулна уу.", code: "PRICE_CHANGED", quote }, { status: 409, headers });
     }
     // One row stores the order and its immutable line-item snapshot atomically.
     const { data, error } = await supabase.from("orders").insert({
       user_id: auth.userId, idempotency_key: body.idempotencyKey, request_hash: requestHash,
-      status: "pending_payment", currency: "MNT", delivery: body.delivery, ...quote,
+      status: "pending_payment", currency: "MNT", delivery: toJson(body.delivery), ...quote, items: toJson(quote.items),
     }).select(FIELDS).single();
     if (error && ["23505", "P0004", "P0005"].includes(error.code)) {
       const concurrent = await findExisting();
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (error?.code === "P0008") throw new OrderInputError("Барааны дэлгүүрийн мэдээлэл өөрчлөгдсөн байна. Сагсаа шинэчлээд дахин оролдоно уу.", 409);
     if (error?.code === "P0005") {
       const updatedQuote = await quoteOrder(body.items, supabase);
-      return NextResponse.json({ error: "Үнэ өөрчлөгдлөө. Шинэ үнийг шалгаад баталгаажуулна уу.", code: "PRICE_CHANGED", quote: updatedQuote }, { status: 409, headers });
+      return apiErrorResponse({ error: "Үнэ өөрчлөгдлөө. Шинэ үнийг шалгаад баталгаажуулна уу.", code: "PRICE_CHANGED", quote: updatedQuote }, { status: 409, headers });
     }
     if (error) throw error;
     return NextResponse.json(data, { status: 201, headers });
@@ -73,8 +75,8 @@ export async function POST(request: NextRequest) {
 }
 
 function orderError(error: unknown) {
-  if (error instanceof OrderInputError) return NextResponse.json({ error: error.message }, { status: error.status, headers });
-  if (error instanceof SyntaxError) return NextResponse.json({ error: "Хүсэлтийн бүтэц буруу байна." }, { status: 400, headers });
+  if (error instanceof OrderInputError) return apiErrorResponse({ error: error.message }, { status: error.status, headers });
+  if (error instanceof SyntaxError) return apiErrorResponse({ error: "Хүсэлтийн бүтэц буруу байна." }, { status: 400, headers });
   console.error("[orders] request failed");
-  return NextResponse.json({ error: "Захиалгын үйлчилгээ түр боломжгүй байна. Дахин оролдоно уу." }, { status: 503, headers });
+  return apiErrorResponse({ error: "Захиалгын үйлчилгээ түр боломжгүй байна. Дахин оролдоно уу." }, { status: 503, headers });
 }

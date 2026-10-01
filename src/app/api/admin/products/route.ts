@@ -1,3 +1,5 @@
+import { toJson } from "@/lib/supabase/json";
+import { apiErrorResponse } from "@/lib/api/errors";
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
@@ -67,15 +69,15 @@ async function save(request: NextRequest, create: boolean) {
     const { error } = await getSupabaseAdmin().rpc(
       "save_furniture_product",
       {
-        p_data: product,
+        p_data: toJson(product),
         p_create: create,
         p_expected_stock: create ? null : raw.expectedStockQuantity,
       },
     );
 
-    if (error?.code === "P0003") return NextResponse.json({ error: "Нөөц өөрчлөгдсөн байна. Жагсаалт руу буцаж шинэчлээд дахин засна уу." }, { status: 409, headers });
+    if (error?.code === "P0003") return apiErrorResponse({ error: "Нөөц өөрчлөгдсөн байна. Жагсаалт руу буцаж шинэчлээд дахин засна уу." }, { status: 409, headers });
     if (error?.code === "P0002") {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error: "Бараа олдсонгүй. Жагсаалтаа шинэчилнэ үү.",
         },
@@ -90,7 +92,7 @@ async function save(request: NextRequest, create: boolean) {
       { status: create ? 201 : 200, headers },
     );
   } catch (error) {
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           error instanceof CatalogInputError

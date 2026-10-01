@@ -9,7 +9,7 @@ function accountPage(deleteDesign = () => {}) {
     user: { id: "test-user", name: "Тест хэрэглэгч", email: "test@example.com" },
     initialized: true, role: "customer", initialize: async () => {},
   };
-  return loadSource("src/app/account/page.tsx", {
+  return loadSource("src/app/(shop)/account/page.tsx", {
     react: { ...React, useEffect: () => {} },
     "next/navigation": { useRouter: () => ({ replace() {} }) },
     "@/components/OrderHistory": { OrderHistory: () => null },
@@ -92,7 +92,7 @@ test("contact details use mail and phone links without placeholder email", () =>
   const { phoneHref } = loadSource("src/lib/siteContact.ts");
   assert.equal(phoneHref("+976 8844 2741"), "tel:+97688442741");
   const render = email => {
-    const Page = loadSource("src/app/about/page.tsx", {
+    const Page = loadSource("src/app/(shop)/about/page.tsx", {
       "next/image": { default: () => null },
       "@/lib/siteContact": { SITE_CONTACT: { email, phone: "+976 8844 2741" }, phoneHref },
       "@/components/ContactForm": { ContactForm: () => null },

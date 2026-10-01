@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
@@ -9,7 +10,7 @@ const MAX_SIZE = 3 * 1024 * 1024;
 const TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const headers = { "Cache-Control": "private, no-store" };
 const fail = (error: string, status: number) =>
-  NextResponse.json({ error }, { status, headers });
+  apiErrorResponse({ error }, { status, headers });
 
 export async function POST(request: NextRequest) {
   try {

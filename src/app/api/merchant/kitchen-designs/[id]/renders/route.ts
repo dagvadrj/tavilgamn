@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { readKitchenRenderRequest } from "@/lib/kitchenMarketplace";
 import { kitchenMarketplaceError, kitchenPrivateHeaders } from "@/lib/kitchenMarketplaceHttp";
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const auth = await requireMerchant(request);
     if (auth.error) return auth.error;
-    if (!UUID.test(routeParams.id)) return NextResponse.json({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
+    if (!UUID.test(routeParams.id)) return apiErrorResponse({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
     const render = readKitchenRenderRequest(await request.json().catch(() => null));
     const configuredModel = process.env.OPENAI_IMAGE_MODEL ?? "gpt-image-2.5-sunburst";
     const model = IMAGE_MODELS.has(configuredModel) ? configuredModel : "gpt-image-2.5-sunburst";

@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { apiErrorResponse } from "@/lib/api/errors";
+
 import { CatalogInputError } from "./catalogValidation";
 import { KitchenMarketplaceInputError } from "./kitchenMarketplace";
 
@@ -43,5 +44,5 @@ export function kitchenMarketplaceError(error: unknown, fallback: string) {
           : code === "P0014"
             ? 409
           : 503;
-  return NextResponse.json({ error: message }, { status, headers: kitchenPrivateHeaders });
+  return apiErrorResponse({ error: message }, { status, headers: kitchenPrivateHeaders });
 }

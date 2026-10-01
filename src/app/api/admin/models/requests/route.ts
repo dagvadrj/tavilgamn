@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import {
   NextRequest,
   NextResponse,
@@ -46,7 +47,7 @@ export async function GET(
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           "3D model хүсэлтүүдийг ачаалж чадсангүй.",

@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextResponse } from "next/server";
 import { readKitchenModuleCatalog } from "@/lib/kitchenModuleCatalogServer";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -15,6 +16,6 @@ export async function GET() {
     if (materials.error) throw materials.error;
     return NextResponse.json({ modules, materials: normalizeKitchenMaterials(materials.data) }, { headers: { "Cache-Control": "no-store" } });
   } catch {
-    return NextResponse.json({ error: "Kitchen catalog ачаалж чадсангүй." }, { status: 503 });
+    return apiErrorResponse({ error: "Kitchen catalog ачаалж чадсангүй." }, { status: 503 });
   }
 }

@@ -32,14 +32,13 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next-checkout/types/**/*.ts",
-    ".next-ui/types/**/*.ts"
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "patches",
     "model-work",
-    ".tools"
+    ".tools",
+    ".next-*/**"
   ]
 }

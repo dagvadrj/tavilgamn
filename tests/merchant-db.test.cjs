@@ -145,4 +145,35 @@ test("merchant isolation, atomic permissions and immutable order fulfillment", a
     await assert.rejects(role(admin,customer,"merchant"),{code:"42501"});
     await db.exec("reset role;");
   });
+  await t.test("architecture migration seeds platform stores without transferring ownership or breaking checkout", async () => {
+    const migration = readFileSync("supabase/migrations/20261001092640_architecture_store_directory.sql", "utf8");
+    await db.exec(migration);
+    assert.equal((await call("select count(*)::int as count from merchant_stores where owner_id is null")).count, 13);
+    const { CATEGORIES } = require("./helpers/load-source.cjs").loadSource("src/lib/catalogCategories.ts");
+    for (const category of CATEGORIES) {
+      assert.equal((await call("select is_furniture_category($1) as valid", [category.id])).valid, true);
+    }
+    assert.equal((await call("select is_furniture_category('unknown') as valid")).valid, false);
+    await call("select save_merchant_store($1,$2)", [alice, JSON.stringify({
+      ...storeData("Alice kitchen"), id: "top-mebel", owner_id: customer,
+      categories: ["kitchen-cabinet", "oven"],
+    })]);
+    assert.equal((await call("select owner_id from merchant_stores where id='top-mebel'")).owner_id, null);
+    assert.equal((await call("select owner_id from merchant_stores where id=$1", [sa.id])).owner_id, alice);
+    await call("select save_furniture_product($1,true)", [JSON.stringify(product("platform-product", {
+      storeIds: ["top-mebel", "mebel-town"],
+    }))]);
+    const order = await checkout([line("platform-product")]);
+    assert.equal((await call("select count(*)::int as count from merchant_order_fulfillments where order_id=$1", [order])).count, 0);
+    await call("update merchant_stores set name='Updated by admin' where id='top-mebel'");
+    await db.exec(migration);
+    assert.equal((await call("select name from merchant_stores where id='top-mebel'")).name, "Updated by admin");
+    assert.equal((await call("select count(*)::int as count from merchant_stores where owner_id is null")).count, 13);
+    await db.exec("set role anon");
+    assert.equal((await db.query("select id,name from merchant_stores")).rows.length, 15);
+    await assert.rejects(db.query("select owner_id from merchant_stores"), { code: "42501" });
+    await assert.rejects(db.exec("update merchant_stores set owner_id=null where id='top-mebel'"), { code: "42501" });
+    await assert.rejects(call("select save_merchant_store($1,$2)", [alice, JSON.stringify(storeData("attack"))]), { code: "42501" });
+    await db.exec("reset role");
+  });
 });

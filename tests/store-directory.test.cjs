@@ -3,7 +3,6 @@ const assert = require("node:assert/strict");
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
 const { loadSource } = require("./helpers/load-source.cjs");
-const { STORES } = loadSource("src/lib/stores.ts");
 
 function merchantRow(id, overrides = {}) {
   return {
@@ -40,14 +39,13 @@ function directoryHarness(rows = [], errors = new Map()) {
   return { queries, ...loadSource("src/lib/storeDirectory.ts", { "./supabase/admin": { getSupabaseAdmin: () => db } }) };
 }
 
-test("public directory preserves existing stores, excludes inactive merchants and private account fields", async () => {
+test("public directory reads only database stores, excludes inactive rows and private account fields", async () => {
   const harness = directoryHarness([
     merchantRow("merchant-visible"), merchantRow("merchant-hidden", { active: false }),
     merchantRow("merchant-invalid", { store_type: "admin" }),
   ]);
   const directory = await harness.readStoreDirectory();
-  for (const store of STORES) assert.deepEqual(directory.find(item => item.id === store.id), store);
-  assert.equal(directory.length, STORES.length + 1);
+  assert.equal(directory.length, 1);
   const visible = directory.find(store => store.id === "merchant-visible");
   assert.equal(visible.storeType, "handmade");
   assert.deepEqual(visible.categories, ["sofa", "bookshelf"]);
@@ -66,7 +64,7 @@ test("directory pagination keeps all stores beyond a response limit and filters 
   rows[1].categories = null;
   const harness = directoryHarness(rows);
   const directory = await harness.readStoreDirectory();
-  assert.equal(directory.length, STORES.length + 1001);
+  assert.equal(directory.length, 1001);
   assert.equal(new Set(directory.map(store => store.id)).size, directory.length);
   assert.deepEqual(directory.find(store => store.id === rows[0].id).categories, ["sofa"]);
   assert.deepEqual(directory.find(store => store.id === rows[1].id).categories, []);
@@ -85,12 +83,9 @@ test("admin directory can include inactive stores while public detail lookup can
   assert.equal(await harness.readDirectoryStore("unknown-store"), undefined);
 });
 
-test("only a not-yet-migrated table falls back to existing stores; outages remain errors", async () => {
-  for (const code of ["42P01", "PGRST205"]) {
-    const harness = directoryHarness([], new Map([[0, { code, message: "not migrated" }]]));
-    assert.deepEqual(await harness.readStoreDirectory(), STORES);
-  }
-  for (const code of ["42501", "PGRST301", "ECONNRESET", "XX000"]) {
+test("missing schema and outages remain errors, never a second static source", async () => {
+  assert.deepEqual(await directoryHarness().readStoreDirectory(), []);
+  for (const code of ["42P01", "PGRST205", "42501", "PGRST301", "ECONNRESET", "XX000"]) {
     const error = { code, message: "database error" };
     const harness = directoryHarness([], new Map([[0, error]]));
     await assert.rejects(harness.readStoreDirectory(), failure => failure === error);

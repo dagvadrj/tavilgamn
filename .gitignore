@@ -60,7 +60,13 @@ logs/
 .DS_Store
 Thumbs.db
 
-/docs/
+# Architecture documentation is versioned; other existing feature notes stay local.
+/docs/*
+!/docs/architecture.md
+!/docs/data-dictionary.md
+!/docs/role-permissions.md
+!/docs/phase1-verification.md
+!/docs/phase1-file-changes.md
 /patches/
 /model-work/
 /.tools/

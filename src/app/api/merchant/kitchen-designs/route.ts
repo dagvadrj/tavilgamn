@@ -1,3 +1,4 @@
+import { toJson } from "@/lib/supabase/json";
 import { NextRequest, NextResponse } from "next/server";
 import { parseKitchenMarketplaceDraft } from "@/lib/kitchenMarketplace";
 import { kitchenMarketplaceError, kitchenPrivateHeaders } from "@/lib/kitchenMarketplaceHttp";
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
       p_actor: auth.userId,
       p_source_id: draft.sourceKitchenId,
       p_slug: draft.slug,
-      p_payload: draft.payload,
+      p_payload: toJson(draft.payload),
     });
     if (error) throw error;
     return NextResponse.json(data, { status: 201, headers: kitchenPrivateHeaders });

@@ -1,15 +1,18 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import "server-only";
 import type { Store } from "./types";
-import { NextResponse } from "next/server";
+
 import { CatalogInputError } from "./catalogValidation";
 import { parseMerchantStore } from "./merchantValidation";
+import { jsonObject } from "./supabase/json";
 
 export const merchantHeaders = { "Cache-Control": "private, no-store" };
 
-export function merchantStoreFromRow(row: Record<string, unknown>): Store {
+export function merchantStoreFromRow(value: unknown): Store {
+  const row = jsonObject(value);
   return {
     ...parseMerchantStore({ ...row, storeType: row.store_type }),
-    id: String(row.id), productIds: [],
+    id: String(row.id),
   };
 }
 
@@ -23,5 +26,5 @@ export function merchantError(error: unknown, fallback: string) {
     : code === "P0015" ? "Үнийн хүсэлтийн төлөв өөрчлөгдсөн байна. Жагсаалтаа шинэчилнэ үү."
     : fallback;
   const status = error instanceof CatalogInputError ? 400 : code === "42501" ? 403 : code === "P0002" ? 404 : code === "P0003" || code === "P0009" || code === "P0015" ? 409 : 503;
-  return NextResponse.json({ error: message }, { status, headers: merchantHeaders });
+  return apiErrorResponse({ error: message }, { status, headers: merchantHeaders });
 }

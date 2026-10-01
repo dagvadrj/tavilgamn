@@ -1,6 +1,5 @@
 import "server-only";
 import { getSupabaseAdmin } from "./supabase/admin";
-import { STORES } from "./stores";
 import { isStoreType } from "./storeTypes";
 import { CATEGORIES } from "./products";
 import type { Category, Store } from "./types";
@@ -17,8 +16,6 @@ export async function readStoreDirectory({ includeInactive = false }: { includeI
     if (!includeInactive) query = query.eq("active", true);
     const { data, error } = await query.order("id").range(offset, offset + 499);
     if (error) {
-      // The existing directory stays available during an additive migration rollout.
-      if (error.code === "42P01" || error.code === "PGRST205") return [...STORES];
       throw error;
     }
     for (const row of data ?? []) {
@@ -29,14 +26,11 @@ export async function readStoreDirectory({ includeInactive = false }: { includeI
         phone: row.phone, description: row.description, image: row.image,
         categories: Array.isArray(row.categories)
           ? row.categories.filter((value: unknown): value is Category => CATEGORIES.some(category => category.id === value)) : [],
-        productIds: [],
       });
     }
     if (!data || data.length < 500) break;
   }
-  const directory = new Map(STORES.map(store => [store.id, store]));
-  for (const store of merchants) directory.set(store.id, store);
-  return [...directory.values()];
+  return merchants;
 }
 
 export async function readDirectoryStore(id: string): Promise<Store | undefined> {

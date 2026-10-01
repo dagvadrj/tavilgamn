@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
@@ -23,14 +24,14 @@ export async function DELETE(
 .maybeSingle();
 if (findError) throw findError;
 if (!model) { 
-  return NextResponse.json({ error: "Загвар олдсонгүй" }, { status: 404 },);
+  return apiErrorResponse({ error: "Загвар олдсонгүй" }, { status: 404 },);
 }
 const {error: deleteError} = await supabase
 .from("furniture_models")
 .delete()
 .eq("id", routeParams.id);
 
-if (deleteError?.code === "P0007") return NextResponse.json({error:"Захиалгад орсон барааг устгах боломжгүй. Барааны үлдэгдлийг шинэчилнэ үү."},{status:409});
+if (deleteError?.code === "P0007") return apiErrorResponse({error:"Захиалгад орсон барааг устгах боломжгүй. Барааны үлдэгдлийг шинэчилнэ үү."},{status:409});
 if (deleteError) throw deleteError;
 
 const storagePaths = [
@@ -51,7 +52,7 @@ if (storagePaths.length > 0) {
 return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[models/delete]", error);
-    return NextResponse.json(
+    return apiErrorResponse(
       { error: "Загвар устгахад алдаа гарлаа" },
       { status: 500 },
     );

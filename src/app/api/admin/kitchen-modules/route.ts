@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { KitchenModuleInputError, parseKitchenModelDelete, parseKitchenVariantInput, parseVariantState } from "@/lib/kitchenModuleCatalog";
 import { readKitchenModelCandidates, readKitchenModuleCatalog } from "@/lib/kitchenModuleCatalogServer";
@@ -21,7 +22,7 @@ const fail = (error: unknown, fallback: string) => {
     : code === "42501" ? "Admin эрх шаардлагатай."
       : code === "P0002" ? "Module эсвэл model олдсонгүй."
         : code === "22023" ? invalidVariant : fallback;
-  return NextResponse.json({ error: message }, { status: error instanceof KitchenModuleInputError || code === "22023" ? 400 : code === "42501" ? 403 : code === "P0002" ? 404 : 503, headers });
+  return apiErrorResponse({ error: message }, { status: error instanceof KitchenModuleInputError || code === "22023" ? 400 : code === "42501" ? 403 : code === "P0002" ? 404 : 503, headers });
 };
 
 export async function GET(request: NextRequest) {
@@ -66,7 +67,7 @@ export async function DELETE(request: NextRequest) {
       .select("id,category,glb_path,source_glb_path,preview_glb_path,standard_glb_path,thumbnail_path")
       .eq("id", modelId).maybeSingle();
     if (modelError) throw modelError;
-    if (!model) return NextResponse.json({ error: "Kitchen GLB олдсонгүй." }, { status: 404, headers });
+    if (!model) return apiErrorResponse({ error: "Kitchen GLB олдсонгүй." }, { status: 404, headers });
     if (model.category !== "kitchen-cabinet") throw new KitchenModuleInputError("Зөвхөн kitchen GLB устгаж болно.");
 
     const { data: variants, error: variantReadError } = await db.from("kitchen_module_variants")
@@ -79,7 +80,7 @@ export async function DELETE(request: NextRequest) {
     if (deleteError || !deleted) {
       if (variants?.length) await db.from("kitchen_module_variants").insert(variants);
       if (deleteError) throw deleteError;
-      return NextResponse.json({ error: "Kitchen GLB олдсонгүй." }, { status: 404, headers });
+      return apiErrorResponse({ error: "Kitchen GLB олдсонгүй." }, { status: 404, headers });
     }
 
     const storedPaths = [model.glb_path, model.source_glb_path,

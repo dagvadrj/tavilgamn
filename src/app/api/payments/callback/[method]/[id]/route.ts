@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
@@ -29,7 +30,7 @@ async function callback(request: NextRequest, { params }: { params: Promise<{ me
     }
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Төлбөр баталгаажуулахад алдаа гарлаа." }, { status: 503 });
+    return apiErrorResponse({ error: "Төлбөр баталгаажуулахад алдаа гарлаа." }, { status: 503 });
   }
 }
 export const GET = callback;

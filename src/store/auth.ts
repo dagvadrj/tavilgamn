@@ -40,6 +40,7 @@ interface AuthState {
 }
 
 let authListenerStarted = false;
+let initialization: Promise<void> | null = null;
 
 const toAppUser = (user: SupabaseUser): User => ({
   id: user.id,
@@ -86,43 +87,38 @@ async function resolveAuthUser(user: SupabaseUser | null) {
   };
 }
 
-export const useAuth = create<AuthState>((set) => ({
+export const useAuth = create<AuthState>((set, get) => ({
   user: null,
   role: null,
   initialized: false,
 
-  initialize: async () => {
-    if (!isSupabaseConfigured) {
-      setLocalDataOwner(null);
-      set({ user: null, role: null, initialized: true });
-      return;
-    }
-    const { data } = await supabase.auth.getSession();
-    const resolved = await resolveAuthUser(
-      data.session?.user ?? null,
-    );
+  initialize: () => {
+    if (get().initialized && (authListenerStarted || !isSupabaseConfigured)) return Promise.resolve();
+    if (initialization) return initialization;
+    initialization = (async () => {
+      if (!isSupabaseConfigured) {
+        setLocalDataOwner(null);
+        set({ user: null, role: null, initialized: true });
+        return;
+      }
+      const { data } = await supabase.auth.getSession();
+      const resolved = await resolveAuthUser(data.session?.user ?? null);
+      set({ ...resolved, initialized: true });
 
-    set({
-      ...resolved,
-      initialized: true,
+      if (!authListenerStarted) {
+        authListenerStarted = true;
+        supabase.auth.onAuthStateChange((_event, session) => {
+          window.setTimeout(() => {
+            void resolveAuthUser(session?.user ?? null).then((nextAuth) => {
+              set({ ...nextAuth, initialized: true });
+            });
+          }, 0);
+        });
+      }
+    })().finally(() => {
+      initialization = null;
     });
-
-    if (!authListenerStarted) {
-      authListenerStarted = true;
-
-      supabase.auth.onAuthStateChange((_event, session) => {
-        window.setTimeout(() => {
-          void resolveAuthUser(session?.user ?? null).then(
-            (nextAuth) => {
-              set({
-                ...nextAuth,
-                initialized: true,
-              });
-            },
-          );
-        }, 0);
-      });
-    }
+    return initialization;
   },
 
   signIn: async (email, password = "") => {

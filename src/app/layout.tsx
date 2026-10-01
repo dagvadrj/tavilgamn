@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { PerformanceDiagnosticsLoader } from "@/components/PerformanceDiagnosticsLoader";
+import { AuthBootstrap } from "@/components/AuthBootstrap";
 
 const sans = Inter({
   subsets: ["latin"],
@@ -33,10 +32,9 @@ export default function RootLayout({
   return (
     <html lang="mn" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen flex flex-col">
+        <AuthBootstrap />
         <a href="#main-content" className="skip-link">Үндсэн агуулга руу очих</a>
-        <Header />
-        <main id="main-content" className="min-w-0 flex-1">{children}</main>
-        <Footer />
+        {children}
         <PerformanceDiagnosticsLoader />
       </body>
     </html>

@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import {
   NextRequest,
   NextResponse,
@@ -50,7 +51,7 @@ export async function POST(
       !body ||
       !modelId(body.modelId)
     ) {
-      return NextResponse.json(
+      return apiErrorResponse(
         {
           error:
             "Model ID буруу байна.",
@@ -83,7 +84,7 @@ export async function POST(
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           "Standard GLB export эхлүүлж чадсангүй.",
@@ -116,8 +117,8 @@ export async function GET(
         "modelId",
       );
 
-    if (!modelId(id)) {
-      return NextResponse.json(
+    if (!id || !modelId(id)) {
+      return apiErrorResponse(
         {
           error:
             "Model ID буруу байна.",
@@ -166,7 +167,7 @@ export async function GET(
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       {
         error:
           "Export төлөвийг уншиж чадсангүй.",

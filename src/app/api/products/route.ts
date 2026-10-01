@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextResponse } from "next/server";
 import { readProducts } from "@/lib/catalogServer";
 
@@ -12,7 +13,7 @@ export async function GET() {
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       { error: "Тавилгын мэдээллийг ачаалж чадсангүй." },
       { status: 503, headers },
     );

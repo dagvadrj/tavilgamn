@@ -1,3 +1,4 @@
+import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { cloudinaryModelAsset } from "@/lib/cloudinaryModels";
@@ -13,7 +14,7 @@ export async function GET(
   if (!/^[0-9a-f-]{36}$/i.test(routeParams.id) || routeParams.filename.length !== 1 ||
       !/^[a-zA-Z0-9._-]+$/.test(routeParams.filename[0]) ||
       [".", ".."].includes(routeParams.filename[0])) {
-    return NextResponse.json({ error: "Файлын зам буруу байна." }, { status: 400, headers });
+    return apiErrorResponse({ error: "Файлын зам буруу байна." }, { status: 400, headers });
   }
   try {
     const db = getSupabaseAdmin();
@@ -29,7 +30,7 @@ export async function GET(
       (value): value is string => typeof value === "string" && value.split("/").pop() === routeParams.filename[0],
     );
     if (!path) {
-      return NextResponse.json({ error: "Файл олдсонгүй." }, { status: 404, headers });
+      return apiErrorResponse({ error: "Файл олдсонгүй." }, { status: 404, headers });
     }
     if (r2ModelKey(path)) {
       const upstream = await fetch(await r2DownloadUrl(path), {
@@ -58,6 +59,6 @@ export async function GET(
     return NextResponse.redirect(destination, { status: 307, headers });
   } catch (error) {
     console.error("[model file]", routeParams.id, routeParams.filename[0], error);
-    return NextResponse.json({ error: "Файлыг ачаалж чадсангүй." }, { status: 503, headers });
+    return apiErrorResponse({ error: "Файлыг ачаалж чадсангүй." }, { status: 503, headers });
   }
 }
