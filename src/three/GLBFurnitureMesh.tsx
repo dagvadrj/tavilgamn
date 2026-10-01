@@ -19,6 +19,7 @@ import {
   type LoadedModel,
 } from "./modelLoader";
 import { reportModelPerformance } from "@/lib/modelPerformance";
+import { useCameraMotionPreview } from "./CameraMotionPreview";
 
 export interface GLBFurnitureMeshProps {
   modelId: string;
@@ -64,6 +65,12 @@ function releaseDisplay(display: Display) {
   display.release();
 }
 
+function raycastVisibleVariant(this: THREE.Object3D) {
+  // Three.js raycasting does not automatically skip invisible descendants.
+  // Returning false stops recursion into the inactive, retained GLB.
+  if (!this.visible) return false;
+}
+
 function applyTextureSet(
   material: THREE.MeshStandardMaterial,
   textures: KitchenMaterialTextureSet,
@@ -92,6 +99,8 @@ export function GLBFurnitureMesh({
   onError,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
+  const motionPreview = useCameraMotionPreview();
+  const retainPreview = motionPreview !== null;
   const root = useRef<THREE.Group>(null);
   const pendingPreviewDraw = useRef<(() => void) | undefined>(undefined);
   const visibility = useRef({
@@ -127,6 +136,7 @@ export function GLBFurnitureMesh({
   const callbacks = useRef({ onReady, onError });
   callbacks.current = { onReady, onError };
   const [display, setDisplay] = useState<Display | null>(null);
+  const [previewDisplay, setPreviewDisplay] = useState<Display | null>(null);
   const owned = useRef(new Set<Display>());
 
   const [error, setError] = useState(false);
@@ -152,6 +162,7 @@ export function GLBFurnitureMesh({
     const startedAt = performance.now();
     setError(false);
     setDisplay(null);
+    setPreviewDisplay(null);
 
     const loadStage = async (file: string, stageKey: string, final: boolean) => {
       const url = base + file;
@@ -264,6 +275,7 @@ export function GLBFurnitureMesh({
         transferred = true;
         assetPrepared = true;
         owned.current.add(next);
+        if (!final && retainPreview) setPreviewDisplay(next);
         setDisplay(next);
         // Let preview reach the screen before even a cached high can replace it.
         if (!final) await rendered;
@@ -312,17 +324,18 @@ export function GLBFurnitureMesh({
     carcassColor,
     frontTexturePaths,
     carcassTexturePaths,
+    retainPreview,
   ]);
 
   useEffect(() => {
     // Cached low/high promises may settle in the same React batch. Release even
     // clones whose intermediate state never reached a commit.
     for (const item of owned.current)
-      if (item !== display) {
+      if (item !== display && !(retainPreview && item === previewDisplay)) {
         releaseDisplay(item);
         owned.current.delete(item);
       }
-  }, [display]);
+  }, [display, previewDisplay, retainPreview]);
   useEffect(() => {
     const items = owned.current;
     return () => {
@@ -338,10 +351,17 @@ export function GLBFurnitureMesh({
   const size = ready?.asset.bounds.getSize(new THREE.Vector3());
   const origin = ready?.asset.bounds.getCenter(new THREE.Vector3());
   const valid = size && origin && Math.min(size.x, size.y, size.z) > 1e-9;
+  const retainedPreview = previewDisplay?.key === previewKey ? previewDisplay : null;
+  const previewSize = retainedPreview?.asset.bounds.getSize(new THREE.Vector3());
+  const previewOrigin = retainedPreview?.asset.bounds.getCenter(new THREE.Vector3());
+  const hasRetainedPreview = ready?.variant === "high" && previewSize && previewOrigin &&
+    Math.min(previewSize.x, previewSize.y, previewSize.z) > 1e-9;
+  const showingMotionPreview = Boolean(motionPreview && hasRetainedPreview);
   return (
-    <group ref={root} userData={{ deliveryPending: !ready || ready.variant !== "high" }}>
+    <group ref={root} userData={{ deliveryPending: !ready || ready.variant !== "high" || showingMotionPreview }}>
       {ready && valid ? (
-        <group scale={[w / size.x, h / size.y, d / size.z]} dispose={null}>
+        <group scale={[w / size.x, h / size.y, d / size.z]} visible={!showingMotionPreview}
+          raycast={raycastVisibleVariant} dispose={null}>
           <primitive
             object={ready.asset.scene}
             position={[-origin.x, -ready.asset.bounds.min.y, -origin.z]}
@@ -358,6 +378,14 @@ export function GLBFurnitureMesh({
           />
           <Edges color="#6b7e68" />
         </mesh>
+      )}
+      {hasRetainedPreview && retainedPreview && (
+        <group scale={[w / previewSize.x, h / previewSize.y, d / previewSize.z]}
+          visible={showingMotionPreview} raycast={raycastVisibleVariant} userData={{ exportExclude: true }} dispose={null}>
+          <primitive object={retainedPreview.asset.scene}
+            position={[-previewOrigin.x, -retainedPreview.asset.bounds.min.y, -previewOrigin.z]}
+            dispose={null} />
+        </group>
       )}
       {enabled && (!ready || error) && (
         <Html position={[0, h + 0.1, 0]} center zIndexRange={[8, 0]}>

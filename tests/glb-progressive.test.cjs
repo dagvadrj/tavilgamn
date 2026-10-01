@@ -8,6 +8,7 @@ const { loadSource } = require("./helpers/load-source.cjs");
 function harness(patch = {}) {
   const slots = [], requests = [], metrics = [], released = [];
   let cursor = 0, dirty = true, effects = [], frame, tree;
+  let motion = null;
   const renderer = {}, root = new THREE.Group();
   const props = { modelId: "model", basePath: "/models/", glbFile: "high.glb",
     previewGlbFile: "preview.glb", w: 2, h: 1, d: 1, ...patch };
@@ -31,6 +32,7 @@ function harness(patch = {}) {
     "@react-three/drei": { Edges: () => null, Html: () => null },
     "./kitchenMaterialTextures": { acquireKitchenMaterialTextures: () => ({ promise: Promise.resolve({}), release() {} }) },
     "@/lib/modelPerformance": { reportModelPerformance: metric => metrics.push(metric) },
+    "./CameraMotionPreview": { useCameraMotionPreview: () => motion },
     "./modelLoader": {
       acquireModel(_renderer, url) {
         let resolve, reject;
@@ -57,6 +59,7 @@ function harness(patch = {}) {
   }
   function find(element, type) {
     if (!React.isValidElement(element)) return null;
+    if (element.props.visible === false) return null;
     if (element.type === type) return element;
     for (const child of React.Children.toArray(element.props.children)) {
       const match = find(child, type); if (match) return match;
@@ -73,6 +76,7 @@ function harness(patch = {}) {
   }
   return { props, requests, metrics, released, root, flush, resolve,
     updateProps(patch) { Object.assign(props, patch); dirty = true; },
+    motion(value) { motion = value; dirty = true; },
     get tree() { return tree; },
     primitive: () => find(tree, "primitive"),
     draw() {
@@ -109,6 +113,101 @@ test("preview draws before high starts, high swaps at identical size/origin and 
     assert.deepEqual(run.released, ["/models/preview.glb"]);
   } finally { run.unmount(); global.window = originalWindow; }
   assert.deepEqual(run.released, ["/models/preview.glb", "/models/high.glb"]);
+});
+
+test("camera motion reuses retained preview and high without new leases, clones or metrics", async () => {
+  const originalWindow = global.window;
+  global.window = { location: { origin: "https://shop.example" } };
+  const run = harness(); run.motion(false);
+  try {
+    await run.flush(); run.resolve(0); await run.flush();
+    const preview = run.primitive().props.object;
+    run.draw(); await run.flush(); run.resolve(1); await run.flush(); run.draw();
+    const high = run.primitive().props.object;
+    assert.notEqual(high, preview);
+    assert.deepEqual(run.released, [], "both leases stay pinned while the viewer is mounted");
+    for (let i = 0; i < 10; i++) {
+      run.motion(true); await run.flush(); run.draw();
+      assert.equal(run.primitive().props.object, preview);
+      assert.equal(run.tree.props.userData.deliveryPending, true, "never export a motion preview");
+      run.motion(false); await run.flush(); run.draw();
+      assert.equal(run.primitive().props.object, high);
+      assert.equal(run.tree.props.userData.deliveryPending, false);
+    }
+    assert.equal(run.requests.length, 2);
+    assert.deepEqual(run.metrics.map(metric => metric.variant), ["preview", "high"]);
+  } finally { run.unmount(); global.window = originalWindow; }
+  assert.deepEqual(run.released.sort(), ["/models/high.glb", "/models/preview.glb"]);
+});
+
+test("models without a preview stay on high during camera motion", async () => {
+  const run = harness({ previewGlbFile: undefined }); run.motion(false);
+  await run.flush(); run.resolve(0); await run.flush();
+  const high = run.primitive().props.object;
+  run.motion(true); await run.flush();
+  assert.equal(run.primitive().props.object, high);
+  assert.equal(run.tree.props.userData.deliveryPending, false);
+  assert.equal(run.requests.length, 1);
+  run.unmount();
+});
+
+test("hidden retained variants are excluded from pointer raycasting", async () => {
+  const originalWindow = global.window;
+  global.window = { location: { origin: "https://shop.example" } };
+  const run = harness(); run.motion(false);
+  try {
+    await run.flush(); run.resolve(0); await run.flush(); run.draw();
+    await run.flush(); run.resolve(1); await run.flush();
+    for (const moving of [true, false]) {
+      run.motion(moving); await run.flush();
+      const variants = run.tree.props.children.slice(0, 2);
+      const root = new THREE.Group();
+      let hits = 0;
+      variants.forEach(element => {
+        const branch = new THREE.Group();
+        branch.visible = element.props.visible;
+        branch.raycast = element.props.raycast;
+        const mesh = new THREE.Mesh(); mesh.raycast = () => { hits++; };
+        branch.add(mesh); root.add(branch);
+      });
+      new THREE.Raycaster().intersectObject(root, true);
+      assert.equal(hits, 1, "pointer events must visit only the active variant");
+    }
+  } finally { run.unmount(); global.window = originalWindow; }
+});
+
+test("retained motion geometry cannot leak into a kitchen export", async () => {
+  const { snapshotKitchen } = loadSource("src/three/kitchenExport.ts");
+  const originalWindow = global.window;
+  global.window = { location: { origin: "https://shop.example" } };
+  const run = harness(); run.motion(false);
+  const mountTree = element => {
+    if (!React.isValidElement(element)) return null;
+    const object = element.type === "primitive" ? element.props.object :
+      element.type === "group" ? new THREE.Group() : null;
+    if (!object) return null;
+    if (element.props.visible !== undefined) object.visible = element.props.visible;
+    if (element.props.userData) object.userData = element.props.userData;
+    for (const child of React.Children.toArray(element.props.children)) {
+      const next = mountTree(child); if (next) object.add(next);
+    }
+    return object;
+  };
+  try {
+    await run.flush(); run.resolve(0); await run.flush();
+    run.primitive().props.object.name = "Preview";
+    run.draw(); await run.flush(); run.resolve(1); await run.flush();
+    run.primitive().props.object.name = "Delivery";
+    run.motion(true); await run.flush();
+    const movingRoot = mountTree(run.tree); movingRoot.userData.kitchenExport = true;
+    assert.throws(() => snapshotKitchen(movingRoot), /Бүрэн чанартай/);
+    run.motion(false); await run.flush();
+    const idleRoot = mountTree(run.tree); idleRoot.userData.kitchenExport = true;
+    const snapshot = snapshotKitchen(idleRoot);
+    assert.ok(snapshot.scene.getObjectByName("Delivery"));
+    assert.equal(snapshot.scene.getObjectByName("Preview"), undefined);
+    snapshot.dispose();
+  } finally { run.unmount(); global.window = originalWindow; }
 });
 
 test("a failed preview falls back to high; unmount prevents pending requests from starting another stage", async () => {

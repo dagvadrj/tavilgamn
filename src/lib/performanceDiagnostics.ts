@@ -13,6 +13,8 @@ export type CanvasMetric = {
   dpr: number;
   heapMiB: number | null;
   loop: string;
+  cameraMotionFrames?: number;
+  motionTriangles?: number | null;
 };
 
 export function performanceDiagnosticsEnabled() {

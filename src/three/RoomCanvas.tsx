@@ -39,6 +39,7 @@ import {
 } from "@/lib/kitchenMaterials";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
+import { CameraMotionPreview } from "./CameraMotionPreview";
 
 interface RoomCanvasProps {
   selectedWall?: RoomWall | null;
@@ -175,6 +176,7 @@ export function RoomCanvas({
         onSelectOpening?.(null);
       }}
     >
+      <CameraMotionPreview>
       <CanvasDiagnostics scene="room" />
       <CameraRig
         view={view}
@@ -305,6 +307,7 @@ export function RoomCanvas({
           maxDistance={Math.max(40, Math.max(design.width, design.depth) * 8)}
         />
       )}
+      </CameraMotionPreview>
     </Canvas>
   );
 }

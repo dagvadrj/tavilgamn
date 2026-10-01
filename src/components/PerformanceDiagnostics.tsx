@@ -36,6 +36,7 @@ export function PerformanceDiagnostics() {
         <p>Дүрслэлт/сек: {latest.renderFps} · Идэвхтэй FPS ≈ {latest.activeFps ?? "—"}</p>
         <p>Draw calls: {latest.drawCalls} · Triangle: {latest.triangles.toLocaleString()}</p>
         <p>Geometry: {latest.geometries} · Texture: {latest.textures} · JS: {latest.heapMiB ?? "—"} MB</p>
+        <p>Камер хөдөлсөн кадр: {latest.cameraMotionFrames ?? 0} · Хөдөлгөөнд triangle: {latest.motionTriangles?.toLocaleString() ?? "—"}</p>
       </> : "Хэмжиж байна…"}
     </output>
     <ul className="my-2 space-y-1" data-testid="model-performance">
