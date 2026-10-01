@@ -267,10 +267,10 @@ async function cleanupPublishedSource(modelId, jobId, sourcePath) {
 async function cleanupOneReadySource() {
   const { data, error } = await db
     .from("furniture_models")
-    .select("id,processing_job_id,source_glb_path,glb_path,low_glb_path")
+    .select("id,processing_job_id,source_glb_path,glb_path,preview_glb_path")
     .eq("processing_status", "ready")
     .not("source_glb_path", "is", null)
-    .not("low_glb_path", "is", null)
+    .not("preview_glb_path", "is", null)
     .limit(1);
   if (error) throw error;
   const model = data?.[0];
@@ -284,10 +284,10 @@ async function cleanupOneReadySource() {
   }
   const { highKey } = previewReference(model, R2_BUCKET_NAME, model.processing_job_id);
   const previewPrefix = `r2://${R2_BUCKET_NAME}/models/${model.id}/delivery/`;
-  const previewTail = model.low_glb_path?.slice(previewPrefix.length);
+  const previewTail = model.preview_glb_path?.slice(previewPrefix.length);
   const match = typeof previewTail === "string" && previewTail.match(/^([0-9a-f-]{36})\/preview-([0-9a-f-]{36})\.glb$/i);
-  if (!model.low_glb_path?.startsWith(previewPrefix) || !match || match[1] !== match[2] || !isUuid(match[1])) return false;
-  for (const key of [highKey, model.low_glb_path.slice(`r2://${R2_BUCKET_NAME}/`.length)]) {
+  if (!model.preview_glb_path?.startsWith(previewPrefix) || !match || match[1] !== match[2] || !isUuid(match[1])) return false;
+  for (const key of [highKey, model.preview_glb_path.slice(`r2://${R2_BUCKET_NAME}/`.length)]) {
     const object = await r2.send(new HeadObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key }));
     if (!object.ContentLength) throw new Error("Delivery asset is missing or empty; preserving source.");
   }
@@ -427,12 +427,7 @@ async function processJob(model) {
       .update({
         glb_path: deliveryPath,
 
-        // Kept during the schema transition for older admin/export code.
-        high_glb_path: deliveryPath,
-
-        medium_glb_path: null,
-
-        low_glb_path: previewPath,
+        preview_glb_path: previewPath,
 
         standard_glb_path: null,
 

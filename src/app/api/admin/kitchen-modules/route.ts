@@ -63,7 +63,7 @@ export async function DELETE(request: NextRequest) {
     const { modelId } = parseKitchenModelDelete(await request.json().catch(() => null));
     const db = getSupabaseAdmin();
     const { data: model, error: modelError } = await db.from("furniture_models")
-      .select("id,category,glb_path,source_glb_path,high_glb_path,medium_glb_path,low_glb_path,standard_glb_path,thumbnail_path")
+      .select("id,category,glb_path,source_glb_path,preview_glb_path,standard_glb_path,thumbnail_path")
       .eq("id", modelId).maybeSingle();
     if (modelError) throw modelError;
     if (!model) return NextResponse.json({ error: "Kitchen GLB олдсонгүй." }, { status: 404, headers });
@@ -82,8 +82,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Kitchen GLB олдсонгүй." }, { status: 404, headers });
     }
 
-    const storedPaths = [model.glb_path, model.source_glb_path, model.high_glb_path, model.medium_glb_path,
-      model.low_glb_path, model.standard_glb_path, model.thumbnail_path]
+    const storedPaths = [model.glb_path, model.source_glb_path,
+      model.preview_glb_path, model.standard_glb_path, model.thumbnail_path]
       .filter((value): value is string => typeof value === "string" && value.length > 0);
     let warning: string | null = null;
     try { await removeStoredModelFiles(db, storedPaths); }

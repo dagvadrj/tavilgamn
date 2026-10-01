@@ -24,7 +24,7 @@ export async function GET() {
       description: model.description,
       basePrice: Number(model.base_price),
       glbFile: fileNameFromPath(model.glb_path),
-      previewGlbFile: fileNameFromPath(model.low_glb_path) || undefined,
+      previewGlbFile: fileNameFromPath(model.preview_glb_path) || undefined,
       thumbnailFile: fileNameFromPath(model.thumbnail_path),
       scale: Number(model.scale),
       dimensionsW: Number(model.dimensions_w),
@@ -39,7 +39,10 @@ export async function GET() {
     }));
 
     return NextResponse.json(models, {
-      headers: { "Cache-Control": "no-store" },
+      headers: {
+        "Cache-Control": "no-store",
+        "X-Model-Delivery-Schema": "preview-v1",
+      },
     });
   } catch (error) {
     console.error("[models/get]", error);

@@ -93,5 +93,5 @@ test("furniture_models row is the sole source of catalog metadata and integer in
     assert.equal(incomplete.model, undefined);
     assert.equal(incomplete.name, row.name);
   }
-  assert.equal(productFromRow({...row,low_glb_path:"r2://test/preview.glb"}).model.previewFile,"preview.glb");
+  assert.equal(productFromRow({...row,preview_glb_path:"r2://test/preview.glb"}).model.previewFile,"preview.glb");
 });

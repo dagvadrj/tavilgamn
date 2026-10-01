@@ -119,9 +119,7 @@ export async function POST(request: NextRequest) {
         base_price: Math.round(basePrice),
         glb_path: null,
 source_glb_path: null,
-high_glb_path: null,
-medium_glb_path: null,
-low_glb_path: null,
+preview_glb_path: null,
 
 processing_status: "idle",
 processing_error: null,

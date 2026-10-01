@@ -28,7 +28,8 @@ type ModelRequest = {
 
   sourcePath: string | null;
 
-  highPath: string | null;
+  deliveryPath: string | null;
+  previewPath: string | null;
 };
 
 function requestStatus(request: ModelRequest) {

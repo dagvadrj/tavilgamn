@@ -112,13 +112,13 @@ async function build(model) {
     publishAttempted = true;
     const { data, error } = await db
       .from("furniture_models")
-      .update({ low_glb_path: previewPath })
+      .update({ preview_glb_path: previewPath })
       .eq("id", model.id)
       .eq("processing_job_id", model.processing_job_id)
       .eq("processing_status", "ready")
       .eq("glb_path", model.glb_path)
-      .is("low_glb_path", null)
-      .select("id,low_glb_path");
+      .is("preview_glb_path", null)
+      .select("id,preview_glb_path");
     if (error) throw error;
     if (!Array.isArray(data) || data.length !== 1) throw new Error("STALE_MODEL");
 
@@ -131,7 +131,7 @@ async function build(model) {
     let unused = !publishAttempted;
     if (uploaded && publishAttempted) {
       const check = await db.from("furniture_models")
-        .select("id").eq("low_glb_path", previewPath).limit(1);
+        .select("id").eq("preview_glb_path", previewPath).limit(1);
       unused = !check.error && Array.isArray(check.data) && check.data.length === 0;
     }
     if (uploaded && unused) {
@@ -148,9 +148,9 @@ async function build(model) {
 try {
   const { data, error } = await db
     .from("furniture_models")
-    .select("id,name,glb_path,low_glb_path,processing_job_id,processing_status")
+    .select("id,name,glb_path,preview_glb_path,processing_job_id,processing_status")
     .eq("processing_status", "ready")
-    .is("low_glb_path", null)
+    .is("preview_glb_path", null)
     .order("processing_updated_at", { ascending: true })
     .limit(limit);
   if (error) throw error;

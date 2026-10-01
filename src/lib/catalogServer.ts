@@ -3,12 +3,12 @@ import type { Product } from "./types";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { parseProduct } from "./catalogValidation";
 
-export const FURNITURE_ORDER_FIELDS = "id,product_id,name,category,description,base_price,image_url,thumbnail_path,glb_path,low_glb_path,processing_status,scale,dimensions_w,dimensions_d,dimensions_h,colors,materials,default_color,in_stock,rating,review_count,badges,is_new,is_best_seller,store_ids";
+export const FURNITURE_ORDER_FIELDS = "id,product_id,name,category,description,base_price,image_url,thumbnail_path,glb_path,preview_glb_path,processing_status,scale,dimensions_w,dimensions_d,dimensions_h,colors,materials,default_color,in_stock,rating,review_count,badges,is_new,is_best_seller,store_ids";
 export const FURNITURE_FIELDS = `${FURNITURE_ORDER_FIELDS},images`;
 export type FurnitureRow = {
   id: string; product_id: string; name: string; category: string; description: string;
   base_price: number | string; image_url: string | null; images?: string[] | null; thumbnail_path: string | null;
-  glb_path: string | null; low_glb_path?: string | null; processing_status: string; scale: number; dimensions_w: number; dimensions_d: number; dimensions_h: number;
+  glb_path: string | null; preview_glb_path?: string | null; processing_status: string; scale: number; dimensions_w: number; dimensions_d: number; dimensions_h: number;
   colors: Product["colors"]; materials: Product["materials"]; default_color: string | null;
   in_stock: number | null; rating: number; review_count: number; badges: string[];
   is_new: boolean; is_best_seller: boolean; store_ids: string[];
@@ -29,7 +29,7 @@ export function productFromRow(row: FurnitureRow): Product {
   });
   if (row.glb_path && row.processing_status === "ready") {
     const file = row.glb_path.split("/").pop()!;
-    const previewFile = row.low_glb_path?.split("/").pop();
+    const previewFile = row.preview_glb_path?.split("/").pop();
     if (!/^[0-9a-f-]{36}$/i.test(row.id) || !/^[a-zA-Z0-9._-]+$/.test(file) || (previewFile && !/^[a-zA-Z0-9._-]+$/.test(previewFile)) || !Number.isFinite(Number(row.scale)) || Number(row.scale) <= 0) throw new Error("Invalid model reference");
     product.model = {id: row.id, file, ...(previewFile ? { previewFile } : {}), scale: Number(row.scale)};
   }
