@@ -63,6 +63,7 @@ export function ProductViewer({
             modelId={model.id}
             basePath={`/api/models/files/${model.id}/`}
             glbFile={model.file}
+            previewGlbFile={model.previewFile}
             w={dimensions.w}
             d={dimensions.d}
             h={dimensions.h}

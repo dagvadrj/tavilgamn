@@ -21,7 +21,7 @@ export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}
   if (variantError) throw variantError;
   const modelIds = [...new Set((variantRows ?? []).map((row) => row.furniture_model_id as string))];
   const { data: modelRows, error: modelError } = modelIds.length
-    ? await db.from("furniture_models").select("id,product_id,name,category,glb_path,source_glb_path,thumbnail_path,processing_status").in("id", modelIds)
+    ? await db.from("furniture_models").select("id,product_id,name,category,glb_path,low_glb_path,source_glb_path,thumbnail_path,processing_status").in("id", modelIds)
     : { data: [], error: null };
   if (modelError) throw modelError;
   const models = new Map((modelRows ?? []).map((row) => [row.id as string, row]));
@@ -37,6 +37,7 @@ export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}
       configuration: row.configuration as Record<string, unknown>, isDefault: Boolean(row.is_default),
       sortOrder: Number(row.sort_order), active: Boolean(row.active), glbFile: file(kitchenGlbPath),
       glbUrl: assetUrl(model.id as string, kitchenGlbPath), thumbnailUrl: assetUrl(model.id as string, model.thumbnail_path),
+      previewGlbFile: file(model.low_glb_path), previewGlbUrl: assetUrl(model.id as string, model.low_glb_path),
       processingStatus: String(model.processing_status ?? "idle"),
     };
     variants.set(row.module_id as string, [...(variants.get(row.module_id as string) ?? []), value]);

@@ -8,6 +8,7 @@ export interface DbModelInfo {
   description: string;
   basePrice: number;
   glbFile: string;
+  previewGlbFile?: string;
   thumbnailFile: string;
   scale: number;
   dimensionsW: number;

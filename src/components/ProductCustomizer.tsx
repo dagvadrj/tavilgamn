@@ -58,7 +58,12 @@ export function ProductCustomizer({ product }: { product: Product }) {
   }, []);
   useEffect(() => {
     if (!product.model) return;
-    void prefetchModel(modelDeliveryUrl(product.model.id, product.model.file));
+    void prefetchModel(
+      modelDeliveryUrl(
+        product.model.id,
+        product.model.previewFile ?? product.model.file,
+      ),
+    );
   }, [product.model]);
   useEffect(() => {
     setAdded(false);

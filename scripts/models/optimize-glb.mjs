@@ -231,6 +231,21 @@ async function main() {
         type: "string",
         default: "4000000",
       },
+
+      "preview-triangles": {
+        type: "string",
+        default: "80000",
+      },
+
+      "preview-texture-size": {
+        type: "string",
+        default: "512",
+      },
+
+      "preview-only": {
+        type: "boolean",
+        default: false,
+      },
     },
   });
 
@@ -252,12 +267,26 @@ async function main() {
 
   const maxTriangles = Number(values["max-triangles"]);
 
+  const previewTriangles = Number(values["preview-triangles"]);
+
+  const previewTextureSize = Number(values["preview-texture-size"]);
+
+  const previewOnly = values["preview-only"];
+
   if (![512, 1024, 2048, 4096].includes(size)) {
     throw new Error("texture-size must be 512/1024/2048/4096");
   }
 
   if (!Number.isInteger(maxTriangles) || maxTriangles < 10000) {
     throw new Error("max-triangles must be an integer >= 10000");
+  }
+
+  if (!Number.isInteger(previewTriangles) || previewTriangles < 10000) {
+    throw new Error("preview-triangles must be an integer >= 10000");
+  }
+
+  if (![256, 512, 1024].includes(previewTextureSize)) {
+    throw new Error("preview-texture-size must be 256/512/1024");
   }
 
   const env = Object.fromEntries(
@@ -331,15 +360,21 @@ async function main() {
           `(actual: ${triangles.toLocaleString()})`,
       );
     }
-    const validation = JSON.parse(
-      await readFile(
-        path.join(path.dirname(file), "geometry-report.json"),
-        "utf8",
-      ),
-    );
-
-    if (!validation.delivery?.passed || !validation.preservedGeometry) {
-      throw new Error(`${file}: delivery geometry validation has not passed`);
+    if (previewOnly) {
+      if (!(json.extensionsUsed ?? []).some(extension =>
+        ["EXT_meshopt_compression", "KHR_draco_mesh_compression"].includes(extension))) {
+        throw new Error(`${file}: preview-only input must be a compressed delivery GLB`);
+      }
+    } else {
+      const validation = JSON.parse(
+        await readFile(
+          path.join(path.dirname(file), "geometry-report.json"),
+          "utf8",
+        ),
+      );
+      if (!validation.delivery?.passed || !validation.preservedGeometry) {
+        throw new Error(`${file}: delivery geometry validation has not passed`);
+      }
     }
   }
 
@@ -368,18 +403,17 @@ async function main() {
           `(actual: ${triangles.toLocaleString()})`,
       );
     }
-    const validation = JSON.parse(
-      await readFile(
-        path.join(path.dirname(file), "geometry-report.json"),
-        "utf8",
-      ),
-    );
-
-    if (!validation.delivery?.passed || !validation.preservedGeometry) {
-      throw new Error(`${file}: delivery geometry validation has not passed`);
+    if (!previewOnly) {
+      const validation = JSON.parse(
+        await readFile(
+          path.join(path.dirname(file), "geometry-report.json"),
+          "utf8",
+        ),
+      );
+      if (!validation.delivery?.passed || !validation.preservedGeometry) {
+        throw new Error(`${file}: delivery geometry validation has not passed`);
+      }
     }
-    const filename = "delivery.glb";
-
     const relative = path.relative(inputRoot, path.dirname(file));
 
     const destination = path.join(output, relative);
@@ -388,165 +422,169 @@ async function main() {
       recursive: true,
     });
 
-    const result = path.join(destination, filename);
+    for (const variant of previewOnly ? ["preview"] : ["delivery", "preview"]) {
+      const result = path.join(destination, `${variant}.glb`);
 
-    try {
-      await stat(result);
-
-      throw new Error(`Refusing to overwrite ${result}`);
-    } catch (error) {
-      if (error.code !== "ENOENT") {
-        throw error;
+      try {
+        await stat(result);
+        throw new Error(`Refusing to overwrite ${result}`);
+      } catch (error) {
+        if (error.code !== "ENOENT") throw error;
       }
-    }
 
-    const work = await mkdtemp(path.join(output, ".encode-"));
+      const work = await mkdtemp(path.join(output, ".encode-"));
 
-    try {
-      let stage = file;
-      let step = 0;
+      try {
+        let stage = file;
+        let step = 0;
+        const transform = async (command, args = []) => {
+          const next = path.join(work, `${++step}.glb`);
+          await run(process.execPath, [cli, command, stage, next, ...args], env);
+          stage = next;
+        };
 
-      const transform = async (command, args = []) => {
-        const next = path.join(work, `${++step}.glb`);
+        await transform("dedup");
+        await transform("prune");
 
-        await run(process.execPath, [cli, command, stage, next, ...args], env);
+        if (variant === "preview" && !json.scenes?.[json.scene ?? 0]?.extras?.pipelineBounds) {
+          // Legacy deliveries have no authored bounds. Capture their decoded
+          // bounds before simplification so the preview fits exactly like high.
+          const [{ NodeIO }, { ALL_EXTENSIONS }, { getBounds }] = await Promise.all([
+            import("@gltf-transform/core"),
+            import("@gltf-transform/extensions"),
+            import("@gltf-transform/functions"),
+          ]);
+          const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
+          const document = await io.read(stage);
+          for (const scene of document.getRoot().listScenes()) {
+            scene.setExtras({ ...scene.getExtras(), pipelineBounds: getBounds(scene) });
+          }
+          const next = path.join(work, `${++step}.glb`);
+          await io.write(next, document);
+          stage = next;
+        }
 
-        stage = next;
-      };
+        if (variant === "preview" && triangles > previewTriangles) {
+          await transform("weld");
+          await transform("simplify", [
+            "--ratio",
+            String(previewTriangles / triangles),
+            "--error",
+            "0.02",
+            "--lock-border",
+            "true",
+          ]);
+          await transform("prune");
+        }
 
-      await transform("dedup");
-      await transform("prune");
+        const texturesAlreadyKtx2 = (json.images ?? []).every(
+          (image) => image.mimeType === "image/ktx2",
+        );
+        if (json.images?.length && !texturesAlreadyKtx2) {
+          const textureLimit =
+            variant === "preview" ? previewTextureSize : size;
+          await transform("resize", [
+            "--width",
+            String(textureLimit),
+            "--height",
+            String(textureLimit),
+          ]);
+          await transform("etc1s", [
+            "--quality",
+            variant === "preview" ? "128" : "192",
+            "--compression",
+            variant === "preview" ? "5" : "4",
+            "--jobs",
+            "4",
+          ]);
+        }
 
-      // --------------------------------
-      // Texture optimization
-      // --------------------------------
-
-      if (json.images?.length) {
-        const textureLimit = size;
-
-        await transform("resize", [
-          "--width",
-          String(textureLimit),
-          "--height",
-          String(textureLimit),
+        await transform("meshopt", [
+          "--level",
+          "high",
+          "--quantize-position",
+          "14",
+          "--quantize-normal",
+          "10",
+          "--quantize-texcoord",
+          "12",
         ]);
 
-        await transform("etc1s", [
-          "--quality",
-          "192",
-          "--compression",
-          "4",
-          "--jobs",
-          "4",
-        ]);
-      }
+        const final = await readFile(stage);
+        const info = readGlb(final);
+        const failedTextures = (info.images ?? [])
+          .map((image, index) => ({
+            index,
+            name: image.name ?? null,
+            mimeType: image.mimeType ?? null,
+          }))
+          .filter((image) => image.mimeType !== "image/ktx2");
 
-      // --------------------------------
-      // Meshopt is the single geometry codec used by the web delivery asset.
-      // --------------------------------
+        if (failedTextures.length) {
+          throw new Error(
+            `Some textures were not converted to KTX2: ${JSON.stringify(failedTextures)}`,
+          );
+        }
+        if (
+          json.images?.length &&
+          !(info.extensionsUsed ?? []).includes("KHR_texture_basisu")
+        ) {
+          throw new Error(
+            "KHR_texture_basisu extension is missing after KTX2 compression",
+          );
+        }
+        if (!(info.extensionsUsed ?? []).includes("EXT_meshopt_compression")) {
+          throw new Error(
+            "EXT_meshopt_compression extension is missing after Meshopt compression",
+          );
+        }
 
-      await transform("meshopt", [
-        "--level",
-        "high",
+        await run(process.execPath, [cli, "validate", stage], env);
+        await writeFile(result, final, { flag: "wx" });
 
-        "--quantize-position",
-        "14",
+        const entry = {
+          source: path.relative(inputRoot, file),
+          file: path.relative(output, result),
+          variant,
+          beforeBytes: before.length,
+          afterBytes: final.length,
+          reductionPercent: Number(
+            (100 * (1 - final.length / before.length)).toFixed(2),
+          ),
+          triangles: triangleCount(info),
+          targetTriangles: variant === "preview" ? previewTriangles : triangles,
+          extensions: info.extensionsUsed,
+          atlas: atlasAudit(json),
+        };
 
-        "--quantize-normal",
-        "10",
-        "--quantize-texcoord",
-        "12",
-      ]);
+        if (variant === "preview" && entry.triangles > previewTriangles * 1.1) {
+          console.warn(
+            `[preview-warning] simplifier retained ${entry.triangles.toLocaleString()} triangles ` +
+              `(target ${previewTriangles.toLocaleString()})`,
+          );
+        }
 
-      const final = await readFile(stage);
-
-      const info = readGlb(final);
-
-      const failedTextures = (info.images ?? [])
-        .map((image, index) => ({
-          index,
-          name: image.name ?? null,
-          mimeType: image.mimeType ?? null,
-        }))
-        .filter((image) => image.mimeType !== "image/ktx2");
-
-      if (failedTextures.length) {
-        throw new Error(
-          `Some textures were not converted to KTX2: ${JSON.stringify(
-            failedTextures,
-          )}`,
+        report.push(entry);
+        await writeFile(
+          path.join(output, "compression-report.json"),
+          JSON.stringify(report, null, 2),
         );
-      }
-      if (!(info.extensionsUsed ?? []).includes("KHR_texture_basisu")) {
-        throw new Error(
-          "KHR_texture_basisu extension is missing after KTX2 compression",
+        console.log(
+          `[compressed:${variant}] ${entry.source}: ` +
+            `${(before.length / 1048576).toFixed(2)} -> ` +
+            `${(final.length / 1048576).toFixed(2)} MiB ` +
+            `(${entry.reductionPercent}%) => ${entry.file}`,
         );
+      } finally {
+        const resolvedWork = path.resolve(work);
+        if (
+          !resolvedWork.startsWith(output + path.sep) ||
+          !path.basename(work).startsWith(".encode-")
+        ) {
+          throw new Error("Unsafe temporary directory");
+        }
+        await rm(work, { recursive: true, force: true });
       }
-      if (!(info.extensionsUsed ?? []).includes("EXT_meshopt_compression")) {
-        throw new Error(
-          "EXT_meshopt_compression extension is missing after Meshopt compression",
-        );
-      }
-
-      // Validator may warn about
-      // Meshopt/KTX2 extensions, but
-      // non-zero exit remains failure.
-      await run(process.execPath, [cli, "validate", stage], env);
-
-      await writeFile(result, final, {
-        flag: "wx",
-      });
-
-      const entry = {
-        source: path.relative(inputRoot, file),
-
-        file: path.relative(output, result),
-
-        variant: "delivery",
-
-        beforeBytes: before.length,
-
-        afterBytes: final.length,
-
-        reductionPercent: Number(
-          (100 * (1 - final.length / before.length)).toFixed(2),
-        ),
-
-        triangles: triangleCount(info),
-
-        extensions: info.extensionsUsed,
-
-        atlas: atlasAudit(json),
-      };
-
-      report.push(entry);
-
-      await writeFile(
-        path.join(output, "compression-report.json"),
-        JSON.stringify(report, null, 2),
-      );
-
-      console.log(
-        `[compressed] ${entry.source}: ` +
-          `${(before.length / 1048576).toFixed(2)} -> ` +
-          `${(final.length / 1048576).toFixed(2)} MiB ` +
-          `(${entry.reductionPercent}%) ` +
-          `=> ${entry.file}`,
-      );
-    } finally {
-      const resolvedWork = path.resolve(work);
-
-      if (
-        !resolvedWork.startsWith(output + path.sep) ||
-        !path.basename(work).startsWith(".encode-")
-      ) {
-        throw new Error("Unsafe temporary directory");
-      }
-
-      await rm(work, {
-        recursive: true,
-        force: true,
-      });
     }
   }
 }

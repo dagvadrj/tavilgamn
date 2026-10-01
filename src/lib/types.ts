@@ -37,6 +37,7 @@ export interface Product {
   model?: {
     id: string;
     file: string;
+    previewFile?: string;
     scale: number;
   };
   reviewCount: number;

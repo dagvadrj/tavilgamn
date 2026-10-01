@@ -15,6 +15,7 @@
     "models:fetch": "node --env-file=.env.local scripts/models/fetch-r2.mjs",
     "models:fetch:2": "node --env-file=.env.local scripts/models/fetch-r2.mjs --output=model-work/source --limit=2",
     "models:worker": "node --env-file=.env.local scripts/models/worker.mjs",
+    "models:backfill-previews": "node --env-file=.env.local scripts/models/backfill-previews.mjs",
     "predev": "npm run models:decoders",
     "prebuild": "npm run models:decoders",
     "dev": "next dev",

@@ -82,10 +82,16 @@ test("cards and the 3D viewer display numeric inventory including zero", () => {
 });
 test("furniture_models row is the sole source of catalog metadata and integer inventory", () => {
   const {productFromRow}=loadSource("src/lib/catalogServer.ts");
-  const row={id:"12345678-1234-4234-8234-123456789abc",product_id:"old-product-link",name:"Fixture",category:"sofa",description:"",base_price:100,image_url:"/test.jpg",glb_path:"r2://test/models/fixture/model.glb",scale:1,
+  const row={id:"12345678-1234-4234-8234-123456789abc",product_id:"old-product-link",name:"Fixture",category:"sofa",description:"",base_price:100,image_url:"/test.jpg",glb_path:"r2://test/models/fixture/model.glb",processing_status:"ready",scale:1,
     dimensions_w:1,dimensions_d:1,dimensions_h:1,colors:[{id:"oak",name:"Oak",hex:"#123456"}],materials:[{id:"wood",name:"Wood",priceDelta:0}],default_color:"oak",in_stock:4};
   const product=productFromRow(row);
   assert.equal(product.id,"old-product-link");assert.equal(product.model.id,row.id);assert.equal(product.stockQuantity,4);assert.equal(product.inStock,true);
   assert.equal(productFromRow({...row,in_stock:0}).inStock,false);
   assert.throws(()=>productFromRow({...row,in_stock:true}),/migration/i);
+  for (const processing_status of ["idle", "queued", "processing", "error"]) {
+    const incomplete = productFromRow({...row,processing_status,glb_path:"r2://test/source/not%20published.usdz"});
+    assert.equal(incomplete.model, undefined);
+    assert.equal(incomplete.name, row.name);
+  }
+  assert.equal(productFromRow({...row,low_glb_path:"r2://test/preview.glb"}).model.previewFile,"preview.glb");
 });

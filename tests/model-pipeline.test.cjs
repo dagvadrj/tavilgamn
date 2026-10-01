@@ -66,20 +66,28 @@ test("3D canvas quality protects mobile and constrained devices", () => {
   );
 });
 
-test("delivery model assets stay single-file", () => {
+test("delivery model assets expose preview first and preserve the high model", () => {
   const high = "model-11111111-2222-4333-8444-555555555555.glb";
+  const preview = "preview-11111111-2222-4333-8444-555555555555.glb";
 
-  assert.deepEqual(modelLodFiles(high), {
+  assert.deepEqual(modelLodFiles(high, preview), {
     high,
+    preview,
   });
 
   assert.equal(modelLodFiles("high.obj"), null);
+  assert.equal(modelLodFiles(high, "preview.obj"), null);
 
-  const path = `r2://bucket/models/${id}/delivery/${id}/model-${id}.glb`;
+  const highPath = `r2://bucket/models/${id}/delivery/${id}/model-${id}.glb`;
+  const previewPath = `r2://bucket/models/${id}/delivery/${id}/preview-${id}.glb`;
 
-  assert.deepEqual(modelAssetPaths(path), [path]);
+  assert.deepEqual(modelAssetPaths(highPath, previewPath), [
+    highPath,
+    previewPath,
+  ]);
 
   assert.equal(chooseModelLod(), "high");
+  assert.equal(chooseModelLod(true), "preview");
 });
 
 test("R2 model validation accepts the direct kitchen source GLB", () => {
@@ -93,6 +101,7 @@ test("R2 model validation accepts the direct kitchen source GLB", () => {
 });
 
 test("R2 model validation accepts only job-addressed delivery GLBs", () => {
+  assert.equal(r2ModelKey(`r2://bucket/models/${id}/lod/${id}/low.glb`), `models/${id}/lod/${id}/low.glb`);
   const delivery =
     `r2://bucket/models/${id}/delivery/${id}/model-${id}.glb`;
 
@@ -102,11 +111,74 @@ test("R2 model validation accepts only job-addressed delivery GLBs", () => {
   );
 
   assert.equal(
+    r2ModelKey(`r2://bucket/models/${id}/delivery/${id}/preview-${id}.glb`),
+    `models/${id}/delivery/${id}/preview-${id}.glb`,
+  );
+
+  assert.equal(
     r2ModelKey(
       `r2://bucket/models/${id}/delivery/${id}/model-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee.glb`,
     ),
     null,
   );
+});
+
+test("preview backfill accepts legacy/high deliveries but rejects sources and cross-model references", async () => {
+  const { previewReference } = await import("../scripts/models/preview-reference.mjs");
+  const buildId = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+  const model = { id, processing_job_id: id };
+  for (const tail of [`delivery/${id}/model-${id}.glb`, `lod/${id}/high.glb`]) {
+    const result = previewReference({ ...model, glb_path: `r2://bucket/models/${id}/${tail}` }, "bucket", buildId);
+    assert.equal(result.highKey, `models/${id}/${tail}`);
+    assert.equal(result.previewKey, `models/${id}/delivery/${buildId}/preview-${buildId}.glb`);
+  }
+  for (const glb_path of [`r2://bucket/models/${id}/source/${id}.glb`, `r2://bucket/models/${buildId}/lod/${id}/high.glb`, `r2://other/models/${id}/lod/${id}/high.glb`]) {
+    assert.throws(() => previewReference({ ...model, glb_path }, "bucket", buildId));
+  }
+});
+
+test("model performance endpoint accepts bounded same-origin timings", async () => {
+  const { POST } = loadSource("src/app/api/model-metrics/route.ts");
+  const originalInfo = console.info;
+  const logged = [];
+  console.info = (...args) => logged.push(args);
+  try {
+    const response = await POST({
+      headers: new Headers({
+        origin: "https://shop.example",
+        "content-length": "180",
+      }),
+      nextUrl: { origin: "https://shop.example" },
+      body: new Response(JSON.stringify({
+        asset: `/api/models/files/${id}/preview-${id}.glb`,
+        variant: "preview",
+        readyMs: 420,
+        queueMs: 4,
+        loadDecodeMs: 390,
+        resourceDurationMs: 260,
+        encodedBodySize: 1_500_000,
+        untrustedExtra: "must not appear in logs",
+      })).body,
+    });
+    assert.equal(response.status, 204);
+    assert.equal(logged.length, 1);
+    assert.equal(logged[0][1].includes("untrustedExtra"), false);
+
+    const rejected = await POST({
+      headers: new Headers({ origin: "https://attacker.example" }),
+      nextUrl: { origin: "https://shop.example" },
+      body: new Response("{}").body,
+    });
+    assert.equal(rejected.status, 400);
+    const oversized = await POST({
+      headers: new Headers(),
+      nextUrl: { origin: "https://shop.example" },
+      body: new Response(" ".repeat(4097)).body,
+    });
+    assert.equal(oversized.status, 400);
+  } finally {
+    console.info = originalInfo;
+  }
 });
 
 test("instancing matches exact geometry/material and preserves nested world-space bounds", () => {

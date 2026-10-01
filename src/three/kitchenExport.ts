@@ -3,6 +3,11 @@ import { Group, Mesh, Material, Texture, type Object3D } from "three";
 /** Snapshot only the explicitly designated kitchen assembly, never the room scene. */
 export function snapshotKitchen(root: Group) {
   if (!root.userData.kitchenExport) throw new Error("Гарнитурын 3D хэсэг бэлэн болоогүй байна.");
+  root.traverse(node => {
+    if (node.userData.deliveryPending && !node.userData.exportExclude) {
+      throw new Error("Бүрэн чанартай 3D загвар ачаалж байна. Түр хүлээгээд экспортоо дахин хийнэ үү.");
+    }
+  });
   root.updateWorldMatrix(true, true);
   const copy = root.clone(true), remove: Object3D[] = [];
   copy.traverse(node => {

@@ -670,10 +670,12 @@ function DraggablePiece({
           modelId={dbModel.fileModelId ?? dbModel.id}
           basePath={`/api/models/files/${dbModel.fileModelId ?? dbModel.id}/`}
           glbFile={dbModel.glbFile}
+          previewGlbFile={dbModel.previewGlbFile}
           w={dims.w}
           d={dims.d}
           h={dims.h}
           selected={selected}
+          deferUntilVisible
         />
       ) : (
         <FurnitureMesh

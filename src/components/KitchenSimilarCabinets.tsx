@@ -119,13 +119,16 @@ export function KitchenSimilarCabinets({
               aria-pressed={current}
               onClick={() => onVariant(module, variant)}
               onPointerEnter={() => {
-                if (variant.glbUrl) void prefetchModel(variant.glbUrl);
+                if (variant.previewGlbUrl ?? variant.glbUrl)
+                  void prefetchModel(variant.previewGlbUrl ?? variant.glbUrl!);
               }}
               onFocus={() => {
-                if (variant.glbUrl) void prefetchModel(variant.glbUrl);
+                if (variant.previewGlbUrl ?? variant.glbUrl)
+                  void prefetchModel(variant.previewGlbUrl ?? variant.glbUrl!);
               }}
               onTouchStart={() => {
-                if (variant.glbUrl) void prefetchModel(variant.glbUrl);
+                if (variant.previewGlbUrl ?? variant.glbUrl)
+                  void prefetchModel(variant.previewGlbUrl ?? variant.glbUrl!);
               }}
             >
               <span className="ksc-image">

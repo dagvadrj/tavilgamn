@@ -35,6 +35,18 @@ test('export rejects whole scenes and empty assemblies; filenames preserve Mongo
   assert.equal(kitchenExportFilename(' . ', 'glb'), 'kitchen.glb');
 });
 
+test('export waits for high-quality delivery instead of exporting preview or placeholder geometry', () => {
+  const root = new THREE.Group(); root.userData.kitchenExport = true;
+  const model = new THREE.Group(); model.userData.deliveryPending = true;
+  model.add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1)));
+  root.add(model);
+  assert.throws(() => snapshotKitchen(root), /Бүрэн чанартай/);
+  model.userData.deliveryPending = false;
+  const snapshot = snapshotKitchen(root);
+  assert.equal(snapshot.scene.children.length, 1);
+  snapshot.dispose();
+});
+
 function glb(json) {
   const text = JSON.stringify(json), padded = text + ' '.repeat((4 - Buffer.byteLength(text) % 4) % 4);
   const data = Buffer.alloc(20 + Buffer.byteLength(padded));

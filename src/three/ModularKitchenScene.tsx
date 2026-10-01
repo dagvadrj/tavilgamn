@@ -317,6 +317,10 @@ function Scene(props: ModularSceneProps) {
                   modelId={cabinet.variantId}
                   basePath={`/api/models/files/${cabinet.variantId}`}
                   glbFile={props.variantModels[cabinet.variantId].glbFile!}
+                  previewGlbFile={
+                    props.variantModels[cabinet.variantId].previewGlbFile ??
+                    undefined
+                  }
                   w={cabinet.width / 1000}
                   h={cabinet.height / 1000}
                   d={cabinet.depth / 1000}

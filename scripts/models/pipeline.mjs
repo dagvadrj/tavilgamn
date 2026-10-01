@@ -14,6 +14,8 @@ const { values } = parseArgs({
     blender: { type: "string" },
     "ktx-bin": { type: "string" },
     "max-triangles": { type: "string", default: "4000000" },
+    "preview-triangles": { type: "string", default: "80000" },
+    "preview-texture-size": { type: "string", default: "512" },
   },
 });
 if (!values.input || !values.output)
@@ -79,6 +81,10 @@ try {
     path.join(output, "compressed"),
     "--max-triangles",
     values["max-triangles"],
+    "--preview-triangles",
+    values["preview-triangles"],
+    "--preview-texture-size",
+    values["preview-texture-size"],
     ...(ktx ? ["--ktx-bin", ktx] : []),
   ]);
 } catch (error) {

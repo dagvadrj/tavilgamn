@@ -5,7 +5,16 @@ import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { instanceRepeatedModules } from "./instanceModules";
-export interface LoadedModel { scene: THREE.Group; bounds: THREE.Box3 }
+export interface ModelLoadMetrics {
+  queuedAt: number;
+  startedAt: number;
+  completedAt: number;
+  queueMs: number;
+  loadDecodeMs: number;
+  resourceDurationMs: number | null;
+  encodedBodySize: number | null;
+}
+export interface LoadedModel { scene: THREE.Group; bounds: THREE.Box3; metrics: ModelLoadMetrics }
 interface Entry { promise: Promise<LoadedModel>; refs: number; ready?: LoadedModel; used: number }
 interface Pool { loader: GLTFLoader; draco: DRACOLoader; ktx: KTX2Loader; entries: Map<string, Entry>; idle?: ReturnType<typeof setTimeout> }
 const pools = new WeakMap<THREE.WebGLRenderer, Pool>();
@@ -60,10 +69,12 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string) {
   const owner = pool;
   let entry = owner.entries.get(url);
   if (!entry) {
+    const queuedAt = performance.now();
     entry = { refs: 0, used: Date.now(), promise: Promise.resolve(null as unknown as LoadedModel) };
     const pending = entry;
     owner.entries.set(url, entry);
     entry.promise = schedule(async () => {
+      const startedAt = performance.now();
       const gltf = await owner.loader.loadAsync(url);
       gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = true; object.receiveShadow = true; } });
       if (!gltf.animations.length) instanceRepeatedModules(gltf.scene);
@@ -73,7 +84,26 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string) {
       if (authored && [authored.min, authored.max].every(value => Array.isArray(value) && value.length === 3 && value.every(Number.isFinite)) && authored.min.every((value: number, i: number) => value < authored.max[i])) {
         bounds = new THREE.Box3(new THREE.Vector3().fromArray(authored.min), new THREE.Vector3().fromArray(authored.max));
       }
-      const result = { scene: gltf.scene, bounds };
+      const completedAt = performance.now();
+      const resource = performance
+        .getEntriesByName(typeof window === "undefined" ? url : new URL(url, window.location.href).href)
+        .filter((entry): entry is PerformanceResourceTiming =>
+          entry.entryType === "resource",
+        )
+        .at(-1);
+      const result = {
+        scene: gltf.scene,
+        bounds,
+        metrics: {
+          queuedAt,
+          startedAt,
+          completedAt,
+          queueMs: startedAt - queuedAt,
+          loadDecodeMs: completedAt - startedAt,
+          resourceDurationMs: resource?.duration ?? null,
+          encodedBodySize: resource?.encodedBodySize ?? null,
+        },
+      };
       const size = bounds.getSize(new THREE.Vector3());
       if (![size.x, size.y, size.z].every(value => Number.isFinite(value) && value > 1e-9)) {
         disposeModel(result);
@@ -89,7 +119,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string) {
     released = true; leased.refs--; leased.used = Date.now(); trim(owner, renderer);
   } };
 }
-export function cloneModel(model: LoadedModel): LoadedModel { return { scene: clone(model.scene) as THREE.Group, bounds: model.bounds }; }
+export function cloneModel(model: LoadedModel): LoadedModel { return { scene: clone(model.scene) as THREE.Group, bounds: model.bounds, metrics: model.metrics }; }
 export function disposeModelClone(model: LoadedModel) {
   model.scene.traverse(object => { if (object instanceof THREE.InstancedMesh) object.dispose(); });
 }

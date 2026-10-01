@@ -15,6 +15,8 @@ export type KitchenCatalogVariant = {
   active: boolean;
   glbFile: string | null;
   glbUrl: string | null;
+  previewGlbFile: string | null;
+  previewGlbUrl: string | null;
   thumbnailUrl: string | null;
   processingStatus: string;
 };

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { Edges, Html } from "@react-three/drei";
 import * as THREE from "three";
 import {
@@ -18,15 +18,18 @@ import {
   disposeModelClone,
   type LoadedModel,
 } from "./modelLoader";
+import { reportModelPerformance } from "@/lib/modelPerformance";
 
 export interface GLBFurnitureMeshProps {
   modelId: string;
   basePath: string;
   glbFile: string;
+  previewGlbFile?: string;
   w: number;
   d: number;
   h: number;
   selected?: boolean;
+  deferUntilVisible?: boolean;
   /** @deprecated Use frontMaterial and carcassMaterial for kitchen models. */
   materialOverride?: {
     color: string;
@@ -43,6 +46,9 @@ export interface GLBFurnitureMeshProps {
 }
 type Display = {
   key: string;
+  url: string;
+  variant: "preview" | "high";
+  requestedAt: number;
   asset: LoadedModel;
   release: () => void;
 };
@@ -71,6 +77,9 @@ export function GLBFurnitureMesh({
   modelId,
   basePath,
   glbFile,
+  previewGlbFile,
+  selected = false,
+  deferUntilVisible = false,
   w,
   d,
   h,
@@ -83,6 +92,34 @@ export function GLBFurnitureMesh({
   onError,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
+  const root = useRef<THREE.Group>(null);
+  const pendingPreviewDraw = useRef<(() => void) | undefined>(undefined);
+  const visibility = useRef({
+    frustum: new THREE.Frustum(),
+    matrix: new THREE.Matrix4(),
+    bounds: new THREE.Box3(),
+  });
+  const [seen, setSeen] = useState(!deferUntilVisible);
+  const enabled = seen || selected || !deferUntilVisible;
+  useFrame(({ camera }) => {
+    if ((enabled && !pendingPreviewDraw.current) || !root.current) return;
+    const { frustum, matrix, bounds } = visibility.current;
+    root.current.updateWorldMatrix(true, false);
+    camera.updateWorldMatrix(true, false);
+    matrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    frustum.setFromProjectionMatrix(matrix);
+    bounds.min.set(-w / 2, 0, -d / 2);
+    bounds.max.set(w / 2, h, d / 2);
+    bounds.applyMatrix4(root.current.matrixWorld);
+    const visible = frustum.intersectsBox(bounds);
+    if (!enabled && visible) setSeen(true);
+    // Non-deferred assemblies may contain cabinets behind the camera. They
+    // still need their high assets ready for whole-assembly exports.
+    if (enabled && !visible) {
+      pendingPreviewDraw.current?.();
+      pendingPreviewDraw.current = undefined;
+    }
+  });
   const callbacks = useRef({ onReady, onError });
   callbacks.current = { onReady, onError };
   const [display, setDisplay] = useState<Display | null>(null);
@@ -91,24 +128,34 @@ export function GLBFurnitureMesh({
   const [error, setError] = useState(false);
   const [retry, setRetry] = useState(0);
   const base = basePath.endsWith("/") ? basePath : `${basePath}/`;
-  const key = `${modelId}:${base}${glbFile}`;
+  const highKey = `${modelId}:${base}${glbFile}`;
+  const previewFile =
+    previewGlbFile && previewGlbFile !== glbFile ? previewGlbFile : null;
+  const previewKey = previewFile
+    ? `${modelId}:${base}${previewFile}`
+    : null;
   const front = frontMaterial ?? materialOverride;
   const carcass = carcassMaterial ?? materialOverride;
   const frontTexturePaths = front?.texturePaths;
   const carcassTexturePaths = carcass?.texturePaths;
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
+    let readyShown = false;
+    let assetPrepared = false;
+    let releaseRenderWait: (() => void) | undefined;
     setError(false);
     setDisplay(null);
 
-    const lease = acquireModel(gl, base + glbFile);
-    const frontTextureLease = acquireKitchenMaterialTextures(frontTexturePaths);
-    const carcassTextureLease =
-      acquireKitchenMaterialTextures(carcassTexturePaths);
-    let transferred = false;
-
-    const load = async () => {
+    const loadStage = async (file: string, stageKey: string, final: boolean) => {
+      const url = base + file;
+      const requestedAt = performance.now();
+      const lease = acquireModel(gl, url);
+      const frontTextureLease = acquireKitchenMaterialTextures(frontTexturePaths);
+      const carcassTextureLease =
+        acquireKitchenMaterialTextures(carcassTexturePaths);
+      let transferred = false;
       try {
         const [asset, frontTextures, carcassTextures] = await Promise.all([
           lease.promise,
@@ -169,7 +216,10 @@ export function GLBFurnitureMesh({
             : clonedMaterials[0];
         });
         const next: Display = {
-          key,
+          key: stageKey,
+          url,
+          variant: final ? "high" : "preview",
+          requestedAt,
           asset: cloned,
           release: () => {
             frontTextureLease.release();
@@ -177,16 +227,47 @@ export function GLBFurnitureMesh({
             lease.release();
           },
         };
+        const rendered = new Promise<void>((resolve) => {
+          releaseRenderWait = resolve;
+          if (!final) pendingPreviewDraw.current = resolve;
+          let firstFrame = true;
+          cloned.scene.traverse((object) => {
+            if (!(object instanceof THREE.Mesh)) return;
+            object.onAfterRender = () => {
+              if (!firstFrame || cancelled) return;
+              firstFrame = false;
+              if (!final) pendingPreviewDraw.current = undefined;
+              reportModelPerformance({
+                asset: new URL(url, window.location.origin).pathname,
+                variant: next.variant,
+                readyMs: performance.now() - requestedAt,
+                queueMs: asset.metrics.queueMs,
+                loadDecodeMs: asset.metrics.loadDecodeMs,
+                resourceDurationMs: asset.metrics.resourceDurationMs,
+                encodedBodySize: asset.metrics.encodedBodySize,
+              });
+              if (!readyShown) {
+                readyShown = true;
+                callbacks.current.onReady?.();
+              }
+              resolve();
+            };
+          });
+        });
         transferred = true;
+        assetPrepared = true;
         owned.current.add(next);
         setDisplay(next);
-        callbacks.current.onReady?.();
+        // Let preview reach the screen before even a cached high can replace it.
+        if (!final) await rendered;
+        return true;
       } catch (error) {
         console.error("[GlbFurnitureMesh]", error);
-        if (!cancelled) {
+        if (!cancelled && final && !assetPrepared) {
           setError(true);
           callbacks.current.onError?.();
         }
+        return false;
       } finally {
         if (!transferred) {
           frontTextureLease.release();
@@ -195,15 +276,28 @@ export function GLBFurnitureMesh({
         }
       }
     };
-    void load();
+
+    void (async () => {
+      if (previewFile && previewKey) {
+        await loadStage(previewFile, previewKey, false);
+      }
+      if (!cancelled) {
+        await loadStage(glbFile, highKey, true);
+      }
+    })();
     return () => {
       cancelled = true;
+      releaseRenderWait?.();
+      pendingPreviewDraw.current = undefined;
     };
   }, [
     gl,
+    enabled,
     base,
     glbFile,
-    key,
+    highKey,
+    previewFile,
+    previewKey,
     retry,
     front,
     carcass,
@@ -232,12 +326,13 @@ export function GLBFurnitureMesh({
     };
   }, []);
 
-  const ready = display?.key === key ? display : null;
+  const ready =
+    display?.key === highKey || display?.key === previewKey ? display : null;
   const size = ready?.asset.bounds.getSize(new THREE.Vector3());
   const origin = ready?.asset.bounds.getCenter(new THREE.Vector3());
   const valid = size && origin && Math.min(size.x, size.y, size.z) > 1e-9;
   return (
-    <group>
+    <group ref={root} userData={{ deliveryPending: !ready || ready.variant !== "high" }}>
       {ready && valid ? (
         <group scale={[w / size.x, h / size.y, d / size.z]} dispose={null}>
           <primitive
@@ -257,7 +352,7 @@ export function GLBFurnitureMesh({
           <Edges color="#6b7e68" />
         </mesh>
       )}
-      {(!ready || error) && (
+      {enabled && (!ready || error) && (
         <Html position={[0, h + 0.1, 0]} center zIndexRange={[8, 0]}>
           {error ? (
             <button

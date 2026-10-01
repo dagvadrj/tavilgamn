@@ -990,17 +990,26 @@ export function RoomPlanner() {
                 onClick={() => addModelPiece(m)}
                 onPointerEnter={() =>
                   void prefetchModel(
-                    modelDeliveryUrl(m.fileModelId ?? m.id, m.glbFile),
+                    modelDeliveryUrl(
+                      m.fileModelId ?? m.id,
+                      m.previewGlbFile ?? m.glbFile,
+                    ),
                   )
                 }
                 onFocus={() =>
                   void prefetchModel(
-                    modelDeliveryUrl(m.fileModelId ?? m.id, m.glbFile),
+                    modelDeliveryUrl(
+                      m.fileModelId ?? m.id,
+                      m.previewGlbFile ?? m.glbFile,
+                    ),
                   )
                 }
                 onTouchStart={() =>
                   void prefetchModel(
-                    modelDeliveryUrl(m.fileModelId ?? m.id, m.glbFile),
+                    modelDeliveryUrl(
+                      m.fileModelId ?? m.id,
+                      m.previewGlbFile ?? m.glbFile,
+                    ),
                   )
                 }
                 className="group flex gap-3 rounded-lg border border-[#AD6547]/30 bg-white p-2 text-left transition hover:border-[#AD6547]/60"

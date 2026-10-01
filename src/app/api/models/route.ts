@@ -24,6 +24,7 @@ export async function GET() {
       description: model.description,
       basePrice: Number(model.base_price),
       glbFile: fileNameFromPath(model.glb_path),
+      previewGlbFile: fileNameFromPath(model.low_glb_path) || undefined,
       thumbnailFile: fileNameFromPath(model.thumbnail_path),
       scale: Number(model.scale),
       dimensionsW: Number(model.dimensions_w),
