@@ -158,7 +158,7 @@ export async function POST(
 
     const lookup = db
       .from("furniture_models")
-      .select("id,product_id");
+      .select("id,product_id,category,dimensions_w,dimensions_h,dimensions_d,archived_at,cabinet_module_id");
 
     const {
       data: model,
@@ -185,6 +185,17 @@ export async function POST(
 
     const modelId =
       model.id;
+    if (model.archived_at) return apiErrorResponse({ error: "Архивласан model-д upload хийхгүй." }, { status: 409 });
+    if (model.category === "kitchen-cabinet" && !model.cabinet_module_id) {
+      const moduleId = typeof body.moduleId === "string" ? body.moduleId : "";
+      if (!/^[0-9a-f-]{36}$/i.test(moduleId)) return apiErrorResponse({ error: "Kitchen module сонгоно уу." }, { status: 400 });
+      const { data: module, error } = await db.from("kitchen_modules").select("id,width_mm,height_mm,depth_mm").eq("id", moduleId).eq("active", true).maybeSingle();
+      if (error) throw error;
+      if (!module || Math.abs(Number(model.dimensions_w) * 1000 - module.width_mm) > 5 || Math.abs(Number(model.dimensions_h) * 1000 - module.height_mm) > 5 || Math.abs(Number(model.dimensions_d) * 1000 - module.depth_mm) > 5) return apiErrorResponse({ error: "Kitchen model-ийн хэмжээ module-тэй таарахгүй." }, { status: 400 });
+      const { data: linked, error: linkError } = await db.from("furniture_models").update({ cabinet_module_id: moduleId }).eq("id", model.id).is("archived_at", null).is("cabinet_module_id", null).select("id").maybeSingle();
+      if (linkError) throw linkError;
+      if (!linked) return apiErrorResponse({ error: "Model өөрчлөгдсөн байна. Дахин ачаална уу." }, { status: 409 });
+    }
 
     // --------------------------------
     // 4. Unique source key
@@ -221,6 +232,13 @@ export async function POST(
         },
       );
 
+    // Register intent BEFORE exposing PUT URL: abandoned uploads stay tracked.
+    const { error: intentError } = await db.from("model_assets").insert({
+      model_id: modelId, version_id: uploadId, role: "source",
+      storage_path: `r2://${bucket}/${key}`, original_name: fileName.slice(0, 255),
+      byte_size: size, created_by: auth.userId, state: "pending",
+    });
+    if (intentError) throw intentError;
     return NextResponse.json({
       uploadUrl,
 

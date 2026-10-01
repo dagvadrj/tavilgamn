@@ -2,7 +2,6 @@ import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { KitchenModuleInputError, parseKitchenModelDelete, parseKitchenVariantInput, parseVariantState } from "@/lib/kitchenModuleCatalog";
 import { readKitchenModelCandidates, readKitchenModuleCatalog } from "@/lib/kitchenModuleCatalogServer";
-import { removeStoredModelFiles } from "@/lib/r2Models";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
 
@@ -17,12 +16,17 @@ const fail = (error: unknown, fallback: string) => {
       ? "GLB-ийн хэмжээ сонгосон module-тэй таарахгүй байна."
       : databaseMessage === "Ready kitchen GLB required"
         ? "Бэлэн болсон kitchen GLB сонгоно уу."
-        : "GLB-ийн хэмжээ module-тэй таарахгүй эсвэл variant тохирохгүй байна.";
+        : databaseMessage === "Model belongs to a different module"
+          ? "Энэ model өөр module-д холбогдсон байна. BASE болон CORNER-BASE-ийг сольж холбохгүй."
+          : databaseMessage.includes("Canonical")
+            ? "Module, variant эсвэл хийцийн canonical code буруу байна."
+            : "GLB-ийн хэмжээ module-тэй таарахгүй эсвэл variant тохирохгүй байна.";
   const message = error instanceof KitchenModuleInputError ? error.message
     : code === "42501" ? "Admin эрх шаардлагатай."
       : code === "P0002" ? "Module эсвэл model олдсонгүй."
-        : code === "22023" ? invalidVariant : fallback;
-  return apiErrorResponse({ error: message }, { status: error instanceof KitchenModuleInputError || code === "22023" ? 400 : code === "42501" ? 403 : code === "P0002" ? 404 : 503, headers });
+        : code === "23505" ? "Энэ module-д ижил variant code бүртгэгдсэн байна. Хийцийн ялгах code нэмнэ үү."
+          : code === "22023" ? invalidVariant : fallback;
+  return apiErrorResponse({ error: message }, { status: error instanceof KitchenModuleInputError || code === "22023" ? 400 : code === "23505" ? 409 : code === "42501" ? 403 : code === "P0002" ? 404 : 503, headers });
 };
 
 export async function GET(request: NextRequest) {
@@ -70,25 +74,8 @@ export async function DELETE(request: NextRequest) {
     if (!model) return apiErrorResponse({ error: "Kitchen GLB олдсонгүй." }, { status: 404, headers });
     if (model.category !== "kitchen-cabinet") throw new KitchenModuleInputError("Зөвхөн kitchen GLB устгаж болно.");
 
-    const { data: variants, error: variantReadError } = await db.from("kitchen_module_variants")
-      .select("*").eq("furniture_model_id", modelId);
-    if (variantReadError) throw variantReadError;
-    const { error: unlinkError } = await db.from("kitchen_module_variants").delete().eq("furniture_model_id", modelId);
-    if (unlinkError) throw unlinkError;
-    const { data: deleted, error: deleteError } = await db.from("furniture_models")
-      .delete().eq("id", modelId).eq("category", "kitchen-cabinet").select("id").maybeSingle();
-    if (deleteError || !deleted) {
-      if (variants?.length) await db.from("kitchen_module_variants").insert(variants);
-      if (deleteError) throw deleteError;
-      return apiErrorResponse({ error: "Kitchen GLB олдсонгүй." }, { status: 404, headers });
-    }
-
-    const storedPaths = [model.glb_path, model.source_glb_path,
-      model.preview_glb_path, model.standard_glb_path, model.thumbnail_path]
-      .filter((value): value is string => typeof value === "string" && value.length > 0);
-    let warning: string | null = null;
-    try { await removeStoredModelFiles(db, storedPaths); }
-    catch (cleanupError) { console.error("[kitchen model cleanup]", modelId, cleanupError); warning = "Model устсан боловч storage цэвэрлэгээг дахин шалгана уу."; }
-    return NextResponse.json({ ok: true, warning }, { headers });
+    const { error } = await db.rpc("set_model_archived", { p_actor: auth.userId, p_model: modelId, p_archived: true });
+    if (error) throw error;
+    return NextResponse.json({ ok: true, archived: true }, { headers });
   } catch (error) { return fail(error, "Kitchen GLB устгаж чадсангүй."); }
 }

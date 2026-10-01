@@ -30,6 +30,7 @@ export interface Product {
     id: string;
     file: string;
     previewFile?: string;
+    physicalSize?: boolean;
     scale: number;
   };
   reviewCount: number;

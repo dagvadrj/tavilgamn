@@ -112,3 +112,9 @@ Removed unused source: stores.ts, PartnerMarquee.tsx and the shadowed
 kitchenMaterialTextures.tsx. The active texture pool is kitchenMaterialTextures.ts.
 No historical database snapshots, GLBs, user accounts or orders are deleted.
 See [verification record](phase1-verification.md) for checked scope and rollout status.
+
+## Phase 2 asset pipeline
+
+AdminKitchenModules / AdminProducts / ModelsTab → shared GlbUploadPreview → upload-url intent → R2 PUT → upload-complete inspection/checksum → queue_model_asset → Blender worker → immutable delivery/preview paths → module variant → ModularKitchenScene / GLBFurnitureMesh.
+
+model_assets is the private version/role/state ledger. furniture_models carries current paths, archive state, canonical module binding and the latest validation; it remains the product master. Archive/restore is transactional, never a destructive file purge. See [GLB contract](glb-cabinet-standard.md).

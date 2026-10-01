@@ -5,14 +5,14 @@ import { parseProduct } from "./catalogValidation";
 import type { Tables } from "./supabase/database.types";
 
 export const FURNITURE_ORDER_FIELDS = "id,product_id,name,category,description,base_price,image_url,thumbnail_path,glb_path,preview_glb_path,processing_status,scale,dimensions_w,dimensions_d,dimensions_h,colors,materials,default_color,in_stock,rating,review_count,badges,is_new,is_best_seller,store_ids";
-export const FURNITURE_FIELDS = `${FURNITURE_ORDER_FIELDS},images`;
+export const FURNITURE_FIELDS = `${FURNITURE_ORDER_FIELDS},images,glb_validation`;
 export type FurnitureRow = Pick<Tables<"furniture_models">,
   "id" | "product_id" | "name" | "category" | "description" | "base_price" |
   "image_url" | "thumbnail_path" | "glb_path" | "processing_status" | "scale" |
   "dimensions_w" | "dimensions_d" | "dimensions_h" | "colors" | "materials" |
   "default_color" | "in_stock" | "rating" | "review_count" | "badges" |
   "is_new" | "is_best_seller" | "store_ids"
-> & Partial<Pick<Tables<"furniture_models">, "images" | "preview_glb_path">>;
+> & Partial<Pick<Tables<"furniture_models">, "images" | "preview_glb_path" | "glb_validation">>;
 
 export function productFromRow(row: FurnitureRow): Product {
   // Boolean stock means the schema migration has not been applied yet.
@@ -34,7 +34,7 @@ export function productFromRow(row: FurnitureRow): Product {
     const file = row.glb_path.split("/").pop()!;
     const previewFile = row.preview_glb_path?.split("/").pop();
     if (!/^[0-9a-f-]{36}$/i.test(row.id) || !/^[a-zA-Z0-9._-]+$/.test(file) || (previewFile && !/^[a-zA-Z0-9._-]+$/.test(previewFile)) || !Number.isFinite(Number(row.scale)) || Number(row.scale) <= 0) throw new Error("Invalid model reference");
-    product.model = {id: row.id, file, ...(previewFile ? { previewFile } : {}), scale: Number(row.scale)};
+    product.model = {id: row.id, file, ...(previewFile ? { previewFile } : {}), scale: Number(row.scale), physicalSize: row.category === "kitchen-cabinet" && Boolean(row.glb_validation)};
   }
   return product;
 }
@@ -44,7 +44,7 @@ export async function readProducts(db = getSupabaseAdmin()): Promise<Product[]> 
     const products: Product[] = [];
     let after = "";
     for (;;) {
-      let query = db.from("furniture_models").select(fields).order("id").limit(500);
+      let query = db.from("furniture_models").select(fields).is("archived_at", null).order("id").limit(500);
       if (after) query = query.gt("id", after);
       const {data, error} = await query;
       if (error) throw error;
@@ -71,7 +71,7 @@ function isMissingGalleryColumn(error: unknown) {
 
 export async function readProduct(id: string, db = getSupabaseAdmin()): Promise<Product | undefined> {
   const readWithFields = async (fields: string) => {
-    const {data,error} = await db.from("furniture_models").select(fields).eq("product_id",id).maybeSingle();
+    const {data,error} = await db.from("furniture_models").select(fields).is("archived_at", null).eq("product_id",id).maybeSingle();
     if (error) throw error;
     return data ? productFromRow(data as unknown as FurnitureRow) : undefined;
   };

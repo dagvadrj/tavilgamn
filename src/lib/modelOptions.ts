@@ -23,7 +23,7 @@ function parseOptions(value: FormDataEntryValue | null): Record<string, unknown>
   const ids = new Set<string>();
   for (const item of parsed) {
     if (
-      typeof item.id !== "string" || !item.id.trim() ||
+      typeof item.id !== "string" || !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(item.id) ||
       typeof item.name !== "string" || !item.name.trim() ||
       ids.has(item.id)
     ) {

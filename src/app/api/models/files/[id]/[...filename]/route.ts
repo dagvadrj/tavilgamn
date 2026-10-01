@@ -21,7 +21,7 @@ export async function GET(
     const { data, error } = await db.from("furniture_models")
       .select("glb_path,preview_glb_path,thumbnail_path,processing_status").eq("id", routeParams.id).maybeSingle();
     if (error) throw error;
-    const path = [
+    let path = [
       ...(data?.processing_status === "ready" && typeof data?.glb_path === "string"
         ? modelAssetPaths(data.glb_path, data.preview_glb_path)
         : []),
@@ -29,6 +29,16 @@ export async function GET(
     ].find(
       (value): value is string => typeof value === "string" && value.split("/").pop() === routeParams.filename[0],
     );
+    if (!path && data) {
+      // Existing designs may still reference an immutable older delivery filename.
+      // Never expose pending/deleted assets, original sources or private exports.
+      const suffix = routeParams.filename[0].replace(/[_%\\]/g, value => `\\${value}`);
+      const { data: history, error: historyError } = await db.from("model_assets").select("storage_path")
+        .eq("model_id", routeParams.id).in("role", ["delivery", "preview", "thumbnail"])
+        .in("state", ["available", "retired"]).like("storage_path", `%/${suffix}`).limit(2);
+      if (historyError) throw historyError;
+      if (history?.length === 1) path = history[0].storage_path;
+    }
     if (!path) {
       return apiErrorResponse({ error: "Файл олдсонгүй." }, { status: 404, headers });
     }
@@ -56,6 +66,23 @@ export async function GET(
     else if (path === `${routeParams.id}/${routeParams.filename[0]}`) {
       destination = db.storage.from("furniture-models").getPublicUrl(path).data.publicUrl;
     } else throw new Error("Invalid stored file path");
+    // Next's local image optimizer consumes the response body and does not
+    // follow this route's external redirect. Serve approved raster thumbnails.
+    if (/\.(png|jpe?g|webp)$/i.test(routeParams.filename[0])) {
+      const upstream = await fetch(destination, {
+        cache: "no-store", signal: AbortSignal.timeout(30000),
+      });
+      const contentType = upstream.headers.get("content-type")?.split(";")[0];
+      if (!upstream.ok || !upstream.body || !contentType ||
+          !["image/png", "image/jpeg", "image/webp"].includes(contentType)) {
+        throw new Error(`Thumbnail fetch failed (${upstream.status})`);
+      }
+      return new NextResponse(upstream.body, { headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=60",
+        "X-Content-Type-Options": "nosniff",
+      } });
+    }
     return NextResponse.redirect(destination, { status: 307, headers });
   } catch (error) {
     console.error("[model file]", routeParams.id, routeParams.filename[0], error);

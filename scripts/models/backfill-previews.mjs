@@ -68,7 +68,8 @@ function run(executable, args) {
 }
 
 async function build(model) {
-  const { highKey, previewKey } = previewReference(model, bucket, randomUUID());
+  const previewJobId = randomUUID();
+  const { highKey, previewKey } = previewReference(model, bucket, previewJobId);
   const workspace = await mkdtemp(path.join(tmpdir(), `tavilga-preview-${model.id}-`));
   const highFile = path.join(workspace, "delivery.glb");
   const output = path.join(workspace, "output");
@@ -96,6 +97,9 @@ async function build(model) {
 
     const previewFile = path.join(output, "preview.glb");
     const info = await stat(previewFile);
+    const { error: ledgerError } = await db.from("model_assets").insert({ model_id: model.id, version_id: previewJobId,
+      role: "preview", storage_path: `r2://${bucket}/${previewKey}`, byte_size: info.size, state: "pending" });
+    if (ledgerError) throw ledgerError;
     await r2.send(
       new PutObjectCommand({
         Bucket: bucket,

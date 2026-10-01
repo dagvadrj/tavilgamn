@@ -680,6 +680,7 @@ function DraggablePiece({
           basePath={`/api/models/files/${dbModel.fileModelId ?? dbModel.id}/`}
           glbFile={dbModel.glbFile}
           previewGlbFile={dbModel.previewGlbFile}
+          preservePhysicalSize={dbModel.physicalSize}
           w={dims.w}
           d={dims.d}
           h={dims.h}

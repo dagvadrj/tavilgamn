@@ -1,60 +1,14 @@
-import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
+import { apiErrorResponse } from "@/lib/api/errors";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
-import { removeStoredModelFiles } from "@/lib/r2Models";
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const routeParams = await params;
-  const adminAuth = await requireAdmin(request);
-
-  if (adminAuth.error) {
-    return adminAuth.error;
-  }
-
-  try {
-    const supabase = getSupabaseAdmin();
-    const { data: model, error: findError } = await supabase
-    .from("furniture_models")
-    .select("glb_path, thumbnail_path")
-  .eq("id", routeParams.id)
-.maybeSingle();
-if (findError) throw findError;
-if (!model) { 
-  return apiErrorResponse({ error: "Загвар олдсонгүй" }, { status: 404 },);
+async function archive(request: NextRequest, params: Promise<{ id: string }>, archived: boolean) {
+  const auth = await requireAdmin(request); if (auth.error) return auth.error;
+  const { id } = await params;
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return apiErrorResponse({ error: "Model ID буруу." }, { status: 400 });
+  const { error } = await getSupabaseAdmin().rpc("set_model_archived", { p_actor: auth.userId, p_model: id, p_archived: archived });
+  if (error) return apiErrorResponse({ error: "Model-ийн архивын төлөв өөрчилж чадсангүй." }, { status: error.code === "P0002" ? 404 : 503 });
+  return NextResponse.json({ success: true, archived }, { headers: { "Cache-Control": "private, no-store" } });
 }
-const {error: deleteError} = await supabase
-.from("furniture_models")
-.delete()
-.eq("id", routeParams.id);
-
-if (deleteError?.code === "P0007") return apiErrorResponse({error:"Захиалгад орсон барааг устгах боломжгүй. Барааны үлдэгдлийг шинэчилнэ үү."},{status:409});
-if (deleteError) throw deleteError;
-
-const storagePaths = [
-  model.glb_path,
-  model.thumbnail_path,
-].filter((path): path is string => !!path);
-if (storagePaths.length > 0) {
-  try {
-    await removeStoredModelFiles(supabase, storagePaths);
-  } catch (cleanupError) {
-    console.error("[models/delete/files]", cleanupError, storagePaths);
-    return NextResponse.json({
-      success: true,
-      warning: "Загвар устсан боловч зарим файл цэвэрлэгдсэнгүй. Серверийн логийг шалгана уу.",
-    });
-  }
-}
-return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[models/delete]", error);
-    return apiErrorResponse(
-      { error: "Загвар устгахад алдаа гарлаа" },
-      { status: 500 },
-    );
-  }
-}
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) { return archive(request, params, true); }
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) { return archive(request, params, false); }

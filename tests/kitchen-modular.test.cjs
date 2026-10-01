@@ -48,7 +48,7 @@ test("cabinet defaults and exported JSON schema agree for every width/type", () 
   }
   for (const patch of [
     { width: 550 },
-    { height: 790 },
+    { height: 739 },
     { doorCount: 3 },
     { drawerCount: 5 },
     { color: "red" },
@@ -66,6 +66,23 @@ test("cabinet defaults and exported JSON schema agree for every width/type", () 
     validate({ ...createCabinet("base", "b", 300), doorCount: 2 }),
     false,
   );
+});
+test("legless 740 mm base remains valid at physical size and floor elevation", () => {
+  const Ajv = require("ajv");
+  const validate = new Ajv({ allErrors: true }).compile(
+    JSON.parse(readFileSync("src/lib/cabinet.schema.json", "utf8")),
+  );
+  const c = { ...cabinet("base-740", 400, 299, "base", 800), height: 740, depth: 598 };
+  assert.equal(validate(c), true, JSON.stringify(validate.errors));
+  assert.equal(validateCabinet(c), null);
+  const k = resolveElevations(kitchen([c]));
+  assert.equal(k.cabinets[0].height, 740);
+  assert.equal(k.cabinets[0].position.y, 0);
+  assert.deepEqual(placementIssues(k), []);
+  assert.equal(fitCountertops(k)[0].position.y, 740);
+  const { parseKitchen } = loadSource("src/lib/kitchenAssembly.ts");
+  assert.deepEqual(parseKitchen(JSON.parse(JSON.stringify(k))).cabinets, k.cabinets);
+  assert.equal(createCabinet("base", "default").height, 840);
 });
 test("initial layout is valid and counter width sums all four base cabinets", () => {
   const k = createModularKitchen();

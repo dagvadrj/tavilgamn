@@ -1,6 +1,6 @@
 # Data dictionary
 
-Schema source: generated `src/lib/supabase/database.types.ts`, refreshed from project gpdpaexkmuhxzknguicp on 2026-10-01 after the Phase 1 migration. Field lists below are derived documentation, not editable schema definitions. Change schema through migrations, regenerate types, then refresh this dictionary.
+Schema source: generated `src/lib/supabase/database.types.ts`, refreshed from project gpdpaexkmuhxzknguicp on 2026-10-01 after the Phase 2 migration. Field lists below are derived documentation, not editable schema definitions. Change schema through migrations, regenerate types, then refresh this dictionary.
 
 ## Storage and interpretation
 
@@ -13,6 +13,25 @@ Schema source: generated `src/lib/supabase/database.types.ts`, refreshed from pr
 - Foreign keys are listed in the generated Relationships contract. Semantic product membership uses furniture_models.store_ids; there is no independent Store.productIds list.
 
 ## Public schema tables
+
+### model_assets
+
+Private server-only asset/version ledger. FK model_id → furniture_models; created_by → profiles. Unique storage_path. Client SELECT/CRUD grants are revoked; RLS denies direct public access. The controlled file API serves only current or unambiguously matching available/retired delivery, preview and thumbnail filenames; it never exposes sources/private exports.
+
+| Column | Generated row type / meaning |
+|---|---|
+| id, model_id, version_id | string UUID |
+| role | string: source, delivery, preview, standard, thumbnail |
+| storage_path | string, unique immutable object locator |
+| original_name | string or null, informational upload label |
+| byte_size | number or null, 12–209715200 when known |
+| sha256 | string or null, source integrity checksum |
+| state | string: pending, available, retired, deleted |
+| validation | Json or null |
+| created_by | string UUID or null for pre-existing/worker assets |
+| created_at, updated_at | string timestamp |
+
+RPCs queue_model_asset(actor, model, path, checksum, validation) and set_model_archived(actor, model, archived) are service-only entry points with independent admin/profile checks and transactional locks.
 
 ### contact_messages
 
@@ -40,6 +59,8 @@ Reserved messaging infrastructure; no current application API owner. Not a secon
 ### furniture_models
 
 Canonical product, inventory, model delivery and processing/export state; catalog/admin/merchant and model worker.
+
+Phase 2 fields: archived_at / archived_by (nullable timestamp/actor FK), cabinet_module_id (nullable kitchen_modules FK), glb_validation (nullable JSON validation report, physical dimensions, optional frontProjectionMm). An audited legacy report may explicitly be dimensions-only; it must not claim a complete new-source authoring validation.
 
 | Column | Generated row type |
 |---|---|

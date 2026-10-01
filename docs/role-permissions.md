@@ -19,6 +19,7 @@ independent defenses. Roles are read from profiles, not browser UI or user_metad
 | Review/publish/feature kitchen listing | No | No | No | Yes | requireAdmin + transactional review RPC |
 | Change customer/merchant role | No | No | No | Yes, with restrictions | no self-change; existing admin protected |
 | Admin catalog/model/material management | No | No | No | Yes | requireAdmin + input validation |
+| Upload/replace GLB, archive/restore model, read asset history | No | No | No | Yes | requireAdmin + actor-bound RPCs; model_assets client grants revoked |
 | Admin orders/payment reconciliation/inbox | No | No | No | Yes | requireAdmin; callback/provider checks separate |
 | Claim platform store (owner_id NULL) | No | No | No | No ownership-assignment UI | no seed account; merchant RPC ignores supplied store ID/owner |
 | Direct write to merchant/private payment tables | No | No | No | No through public client | grants revoked; server-only secret/RPCs |

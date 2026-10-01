@@ -68,6 +68,7 @@ export const useCatalogStore = create<State>((set) => ({
               basePrice: product.basePrice,
               glbFile: product.model!.file,
               previewGlbFile: product.model!.previewFile,
+              physicalSize: product.model!.physicalSize,
               thumbnailFile: product.image.startsWith(
                 `/api/models/files/${product.model!.id}/`,
               )

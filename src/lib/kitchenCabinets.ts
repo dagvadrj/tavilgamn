@@ -61,7 +61,8 @@ export interface ModularKitchen {
   backsplashSettings?: { mode: "full-run" | "manual"; panels: { id: string; width: number; height: number; thickness: number; position: CabinetPose }[] };
 }
 export const CABINET_DEFAULTS = {
-  base: { label: "Доод шүүгээ", height: 840, depth: 600, heightRange: [800, 900], depthRange: [550, 650] },
+  // 740mm legless bodies are catalog assets, not 840mm cabinets to be stretched.
+  base: { label: "Доод шүүгээ", height: 840, depth: 600, heightRange: [740, 900], depthRange: [550, 650] },
   wall: { label: "Дээд шүүгээ", height: 740, depth: 350, heightRange: [400, 1200], depthRange: [250, 450] },
   tall: { label: "Өндөр шүүгээ", height: 2600, depth: 600, heightRange: [1800, 3500], depthRange: [550, 650] },
 } as const;

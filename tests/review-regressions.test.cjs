@@ -59,17 +59,18 @@ test("model list is dynamic and subsequent requests read current database values
   const route = loadSource("src/app/api/models/route.ts", {
     "@/lib/catalogServer": { readProducts: async () => [] },
     "@/lib/supabase/admin": { getSupabaseAdmin: () => ({
-      from: () => ({ select: () => ({ order: async () => ({ data: rows, error: null }) }) }),
+      from: () => ({ select: () => ({ order: () => ({ is: async () => ({ data: rows, error: null }) }) }) }),
     }) },
   });
   assert.equal(route.dynamic, "force-dynamic");
-  const initial = await route.GET();
+  const request = new (require('next/server').NextRequest)('http://localhost/api/models');
+  const initial = await route.GET(request);
   assert.equal(initial.headers.get("cache-control"), "no-store");
   assert.deepEqual(await initial.json(), []);
   rows = [{ id: "new-model", name: "New model", glb_path: "new-model/model.glb" }];
-  assert.equal((await (await route.GET()).json())[0].id, "new-model");
+  assert.equal((await (await route.GET(request)).json())[0].id, "new-model");
   rows = [];
-  assert.deepEqual(await (await route.GET()).json(), []);
+  assert.deepEqual(await (await route.GET(request)).json(), []);
 });
 
 test("deleting the active saved design cannot resurrect it with saveCurrent", () => {

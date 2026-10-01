@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+import type { GlbPreviewResult } from "./GlbUploadPreview";
+const GlbUploadPreview = dynamic(() => import("./GlbUploadPreview"), { ssr: false });
 import {
   Search,
   RefreshCw,
@@ -20,6 +23,7 @@ import { useCatalog, useCatalogStore } from "@/store/catalog";
 import { authFetch } from "@/lib/authFetch";
 import { formatPrice } from "@/lib/format";
 import { CatalogStatus } from "./CatalogStatus";
+import { useKitchenCatalog } from "@/features/kitchen-planner/hooks/useKitchenCatalog";
 
 import { stockLabel, MAX_STOCK_QUANTITY } from "@/lib/inventory";
 
@@ -450,6 +454,9 @@ function ProductEditor({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [glbFile, setGlbFile] = useState<File | null>(null);
+  const [glbPreview, setGlbPreview] = useState<GlbPreviewResult | null>(null);
+  const { moduleCatalog } = useKitchenCatalog(draft.category === "kitchen-cabinet");
+  const [cabinetModuleId, setCabinetModuleId] = useState("");
   const [glbMessage, setGlbMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   type FieldErrors = {
@@ -908,12 +915,17 @@ function ProductEditor({
               Original GLB файл оруул. Web-д зориулсан хувилбар автоматаар
               боловсруулагдана.
             </p>
+            <GlbUploadPreview allowFrontProjection={draft.category === "kitchen-cabinet"} file={glbFile} expected={{ widthMm: draft.dimensions.w * 1000, heightMm: draft.dimensions.h * 1000, depthMm: draft.dimensions.d * 1000 }} onChange={setGlbPreview} />
+            {draft.category === "kitchen-cabinet" && <label className="label">Upload module (холбоогүй model-д шаардлагатай)
+              <select className="input" value={cabinetModuleId} onChange={event => setCabinetModuleId(event.target.value)}><option value="">Одоо холбогдсон module</option>
+                {moduleCatalog.filter(module => Math.abs(module.widthMm-draft.dimensions.w*1000)<=5 && Math.abs(module.heightMm-draft.dimensions.h*1000)<=5 && Math.abs(module.depthMm-draft.dimensions.d*1000)<=5).map(module => <option value={module.id} key={module.id}>{module.code}</option>)}
+              </select></label>}
             <button
               type="button"
               className="btn-ghost"
-              disabled={busy || !glbFile}
+              disabled={busy || !glbFile || !glbPreview || glbPreview.file !== glbFile}
               onClick={async () => {
-                if (busy || !glbFile) return;
+                if (busy || !glbFile || !glbPreview || glbPreview.file !== glbFile) return;
 
                 setBusy(true);
                 setError(null);
@@ -958,6 +970,7 @@ function ProductEditor({
                         productId: draft.id,
                         fileName: glbFile.name,
                         size: glbFile.size,
+                        moduleId: cabinetModuleId,
                       }),
                     },
                     owner,
@@ -1028,6 +1041,8 @@ function ProductEditor({
                       body: JSON.stringify({
                         modelId: prepareData.modelId,
                         sourcePath: prepareData.sourcePath,
+                        frontConfirmed: glbPreview.frontConfirmed,
+                        frontProjectionMm: glbPreview.report.frontProjectionMm,
                       }),
                     },
                     owner,

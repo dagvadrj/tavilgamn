@@ -42,7 +42,7 @@
     {"if":{"required":["opening"],"properties":{"opening":{"enum":["sink","open"]}}},"then":{"properties":{"drawerCount":{"const":0}}}},
     {"if":{"required":["opening"],"properties":{"opening":{"const":"sink"}}},"then":{"properties":{"type":{"const":"base"},"width":{"enum":[600,700,800,900]}}}},
     {"if":{"required":["opening"],"properties":{"opening":{"const":"hob"}}},"then":{"properties":{"type":{"const":"base"},"width":{"enum":[400,450,500,600,700,800,900]}}}},
-    {"if":{"properties":{"type":{"const":"base"}}},"then":{"properties":{"height":{"minimum":800,"maximum":900},"depth":{"minimum":550,"maximum":650}}}},
+    {"if":{"properties":{"type":{"const":"base"}}},"then":{"properties":{"height":{"minimum":740,"maximum":900},"depth":{"minimum":550,"maximum":650}}}},
     {"if":{"properties":{"type":{"const":"wall"}}},"then":{"properties":{"drawerCount":{"const":0}},"allOf":[{"if":{"required":["opening","hoodMount"],"properties":{"opening":{"const":"hood"},"hoodMount":{"const":"wall"}}},"then":{"properties":{"height":{"minimum":200,"maximum":1200},"depth":{"minimum":250,"maximum":600}}},"else":{"properties":{"height":{"minimum":400,"maximum":1200},"depth":{"minimum":250,"maximum":450}}}}]},"else":{"properties":{"position":{"properties":{"y":{"const":0}}}}}},
     {"if":{"properties":{"type":{"const":"tall"}},"not":{"required":["opening"],"properties":{"opening":{"const":"refrigerator"}}}},"then":{"properties":{"height":{"minimum":1800,"maximum":3500},"depth":{"minimum":550,"maximum":650}}}},
     {"if":{"properties":{"width":{"enum":[300,400,450,500]}},"not":{"required":["opening"],"properties":{"opening":{"const":"refrigerator"}}}},"then":{"properties":{"doorCount":{"const":1}}}}

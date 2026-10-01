@@ -7,21 +7,10 @@ import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { ModelOptionsError, parseModelColors, parseModelMaterials } from "@/lib/modelOptions";
 import { removeStoredModelFiles } from "@/lib/r2Models";
 import { CloudinaryModelError, uploadModelAsset } from "@/lib/cloudinaryModels";
+import { isCategory } from "@/lib/catalogCategories";
 const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024;
 export const runtime = "nodejs";
 export const maxDuration = 180;
-
-const ALLOWED_CATEGORIES = new Set([
-  "sofa",
-  "wardrobe",
-  "dining-table",
-  "office",
-  "bed",
-  "tv-stand",
-  "bookshelf",
-  "kitchen-cabinet",
-  "oven",
-]);
 
 export async function POST(request: NextRequest) {
   const adminAuth = await requireAdmin(request);
@@ -59,7 +48,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!ALLOWED_CATEGORIES.has(category)) {
+    if (!isCategory(category)) {
       return apiErrorResponse(
         { error: "Тавилгын ангилал буруу байна" },
         { status: 400 },
@@ -98,6 +87,13 @@ export async function POST(request: NextRequest) {
 
     const colors = parseModelColors(formData.get("colors"));
     const materials = parseModelMaterials(formData.get("materials"));
+    const cabinetModuleId = String(formData.get("cabinetModuleId") ?? "");
+    if (category === "kitchen-cabinet") {
+      if (!/^[0-9a-f-]{36}$/i.test(cabinetModuleId)) return apiErrorResponse({ error: "Kitchen module сонгоно уу." }, { status: 400 });
+      const { data: module, error } = await supabase.from("kitchen_modules").select("id,width_mm,height_mm,depth_mm").eq("id", cabinetModuleId).eq("active", true).maybeSingle();
+      if (error) throw error;
+      if (!module || scale !== 1 || Math.abs(dimensionsW * 1000 - module.width_mm) > 5 || Math.abs(dimensionsH * 1000 - module.height_mm) > 5 || Math.abs(dimensionsD * 1000 - module.depth_mm) > 5) return apiErrorResponse({ error: "Kitchen GLB-д зөв canonical module, метр хэмжээ, scale 1 шаардлагатай." }, { status: 400 });
+    }
 
     const id = randomUUID();
 
@@ -117,6 +113,7 @@ export async function POST(request: NextRequest) {
         default_color: colors[0].id,
         name,
         category,
+        cabinet_module_id: category === "kitchen-cabinet" ? cabinetModuleId : null,
         description,
         base_price: Math.round(basePrice),
         glb_path: null,

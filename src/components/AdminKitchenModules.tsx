@@ -12,6 +12,10 @@ import {
   Upload,
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
+import dynamic from "next/dynamic";
+import type { GlbPreviewResult } from "./GlbUploadPreview";
+import { cabinetVariantCode } from "@/lib/cabinetCodes";
+const GlbUploadPreview = dynamic(() => import("./GlbUploadPreview"), { ssr: false });
 import {
   type KitchenCatalogModule,
   type KitchenCatalogVariant,
@@ -180,6 +184,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   const [presetId, setPresetId] = useState("door-1");
   const [opening, setOpening] = useState<KitchenOpening>("doors");
   const [variantCode, setVariantCode] = useState("");
+  const [designCode, setDesignCode] = useState("");
   const [doorCount, setDoorCount] = useState(1);
   const [drawerCount, setDrawerCount] = useState(0);
   const [isDefault, setIsDefault] = useState(false);
@@ -188,6 +193,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   const [uploadName, setUploadName] = useState("");
   const [uploadModuleId, setUploadModuleId] = useState("");
   const [uploadGlb, setUploadGlb] = useState<File | null>(null);
+  const [preview, setPreview] = useState<GlbPreviewResult | null>(null);
   const [uploadThumbnail, setUploadThumbnail] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -227,9 +233,9 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               (selectedModel.moduleCode
                 ? module.code === selectedModel.moduleCode
                 : true) &&
-              Math.abs(module.widthMm - selectedModel.widthMm) <= 10 &&
-              Math.abs(module.heightMm - selectedModel.heightMm) <= 10 &&
-              Math.abs(module.depthMm - selectedModel.depthMm) <= 10,
+              Math.abs(module.widthMm - selectedModel.widthMm) <= 5 &&
+              Math.abs(module.heightMm - selectedModel.heightMm) <= 5 &&
+              Math.abs(module.depthMm - selectedModel.depthMm) <= 5,
           )
         : modules,
     [modules, selectedModel],
@@ -258,8 +264,9 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     setOpening(preset.opening);
     setDoorCount(preset.doorCount);
     setDrawerCount(preset.drawerCount);
-    setVariantCode(`${selectedModule.code}-${preset.code}`);
-  }, [availablePresets, presetId, selectedModule]);
+    try { setVariantCode(cabinetVariantCode(selectedModule.code, preset.opening, preset.doorCount, preset.drawerCount, designCode)); }
+    catch { setVariantCode(""); }
+  }, [availablePresets, presetId, selectedModule, designCode]);
 
   function choosePreset(value: string) {
     const preset = availablePresets.find((item) => item.id === value);
@@ -268,7 +275,10 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     setOpening(preset.opening);
     setDoorCount(preset.doorCount);
     setDrawerCount(preset.drawerCount);
-    if (selectedModule) setVariantCode(`${selectedModule.code}-${preset.code}`);
+    if (selectedModule) {
+      try { setVariantCode(cabinetVariantCode(selectedModule.code, preset.opening, preset.doorCount, preset.drawerCount, designCode)); }
+      catch { setVariantCode(""); }
+    }
   }
 
   async function uploadModel(event: React.FormEvent) {
@@ -279,6 +289,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       setUploadError("Загварын нэр, module болон GLB файлыг бүрэн сонгоно уу.");
       return;
     }
+    if (!preview || preview.file !== uploadGlb || !preview.frontConfirmed) { setUploadError("GLB preview шалгалт болон нүүрэн талын баталгаажуулалт шаардлагатай."); return; }
     if (
       !uploadGlb.name.toLowerCase().endsWith(".glb") ||
       uploadGlb.size < 12 ||
@@ -305,6 +316,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       const form = new FormData();
       form.set("name", uploadName.trim());
       form.set("category", "kitchen-cabinet");
+      form.set("cabinetModuleId", uploadModule.id);
       form.set("description", `${uploadModule.code} kitchen module GLB`);
       form.set("basePrice", "0");
       form.set("stockQuantity", "0");
@@ -327,7 +339,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         "materials",
         JSON.stringify([{ id: "wood", name: "Мод", priceDelta: 0 }]),
       );
-      if (uploadThumbnail) form.set("thumbnail", uploadThumbnail);
+      form.set("thumbnail", uploadThumbnail ?? preview.thumbnail);
 
       const createResponse = await authFetch(
         "/api/models/upload",
@@ -382,6 +394,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           body: JSON.stringify({
             modelId: model.id,
             sourcePath: prepared.sourcePath,
+            frontConfirmed: preview.frontConfirmed,
+            frontProjectionMm: preview.report.frontProjectionMm,
           }),
         },
         owner,
@@ -432,6 +446,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             moduleId,
             opening,
             variantCode,
+            designCode,
             doorCount,
             drawerCount,
             isDefault,
@@ -446,6 +461,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       setModelId("");
       setModuleId("");
       setVariantCode("");
+      setDesignCode("");
       setIsDefault(false);
       await load();
     } catch (reason) {
@@ -483,10 +499,21 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     }
   }
 
+  async function restoreModel(id: string) {
+    setBusy(`delete:${id}`); setError(null);
+    try {
+      const response = await authFetch(`/api/models/${id}`, { method: "PATCH" }, owner);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error ?? "Сэргээж чадсангүй.");
+      await load();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Сэргээж чадсангүй."); }
+    finally { setBusy(null); }
+  }
+
   async function deleteModel(model: KitchenModelCandidate) {
     if (
       !window.confirm(
-        `“${model.name}” kitchen GLB-г бүр мөсөн устгах уу? Холбогдсон variant мөн сална.`,
+        `“${model.name}” kitchen GLB-г архивлах уу? Файл, variant хэвээр хадгалагдана; дараа нь сэргээж болно.`,
       )
     )
       return;
@@ -511,7 +538,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         setModuleId("");
       }
       setUploadSuccess(
-        data?.warning ?? "Kitchen GLB болон холбогдсон variant устлаа.",
+        "Kitchen GLB архивлагдлаа. Файл, variant хэвээр хадгалагдана.",
       );
       await load();
     } catch (reason) {
@@ -533,7 +560,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           <h2 className="mt-1 text-lg font-semibold">Гал тогооны GLB нэмэх</h2>
           <p className="text-sm text-black/55">
             Ангилал нь автоматаар “Гал тогооны шүүгээ” болно. Сонгосон
-            module-ийн хэмжээ загварт оноогдоно.
+            module-ийн хэмжээ GLB-ийн бодит хэмжээтэй таарах ёстой. Метр · +Y дээш · +Z нүүр · origin доод төв · applied transform.
           </p>
         </div>
         <form
@@ -560,7 +587,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               onChange={(event) => setUploadModuleId(event.target.value)}
             >
               <option value="">Сонгоно уу</option>
-              {modules.map((module) => (
+              {modules.filter(module => module.active).map((module) => (
                 <option key={module.id} value={module.id}>
                   {module.code} · {module.widthMm}×{module.heightMm}×
                   {module.depthMm} мм
@@ -604,10 +631,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               ? `${uploadModule.widthMm}×${uploadModule.heightMm}×${uploadModule.depthMm} мм`
               : "Module сонгоно уу"}
           </div>
+          <GlbUploadPreview allowFrontProjection file={uploadGlb} expected={{ widthMm: uploadModule?.widthMm ?? 0, heightMm: uploadModule?.heightMm ?? 0, depthMm: uploadModule?.depthMm ?? 0 }} onChange={setPreview} />
           <button
             className="btn-primary"
             disabled={
-              uploading || !uploadName.trim() || !uploadModule || !uploadGlb
+              uploading || !uploadName.trim() || !uploadModule || !uploadGlb || !preview || preview.file !== uploadGlb
             }
           >
             {uploading ? (
@@ -723,10 +751,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               required
               maxLength={80}
               value={variantCode}
-              onChange={(event) =>
-                setVariantCode(event.target.value.toUpperCase())
-              }
+              readOnly
             />
+          </label>
+          <label className="label">Хийцийн ялгах code (сонголттой)
+            <input className="input mt-1 w-full" value={designCode} onChange={event => setDesignCode(event.target.value.toUpperCase())} placeholder="Ж: TOP144" maxLength={40} />
           </label>
           <div className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs text-black/55">
             <strong className="text-black/70">Хаалга:</strong> {doorCount} ·{" "}
@@ -777,14 +806,14 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                 type="button"
                 className="btn-ghost !min-h-8 !px-2 text-red-600"
                 disabled={busy === `delete:${model.id}`}
-                onClick={() => void deleteModel(model)}
+                onClick={() => model.archivedAt ? void restoreModel(model.id) : void deleteModel(model)}
               >
                 {busy === `delete:${model.id}` ? (
                   <LoaderCircle size={13} className="animate-spin" />
                 ) : (
                   <Trash2 size={13} />
                 )}
-                Устгах
+                {model.archivedAt ? "Сэргээх" : "Архивлах"}
               </button>
             </div>
           ))}

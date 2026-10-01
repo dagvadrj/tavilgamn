@@ -1,291 +1,57 @@
+import { createHash } from "node:crypto";
+import { GetObjectCommand, HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { NextRequest, NextResponse } from "next/server";
 import { apiErrorResponse } from "@/lib/api/errors";
-import {
-  HeadObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-
-import {
-  NextRequest,
-  NextResponse,
-} from "next/server";
-
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { toJson } from "@/lib/supabase/json";
+import { GLB_STANDARD, GlbStandardError, inspectGlb, validateCabinetGlb } from "@/lib/glbStandard";
 
-const MAX_GLB_SIZE = 200 * 1024 * 1024;
-
-function getR2Client() {
-  const accountId = process.env.R2_ACCOUNT_ID;
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-
-  if (
-    !accountId ||
-    !accessKeyId ||
-    !secretAccessKey
-  ) {
-    throw new Error(
-      "R2 environment тохиргоо дутуу байна.",
-    );
-  }
-
-  return new S3Client({
-    region: "auto",
-
-    endpoint:
-      `https://${accountId}.r2.cloudflarestorage.com`,
-
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
-  });
-}
-
-function parseSourcePath(
-  sourcePath: string,
-  modelId: string,
-  bucket: string,
-) {
-  const prefix =
-    `r2://${bucket}/models/${modelId}/source/`;
-
-  if (!sourcePath.startsWith(prefix)) {
-    throw new Error(
-      "Source GLB зам буруу байна.",
-    );
-  }
-
-  const fileName = sourcePath.slice(prefix.length);
-
-  const match =
-    /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.glb$/i.exec(
-      fileName,
-    );
-
-  if (!match) {
-    throw new Error(
-      "Source GLB файлын нэр буруу байна.",
-    );
-  }
-
-  return {
-    uploadId: match[1],
-
-    key:
-      `models/${modelId}/source/${fileName}`,
-  };
-}
-
-export async function POST(
-  request: NextRequest,
-) {
-  let client: S3Client | null = null;
-
+export const runtime = "nodejs";
+export const maxDuration = 180;
+export async function POST(request: NextRequest) {
+  const auth = await requireAdmin(request); if (auth.error) return auth.error;
+  let client: S3Client | undefined;
   try {
-    const auth = await requireAdmin(request);
-
-    if (auth.error) {
-      return auth.error;
-    }
-
-    const bucket =
-      process.env.R2_BUCKET_NAME;
-
-    if (!bucket) {
-      throw new Error(
-        "R2_BUCKET_NAME тохируулаагүй байна.",
-      );
-    }
-
     const body = await request.json();
-
-    const modelId =
-      typeof body?.modelId === "string"
-        ? body.modelId.trim()
-        : "";
-
-    const sourcePath =
-      typeof body?.sourcePath === "string"
-        ? body.sourcePath.trim()
-        : "";
-
-    // --------------------------------
-    // 1. modelId нь furniture_models.id UUID
-    // --------------------------------
-
-    if (
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        modelId,
-      )
-    ) {
-      return apiErrorResponse(
-        {
-          error: "3D model ID буруу байна.",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    // --------------------------------
-    // 2. Source R2 path шалгах
-    // --------------------------------
-
-    const {
-      key,
-      uploadId,
-    } = parseSourcePath(
-      sourcePath,
-      modelId,
-      bucket,
-    );
-
-    // --------------------------------
-    // 3. R2 дээр файл үнэхээр байгаа эсэх
-    // --------------------------------
-
-    client = getR2Client();
-
-    let head;
-
-    try {
-      head = await client.send(
-        new HeadObjectCommand({
-          Bucket: bucket,
-          Key: key,
-        }),
-      );
-    } catch {
-      return apiErrorResponse(
-        {
-          error:
-            "R2 дээр upload хийсэн GLB олдсонгүй.",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    const bytes =
-      head.ContentLength ?? 0;
-
-    if (
-      bytes < 12 ||
-      bytes > MAX_GLB_SIZE
-    ) {
-      return apiErrorResponse(
-        {
-          error:
-            "Upload хийсэн GLB-ийн хэмжээ буруу байна.",
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    // --------------------------------
-    // 4. Model DB дээр байгаа эсэх
-    // --------------------------------
-
+    const modelId = String(body?.modelId ?? ""), sourcePath = String(body?.sourcePath ?? "");
+    const bucket = process.env.R2_BUCKET_NAME;
+    if (!bucket || !process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) throw new Error("R2 тохиргоо дутуу.");
+    const prefix = `r2://${bucket}/models/${modelId}/source/`;
+    if (!/^[0-9a-f-]{36}$/i.test(modelId) || !sourcePath.startsWith(prefix) || !/^[0-9a-f-]{36}\.glb$/i.test(sourcePath.slice(prefix.length))) throw new GlbStandardError("Source GLB зам буруу байна.");
     const db = getSupabaseAdmin();
-
-    const {
-      data: model,
-      error: modelError,
-    } = await db
-      .from("furniture_models")
-      .select("id")
-      .eq("id", modelId)
-      .maybeSingle();
-
-    if (modelError) {
-      throw modelError;
-    }
-
-    if (!model) {
-      return apiErrorResponse(
-        {
-          error: "3D model олдсонгүй.",
-        },
-        {
-          status: 404,
-        },
-      );
-    }
-
-    const now =
-      new Date().toISOString();
-
-    const {
-      data: queued,
-      error: queueError,
-    } = await db
-      .from("furniture_models")
-      .update({
-        source_glb_path:
-          sourcePath,
-
-        processing_job_id:
-          uploadId,
-
-        processing_status:
-          "queued",
-
-        processing_error:
-          null,
-
-        processing_requested_at:
-          now,
-
-        processing_updated_at:
-          now,
-      })
-      .eq("id", modelId)
-      .select(
-        "id,processing_status,processing_job_id",
-      )
-      .single();
-
-    if (queueError) {
-      throw queueError;
-    }
-
-    return NextResponse.json({
-      ok: true,
-
-      directSource: false,
-
-      modelId:
-        queued.id,
-
-      jobId:
-        queued.processing_job_id,
-
-      status:
-        queued.processing_status,
+    const [{ data: model, error: modelError }, { data: intent, error: intentError }] = await Promise.all([
+      db.from("furniture_models").select("id,category,dimensions_w,dimensions_h,dimensions_d,archived_at,cabinet_module_id").eq("id", modelId).maybeSingle(),
+      db.from("model_assets").select("id,byte_size,state,version_id").eq("model_id", modelId).eq("storage_path", sourcePath).eq("role", "source").eq("created_by", auth.userId).maybeSingle(),
+    ]);
+    if (modelError) throw modelError; if (intentError) throw intentError;
+    if (!model || model.archived_at) return apiErrorResponse({ error: "Идэвхтэй model олдсонгүй." }, { status: 404 });
+    if (!intent || !["pending", "available"].includes(intent.state)) throw new GlbStandardError("Upload бүртгэл олдсонгүй.");
+    if (intent.state === "available") return NextResponse.json({ ok: true, modelId, jobId: intent.version_id, status: "accepted" });
+    if (body.frontConfirmed !== true) throw new GlbStandardError("Upload preview дээр босоо байрлал, +Z нүүрэн талыг батална уу.");
+    client = new S3Client({ region: "auto", endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`, credentials: { accessKeyId: process.env.R2_ACCESS_KEY_ID, secretAccessKey: process.env.R2_SECRET_ACCESS_KEY } });
+    const key = sourcePath.slice(`r2://${bucket}/`.length);
+    const head = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+    if (!head.ContentLength || head.ContentLength !== intent.byte_size || head.ContentLength > GLB_STANDARD.maxBytes) throw new GlbStandardError("Upload хэмжээ бүртгэлтэй таарахгүй байна.");
+    const object = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key, IfMatch: head.ETag }), { abortSignal: AbortSignal.timeout(120000) });
+    if (!object.Body) throw new GlbStandardError("GLB body байхгүй.");
+    const bytes = await object.Body.transformToByteArray();
+    const report = inspectGlb(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer);
+    const projection = body.frontProjectionMm ?? 0;
+    if (typeof projection !== "number" || !Number.isFinite(projection) || projection < 0 || projection > 100 || (projection > 0 && model.category !== "kitchen-cabinet")) throw new GlbStandardError("Бариулын projection буруу байна.");
+    report.frontProjectionMm = projection;
+    const errors = validateCabinetGlb(report, { widthMm: Number(model.dimensions_w) * 1000, heightMm: Number(model.dimensions_h) * 1000, depthMm: Number(model.dimensions_d) * 1000 });
+    if (errors.length) throw new GlbStandardError(errors.join(" "));
+    if (model.category === "kitchen-cabinet" && !model.cabinet_module_id) throw new GlbStandardError("Kitchen model-ийн canonical module-ийг эхлээд сонгоно уу.");
+    const sha256 = createHash("sha256").update(bytes).digest("hex");
+    const { data: jobId, error } = await db.rpc("queue_model_asset", {
+      p_actor: auth.userId, p_model: modelId, p_path: sourcePath, p_sha256: sha256,
+      p_validation: toJson({ ...report, frontConfirmed: true, validatedAt: new Date().toISOString() }),
     });
+    if (error) throw error;
+    return NextResponse.json({ ok: true, modelId, jobId, status: "queued", validation: report });
   } catch (error) {
-    console.error(
-      "[model upload-complete]",
-      error,
-    );
-
-    return apiErrorResponse(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Processing queue-д оруулж чадсангүй.",
-      },
-      {
-        status: 500,
-      },
-    );
-  } finally {
-    client?.destroy();
-  }
+    console.error("[model upload-complete]", error);
+    return apiErrorResponse({ error: error instanceof GlbStandardError ? error.message : "GLB шалгаж queue-д оруулахад алдаа гарлаа." }, { status: error instanceof GlbStandardError ? 400 : 503 });
+  } finally { client?.destroy(); }
 }

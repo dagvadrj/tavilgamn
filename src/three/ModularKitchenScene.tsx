@@ -316,6 +316,7 @@ function Scene(props: ModularSceneProps) {
               props.variantModels?.[cabinet.variantId]?.glbFile ? (
                 <GLBFurnitureMesh
                   modelId={cabinet.variantId}
+                  preservePhysicalSize={props.variantModels[cabinet.variantId].physicalSize}
                   basePath={`/api/models/files/${cabinet.variantId}`}
                   glbFile={props.variantModels[cabinet.variantId].glbFile!}
                   previewGlbFile={

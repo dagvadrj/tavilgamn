@@ -1591,6 +1591,8 @@ def process_delivery(
         "placedTriangles": total,
         "unit": "triangles",
         "preservedGeometry": True,
+        "dimensionsM": {"w": maximum.x - minimum.x, "h": maximum.z - minimum.z, "d": maximum.y - minimum.y},
+        "boundsM": {"min": [minimum.x, minimum.z, -maximum.y], "max": [maximum.x, maximum.z, -minimum.y]},
         "maxTriangles": max_triangles,
         "delivery": {
             "passed": True,

@@ -8,7 +8,8 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 
-import { mkdir, mkdtemp, rm, stat } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, stat, readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 
 import { createReadStream, createWriteStream } from "node:fs";
 
@@ -32,6 +33,9 @@ const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../..",
 );
+// Bounded end-to-end verification: never claim another model's queued job.
+const VERIFY_MODEL_ID = process.env.MODEL_WORKER_VERIFY_MODEL_ID;
+if (VERIFY_MODEL_ID && !isUuid(VERIFY_MODEL_ID)) throw new Error("Invalid verification model UUID");
 function isTransientNetworkError(error) {
   const message = error instanceof Error ? error.message : String(error);
 
@@ -82,6 +86,11 @@ const r2 = new S3Client({
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+async function cleanupTemporaryWorkspace(directory) {
+  const resolved = path.resolve(directory), tempRoot = path.resolve(tmpdir());
+  if (path.dirname(resolved) !== tempRoot || !/^tavilgamn-(?:export-)?[0-9a-f-]{36}-[a-zA-Z0-9]+$/.test(path.basename(resolved))) throw new Error("Unsafe temporary workspace cleanup target");
+  await rm(resolved, { recursive: true, force: true });
 }
 
 function isUuid(value) {
@@ -142,6 +151,18 @@ async function run(executable, args) {
 }
 
 async function claimJob() {
+  if (VERIFY_MODEL_ID) {
+    const { data: pending, error: readError } = await db.from("furniture_models").select("*")
+      .eq("id", VERIFY_MODEL_ID).eq("processing_status", "queued").is("archived_at", null).maybeSingle();
+    if (readError) throw readError;
+    if (!pending) return null;
+    const { data: claimed, error: claimError } = await db.from("furniture_models")
+      .update({ processing_status: "processing", processing_updated_at: new Date().toISOString() })
+      .eq("id", pending.id).eq("processing_job_id", pending.processing_job_id)
+      .eq("processing_status", "queued").is("archived_at", null).select("*").maybeSingle();
+    if (claimError) throw claimError;
+    return claimed;
+  }
   const { data, error } = await db.rpc("claim_furniture_model_job");
 
   if (error) {
@@ -209,6 +230,15 @@ async function uploadGlb(file, key) {
   if (!info.isFile() || info.size < 12) {
     throw new Error(`Invalid output GLB: ${file}`);
   }
+  const match = /^models\/([0-9a-f-]{36})\/(delivery|standard)\/([0-9a-f-]{36})\//i.exec(key);
+  if (!match) throw new Error("Untracked asset key");
+  const storagePath = `r2://${R2_BUCKET_NAME}/${key}`;
+  const { error: ledgerError } = await db.from("model_assets").upsert({
+    model_id: match[1], version_id: match[3], storage_path: storagePath,
+    role: match[2] === "standard" ? "standard" : key.includes("/preview-") ? "preview" : "delivery",
+    byte_size: info.size, state: "pending",
+  }, { onConflict: "storage_path" });
+  if (ledgerError) throw ledgerError;
 
   await r2.send(
     new PutObjectCommand({
@@ -223,6 +253,7 @@ async function uploadGlb(file, key) {
       ContentType: "model/gltf-binary",
 
       CacheControl: "public, max-age=31536000, immutable",
+      IfNoneMatch: "*",
     }),
   );
 
@@ -238,6 +269,8 @@ async function deleteR2Key(key, quiet = true) {
         Key: key,
       }),
     );
+    const { error } = await db.from("model_assets").update({ state: "deleted", updated_at: new Date().toISOString() }).eq("storage_path", `r2://${R2_BUCKET_NAME}/${key}`);
+    if (error) throw error;
   } catch (error) {
     if (!quiet) throw error;
     console.error(`[worker] cleanup failed: ${key}`, error);
@@ -340,6 +373,10 @@ async function processJob(model) {
     // --------------------------------
 
     const sourceBytes = await downloadSource(sourceKey, sourceFile);
+    const { data: sourceAsset, error: sourceAssetError } = await db.from("model_assets")
+      .select("sha256").eq("model_id", modelId).eq("storage_path", model.source_glb_path).maybeSingle();
+    if (sourceAssetError) throw sourceAssetError;
+    if (sourceAsset?.sha256 && createHash("sha256").update(await readFile(sourceFile)).digest("hex") !== sourceAsset.sha256) throw new Error("Source checksum changed after validation");
 
     console.log(`[worker] source: ${(sourceBytes / 1048576).toFixed(2)} MiB`);
 
@@ -381,6 +418,14 @@ async function processJob(model) {
     const previewFile = path.join(compressed, "preview.glb");
     const deliveryInfo = await stat(deliveryFile);
     const previewInfo = await stat(previewFile);
+    if (model.glb_validation) {
+      const geometryReport = JSON.parse(await readFile(path.join(buildDirectory, "geometry", modelId, "geometry-report.json"), "utf8"));
+      const actual = geometryReport.dimensionsM;
+      const projectionM = Number(model.glb_validation.frontProjectionMm ?? 0) / 1000;
+      if (!Number.isFinite(projectionM) || projectionM < 0 || projectionM > 0.1 || !actual || ["w", "h", "d"].some(axis => !Number.isFinite(actual[axis]) || Math.abs(actual[axis] - Number(model[`dimensions_${axis}`]) - (axis === "d" ? projectionM : 0)) > 0.005)) throw new Error("Decoded GLB dimensions do not match approved catalog dimensions");
+      const bounds = geometryReport.boundsM;
+      if (!bounds || ![...bounds.min, ...bounds.max].every(Number.isFinite) || Math.max(Math.abs((bounds.min[0]+bounds.max[0])/2), Math.abs(bounds.min[1]), Math.abs((bounds.min[2]+bounds.max[2])/2)) > 0.002) throw new Error("Decoded GLB origin is not bottom-center");
+    }
 
     if (!deliveryInfo.isFile() || deliveryInfo.size < 12) {
       throw new Error("Missing compressed delivery.glb");
@@ -507,10 +552,7 @@ async function processJob(model) {
     // source + geometry + compressed
     // --------------------------------
 
-    await rm(workspace, {
-      recursive: true,
-      force: true,
-    });
+    await cleanupTemporaryWorkspace(workspace);
 
     console.log(`[worker] TEMP deleted: ${workspace}`);
   }
@@ -532,12 +574,15 @@ async function main() {
 
         try {
           await processJob(job);
-        } catch {
+        } catch (error) {
           // processJob DB status-ээ өөрөө шинэчилнэ.
+          if (VERIFY_MODEL_ID) throw error;
         }
-
+        if (VERIFY_MODEL_ID) { r2.destroy(); return; }
         continue;
       }
+
+      if (VERIFY_MODEL_ID) throw new Error("Verification model is not queued; no other jobs were touched");
 
       const exportJob = await claimExportJob();
 
@@ -562,6 +607,7 @@ async function main() {
 
       await sleep(POLL_INTERVAL);
     } catch (error) {
+      if (VERIFY_MODEL_ID) throw error;
       if (isTransientNetworkError(error)) {
         console.warn(
           `[worker] Supabase түр холбогдохгүй байна. ` +
@@ -702,10 +748,7 @@ async function processExportJob(model) {
 
     throw error;
   } finally {
-    await rm(workspace, {
-      recursive: true,
-      force: true,
-    });
+    await cleanupTemporaryWorkspace(workspace);
   }
 }
 

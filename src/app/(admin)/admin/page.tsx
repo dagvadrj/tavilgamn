@@ -1,6 +1,10 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
+import { authFetch } from "@/lib/authFetch";
+import type { GlbPreviewResult } from "@/components/GlbUploadPreview";
+const GlbUploadPreview = dynamic(() => import("@/components/GlbUploadPreview"), { ssr: false });
 import { useState, useEffect, useRef, useCallback } from "react";
 import { AdminMessages } from "@/components/AdminMessages";
 import {
@@ -200,6 +204,7 @@ type ColorEntry = { name: string; hex: string; priceDelta: string };
 type MaterialEntry = { id: string; priceDelta: string };
 
 type ModelRecord = {
+  archivedAt?: string | null;
   id: string;
   name: string;
   category: string;
@@ -223,7 +228,7 @@ type ExportState = {
 
   error: string | null;
 };
-type ModelSection = "requests" | "processing" | "ready" | "error";
+type ModelSection = "requests" | "processing" | "ready" | "error" | "archived";
 
 type ModelStatus = {
   id: string;
@@ -277,13 +282,14 @@ function ModelsTab({
   const [description, setDescription] = useState("");
   const [basePrice, setBasePrice] = useState("0");
   const [stockQuantity, setStockQuantity] = useState("0");
-  const [scale, setScale] = useState("0.001");
+  const [scale, setScale] = useState("1");
   const [dimW, setDimW] = useState("1.0");
   const [dimD, setDimD] = useState("1.0");
   const [dimH, setDimH] = useState("1.0");
 
   // Files
   const [glbFile, setGlbFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<GlbPreviewResult | null>(null);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const glbRef = useRef<HTMLInputElement>(null);
   const thumbRef = useRef<HTMLInputElement>(null);
@@ -298,11 +304,11 @@ function ModelsTab({
     { id: "wood", priceDelta: "0" },
   ]);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setFetching(true);
     setLoadError(null);
     try {
-      const res = await fetch("/api/models");
+      const res = await authFetch("/api/models?admin=1", undefined, owner);
       if (!res.ok)
         throw new Error("Загваруудын жагсаалтыг татахад алдаа гарлаа.");
       const data = await res.json();
@@ -317,8 +323,8 @@ function ModelsTab({
     } finally {
       setFetching(false);
     }
-  };
-  const loadModelStatuses = async () => {
+  }, [owner]);
+  const loadModelStatuses = useCallback(async () => {
     try {
       const {
         data: { session },
@@ -352,7 +358,7 @@ function ModelsTab({
     } catch (reason) {
       console.error("[models/status]", reason);
     }
-  };
+  }, []);
 
   const sessionToken = useCallback(async () => {
     const {
@@ -527,7 +533,7 @@ function ModelsTab({
 
   useEffect(() => {
     void Promise.all([load(), loadModelStatuses()]);
-  }, []);
+  }, [load, loadModelStatuses]);
 
   const addColor = () =>
     setColors((c) => [
@@ -561,7 +567,7 @@ function ModelsTab({
     setDescription("");
     setBasePrice("0");
     setStockQuantity("0");
-    setScale("0.001");
+    setScale("1");
     setDimW("1.0");
     setDimD("1.0");
     setDimH("1.0");
@@ -580,6 +586,7 @@ function ModelsTab({
       setError("Нэр болон GLB файл заавал шаардлагатай.");
       return;
     }
+    if (!preview || preview.file !== glbFile || !preview.frontConfirmed) { setError("GLB preview-г шалгаж, нүүрэн талыг батална уу."); return; }
 
     if (
       !glbFile.name.toLowerCase().endsWith(".glb") ||
@@ -642,7 +649,7 @@ function ModelsTab({
       fd.append("dimensionsH", dimH);
       fd.append("colors", colorsJson);
       fd.append("materials", matsJson);
-      if (thumbnail) fd.append("thumbnail", thumbnail);
+      fd.append("thumbnail", thumbnail ?? preview.thumbnail);
 
       const {
         data: { session },
@@ -717,6 +724,7 @@ function ModelsTab({
           body: JSON.stringify({
             modelId: model.id,
             sourcePath: prepareData.sourcePath,
+            frontConfirmed: preview.frontConfirmed,
           }),
         },
       );
@@ -767,9 +775,21 @@ function ModelsTab({
     }
   };
 
+  const handleRestore = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const res = await authFetch(`/api/models/${id}`, { method: "PATCH" }, owner);
+      if (!res.ok) throw new Error("Сэргээхэд алдаа гарлаа.");
+      await load();
+    } catch (reason) { setLoadError(reason instanceof Error ? reason.message : "Сэргээхэд алдаа гарлаа."); }
+    finally { setDeletingId(null); }
+  };
+
   const catLabel = (id: string) =>
     CATEGORY_OPTIONS.find((c) => c.id === id)?.name ?? id;
   const filteredModels = models.filter((model) => {
+    if (modelSection === "archived") return !!model.archivedAt;
+    if (model.archivedAt) return false;
     const status = modelStatuses[model.id];
 
     if (!status) {
@@ -811,6 +831,7 @@ function ModelsTab({
   return (
     <div>
       <div className="admin-model-tabs">
+        <button type="button" className={modelSection === "archived" ? "active" : ""} onClick={() => setModelSection("archived")}>Архив</button>
         <button
           type="button"
           className={modelSection === "requests" ? "active" : ""}
@@ -888,7 +909,7 @@ function ModelsTab({
                       onChange={(e) => setCategory(e.target.value)}
                       className="input"
                     >
-                      {CATEGORY_OPTIONS.map((c) => (
+                      {CATEGORY_OPTIONS.filter(c => c.id !== "kitchen-cabinet").map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
                         </option>
@@ -1115,6 +1136,7 @@ function ModelsTab({
                 </div>
               </section>
 
+              <GlbUploadPreview file={glbFile} expected={{ widthMm: Number(dimW) * 1000, heightMm: Number(dimH) * 1000, depthMm: Number(dimD) * 1000 }} onChange={setPreview} />
               {error && (
                 <p role="alert" className="admin-error">
                   {error}
@@ -1131,7 +1153,7 @@ function ModelsTab({
 
               <button
                 type="submit"
-                disabled={uploading}
+                disabled={uploading || !preview || preview.file !== glbFile}
                 className="btn-primary"
               >
                 <Upload className="h-4 w-4" />
@@ -1306,14 +1328,14 @@ function ModelsTab({
 
                       <button
                         type="button"
-                        aria-label={`${m.name} устгах`}
-                        onClick={() => setPendingDelete(m)}
+                        aria-label={`${m.name} ${m.archivedAt ? "сэргээх" : "архивлах"}`}
+                        onClick={() => m.archivedAt ? void handleRestore(m.id) : setPendingDelete(m)}
                         disabled={deletingId === m.id}
                         className="admin-model-delete"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
 
-                        {deletingId === m.id ? "Устгаж байна…" : "Устгах"}
+                        {deletingId === m.id ? "Хадгалж байна…" : m.archivedAt ? "Сэргээх" : "Архивлах"}
                       </button>
                     </div>
                   </div>
@@ -1354,10 +1376,10 @@ function ModelsTab({
             <span className="admin-dialog-icon">
               <Trash2 size={23} />
             </span>
-            <h2 id="delete-model-title">3D загварыг устгах уу?</h2>
+            <h2 id="delete-model-title">3D загварыг архивлах уу?</h2>
             <p id="delete-model-description">
               <strong>{pendingDelete.name}</strong> загвар болон холбогдох
-              файлууд устгагдана. Энэ үйлдлийг буцаах боломжгүй.
+              файлууд хэвээр хадгалагдана. Архиваас сэргээх боломжтой.
             </p>
             <div className="admin-dialog-actions">
               <button
@@ -1375,7 +1397,7 @@ function ModelsTab({
                 disabled={!!deletingId}
                 onClick={() => void handleDelete(pendingDelete.id)}
               >
-                {deletingId ? "Устгаж байна…" : "Тийм, устгах"}
+                {deletingId ? "Архивлаж байна…" : "Тийм, архивлах"}
               </button>
             </div>
           </section>

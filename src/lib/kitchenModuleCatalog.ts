@@ -2,6 +2,7 @@ export const KITCHEN_OPENINGS = ["doors", "drawers", "open", "sink", "hob", "ove
 export type KitchenOpening = (typeof KITCHEN_OPENINGS)[number];
 
 export type KitchenCatalogVariant = {
+  physicalSize?: boolean;
   furnitureModelId: string;
   productId: string;
   modelName: string;
@@ -34,6 +35,7 @@ export type KitchenCatalogModule = {
 };
 
 export type KitchenModelCandidate = {
+  archivedAt?: string | null;
   id: string;
   productId: string;
   name: string;
@@ -129,6 +131,8 @@ export function parseKitchenVariantInput(value: unknown) {
   const moduleId = typeof raw.moduleId === "string" ? raw.moduleId : "";
   const opening = typeof raw.opening === "string" ? raw.opening : "";
   const variantCode = typeof raw.variantCode === "string" ? raw.variantCode.trim().toUpperCase() : "";
+  const designCode = typeof raw.designCode === "string" ? raw.designCode.trim().toUpperCase() : "";
+  if (designCode && !/^[A-Z0-9]{1,16}(?:-[A-Z0-9]{1,16}){0,3}$/.test(designCode)) throw new KitchenModuleInputError("Хийцийн code буруу байна.");
   const integer = (input: unknown, fallback: number) => input === undefined ? fallback : Number(input);
   const doorCount = integer(raw.doorCount, 0), drawerCount = integer(raw.drawerCount, 0), sortOrder = integer(raw.sortOrder, 0);
   if (!UUID.test(modelId) || !UUID.test(moduleId)) throw new KitchenModuleInputError("Model эсвэл module ID буруу байна.");
@@ -138,7 +142,7 @@ export function parseKitchenVariantInput(value: unknown) {
     throw new KitchenModuleInputError("Хаалга, шургуулга эсвэл эрэмбийн утга буруу байна.");
   }
   return { modelId, moduleId, payload: { variantCode, opening, doorCount, drawerCount,
-    isDefault: raw.isDefault === true, sortOrder, configuration: {} } };
+    isDefault: raw.isDefault === true, sortOrder, configuration: designCode ? { designCode } : {} } };
 }
 
 export function parseVariantState(value: unknown) {

@@ -19,9 +19,11 @@ import {
   type LoadedModel,
 } from "./modelLoader";
 import { reportModelPerformance } from "@/lib/modelPerformance";
+import { modelPlacement } from "@/lib/modelPlacement";
 import { useCameraMotionPreview } from "./CameraMotionPreview";
 
 export interface GLBFurnitureMeshProps {
+  preservePhysicalSize?: boolean;
   modelId: string;
   basePath: string;
   glbFile: string;
@@ -97,6 +99,7 @@ export function GLBFurnitureMesh({
   carcassColor,
   onReady,
   onError,
+  preservePhysicalSize = false,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
   const motionPreview = useCameraMotionPreview();
@@ -357,14 +360,16 @@ export function GLBFurnitureMesh({
   const hasRetainedPreview = ready?.variant === "high" && previewSize && previewOrigin &&
     Math.min(previewSize.x, previewSize.y, previewSize.z) > 1e-9;
   const showingMotionPreview = Boolean(motionPreview && hasRetainedPreview);
+  const placement = ready && valid ? modelPlacement(ready.asset.bounds, { w, h, d }, preservePhysicalSize) : null;
+  const previewPlacement = hasRetainedPreview && retainedPreview ? modelPlacement(retainedPreview.asset.bounds, { w, h, d }, preservePhysicalSize, { w: size!.x, h: size!.y, d: size!.z }) : null;
   return (
     <group ref={root} userData={{ deliveryPending: !ready || ready.variant !== "high" || showingMotionPreview }}>
       {ready && valid ? (
-        <group scale={[w / size.x, h / size.y, d / size.z]} visible={!showingMotionPreview}
+        <group scale={placement!.scale} visible={!showingMotionPreview}
           raycast={raycastVisibleVariant} dispose={null}>
           <primitive
             object={ready.asset.scene}
-            position={[-origin.x, -ready.asset.bounds.min.y, -origin.z]}
+            position={placement!.position}
             dispose={null}
           />
         </group>
@@ -380,10 +385,10 @@ export function GLBFurnitureMesh({
         </mesh>
       )}
       {hasRetainedPreview && retainedPreview && (
-        <group scale={[w / previewSize.x, h / previewSize.y, d / previewSize.z]}
+        <group scale={previewPlacement!.scale}
           visible={showingMotionPreview} raycast={raycastVisibleVariant} userData={{ exportExclude: true }} dispose={null}>
           <primitive object={retainedPreview.asset.scene}
-            position={[-previewOrigin.x, -retainedPreview.asset.bounds.min.y, -previewOrigin.z]}
+            position={previewPlacement!.position}
             dispose={null} />
         </group>
       )}
