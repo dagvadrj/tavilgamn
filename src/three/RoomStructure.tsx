@@ -156,6 +156,7 @@ function RoomSurfaces({ design, view, onSelect, onSelectOpening }: RoomStructure
   });
   return <>
     <mesh rotation={[Math.PI / 2, 0, 0]} geometry={geometries.floor} receiveShadow onPointerDown={event => {
+      if (event.button !== 0) return;
       event.stopPropagation(); onSelect(null); onSelectOpening?.(null);
     }}><meshStandardMaterial {...floorProps} /></mesh>
     <mesh ref={ceiling} visible={false} position={[0, height, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={geometries.roof} receiveShadow raycast={noRaycast}>

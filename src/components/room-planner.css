@@ -146,7 +146,8 @@
   .room-wall-live strong { font-size: 17px; }
 }
 .planner-kitchen-library { border-bottom: 1px solid #dce1db; margin-bottom: 16px; padding-bottom: 16px; }
-.planner-kitchen-library > h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+.planner-kitchen-library > summary { font-size: 13px; font-weight: 650; padding: 12px; border: 1px solid #dce3dd; border-radius: 12px; background: #f3f6f1; cursor: pointer; }
+.planner-kitchen-library[open] > summary { margin-bottom: 12px; }
 .planner-advanced { padding: 16px; border-bottom: 1px solid #dce1db; }
 .planner-advanced summary { cursor: pointer; font-size: 13px; font-weight: 600; }
 .planner-advanced-fields { display: flex; flex-wrap: wrap; gap: 10px; padding-top: 16px; }
@@ -270,4 +271,45 @@
 @media (min-width: 1440px) { .planner-workspace { grid-template-columns: 250px minmax(0, 1fr) 310px; } }
 @media (max-width: 1279px) { .room-camera-guide { bottom: 82px; font-size: 10px; } }
 @media (max-width: 767px) { .room-material-sample { height: 84px; } .room-camera-guide { bottom: 98px; max-width: 230px; margin-inline: auto; line-height: 1.5; } }
+
+/* A calm workspace: editing on top, navigation on the map, budget below. */
+.planner-workspace { grid-template-columns: 272px minmax(0, 1fr) 304px; }
+.planner-drawer { background: #fafbf8; }
+.planner-panel-heading { gap: 5px; margin-bottom: 14px; }
+.planner-search { min-height: 44px; box-shadow: 0 2px 8px #253d2a04; }
+.planner-view-toolbar { align-items: flex-start; gap: 8px; }
+.planner-segment, .planner-tool-group { border-radius: 14px; padding: 4px; box-shadow: 0 5px 18px #263a300b; }
+.planner-view-toolbar button { min-height: 40px; height: auto; min-width: 40px; }
+.planner-file-actions { margin-left: auto; }
+.planner-file-actions button { padding-inline: 10px; font-weight: 600; }
+.planner-file-actions button:last-child { background: #293c32; color: #fff; }
+.planner-file-actions button:last-child:hover { background: #3e594a; }
+.planner-tools-menu { position: relative; pointer-events: auto; }
+.planner-tools-menu > summary { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 50px; padding: 8px 12px; border: 1px solid #dce3dd; border-radius: 14px; background: #fff; font-size: 12px; cursor: pointer; list-style: none; box-shadow: 0 5px 18px #263a300b; }
+.planner-tools-menu > summary::-webkit-details-marker { display: none; }
+.planner-tools-menu[open] > summary { border-color: #9dae9e; background: #eaf0e7; }
+.planner-tools-popover { position: absolute; top: calc(100% + 8px); left: 0; display: grid; gap: 5px; padding: 8px; width: 210px; background: #fff; border: 1px solid #dce3dd; border-radius: 14px; box-shadow: 0 14px 34px #263a3020; }
+.planner-tools-popover button { justify-content: flex-start; padding: 8px 10px; font-size: 12px; }
+.planner-room-caption { top: 80px; left: 16px; padding: 10px 14px; border: 1px solid #ffffffb8; border-radius: 14px; background: #ffffffd9; box-shadow: 0 4px 20px #263a3006; max-width: calc(100% - 32px); }
+.planner-room-caption strong { font-size: 14px; }
+.planner-room-caption span { font-size: 11px; }
+.planner-measure-readout { top: 154px; }
+.planner-budget-bar { padding: 12px 16px; border-radius: 16px; }
+.planner-selection-toolbar:has(button) { border-radius: 16px; }
+.room-camera-guide { left: 14px; right: auto; max-width: calc(100% - 105px); padding: 8px 10px; border-radius: 10px; background: #ffffffb8; text-align: left; }
+@media (max-width: 1279px) { .planner-room-caption { top: 124px; } .planner-measure-readout { top: 196px; } }
+@media (max-width: 600px) {
+  .planner-view-toolbar { gap: 5px; }
+  .planner-view-toolbar button { min-width: 34px; min-height: 38px; }
+  .planner-segment, .planner-tool-group { padding: 3px; gap: 0; }
+  .planner-segment button { padding-inline: 8px; }
+  .planner-file-actions button { padding-inline: 8px; }
+  .planner-file-actions button span, .planner-tools-menu > summary span { display: none; }
+  .planner-tools-menu > summary { min-height: 46px; padding: 8px; }
+  .planner-room-caption { top: 116px; left: 12px; padding: 8px 11px; }
+  .planner-room-caption span { font-size: 10px; }
+  .planner-measure-readout { top: 183px; }
+  .room-camera-guide { font-size: 9px; max-width: 220px; margin: 0; }
+}
+@media (max-width: 359px) { .planner-segment button svg { display: none; } }
 .planner-workspace .planner-start-hint .planner-hint-dismiss { display: grid; position: absolute; right: 5px; top: 5px; place-items: center; width: 25px; height: 25px; color: #788171; }

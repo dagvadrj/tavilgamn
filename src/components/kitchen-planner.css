@@ -1546,6 +1546,28 @@
   background: #293c32;
   color: white;
 }
+
+/* Shared visual language with the room planner; map actions live by the canvas. */
+.kp-planner-topbar { gap: 12px; background: #fcfdfb; box-shadow: 0 4px 20px #203b2408; }
+.kp-top-actions > button, .kp-top-menu > summary, .kp-close-planner { border-radius: 11px; }
+.kp-project-name input { border-radius: 11px; background: #f1f5ef; font-size: 13px; }
+.kp-shell .kp-preview-bar { gap: 10px; }
+.kp-shell .kp-preview-bar > span { font-size: 12px; min-height: 42px; padding: 11px 13px; border-radius: 14px; }
+.kp-shell .km-view-tools { gap: 3px; padding: 4px; border-radius: 14px; }
+.kp-shell .kp-preview-bar button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px; font-size: 12px; padding: 8px 10px; }
+.kp-shell .km-view-tools button:nth-child(3) span { display: none; }
+.kp-shell .kp-preview-hint { font-size: 11px; max-width: calc(50% - 25px); border-radius: 12px; }
+.kp-shell .km-feedback { left: auto; right: 14px; transform: none; max-width: calc(50% - 25px); font-size: 11px; border-radius: 12px; }
+.kp-shell .viewport-controls { bottom: 80px; }
+.kp-shell:has(.kp-settings.is-open) .viewport-controls { right: 420px; }
+.kp-shell .kp-settings { border-radius: 18px; box-shadow: 0 16px 48px #203b2420; }
+@media (max-width: 1000px) { .kp-shell .km-view-tools button span { display: none; } .kp-shell .kp-preview-bar button { min-width: 40px; padding: 9px; } }
+@media (max-width: 760px) { .kp-shell .viewport-controls { bottom: 124px; } .kp-shell:has(.kp-settings.is-open) .viewport-controls { display: none; } .kp-shell .kp-preview-hint { max-width: calc(100% - 26px); } .kp-shell .km-feedback { left: 12px; right: auto; bottom: 58px; max-width: calc(100% - 26px); } }
+@media (max-width: 359px) {
+  .kp-planner-topbar { align-items: flex-start; }
+  .kp-top-actions { display: grid; flex: 1; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .kp-top-actions > button, .kp-top-actions > a, .kp-top-actions .kp-top-menu > summary { width: 100%; padding: 7px; }
+}
 .km-add-menu > summary {
   display: flex;
   align-items: center;

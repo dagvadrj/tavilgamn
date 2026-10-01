@@ -74,6 +74,9 @@ Thumbs.db
 !/docs/phase3-verification.md
 !/docs/phase3-review.png
 !/docs/phase3-workspace.png
+!/docs/planner-ui-verification.md
+!/docs/room-planner-ui.png
+!/docs/kitchen-planner-ui.png
 /patches/
 /model-work/
 /.tools/

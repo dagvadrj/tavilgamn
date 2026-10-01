@@ -2,7 +2,9 @@
 import dynamic from "next/dynamic";
 import { useRoomPlannerUi, type CustomInterior } from "@/features/room-planner/hooks/useRoomPlannerUi";
 import { Drawer, CompareModal, NumberControl, PlannerSkeleton } from "@/features/room-planner/components/PlannerPanels";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ViewportControls } from "@/features/planner/components/ViewportControls";
+import type { CameraAction, CameraRequest } from "@/lib/plannerCamera";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -29,7 +31,6 @@ import {
   Ruler,
   Search,
   Download,
-  Scan,
   Check,
   Move,
   ArrowUp,
@@ -156,6 +157,12 @@ export function RoomPlanner() {
     [catalog.products],
   );
   const workspaceRef = useRef<HTMLDivElement>(null);
+  const [cameraRequest, setCameraRequest] = useState<CameraRequest>();
+  function navigateView(action: CameraAction) {
+    if (action === "top") setView("plan");
+    if (action === "front") setView("perspective");
+    setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action }));
+  }
   const shortcuts = useRef<Record<string, () => void>>({});
   const addToCart = useCart((s) => s.add);
 
@@ -881,8 +888,8 @@ export function RoomPlanner() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-3">
-          <section className="planner-kitchen-library">
-            <h3>Өөрийн загвар · гарнитур</h3>
+          <details className="planner-kitchen-library">
+            <summary>Өөрийн загвар · гарнитур</summary>
             <SavedKitchenList
               onPlace={(saved: SavedKitchen) => {
                 const fit = assessKitchenRoomFit(
@@ -911,7 +918,7 @@ export function RoomPlanner() {
               <Plus size={15} />
               Гарнитур үүсгэх
             </Link>
-          </section>
+          </details>
           {(catalog.loading || !catalog.ready) && (
             <CatalogStatus
               loading={catalog.loading}
@@ -1065,14 +1072,16 @@ export function RoomPlanner() {
               <Redo2 size={18} />
             </button>
           </div>
-          <div className="planner-tool-group">
+          <details className="planner-tools-menu">
+            <summary aria-label="Засварлах хэрэгслүүд"><Settings size={17}/><span>Засвар</span></summary>
+            <div className="planner-tools-popover">
             <button
               title="25 см тор ба торонд тааруулах"
               aria-label="Торонд тааруулах"
               aria-pressed={gridEnabled}
               onClick={() => setGridEnabled((v) => !v)}
             >
-              <LayoutGrid size={18} />
+              <LayoutGrid size={18} /><span>25 см тор</span>
             </button>
             <button
               title="Хананд наалдуулах"
@@ -1080,7 +1089,7 @@ export function RoomPlanner() {
               aria-pressed={snapEnabled}
               onClick={() => setSnapEnabled((v) => !v)}
             >
-              <Magnet size={18} />
+              <Magnet size={18} /><span>Хананд тааруулах</span>
             </button>
             <button
               title="Measure · тавилга сонгоод хэмжээ, зайг харах"
@@ -1088,51 +1097,34 @@ export function RoomPlanner() {
               aria-pressed={showDimensions}
               onClick={() => setShowDimensions((v) => !v)}
             >
-              <Ruler size={18} />
+              <Ruler size={18} /><span>Хэмжээс</span>
             </button>
-          </div>
-          <div className="planner-tool-group">
-            <button
-              title="Камерын хөдөлгөөн түгжих"
-              aria-label="Камер түгжих"
-              aria-pressed={locked}
-              onClick={() => setLocked((v) => !v)}
-            >
-              {locked ? <Lock size={18} /> : <Unlock size={18} />}
-            </button>
-            <button
-              title="Камерыг эхний байрлалд"
-              aria-label="Камер дахин төвлөрүүлэх"
-              onClick={() => setResetKey((v) => v + 1)}
-            >
-              <Scan size={18} />
-            </button>
-            <button
-              title="Томруулах / буцаах"
-              aria-label="Ажлын талбай томруулах"
-              aria-pressed={expanded}
-              onClick={() => setExpanded((v) => !v)}
-            >
-              <Maximize size={18} />
-            </button>
-          </div>
-          <div className="planner-tool-group">
+            </div>
+          </details>
+          <div className="planner-tool-group planner-file-actions">
             <button
               title="PNG зураг татах"
               aria-label="Зураг татах"
               onClick={exportImage}
             >
-              <Download size={18} />
+              <Download size={18} /><span>Зураг</span>
             </button>
             <button
               title="Хадгалах (Ctrl+S)"
               aria-label="Загвар хадгалах"
               onClick={save}
             >
-              <Save size={18} />
+              <Save size={18} /><span>Хадгалах</span>
             </button>
           </div>
         </div>
+        <ViewportControls onAction={navigateView} plan={view === "plan"} disabled={locked}
+          extra={<>
+            <button type="button" title="Камер түгжих" aria-label="Камер түгжих" aria-pressed={locked}
+              onClick={() => setLocked(value => !value)}>{locked ? <Lock size={18}/> : <Unlock size={18}/>}</button>
+            <button type="button" title="Ажлын талбай томруулах" aria-label="Ажлын талбай томруулах" aria-pressed={expanded}
+              onClick={() => setExpanded(value => !value)}><Maximize size={18}/></button>
+          </>}/>
         <div className="planner-room-caption">
           <strong>
             {current.roomName ?? "Зочны өрөө"} · {current.width} ×{" "}
@@ -1291,8 +1283,8 @@ export function RoomPlanner() {
           {placementTemplate
             ? "Байрлуулах ханандаа дарна уу · Esc цуцлах"
             : view === "plan"
-              ? "2D төлөвлөгөө · Чирж байрлуулах"
-              : "360° эргүүлэх · Дугуйгаар ойртуулах · Хана автоматаар бүдгэрнэ"}
+              ? "2D · Дунд товч: шилжүүлэх · Дугуй: ойртуулах"
+              : "Дунд товч: эргүүлэх · Shift: шилжүүлэх · Дугуй: ойртуулах"}
         </div>
 
         <div className="planner-canvas h-full w-full pt-10 xl:pt-0">
@@ -1333,6 +1325,7 @@ export function RoomPlanner() {
             showDimensions={showDimensions}
             measurements={measurements}
             resetKey={resetKey}
+            cameraRequest={cameraRequest}
             onEditStart={beginEdit}
             onEditEnd={endEdit}
             customInterior={

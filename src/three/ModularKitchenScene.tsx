@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, useEffect, useRef, type ReactNode } from "react";
+import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Canvas,
   useFrame,
@@ -35,6 +35,8 @@ import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { DEFAULT_FLOOR_MATERIAL } from "@/lib/roomDesign";
 import { useRoomMaterial } from "./roomMaterials";
 import { KitchenExtraMesh } from "./KitchenExtraMesh";
+import { CameraNavigation } from "./CameraNavigation";
+import type { CameraRequest } from "@/lib/plannerCamera";
 
 export interface ModularSceneProps {
   exportRoot?: (root: Group | null) => void;
@@ -43,6 +45,7 @@ export interface ModularSceneProps {
   kitchen: ModularKitchen;
   selectedId: string | null;
   mode: "move" | "orbit";
+  cameraRequest?: CameraRequest;
   onSelect: (id: string) => void;
   onDeselect?: () => void;
   onStart: (id: string) => void;
@@ -120,6 +123,7 @@ function Scene(props: ModularSceneProps) {
   const { camera, gl, invalidate, scene } = useThree();
   const callbacks = useRef(props);
   callbacks.current = props;
+  const [dragActive, setDragActive] = useState(false);
   const drag = useRef<{
     id: string;
     pointerId: number;
@@ -137,6 +141,7 @@ function Scene(props: ModularSceneProps) {
     const current = drag.current;
     if (!current) return;
     drag.current = null;
+    setDragActive(false);
     try {
       current.target.releasePointerCapture(current.pointerId);
     } catch {
@@ -218,6 +223,7 @@ function Scene(props: ModularSceneProps) {
         cabinet.position.z / 1000 - point.z,
       ),
     };
+    setDragActive(true);
     props.onStart(cabinet.id);
   }
   function move(event: ThreeEvent<PointerEvent>) {
@@ -249,12 +255,15 @@ function Scene(props: ModularSceneProps) {
       <ambientLight intensity={1.2} />
       <directionalLight castShadow position={[2, 7, 4]} intensity={2.3} />
       <OrbitControls
-        enabled={mode === "orbit"}
+        makeDefault
+        enabled={!dragActive}
         target={[focus.centerX / 1000, focus.h / 2, focus.centerZ / 1000]}
         minDistance={1}
-        maxDistance={18}
+        maxDistance={Math.max(18, Math.hypot(width, depth, roomHeight) * 4)}
         maxPolarAngle={Math.PI / 2.05}
       />
+      <CameraNavigation request={props.cameraRequest}
+        bounds={{ width, depth, height: roomHeight, centerX: width / 2, centerZ: depth / 2 }}/>
       <mesh position={[width / 2, -0.04, depth / 2]} receiveShadow>
         <boxGeometry args={[width, 0.08, depth]} />
         <meshStandardMaterial {...floorMaterial} />

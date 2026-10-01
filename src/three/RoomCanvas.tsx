@@ -40,6 +40,8 @@ import {
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
+import { CameraNavigation } from "./CameraNavigation";
+import type { CameraRequest } from "@/lib/plannerCamera";
 
 interface RoomCanvasProps {
   selectedWall?: RoomWall | null;
@@ -62,6 +64,7 @@ interface RoomCanvasProps {
   showDimensions?: boolean;
   measurements?: Measurement[];
   resetKey?: number;
+  cameraRequest?: CameraRequest;
   onEditStart?: () => void;
   onEditEnd?: () => void;
   /** Optional custom GLB interior to render instead of procedural room */
@@ -86,6 +89,7 @@ export function RoomCanvas({
   showDimensions = false,
   measurements = [],
   resetKey = 0,
+  cameraRequest,
   onEditStart,
   onEditEnd,
   customInterior,
@@ -307,6 +311,8 @@ export function RoomCanvas({
           maxDistance={Math.max(40, Math.max(design.width, design.depth) * 8)}
         />
       )}
+      <CameraNavigation request={cameraRequest} plan={view === "plan"}
+        bounds={{ width: spanX, depth: spanZ, height: roomHeight, centerX, centerZ }}/>
       </CameraMotionPreview>
     </Canvas>
   );

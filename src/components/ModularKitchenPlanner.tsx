@@ -6,6 +6,8 @@ import { EditorHistory } from "@/lib/editorHistory";
 import { extraFromProduct, findExtraSpace, parseKitchenExtras, type KitchenExtra } from "@/lib/kitchenExtras";
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
 import { ProjectReport } from "@/features/kitchen-planner/components/ProjectReport";
+import { ViewportControls } from "@/features/planner/components/ViewportControls";
+import type { CameraRequest } from "@/lib/plannerCamera";
 import { VersionHistory } from "@/features/kitchen-planner/components/VersionHistory";
 import { useCatalog } from "@/store/catalog";
 import type { Product } from "@/lib/types";
@@ -28,6 +30,10 @@ import {
   Undo2,
   Redo2,
   Copy,
+  Move,
+  Orbit,
+  Grid2X2,
+  DoorOpen,
 } from "lucide-react";
 import {
   CABINET_DEFAULTS,
@@ -165,6 +171,7 @@ export function ModularKitchenPlanner({
     [],
   );
   const [viewKey, setViewKey] = useState(0);
+  const [cameraRequest, setCameraRequest] = useState<CameraRequest>();
   const [scope, setScope] = useState<"all" | "base" | "wall" | "selected">(
     "all",
   );
@@ -924,44 +931,52 @@ export function ModularKitchenPlanner({
                   type="button"
                   disabled={busy}
                   aria-pressed={mode === "move"}
+                  aria-label="Шүүгээ зөөх"
                   onClick={() => {
                     setMode("move");
                     setOpen(false);
                   }}
                 >
-                  Шүүгээ зөөх
+                  <Move size={17}/><span>Шүүгээ зөөх</span>
                 </button>
                 <button
                   type="button"
                   disabled={busy}
                   aria-pressed={mode === "orbit"}
+                  aria-label="Харах өнцөг"
                   onClick={() => setMode("orbit")}
                 >
-                  Харах өнцөг
+                  <Orbit size={17}/><span>Харах өнцөг</span>
                 </button>
                 <button
                   type="button"
                   disabled={busy || !selected}
+                  aria-label="Бүрэлдэхүүн хэсгүүд"
                   onClick={() => setComponentOverview(true)}
                 >
-                  Бүрэлдэхүүн хэсгүүд
+                  <Layers3 size={17}/><span>Бүрэлдэхүүн хэсгүүд</span>
                 </button>
-                <button type="button" onClick={() => setReviewOpen(true)}>
-                  2D план
+                <button type="button" aria-label="2D план" onClick={() => setReviewOpen(true)}>
+                  <Grid2X2 size={17}/><span>2D план</span>
                 </button>
                 <button
                   type="button"
                   disabled={busy}
                   aria-pressed={open}
+                  aria-label={open ? "Хаалгуудыг хаах" : "Хаалгуудыг нээх"}
                   onClick={() => {
                     setMode("orbit");
                     setOpen(!open);
                   }}
                 >
-                  {open ? "Хаалгуудыг хаах" : "Хаалгуудыг нээх"}
+                  <DoorOpen size={17}/><span>{open ? "Хаалгуудыг хаах" : "Хаалгуудыг нээх"}</span>
                 </button>
               </div>
             </div>
+            <ViewportControls disabled={busy || !ready} onAction={action => {
+              setMode("orbit");
+              setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action }));
+            }}/>
             <div className="kp-canvas">
               {active && ready && (
                 <Scene
@@ -972,6 +987,7 @@ export function ModularKitchenPlanner({
                   open={open}
                   selectedId={selectedId}
                   mode={saving ? "orbit" : mode}
+                  cameraRequest={cameraRequest}
                   onSelect={selectCabinet}
                   onDeselect={() => {
                     setSelectedId(null);
@@ -989,8 +1005,8 @@ export function ModularKitchenPlanner({
             </div>
             <p className="kp-preview-hint">
               {mode === "move"
-                ? "Шүүгээг чирж байрлуулна · Улаан хүрээ: байрлуулах боломжгүй · Esc: буцаах"
-                : "Чирж харах өнцгийг эргүүлнэ · Гүйлгэж ойртуулна"}
+                ? "Зүүн товч: шүүгээ зөөх · Дунд товч: эргүүлэх · Esc: буцаах"
+                : "Дунд товч: эргүүлэх · Shift: шилжүүлэх · Дугуй: ойртуулах"}
             </p>
             <p
               className={`km-feedback ${issues.some((issue) => issue.severity === "error") ? "has-error" : ""}`}
