@@ -144,7 +144,10 @@ export function MerchantNotifications({
   const openNotification = (notification: MerchantNotification) => {
     if (!notification.readAt) void markRead(notification.id);
     setOpen(false);
-    if (notification.kind === "kitchen_quote") router.push(notification.href);
+    if (notification.kind === "kitchen_quote" && notification.href.startsWith("/merchant?")) {
+      window.history.pushState(window.history.state, "", notification.href);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    } else if (notification.kind === "kitchen_quote") router.push(notification.href);
     else onKitchens(notification.entityId ?? undefined);
   };
 

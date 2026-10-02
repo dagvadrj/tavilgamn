@@ -1,5 +1,5 @@
 import type { Category, Store } from "./types";
-import { CATEGORY_LABEL } from "./products";
+import { CATEGORIES, CATEGORY_LABEL } from "./catalogCategories";
 import { CatalogInputError, parseProduct } from "./catalogValidation";
 
 export function merchantObject(value: unknown): Record<string, unknown> {
@@ -16,7 +16,7 @@ export function parseMerchantStore(value: unknown) {
   };
   const storeType = text("storeType", 20);
   if (!["factory", "handmade", "retail"].includes(storeType)) throw new CatalogInputError("Дэлгүүрийн төрөл буруу байна.");
-  if (!Array.isArray(raw.categories) || raw.categories.length > 7 || raw.categories.some(c => typeof c !== "string" || !Object.hasOwn(CATEGORY_LABEL, c))) throw new CatalogInputError("Тавилгын ангилал буруу байна.");
+  if (!Array.isArray(raw.categories) || raw.categories.length > CATEGORIES.length || raw.categories.some(c => typeof c !== "string" || !Object.hasOwn(CATEGORY_LABEL, c))) throw new CatalogInputError("Тавилгын ангилал буруу байна.");
   const image = text("image", 2000, true);
   let validImage = !image || /^\/(?!\/)[^\\\s]+$/.test(image);
   try {
@@ -38,6 +38,8 @@ export function parseMerchantProduct(value: unknown, id: string) {
   return parseProduct({
     id, name: raw.name, category: raw.category, description: raw.description,
     basePrice: raw.basePrice, image: raw.image, images: raw.images,
+    compareAtPrice: raw.compareAtPrice, promotionLabel: raw.promotionLabel,
+    promotionEndsAt: raw.promotionEndsAt, deliveryTerms: raw.deliveryTerms,
     colors: raw.colors, materials: raw.materials, defaultColor: raw.defaultColor,
     dimensions: raw.dimensions, stockQuantity: raw.stockQuantity,
     rating: 0, reviewCount: 0, badges: [], isNew: false, isBestSeller: false, storeIds: [],

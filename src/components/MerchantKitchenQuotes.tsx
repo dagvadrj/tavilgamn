@@ -15,6 +15,8 @@ import { authFetch } from "@/lib/authFetch";
 import { formatPrice } from "@/lib/format";
 import type { KitchenQuoteStatus } from "@/lib/kitchenQuotes";
 import { useAuth } from "@/store/auth";
+import { useKitchenQuoteFocus } from "@/features/kitchen-planner/hooks/useKitchenQuoteFocus";
+import { KitchenQuotePreview } from "./KitchenQuotePreview";
 
 type MerchantKitchenQuote = {
   id: string;
@@ -45,6 +47,7 @@ const isOwner = (owner: string) =>
   useAuth.getState().role === "merchant";
 
 export function MerchantKitchenQuotes({ owner }: { owner: string }) {
+  const { quoteId, clear } = useKitchenQuoteFocus();
   const [page, setPage] = useState(0);
   const [refresh, setRefresh] = useState(0);
   const [result, setResult] = useState<{
@@ -62,7 +65,7 @@ export function MerchantKitchenQuotes({ owner }: { owner: string }) {
     void (async () => {
       try {
         const response = await authFetch(
-          `/api/merchant/kitchen-quotes?page=${page}`,
+          `/api/merchant/kitchen-quotes?page=${page}${quoteId ? `&quote=${quoteId}` : ""}`,
           { signal: controller.signal },
           owner,
         );
@@ -88,7 +91,7 @@ export function MerchantKitchenQuotes({ owner }: { owner: string }) {
       active = false;
       controller.abort();
     };
-  }, [owner, page, refresh]);
+  }, [owner, page, refresh, quoteId]);
 
   const update = (id: string, changes: Partial<MerchantKitchenQuote>) => {
     setResult(
@@ -148,6 +151,7 @@ export function MerchantKitchenQuotes({ owner }: { owner: string }) {
           ))}
         </div>
       )}
+      {quoteId && <button type="button" className="btn-ghost" onClick={() => { clear(); setPage(0); }}>Бүх үнийн хүсэлт харах</button>}
       <nav className="merchant-actions" aria-label="Үнийн хүсэлтийн хуудаслалт">
         <span aria-live="polite" className="merchant-muted">
           Хуудас {page + 1}
@@ -235,7 +239,8 @@ function MerchantKitchenQuoteCard({
   };
 
   return (
-    <article className="merchant-panel merchant-order">
+    <article id={`quote-${quote.id}`} className="merchant-panel merchant-order">
+      <KitchenQuotePreview owner={owner} quoteId={quote.id} />
       <header className="merchant-section-heading">
         <div className="flex min-w-0 items-center gap-3">
           {quote.thumbnailUrl ? (

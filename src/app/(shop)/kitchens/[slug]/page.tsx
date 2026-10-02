@@ -17,6 +17,7 @@ import {
 import { readPublishedKitchenDesignBySlug } from "@/lib/kitchenMarketplaceServer";
 import { UseKitchenDesignButton } from "@/components/UseKitchenDesignButton";
 import { KitchenQuoteRequest } from "@/components/KitchenQuoteRequest";
+import { kitchenPriceLabel } from "@/lib/kitchenMarketplace";
 
 export const dynamic = "force-dynamic";
 
@@ -133,9 +134,7 @@ export default async function KitchenDesignPage({ params }: PageProps) {
               {design.pricingMode === "quote" ? "Үнэ" : "Эхлэх үнэ"}
             </span>
             <strong className="mt-1 block text-2xl text-[#293c32]">
-              {design.priceFrom == null
-                ? "Үнийн санал авна"
-                : `${design.priceFrom.toLocaleString()} ₮`}
+              {kitchenPriceLabel(design)}
             </strong>
           </div>
           <dl className="grid grid-cols-2 gap-3 text-sm">
@@ -179,6 +178,8 @@ export default async function KitchenDesignPage({ params }: PageProps) {
             </div>
           </dl>
           <div className="space-y-2 text-sm">
+            <p><span className="text-black/45">Стиль / layout: </span>{design.style} · {design.layout}</p>
+            <p><span className="text-black/45">Материал: </span>{design.materials.join(", ") || "Үйлдвэрлэгчтэй тохиролцоно"}</p>
             <p className="flex items-center gap-2">
               <Wrench size={16} className="text-[#42634f]" />
               {design.installationIncluded

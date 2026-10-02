@@ -7,6 +7,7 @@ import { CatalogInputError } from "@/lib/catalogValidation";
 import { FurnitureRow, productFromRow } from "@/lib/catalogServer";
 type MerchantFurnitureRow = FurnitureRow & {
   model_requested?: boolean | null;
+  archived_at?: string | null;
 };
 import { merchantObject, parseMerchantProduct } from "@/lib/merchantValidation";
 import { merchantError, merchantHeaders } from "@/lib/merchantServer";
@@ -21,16 +22,18 @@ export async function GET(request: NextRequest) {
     const db = getSupabaseAdmin();
     let after: string | null = null;
     for (;;) {
-      const { data, error } = await db.rpc("read_merchant_products", { p_actor: auth.userId, p_after: after });
+      const { data, error } = await db.rpc("read_merchant_products_v2", {
+        p_actor: auth.userId, p_after: after,
+        p_include_archived: new URL(request.url).searchParams.get("archived") === "1",
+      });
       if (error) throw error;
       const rows = (data ?? []) as MerchantFurnitureRow[];
 
-products.push(
-  ...rows.map((row) => ({
-    ...productFromRow(row),
-    modelRequested: Boolean(row.model_requested),
-  })),
-);
+      products.push(...rows.map((row) => ({
+        ...productFromRow(row),
+        modelRequested: Boolean(row.model_requested),
+        archivedAt: row.archived_at ?? null,
+      })));
       if (rows.length < 500) break;
       after = rows[rows.length - 1].id;
     }
@@ -46,29 +49,19 @@ async function save(request: NextRequest, create: boolean) {
     if (!create && (typeof raw.id !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/.test(raw.id))) throw new CatalogInputError("Барааны ID буруу байна.");
     if (!create && raw.expectedStockQuantity !== null && (!Number.isSafeInteger(raw.expectedStockQuantity) || Number(raw.expectedStockQuantity) < 0 || Number(raw.expectedStockQuantity) > 1_000_000)) throw new CatalogInputError("Нөөцийн мэдээллээ шинэчилнэ үү.");
 
-    const modelRequested =
-  raw.modelRequested === undefined
-    ? false
-    : raw.modelRequested;
-
-if (typeof modelRequested !== "boolean") {
-  throw new CatalogInputError(
-    "3D загварын хүсэлтийн мэдээлэл буруу байна.",
-  );
-}
+    const modelRequested = raw.modelRequested === undefined ? false : raw.modelRequested;
+    if (typeof modelRequested !== "boolean") {
+      throw new CatalogInputError("3D загварын хүсэлтийн мэдээлэл буруу байна.");
+    }
 
     const product = parseMerchantProduct(raw, create ? randomUUID() : raw.id as string);
-    const { error } = await getSupabaseAdmin().rpc(
-  "save_merchant_product_v2",
-  {
-    p_actor: auth.userId,
-    p_data: toJson(product),
-    p_create: create,
-    p_model_requested: modelRequested,
-    p_expected_stock:
-      create || raw.expectedStockQuantity === null ? null : Number(raw.expectedStockQuantity),
-  },
-);
+    const { error } = await getSupabaseAdmin().rpc("save_merchant_product_v2", {
+      p_actor: auth.userId,
+      p_data: toJson(product),
+      p_create: create,
+      p_model_requested: modelRequested,
+      p_expected_stock: create || raw.expectedStockQuantity === null ? null : Number(raw.expectedStockQuantity),
+    });
     if (error) throw error;
     return NextResponse.json({ id: product.id }, { status: create ? 201 : 200, headers: merchantHeaders });
   } catch (error) { return merchantError(error, "Барааг хадгалж чадсангүй."); }

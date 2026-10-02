@@ -352,10 +352,12 @@ export type Database = {
           installation_included: boolean
           layout: string
           lead_time_days: number | null
+          materials: Json
           max_height_mm: number
           min_room_depth_mm: number
           min_room_width_mm: number
           price_from: number | null
+          price_to: number | null
           pricing_mode: string
           review_status: string
           service_areas: Json
@@ -389,10 +391,12 @@ export type Database = {
           installation_included?: boolean
           layout: string
           lead_time_days?: number | null
+          materials?: Json
           max_height_mm: number
           min_room_depth_mm: number
           min_room_width_mm: number
           price_from?: number | null
+          price_to?: number | null
           pricing_mode?: string
           review_status?: string
           service_areas?: Json
@@ -426,10 +430,12 @@ export type Database = {
           installation_included?: boolean
           layout?: string
           lead_time_days?: number | null
+          materials?: Json
           max_height_mm?: number
           min_room_depth_mm?: number
           min_room_width_mm?: number
           price_from?: number | null
+          price_to?: number | null
           pricing_mode?: string
           review_status?: string
           service_areas?: Json
@@ -599,6 +605,47 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "kitchen_design_versions"
             referencedColumns: ["design_id", "id"]
+          },
+        ]
+      }
+      kitchen_marketplace_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          design_id: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          design_id: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          design_id?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kitchen_marketplace_audit_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "kitchen_designs"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -860,6 +907,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      kitchen_render_policy: {
+        Row: {
+          enabled: boolean
+          id: boolean
+          requests_per_24h: number
+        }
+        Insert: {
+          enabled?: boolean
+          id?: boolean
+          requests_per_24h?: number
+        }
+        Update: {
+          enabled?: boolean
+          id?: boolean
+          requests_per_24h?: number
+        }
+        Relationships: []
       }
       material_definitions: {
         Row: {
@@ -1340,6 +1405,10 @@ export type Database = {
         Args: { p_actor: string; p_design: string }
         Returns: undefined
       }
+      cancel_kitchen_render: {
+        Args: { p_actor: string; p_job: string; p_note: string }
+        Returns: undefined
+      }
       claim_furniture_model_export_job: {
         Args: never
         Returns: {
@@ -1535,12 +1604,13 @@ export type Database = {
         Returns: string
       }
       read_customer_kitchen_quotes: {
-        Args: { p_actor: string; p_page?: number }
+        Args: { p_actor: string; p_focus?: string; p_page?: number }
         Returns: Json
       }
       read_featured_merchants: { Args: { p_limit?: number }; Returns: Json }
+      read_kitchen_render_usage: { Args: { p_actor: string }; Returns: Json }
       read_merchant_kitchen_quotes: {
-        Args: { p_actor: string; p_page?: number }
+        Args: { p_actor: string; p_focus?: string; p_page?: number }
         Returns: Json
       }
       read_merchant_orders: {
@@ -1620,6 +1690,7 @@ export type Database = {
       request_kitchen_render: {
         Args: {
           p_actor: string
+          p_consent?: boolean
           p_design: string
           p_model: string
           p_prompt: string

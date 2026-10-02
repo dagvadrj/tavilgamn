@@ -8,8 +8,8 @@ import { OrderInputError, parseOrderBody } from "@/lib/orderValidation";
 import { quoteOrder } from "@/lib/orderService";
 
 export const dynamic = "force-dynamic";
-const FIELDS = "id,status,currency,items,subtotal,shipping,total,delivery,created_at";
-const HISTORY_FIELDS = `${FIELDS},order_payments(method,state)`;
+const FIELDS = "id,status,currency,items,subtotal,shipping,total,delivery,created_at,platform_fulfillment_status";
+const HISTORY_FIELDS = `${FIELDS},order_payments(method,state,requires_review),order_cancellations(order_id,reason,status,requested_at,review_note,refund_reference,refund_amount,refunded_at),merchant_order_fulfillments(store_id,status,items,subtotal)`;
 const headers = { "Cache-Control": "no-store" };
 
 export async function GET(request: NextRequest) {

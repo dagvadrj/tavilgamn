@@ -1,6 +1,6 @@
 # Data dictionary
 
-Schema source: generated `src/lib/supabase/database.types.ts`, refreshed from project gpdpaexkmuhxzknguicp on 2026-10-01 after the Phase 2 migration. Field lists below are derived documentation, not editable schema definitions. Change schema through migrations, regenerate types, then refresh this dictionary.
+Schema source: generated `src/lib/supabase/database.types.ts`, refreshed from project gpdpaexkmuhxzknguicp on 2026-10-02 after the Phase 4 migration. Field lists below are derived documentation, not editable schema definitions. Change schema through migrations, regenerate types, then refresh this dictionary.
 
 ## Storage and interpretation
 
@@ -170,6 +170,8 @@ Immutable/pending marketplace versions with saved geometry, marketing fields and
 | `min_room_depth_mm` | `number` |
 | `min_room_width_mm` | `number` |
 | `price_from` | `number | null` |
+| `price_to` | `number | null`; optional upper bound, only for `from` mode and at least `price_from` |
+| `materials` | `Json`; validated array of at most 50 material labels |
 | `pricing_mode` | `string` |
 | `review_status` | `string` |
 | `service_areas` | `Json` |
@@ -303,6 +305,10 @@ Customer-to-store quotation requests with status, contact and immutable source s
 ### kitchen_render_jobs
 
 Persisted AI-render lifecycle and output linkage; merchant requests/admin generation.
+New requests require explicit consent. Metadata preserves consent version/time
+when provider results are merged. All request outcomes count toward the rolling
+store allowance. Cancellation is permitted only while queued; claim/complete
+remain service-only actor-verified operations.
 
 | Column | Generated row type |
 |---|---|
@@ -320,6 +326,35 @@ Persisted AI-render lifecycle and output linkage; merchant requests/admin genera
 | `started_at` | `string | null` |
 | `status` | `string` |
 | `version_id` | `string` |
+
+### kitchen_marketplace_audit
+
+Append-only, private marketplace event ledger. Design FK restricts deletion.
+Browser grants are revoked and RLS has no public policy. Owner/admin API summaries
+include events; public listings never do. Trigger-generated metadata intentionally
+excludes customer contacts and AI prompts. No retrospective audit history is
+fabricated for actions before this migration.
+
+| Column | Generated row type / meaning |
+|---|---|
+| `id`, `design_id`, `entity_id` | `string`; UUID event, listing and affected entity |
+| `actor_id` | `string | null`; verified actor, null for infrastructure-originated events |
+| `action`, `entity_type` | `string`; lifecycle/content/media/render/quote/clone action |
+| `metadata` | `Json`; minimal status/pointer metadata |
+| `created_at` | `string`; timestamp |
+
+### kitchen_render_policy
+
+Private singleton policy, not directly editable by browser clients. Initial
+allowance is 3 requests per store in a rolling 24h window. This is a conservative
+MVP default, not a user-approved billing commitment. Read allowance through the
+actor-bound usage RPC; no policy-management UI was added in Phase 4.
+
+| Column | Generated row type / meaning |
+|---|---|
+| `id` | `boolean`; constrained to true for singleton |
+| `enabled` | `boolean`; request availability |
+| `requests_per_24h` | `number`; integer 0–100 |
 
 ### material_definitions
 

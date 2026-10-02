@@ -9,7 +9,7 @@ import type {
 } from "@/lib/kitchenMarketplace";
 
 const versionStatus: Record<KitchenDesignReviewStatus, string> = {
-  draft: "Draft",
+  draft: "Ноорог",
   submitted: "Хяналтад",
   changes_requested: "Засвар хүссэн",
   approved: "Зөвшөөрсөн",
@@ -135,6 +135,17 @@ export function KitchenReviewTimeline({
               </div>
             )}
           </div>
+        </details>
+      )}
+      {design.audit?.length > 0 && (
+        <details className="rounded-xl border border-black/10 p-3 text-sm">
+          <summary className="cursor-pointer font-medium">Үйлдлийн бүртгэл ({design.audit.length})</summary>
+          <ol className="mt-3 max-h-64 space-y-2 overflow-y-auto">
+            {design.audit.map(event => <li key={event.id} className="flex flex-wrap justify-between gap-2 border-b border-black/5 py-2">
+              <span>{event.action}<span className="ml-2 text-xs text-black/40">{event.actorId ? `${event.actorId.slice(0, 8)}…` : "Систем"}</span></span>
+              <time className="text-xs text-black/45" dateTime={event.createdAt}>{dateTime(event.createdAt)}</time>
+            </li>)}
+          </ol>
         </details>
       )}
     </>

@@ -22,6 +22,7 @@ export function readMerchantLocation(search: string): {
   designId: string | null;
 } {
   const params = new URLSearchParams(search);
+
   const requestedTab = params.get("tab") as MerchantLocationTab | null;
   const tab = requestedTab && MERCHANT_TABS.has(requestedTab)
     ? requestedTab
@@ -45,6 +46,7 @@ export function merchantLocationPath(
   designId?: string | null,
 ) {
   const params = new URLSearchParams(search);
+  params.delete("quote");
 
   if (tab === "overview") params.delete("tab");
   else params.set("tab", tab);

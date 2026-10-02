@@ -16,7 +16,6 @@ import {
 import { useCart } from "@/store/cart";
 import { useWishlist } from "@/store/wishlist";
 import { useAuth } from "@/store/auth";
-import { STORE_TYPES } from "@/lib/storeTypes";
 import { CategoryMenu } from "./CategoryMenu";
 
 export function Header() {
@@ -105,10 +104,10 @@ export function Header() {
               type="search"
               name="q"
               aria-label="Тавилга хайх"
-              placeholder="Гэртээ юу хайж байна вэ?"
+              placeholder="Тавилга, загвар, ангилал хайх"
             />
             <button type="submit" aria-label="Хайх">
-              <ArrowUpRight size={19} />
+              <Search size={18} />
             </button>
           </form>
           <div className="header-actions">
@@ -150,13 +149,11 @@ export function Header() {
           >
             <LayoutGrid size={16} /> Бүх ангилал
           </button>
-          {STORE_TYPES.map((type) => (
-            <Link key={type.id} href={`/stores?type=${type.id}`}>
-              {type.label}
-            </Link>
-          ))}
+          <Link href="/stores" className={pathname === "/stores" ? "active" : ""}>Дэлгүүрүүд</Link>
+          <Link href="/catalog?offers=1" className="shop-secondary-link">Хямдрал, урамшуулал</Link>
+          <Link href="/catalog?sort=new" className="shop-secondary-link">Шинээр нэмэгдсэн</Link>
           <Link href="/planner" className="planner-link">
-            Өрөөгөө төлөвлөх <ArrowUpRight size={15} />
+            Өрөөгөө 3D төлөвлөх <ArrowUpRight size={15} />
           </Link>
           <Link
             href="/kitchen"
@@ -175,13 +172,6 @@ export function Header() {
             <Link href="/merchant">Миний дэлгүүр</Link>
           )}
         </nav>
-        <Link
-          href="/kitchen"
-          className="flex min-h-11 items-center justify-center gap-2 border-t border-[#293C32]/10 text-sm text-[#42634F] md:hidden"
-          aria-current={pathname === "/kitchen" ? "page" : undefined}
-        >
-          Гал тогоо төлөвлөх <ArrowUpRight size={15} />
-        </Link>
       </header>
       <nav className="mobile-bottom-nav" aria-label="Доод үндсэн цэс">
         {links.map(({ href, label, icon: Icon, active, count }) =>

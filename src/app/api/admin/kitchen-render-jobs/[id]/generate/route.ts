@@ -28,6 +28,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (auth.error) return auth.error;
     actor = auth.userId;
     if (!UUID.test(routeParams.id)) return apiErrorResponse({ error: "Render job ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
+    const approval = await request.json().catch(() => null);
+    if (approval?.approveCost !== true) return apiErrorResponse({ error: "AI render-ийн төлбөртэй үйлдлийг зөвшөөрнө үү." }, { status: 400, headers: kitchenPrivateHeaders });
     if (!process.env.OPENAI_API_KEY || !cloudinaryImageUploadConfigured()) {
       return apiErrorResponse({ error: "OPENAI_API_KEY эсвэл Cloudinary тохиргоо дутуу байна." }, { status: 503, headers: kitchenPrivateHeaders });
     }

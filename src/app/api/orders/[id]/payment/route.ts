@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase/requireUser";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isPaymentMethod } from "@/lib/payments";
+import { jsonObject } from "@/lib/supabase/json";
+import { ORDER_UUID } from "@/lib/orderOperations";
 import { createPayment, PaymentConfigError, validatePaymentConfig } from "@/lib/payments/providers";
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const auth = await requireUser(request);
     if (auth.error) return auth.error;
+    if (!ORDER_UUID.test(routeParams.id)) return apiErrorResponse({ error: "Захиалгын дугаар буруу байна." }, { status: 400 });
     const { method } = await request.json();
     if (!isPaymentMethod(method)) return apiErrorResponse({ error: "Төлбөрийн аргаа сонгоно уу." }, { status: 400 });
     const supabase = getSupabaseAdmin();
@@ -20,18 +23,27 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (error) throw error;
     if (!order) return apiErrorResponse({ error: "Захиалга олдсонгүй." }, { status: 404 });
     if (order.status !== "pending_payment") return apiErrorResponse({ error: "Энэ захиалга төлбөр хүлээж буй төлөвт биш байна." }, { status: 409 });
-    const { data: existing, error: findError } = await supabase.from("order_payments").select("method,state,instructions,created_at").eq("order_id", order.id).maybeSingle();
-    if (findError) throw findError;
-    if (existing) return paymentResponse(existing, method);
-    validatePaymentConfig(method);
-    const callbackToken = randomBytes(32).toString("hex");
-    const { error: claimError } = await supabase.from("order_payments").insert({ order_id: order.id, method, callback_token: callbackToken });
-    if (claimError?.code === "23505") {
-      const { data, error: replayError } = await supabase.from("order_payments").select("method,state,instructions,created_at").eq("order_id", order.id).single();
-      if (replayError) throw replayError;
-      return paymentResponse(data, method);
+    try { validatePaymentConfig(method); } catch (configError) {
+      // Stored invoice instructions remain usable even when new invoices are
+      // temporarily disabled. The atomic claim still checks cancellation below.
+      const { data: stored, error: storedError } = await supabase.from("order_payments")
+        .select("order_id").eq("order_id", order.id).maybeSingle();
+      if (storedError) throw storedError;
+      if (!stored) throw configError;
     }
+    const callbackToken = randomBytes(32).toString("hex");
+    // Claim under the same order lock used by cancellation; a late browser
+    // request cannot create a remote invoice after the order was cancelled.
+    const { data: claim, error: claimError } = await supabase.rpc("claim_order_payment", {
+      p_actor: auth.userId, p_order: order.id, p_method: method, p_callback_token: callbackToken,
+    });
+    if (claimError?.code === "P0016") return apiErrorResponse({ error: "Цуцлах хүсэлттэй эсвэл төлөв нь өөрчлөгдсөн захиалгад шинэ нэхэмжлэх үүсгэхгүй." }, { status: 409 });
     if (claimError) throw claimError;
+    const claimed = jsonObject(claim);
+    if (!claimed.claimed) {
+      const existing = jsonObject(claimed.payment);
+      return paymentResponse({ method: String(existing.method), state: String(existing.state), instructions: existing.instructions, created_at: String(existing.created_at) }, method);
+    }
     try {
       const result = await createPayment(method, order.id, Number(order.total), callbackToken);
       const { error: saveError } = await supabase.from("order_payments").update({ state: "ready", invoice_id: result.invoiceId, instructions: toJson(result.instructions) }).eq("order_id", order.id).eq("state", "creating");

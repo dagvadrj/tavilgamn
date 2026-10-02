@@ -20,7 +20,7 @@ export function merchantNotificationFromRow(
     kind: row.kind === "kitchen_quote" ? "kitchen_quote" : "kitchen_review",
     title: String(row.title),
     body: typeof row.body === "string" ? row.body : "",
-    href: String(row.href),
+    href: typeof row.href === "string" && /^\/(?![\/\\])[^\\\x00-\x1f]*$/.test(row.href) ? row.href : "/account",
     entityId: typeof row.entity_id === "string" ? row.entity_id : null,
     metadata:
       metadata && typeof metadata === "object" && !Array.isArray(metadata)

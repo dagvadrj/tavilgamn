@@ -9,10 +9,10 @@ import {
   RefreshCw,
   RotateCcw,
   Sparkles,
-  X,
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
 import type { KitchenDesignSummary } from "@/lib/kitchenMarketplace";
+import { kitchenLifecycle, kitchenLifecycleLabel, kitchenPriceLabel } from "@/lib/kitchenMarketplace";
 import { AdminKitchenMaterials } from "./AdminKitchenMaterials";
 import { AdminKitchenModules } from "./AdminKitchenModules";
 import { KitchenReviewTimeline } from "./KitchenReviewTimeline";
@@ -22,6 +22,7 @@ type ReviewAction =
   | "changes_requested"
   | "rejected"
   | "unpublished";
+type AdminAction = ReviewAction | "published" | "suspended";
 
 export function AdminKitchenDesigns({ owner }: { owner: string }) {
   const [designs, setDesigns] = useState<KitchenDesignSummary[]>([]);
@@ -58,13 +59,13 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
       designs.filter(
         (item) =>
           filter === "all" ||
-          item.reviewStatus === filter ||
-          item.publicationStatus === filter,
+          kitchenLifecycle(item) === filter ||
+          (item.publicationStatus === "published" && item.publishedVersionId !== item.versionId && item.reviewStatus === filter),
       ),
     [designs, filter],
   );
 
-  async function review(design: KitchenDesignSummary, action: ReviewAction) {
+  async function review(design: KitchenDesignSummary, action: AdminAction) {
     setBusy(`${design.id}:${action}`);
     setError(null);
     try {
@@ -99,12 +100,13 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
   }
 
   async function generateRender(jobId: string) {
+    if (!window.confirm("Энэ хүсэлтийг зөвшөөрч төлбөртэй AI зураг үүсгэх үү? Provider-ийн төлбөр бодогдоно.")) return;
     setBusy(`render:${jobId}`);
     setError(null);
     try {
       const response = await authFetch(
         `/api/admin/kitchen-render-jobs/${jobId}/generate`,
-        { method: "POST" },
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ approveCost: true }) },
         owner,
       );
       const data = await response.json().catch(() => null);
@@ -120,6 +122,21 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
     } finally {
       setBusy(null);
     }
+  }
+
+  async function cancelRender(jobId: string) {
+    const reason = window.prompt("AI render хүсэлтийг цуцлах шалтгаан:");
+    if (!reason?.trim()) return;
+    setBusy(`render:${jobId}`); setError(null);
+    try {
+      const response = await authFetch(`/api/kitchen-render-jobs/${jobId}/cancel`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: reason }),
+      }, owner);
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "Цуцалж чадсангүй.");
+      await load();
+    } catch (error) { setError(error instanceof Error ? error.message : "Цуцалж чадсангүй."); }
+    finally { setBusy(null); }
   }
 
   return (
@@ -141,11 +158,13 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
       <div className="flex flex-wrap gap-2">
         {[
           "all",
+          "draft",
           "submitted",
           "changes_requested",
           "approved",
           "published",
           "suspended",
+          "archived",
         ].map((value) => (
           <button
             key={value}
@@ -153,7 +172,7 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
             onClick={() => setFilter(value)}
             className={filter === value ? "btn-primary" : "btn-ghost"}
           >
-            {value === "all" ? "Бүгд" : value}
+            {value === "all" ? "Бүгд" : kitchenLifecycleLabel[value as keyof typeof kitchenLifecycleLabel]}
           </button>
         ))}
       </div>
@@ -193,9 +212,9 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                   </p>
                 </div>
                 <div className="text-right text-xs">
-                  <div>{design.reviewStatus}</div>
+                  <div>{kitchenLifecycleLabel[kitchenLifecycle(design)]}</div>
                   <div className="text-black/45">
-                    {design.publicationStatus}
+                    v{design.versionNo}: {kitchenLifecycleLabel[kitchenLifecycle({ publicationStatus: "draft", reviewStatus: design.reviewStatus })]}
                   </div>
                 </div>
               </div>
@@ -298,6 +317,7 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                 </div>
               </details>
               <KitchenReviewTimeline design={design} />
+              <p className="text-xs text-black/55">{kitchenPriceLabel(design)} · Материал: {design.materials.join(", ") || "Оруулаагүй"}</p>
               {design.renderJobs.length > 0 && (
                 <div className="space-y-2 rounded-xl border border-violet-200 bg-violet-50 p-3">
                   <h3 className="flex items-center gap-2 text-sm font-medium text-violet-950">
@@ -320,6 +340,7 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                         )}
                       </div>
                       {job.status === "queued" && (
+                        <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
                           className="btn-primary"
@@ -331,28 +352,22 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                           ) : (
                             <Sparkles size={15} />
                           )}
-                          AI зураг үүсгэх
+                          Зөвшөөрч AI зураг үүсгэх
                         </button>
+                        <button type="button" className="btn-ghost" disabled={!!busy} onClick={() => void cancelRender(job.id)}>Цуцлах</button>
+                        </div>
                       )}
                     </div>
                   ))}
                 </div>
               )}
-              {design.reviewStatus === "submitted" && (
+              {(design.reviewStatus === "submitted" || ["published", "suspended"].includes(design.publicationStatus)) && (
+                <textarea className="input min-h-20 w-full" aria-label={`${design.title} хяналтын тайлбар`}
+                  placeholder="Засвар хүсэх, түдгэлзүүлэх үед шалтгаан заавал бичнэ" maxLength={5000}
+                  value={note[design.id] ?? ""} onChange={event => setNote(current => ({ ...current, [design.id]: event.target.value }))} />
+              )}
+              {design.reviewStatus === "submitted" && !["archived", "suspended"].includes(design.publicationStatus) && (
                 <>
-                  <textarea
-                    className="input min-h-20 w-full"
-                    aria-label={`${design.title} хяналтын тайлбар`}
-                    placeholder="Merchant-д өгөх тайлбар"
-                    maxLength={5000}
-                    value={note[design.id] ?? ""}
-                    onChange={(event) =>
-                      setNote((current) => ({
-                        ...current,
-                        [design.id]: event.target.value,
-                      }))
-                    }
-                  />
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
@@ -372,27 +387,29 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                       <RotateCcw size={15} />
                       Засвар хүсэх
                     </button>
-                    <button
-                      type="button"
-                      className="btn-ghost"
-                      disabled={!!busy}
-                      onClick={() => void review(design, "rejected")}
-                    >
-                      <X size={15} />
-                      Татгалзах
-                    </button>
                   </div>
                 </>
+              )}
+              {design.reviewStatus === "approved" && design.publicationStatus !== "archived" &&
+                (design.publicationStatus !== "published" || design.publishedVersionId !== design.versionId) && (
+                <button type="button" className="btn-primary" disabled={!!busy} onClick={() => void review(design, "published")}>
+                  <Check size={15} />{design.publicationStatus === "suspended" ? "Түдгэлзүүлэлтийг цуцалж нийтлэх" : "Marketplace-д нийтлэх"}
+                </button>
+              )}
+              {design.publicationStatus === "suspended" && design.publishedVersionId && design.publishedVersionId !== design.versionId && (
+                <button type="button" className="btn-ghost" disabled={!!busy} onClick={() => void review({ ...design, versionId: design.publishedVersionId! }, "published")}>
+                  Батлагдсан өмнөх хувилбарыг буцааж нийтлэх
+                </button>
               )}
               {design.publicationStatus === "published" && (
                 <button
                   type="button"
                   className="btn-ghost"
                   disabled={!!busy}
-                  onClick={() => void review(design, "unpublished")}
+                  onClick={() => void review(design, "suspended")}
                 >
                   <EyeOff size={15} />
-                  Marketplace-с буулгах
+                  Түдгэлзүүлэх
                 </button>
               )}
             </div>

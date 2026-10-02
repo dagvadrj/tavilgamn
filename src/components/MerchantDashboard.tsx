@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  Archive,
   ArrowUpRight,
   Box,
   Boxes,
@@ -27,6 +28,7 @@ import { authFetch } from "@/lib/authFetch";
 import type { Product, Store } from "@/lib/types";
 type MerchantProduct = Product & {
   modelRequested?: boolean;
+  archivedAt?: string | null;
 };
 import { CATEGORIES, CATEGORY_LABEL } from "@/lib/products";
 import { STORE_TYPES } from "@/lib/storeTypes";
@@ -874,12 +876,14 @@ function MerchantProducts({ owner }: { owner: string }) {
     create: boolean;
   } | null>(null);
   const [saved, setSaved] = useState(false);
+  const [includeArchived, setIncludeArchived] = useState(false);
+  const [archiveBusy, setArchiveBusy] = useState<string | null>(null);
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
     setLoading(true);
     setError(null);
-    merchantRequest<{ products: Product[] }>("/api/merchant/products", owner, {
+    merchantRequest<{ products: MerchantProduct[] }>(`/api/merchant/products${includeArchived ? "?archived=1" : ""}`, owner, {
       signal: controller.signal,
     })
       .then((result) => {
@@ -902,7 +906,7 @@ function MerchantProducts({ owner }: { owner: string }) {
       active = false;
       controller.abort();
     };
-  }, [owner, refresh]);
+  }, [owner, refresh, includeArchived]);
   if (editing)
     return (
       <MerchantProductEditor
@@ -959,6 +963,10 @@ function MerchantProducts({ owner }: { owner: string }) {
           <RefreshCw size={16} />
         </button>
       </div>
+      <label className="merchant-muted flex items-center gap-2 mb-4">
+        <input type="checkbox" checked={includeArchived} onChange={event => setIncludeArchived(event.target.checked)} />
+        Архивласан барааг хамт харах
+      </label>
       {saved && (
         <p className="merchant-success" role="status">
           Бүтээгдэхүүн хадгалагдлаа.
@@ -990,7 +998,7 @@ function MerchantProducts({ owner }: { owner: string }) {
               <div className="merchant-product-info">
                 <h3>{product.name}</h3>
                 <p>
-                  {CATEGORY_LABEL[product.category]} · {stockLabel(product)}
+                  {CATEGORY_LABEL[product.category]} · {product.archivedAt ? "Архивласан" : stockLabel(product)}
                 </p>
               </div>
               <strong className="merchant-product-price">
@@ -998,6 +1006,7 @@ function MerchantProducts({ owner }: { owner: string }) {
               </strong>
               <button
                 className="btn-ghost"
+                disabled={Boolean(product.archivedAt) || archiveBusy === product.id}
                 aria-label={`${product.name} засах`}
                 onClick={() => {
                   setSaved(false);
@@ -1006,6 +1015,22 @@ function MerchantProducts({ owner }: { owner: string }) {
               >
                 <Pencil size={15} />
                 Засах
+              </button>
+              <button type="button" className="btn-ghost" disabled={archiveBusy === product.id}
+                aria-label={`${product.name} ${product.archivedAt ? "сэргээх" : "архивлах"}`}
+                onClick={async () => {
+                  if (!product.archivedAt && !window.confirm("Барааг худалдаанаас түр нууж архивлах уу? Зураг, 3D болон захиалгын түүх устахгүй.")) return;
+                  setArchiveBusy(product.id); setError(null);
+                  try {
+                    await merchantRequest(`/api/merchant/products/${encodeURIComponent(product.id)}`, owner, {
+                      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ archived: !product.archivedAt }),
+                    });
+                    setRefresh(value => value + 1);
+                    void useCatalogStore.getState().refresh(true);
+                  } catch (reason) { setError(reason instanceof Error ? reason.message : "Архивлаж чадсангүй."); }
+                  finally { setArchiveBusy(null); }
+                }}>
+                <Archive size={15} /> {product.archivedAt ? "Сэргээх" : "Архивлах"}
               </button>
             </article>
           ))}
@@ -1041,6 +1066,13 @@ function MerchantProductEditor({
   const [busy, setBusy] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!imageFile) { setImagePreview(null); return; }
+    const url = URL.createObjectURL(imageFile);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
   function field<K extends keyof Product>(key: K, value: Product[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
   }
@@ -1214,6 +1246,34 @@ function MerchantProductEditor({
               Өнгө, материалын бүх сонголтын нийт нөөц. Дууссан бол 0.
             </small>
           </label>
+          <label>
+            Хямдралын өмнөх бодит үнэ (₮) · заавал биш
+            <input className="input" type="number" min={0} max={Number.MAX_SAFE_INTEGER} step={1}
+              value={draft.compareAtPrice ?? ""} onChange={event => {
+                const value = event.target.value === "" ? null : event.target.valueAsNumber;
+                setDraft(current => ({ ...current, compareAtPrice: value, ...(value == null ? { promotionLabel: null, promotionEndsAt: null } : {}) }));
+              }} />
+            <small>Худалдах үнээс өндөр, өмнө нь бодитоор мөрдсөн үнэ. Хоосон бол хямдрал харуулахгүй.</small>
+          </label>
+          <label>
+            Урамшууллын нэр · заавал биш
+            <input className="input" maxLength={80} disabled={draft.compareAtPrice == null}
+              value={draft.promotionLabel ?? ""} onChange={event => field("promotionLabel", event.target.value)} />
+          </label>
+          <label>
+            Урамшуулал дуусах · таны төхөөрөмжийн цаг
+            <input className="input" type="datetime-local" disabled={draft.compareAtPrice == null}
+              value={draft.promotionEndsAt ? new Date(Date.parse(draft.promotionEndsAt) - new Date(draft.promotionEndsAt).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ""}
+              onChange={event => field("promotionEndsAt", event.target.value ? new Date(event.target.value).toISOString() : null)} />
+            <small>Дуусмагц хямдралын тэмдэг нуугдана. Худалдах үнэ автоматаар өөрчлөгдөхгүй.</small>
+          </label>
+          <label className="merchant-span">
+            Хүргэлт, үйлдвэрлэлийн нөхцөл · заавал биш
+            <textarea className="input" maxLength={1000} rows={2} value={draft.deliveryTerms ?? ""}
+              placeholder="Жишээ: Улаанбаатарын бүсэд 3–5 хоног; хүргэлтийн үнэ захиалгын шатанд баталгаажина."
+              onChange={event => field("deliveryTerms", event.target.value)} />
+            <small>Зөвхөн үнэн бодит нөхцөлөө оруулна. Энэ тайлбар хүргэлтийн үнийг автоматаар тооцоолохгүй.</small>
+          </label>
           <div className="merchant-span merchant-image-upload">
             <label>
               Үндсэн зураг
@@ -1235,10 +1295,10 @@ function MerchantProductEditor({
               </span>
             </label>
 
-            {(imageFile || draft.image) && (
+            {(imagePreview || draft.image) && (
               <div className="merchant-image-preview">
                 <Image
-                  src={imageFile ? URL.createObjectURL(imageFile) : draft.image}
+                  src={imagePreview ?? draft.image}
                   alt=""
                   width={160}
                   height={120}

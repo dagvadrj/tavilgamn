@@ -24,6 +24,13 @@ export interface OrderLine extends OrderSelection {
   materialName: string;
   unitPrice: number;
   lineTotal: number;
+  category?: string;
+  storeIds?: string[];
+  dimensions?: { w: number; d: number; h: number };
+  deliveryTerms?: string;
+  compareAtPrice?: number | null;
+  promotionLabel?: string | null;
+  promotionEndsAt?: string | null;
 }
 
 export interface OrderQuote {

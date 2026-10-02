@@ -25,6 +25,8 @@ import { useWishlist } from "@/store/wishlist";
 
 import { availableStock, quantityLimit, stockLabel } from "@/lib/inventory";
 import { modelDeliveryUrl, prefetchModel } from "@/lib/modelPrefetch";
+import { productOffer } from "@/lib/catalogPresentation";
+import { FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE } from "@/lib/orders";
 
 const ProductViewer = dynamic(
   () => import("@/three/ProductViewer").then((m) => m.ProductViewer),
@@ -53,9 +55,18 @@ export function ProductCustomizer({ product }: { product: Product }) {
   const [showViewerHint, setShowViewerHint] = useState(false);
   const [added, setAdded] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [offerNow, setOfferNow] = useState<number | undefined>();
   useEffect(() => {
     setMounted(true);
+    setOfferNow(Date.now());
   }, []);
+  useEffect(() => {
+    if (!product.promotionEndsAt) return;
+    const expires = Date.parse(product.promotionEndsAt);
+    if (!Number.isFinite(expires) || expires <= Date.now()) return;
+    const timer = window.setTimeout(() => setOfferNow(Date.now()), Math.max(0, Math.min(expires - Date.now() + 50, 2_147_483_647)));
+    return () => window.clearTimeout(timer);
+  }, [product.promotionEndsAt, offerNow]);
   useEffect(() => {
     if (!product.model) return;
     void prefetchModel(
@@ -90,6 +101,7 @@ export function ProductCustomizer({ product }: { product: Product }) {
     [product, color, material],
   );
   const selectedColor = product.colors.find((c) => c.id === color);
+  const offer = productOffer(product, offerNow);
   const selectedMaterial = product.materials.find((m) => m.id === material);
   const colorHex = selectedColor?.hex ?? "#C9A37A";
   const handleViewerReady = useCallback(() => {
@@ -275,13 +287,13 @@ export function ProductCustomizer({ product }: { product: Product }) {
             {product.name}
           </h1>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#293C32]/10 pb-5">
-            <div className="flex items-center gap-1.5 text-sm text-[#6C726B]">
+            {product.reviewCount > 0 ? <div className="flex items-center gap-1.5 text-sm text-[#6C726B]">
               <Star
                 className="h-4 w-4 fill-[#AD6547] text-[#AD6547]"
                 aria-hidden="true"
               />
               {product.rating} · {product.reviewCount} сэтгэгдэл
-            </div>
+            </div> : <span className="text-xs text-[#6C726B]">Сэтгэгдэл хараахан байхгүй</span>}
             <button
               type="button"
               onClick={() => toggleWish(product.id)}
@@ -309,11 +321,14 @@ export function ProductCustomizer({ product }: { product: Product }) {
             <p className="mt-1 text-3xl font-semibold tabular-nums text-[#AD6547]">
               {formatPrice(price)}
             </p>
+            {offer.compareAtPrice != null && price === product.basePrice && <p className="mt-2 flex flex-wrap items-center gap-3 text-sm"><del className="text-[#6C726B]">{formatPrice(offer.compareAtPrice)}</del>{offer.discountPercent && <span className="rounded-md bg-[#F4E9DF] px-2 py-1 text-xs font-medium text-[#8A4D38]">−{offer.discountPercent}%</span>}</p>}
+            {offer.label && <p className="mt-2 text-sm text-[#8A4D38]">{offer.label}{price !== product.basePrice && " · үндсэн загварын урамшуулал"}</p>}
           </div>
 
           <p className="border-b border-[#293C32]/10 pb-6 text-sm leading-7 text-[#6C726B]">
             {product.description}
           </p>
+          <details className="mt-4 rounded-xl border border-[#293C32]/10 bg-[#F8F7F3] p-4 text-sm"><summary className="cursor-pointer font-medium">Хүргэлт ба захиалгын нөхцөл</summary><div className="mt-3 space-y-2 text-xs leading-relaxed text-[#6C726B]">{product.deliveryTerms && <p className="whitespace-pre-wrap break-words">Дэлгүүрийн нөхцөл: {product.deliveryTerms}</p>}<p>Одоогийн checkout хүргэлт: захиалгын барааны дүн {formatPrice(FREE_SHIPPING_THRESHOLD)}-өөс бага бол {formatPrice(STANDARD_SHIPPING_FEE)}, түүнээс дээш бол 0₮. Баталгаажуулах дэлгэцийн нийт дүнг шалгана уу.</p><p>Хүргэлтэд гарахаас өмнө цуцлах хүсэлт гаргаж болно. Төлбөр төлсөн бол админ шалгаж, мөнгөний буцаалтыг тусад нь бүртгэнэ. Хүргэлтэд гарсан барааны буцаалтаар бидэнтэй холбоо барина уу.</p><Link className="inline-block min-h-11 pt-3 underline" href="/about#contact">Хүргэлтийн бүс, хугацааг лавлах</Link></div></details>
 
           <div className="border-b border-[#293C32]/10 py-5">
             <div className="mb-3 flex items-center gap-2 text-sm font-medium">

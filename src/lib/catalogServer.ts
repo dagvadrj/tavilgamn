@@ -5,14 +5,18 @@ import { parseProduct } from "./catalogValidation";
 import type { Tables } from "./supabase/database.types";
 
 export const FURNITURE_ORDER_FIELDS = "id,product_id,name,category,description,base_price,image_url,thumbnail_path,glb_path,preview_glb_path,processing_status,scale,dimensions_w,dimensions_d,dimensions_h,colors,materials,default_color,in_stock,rating,review_count,badges,is_new,is_best_seller,store_ids";
-export const FURNITURE_FIELDS = `${FURNITURE_ORDER_FIELDS},images,glb_validation`;
+const FURNITURE_LEGACY_FIELDS = `${FURNITURE_ORDER_FIELDS},images,glb_validation`;
+export const FURNITURE_FIELDS = `${FURNITURE_LEGACY_FIELDS},compare_at_price,promotion_label,promotion_ends_at,delivery_terms`;
 export type FurnitureRow = Pick<Tables<"furniture_models">,
   "id" | "product_id" | "name" | "category" | "description" | "base_price" |
   "image_url" | "thumbnail_path" | "glb_path" | "processing_status" | "scale" |
   "dimensions_w" | "dimensions_d" | "dimensions_h" | "colors" | "materials" |
   "default_color" | "in_stock" | "rating" | "review_count" | "badges" |
   "is_new" | "is_best_seller" | "store_ids"
-> & Partial<Pick<Tables<"furniture_models">, "images" | "preview_glb_path" | "glb_validation">>;
+> & Partial<Pick<Tables<"furniture_models">, "images" | "preview_glb_path" | "glb_validation">> & {
+  compare_at_price?: number | null; promotion_label?: string | null;
+  promotion_ends_at?: string | null; delivery_terms?: string | null;
+};
 
 export function productFromRow(row: FurnitureRow): Product {
   // Boolean stock means the schema migration has not been applied yet.
@@ -24,6 +28,9 @@ export function productFromRow(row: FurnitureRow): Product {
   const product = parseProduct({
     id: row.product_id, name: row.name, category: row.category, description: row.description,
     basePrice: Number(row.base_price), image: row.image_url || (thumbnail ? `/api/models/files/${row.id}/${thumbnail}` : "/public/image.png"),
+    compareAtPrice: row.compare_at_price == null ? null : Number(row.compare_at_price),
+    promotionLabel: row.promotion_label, promotionEndsAt: row.promotion_ends_at,
+    deliveryTerms: row.delivery_terms,
     images: row.images ?? [],
     colors: row.colors, materials: row.materials, defaultColor: row.default_color ?? fallbackColor,
     dimensions: {w: Number(row.dimensions_w), d: Number(row.dimensions_d), h: Number(row.dimensions_h)},
@@ -58,15 +65,19 @@ export async function readProducts(db = getSupabaseAdmin()): Promise<Product[]> 
   try {
     return await readWithFields(FURNITURE_FIELDS);
   } catch (error) {
-    if (!isMissingGalleryColumn(error)) throw error;
-    return readWithFields(FURNITURE_ORDER_FIELDS);
+    if (!isMissingOptionalColumn(error)) throw error;
+    try { return await readWithFields(FURNITURE_LEGACY_FIELDS); }
+    catch (legacyError) {
+      if (!isMissingOptionalColumn(legacyError, ["images", "glb_validation"])) throw legacyError;
+      return readWithFields(FURNITURE_ORDER_FIELDS);
+    }
   }
 }
 
-function isMissingGalleryColumn(error: unknown) {
+function isMissingOptionalColumn(error: unknown, columns = ["images", "glb_validation", "compare_at_price", "promotion_label", "promotion_ends_at", "delivery_terms"]) {
   if (!error || typeof error !== "object") return false;
   const value = error as { code?: string; message?: string };
-  return value.code === "42703" || (value.message?.includes("images") && value.message.includes("column"));
+  return ["42703", "PGRST204"].includes(value.code ?? "") && columns.some(column => value.message?.includes(column));
 }
 
 export async function readProduct(id: string, db = getSupabaseAdmin()): Promise<Product | undefined> {
@@ -79,7 +90,11 @@ export async function readProduct(id: string, db = getSupabaseAdmin()): Promise<
   try {
     return await readWithFields(FURNITURE_FIELDS);
   } catch (error) {
-    if (!isMissingGalleryColumn(error)) throw error;
-    return readWithFields(FURNITURE_ORDER_FIELDS);
+    if (!isMissingOptionalColumn(error)) throw error;
+    try { return await readWithFields(FURNITURE_LEGACY_FIELDS); }
+    catch (legacyError) {
+      if (!isMissingOptionalColumn(legacyError, ["images", "glb_validation"])) throw legacyError;
+      return readWithFields(FURNITURE_ORDER_FIELDS);
+    }
   }
 }

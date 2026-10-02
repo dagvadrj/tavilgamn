@@ -12,6 +12,8 @@ type MerchantOrder = {
   id: string; items: OrderLine[]; subtotal: number; currency: "MNT";
   delivery: DeliveryAddress; created_at: string; status: FulfillmentStatus;
   paymentStatus: "pending_payment" | "paid" | "cancelled";
+  commissionBps?: number; platformFee?: number; merchantNet?: number;
+  cancellationStatus?: "requested" | "approved" | "rejected" | "refunded" | null;
 };
 const STATUS_LABEL: Record<FulfillmentStatus, string> = { pending: "Шинэ захиалга", processing: "Бэлтгэж буй", shipped: "Хүргэлтэд гарсан", delivered: "Хүргэгдсэн" };
 const NEXT_STATUS: Partial<Record<FulfillmentStatus, FulfillmentStatus>> = { pending: "processing", processing: "shipped", shipped: "delivered" };
@@ -55,7 +57,9 @@ function MerchantOrderCard({ owner, order, onUpdated }: { owner: string; order: 
     <header className="merchant-section-heading"><div><h3>Захиалга #{order.id.slice(0, 8).toUpperCase()}</h3><p>{new Date(order.created_at).toLocaleString("mn-MN", { timeZone: "Asia/Ulaanbaatar" })}</p></div><span className="merchant-order-status">{order.paymentStatus === "cancelled" ? "Цуцлагдсан" : STATUS_LABEL[order.status]}</span></header>
     <div className="merchant-order-details"><div><h4>Хүргэлтийн мэдээлэл</h4><p>{order.delivery.name}</p><p>{order.delivery.phone}</p><p>{order.delivery.address}</p></div><div><h4>Захиалсан бараа</h4><ul>{order.items.map(item => <li key={JSON.stringify([item.productId, item.color, item.material])}><strong>{item.name} × {item.qty}</strong><p>{item.colorName} · {item.materialName}</p><p>{formatPrice(item.lineTotal)}</p></li>)}</ul></div></div>
     <footer className="merchant-order-footer"><span>{order.paymentStatus === "paid" ? "Төлбөр төлөгдсөн" : order.paymentStatus === "cancelled" ? "Захиалга цуцлагдсан" : "Төлбөр хүлээж буй"}</span><span>Танай барааны дүн <strong>{formatPrice(order.subtotal)}</strong></span></footer>
-    {next && order.paymentStatus === "paid" && <div className="merchant-actions"><button className="btn-primary" disabled={busy} onClick={async () => {
+    {order.platformFee != null && order.merchantNet != null && <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 border-t pt-3 text-xs text-[#6C726B]"><span>Захиалга үүсэх үеийн шимтгэл {(order.commissionBps ?? 0) / 100}% · {formatPrice(order.platformFee)}</span><span>Дэлгүүрийн тооцооны дүн {formatPrice(order.merchantNet)}{order.paymentStatus === "cancelled" && " · цуцлагдсан"}</span><span>Энэ нь данс руу мөнгө шилжүүлсэн баримт биш.</span></div>}
+    {order.cancellationStatus === "requested" && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Цуцлах хүсэлтийг шалгаж байна. Шийдвэр гарах хүртэл бэлтгэл, хүргэлтийг түр зогсооно.</p>}
+    {next && order.paymentStatus === "paid" && order.cancellationStatus !== "requested" && <div className="merchant-actions"><button className="btn-primary" disabled={busy} onClick={async () => {
       if (busy) return;
       setBusy(true); setError(null); setMessage(null);
       try {

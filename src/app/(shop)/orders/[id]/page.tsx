@@ -32,6 +32,8 @@ import {
   type PaymentView,
 } from "@/lib/payments";
 import { formatDateTime, formatPrice, cn } from "@/lib/format";
+import { CustomerOrderActions, OrderFulfillmentSummary } from "@/components/CommerceOrderActions";
+import { cancellationBlocksPayment, type CommerceOrderDetails } from "@/lib/commerceOperations";
 
 const ORDER_FLOW: { status: OrderStatus; label: string }[] = [
   { status: "pending_payment", label: "Захиалга үүссэн" },
@@ -63,7 +65,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
   const initialized = useAuth((state) => state.initialized);
   const [result, setResult] = useState<{
     owner: string;
-    order: OrderRecord;
+    order: OrderRecord & CommerceOrderDetails;
     payment: PaymentView | null;
   } | null>(null);
   const [methods, setMethods] = useState<
@@ -140,7 +142,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
       : null;
 
   async function startPayment() {
-    if (busy || !current) return;
+    if (busy || !current || cancellationBlocksPayment(current.order)) return;
     setBusy(true);
     setError(null);
     try {
@@ -292,7 +294,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
           <div className="flex gap-3 border-t border-[#293C32]/10 bg-[#FDF6F6] px-5 py-4 text-sm text-[#8A4B4B] sm:px-7">
             <XCircle className="mt-0.5 shrink-0" size={18} />
             <p>
-              Энэ захиалга цуцлагдсан. Тусгаарласан барааны нөөцийг буцаасан.
+              Энэ захиалга цуцлагдсан. Төлбөрийн буцаалтын төлөвийг доорх хүсэлтийн мэдээллээс харна уу.
             </p>
           </div>
         ) : (
@@ -346,6 +348,11 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
         )}
       </section>
 
+      <div className="mt-5 space-y-3">
+        <OrderFulfillmentSummary order={order} />
+        <CustomerOrderActions key={order.id} order={order} paid={payment?.state === "paid"} onUpdated={load} />
+        {payment?.requires_review && <p role="status" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">Төлбөр бүртгэгдсэн боловч тулгах шалгалт шаардлагатай. Дахин төлбөр бүү хийгээрэй; админтай холбоо барина уу.</p>}
+      </div>
       {error && (
         <div
           role="alert"
@@ -499,6 +506,8 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                   </p>
                 </div>
               </div>
+            ) : cancellationBlocksPayment(order) ? (
+              <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">Цуцлах хүсэлтийг шалгаж байна. Шалгалт дуусах хүртэл нэхэмжлэхээр төлбөр бүү хийгээрэй.</p>
             ) : order.status !== "pending_payment" ? (
               <div className="mt-5 flex gap-3 rounded-xl bg-[#EEF4ED] p-4 text-sm text-[#42634F]">
                 <CheckCircle2 className="shrink-0" size={19} />

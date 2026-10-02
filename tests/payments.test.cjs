@@ -158,7 +158,13 @@ test("non-admin cannot manually mark a bank transfer paid", async () => {
 });
 test("uncertain invoice creation is persisted and never retried as another remote invoice", async () => {
   let payment = null, calls = 0;
-  const db = { from(table) {
+  const db = { async rpc(name,args) {
+    assert.equal(name,"claim_order_payment");
+    assert.equal(args.p_order,id);
+    if (payment) return {data:{claimed:false,payment},error:null};
+    payment={order_id:id,method:args.p_method,callback_token:args.p_callback_token,state:"creating",instructions:null,created_at:new Date().toISOString()};
+    return {data:{claimed:true,payment},error:null};
+  }, from(table) {
     let update;
     const query = {
       select() { return query; }, eq() { return query; },

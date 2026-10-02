@@ -17,10 +17,16 @@ export function KitchenQuoteRequest({
   designId,
   returnPath,
   defaultRoom,
+  projectId,
+  beforeSubmit,
+  disabled = false,
 }: {
   designId: string;
   returnPath: string;
   defaultRoom: RoomDefaults;
+  projectId?: string;
+  beforeSubmit?: () => Promise<void>;
+  disabled?: boolean;
 }) {
   const router = useRouter();
   const user = useAuth((state) => state.user);
@@ -54,6 +60,7 @@ export function KitchenQuoteRequest({
     setBusy(true);
     setError("");
     try {
+      await beforeSubmit?.();
       const response = await authFetch(
         `/api/kitchen-designs/${encodeURIComponent(designId)}/quotes`,
         {
@@ -61,6 +68,7 @@ export function KitchenQuoteRequest({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             idempotencyKey: idempotencyKey.current,
+            projectId: projectId ?? null,
             name: form.get("name"),
             phone: form.get("phone"),
             email: form.get("email"),
@@ -110,7 +118,7 @@ export function KitchenQuoteRequest({
       <button
         type="button"
         className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-[#293c32]/20 px-5 text-sm font-medium text-[#293c32] disabled:opacity-60"
-        disabled={!initialized}
+        disabled={!initialized || disabled}
         onClick={begin}
       >
         <MessageSquareQuote size={17} />
@@ -124,6 +132,7 @@ export function KitchenQuoteRequest({
       className="space-y-4 rounded-2xl border border-[#293c32]/15 bg-[#f8f8f4] p-4"
       onSubmit={submit}
     >
+      {projectId && <p className="text-xs text-[#42634f]">Таны өөрчилсөн загварыг хадгалж, энэ үеийн хувилбарыг үйлдвэрлэгчид илгээнэ.</p>}
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-medium text-[#293c32]">Үнийн санал авах</h2>

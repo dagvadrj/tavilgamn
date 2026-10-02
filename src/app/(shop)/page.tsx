@@ -10,11 +10,11 @@ import {
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/products";
 import { readStoreDirectory } from "@/lib/storeDirectory";
-import { INSPIRATION } from "@/lib/reviews";
 import { readProducts } from "@/lib/catalogServer";
 import { ProductCard } from "@/components/ProductCard";
 import { hasAvailableStock } from "@/lib/inventory";
 import { FeaturedMerchants } from "@/components/FeaturedMerchants";
+import { hasProductOffer } from "@/lib/catalogPresentation";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +26,8 @@ export default async function HomePage() {
     ...products.filter((p) => !p.isBestSeller),
   ].slice(0, 8);
   const newArrivals = products.filter((p) => p.isNew).slice(0, 4);
+  const offerCheckedAt = Date.now();
+  const offers = products.filter(product => hasProductOffer(product, offerCheckedAt)).slice(0, 4);
   return (
     <div className="store-home">
       <section
@@ -34,17 +36,17 @@ export default async function HomePage() {
       >
         <div className="hero-copy">
           <span className="eyebrow">
-            <span className="status-dot" /> Таны гэрийн шинэ эхлэл
+            <span className="status-dot" /> Гэртээ хэрэгтэй сонголтууд
           </span>
           <h1 id="home-title">
-            Гэр гэдэг
+            Тавилгаа ол.
             <br />
-            хамгийн <span>тухтай</span>
-            <br className="hero-break" /> газар.
+            <span>Өрөөндөө</span>
+            <br className="hero-break" /> тохируул.
           </h1>
           <p>
-            Танд таалагдах загвар. Амьдралд тань нийцэх тавилга.
-            <br className="hidden sm:block" /> Өөрийн орон зайг хамтдаа бүтээе.
+            Дэлгүүрүүдийн сонголтыг харьцуулж, хэмжээ, өнгө,
+            үнээ шалгаад өрөөндөө 3D-ээр байрлуулж үзээрэй.
           </p>
           <Link href="/catalog" className="btn-primary">
             Тавилга үзэх <ArrowRight size={17} />
@@ -135,7 +137,10 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
-      <FeaturedMerchants />
+      {offers.length > 0 ? <section className="shop-container shop-section" aria-labelledby="offers-title">
+        <div className="section-title"><div><span className="eyebrow">Дэлгүүрүүдийн идэвхтэй санал</span><h2 id="offers-title">Хямдрал, урамшуулал</h2></div><Link href="/catalog?offers=1" className="text-link">Бүгдийг үзэх <ArrowRight size={17} /></Link></div>
+        <div className="product-grid">{offers.map(product => <ProductCard key={product.id} product={product} offerCheckedAt={offerCheckedAt} />)}</div>
+      </section> : null}
       <section
         className="shop-container shop-section"
         aria-labelledby="featured-title"
@@ -152,7 +157,7 @@ export default async function HomePage() {
         {featured.length ? (
           <div className="product-grid">
             {featured.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} offerCheckedAt={offerCheckedAt} />
             ))}
           </div>
         ) : (
@@ -166,6 +171,7 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+      <FeaturedMerchants />
       <section
         className="shop-container shop-section"
         aria-labelledby="planner-title"
@@ -216,46 +222,11 @@ export default async function HomePage() {
           </div>
           <div className="product-grid">
             {newArrivals.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} offerCheckedAt={offerCheckedAt} />
             ))}
           </div>
         </section>
       )}
-      <section
-        className="shop-container shop-section"
-        aria-labelledby="inspiration-title"
-      >
-        <div className="section-title">
-          <div>
-            <span className="eyebrow">Таны орон зай, таны хэв маяг</span>
-            <h2 id="inspiration-title">Гэртээ урам нэмээрэй</h2>
-          </div>
-        </div>
-        <div className="inspiration-grid">
-          {INSPIRATION.slice(0, 3).map((item, i) => (
-            <Link
-              href={"/catalog/" + ["sofa", "bed", "dining-table"][i]}
-              key={item.id}
-              className="inspiration-card"
-            >
-              <div>
-                <Image
-                  src={item.src}
-                  alt={item.title}
-                  fill
-                  sizes="(max-width: 767px) 85vw, 33vw"
-                  className="object-cover"
-                />
-              </div>
-              <span>{item.style}</span>
-              <h3>
-                {item.title}
-                <ArrowUpRight size={18} />
-              </h3>
-            </Link>
-          ))}
-        </div>
-      </section>
       <section
         id="stores"
         className="shop-container shop-section"

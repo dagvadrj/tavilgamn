@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
-  CheckCircle2,
   GitBranch,
   ImagePlus,
   LoaderCircle,
@@ -19,7 +19,9 @@ import { authFetch } from "@/lib/authFetch";
 import type {
   KitchenDesignSummary,
   KitchenVersionSaveMode,
+  KitchenRenderUsage,
 } from "@/lib/kitchenMarketplace";
+import { kitchenLifecycle, kitchenLifecycleLabel } from "@/lib/kitchenMarketplace";
 import { KitchenReviewTimeline } from "./KitchenReviewTimeline";
 
 type SavedKitchen = { id: string; name: string };
@@ -27,6 +29,7 @@ type LoadResult = {
   eligible: boolean;
   storeType: string | null;
   designs: KitchenDesignSummary[];
+  renderUsage: KitchenRenderUsage | null;
 };
 
 const splitList = (value: string) => [
@@ -44,6 +47,8 @@ type ListingForm = {
   style: string;
   pricingMode: "fixed" | "from" | "quote";
   priceFrom: string;
+  priceTo: string;
+  materials: string;
   leadTimeDays: string;
   warrantyMonths: string;
   installationIncluded: boolean;
@@ -59,6 +64,8 @@ const listingForm = (design: KitchenDesignSummary): ListingForm => ({
   style: design.style,
   pricingMode: design.pricingMode,
   priceFrom: design.priceFrom == null ? "" : String(design.priceFrom),
+  priceTo: design.priceTo == null ? "" : String(design.priceTo),
+  materials: design.materials?.join("\n") ?? "",
   leadTimeDays: design.leadTimeDays == null ? "" : String(design.leadTimeDays),
   warrantyMonths:
     design.warrantyMonths == null ? "" : String(design.warrantyMonths),
@@ -70,7 +77,9 @@ const listingForm = (design: KitchenDesignSummary): ListingForm => ({
 });
 const listingPayload = (form: ListingForm) => ({
   ...form,
-  priceFrom: form.priceFrom || null,
+  priceFrom: form.pricingMode === "quote" ? null : form.priceFrom || null,
+  priceTo: form.pricingMode === "from" ? form.priceTo || null : null,
+  materials: splitList(form.materials),
   leadTimeDays: form.leadTimeDays || null,
   warrantyMonths: form.warrantyMonths || null,
   tags: splitList(form.tags),
@@ -90,14 +99,6 @@ async function request<T>(
     throw new Error(data?.error ?? "Мэдээллийг ачаалж чадсангүй.");
   return data as T;
 }
-
-const reviewLabel: Record<KitchenDesignSummary["reviewStatus"], string> = {
-  draft: "Draft",
-  submitted: "Хяналтад",
-  changes_requested: "Засвар хүссэн",
-  approved: "Зөвшөөрсөн",
-  rejected: "Татгалзсан",
-};
 
 function VersionEditor({
   design,
@@ -205,6 +206,16 @@ function VersionEditor({
         />
       </label>
       <label className="label">
+        Үнийн хүрээний дээд үнэ (₮)
+        <input className="input mt-1 w-full" type="number" min={form.priceFrom || 0} disabled={form.pricingMode !== "from"}
+          value={form.priceTo} onChange={event => field("priceTo", event.target.value)} placeholder="Заавал биш" />
+      </label>
+      <label className="label">
+        Материалууд
+        <textarea className="input mt-1 min-h-20 w-full" value={form.materials} onChange={event => field("materials", event.target.value)}
+          placeholder="Царс, MDF, чулуун тавцан" maxLength={5000} />
+      </label>
+      <label className="label">
         Үйлдвэрлэх хоног
         <input
           className="input mt-1 w-full"
@@ -309,6 +320,9 @@ export function MerchantKitchenDesigns({
     "quote",
   );
   const [priceFrom, setPriceFrom] = useState("");
+  const [priceTo, setPriceTo] = useState("");
+  const [materials, setMaterials] = useState("");
+  const [renderConsent, setRenderConsent] = useState<Record<string, boolean>>({});
   const [leadTimeDays, setLeadTimeDays] = useState("");
   const [warrantyMonths, setWarrantyMonths] = useState("");
   const [installationIncluded, setInstallationIncluded] = useState(false);
@@ -382,7 +396,9 @@ export function MerchantKitchenDesigns({
           description,
           style,
           pricingMode,
-          priceFrom: priceFrom || null,
+          priceFrom: pricingMode === "quote" ? null : priceFrom || null,
+          priceTo: pricingMode === "from" ? priceTo || null : null,
+          materials: splitList(materials),
           leadTimeDays: leadTimeDays || null,
           warrantyMonths: warrantyMonths || null,
           installationIncluded,
@@ -398,6 +414,7 @@ export function MerchantKitchenDesigns({
       setStyle("modern");
       setPricingMode("quote");
       setPriceFrom("");
+      setPriceTo(""); setMaterials("");
       setLeadTimeDays("");
       setWarrantyMonths("");
       setInstallationIncluded(false);
@@ -467,6 +484,7 @@ export function MerchantKitchenDesigns({
   }
 
   async function requestRender(design: KitchenDesignSummary) {
+    if (!renderConsent[design.id]) { setError("AI render зөвшөөрлийг баталгаажуулна уу."); return; }
     const source =
       design.media.find(
         (item) => item.kind === "thumbnail" && item.isPrimary,
@@ -485,10 +503,12 @@ export function MerchantKitchenDesigns({
             versionId: design.versionId,
             sourceMediaId: source.id,
             direction: renderDirections[design.id] ?? "",
+            consent: true,
           }),
         },
       );
       setRenderDirections((current) => ({ ...current, [design.id]: "" }));
+      setRenderConsent(current => ({ ...current, [design.id]: false }));
       await load();
     } catch (reason) {
       setError(
@@ -499,6 +519,18 @@ export function MerchantKitchenDesigns({
     } finally {
       setBusy(null);
     }
+  }
+
+  async function cancelRender(jobId: string) {
+    if (!window.confirm("Хүлээгдэж буй AI render хүсэлтийг цуцлах уу? 24 цагийн хүсэлтийн тоо буурахгүй.")) return;
+    setBusy(`render:${jobId}`); setError(null);
+    try {
+      await request(`/api/kitchen-render-jobs/${jobId}/cancel`, owner, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: "Merchant хүсэлтээ цуцалсан" }),
+      });
+      await load();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Цуцалж чадсангүй."); }
+    finally { setBusy(null); }
   }
 
   async function saveVersion(
@@ -657,6 +689,16 @@ export function MerchantKitchenDesigns({
               />
             </label>
             <label className="label">
+              Үнийн хүрээний дээд үнэ (₮)
+              <input className="input mt-1 w-full" type="number" min={priceFrom || 0} disabled={pricingMode !== "from"}
+                value={priceTo} onChange={event => setPriceTo(event.target.value)} placeholder="Заавал биш" />
+            </label>
+            <label className="label">
+              Материалууд
+              <textarea className="input mt-1 min-h-20 w-full" maxLength={5000} value={materials}
+                onChange={event => setMaterials(event.target.value)} placeholder="Царс, MDF, чулуун тавцан" />
+            </label>
+            <label className="label">
               Үйлдвэрлэх хоног
               <input
                 className="input mt-1 w-full"
@@ -741,6 +783,7 @@ export function MerchantKitchenDesigns({
           <div className="grid gap-4 xl:grid-cols-2">
             {data?.designs.map((design) => {
               const isFocused = focusedDesignId === design.id;
+              const editable = !["archived", "suspended"].includes(design.publicationStatus);
               return (
                 <article
                   id={`merchant-kitchen-${design.id}`}
@@ -767,17 +810,20 @@ export function MerchantKitchenDesigns({
                       <div>
                         <h3 className="font-semibold">{design.title}</h3>
                         <p className="text-xs text-black/50">
-                          v{design.versionNo} · {design.cabinetCount} шүүгээ ·{" "}
+                          v{design.versionNo} ({kitchenLifecycleLabel[kitchenLifecycle({ publicationStatus: "draft", reviewStatus: design.reviewStatus })]}) · {design.cabinetCount} шүүгээ ·{" "}
                           {design.roomWidthMm}×{design.roomDepthMm} мм
                         </p>
                       </div>
                       <span className="rounded-full bg-black/5 px-2 py-1 text-xs">
-                        {reviewLabel[design.reviewStatus]}
+                        {kitchenLifecycleLabel[kitchenLifecycle(design)]}
                       </span>
                     </div>
                     <p className="text-sm text-black/60">
                       {design.shortDescription || "Тайлбар оруулаагүй"}
                     </p>
+                    <p className="text-xs text-black/55">{design.materials?.join(", ") || "Материал оруулаагүй"}</p>
+                    {design.publicationStatus === "published" && <Link className="text-sm underline" href={`/kitchens/${design.slug}`}>Marketplace дээр харах</Link>}
+                    {!editable && <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-950">{design.publicationStatus === "suspended" ? "Admin түдгэлзүүлсэн. Шалтгааныг түүхээс харж, admin-тай холбогдоно уу." : "Архивласан загвар засагдахгүй."}</p>}
                     <KitchenReviewTimeline
                       key={`${design.id}:${isFocused}`}
                       design={design}
@@ -815,7 +861,7 @@ export function MerchantKitchenDesigns({
                     {design.renderJobs.length > 0 && (
                       <div className="space-y-1 rounded-xl bg-violet-50 p-3 text-xs text-violet-950">
                         {design.renderJobs.slice(0, 3).map((job) => (
-                          <p key={job.id}>
+                          <div key={job.id}>
                             <strong>AI render:</strong>{" "}
                             {job.status === "queued"
                               ? "admin хүлээж байна"
@@ -831,11 +877,12 @@ export function MerchantKitchenDesigns({
                                 {job.error}
                               </span>
                             )}
-                          </p>
+                            {job.status === "queued" && <button type="button" className="mt-1 underline" disabled={!!busy} onClick={() => void cancelRender(job.id)}>Хүсэлт цуцлах</button>}
+                          </div>
                         ))}
                       </div>
                     )}
-                    {(["draft", "changes_requested"] as const).includes(
+                    {editable && (["draft", "changes_requested"] as const).includes(
                       design.reviewStatus as "draft" | "changes_requested",
                     ) &&
                       design.thumbnailUrl && (
@@ -847,6 +894,13 @@ export function MerchantKitchenDesigns({
                             </span>
                           </summary>
                           <div className="mt-3 space-y-2">
+                            <p className="text-xs text-violet-950">Сүүлийн 24 цаг: {data.renderUsage?.used ?? 0}/{data.renderUsage?.limit ?? 0} хүсэлт.
+                              Цуцалсан болон амжилтгүй хүсэлт мөн тоологдоно. Admin зөвшөөрсний дараа зураг үүснэ.</p>
+                            <label className="flex items-start gap-2 text-xs text-violet-950">
+                              <input type="checkbox" checked={renderConsent[design.id] ?? false}
+                                onChange={event => setRenderConsent(current => ({ ...current, [design.id]: event.target.checked }))} />
+                              Энэ зураг миний ашиглах эрхтэй зураг бөгөөд AI provider руу илгээхийг зөвшөөрч байна. AI зураг нь үйлдвэрлэлийн баталгаа биш.
+                            </label>
                             <textarea
                               className="input min-h-20 w-full bg-white"
                               maxLength={1000}
@@ -864,6 +918,7 @@ export function MerchantKitchenDesigns({
                               className="btn-primary"
                               disabled={
                                 !!busy ||
+                                !renderConsent[design.id] || !data.renderUsage?.enabled || data.renderUsage.used >= data.renderUsage.limit ||
                                 design.renderJobs.some(
                                   (job) =>
                                     job.status === "queued" ||
@@ -890,7 +945,12 @@ export function MerchantKitchenDesigns({
                         </details>
                       )}
                     <div className="flex flex-wrap gap-2">
-                      {(["draft", "changes_requested"] as const).includes(
+                      {editable && design.sourceKitchenId && <Link className="btn-ghost" href={`/kitchen?design=${design.sourceKitchenId}`}>3D editor нээх</Link>}
+                      {editable && ["draft", "changes_requested"].includes(design.reviewStatus) && design.sourceKitchenId &&
+                        <button type="button" className="btn-ghost" disabled={!!busy} onClick={() => {
+                          if (window.confirm("Editor дээр хадгалсан загвараар энэ нооргийг шинэчлэх үү? Өмнөх thumbnail болон AI зургууд шинэ snapshot-д ашиглагдахгүй.")) void saveVersion(design, "sync_project", listingForm(design));
+                        }}>Хадгалсан 3D загвартай шинэчлэх</button>}
+                      {editable && (["draft", "changes_requested"] as const).includes(
                         design.reviewStatus as "draft" | "changes_requested",
                       ) && (
                         <button
@@ -905,7 +965,7 @@ export function MerchantKitchenDesigns({
                           Мэдээлэл засах
                         </button>
                       )}
-                      {(design.reviewStatus === "rejected" ||
+                      {editable && (design.reviewStatus === "rejected" ||
                         (design.publicationStatus === "published" &&
                           design.publishedVersionId === design.versionId)) && (
                         <button
@@ -923,7 +983,7 @@ export function MerchantKitchenDesigns({
                           Шинэ version
                         </button>
                       )}
-                      {(["draft", "changes_requested"] as const).includes(
+                      {editable && (["draft", "changes_requested"] as const).includes(
                         design.reviewStatus as "draft" | "changes_requested",
                       ) && (
                         <label className="btn-ghost cursor-pointer">
@@ -945,7 +1005,7 @@ export function MerchantKitchenDesigns({
                           />
                         </label>
                       )}
-                      {(["draft", "changes_requested"] as const).includes(
+                      {editable && (["draft", "changes_requested"] as const).includes(
                         design.reviewStatus as "draft" | "changes_requested",
                       ) && (
                         <label className="btn-ghost cursor-pointer">
@@ -965,7 +1025,7 @@ export function MerchantKitchenDesigns({
                           />
                         </label>
                       )}
-                      {(["draft", "changes_requested"] as const).includes(
+                      {editable && (["draft", "changes_requested"] as const).includes(
                         design.reviewStatus as "draft" | "changes_requested",
                       ) && (
                         <button
@@ -978,20 +1038,8 @@ export function MerchantKitchenDesigns({
                           Хяналтад илгээх
                         </button>
                       )}
-                      {design.reviewStatus === "approved" &&
-                        design.publishedVersionId !== design.versionId && (
-                          <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={!!busy}
-                            onClick={() => void action(design, "publish")}
-                          >
-                            <CheckCircle2 size={15} />
-                            {design.publicationStatus === "published"
-                              ? "Шинэчлэлийг нийтлэх"
-                              : "Нийтлэх"}
-                          </button>
-                        )}
+                      {editable && design.reviewStatus === "approved" && design.publishedVersionId !== design.versionId &&
+                        <p className="text-xs text-emerald-800">Admin-аас нийтлэхийг хүлээж байна.</p>}
                       {design.publicationStatus !== "archived" && (
                         <button
                           type="button"

@@ -6,7 +6,7 @@ import { cabinetAxes, cabinetCorners, cabinetsOverlap, fitCountertops, placement
 import { fitBacksplashes, parseBacksplashSettings } from "./kitchenBacksplash";
 import { parseKitchenExtras } from "./kitchenExtras";
 
-export type SavedKitchen = { id: string; name: string; design: ModularKitchen; revision?: number; thumbnailUrl: string | null; createdAt: string; updatedAt: string };
+export type SavedKitchen = { id: string; name: string; design: ModularKitchen; revision?: number; thumbnailUrl: string | null; sourceMarketplaceDesignId?: string | null; sourceMarketplaceVersionId?: string | null; createdAt: string; updatedAt: string };
 export type KitchenSnapshot = { id: string; name: string; design: ModularKitchen };
 export const cloneKitchen = (kitchen: ModularKitchen): ModularKitchen => JSON.parse(JSON.stringify(kitchen));
 export function createUnifiedKitchen(): ModularKitchen {

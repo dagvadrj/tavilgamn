@@ -20,7 +20,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const model = IMAGE_MODELS.has(configuredModel) ? configuredModel : "gpt-image-2.5-sunburst";
     const { data: id, error } = await getSupabaseAdmin().rpc("request_kitchen_render", {
       p_actor: auth.userId, p_design: routeParams.id, p_version: render.versionId,
-      p_source_media: render.sourceMediaId, p_prompt: render.prompt, p_provider: "openai", p_model: model,
+      p_source_media: render.sourceMediaId, p_prompt: render.prompt, p_provider: "openai", p_model: model, p_consent: render.consent,
     });
     if (error) throw error;
     return NextResponse.json({ id, status: "queued" }, { status: 201, headers: kitchenPrivateHeaders });

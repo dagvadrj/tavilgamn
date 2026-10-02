@@ -84,6 +84,7 @@ import {
   type CabinetComponent,
 } from "@/lib/kitchenComponents";
 import { KitchenExportButtons } from "./KitchenExportButtons";
+import { KitchenQuoteRequest } from "./KitchenQuoteRequest";
 import {
   fitBacksplashes,
   parseBacksplashSettings,
@@ -157,6 +158,7 @@ export function ModularKitchenPlanner({
   const [name, setName] = useState("Миний гал тогоо"),
     [savedId, setSavedId] = useState("");
   const [revision,setRevision]=useState(0);
+  const marketplaceSource = library.items.find(item => item.id === savedId)?.sourceMarketplaceDesignId;
   const [versionBusy,setVersionBusy]=useState(false);
   const [open, setOpen] = useState(false);
   const [componentOverview, setComponentOverview] = useState(false);
@@ -431,6 +433,7 @@ export function ModularKitchenPlanner({
             : "Гарнитур хадгалагдлаа. 3D нүүр зургийг энэ удаа хадгалж чадсангүй.",
         );
         if (place) router.push(`/planner?kitchen=${saved.id}`);
+        return saved;
       } else
         setMessage(
           useKitchens.getState().error ||
@@ -2121,6 +2124,12 @@ export function ModularKitchenPlanner({
               />
               <ProjectReport name={name} kitchen={kitchen} modules={moduleCatalog} products={products.products}
                 disabled={busy} capture={async()=>await captureKitchen.current?.()??null}/>
+              {user && savedId && marketplaceSource && (
+                <KitchenQuoteRequest key={savedId} designId={marketplaceSource}
+                  projectId={savedId} returnPath={`/kitchen?design=${savedId}`} disabled={busy}
+                  defaultRoom={{ widthMm: kitchen.room.width, depthMm: kitchen.room.depth, heightMm: kitchen.room.height }}
+                  beforeSubmit={async () => { if (!await save()) throw new Error(useKitchens.getState().error || "Үнийн хүсэлт илгээхийн өмнө загвараа хадгална уу."); }} />
+              )}
             </aside>
           </div>
         </section>

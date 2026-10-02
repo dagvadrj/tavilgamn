@@ -7,8 +7,11 @@ import { authFetch } from "@/lib/authFetch";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import { ORDER_STATUS_LABEL, type OrderRecord, type OrderStatus } from "@/lib/orders";
 import { PAYMENT_METHOD_LABEL, type PaymentMethod } from "@/lib/payments";
+import { AdminOrderOperations } from "@/components/CommerceOrderActions";
+import { AdminCommerceHealth } from "@/components/AdminCommerceHealth";
+import { CANCELLATION_LABEL, type CommerceOrderDetails } from "@/lib/commerceOperations";
 
-type HistoryOrder = OrderRecord & { order_payments?: { method: PaymentMethod; state: string } | null };
+type HistoryOrder = OrderRecord & CommerceOrderDetails & { order_payments?: { method: PaymentMethod; state: string; requires_review?: boolean } | null };
 
 const userStatusTone: Record<OrderStatus, string> = {
   pending_payment: "bg-[#FFF4E5] text-[#9A5B20]",
@@ -44,6 +47,7 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
   const current = result?.owner === userId ? result : null;
   const visible = current?.orders.filter(order => (!status || order.status === status) && `${order.id} ${order.delivery.name} ${order.delivery.phone}`.toLowerCase().includes(query.trim().toLowerCase())) ?? [];
   if (admin) return <div>
+    {userId && <AdminCommerceHealth key={userId} owner={userId} />}
     <div className="admin-toolbar"><label className="admin-search"><Search size={18} /><input aria-label="Энэ хуудсанд захиалга хайх" placeholder="Энэ хуудсанд нэр, утас, дугаараар хайх…" value={query} onChange={e=>setQuery(e.target.value)} /></label><select className="input" aria-label="Энэ хуудсан дахь захиалгын төлөв" value={status} onChange={e=>setStatus(e.target.value)}><option value="">Бүх төлөв</option>{Object.entries(ORDER_STATUS_LABEL).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select><button type="button" className="btn-ghost" disabled={loading} onClick={load}><RefreshCw size={15} />Шинэчлэх</button></div>
     {error && <p role="alert" className="admin-error">{error}</p>}
     {loading ? <div className="admin-loading" role="status"><Package size={25} />Захиалгуудыг ачаалж байна…</div> : !error && <>
@@ -52,8 +56,9 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
         <header className="admin-order-header"><div><p className="admin-order-id">Захиалга #{order.id}</p><h3>{new Date(order.created_at).toLocaleDateString("mn-MN", {timeZone:"Asia/Ulaanbaatar"})} · {order.items.reduce((sum,item)=>sum+item.qty,0)} ширхэг</h3></div><span className={"admin-status " + (order.status === "pending_payment" ? "pending" : order.status === "cancelled" ? "cancelled" : "")}>{ORDER_STATUS_LABEL[order.status]}</span></header>
         <div className="admin-order-body"><div className="admin-order-details"><div><h4 className="flex items-center gap-2"><MapPin size={13} />ХҮРГЭЛТИЙН МЭДЭЭЛЭЛ</h4><p className="font-medium">{order.delivery.name}</p><p>{order.delivery.phone}</p><p className="text-[#829072]">{order.delivery.address}</p></div><div><h4>ЗАХИАЛСАН БАРАА</h4><ul>{order.items.map(item=><li key={JSON.stringify([item.productId,item.color,item.material])}><p className="font-medium">{item.name} × {item.qty}</p><p className="text-xs text-[#8a967c]">{item.colorName} · {item.materialName}</p></li>)}</ul></div></div>
         <div className="admin-order-footer"><span className="flex items-center gap-2"><CreditCard size={15} />{order.order_payments ? PAYMENT_METHOD_LABEL[order.order_payments.method] : "Төлбөрийн арга сонгоогүй"}</span><span>Нийт дүн <strong className="ml-3">{formatPrice(order.total)}</strong></span></div>
-        {order.order_payments?.state === "needs_review" && <p className="admin-error">Нэхэмжлэхийг шалгах шаардлагатай.</p>}
+        {(order.order_payments?.state === "needs_review" || order.order_payments?.requires_review) && <p className="admin-error">Төлбөрийг тулгаж шалгах шаардлагатай. Цуцлагдсан захиалгад орсон төлбөрийг дахин захиалга болгохгүй.</p>}
         {order.status === "pending_payment" && order.order_payments?.method === "bank_transfer" && <details className="admin-transfer"><summary>Банкны шилжүүлэг шалгах, баталгаажуулах</summary><TransferConfirmation order={order} onConfirmed={load} /></details>}
+        <AdminOrderOperations key={order.id} order={order} paymentState={order.order_payments?.state} onUpdated={load} />
         </div>
       </article>)}</div>}
     </>}
@@ -100,6 +105,7 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
                 </ul>
                 {order.items.length > 3 && <p className="mt-2 text-xs text-[#6C726B]">+{order.items.length - 3} нэр төрөл</p>}
                 <p className="mt-4 flex items-center gap-2 text-xs text-[#6C726B]"><CreditCard size={14} />{order.order_payments ? PAYMENT_METHOD_LABEL[order.order_payments.method] : order.status === "pending_payment" ? "Төлбөрийн арга сонгоогүй" : "Төлбөрийн мэдээлэл бүртгэгдээгүй"}</p>
+                {order.order_cancellations && <p className="mt-2 text-xs text-[#9A5B20]">{CANCELLATION_LABEL[order.order_cancellations.status]}</p>}
               </div>
               <div className="sm:text-right">
                 <p className="text-xs text-[#6C726B]">Нийт дүн</p>

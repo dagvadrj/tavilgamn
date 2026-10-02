@@ -12,6 +12,8 @@ export interface PaymentView {
   method: PaymentMethod;
   state: "creating" | "ready" | "needs_review" | "paid";
   instructions: PaymentInstructions | null;
+  /** A verified late payment must be reconciled by an admin, not paid again. */
+  requires_review?: boolean;
 }
 export function isPaymentMethod(value: unknown): value is PaymentMethod {
   return value === "qpay" || value === "socialpay" || value === "bank_transfer";

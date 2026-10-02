@@ -1,6 +1,6 @@
-# Architecture — Phase 1
+# Architecture
 
-Updated: 2026-10-01. This document describes the current implementation, not a future redesign.
+Updated: 2026-10-02 (Phase 4). This document describes the current implementation, not a future redesign.
 
 ## Route shells
 
@@ -36,7 +36,7 @@ The shop's merchant workspace deliberately retains shop navigation.
 | Account / login / register | account route; authFetch/authErrors | protected routes use requireUser | auth.users, profiles | auth |
 | Room planner | components/RoomPlanner; features/room-planner/hooks and components | products, models, kitchens | furniture_models; kitchen_garnitures for imported kitchens | designs, catalog |
 | Kitchen editor | KitchenPlanner/ModularKitchenPlanner; features/kitchen-planner; kitchenAssembly/Placement/Extras/Bom; editorHistory | kitchen-modules, products, kitchens, kitchens/[id]/thumbnail, kitchens/[id]/versions | kitchen_modules, kitchen_module_variants, material_definitions, kitchen_garnitures, kitchen_garniture_versions | kitchens; catalog; in-memory undo/redo |
-| Kitchen marketplace | (shop)/kitchens routes; kitchenMarketplaceServer and validation | kitchen-designs, merchant/kitchen-designs/*, admin/kitchen-designs | kitchen_designs, kitchen_design_versions, kitchen_design_media, kitchen_design_reviews, kitchen_render_jobs | editor projects remain in kitchens |
+| Kitchen marketplace | (shop)/kitchens routes; kitchenMarketplaceServer and validation | kitchen-designs, merchant/kitchen-designs/*, admin/kitchen-designs, kitchen-render-jobs/* | kitchen_designs, kitchen_design_versions, kitchen_design_media, kitchen_design_reviews, kitchen_render_jobs, kitchen_marketplace_audit, kitchen_render_policy | editor projects remain in kitchens |
 | Kitchen quotation | kitchenQuotes validation; merchant/customer panels | kitchen-designs/[id]/quotes, kitchen-quotes, merchant/kitchen-quotes | kitchen_quote_requests | none |
 | Merchant workspace | MerchantDashboard; merchantServer/Validation | merchant/store, products, orders, analytics, notifications | merchant_stores, furniture_models, merchant_order_fulfillments, user_notifications | auth |
 | Admin | admin route; AdminProducts/KitchenModules/Merchants panels | admin/* | profiles and feature tables above | auth |
@@ -118,3 +118,37 @@ See [verification record](phase1-verification.md) for checked scope and rollout 
 AdminKitchenModules / AdminProducts / ModelsTab → shared GlbUploadPreview → upload-url intent → R2 PUT → upload-complete inspection/checksum → queue_model_asset → Blender worker → immutable delivery/preview paths → module variant → ModularKitchenScene / GLBFurnitureMesh.
 
 model_assets is the private version/role/state ledger. furniture_models carries current paths, archive state, canonical module binding and the latest validation; it remains the product master. Archive/restore is transactional, never a destructive file purge. See [GLB contract](glb-cabinet-standard.md).
+
+## Phase 4 marketplace boundaries
+
+The merchant's editable source lives in kitchen_garnitures. Marketplace versions
+are immutable snapshots once submitted/reviewed; editing a source never changes
+a published version. The explicit sync_project action replaces an editable draft
+snapshot and invalidates derived thumbnails/AI media. Public readers see only
+the approved published pointer of an active factory/handmade store, never review
+notes, audit events, source project IDs or render jobs.
+
+Canonical lifecycle: draft → submitted → changes_requested/approved → published.
+An admin may suspend a published listing; owners/admins may archive listings. A newly drafted
+version does not remove the previously approved public version. Historical
+rejected values are displayed as changes_requested; SQL review actions retain
+their historical representation while the domain/UI expose seven states.
+
+Only an admin can approve, publish, resume or suspend. Merchant APIs and all
+service-only mutation RPCs independently verify a fresh role, active eligible
+store and ownership. Transactional guards lock the design before its versions
+and render jobs; paid generation requires an explicit admin cost confirmation.
+Internal snapshot helpers are in kitchen_internal, not exposed through PostgREST.
+
+Customer clone → own editable project → save → quote creates an immutable
+project_snapshot for the request. The owning merchant can inspect that snapshot
+in a lazy-loaded, read-only 3D/2D/BOM dialog and respond. Notification links focus
+the exact design/quote and cannot navigate to an external origin.
+
+AI consent is recorded with the request; a rolling store-wide 24h allowance is
+checked under an advisory lock. Failed/cancelled requests still count. Queued
+requests may be cancelled, not already-processing jobs. No generation starts
+without explicit approval; no paid request was made during Phase 4 verification.
+
+See [Phase 4 verification](phase4-verification.md) for the verified live test flow
+and remaining deployment/paid-render gates.

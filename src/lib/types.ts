@@ -24,6 +24,12 @@ export interface Product {
   category: Category;
   description: string;
   basePrice: number;
+  /** Merchant-entered reference price; never synthesized from a percentage. */
+  compareAtPrice?: number | null;
+  promotionLabel?: string | null;
+  promotionEndsAt?: string | null;
+  /** Informational merchant delivery conditions, not an automatic shipping quote. */
+  deliveryTerms?: string | null;
   rating: number;
   storeIds?: string[];
   model?: {

@@ -12,6 +12,7 @@ import { authFetch } from "@/lib/authFetch";
 import { formatPrice } from "@/lib/format";
 import type { KitchenQuoteStatus } from "@/lib/kitchenQuotes";
 import { useAuth } from "@/store/auth";
+import { useKitchenQuoteFocus } from "@/features/kitchen-planner/hooks/useKitchenQuoteFocus";
 
 type CustomerKitchenQuote = {
   id: string;
@@ -33,6 +34,7 @@ const STATUS_LABEL: Record<KitchenQuoteStatus, string> = {
 };
 
 export function KitchenQuoteHistory() {
+  const { quoteId, clear } = useKitchenQuoteFocus();
   const user = useAuth((state) => state.user);
   const [page, setPage] = useState(0);
   const [refresh, setRefresh] = useState(0);
@@ -52,7 +54,7 @@ export function KitchenQuoteHistory() {
     void (async () => {
       try {
         const response = await authFetch(
-          `/api/kitchen-quotes?page=${page}`,
+          `/api/kitchen-quotes?page=${page}${quoteId ? `&quote=${quoteId}` : ""}`,
           { signal: controller.signal },
           user.id,
         );
@@ -77,7 +79,7 @@ export function KitchenQuoteHistory() {
       active = false;
       controller.abort();
     };
-  }, [user, page, refresh]);
+  }, [user, page, refresh, quoteId]);
 
   if (loading)
     return (
@@ -122,8 +124,10 @@ export function KitchenQuoteHistory() {
 
   return (
     <div className="space-y-4">
+      {quoteId && <button type="button" className="btn-ghost" onClick={() => { clear(); setPage(0); }}>Бүх үнийн хүсэлт харах</button>}
       {result.quotes.map((quote) => (
         <article
+          id={`quote-${quote.id}`}
           key={quote.id}
           className="rounded-xl border border-[#293C32]/10 bg-white p-5"
         >

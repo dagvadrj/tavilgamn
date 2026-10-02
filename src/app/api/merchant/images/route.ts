@@ -2,6 +2,7 @@ import { apiErrorResponse } from "@/lib/api/errors";
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireMerchant } from "@/lib/supabase/requireMerchant";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ const fail = (error: string, status: number) =>
   apiErrorResponse({ error }, { status, headers });
 
 export async function POST(request: NextRequest) {
+  let uploadId: string | null = null;
   try {
     const auth = await requireMerchant(request);
     if (auth.error) return auth.error;
@@ -38,10 +40,18 @@ export async function POST(request: NextRequest) {
       return fail("Зураг 3 MB-аас ихгүй байх ёстой.", 413);
     }
 
+    uploadId = randomUUID();
+    const publicId = `casa-nova/products/${auth.userId}/${uploadId}`;
+    const db = getSupabaseAdmin();
+    // Register before contacting storage. Failed/abandoned attempts remain discoverable.
+    const { error: intentError } = await db.from("product_media_assets").insert({
+      id: uploadId, owner_id: auth.userId, public_id: publicId, state: "uploading",
+    });
+    if (intentError) throw intentError;
     const params: Record<string, string> = {
       allowed_formats: "jpg,png,webp",
       overwrite: "false",
-      public_id: `casa-nova/products/${randomUUID()}`,
+      public_id: publicId,
       timestamp: String(Math.floor(Date.now() / 1000)),
     };
     const signature = createHash("sha256")
@@ -61,14 +71,20 @@ export async function POST(request: NextRequest) {
     });
     const data = await response.json().catch(() => null);
     if (!response.ok || typeof data?.secure_url !== "string") {
+      await db.from("product_media_assets").update({ state: "failed" }).eq("id", uploadId);
       return fail("Cloudinary рүү зураг оруулж чадсангүй. Тохиргоо болон зургаа шалгана уу.", 502);
     }
     const url = new URL(data.secure_url);
-    if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com") {
+    if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com" || url.username || url.password || data.public_id !== publicId || !url.pathname.startsWith(`/${cloud}/image/upload/`)) {
+      await db.from("product_media_assets").update({ state: "failed" }).eq("id", uploadId);
       return fail("Зургийн холбоос буруу ирлээ.", 502);
     }
+    const { error: finishError } = await db.from("product_media_assets").update({ url: url.href, state: "ready" }).eq("id", uploadId).eq("owner_id", auth.userId);
+    if (finishError) throw finishError;
     return NextResponse.json({ url: url.href }, { status: 201, headers });
   } catch {
+    // Do not delete external objects on uncertain failures. The registered public_id
+    // supports an admin reconciliation without breaking order/product history.
     return fail("Зураг оруулж чадсангүй. Дахин оролдоно уу.", 503);
   }
 }

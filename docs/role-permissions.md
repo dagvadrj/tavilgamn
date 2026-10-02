@@ -1,6 +1,6 @@
 # Role permission matrix
 
-Updated: 2026-10-01. API checks are in lib/supabase/authorize.ts; RPCs and RLS remain
+Updated: 2026-10-02 (Phase 4). API checks are in lib/supabase/authorize.ts; RPCs and RLS remain
 independent defenses. Roles are read from profiles, not browser UI or user_metadata.
 
 | Action | Guest | Customer | Merchant | Admin | Enforcement |
@@ -17,7 +17,15 @@ independent defenses. Roles are read from profiles, not browser UI or user_metad
 | View merchant orders/quotes/analytics | No | No | Own snapshot/requests | Via admin API | actor-bound RPCs; no other store totals |
 | Fulfill merchant order | No | No | Own eligible paid order | Via admin API | sequential transition + expected status |
 | Draft/submit merchant kitchen listing | No | No | Own eligible factory/handmade store | Review through admin API | requireMerchant + eligible store RPC |
+| Sync editor geometry into marketplace draft | No | No | Own editable version and source project | No implicit merchant access | actor-bound snapshot RPC; submitted/archived/suspended blocked |
 | Review/publish/feature kitchen listing | No | No | No | Yes | requireAdmin + transactional review RPC |
+| Suspend/resume kitchen listing | No | No | No | Yes | locked admin RPC; reasons required for suspension |
+| Archive kitchen listing | No | No | Own eligible store | Yes | actor-bound RPC; archived listings not restored |
+| Read private marketplace audit | No | No | Own eligible store listings | All through admin API | private server projection; append-only ledger, browser grants revoked |
+| Request AI render/read allowance | No | No | Own editable version; explicit consent and store quota | No implicit merchant request access | service-only actor RPC + store advisory lock |
+| Cancel queued AI render | No | No | Own request only | Yes | role/owner/status check; allowance not refunded |
+| Run paid AI generation | No | No | No | Explicit cost approval | requireAdmin + approveCost + transactional claim; provider credentials server-only |
+| Inspect quote project in 3D/2D/BOM | No | No | Own eligible store request only | No implicit merchant access | exact quote/store/owner predicate; immutable read-only snapshot |
 | Change customer/merchant role | No | No | No | Yes, with restrictions | no self-change; existing admin protected |
 | Admin catalog/model/material management | No | No | No | Yes | requireAdmin + input validation |
 | Upload/replace GLB, archive/restore model, read asset history | No | No | No | Yes | requireAdmin + actor-bound RPCs; model_assets client grants revoked |
@@ -44,3 +52,4 @@ change the trigger to invoker rights without verifying signup provisioning.
 
 RLS-without-policy INFO notices on server-only contact/payment/fulfillment/archive
 tables reflect intentional denial of direct client access, not permission grants.
+The same intentional denial applies to Phase 4 audit and render-policy tables.

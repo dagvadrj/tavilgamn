@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, CookingPot, Ruler } from "lucide-react";
 import { readPublishedKitchenDesigns } from "@/lib/kitchenMarketplaceServer";
+import { kitchenPriceLabel } from "@/lib/kitchenMarketplace";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -89,9 +90,7 @@ export default async function KitchenMarketplacePage() {
                       {design.pricingMode === "quote" ? "Үнэ" : "Эхлэх үнэ"}
                     </span>
                     <strong>
-                      {design.priceFrom == null
-                        ? "Үнийн санал"
-                        : `${design.priceFrom.toLocaleString()} ₮`}
+                      {kitchenPriceLabel(design)}
                     </strong>
                   </div>
                   {design.leadTimeDays && (

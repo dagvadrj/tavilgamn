@@ -15,8 +15,10 @@ interface KitchenState {
 }
 export type KitchenVersionSummary={revision:number;name:string;created_at:string;thumbnail_url:string|null};
 let generation = 0, listRequest = 0;
-function readSaved(row: { id: string; name: string; design: unknown; revision?:number; thumbnail_url?: unknown; created_at: string; updated_at: string }): SavedKitchen {
-  return { id: row.id, name: row.name, design: parseKitchen(row.design), revision:row.revision??1, thumbnailUrl: typeof row.thumbnail_url === "string" ? row.thumbnail_url : null, createdAt: row.created_at, updatedAt: row.updated_at };
+function readSaved(row: { id: string; name: string; design: unknown; revision?:number; thumbnail_url?: unknown; source_marketplace_design_id?: string | null; source_marketplace_version_id?: string | null; created_at: string; updated_at: string }): SavedKitchen {
+  return { id: row.id, name: row.name, design: parseKitchen(row.design), revision:row.revision??1, thumbnailUrl: typeof row.thumbnail_url === "string" ? row.thumbnail_url : null,
+    sourceMarketplaceDesignId: row.source_marketplace_design_id ?? null, sourceMarketplaceVersionId: row.source_marketplace_version_id ?? null,
+    createdAt: row.created_at, updatedAt: row.updated_at };
 }
 async function authenticatedSession(owner: string) {
   const { data } = await supabase.auth.getSession();

@@ -13,11 +13,13 @@ export function CatalogView({
   initialQuery,
   initialSort,
   initialRoom,
+  initialOffers,
 }: {
   initialCategory?: Category;
   initialQuery?: string;
   initialSort?: string;
   initialRoom?: string;
+  initialOffers?: boolean;
 }) {
   const room = getRoomCatalogGroup(initialRoom);
   const [query, setQuery] = useState(initialQuery ?? "");
@@ -35,10 +37,12 @@ export function CatalogView({
   const roomFilterActive = !initialCategory && room && categories.size === room.categories.length && room.categories.every(category => categories.has(category));
 
   const toggleCategory = (c: Category) => {
-    const next = new Set(categories);
-    if (next.has(c)) next.delete(c);
-    else next.add(c);
-    setCategories(next);
+    setCategories(current => {
+      const next = new Set(current);
+      if (next.has(c)) next.delete(c);
+      else next.add(c);
+      return next;
+    });
   };
 
   return (
@@ -51,7 +55,7 @@ export function CatalogView({
         <div className="mt-3 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-3xl font-medium leading-tight tracking-tight sm:text-4xl">
-              {initialCategory ? CATEGORY_LABEL[initialCategory] : roomFilterActive ? room.label : "Өөрт тохирох тавилгаа олоорой"}
+              {initialCategory ? CATEGORY_LABEL[initialCategory] : roomFilterActive ? room.label : initialOffers ? "Хямдрал, урамшуулал" : "Тавилга, гэрийн сонголтууд"}
             </h1>
             <p className="mt-3 text-sm leading-6 text-[#6C726B]">
               {roomFilterActive ? room.description : "Загвар, өнгө, материалаа харьцуулж, өөрт тохирохыг сонгоорой."}
@@ -174,7 +178,7 @@ export function CatalogView({
               ))}
             </div>
           )}
-          <CatalogProducts query={query} categories={[...categories]} initialSort={initialSort} />
+          <CatalogProducts query={query} categories={[...categories]} initialSort={initialSort} initialOffers={initialOffers} />
         </div>
       </div>
     </div>

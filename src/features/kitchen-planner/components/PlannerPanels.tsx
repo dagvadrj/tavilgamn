@@ -1,4 +1,5 @@
 "use client";
+import "./kitchen-plan.css";
 import { cabinetAxes, cabinetCorners, placementIssues } from "@/lib/kitchenPlacement";
 import { cabinetLabel, type ModularKitchen } from "@/lib/kitchenCabinets";
 
@@ -51,10 +52,12 @@ export function Plan({
   kitchen,
   selectedId,
   onSelect,
+  readOnly = false,
 }: {
   kitchen: ModularKitchen;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  readOnly?: boolean;
 }) {
   const errors = new Set(
     placementIssues(kitchen)
@@ -66,7 +69,7 @@ export function Plan({
   );
   return (
     <svg
-      className="km-plan"
+      className={`km-plan${readOnly ? " is-read-only" : ""}`}
       viewBox={`-200 -200 ${kitchen.room.width + 450} ${kitchen.room.depth + 400}`}
       role="group"
       aria-label="Модуль шүүгээний дээрээс харах зураг"
@@ -92,12 +95,12 @@ export function Plan({
               points={cabinetCorners(cabinet)
                 .map((p) => `${p.x},${p.z}`)
                 .join(" ")}
-              role="button"
-              tabIndex={0}
+              role={readOnly ? undefined : "button"}
+              tabIndex={readOnly ? undefined : 0}
               aria-label={`${cabinetLabel(cabinet)}, ${cabinet.width} мм`}
-              aria-pressed={selectedId === cabinet.id}
-              onClick={() => onSelect(cabinet.id)}
-              onKeyDown={(event) => {
+              aria-pressed={readOnly ? undefined : selectedId === cabinet.id}
+              onClick={readOnly ? undefined : () => onSelect(cabinet.id)}
+              onKeyDown={readOnly ? undefined : (event) => {
                 if (["Enter", " "].includes(event.key)) {
                   event.preventDefault();
                   onSelect(cabinet.id);
@@ -125,9 +128,9 @@ export function Plan({
         );
       })}
       {(kitchen.extras ?? []).map(extra=><g key={extra.id} className={`km-plan-cabinet ${selectedId===extra.id ? "is-selected" : ""}`}>
-        <polygon points={cabinetCorners(extra).map(p=>`${p.x},${p.z}`).join(" ")} role="button" tabIndex={0}
-          aria-label={`${extra.name}, ${extra.width} мм`} aria-pressed={selectedId===extra.id} onClick={()=>onSelect(extra.id)}
-          onKeyDown={e=>{if(["Enter"," "].includes(e.key)){e.preventDefault();onSelect(extra.id);}}}/>
+        <polygon points={cabinetCorners(extra).map(p=>`${p.x},${p.z}`).join(" ")} role={readOnly ? undefined : "button"} tabIndex={readOnly ? undefined : 0}
+          aria-label={`${extra.name}, ${extra.width} мм`} aria-pressed={readOnly ? undefined : selectedId===extra.id} onClick={readOnly ? undefined : ()=>onSelect(extra.id)}
+          onKeyDown={readOnly ? undefined : e=>{if(["Enter"," "].includes(e.key)){e.preventDefault();onSelect(extra.id);}}}/>
         <text x={extra.position.x} y={extra.position.z} textAnchor="middle" fontSize={70} pointerEvents="none">{extra.width}</text>
       </g>)}
     </svg>

@@ -10,10 +10,17 @@ export function kitchenMarketplaceError(error: unknown, fallback: string) {
     ? String(error.code)
     : "";
   const inputError = error instanceof KitchenMarketplaceInputError || error instanceof CatalogInputError;
+  const phase4Errors: Record<string, { message: string; status: number }> = {
+    P0016: { message: "Хяналтад илгээхийн өмнө AI render-ийг дуусгах эсвэл цуцална уу.", status: 409 },
+    P0017: { message: "Merchant-ийн AI render зөвшөөрөл шаардлагатай. Хуучин хүсэлтийг цуцлаад шинээр илгээнэ үү.", status: 409 },
+    P0018: { message: "Шийдвэрийн шалтгааныг бичнэ үү.", status: 400 },
+    P0019: { message: "Сүүлийн 24 цагийн AI render хүсэлтийн хязгаарт хүрсэн байна.", status: 429 },
+  };
+  if (phase4Errors[code]) return apiErrorResponse({ error: phase4Errors[code].message }, { status: phase4Errors[code].status, headers: kitchenPrivateHeaders });
   const message = inputError
     ? error.message
     : code === "42501"
-      ? "Энэ үйлдлийг зөвхөн идэвхтэй үйлдвэр эсвэл гар хийцийн дэлгүүр хийж болно."
+      ? "Энэ үйлдлийг хийх эрх хүрэлцэхгүй байна."
       : code === "P0002"
         ? "Загвар олдсонгүй. Жагсаалтаа шинэчилнэ үү."
         : code === "P0010"

@@ -1,5 +1,5 @@
 import type { Product } from "./types";
-import { CATEGORY_LABEL } from "./products";
+import { CATEGORY_LABEL } from "./catalogCategories";
 import { MAX_STOCK_QUANTITY } from "./inventory";
 import {
   parseModelColors,
@@ -118,6 +118,24 @@ export function parseProduct(value: unknown): Product {
   }
 
   const basePrice = integer(value.basePrice);
+  const compareAtPrice = value.compareAtPrice == null ? null : integer(value.compareAtPrice);
+  if (compareAtPrice != null && compareAtPrice <= basePrice) {
+    throw new CatalogInputError("Лавлах үнэ худалдах үнээс өндөр байх ёстой.");
+  }
+  const promotionLabel = value.promotionLabel == null || value.promotionLabel === ""
+    ? null : text(value.promotionLabel, 80);
+  const deliveryTerms = value.deliveryTerms == null || value.deliveryTerms === ""
+    ? null : text(value.deliveryTerms, 1000);
+  let promotionEndsAt: string | null = null;
+  if (value.promotionEndsAt != null && value.promotionEndsAt !== "") {
+    if (typeof value.promotionEndsAt !== "string" || !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value.promotionEndsAt) || !Number.isFinite(Date.parse(value.promotionEndsAt))) {
+      throw new CatalogInputError("Урамшууллын дуусах огноо буруу байна.");
+    }
+    promotionEndsAt = new Date(value.promotionEndsAt).toISOString();
+  }
+  if (compareAtPrice == null && (promotionLabel || promotionEndsAt)) {
+    throw new CatalogInputError("Урамшууллын лавлах үнийг эхлээд оруулна уу.");
+  }
 
   for (const color of colors) {
     for (const material of materials) {
@@ -192,6 +210,10 @@ export function parseProduct(value: unknown): Product {
     image,
     images,
     basePrice,
+    compareAtPrice,
+    promotionLabel,
+    promotionEndsAt,
+    deliveryTerms,
     colors,
     materials,
     defaultColor,

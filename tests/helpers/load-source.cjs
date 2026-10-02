@@ -22,6 +22,9 @@ function loadSource(relativePath, mocks = {}) {
       const resolved = resolve(id, file) ?? id;
       if (resolvedMocks.has(resolved)) return resolvedMocks.get(resolved);
       if (id === "server-only") return {};
+      // Global CSS is a browser/bundler side effect, not executable CommonJS.
+      // Style contracts have their own source assertions and browser verification.
+      if (id.endsWith(".css") && !id.endsWith(".module.css")) return {};
       return resolved !== id || /\.tsx?$/.test(resolved) ? compile(resolved) : originalRequire(id);
     };
     loaded._compile(ts.transpileModule(readFileSync(file, "utf8"), {

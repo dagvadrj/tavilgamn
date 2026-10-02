@@ -1,11 +1,11 @@
 import "server-only";
-import type { KitchenDesignSummary, KitchenRenderJobSummary, KitchenReviewHistoryItem, KitchenVersionHistoryItem } from "./kitchenMarketplace";
+import type { KitchenAuditEvent, KitchenDesignSummary, KitchenRenderJobSummary, KitchenRenderUsage, KitchenReviewHistoryItem, KitchenVersionHistoryItem } from "./kitchenMarketplace";
 import { getSupabaseAdmin } from "./supabase/admin";
 
 type Db = ReturnType<typeof getSupabaseAdmin>;
 type DesignRow = {
   id: string; store_id: string; slug: string; publication_status: KitchenDesignSummary["publicationStatus"];
-  published_version_id: string | null; updated_at: string;
+  published_version_id: string | null; updated_at: string; source_garniture_id?: string | null;
 };
 type VersionRow = {
   id: string; design_id: string; version_no: number; review_status: KitchenDesignSummary["reviewStatus"];
@@ -15,6 +15,7 @@ type VersionRow = {
   exclusions: string[]; cabinet_count: number; min_room_width_mm: number;
   min_room_depth_mm: number; max_height_mm: number;
   created_at: string; submitted_at: string | null; approved_at: string | null;
+  price_to: number | string | null; materials: string[];
 };
 
 async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], storeNames: Map<string, string>, includePrivateHistory = false) {
@@ -22,7 +23,7 @@ async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], s
   const chosen = new Map<string, VersionRow>();
   for (const version of versions) if (!chosen.has(version.design_id)) chosen.set(version.design_id, version);
   const ids = [...chosen.values()].map((version) => version.id);
-  const [{ data: media, error }, { data: jobs, error: jobsError }, { data: reviews, error: reviewsError }] = await Promise.all([
+  const [{ data: media, error }, { data: jobs, error: jobsError }, { data: reviews, error: reviewsError }, { data: audit, error: auditError }] = await Promise.all([
     ids.length
       ? db.from("kitchen_design_media").select("id,version_id,kind,source,url,alt_text,is_primary,sort_order").in("version_id", ids).eq("status", "ready").order("sort_order", { ascending: true })
       : Promise.resolve({ data: [], error: null }),
@@ -32,10 +33,20 @@ async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], s
     includePrivateHistory
       ? db.from("kitchen_design_reviews").select("id,design_id,version_id,action,note,created_at").in("design_id", designs.map((design) => design.id)).order("created_at", { ascending: false }).limit(5000)
       : Promise.resolve({ data: [], error: null }),
+    includePrivateHistory
+      ? db.from("kitchen_marketplace_audit").select("id,design_id,actor_id,entity_type,action,created_at").in("design_id", designs.map(design => design.id)).order("created_at", { ascending: false }).limit(5000)
+      : Promise.resolve({ data: [], error: null }),
   ]);
   if (error) throw error;
   if (jobsError) throw jobsError;
   if (reviewsError) throw reviewsError;
+  if (auditError) throw auditError;
+  const auditByDesign = new Map<string, KitchenAuditEvent[]>();
+  for (const event of audit ?? []) {
+    const events = auditByDesign.get(event.design_id) ?? [];
+    events.push({ id: event.id, actorId: event.actor_id, action: event.action, entityType: event.entity_type, createdAt: event.created_at });
+    auditByDesign.set(event.design_id, events);
+  }
   const mediaByVersion = new Map<string, KitchenDesignSummary["media"]>();
   for (const item of media ?? []) {
     const versionId = item.version_id as string;
@@ -85,6 +96,9 @@ async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], s
       title: version.title, shortDescription: version.short_description, description: version.description,
       style: version.style, layout: version.layout, tags: Array.isArray(version.tags) ? version.tags : [],
       pricingMode: version.pricing_mode, priceFrom: version.price_from == null ? null : Number(version.price_from),
+      priceTo: version.price_to == null ? null : Number(version.price_to),
+      materials: Array.isArray(version.materials) ? version.materials.filter(item => typeof item === "string") : [],
+      sourceKitchenId: includePrivateHistory ? design.source_garniture_id ?? null : null,
       leadTimeDays: version.lead_time_days, installationIncluded: version.installation_included,
       warrantyMonths: version.warranty_months,
       serviceAreas: Array.isArray(version.service_areas) ? version.service_areas : [],
@@ -95,12 +109,12 @@ async function summaries(db: Db, designs: DesignRow[], versions: VersionRow[], s
       maxHeightMm: version.max_height_mm,
       thumbnailUrl: mediaByVersion.get(version.id)?.find((item) => item.kind === "thumbnail" && item.isPrimary)?.url ?? null,
       media: mediaByVersion.get(version.id) ?? [], renderJobs: jobsByVersion.get(version.id) ?? [],
-      versions: versionsByDesign.get(design.id) ?? [], reviews: reviewsByDesign.get(design.id) ?? [], updatedAt: design.updated_at,
+      versions: versionsByDesign.get(design.id) ?? [], reviews: reviewsByDesign.get(design.id) ?? [], audit: auditByDesign.get(design.id) ?? [], updatedAt: design.updated_at,
     }];
   });
 }
 
-const VERSION_FIELDS = "id,design_id,version_no,review_status,title,short_description,description,style,layout,tags,pricing_mode,price_from,lead_time_days,installation_included,warranty_months,service_areas,inclusions,exclusions,cabinet_count,min_room_width_mm,min_room_depth_mm,max_height_mm,created_at,submitted_at,approved_at";
+const VERSION_FIELDS = "id,design_id,version_no,review_status,title,short_description,description,style,layout,tags,pricing_mode,price_from,price_to,materials,lead_time_days,installation_included,warranty_months,service_areas,inclusions,exclusions,cabinet_count,min_room_width_mm,min_room_depth_mm,max_height_mm,created_at,submitted_at,approved_at";
 
 export async function readMerchantKitchenDesigns(actor: string, db = getSupabaseAdmin()) {
   const { data: store, error: storeError } = await db.from("merchant_stores").select("id,name,store_type,active").eq("owner_id", actor).maybeSingle();
@@ -108,7 +122,7 @@ export async function readMerchantKitchenDesigns(actor: string, db = getSupabase
   if (!store) return { eligible: false, storeType: null, designs: [] as KitchenDesignSummary[] };
   const eligible = store.active && ["factory", "handmade"].includes(store.store_type);
   const { data: designRows, error: designError } = await db.from("kitchen_designs")
-    .select("id,store_id,slug,publication_status,published_version_id,updated_at")
+    .select("id,store_id,slug,publication_status,published_version_id,source_garniture_id,updated_at")
     .eq("store_id", store.id).order("updated_at", { ascending: false }).limit(500);
   if (designError) throw designError;
   const designs = (designRows ?? []) as DesignRow[];
@@ -117,12 +131,15 @@ export async function readMerchantKitchenDesigns(actor: string, db = getSupabase
     ? await db.from("kitchen_design_versions").select(VERSION_FIELDS).in("design_id", ids).order("version_no", { ascending: false })
     : { data: [], error: null };
   if (versionError) throw versionError;
-  return { eligible, storeType: store.store_type as string, designs: await summaries(db, designs, (versionRows ?? []) as VersionRow[], new Map([[store.id, store.name]]), true) };
+  const usage = eligible ? await db.rpc("read_kitchen_render_usage", { p_actor: actor }) : { data: null, error: null };
+  if (usage.error) throw usage.error;
+  return { eligible, storeType: store.store_type as string, renderUsage: usage.data as KitchenRenderUsage | null,
+    designs: await summaries(db, designs, (versionRows ?? []) as VersionRow[], new Map([[store.id, store.name]]), true) };
 }
 
 export async function readAdminKitchenDesigns(db = getSupabaseAdmin()) {
   const { data: designRows, error: designError } = await db.from("kitchen_designs")
-    .select("id,store_id,slug,publication_status,published_version_id,updated_at")
+    .select("id,store_id,slug,publication_status,published_version_id,source_garniture_id,updated_at")
     .order("updated_at", { ascending: false }).limit(1000);
   if (designError) throw designError;
   const designs = (designRows ?? []) as DesignRow[];
@@ -146,12 +163,18 @@ export async function readPublishedKitchenDesigns(db = getSupabaseAdmin()) {
   const versionIds = designs.map((item) => item.published_version_id).filter((id): id is string => !!id);
   const storeIds = [...new Set(designs.map((item) => item.store_id))];
   const [{ data: versionRows, error: versionError }, { data: stores, error: storeError }] = await Promise.all([
-    versionIds.length ? db.from("kitchen_design_versions").select(VERSION_FIELDS).in("id", versionIds) : Promise.resolve({ data: [], error: null }),
-    storeIds.length ? db.from("merchant_stores").select("id,name").in("id", storeIds) : Promise.resolve({ data: [], error: null }),
+    versionIds.length ? db.from("kitchen_design_versions").select(VERSION_FIELDS).in("id", versionIds).eq("review_status", "approved") : Promise.resolve({ data: [], error: null }),
+    storeIds.length ? db.from("merchant_stores").select("id,name,owner_id").in("id", storeIds).eq("active", true).in("store_type", ["factory", "handmade"]) : Promise.resolve({ data: [], error: null }),
   ]);
   if (versionError) throw versionError;
   if (storeError) throw storeError;
-  return summaries(db, designs, (versionRows ?? []) as VersionRow[], new Map((stores ?? []).map((store) => [store.id as string, store.name as string])));
+  const ownerIds = (stores ?? []).flatMap(store => store.owner_id ? [store.owner_id] : []);
+  const owners = ownerIds.length ? await db.from("profiles").select("id").in("id", ownerIds).eq("role", "merchant") : { data: [], error: null };
+  if (owners.error) throw owners.error;
+  const eligibleOwners = new Set((owners.data ?? []).map(owner => owner.id));
+  const eligibleStores = (stores ?? []).filter(store => store.owner_id && eligibleOwners.has(store.owner_id));
+  const names = new Map(eligibleStores.map(store => [store.id, store.name]));
+  return summaries(db, designs.filter(design => names.has(design.store_id)), (versionRows ?? []) as VersionRow[], names);
 }
 
 export async function readPublishedKitchenDesignBySlug(slug: string, db = getSupabaseAdmin()) {
@@ -162,11 +185,14 @@ export async function readPublishedKitchenDesignBySlug(slug: string, db = getSup
   if (designError) throw designError;
   if (!designRow?.published_version_id) return null;
   const [{ data: versionRow, error: versionError }, { data: store, error: storeError }] = await Promise.all([
-    db.from("kitchen_design_versions").select(VERSION_FIELDS).eq("id", designRow.published_version_id).maybeSingle(),
-    db.from("merchant_stores").select("id,name").eq("id", designRow.store_id).maybeSingle(),
+    db.from("kitchen_design_versions").select(VERSION_FIELDS).eq("id", designRow.published_version_id).eq("review_status", "approved").maybeSingle(),
+    db.from("merchant_stores").select("id,name,owner_id").eq("id", designRow.store_id).eq("active", true).in("store_type", ["factory", "handmade"]).maybeSingle(),
   ]);
   if (versionError) throw versionError;
   if (storeError) throw storeError;
   if (!versionRow || !store) return null;
+  const owner = store.owner_id ? await db.from("profiles").select("id").eq("id", store.owner_id).eq("role", "merchant").maybeSingle() : { data: null, error: null };
+  if (owner.error) throw owner.error;
+  if (!owner.data) return null;
   return (await summaries(db, [designRow as DesignRow], [versionRow as VersionRow], new Map([[store.id as string, store.name as string]])))[0] ?? null;
 }

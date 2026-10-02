@@ -16,9 +16,11 @@ export async function GET(request: NextRequest) {
     if (!Number.isInteger(page) || page < 0 || page > 100000) {
       throw new CatalogInputError("Хуудасны дугаар буруу байна.");
     }
+    const focus = new URL(request.url).searchParams.get("quote");
+    if (focus && !/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(focus)) throw new CatalogInputError("Хүсэлтийн ID буруу байна.");
     const { data, error } = await getSupabaseAdmin().rpc(
       "read_merchant_kitchen_quotes",
-      { p_actor: auth.userId, p_page: page },
+      { p_actor: auth.userId, p_page: focus ? 0 : page, ...(focus ? { p_focus: focus } : {}) },
     );
     if (error) throw error;
     return NextResponse.json(
