@@ -1,224 +1,46 @@
-"use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import {
-  Heart,
-  Search,
-  ShoppingBag,
-  UserRound,
-  House,
-  LayoutGrid,
-  Armchair,
-  ArrowUpRight,
-  MapPin,
-} from "lucide-react";
-import { useCart } from "@/store/cart";
-import { useWishlist } from "@/store/wishlist";
-import { useAuth } from "@/store/auth";
-import { CategoryMenu } from "./CategoryMenu";
+import { Armchair, Search, ChevronDown } from "lucide-react";
+import { CATEGORIES } from "@/lib/products";
+import { ShopHeaderActions, MobileShopNavigation, ShopRoleLinks } from "./ShopHeaderActions";
 
 export function Header() {
-  const pathname = usePathname();
-  const cartCount = useCart((s) => s.count());
-  const wishCount = useWishlist((s) => s.items.length);
-  const user = useAuth((s) => s.user);
-  const role = useAuth((s) => s.role);
-  const [mounted, setMounted] = useState(false);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  useEffect(() => {
-    setCategoriesOpen(false);
-  }, [pathname]);
-  const accountHref = mounted && user ? "/account" : "/login";
-  const links = [
-    {
-      href: "/",
-      label: "Нүүр",
-      icon: House,
-      active: pathname === "/",
-      count: 0,
-    },
-    {
-      href: "/catalog",
-      label: "Ангилал",
-      icon: LayoutGrid,
-      active:
-        pathname.startsWith("/catalog") || pathname.startsWith("/product"),
-      count: 0,
-    },
-    {
-      href: "/wishlist",
-      label: "Хадгалсан",
-      icon: Heart,
-      active: pathname === "/wishlist",
-      count: wishCount,
-    },
-    {
-      href: "/cart",
-      label: "Сагс",
-      icon: ShoppingBag,
-      active: pathname === "/cart" || pathname === "/checkout",
-      count: cartCount,
-    },
-    {
-      href: accountHref,
-      label: "Миний",
-      icon: UserRound,
-      active:
-        ["/account", "/login", "/register"].includes(pathname) ||
-        pathname.startsWith("/orders"),
-      count: 0,
-    },
-  ];
-  return (
-    <>
-      <div className="store-announcement">
-        <div className="shop-container">
-          <span>Гэртээ тухтай. Өөрийнхөөрөө.</span>
-          <Link href="/stores">
-            <MapPin size={13} /> Дэлгүүрүүдтэй танилцах{" "}
-            <ArrowUpRight size={13} />
-          </Link>
-        </div>
+  return <>
+    <div className="store-announcement">
+      <div className="shop-container market-utility">
+        <div><Link href="/merchant">Дэлгүүр нээх</Link><Link href="/about#contact">Тусламж</Link></div>
+        <span lang="mn">Монгол <span aria-hidden="true">·</span> ₮ MNT</span>
       </div>
-      <header className="store-header">
-        <div className="shop-container header-main">
-          <Link href="/" className="brand" aria-label="Тавилга.mn — Нүүр">
-            <span className="brand-icon">
-              <Armchair size={23} strokeWidth={1.7} />
-            </span>
-            tavilga<span className="brand-dot">.</span>mn
-          </Link>
-          <form
-            action="/catalog"
-            method="get"
-            role="search"
-            className="store-search"
-          >
-            <Search size={19} aria-hidden="true" />
-            <input
-              key={pathname}
-              type="search"
-              name="q"
-              aria-label="Тавилга хайх"
-              placeholder="Тавилга, загвар, ангилал хайх"
-            />
-            <button type="submit" aria-label="Хайх">
-              <Search size={18} />
-            </button>
-          </form>
-          <div className="header-actions">
-            {links.slice(2, 4).map(({ href, label, icon: Icon, count }) => (
-              <Link
-                key={href}
-                href={href}
-                className="header-action"
-                aria-label={label}
-              >
-                <span className="nav-icon">
-                  <Icon size={21} strokeWidth={1.7} />
-                  {mounted && count > 0 && (
-                    <span className="nav-count">
-                      {count > 99 ? "99+" : count}
-                    </span>
-                  )}
-                </span>
-                <span>{label}</span>
-              </Link>
-            ))}
-            <Link href={accountHref} className="header-action account-action">
-              <UserRound size={21} strokeWidth={1.7} />
-              <span>{mounted && user ? "Миний бүртгэл" : "Нэвтрэх"}</span>
-            </Link>
-          </div>
-          <Link href="/planner" className="mobile-planner">
-            <Armchair size={17} /> 3D өрөө
-          </Link>
-        </div>
+    </div>
+    <header className="store-header">
+      <div className="shop-container header-main">
+        <Link href="/" className="brand" aria-label="Тавилга.mn — Нүүр">
+          <Armchair size={27} strokeWidth={1.7} aria-hidden="true" /><span>Тавилга<span className="brand-dot">.</span></span>
+        </Link>
+        <form action="/catalog" method="get" role="search" className="store-search">
+          <label className="search-category"><span className="sr-only">Хайлтын ангилал</span>
+            <select name="category" defaultValue="" aria-label="Хайлтын ангилал">
+              <option value="">Бүх ангилал</option>
+              {CATEGORIES.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+            </select><ChevronDown size={13} aria-hidden="true" />
+          </label>
+          <input type="search" name="q" aria-label="Тавилга хайх" placeholder="Тавилга, загвар, ангилал хайх…" />
+          <button type="submit" aria-label="Хайх"><Search size={18} aria-hidden="true" /><span>Хайх</span></button>
+        </form>
+        <ShopHeaderActions />
+      </div>
+      <div className="market-nav-surface">
         <nav className="shop-container desktop-nav" aria-label="Үндсэн цэс">
-          <button
-            type="button"
-            className={`category-menu-trigger${categoriesOpen || pathname.startsWith("/catalog") ? " active" : ""}`}
-            onClick={() => setCategoriesOpen(true)}
-            aria-expanded={categoriesOpen}
-            aria-controls="category-menu"
-            aria-haspopup="dialog"
-          >
-            <LayoutGrid size={16} /> Бүх ангилал
-          </button>
-          <Link href="/stores" className={pathname === "/stores" ? "active" : ""}>Дэлгүүрүүд</Link>
-          <Link href="/catalog?offers=1" className="shop-secondary-link">Хямдрал, урамшуулал</Link>
-          <Link href="/catalog?sort=new" className="shop-secondary-link">Шинээр нэмэгдсэн</Link>
-          <Link href="/planner" className="planner-link">
-            Өрөөгөө 3D төлөвлөх <ArrowUpRight size={15} />
-          </Link>
-          <Link
-            href="/kitchen"
-            className={pathname === "/kitchen" ? "active" : ""}
-          >
-            Гал тогоо төлөвлөх <ArrowUpRight size={15} />
-          </Link>
-          <Link
-            href="/kitchens"
-            className={pathname.startsWith("/kitchens") ? "active" : ""}
-          >
-            Бэлэн загварууд
-          </Link>
-          {mounted && role === "admin" && <Link href="/admin">Удирдлага</Link>}
-          {mounted && role === "merchant" && (
-            <Link href="/merchant">Миний дэлгүүр</Link>
-          )}
+          <Link href="/catalog?offers=1" className="market-sale-link">Хямдрал</Link>
+          <Link href="/catalog?sort=new">Шинэ</Link>
+          {CATEGORIES.map(category => <Link key={category.id} href={`/catalog/${category.id}`}>{category.name}</Link>)}
+          <Link href="/planner">3D төлөвлөгч</Link>
+          <Link href="/stores">Дэлгүүрүүд</Link>
+          <Link href="/kitchen">Гал тогоо төлөвлөх</Link>
+          <Link href="/kitchens">Бэлэн гал тогоо</Link>
+          <ShopRoleLinks />
         </nav>
-      </header>
-      <nav className="mobile-bottom-nav" aria-label="Доод үндсэн цэс">
-        {links.map(({ href, label, icon: Icon, active, count }) =>
-          label === "Ангилал" ? (
-            <button
-              key="categories"
-              type="button"
-              className={`mobile-category-trigger${active || categoriesOpen ? " active" : ""}`}
-              onClick={() => setCategoriesOpen(true)}
-              aria-expanded={categoriesOpen}
-              aria-controls="category-menu"
-              aria-haspopup="dialog"
-            >
-              <span className="nav-icon">
-                <Icon
-                  size={22}
-                  strokeWidth={active || categoriesOpen ? 2 : 1.7}
-                />
-              </span>
-              <span>{label}</span>
-            </button>
-          ) : (
-            <Link
-              key={href}
-              href={href}
-              className={active ? "active" : ""}
-              aria-current={active ? "page" : undefined}
-            >
-              <span className="nav-icon">
-                <Icon size={22} strokeWidth={active ? 2 : 1.7} />
-                {mounted && count > 0 && (
-                  <span className="nav-count">
-                    {count > 99 ? "99+" : count}
-                  </span>
-                )}
-              </span>
-              <span>{label}</span>
-            </Link>
-          ),
-        )}
-      </nav>
-      <CategoryMenu
-        open={categoriesOpen}
-        onClose={() => setCategoriesOpen(false)}
-        merchant={mounted && role === "merchant"}
-        admin={mounted && role === "admin"}
-      />
-    </>
-  );
+      </div>
+    </header>
+    <MobileShopNavigation />
+  </>;
 }

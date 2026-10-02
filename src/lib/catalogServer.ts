@@ -13,10 +13,8 @@ export type FurnitureRow = Pick<Tables<"furniture_models">,
   "dimensions_w" | "dimensions_d" | "dimensions_h" | "colors" | "materials" |
   "default_color" | "in_stock" | "rating" | "review_count" | "badges" |
   "is_new" | "is_best_seller" | "store_ids"
-> & Partial<Pick<Tables<"furniture_models">, "images" | "preview_glb_path" | "glb_validation">> & {
-  compare_at_price?: number | null; promotion_label?: string | null;
-  promotion_ends_at?: string | null; delivery_terms?: string | null;
-};
+> & Partial<Pick<Tables<"furniture_models">, "images" | "preview_glb_path" | "glb_validation" |
+  "compare_at_price" | "promotion_label" | "promotion_ends_at" | "delivery_terms">>;
 
 export function productFromRow(row: FurnitureRow): Product {
   // Boolean stock means the schema migration has not been applied yet.

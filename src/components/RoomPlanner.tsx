@@ -2,8 +2,9 @@
 import dynamic from "next/dynamic";
 import { useRoomPlannerUi, type CustomInterior } from "@/features/room-planner/hooks/useRoomPlannerUi";
 import { Drawer, CompareModal, NumberControl, PlannerSkeleton } from "@/features/room-planner/components/PlannerPanels";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ViewportControls } from "@/features/planner/components/ViewportControls";
+import { PlannerRail } from "@/features/planner/components/PlannerRail";
 import type { CameraAction, CameraRequest } from "@/lib/plannerCamera";
 import Image from "next/image";
 import Link from "next/link";
@@ -87,6 +88,7 @@ import {
 } from "@/lib/furnitureMeasurements";
 import "./room-planner.css";
 import "@/features/planner/components/planner-studio.css";
+import "@/features/planner/components/planner-reference.css";
 import { type DbModelInfo, getDbModel } from "@/lib/modelRegistry";
 
 const RoomCanvas = dynamic(
@@ -136,19 +138,28 @@ export function RoomPlanner() {
     kitchenUser = useAuth((state) => state.user);
   const handledKitchen = useRef<string | null>(null);
   const {
+    inspector, setInspector,
     selected, setSelected, environmentTab, setEnvironmentTab, surface,
     setSurface, selectedWall, setSelectedWall, selectedOpening, setSelectedOpening,
     placementTemplate, setPlacementTemplate, showStartHint, setShowStartHint, view,
     setView, snapEnabled, setSnapEnabled, locked, setLocked,
     paletteCat, setPaletteCat, showCompare, setShowCompare, showRoomGeometry,
     setShowRoomGeometry, compareIds, setCompareIds, saveName, setSaveName,
-    leftOpen, setLeftOpen, rightOpen, setRightOpen, activePreset,
+    leftOpen, setLeftOpen: setCatalogOpen, rightOpen, setRightOpen: setPropertiesOpen, activePreset,
     setActivePreset, presetStatus, setPresetStatus, presetError, setPresetError,
     localFile, setLocalFile, localUrl, setLocalUrl, localScale,
     setLocalScale, query, setQuery, gridEnabled, setGridEnabled,
     showDimensions, setShowDimensions, resetKey, setResetKey, notice,
     setNotice, expanded, setExpanded, newRoomType, setNewRoomType,
   } = useRoomPlannerUi();
+  const setLeftOpen = useCallback((open: boolean) => {
+    setCatalogOpen(open);
+    if (open) { setInspector("catalog"); setPropertiesOpen(false); }
+  }, [setCatalogOpen, setInspector, setPropertiesOpen]);
+  const setRightOpen = useCallback((open: boolean) => {
+    setPropertiesOpen(open);
+    if (open) { setInspector("environment"); setCatalogOpen(false); }
+  }, [setCatalogOpen, setInspector, setPropertiesOpen]);
   const dbModels = useMemo(
     () =>
       catalog.products
@@ -820,7 +831,7 @@ export function RoomPlanner() {
     <div
       ref={workspaceRef}
       className={cn(
-        "room-planner-layout planner-workspace planner-studio relative overflow-hidden xl:grid",
+        "room-planner-layout planner-workspace planner-studio planner-reference room-reference relative overflow-hidden xl:grid",
         expanded && "planner-expanded",
       )}
     >
@@ -828,7 +839,7 @@ export function RoomPlanner() {
         <Link href="/" className="studio-brand" aria-label="Tavilga.mn нүүр">
           <House size={19}/><span>tavilga.mn</span>
         </Link>
-        <div className="studio-heading"><span>Өрөөний студи</span><small>Таны орон зай, таны загвар</small></div>
+        <div className="studio-heading"><span>Өрөөний төлөвлөгч</span><small>{current.roomName ?? current.name}</small></div>
         <nav className="studio-switch" aria-label="Planner сонгох">
           <span aria-current="page">Өрөө</span>
           <Link href="/kitchen">Гал тогоо</Link>
@@ -868,10 +879,20 @@ export function RoomPlanner() {
         </button>
       </div>
 
-      {/* LEFT: catalog palette */}
+      <PlannerRail items={[
+        { id: "room", label: "Өрөө", Icon: House, active: inspector === "environment" && environmentTab === "room", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("room"); setRightOpen(true); } },
+        { id: "catalog", label: "Тавилгын каталог", Icon: LayoutGrid, active: inspector === "catalog", onClick: () => setLeftOpen(true) },
+        { id: "materials", label: "Өнгө, материал", Icon: Paintbrush, active: inspector === "environment" && environmentTab === "surfaces", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("surfaces"); setRightOpen(true); } },
+        { id: "openings", label: "Хаалга, цонх", Icon: DoorOpen, active: inspector === "environment" && environmentTab === "openings", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("openings"); setRightOpen(true); } },
+        { id: "lighting", label: "Гэрэлтүүлэг", Icon: Lightbulb, active: inspector === "environment" && environmentTab === "lighting", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("lighting"); setRightOpen(true); } },
+        { id: "measure", label: "Хэмжээс харуулах", Icon: Ruler, active: showDimensions, onClick: () => setShowDimensions(value => !value) },
+      ]} />
+
+      {/* One shared right inspector; the catalog no longer consumes canvas width on the left. */}
       <Drawer
-        side="left"
+        side="right"
         open={leftOpen}
+        active={inspector === "catalog"}
         onClose={() => setLeftOpen(false)}
         title="Тавилгын каталог"
       >
@@ -889,23 +910,16 @@ export function RoomPlanner() {
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
-          <div className="studio-categories" role="group" aria-label="Тавилгын ангилал">
+          <label className="planner-reference-category">
+            <span>Тавилгын ангилал</span>
+            <select aria-label="Тавилгын ангилал" value={paletteCat} onChange={event => setPaletteCat(event.target.value as typeof paletteCat)}>
             {CATEGORIES.map((c) => (
-              <button
-                key={c.id}
-                aria-pressed={paletteCat === c.id}
-                onClick={() => setPaletteCat(c.id)}
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs transition",
-                  paletteCat === c.id
-                    ? "bg-[#293C32] text-white"
-                    : "bg-white text-[#293C32] hover:bg-[#293C32]/10",
-                )}
-              >
+              <option key={c.id} value={c.id}>
                 {c.name}
-              </button>
+              </option>
             ))}
-          </div>
+            </select>
+          </label>
         </div>
         <div className="studio-catalog-scroll flex-1 overflow-y-auto p-3">
           <details className="planner-kitchen-library">
@@ -1210,7 +1224,10 @@ export function RoomPlanner() {
           {selected && (
             <>
               <button
-                onClick={() => setRightOpen(true)}
+                onClick={() => {
+                  setEnvironmentTab("room");
+                  setRightOpen(true);
+                }}
                 title="Сонгосон тавилгын тохиргоо"
                 className="planner-selection-name"
               >
@@ -1299,6 +1316,7 @@ export function RoomPlanner() {
             onSelect={(id) => {
               setSelected(id);
               if (id) {
+                setRightOpen(true);
                 setSelectedOpening(null);
                 setSelectedWall(null);
                 setPlacementTemplate(null);
@@ -1365,6 +1383,7 @@ export function RoomPlanner() {
       <Drawer
         side="right"
         open={rightOpen}
+        active={inspector === "environment"}
         onClose={() => setRightOpen(false)}
         title="Тохиргоо"
       >

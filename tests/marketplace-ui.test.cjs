@@ -31,12 +31,12 @@ test("offer presentation accepts only authored prices and active promotion metad
 test("marketplace cards show real price, inventory, optional delivery and no fabricated rating", () => {
   const { ProductCard } = loadSource("src/components/ProductCard.tsx");
   const plain = renderToStaticMarkup(React.createElement(ProductCard, { product, offerCheckedAt: now }));
-  assert.ok(plain.includes("₮80,000") && plain.includes("Үлдэгдэл: 5 ширхэг"));
+  assert.ok(plain.includes("80,000₮") && plain.includes("Үлдэгдэл: 5 ширхэг"));
   assert.ok(plain.includes("50 × 60 × 90 см"));
   assert.ok(!plain.includes("<del") && !plain.includes("product-rating") && !plain.includes("product-delivery"));
   const actual = renderToStaticMarkup(React.createElement(ProductCard, { product: { ...product, compareAtPrice: 100000, promotionLabel: "Намрын санал", promotionEndsAt: "2026-10-03T00:00:00Z", deliveryTerms: "Хүргэлтийн нөхцөлийг дэлгүүртэй тохирно", rating: 4.5, reviewCount: 12, model: { id: "m", file: "/m.glb", scale: 1 } }, offerCheckedAt: now }));
-  assert.ok(actual.includes("−20%") && actual.includes("₮100,000") && actual.includes("Намрын санал"));
-  assert.ok(actual.includes("3D үзэх") && actual.includes("(12)") && actual.includes("Хүргэлтийн нөхцөлийг дэлгүүртэй тохирно"));
+  assert.ok(actual.includes("−20%") && actual.includes("100,000₮") && actual.includes("Намрын санал"));
+  assert.ok(actual.includes("3D үзэх") && actual.includes("12 сэтгэгдэл") && actual.includes("Хүргэлтийн нөхцөлийг дэлгүүртэй тохирно"));
   const expired = renderToStaticMarkup(React.createElement(ProductCard, { product: { ...product, compareAtPrice: 100000, promotionLabel: "Намрын санал", promotionEndsAt: "2026-10-01T00:00:00Z" }, offerCheckedAt: now }));
   assert.ok(!expired.includes("<del") && !expired.includes("Намрын санал"));
 });
@@ -69,12 +69,16 @@ test("home promotion section is conditional on real currently available product 
       "@/components/ProductCard": { ProductCard: ({ product }) => React.createElement("article", { "data-product": product.id }) },
       "next/image": { default: ({ alt }) => React.createElement("span", { "aria-label": alt }) },
     }).default;
-    return renderToStaticMarkup(await Home());
+    return renderToStaticMarkup(await Home({}));
   }
   assert.ok(!(await render([product])).includes('id="offers-title"'));
   const offered = await render([{ ...product, compareAtPrice: 100000 }]);
   assert.ok(offered.includes('id="offers-title"') && offered.includes("/catalog?offers=1"));
   assert.ok(!(await render([{ ...product, compareAtPrice: 100000, stockQuantity: 0 }])).includes('id="offers-title"'));
+  const surcharged = { ...product, compareAtPrice: 100000,
+    colors: [{ id: "oak", name: "Царс", hex: "#c9aa80", priceDelta: 30000 }],
+    materials: [{ id: "wood", name: "Мод", priceDelta: 0 }] };
+  assert.ok(!(await render([surcharged])).includes('id="offers-title"'));
 });
 
 test("store styling is isolated from fullscreen planners and supports small touch screens", () => {

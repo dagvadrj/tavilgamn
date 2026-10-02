@@ -4,7 +4,7 @@ const { readFileSync } = require("node:fs");
 const { randomUUID } = require("node:crypto");
 const { PGlite } = require("@electric-sql/pglite");
 
-test("Phase 5 commerce transactions preserve inventory, payment evidence and ACL", async t => {
+test("Combined Phase 5 migrations preserve locked catalog snapshots, inventory, payment evidence and ACL", async t => {
   const db = new PGlite();
   t.after(() => db.close());
   await db.exec(`
@@ -28,8 +28,13 @@ test("Phase 5 commerce transactions preserve inventory, payment evidence and ACL
     "202609090001_product_gallery.sql", "20260916072036_merchant_stores_roles.sql",
     "20260916180746_merchant_checkout_lock.sql", "20260918000000_model_processing_pipeline_recovery.sql",
     "20260919125623_merchant_commission_featured_and_3d_requests.sql", "20260919125726_snapshot_merchant_commission_on_orders.sql",
-    "20261001092640_architecture_store_directory.sql", "20261002090000_marketplace_order_operations.sql",
+    "20260919130629_merchant_product_3d_request_save.sql",
+    "20261001092640_architecture_store_directory.sql", "20261002131851_marketplace_order_operations.sql",
   ]) await db.exec(readFileSync(`supabase/migrations/${file}`, "utf8"));
+  // The archive columns are supplied by the earlier GLB standard migration in
+  // production. This commerce fixture omits its unrelated kitchen/model ledger.
+  await db.exec("alter table furniture_models add column archived_at timestamptz, add column archived_by uuid references profiles(id)");
+  await db.exec(readFileSync("supabase/migrations/20261002131913_marketplace_product_commerce.sql", "utf8"));
   const admin = randomUUID(), buyer = randomUUID(), stranger = randomUUID(), alice = randomUUID(), bob = randomUUID();
   for (const [actor, role] of [[admin,"admin"],[buyer,"customer"],[stranger,"customer"],[alice,"merchant"],[bob,"merchant"]]) {
     await db.query("insert into auth.users values($1)",[actor]);
@@ -79,7 +84,7 @@ test("Phase 5 commerce transactions preserve inventory, payment evidence and ACL
     }
     await assert.rejects(db.query("delete from orders where id=$1",[id]),{code:"42501"});
     await db.exec("update furniture_models set name='Changed current catalog' where product_id='platform'");
-    assert.equal((await order(id)).items[0].name,"Snapshot platform");
+    assert.equal((await order(id)).items[0].name,"platform");
   });
   await t.test("incorrect stored line math cannot be persisted and inventory rolls back",async()=>{
     const before=await stock("platform");

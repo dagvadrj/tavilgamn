@@ -77,7 +77,7 @@ test("product ownership, gallery ledger, archive and metadata changes are atomic
   await db.exec(gallery.slice(gallery.indexOf("create or replace function public.save_furniture_product"), gallery.indexOf("notify pgrst")));
   await db.exec(readFileSync("supabase/migrations/20260919130629_merchant_product_3d_request_save.sql", "utf8"));
   await db.exec("revoke all on function save_merchant_product_v2(uuid,jsonb,boolean,boolean,integer) from public,anon,authenticated; grant execute on function save_merchant_product_v2(uuid,jsonb,boolean,boolean,integer) to service_role;");
-  await db.exec(readFileSync("supabase/migrations/20261002090001_marketplace_product_commerce.sql", "utf8"));
+  await db.exec(readFileSync("supabase/migrations/20261002131913_marketplace_product_commerce.sql", "utf8"));
   await db.exec("create trigger reserve_order_stock before insert on public.orders for each row execute function reserve_order_stock()");
   const alice = randomUUID(), bob = randomUUID(), customer = randomUUID();
   await db.query("insert into profiles values($1,'merchant'),($2,'merchant'),($3,'customer')", [alice,bob,customer]);

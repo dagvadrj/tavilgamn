@@ -22,7 +22,8 @@ export function useRoomPlannerUi() {
   const [placementTemplate, setPlacementTemplate] = useState<string | null>(
     null,
   );
-  const [showStartHint, setShowStartHint] = useState(true);
+  const [showStartHint, setShowStartHint] = useState(false);
+  const [inspector, setInspector] = useState<"catalog" | "environment">("environment");
   const [view, setView] = useState<"plan" | "perspective">("perspective");
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [locked, setLocked] = useState(false);
@@ -49,6 +50,6 @@ export function useRoomPlannerUi() {
   const [expanded, setExpanded] = useState(false);
   const [newRoomType, setNewRoomType] = useState<RoomType>("bedroom");
   return {
-    selected, setSelected, environmentTab, setEnvironmentTab, surface, setSurface, selectedWall, setSelectedWall, selectedOpening, setSelectedOpening, placementTemplate, setPlacementTemplate, showStartHint, setShowStartHint, view, setView, snapEnabled, setSnapEnabled, locked, setLocked, paletteCat, setPaletteCat, showCompare, setShowCompare, showRoomGeometry, setShowRoomGeometry, compareIds, setCompareIds, saveName, setSaveName, leftOpen, setLeftOpen, rightOpen, setRightOpen, activePreset, setActivePreset, presetStatus, setPresetStatus, presetError, setPresetError, localFile, setLocalFile, localUrl, setLocalUrl, localScale, setLocalScale, query, setQuery, gridEnabled, setGridEnabled, showDimensions, setShowDimensions, resetKey, setResetKey, notice, setNotice, expanded, setExpanded, newRoomType, setNewRoomType
+    inspector, setInspector, selected, setSelected, environmentTab, setEnvironmentTab, surface, setSurface, selectedWall, setSelectedWall, selectedOpening, setSelectedOpening, placementTemplate, setPlacementTemplate, showStartHint, setShowStartHint, view, setView, snapEnabled, setSnapEnabled, locked, setLocked, paletteCat, setPaletteCat, showCompare, setShowCompare, showRoomGeometry, setShowRoomGeometry, compareIds, setCompareIds, saveName, setSaveName, leftOpen, setLeftOpen, rightOpen, setRightOpen, activePreset, setActivePreset, presetStatus, setPresetStatus, presetError, setPresetError, localFile, setLocalFile, localUrl, setLocalUrl, localScale, setLocalScale, query, setQuery, gridEnabled, setGridEnabled, showDimensions, setShowDimensions, resetKey, setResetKey, notice, setNotice, expanded, setExpanded, newRoomType, setNewRoomType
   };
 }

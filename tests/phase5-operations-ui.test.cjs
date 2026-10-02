@@ -45,3 +45,12 @@ test("customer fulfillment summary contains only delivery data, not merchant set
   const admin = renderToStaticMarkup(React.createElement(ui.OrderFulfillmentSummary, { order: mixed, admin: true }));
   assert.match(admin, /Шимтгэл/);
 });
+
+test("admin audit uses readable event labels without implying automatic money movement", () => {
+  const html = renderToStaticMarkup(React.createElement(ui.AdminOrderOperations, {
+    order: { ...order, commerce_order_events: [{ id: "event", event: "refund_recorded", created_at: order.created_at, details: {} }] },
+    paymentState: "paid", onUpdated: async () => {},
+  }));
+  assert.match(html, /Бодит буцаалтыг бүртгэсэн/);
+  assert.doesNotMatch(html, />refund_recorded</);
+});

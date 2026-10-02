@@ -38,6 +38,16 @@ export const FULFILLMENT_LABEL: Record<OrderFulfillment["status"], string> = {
   shipped: "Хүргэлтэд гарсан",
   delivered: "Хүргэгдсэн",
 };
+export const COMMERCE_EVENT_LABEL: Record<string, string> = {
+  payment_verified: "Төлбөр баталгаажсан",
+  late_payment_review: "Цуцлагдсан захиалгад орсон төлбөрийг шалгах",
+  cancellation_requested: "Цуцлах хүсэлт ирсэн",
+  cancellation_approved: "Цуцлалтыг зөвшөөрсөн",
+  cancellation_rejected: "Цуцлах хүсэлтийг зөвшөөрөөгүй",
+  refund_recorded: "Бодит буцаалтыг бүртгэсэн",
+  merchant_fulfillment: "Дэлгүүрийн хүргэлтийн төлөв шинэчлэгдсэн",
+  platform_fulfillment: "Платформын хүргэлтийн төлөв шинэчлэгдсэн",
+};
 export function canRequestCancellation(order: OrderRecord & CommerceOrderDetails) {
   return ["pending_payment", "paid", "processing"].includes(order.status) && !order.order_cancellations;
 }

@@ -32,7 +32,7 @@ test("kitchen suggestion creates the chosen appliances and a valid editable layo
   );
 });
 
-test("optional appliances can be omitted and the kitchen route starts with the suggestion flow", () => {
+test("optional appliances can be omitted and the kitchen route starts directly in the editor", () => {
   const kitchen = createSuggestedKitchen({
     oven: "under-worktop",
     hood: "none",
@@ -55,8 +55,8 @@ test("optional appliances can be omitted and the kitchen route starts with the s
     "src/components/ModularKitchenPlanner.tsx",
     "utf8",
   );
-  assert.match(route, /KitchenSuggestionWizard/);
-  assert.match(route, /params\.get\("new"\) !== "1"/);
+  assert.doesNotMatch(route, /KitchenSuggestionWizard/);
+  assert.match(route, /<ModularKitchenPlanner/);
   assert.match(editor, /kp-shell/);
   assert.match(editor, /onDeselect/);
 });

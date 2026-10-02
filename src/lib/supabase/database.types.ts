@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      commerce_order_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          details: Json
+          event: string
+          id: string
+          order_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          event: string
+          id?: string
+          order_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          event?: string
+          id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commerce_order_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commerce_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           created_at: string
@@ -68,8 +110,10 @@ export type Database = {
           cabinet_module_id: string | null
           category: string
           colors: Json
+          compare_at_price: number | null
           created_at: string
           default_color: string | null
+          delivery_terms: string | null
           description: string
           dimensions_d: number
           dimensions_h: number
@@ -99,6 +143,8 @@ export type Database = {
           processing_status: string
           processing_updated_at: string | null
           product_id: string
+          promotion_ends_at: string | null
+          promotion_label: string | null
           rating: number
           review_count: number
           scale: number
@@ -116,8 +162,10 @@ export type Database = {
           cabinet_module_id?: string | null
           category?: string
           colors?: Json
+          compare_at_price?: number | null
           created_at?: string
           default_color?: string | null
+          delivery_terms?: string | null
           description?: string
           dimensions_d?: number
           dimensions_h?: number
@@ -147,6 +195,8 @@ export type Database = {
           processing_status?: string
           processing_updated_at?: string | null
           product_id: string
+          promotion_ends_at?: string | null
+          promotion_label?: string | null
           rating?: number
           review_count?: number
           scale?: number
@@ -164,8 +214,10 @@ export type Database = {
           cabinet_module_id?: string | null
           category?: string
           colors?: Json
+          compare_at_price?: number | null
           created_at?: string
           default_color?: string | null
+          delivery_terms?: string | null
           description?: string
           dimensions_d?: number
           dimensions_h?: number
@@ -195,6 +247,8 @@ export type Database = {
           processing_status?: string
           processing_updated_at?: string | null
           product_id?: string
+          promotion_ends_at?: string | null
+          promotion_label?: string | null
           rating?: number
           review_count?: number
           scale?: number
@@ -1183,6 +1237,73 @@ export type Database = {
           },
         ]
       }
+      order_cancellations: {
+        Row: {
+          order_id: string
+          reason: string
+          refund_amount: number | null
+          refund_method: string | null
+          refund_reference: string | null
+          refunded_at: string | null
+          requested_at: string
+          requested_by: string
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          order_id: string
+          reason: string
+          refund_amount?: number | null
+          refund_method?: string | null
+          refund_reference?: string | null
+          refunded_at?: string | null
+          requested_at?: string
+          requested_by: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          order_id?: string
+          reason?: string
+          refund_amount?: number | null
+          refund_method?: string | null
+          refund_reference?: string | null
+          refunded_at?: string | null
+          requested_at?: string
+          requested_by?: string
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_cancellations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_cancellations_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_cancellations_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_payments: {
         Row: {
           callback_token: string
@@ -1193,6 +1314,7 @@ export type Database = {
           order_id: string
           paid_at: string | null
           provider_reference: string | null
+          requires_review: boolean
           state: string
           verified_by: string | null
         }
@@ -1205,6 +1327,7 @@ export type Database = {
           order_id: string
           paid_at?: string | null
           provider_reference?: string | null
+          requires_review?: boolean
           state?: string
           verified_by?: string | null
         }
@@ -1217,6 +1340,7 @@ export type Database = {
           order_id?: string
           paid_at?: string | null
           provider_reference?: string | null
+          requires_review?: boolean
           state?: string
           verified_by?: string | null
         }
@@ -1238,6 +1362,7 @@ export type Database = {
           id: string
           idempotency_key: string
           items: Json
+          platform_fulfillment_status: string | null
           request_hash: string
           shipping: number
           status: string
@@ -1253,6 +1378,7 @@ export type Database = {
           id?: string
           idempotency_key: string
           items: Json
+          platform_fulfillment_status?: string | null
           request_hash: string
           shipping: number
           status?: string
@@ -1268,6 +1394,7 @@ export type Database = {
           id?: string
           idempotency_key?: string
           items?: Json
+          platform_fulfillment_status?: string | null
           request_hash?: string
           shipping?: number
           status?: string
@@ -1277,6 +1404,74 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      product_media_assets: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string
+          public_id: string
+          retired_at: string | null
+          state: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id: string
+          public_id: string
+          retired_at?: string | null
+          state?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string
+          public_id?: string
+          retired_at?: string | null
+          state?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_media_assets_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_media_refs: {
+        Row: {
+          asset_id: string
+          model_id: string
+        }
+        Insert: {
+          asset_id: string
+          model_id: string
+        }
+        Update: {
+          asset_id?: string
+          model_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_media_refs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "product_media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_media_refs_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "furniture_models"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products_legacy_backup: {
         Row: {
@@ -1419,8 +1614,10 @@ export type Database = {
           cabinet_module_id: string | null
           category: string
           colors: Json
+          compare_at_price: number | null
           created_at: string
           default_color: string | null
+          delivery_terms: string | null
           description: string
           dimensions_d: number
           dimensions_h: number
@@ -1450,6 +1647,8 @@ export type Database = {
           processing_status: string
           processing_updated_at: string | null
           product_id: string
+          promotion_ends_at: string | null
+          promotion_label: string | null
           rating: number
           review_count: number
           scale: number
@@ -1476,8 +1675,10 @@ export type Database = {
           cabinet_module_id: string | null
           category: string
           colors: Json
+          compare_at_price: number | null
           created_at: string
           default_color: string | null
+          delivery_terms: string | null
           description: string
           dimensions_d: number
           dimensions_h: number
@@ -1507,6 +1708,8 @@ export type Database = {
           processing_status: string
           processing_updated_at: string | null
           product_id: string
+          promotion_ends_at: string | null
+          promotion_label: string | null
           rating: number
           review_count: number
           scale: number
@@ -1525,6 +1728,15 @@ export type Database = {
       }
       claim_kitchen_render: {
         Args: { p_actor: string; p_job: string }
+        Returns: Json
+      }
+      claim_order_payment: {
+        Args: {
+          p_actor: string
+          p_callback_token: string
+          p_method: string
+          p_order: string
+        }
         Returns: Json
       }
       clone_published_kitchen_design: {
@@ -1627,8 +1839,10 @@ export type Database = {
           cabinet_module_id: string | null
           category: string
           colors: Json
+          compare_at_price: number | null
           created_at: string
           default_color: string | null
+          delivery_terms: string | null
           description: string
           dimensions_d: number
           dimensions_h: number
@@ -1658,6 +1872,73 @@ export type Database = {
           processing_status: string
           processing_updated_at: string | null
           product_id: string
+          promotion_ends_at: string | null
+          promotion_label: string | null
+          rating: number
+          review_count: number
+          scale: number
+          source_glb_path: string | null
+          standard_glb_path: string | null
+          store_ids: Json
+          thumbnail_path: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "furniture_models"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      read_merchant_products_v2: {
+        Args: {
+          p_actor: string
+          p_after?: string
+          p_include_archived?: boolean
+        }
+        Returns: {
+          archived_at: string | null
+          archived_by: string | null
+          badges: Json
+          base_price: number
+          cabinet_module_id: string | null
+          category: string
+          colors: Json
+          compare_at_price: number | null
+          created_at: string
+          default_color: string | null
+          delivery_terms: string | null
+          description: string
+          dimensions_d: number
+          dimensions_h: number
+          dimensions_w: number
+          export_error: string | null
+          export_job_id: string | null
+          export_requested_at: string | null
+          export_status: string
+          export_updated_at: string | null
+          glb_path: string | null
+          glb_validation: Json | null
+          id: string
+          image_url: string | null
+          images: Json
+          in_stock: number | null
+          is_best_seller: boolean
+          is_new: boolean
+          materials: Json
+          model_requested: boolean
+          model_requested_at: string | null
+          model_requested_by_store_id: string | null
+          name: string
+          preview_glb_path: string | null
+          processing_error: string | null
+          processing_job_id: string | null
+          processing_requested_at: string | null
+          processing_status: string
+          processing_updated_at: string | null
+          product_id: string
+          promotion_ends_at: string | null
+          promotion_label: string | null
           rating: number
           review_count: number
           scale: number
@@ -1700,6 +1981,21 @@ export type Database = {
         }
         Returns: string
       }
+      request_order_cancellation: {
+        Args: { p_actor: string; p_order: string; p_reason: string }
+        Returns: Json
+      }
+      resolve_order_cancellation: {
+        Args: {
+          p_action: string
+          p_actor: string
+          p_amount?: number
+          p_note: string
+          p_order: string
+          p_reference?: string
+        }
+        Returns: Json
+      }
       review_kitchen_design: {
         Args: {
           p_action: string
@@ -1715,6 +2011,10 @@ export type Database = {
         Returns: undefined
       }
       save_furniture_product: {
+        Args: { p_create: boolean; p_data: Json; p_expected_stock?: number }
+        Returns: undefined
+      }
+      save_furniture_product_pre_phase5: {
         Args: { p_create: boolean; p_data: Json; p_expected_stock?: number }
         Returns: undefined
       }
@@ -1756,6 +2056,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_merchant_product_pre_phase5: {
+        Args: {
+          p_actor: string
+          p_create: boolean
+          p_data: Json
+          p_expected_stock?: number
+          p_model_requested?: boolean
+        }
+        Returns: undefined
+      }
       save_merchant_product_v2: {
         Args: {
           p_actor: string
@@ -1772,6 +2082,10 @@ export type Database = {
       }
       set_kitchen_module_variant_active: {
         Args: { p_active: boolean; p_actor: string; p_model: string }
+        Returns: undefined
+      }
+      set_merchant_product_archived: {
+        Args: { p_actor: string; p_archived: boolean; p_product: string }
         Returns: undefined
       }
       set_merchant_role: {
@@ -1799,6 +2113,10 @@ export type Database = {
         Args: { p_actor: string; p_design: string; p_version: string }
         Returns: undefined
       }
+      sync_order_fulfillment_status: {
+        Args: { p_order: string }
+        Returns: undefined
+      }
       update_merchant_kitchen_quote: {
         Args: {
           p_actor: string
@@ -1811,6 +2129,15 @@ export type Database = {
         Returns: undefined
       }
       update_merchant_order: {
+        Args: {
+          p_actor: string
+          p_expected_status: string
+          p_order: string
+          p_status: string
+        }
+        Returns: undefined
+      }
+      update_platform_order: {
         Args: {
           p_actor: string
           p_expected_status: string

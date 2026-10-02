@@ -1,4 +1,5 @@
 -- Additive Phase 5 product commerce and media lifecycle; no objects are purged.
+-- Timestamp matches the migration applied through Supabase after verification.
 begin;
 
 alter table public.furniture_models

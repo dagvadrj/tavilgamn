@@ -14,19 +14,21 @@ export function Drawer({
   open,
   onClose,
   title,
+  active = true,
   children,
 }: {
   side: "left" | "right";
   open: boolean;
   onClose: () => void;
   title: string;
+  active?: boolean;
   children: React.ReactNode;
 }) {
   const drawerRef = useRef<HTMLElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   useEffect(() => {
-    if (!open || window.matchMedia("(min-width: 1280px)").matches) return;
+    if (!active || !open || window.matchMedia("(min-width: 960px)").matches) return;
     const previous = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -61,14 +63,15 @@ export function Drawer({
       drawer?.removeEventListener("keydown", handleKey);
       if (previous?.isConnected) previous.focus();
     };
-  }, [open]);
+  }, [open, active]);
+  if (!active) return null;
   return (
     <>
       {/* mobile backdrop */}
       {open && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-[60] bg-[#293C32]/40 xl:hidden"
+          className="planner-drawer-backdrop fixed inset-0 z-[60] bg-[#293C32]/40 xl:hidden"
         />
       )}
       <aside
@@ -84,7 +87,7 @@ export function Drawer({
           !open && side === "right" && "translate-x-full xl:translate-x-0",
         )}
       >
-        <div className="flex items-center justify-between border-b border-[#293C32]/10 p-4 xl:hidden">
+        <div className="planner-drawer-heading flex items-center justify-between border-b border-[#293C32]/10 p-4 xl:hidden">
           <p className="text-lg text-[#293C32]">{title}</p>
           <button
             onClick={onClose}

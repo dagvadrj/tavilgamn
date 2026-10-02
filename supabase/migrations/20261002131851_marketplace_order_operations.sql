@@ -1,5 +1,5 @@
 -- Phase 5: immutable checkout, operational audit and explicit cancellation/refund.
--- Supabase CLI is unavailable on the task host; filename reserved by coordinator.
+-- Timestamp matches the migration applied through Supabase after verification.
 begin;
 
 alter table public.order_payments add column requires_review boolean not null default false;

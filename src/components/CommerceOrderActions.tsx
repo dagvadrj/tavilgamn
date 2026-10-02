@@ -6,7 +6,7 @@ import type { OrderRecord } from "@/lib/orders";
 import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
 import { formatDateTime, formatPrice } from "@/lib/format";
-import { CANCELLATION_LABEL, FULFILLMENT_LABEL, canRequestCancellation, type CommerceOrderDetails, type OrderCancellation } from "@/lib/commerceOperations";
+import { CANCELLATION_LABEL, FULFILLMENT_LABEL, COMMERCE_EVENT_LABEL, canRequestCancellation, type CommerceOrderDetails, type OrderCancellation } from "@/lib/commerceOperations";
 
 type CommerceOrder = OrderRecord & CommerceOrderDetails;
 
@@ -120,7 +120,7 @@ export function AdminOrderOperations({ order, paymentState, onUpdated }: { order
         <button className="btn-primary" disabled={busy}>{busy ? <><RefreshCw size={14} className="animate-spin" />Хадгалж байна…</> : refund ? "Бодит буцаалтыг бүртгэх" : "Шийдвэр хадгалах"}</button>
       </form>}
       {error && <p role="alert" className="text-red-700">{error}</p>}
-      {!!order.commerce_order_events?.length && <div className="border-t pt-3"><h4 className="font-medium">Үйлдлийн бүртгэл</h4><ol className="mt-2 space-y-2 text-xs text-[#6C726B]">{order.commerce_order_events.slice().sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 12).map(event => <li key={event.id}><span>{formatDateTime(event.created_at)}</span><p className="break-words">{event.event}</p></li>)}</ol></div>}
+      {!!order.commerce_order_events?.length && <div className="border-t pt-3"><h4 className="font-medium">Үйлдлийн бүртгэл</h4><ol className="mt-2 space-y-2 text-xs text-[#6C726B]">{order.commerce_order_events.slice().sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 12).map(event => <li key={event.id}><span>{formatDateTime(event.created_at)}</span><p className="break-words">{COMMERCE_EVENT_LABEL[event.event] ?? event.event}</p></li>)}</ol></div>}
     </div>
   </details>;
 }
