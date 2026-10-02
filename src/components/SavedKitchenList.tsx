@@ -58,7 +58,7 @@ export function SavedKitchenList({
         </p>
       )}
       {loaded && !items.length && (
-        <p className="py-4 text-sm text-[#69756c]">
+        <p className="py-4 text-sm text-white">
           Хадгалсан гарнитур алга.{" "}
           <Link className="underline" href="/kitchen">
             Гал тогоогоо төлөвлөх
@@ -70,10 +70,7 @@ export function SavedKitchenList({
           const bounds = kitchenEnvelope(item.design),
             pad = 100;
           return (
-            <article
-              key={item.id}
-              className="rounded-xl border border-[#cbd3c7] bg-white p-3"
-            >
+            <article key={item.id} className="rounded-xl bg-[#27292d] p-3">
               {item.thumbnailUrl ? (
                 <div className="relative h-40 w-full overflow-hidden rounded-lg bg-[#f3f4ee]">
                   <Image

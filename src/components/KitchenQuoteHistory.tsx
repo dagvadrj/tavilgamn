@@ -84,7 +84,7 @@ export function KitchenQuoteHistory() {
   if (loading)
     return (
       <div
-        className="rounded-lg border border-[#293C32]/10 p-8 text-sm text-[#737D6C]"
+        className="rounded-lg border border-[#293C32]/10 p-8 text-sm text-white"
         role="status"
       >
         Үнийн хүсэлтүүдийг ачаалж байна…
@@ -124,40 +124,51 @@ export function KitchenQuoteHistory() {
 
   return (
     <div className="space-y-4">
-      {quoteId && <button type="button" className="btn-ghost" onClick={() => { clear(); setPage(0); }}>Бүх үнийн хүсэлт харах</button>}
+      {quoteId && (
+        <button
+          type="button"
+          className="btn-ghost"
+          onClick={() => {
+            clear();
+            setPage(0);
+          }}
+        >
+          Бүх үнийн хүсэлт харах
+        </button>
+      )}
       {result.quotes.map((quote) => (
         <article
           id={`quote-${quote.id}`}
           key={quote.id}
-          className="rounded-xl border border-[#293C32]/10 bg-white p-5"
+          className="rounded-xl border border-[#293C32]/10 bg-[#27292d] p-5"
         >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <Link
                 href={`/kitchens/${quote.designSlug}`}
-                className="font-medium text-[#293C32] hover:underline"
+                className="font-medium text-white hover:underline"
               >
                 {quote.projectName}
               </Link>
-              <p className="mt-1 text-xs text-[#737D6C]">
+              <p className="mt-1 text-xs text-white">
                 {quote.storeName} ·{" "}
                 {new Date(quote.createdAt).toLocaleDateString("mn-MN")}
               </p>
             </div>
-            <span className="rounded-full bg-[#293C32]/[.07] px-3 py-1 text-xs text-[#293C32]">
+            <span className="rounded-full bg-white px-3 py-1 text-xs text-black">
               {STATUS_LABEL[quote.status]}
             </span>
           </div>
           {quote.quotedPrice != null ? (
             <p className="mt-4 text-sm">
               Үнийн санал:{" "}
-              <strong className="text-lg text-[#293C32]">
+              <strong className="text-lg text-white">
                 {formatPrice(quote.quotedPrice)}
               </strong>
             </p>
           ) : null}
           {quote.merchantNote ? (
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#6C726B]">
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white">
               {quote.merchantNote}
             </p>
           ) : null}
@@ -167,26 +178,24 @@ export function KitchenQuoteHistory() {
         className="flex items-center justify-end gap-2"
         aria-label="Үнийн хүсэлтийн хуудаслалт"
       >
-        <span className="mr-auto text-xs text-[#737D6C]">
-          Хуудас {page + 1}
-        </span>
+        <span className="mr-auto text-xs text-white">Хуудас {page + 1}</span>
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm disabled:opacity-40"
+          className="inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm disabled:opacity-40 text-white"
           disabled={page === 0}
           onClick={() => setPage((value) => value - 1)}
         >
-          <ChevronLeft size={15} />
+          <ChevronLeft className="text-white" size={15} />
           Өмнөх
         </button>
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm disabled:opacity-40"
+          className="inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm disabled:opacity-40 text-white"
           disabled={!result.hasMore}
           onClick={() => setPage((value) => value + 1)}
         >
           Дараах
-          <ChevronRight size={15} />
+          <ChevronRight className="text-white" size={15} />
         </button>
       </nav>
     </div>

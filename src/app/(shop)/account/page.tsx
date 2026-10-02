@@ -57,22 +57,10 @@ export default function AccountPage() {
   return (
     <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[260px_1fr]">
       <aside>
-        <div className="rounded-lg border border-[#293C32]/10 bg-[#FFFFFF] p-6">
+        <div className="rounded-lg border border-[#293C32]/10 bg-[#27292d] p-6">
           <div className="grid h-16 w-16 place-items-center rounded-full bg-[#EEEEE7] font-mono text-2xl text-[#293C32]">
             {user.name[0]?.toUpperCase()}
           </div>
-          <p className="mt-3 font-medium">{user.name}</p>
-          <p className="text-xs text-[#737D6C]">{user.email}</p>
-          <button
-            onClick={async () => {
-              await signOut();
-              router.replace("/login");
-              router.refresh();
-            }}
-            className="mt-6 inline-flex items-center gap-2 text-sm text-[#6C726B] hover:text-[#293C32]"
-          >
-            <LogOut className="h-4 w-4" /> Гарах
-          </button>
         </div>
         <nav className="mt-4 space-y-1 text-sm">
           {role === "admin" && (
@@ -112,29 +100,41 @@ export default function AccountPage() {
             <a
               key={n.href}
               href={n.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#6C726B] hover:bg-[#293C32]/5 hover:text-[#293C32]"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#6C726B] hover:bg-[#27292d]/5 hover:text-[#293C32]"
             >
               <n.icon className="h-4 w-4" />
               {n.label}
             </a>
           ))}
         </nav>
+        <button
+          onClick={async () => {
+            await signOut();
+            router.replace("/login");
+            router.refresh();
+          }}
+          className="mt-6 inline-flex items-center gap-2 text-sm text-[#a395ff] hover:text-white"
+        >
+          <LogOut className="h-4 w-4" /> Гарах
+        </button>
       </aside>
 
       <div className="space-y-10">
         <section
           id="profile"
-          className="scroll-mt-24 rounded-lg border border-[#293C32]/10 bg-white p-6"
+          className="scroll-mt-24 rounded-lg border border-[#293C32]/10 bg-[#27292d] p-6"
         >
-          <h1 className="text-3xl text-[#293C32]">Профайл</h1>
+          <h1 className="text-3xl text-white">Профайл</h1>
           <dl className="mt-6 grid gap-5 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-[#737D6C]">Нэр</dt>
+              <dt className="text-[#ded6ff]">Нэр</dt>
               <dd className="mt-1 font-medium">{user.name}</dd>
             </div>
             <div>
-              <dt className="text-[#737D6C]">Имэйл</dt>
-              <dd className="mt-1 break-all font-medium">{user.email}</dd>
+              <dt className="text-[#ded6ff]">Имэйл</dt>
+              <dd className="mt-1 break-all text-white font-medium">
+                {user.email}
+              </dd>
             </div>
           </dl>
         </section>
@@ -148,21 +148,21 @@ export default function AccountPage() {
           )}
           <div className="flex items-end justify-between">
             <div>
-              <p className="font-mono text-xs uppercase tracking-wide text-[#737D6C]">
+              <p className="font-mono text-xs uppercase tracking-wide text-white">
                 Хадгалсан өрөөний загвар
               </p>
-              <h2 className="text-3xl text-[#293C32]">Таны загварууд</h2>
+              <h2 className="text-3xl text-white">Таны загварууд</h2>
             </div>
             <Link
               href="/planner"
-              className="rounded-sm bg-[#293C32] px-6 py-3 text-sm font-medium text-[#FFFFFF] hover:bg-[#3C5446] transition inline-flex items-center gap-2"
+              className="rounded bg-[#27292d] px-6 py-3 text-sm font-medium text-[#FFFFFF] hover:bg-[#3C5446] transition inline-flex items-center gap-2"
             >
               Шинэ загвар
             </Link>
           </div>
           {designs.length === 0 ? (
             <div className="mt-6 rounded-lg border border-dashed border-[#293C32]/20 p-12 text-center">
-              <p className="text-sm text-[#737D6C]">
+              <p className="text-sm text-white">
                 Та одоохондоо ямар нэг загвар хадгалаагүй байна. Төлөвлөгч дээр
                 эхний загвараа үүсгэнэ үү.
               </p>
@@ -234,25 +234,23 @@ export default function AccountPage() {
         </section>
 
         <section id="kitchen-garniture" className="scroll-mt-24">
-          <h2 className="mb-5 text-3xl text-[#293C32]">
+          <h2 className="mb-5 text-3xl text-white">
             Миний гал тогооны гарнитур
           </h2>
           <SavedKitchenList />
         </section>
         <section id="kitchen-quotes" className="scroll-mt-24">
-          <p className="font-mono text-xs uppercase tracking-wide text-[#737D6C]">
+          <p className="font-mono text-xs uppercase tracking-wide text-white">
             Marketplace
           </p>
-          <h2 className="mb-5 text-3xl text-[#293C32]">
-            Гал тогооны үнийн хүсэлт
-          </h2>
+          <h2 className="mb-5 text-3xl text-white">Гал тогооны үнийн хүсэлт</h2>
           <KitchenQuoteHistory />
         </section>
         <section id="orders">
-          <p className="font-mono text-xs uppercase tracking-wide text-[#737D6C]">
+          <p className="font-mono text-xs uppercase tracking-wide text-white">
             Захиалгын түүх
           </p>
-          <h2 className="text-3xl text-[#293C32]">Захиалга</h2>
+          <h2 className="text-3xl text-white">Захиалга</h2>
           <OrderHistory />
         </section>
 
@@ -264,10 +262,10 @@ export default function AccountPage() {
               retry={() => void catalog.refresh()}
             />
           )}
-          <p className="font-mono text-xs uppercase tracking-wide text-[#737D6C]">
+          <p className="font-mono text-xs uppercase tracking-wide text-white">
             Хүслийн жагсаалт
           </p>
-          <h2 className="text-3xl text-[#293C32]">
+          <h2 className="text-3xl text-white">
             {wishlist.length} тавилга хадгалсан
           </h2>
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
