@@ -13,7 +13,7 @@ prisma/dev.db-journal
 .env
 .env.*
 !.env.example
-.github/workflows/ci.yml
+.github/
 # Keys and certificates
 *.pem
 *.key
