@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, ChevronDown, MessageSquare, Search } from "lucide-react";
+import { Menu, MessageSquare, Package, Search } from "lucide-react";
 
 export function AdminHeader({
   userName,
@@ -9,44 +9,45 @@ export function AdminHeader({
   onProducts,
   onOrders,
   onMessages,
+  menuOpen,
+  onToggleMenu,
 }: {
   userName: string;
   activeLabel: string;
   onProducts: () => void;
   onOrders: () => void;
   onMessages: () => void;
+  menuOpen: boolean;
+  onToggleMenu: () => void;
 }) {
   const initial = userName.trim().slice(0, 1).toUpperCase() || "A";
 
   return (
-    <header className="admin-topbar">
-      <div className="admin-header-title">
-        <strong>{activeLabel}</strong>
-        <span>Admin workspace</span>
+    <header className="admin-topbar dashboard-topbar">
+      <div className="dashboard-header-title">
+        <button type="button" className="dashboard-menu-toggle" aria-label="Админ цэс нээх" aria-expanded={menuOpen} aria-controls="admin-navigation" onClick={onToggleMenu}><Menu size={20} /></button>
+        <div><strong>{activeLabel}</strong><small>Админ · Удирдлагын самбар</small></div>
       </div>
 
-      <div className="admin-topbar-actions">
+      <div className="admin-topbar-actions dashboard-header-actions">
         <button
           type="button"
           className="admin-header-search"
           onClick={onProducts}
+          aria-label="Бүтээгдэхүүний хайлт руу очих"
         >
           <Search size={18} strokeWidth={1.7} />
 
-          <span>Бүтээгдэхүүн хайх...</span>
-
-          <kbd>⌘ K</kbd>
+          <span>Бүтээгдэхүүн хайх</span>
         </button>
 
         <button
           type="button"
           className="admin-header-icon"
-          aria-label="Захиалгын мэдэгдэл"
+          aria-label="Захиалгуудыг нээх"
           onClick={onOrders}
         >
-          <Bell size={19} strokeWidth={1.7} />
-
-          <span className="admin-header-notification" />
+          <Package size={19} strokeWidth={1.7} />
         </button>
 
         <button
@@ -58,15 +59,14 @@ export function AdminHeader({
           <MessageSquare size={19} strokeWidth={1.7} />
         </button>
 
-        <Link href="/account" className="admin-profile">
+        <Link href="/account" className="admin-profile" aria-label={`${userName} — миний бүртгэл`}>
           <span className="admin-avatar">{initial}</span>
 
           <span className="admin-profile-copy">
             <strong>{userName}</strong>
-            <small>Administrator</small>
+            <small>Админ</small>
           </span>
 
-          <ChevronDown size={14} />
         </Link>
       </div>
     </header>

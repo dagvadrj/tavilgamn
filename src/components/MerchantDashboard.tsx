@@ -34,7 +34,7 @@ import { CATEGORIES, CATEGORY_LABEL } from "@/lib/products";
 import { STORE_TYPES } from "@/lib/storeTypes";
 import { parseProduct } from "@/lib/catalogValidation";
 import { formatPrice } from "@/lib/format";
-import { MAX_STOCK_QUANTITY, stockLabel } from "@/lib/inventory";
+import { hasAvailableStock, MAX_STOCK_QUANTITY, stockLabel } from "@/lib/inventory";
 import {
   merchantLocationPath,
   readMerchantLocation,
@@ -121,21 +121,21 @@ export function MerchantDashboard() {
   }, [initialized, user, router]);
   if (!initialized || !user)
     return (
-      <div className="merchant-state" role="status">
+      <main id="main-content" className="merchant-gate merchant-state" role="status">
         <StoreIcon size={32} />
         Дэлгүүрийн эрхийг шалгаж байна…
-      </div>
+      </main>
     );
   if (role !== "merchant")
     return (
-      <div className="merchant-state">
+      <main id="main-content" className="merchant-gate merchant-state">
         <StoreIcon size={32} />
         <h1>Худалдаа эрхлэгчийн хэсэг</h1>
         <p>Дэлгүүр нээхийн тулд админаар merchant эрхээ идэвхжүүлнэ үү.</p>
         <Link href="/account" className="btn-ghost">
           Миний бүртгэл
         </Link>
-      </div>
+      </main>
     );
   return (
     <MerchantWorkspace key={user.id} owner={user.id} userName={user.name} />
@@ -429,12 +429,12 @@ function MerchantOverview({
   );
 
   const colors = [
-    "#2563eb",
-    "#60a5fa",
-    "#93c5fd",
-    "#bfdbfe",
-    "#dbeafe",
-    "#e5e7eb",
+    "#8b78ff",
+    "#6c5bdd",
+    "#b3a7ff",
+    "#72c98a",
+    "#b5bbca",
+    "#4a4e59",
   ];
 
   let cursor = 0;
@@ -451,7 +451,7 @@ function MerchantOverview({
           return `${colors[index % colors.length]} ${start}% ${cursor}%`;
         })
         .join(", ")
-    : "#e5e7eb 0 100%";
+    : "#27292d 0 100%";
 
   return (
     <section className="merchant-overview">
@@ -485,7 +485,7 @@ function MerchantOverview({
 
           <div>
             <span>Нөөцийн үнэлгээ</span>
-            <strong>{formatPrice(inventoryValue)}</strong>
+            <strong>{loading ? "—" : formatPrice(inventoryValue)}</strong>
             <small>Одоогийн нийт барааны үнэлгээ</small>
           </div>
         </article>
@@ -560,7 +560,7 @@ function MerchantOverview({
                     <div className="merchant-bar-track">
                       <span
                         style={{
-                          width: `${Math.max(4, (stock / maxStock) * 100)}%`,
+                          width: `${Math.max(0, (stock / maxStock) * 100)}%`,
                         }}
                       />
                     </div>
@@ -633,7 +633,7 @@ function MerchantOverview({
         <div className="merchant-preview-list">
           {topProducts.slice(0, 5).map((product) => (
             <div key={product.id}>
-              <Image src={product.image} alt="" width={52} height={52} />
+              <Image src={product.image} alt={product.name} width={52} height={52} sizes="52px" />
 
               <div>
                 <strong>{product.name}</strong>
@@ -644,7 +644,7 @@ function MerchantOverview({
                 {formatPrice(product.basePrice)}
               </span>
 
-              <span className="merchant-preview-stock">
+              <span className={`merchant-preview-stock ${hasAvailableStock(product) ? "" : "is-unavailable"}`}>
                 {stockLabel(product)}
               </span>
             </div>
@@ -994,7 +994,7 @@ function MerchantProducts({ owner }: { owner: string }) {
         <div className="merchant-products">
           {filtered.map((product) => (
             <article className="merchant-product" key={product.id}>
-              <Image src={product.image} alt="" width={76} height={76} />
+              <Image src={product.image} alt={product.name} width={76} height={76} sizes="60px" />
               <div className="merchant-product-info">
                 <h3>{product.name}</h3>
                 <p>
@@ -1299,7 +1299,7 @@ function MerchantProductEditor({
               <div className="merchant-image-preview">
                 <Image
                   src={imagePreview ?? draft.image}
-                  alt=""
+                  alt={draft.name || "Бүтээгдэхүүний үндсэн зураг"}
                   width={160}
                   height={120}
                 />
@@ -1331,10 +1331,11 @@ function MerchantProductEditor({
               <div className="merchant-gallery-preview">
                 {draft.images.map((url) => (
                   <div key={url}>
-                    <Image src={url} alt="" width={90} height={70} />
+                    <Image src={url} alt={`${draft.name || "Бүтээгдэхүүн"} — нэмэлт зураг`} width={90} height={70} sizes="90px" />
 
                     <button
                       type="button"
+                      aria-label="Нэмэлт зураг хасах"
                       onClick={() =>
                         field(
                           "images",

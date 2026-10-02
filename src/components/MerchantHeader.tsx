@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, MessageSquare, Search } from "lucide-react";
+import { ChevronDown, Menu, MessageSquareQuote, Package } from "lucide-react";
 import { MerchantNotifications } from "./MerchantNotifications";
 
 export function MerchantHeader({
@@ -10,31 +10,51 @@ export function MerchantHeader({
   owner,
   onProducts,
   onKitchens,
+  onQuotes,
+  activeLabel,
+  hasStore,
+  sidebarOpen,
+  onToggleSidebar,
 }: {
   userName: string;
   storeName: string;
   owner: string;
   onProducts: () => void;
   onKitchens: (designId?: string) => void;
+  onQuotes: () => void;
+  activeLabel: string;
+  hasStore: boolean;
+  sidebarOpen: boolean;
+  onToggleSidebar: () => void;
 }) {
   const initial = userName.trim().slice(0, 1).toUpperCase() || "M";
 
   return (
-    <header className="merchant-topbar">
-      <div className="merchant-topbar-title">
-        <strong>{storeName}</strong>
-        <span>Merchant workspace</span>
+    <header className="merchant-topbar dashboard-topbar">
+      <div className="merchant-topbar-heading">
+        <button
+          type="button"
+          className="dashboard-menu-toggle"
+          aria-label="Дэлгүүрийн цэс нээх"
+          aria-controls="merchant-dashboard-navigation"
+          aria-expanded={sidebarOpen}
+          onClick={onToggleSidebar}
+        ><Menu size={21} /></button>
+        <div className="merchant-topbar-title dashboard-header-title">
+          <strong>{activeLabel}</strong>
+          <span>{storeName}</span>
+        </div>
       </div>
 
-      <div className="merchant-topbar-actions">
+      <div className="merchant-topbar-actions dashboard-header-actions">
         <button
           type="button"
           className="merchant-header-search"
           onClick={onProducts}
+          disabled={!hasStore}
         >
-          <Search size={18} />
-          <span>Бүтээгдэхүүн хайх...</span>
-          <kbd>⌘ K</kbd>
+          <Package size={17} />
+          <span>Бүтээгдэхүүн</span>
         </button>
 
         <MerchantNotifications owner={owner} onKitchens={onKitchens} />
@@ -42,9 +62,12 @@ export function MerchantHeader({
         <button
           type="button"
           className="merchant-header-icon"
-          aria-label="Зурвас"
+          aria-label="Үнийн хүсэлтүүд"
+          title="Үнийн хүсэлтүүд"
+          onClick={onQuotes}
+          disabled={!hasStore}
         >
-          <MessageSquare size={19} strokeWidth={1.7} />
+          <MessageSquareQuote size={19} strokeWidth={1.7} />
         </button>
 
         <Link href="/account" className="merchant-header-profile">
@@ -52,7 +75,7 @@ export function MerchantHeader({
 
           <span className="merchant-header-user">
             <strong>{userName}</strong>
-            <small>Merchant</small>
+            <small>Худалдаа эрхлэгч</small>
           </span>
 
           <ChevronDown size={15} />

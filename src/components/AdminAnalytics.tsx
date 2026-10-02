@@ -143,12 +143,12 @@ function AnalyticsPanel({ owner }: { owner: string }) {
     <div>
       <div className="admin-page-heading">
         <div>
-          <span className="admin-eyebrow">MARKETPLACE OVERVIEW</span>
+          <span className="admin-eyebrow">MARKETPLACE · СҮҮЛИЙН 30 ХОНОГ</span>
 
           <h1>Ерөнхий тойм</h1>
 
           <p>
-            Marketplace-ийн борлуулалт, commission болон merchant performance.
+            Борлуулалт, дэлгүүрүүдийн үзүүлэлт болон платформын орлого.
           </p>
         </div>
 
@@ -197,9 +197,9 @@ function AnalyticsPanel({ owner }: { owner: string }) {
 
             <Metric
               icon={BadgeDollarSign}
-              label="Platform орлого"
+              label="Платформын орлого"
               value={money(result.platformRevenue)}
-              detail="3–5% commission"
+              detail="Төлөгдсөн захиалгын шимтгэл"
             />
 
             <Metric
@@ -215,7 +215,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
               value={`${count(result.activeMerchants)} / ${count(
                 result.totalMerchants,
               )}`}
-              detail={`${count(result.featuredMerchants)} Featured merchant`}
+              detail={`${count(result.featuredMerchants)} онцлох дэлгүүр`}
             />
           </div>
 
@@ -244,7 +244,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
               <div>
                 <Star size={18} />
 
-                <span>Featured merchant</span>
+                <span>Онцлох дэлгүүр</span>
               </div>
 
               <strong>{count(result.featuredMerchants)}</strong>
@@ -254,7 +254,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
           <section className="admin-top-merchants">
             <div className="admin-panel-heading">
               <div>
-                <h2>Top merchants</h2>
+                <h2>Борлуулалтаар тэргүүлэгч дэлгүүрүүд</h2>
 
                 <p>Сүүлийн 30 хоногийн төлөгдсөн борлуулалтаар.</p>
               </div>
@@ -278,7 +278,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
                       <strong>{merchant.name}</strong>
 
                       <small>
-                        Commission {(merchant.commissionBps / 100).toFixed(1)}%
+                        Шимтгэл {(merchant.commissionBps / 100).toFixed(1)}%
                       </small>
                     </div>
 
@@ -289,7 +289,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
                     </div>
 
                     <div>
-                      <small>Platform fee</small>
+                      <small>Платформын шимтгэл</small>
 
                       <strong>{money(merchant.platformRevenue)}</strong>
                     </div>
@@ -304,6 +304,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
               </div>
             )}
           </section>
+          <RevenuePanels result={result} />
         </>
       ) : null}
 
@@ -322,6 +323,35 @@ function AnalyticsPanel({ owner }: { owner: string }) {
       </section>
     </div>
   );
+}
+
+function ratio(value: string, total: string) {
+  const denominator = BigInt(total);
+  if (denominator <= 0n) return 0;
+  return Math.max(0, Math.min(100, Number(BigInt(value) * 10000n / denominator) / 100));
+}
+
+function RevenuePanels({ result }: { result: Analytics }) {
+  const merchants = result.topMerchants.slice(0, 5);
+  const maxRevenue = merchants.reduce((max, merchant) => BigInt(merchant.grossRevenue) > BigInt(max) ? merchant.grossRevenue : max, "0");
+  const total = (BigInt(result.platformRevenue) + BigInt(result.merchantNet)).toString();
+  return <div className="admin-analysis-panels">
+    <section className="dashboard-panel" aria-labelledby="admin-revenue-heading">
+      <h2 id="admin-revenue-heading">Дэлгүүрүүдийн борлуулалт</h2>
+      <p>Сүүлийн 30 хоног · Төлөгдсөн захиалгаар</p>
+      {merchants.length ? <ul className="admin-revenue-bars">{merchants.map(merchant => <li key={merchant.id}>
+        <div className="admin-revenue-bar-label"><span>{merchant.name}</span><strong>{money(merchant.grossRevenue)}</strong></div>
+        <div className="admin-revenue-bar-track" aria-hidden="true"><span style={{ width: `${ratio(merchant.grossRevenue, maxRevenue)}%` }} /></div>
+      </li>)}</ul> : <p className="py-8">Төлөгдсөн борлуулалтын мэдээлэл одоогоор алга.</p>}
+    </section>
+    <section className="dashboard-panel" aria-labelledby="admin-split-heading">
+      <h2 id="admin-split-heading">Борлуулалтын хуваарилалт</h2>
+      <p>Шимтгэл болон дэлгүүрт очих цэвэр дүн</p>
+      <div className="admin-revenue-split" aria-hidden="true"><span style={{ width: `${ratio(result.platformRevenue, total)}%` }} /><span style={{ width: `${ratio(result.merchantNet, total)}%` }} /></div>
+      <dl className="admin-revenue-legend"><div><dt><i aria-hidden="true" />Платформын орлого</dt><dd>{money(result.platformRevenue)}</dd></div><div><dt><i aria-hidden="true" />Дэлгүүрүүдийн цэвэр дүн</dt><dd>{money(result.merchantNet)}</dd></div></dl>
+      {BigInt(total) === 0n && <p className="mt-5">Төлөгдсөн борлуулалт хараахан бүртгэгдээгүй.</p>}
+    </section>
+  </div>;
 }
 
 function Metric({

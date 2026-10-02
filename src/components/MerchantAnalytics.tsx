@@ -153,7 +153,7 @@ export function MerchantAnalytics({ owner }: { owner: string }) {
 
           <h2>Санхүүгийн тойм</h2>
 
-          <p>Борлуулалт болон platform шимтгэлийн мэдээлэл.</p>
+          <p>Борлуулалт болон платформын шимтгэлийн мэдээлэл.</p>
         </div>
 
         <button
@@ -176,9 +176,9 @@ export function MerchantAnalytics({ owner }: { owner: string }) {
 
         <Metric
           icon={BadgeDollarSign}
-          label="Platform шимтгэл"
+          label="Платформын шимтгэл"
           value={money(analytics.platformFee)}
-          detail={`${commission.toFixed(1)}% commission`}
+          detail={`${commission.toFixed(1)}% шимтгэл`}
         />
 
         <Metric

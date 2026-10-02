@@ -12,7 +12,10 @@ import {
   Users,
   Store,
   CookingPot,
+  ArrowUpRight,
+  CircleHelp,
 } from "lucide-react";
+import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 
 export const ADMIN_TABS = [
   {
@@ -70,22 +73,32 @@ export type AdminTab = (typeof ADMIN_TABS)[number]["id"];
 export function AdminSidebar({
   active,
   onChange,
+  userName,
+  open,
+  onClose,
 }: {
   active: AdminTab;
   onChange: (tab: AdminTab) => void;
+  userName: string;
+  open: boolean;
+  onClose: () => void;
 }) {
+  const groups = [
+    { label: "УДИРДЛАГА", tabs: ADMIN_TABS.filter(item => ["dashboard", "merchants", "furniture", "orders"].includes(item.id)) },
+    { label: "ХЭРЭГЛЭГЧ БА КОНТЕНТ", tabs: ADMIN_TABS.filter(item => ["users", "messages", "models", "kitchens"].includes(item.id)) },
+  ];
   return (
-    <aside className="admin-sidebar">
-      <Link href="/" className="admin-sidebar-brand" aria-label="tavilga.mn">
-        <span>
+    <DashboardSidebar id="admin-navigation" label="Админы хажуугийн цэс" open={open} onClose={onClose}>
+      <Link href="/" className="dashboard-brand" aria-label="tavilga.mn — дэлгүүр рүү очих">
+        <span className="dashboard-brand-icon">
           <Armchair size={22} strokeWidth={1.7} />
         </span>
-
-        <small>Furni</small>
+        <span className="dashboard-brand-copy"><strong>tavilga.mn</strong><small>{userName} · Админ</small></span>
       </Link>
-
-      <nav className="admin-sidebar-nav" aria-label="Админ цэс">
-        {ADMIN_TABS.map((item) => {
+      <nav aria-label="Админ цэс">
+        {groups.map(group => <div className="dashboard-nav-group" key={group.label}>
+          <p className="dashboard-nav-label">{group.label}</p>
+          {group.tabs.map((item) => {
           const Icon = item.icon;
 
           return (
@@ -94,22 +107,25 @@ export function AdminSidebar({
               type="button"
               title={item.label}
               aria-current={active === item.id ? "page" : undefined}
-              className={active === item.id ? "active" : ""}
+              className="dashboard-nav-button"
               onClick={() => onChange(item.id)}
             >
-              <span className="admin-nav-icon">
+              <span className="dashboard-nav-icon">
                 <Icon size={20} strokeWidth={1.7} />
               </span>
 
-              <small>{item.short}</small>
+              <span>{item.label}</span>
             </button>
           );
-        })}
+          })}
+        </div>)}
       </nav>
-
-      <Link href="/account" className="admin-sidebar-settings" title="Тохиргоо">
-        <Settings size={19} strokeWidth={1.7} />
-      </Link>
-    </aside>
+      <div className="dashboard-sidebar-bottom">
+        <div className="dashboard-sidebar-note"><strong>Marketplace удирдлага</strong><p>Дэлгүүр, бараа болон захиалгын мэдээллээ нэг дор хянаарай.</p></div>
+        <Link href="/account" className="dashboard-sidebar-link"><Settings size={18} />Миний бүртгэл</Link>
+        <Link href="/about#contact" className="dashboard-sidebar-link"><CircleHelp size={18} />Тусламж, холбоо барих</Link>
+        <Link href="/" className="dashboard-sidebar-link"><ArrowUpRight size={18} />Дэлгүүр рүү очих</Link>
+      </div>
+    </DashboardSidebar>
   );
 }

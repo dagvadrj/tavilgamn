@@ -48,12 +48,15 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/auth";
 import { cn } from "@/lib/format";
 import "./admin.css";
+import "./admin-dark.css";
 
 const TABS = ADMIN_TABS;
 type Tab = AdminTab;
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("dashboard");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
   const router = useRouter();
   const user = useAuth((s) => s.user);
   const role = useAuth((s) => s.role);
@@ -72,6 +75,7 @@ export default function AdminPage() {
 
   const selectTab = (next: Tab) => {
     setTab(next);
+    setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: "instant" });
     requestAnimationFrame(() =>
       panelRef.current?.focus({ preventScroll: true }),
@@ -80,27 +84,30 @@ export default function AdminPage() {
 
   if (!initialized || !user || role !== "admin")
     return (
-      <div className="admin-gate" role="status">
+      <main id="main-content" className="admin-gate" role="status">
         <ShieldCheck size={32} strokeWidth={1.4} />
         <p>Удирдлагын эрхийг шалгаж байна…</p>
-      </div>
+      </main>
     );
   const active = TABS.find((t) => t.id === tab)!;
   return (
-    <div className="admin-shell">
-      <AdminSidebar active={tab} onChange={selectTab} />
+    <div className="admin-shell dashboard-shell">
+      <AdminSidebar active={tab} onChange={selectTab} userName={user.name} open={menuOpen} onClose={closeMenu} />
 
-      <div className="admin-workspace">
+      <div className="admin-workspace dashboard-workspace">
         <AdminHeader
           userName={user.name}
           activeLabel={active.label}
           onProducts={() => selectTab("furniture")}
           onOrders={() => selectTab("orders")}
           onMessages={() => selectTab("messages")}
+          menuOpen={menuOpen}
+          onToggleMenu={() => setMenuOpen(open => !open)}
         />
 
-        <div
-          className="admin-content"
+        <main
+          id="main-content"
+          className="admin-content dashboard-content"
           ref={panelRef}
           tabIndex={-1}
           aria-label={active.label}
@@ -150,7 +157,7 @@ export default function AdminPage() {
           )}
 
           {tab === "kitchens" && <AdminKitchenDesigns owner={user.id} />}
-        </div>
+        </main>
 
         <footer className="admin-footer">
           <span>© {new Date().getFullYear()} tavilga.mn</span>
@@ -159,23 +166,6 @@ export default function AdminPage() {
         </footer>
       </div>
 
-      <nav className="admin-mobile-nav" aria-label="Удирдлагын доод цэс">
-        {TABS.map((t) => (
-          <button
-            type="button"
-            key={t.id}
-            aria-current={tab === t.id ? "page" : undefined}
-            className={tab === t.id ? "active" : ""}
-            onClick={() => selectTab(t.id)}
-          >
-            <span>
-              <t.icon size={21} strokeWidth={1.7} />
-            </span>
-
-            {t.short}
-          </button>
-        ))}
-      </nav>
     </div>
   );
 }
