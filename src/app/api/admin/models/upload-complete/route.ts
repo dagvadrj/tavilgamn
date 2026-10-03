@@ -6,14 +6,11 @@ import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { toJson } from "@/lib/supabase/json";
 import { GLB_STANDARD, GlbStandardError, inspectGlb, validateCabinetGlb } from "@/lib/glbStandard";
-import { enforceApiRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request); if (auth.error) return auth.error;
-  const rateLimitResponse = await enforceApiRateLimit(request, auth.userId);
-  if (rateLimitResponse) return rateLimitResponse;
   let client: S3Client | undefined;
   try {
     const body = await request.json();

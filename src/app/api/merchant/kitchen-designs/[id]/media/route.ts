@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { kitchenMarketplaceError, kitchenPrivateHeaders } from "@/lib/kitchenMarketplaceHttp";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireMerchant } from "@/lib/supabase/requireMerchant";
-import { enforceApiRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,8 +18,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const auth = await requireMerchant(request);
     if (auth.error) return auth.error;
-    const rateLimitResponse = await enforceApiRateLimit(request, auth.userId);
-    if (rateLimitResponse) return rateLimitResponse;
     if (!UUID.test(routeParams.id)) return apiErrorResponse({ error: "Загварын ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
     const form = await request.formData();
     const file = form.get("file");

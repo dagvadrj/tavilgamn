@@ -16,17 +16,6 @@ type NullableArgs = {
   save_furniture_product: "p_expected_stock";
 };
 type Functions = Generated["public"]["Functions"];
-type AddedFunctions = {
-  consume_api_rate_limit: {
-    Args: {
-      p_scope: string;
-      p_identity: string;
-      p_limit: number;
-      p_window_seconds: number;
-    };
-    Returns: { allowed: boolean; retryAfter: number };
-  };
-};
 type Rpc<Name extends keyof Functions> = Name extends keyof NullableArgs
   ? Omit<Functions[Name], "Args"> & {
       Args: { [Key in keyof Functions[Name]["Args"]]:
@@ -35,6 +24,6 @@ type Rpc<Name extends keyof Functions> = Name extends keyof NullableArgs
   : Functions[Name];
 export type Database = Omit<Generated, "public"> & {
   public: Omit<Generated["public"], "Functions"> & {
-    Functions: { [Name in keyof Functions]: Rpc<Name> } & AddedFunctions;
+    Functions: { [Name in keyof Functions]: Rpc<Name> };
   };
 };

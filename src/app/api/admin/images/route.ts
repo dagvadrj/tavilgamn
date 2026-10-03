@@ -2,7 +2,6 @@ import { apiErrorResponse } from "@/lib/api/errors";
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
-import { enforceApiRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,8 +16,6 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireAdmin(request);
     if (auth.error) return auth.error;
-    const rateLimitResponse = await enforceApiRateLimit(request, auth.userId);
-    if (rateLimitResponse) return rateLimitResponse;
 
     const cloud = process.env.CLOUDINARY_CLOUD_NAME;
     const key = process.env.CLOUDINARY_API_KEY;

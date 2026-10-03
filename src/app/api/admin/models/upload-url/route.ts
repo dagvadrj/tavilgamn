@@ -15,7 +15,6 @@ import {
 
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { enforceApiRateLimit } from "@/lib/rateLimit";
 
 const MAX_GLB_SIZE =
   200 * 1024 * 1024;
@@ -64,8 +63,6 @@ export async function POST(
     if (auth.error) {
       return auth.error;
     }
-    const rateLimitResponse = await enforceApiRateLimit(request, auth.userId);
-    if (rateLimitResponse) return rateLimitResponse;
 
     const bucket =
       process.env.R2_BUCKET_NAME;

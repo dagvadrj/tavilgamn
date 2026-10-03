@@ -5,7 +5,6 @@ import { cloudinaryImageUploadConfigured, uploadCloudinaryImage } from "@/lib/cl
 import { kitchenMarketplaceError, kitchenPrivateHeaders } from "@/lib/kitchenMarketplaceHttp";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
-import { enforceApiRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,8 +26,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const auth = await requireAdmin(request);
     if (auth.error) return auth.error;
-    const rateLimitResponse = await enforceApiRateLimit(request, auth.userId);
-    if (rateLimitResponse) return rateLimitResponse;
     actor = auth.userId;
     if (!UUID.test(routeParams.id)) return apiErrorResponse({ error: "Render job ID буруу байна." }, { status: 400, headers: kitchenPrivateHeaders });
     const approval = await request.json().catch(() => null);

@@ -1,27 +1,10 @@
 "use client";
 import dynamic from "next/dynamic";
-import {
-  useRoomPlannerUi,
-  type CustomInterior,
-} from "@/features/room-planner/hooks/useRoomPlannerUi";
-import {
-  Drawer,
-  CompareModal,
-  NumberControl,
-  PlannerSkeleton,
-} from "@/features/room-planner/components/PlannerPanels";
+import { useRoomPlannerUi, type CustomInterior } from "@/features/room-planner/hooks/useRoomPlannerUi";
+import { Drawer, CompareModal, NumberControl, PlannerSkeleton } from "@/features/room-planner/components/PlannerPanels";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ViewportControls } from "@/features/planner/components/ViewportControls";
 import { PlannerRail } from "@/features/planner/components/PlannerRail";
-import { PlannerSwitch } from "@/features/planner/components/PlannerSwitch";
-import {
-  ProjectSaveStatus,
-  ProjectSaveRecovery,
-} from "@/features/planner/components/ProjectSaveStatus";
-import { ProjectVersionHistory } from "@/features/planner/components/ProjectVersionHistory";
-import { useRoomProjectWorkspace } from "@/features/room-planner/hooks/useRoomProjectWorkspace";
-import { useRoomProjects } from "@/store/roomProjects";
-import { downloadRoomJson } from "@/lib/roomLocalStorage";
 import type { CameraAction, CameraRequest } from "@/lib/plannerCamera";
 import Image from "next/image";
 import Link from "next/link";
@@ -79,7 +62,9 @@ import type {
 } from "@/lib/types";
 import { getRoomGeometry, ROOM_TYPES } from "@/lib/roomGeometry";
 import { RoomGeometryModal } from "./RoomGeometryModal";
-import { RoomEnvironmentPanel } from "./RoomEnvironmentPanel";
+import {
+  RoomEnvironmentPanel,
+} from "./RoomEnvironmentPanel";
 import {
   createOpening,
   validateOpening,
@@ -117,6 +102,7 @@ const ROOM_OPTIONS: { id: RoomSize; label: string; sub: string }[] = [
   { id: "120", label: "120 м² байшин", sub: "11 × 11 м" },
 ];
 
+
 const STATIC_PRESETS: CustomInterior[] = [
   {
     id: "tvfurniture",
@@ -127,10 +113,6 @@ const STATIC_PRESETS: CustomInterior[] = [
   },
 ];
 
-const loadRoomVersions = (id: string, before?: number) =>
-  useRoomProjects.getState().versions(id, before);
-const loadRoomVersion = (id: string, revision: number) =>
-  useRoomProjects.getState().version(id, revision);
 export function RoomPlanner() {
   const {
     current,
@@ -139,6 +121,7 @@ export function RoomPlanner() {
     addRoom,
     selectRoom,
     loadDesign,
+    saveCurrent,
     deleteDesign,
     duplicateDesign,
     updatePieces,
@@ -150,102 +133,33 @@ export function RoomPlanner() {
     beginEdit,
     endEdit,
   } = useDesigns();
-  const project = useRoomProjectWorkspace();
-  const [versionBusy, setVersionBusy] = useState(false);
   const catalog = useCatalog();
   const kitchenLibrary = useKitchens(),
     kitchenUser = useAuth((state) => state.user);
   const handledKitchen = useRef<string | null>(null);
   const {
-    inspector,
-    setInspector,
-    selected,
-    setSelected,
-    environmentTab,
-    setEnvironmentTab,
-    surface,
-    setSurface,
-    selectedWall,
-    setSelectedWall,
-    selectedOpening,
-    setSelectedOpening,
-    placementTemplate,
-    setPlacementTemplate,
-    showStartHint,
-    setShowStartHint,
-    view,
-    setView,
-    snapEnabled,
-    setSnapEnabled,
-    locked,
-    setLocked,
-    paletteCat,
-    setPaletteCat,
-    showCompare,
-    setShowCompare,
-    showRoomGeometry,
-    setShowRoomGeometry,
-    compareIds,
-    setCompareIds,
-    saveName,
-    setSaveName,
-    leftOpen,
-    setLeftOpen: setCatalogOpen,
-    rightOpen,
-    setRightOpen: setPropertiesOpen,
-    activePreset,
-    setActivePreset,
-    presetStatus,
-    setPresetStatus,
-    presetError,
-    setPresetError,
-    localFile,
-    setLocalFile,
-    localUrl,
-    setLocalUrl,
-    localScale,
-    setLocalScale,
-    query,
-    setQuery,
-    gridEnabled,
-    setGridEnabled,
-    showDimensions,
-    setShowDimensions,
-    resetKey,
-    setResetKey,
-    notice,
-    setNotice,
-    expanded,
-    setExpanded,
-    newRoomType,
-    setNewRoomType,
+    inspector, setInspector,
+    selected, setSelected, environmentTab, setEnvironmentTab, surface,
+    setSurface, selectedWall, setSelectedWall, selectedOpening, setSelectedOpening,
+    placementTemplate, setPlacementTemplate, showStartHint, setShowStartHint, view,
+    setView, snapEnabled, setSnapEnabled, locked, setLocked,
+    paletteCat, setPaletteCat, showCompare, setShowCompare, showRoomGeometry,
+    setShowRoomGeometry, compareIds, setCompareIds, saveName, setSaveName,
+    leftOpen, setLeftOpen: setCatalogOpen, rightOpen, setRightOpen: setPropertiesOpen, activePreset,
+    setActivePreset, presetStatus, setPresetStatus, presetError, setPresetError,
+    localFile, setLocalFile, localUrl, setLocalUrl, localScale,
+    setLocalScale, query, setQuery, gridEnabled, setGridEnabled,
+    showDimensions, setShowDimensions, resetKey, setResetKey, notice,
+    setNotice, expanded, setExpanded, newRoomType, setNewRoomType,
   } = useRoomPlannerUi();
-  const setLeftOpen = useCallback(
-    (open: boolean) => {
-      setCatalogOpen(open);
-      if (open) {
-        setInspector("catalog");
-        setPropertiesOpen(false);
-      }
-    },
-    [setCatalogOpen, setInspector, setPropertiesOpen],
-  );
-  const setRightOpen = useCallback(
-    (open: boolean) => {
-      setPropertiesOpen(open);
-      if (open) {
-        setInspector("environment");
-        setCatalogOpen(false);
-      }
-    },
-    [setCatalogOpen, setInspector, setPropertiesOpen],
-  );
-  useEffect(() => {
-    if (project.error) {
-      setCatalogOpen(false);
-      setPropertiesOpen(false);
-    }
-  }, [project.error, setCatalogOpen, setPropertiesOpen]);
+  const setLeftOpen = useCallback((open: boolean) => {
+    setCatalogOpen(open);
+    if (open) { setInspector("catalog"); setPropertiesOpen(false); }
+  }, [setCatalogOpen, setInspector, setPropertiesOpen]);
+  const setRightOpen = useCallback((open: boolean) => {
+    setPropertiesOpen(open);
+    if (open) { setInspector("environment"); setCatalogOpen(false); }
+  }, [setCatalogOpen, setInspector, setPropertiesOpen]);
   const dbModels = useMemo(
     () =>
       catalog.products
@@ -259,7 +173,7 @@ export function RoomPlanner() {
   function navigateView(action: CameraAction) {
     if (action === "top") setView("plan");
     if (action === "front") setView("perspective");
-    setCameraRequest((previous) => ({ id: (previous?.id ?? 0) + 1, action }));
+    setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action }));
   }
   const shortcuts = useRef<Record<string, () => void>>({});
   const addToCart = useCart((s) => s.add);
@@ -290,20 +204,9 @@ export function RoomPlanner() {
     else if (type === "kitchen") setPaletteCat("dining-table");
     else if (type === "office") setPaletteCat("office");
     else setPaletteCat("sofa");
-  }, [
-    current?.id,
-    current?.activeRoomId,
-    current?.roomType,
-    setSelected,
-    setSelectedWall,
-    setSelectedOpening,
-    setPlacementTemplate,
-    setActivePreset,
-    setLocalFile,
-    setLocalUrl,
-    setResetKey,
-    setPaletteCat,
-  ]);
+  }, [current?.id, current?.activeRoomId, current?.roomType, setSelected,
+    setSelectedWall, setSelectedOpening, setPlacementTemplate, setActivePreset,
+    setLocalFile, setLocalUrl, setResetKey, setPaletteCat]);
   useEffect(() => {
     if (
       selectedOpening &&
@@ -314,15 +217,6 @@ export function RoomPlanner() {
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (
-        (event.ctrlKey || event.metaKey) &&
-        event.key.toLowerCase() === "s" &&
-        !target.closest("dialog")
-      ) {
-        event.preventDefault();
-        shortcuts.current.save?.();
-        return;
-      }
       if (
         target.closest(
           "dialog, input, textarea, select, [contenteditable=true]",
@@ -404,16 +298,8 @@ export function RoomPlanner() {
       "",
       `${url.pathname}${url.search}${url.hash}`,
     );
-  }, [
-    current,
-    kitchenLibrary,
-    kitchenUser,
-    updatePieces,
-    setSelected,
-    setNotice,
-    setLeftOpen,
-    setRightOpen,
-  ]);
+  }, [current, kitchenLibrary, kitchenUser, updatePieces, setSelected,
+    setNotice, setLeftOpen, setRightOpen]);
 
   useEffect(() => {
     return () => {
@@ -750,10 +636,10 @@ export function RoomPlanner() {
     setSelected(copy.instanceId);
   };
   const save = () => {
-    if (versionBusy || project.loading) return;
     endEdit();
-    void project.save(saveName.trim() || current.name.trim() || "Миний өрөө");
+    saveCurrent(saveName.trim() || current.name.trim() || "Миний өрөө");
     setSaveName("");
+    setNotice("Загварыг энэ төхөөрөмж дээр хадгаллаа.");
   };
   const nudge = (x: number, z: number) => {
     if (selectedPiece)
@@ -951,76 +837,22 @@ export function RoomPlanner() {
     >
       <header className="studio-header room-studio-header">
         <Link href="/" className="studio-brand" aria-label="Tavilga.mn нүүр">
-          <House size={19} />
-          <span>tavilga.mn</span>
+          <House size={19}/><span>tavilga.mn</span>
         </Link>
-        <div className="studio-heading">
-          <span>Өрөөний төлөвлөгч</span>
-          <ProjectSaveStatus
-            state={project.state}
-            revision={project.revision}
-          />
-        </div>
-        <PlannerSwitch active="room" />
+        <div className="studio-heading"><span>Өрөөний төлөвлөгч</span><small>{current.roomName ?? current.name}</small></div>
+        <nav className="studio-switch" aria-label="Planner сонгох">
+          <span aria-current="page">Өрөө</span>
+          <Link href="/kitchen">Гал тогоо</Link>
+        </nav>
         <div className="studio-file-actions">
-          <button
-            type="button"
-            title="PNG зураг татах"
-            aria-label="Зураг татах"
-            onClick={exportImage}
-          >
-            <Download size={17} />
-            <span>Зураг</span>
+          <button type="button" title="PNG зураг татах" aria-label="Зураг татах" onClick={exportImage}>
+            <Download size={17}/><span>Зураг</span>
           </button>
-          <button
-            type="button"
-            className="studio-primary"
-            disabled={project.saving || project.loading || versionBusy}
-            title="Хадгалах (Ctrl+S)"
-            aria-label="Загвар хадгалах"
-            onClick={save}
-          >
-            <Save size={17} />
-            <span>Хадгалах</span>
+          <button type="button" className="studio-primary" title="Хадгалах (Ctrl+S)" aria-label="Загвар хадгалах" onClick={save}>
+            <Save size={17}/><span>Хадгалах</span>
           </button>
         </div>
       </header>
-      <ProjectSaveRecovery
-        state={project.state}
-        error={project.error}
-        busy={project.saving || project.loading}
-        onRetry={save}
-        onCopy={() => void project.save(undefined, true)}
-        onReload={
-          project.cloudId && project.revision > 0
-            ? () => void project.reload()
-            : undefined
-        }
-      />
-      {(project.message || project.loading) && (
-        <p className="planner-project-message" role="status">
-          {project.loading ? "Cloud загвар ачаалж байна…" : project.message}
-        </p>
-      )}
-      {project.storageError && (
-        <section
-          className="planner-project-recovery"
-          aria-label="Local draft хадгалалт"
-        >
-          <p role="alert">{project.storageError}</p>
-          <button
-            type="button"
-            onClick={() =>
-              downloadRoomJson({
-                schemaVersion: 1,
-                design: useDesigns.getState().current,
-              })
-            }
-          >
-            Draft JSON татах
-          </button>
-        </section>
-      )}
       {notice && (
         <div className="planner-notice" role="status">
           <Check size={17} />
@@ -1031,91 +863,30 @@ export function RoomPlanner() {
         </div>
       )}
       {/* MOBILE TOOLBAR */}
-      <div className="planner-mobile-toolbar absolute left-0 right-0 top-0 z-30 flex items-center justify-between border-b border-[var(--workspace-border)] bg-[var(--workspace-surface)] px-3 py-2 backdrop-blur xl:hidden">
+      <div className="planner-mobile-toolbar absolute left-0 right-0 top-0 z-30 flex items-center justify-between border-b border-[#293C32]/10 bg-[#FAF9F6]/95 px-3 py-2 backdrop-blur xl:hidden">
         <button
           onClick={() => setLeftOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-[var(--workspace-primary)] px-3 py-1.5 text-xs text-[#FFFFFF]"
+          className="flex items-center gap-2 rounded-full bg-[#293C32] px-3 py-1.5 text-xs text-[#FFFFFF]"
         >
           <Menu className="h-3.5 w-3.5" /> Тавилга
         </button>
         <p className="truncate  text-sm">{current.roomName ?? current.name}</p>
         <button
           onClick={() => setRightOpen(true)}
-          className="flex items-center gap-2 rounded-full border border-[var(--workspace-border)] px-3 py-1.5 text-xs"
+          className="flex items-center gap-2 rounded-full border border-[#293C32]/15 px-3 py-1.5 text-xs"
         >
           <Settings className="h-3.5 w-3.5" /> Тохиргоо
         </button>
       </div>
 
-      <PlannerRail
-        items={[
-          {
-            id: "room",
-            label: "Өрөө",
-            Icon: House,
-            active: inspector === "environment" && environmentTab === "room",
-            onClick: () => {
-              endEdit();
-              setPlacementTemplate(null);
-              setEnvironmentTab("room");
-              setRightOpen(true);
-            },
-          },
-          {
-            id: "catalog",
-            label: "Тавилгын каталог",
-            Icon: LayoutGrid,
-            active: inspector === "catalog",
-            onClick: () => setLeftOpen(true),
-          },
-          {
-            id: "materials",
-            label: "Өнгө, материал",
-            Icon: Paintbrush,
-            active:
-              inspector === "environment" && environmentTab === "surfaces",
-            onClick: () => {
-              endEdit();
-              setPlacementTemplate(null);
-              setEnvironmentTab("surfaces");
-              setRightOpen(true);
-            },
-          },
-          {
-            id: "openings",
-            label: "Хаалга, цонх",
-            Icon: DoorOpen,
-            active:
-              inspector === "environment" && environmentTab === "openings",
-            onClick: () => {
-              endEdit();
-              setPlacementTemplate(null);
-              setEnvironmentTab("openings");
-              setRightOpen(true);
-            },
-          },
-          {
-            id: "lighting",
-            label: "Гэрэлтүүлэг",
-            Icon: Lightbulb,
-            active:
-              inspector === "environment" && environmentTab === "lighting",
-            onClick: () => {
-              endEdit();
-              setPlacementTemplate(null);
-              setEnvironmentTab("lighting");
-              setRightOpen(true);
-            },
-          },
-          {
-            id: "measure",
-            label: "Хэмжээс харуулах",
-            Icon: Ruler,
-            active: showDimensions,
-            onClick: () => setShowDimensions((value) => !value),
-          },
-        ]}
-      />
+      <PlannerRail items={[
+        { id: "room", label: "Өрөө", Icon: House, active: inspector === "environment" && environmentTab === "room", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("room"); setRightOpen(true); } },
+        { id: "catalog", label: "Тавилгын каталог", Icon: LayoutGrid, active: inspector === "catalog", onClick: () => setLeftOpen(true) },
+        { id: "materials", label: "Өнгө, материал", Icon: Paintbrush, active: inspector === "environment" && environmentTab === "surfaces", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("surfaces"); setRightOpen(true); } },
+        { id: "openings", label: "Хаалга, цонх", Icon: DoorOpen, active: inspector === "environment" && environmentTab === "openings", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("openings"); setRightOpen(true); } },
+        { id: "lighting", label: "Гэрэлтүүлэг", Icon: Lightbulb, active: inspector === "environment" && environmentTab === "lighting", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("lighting"); setRightOpen(true); } },
+        { id: "measure", label: "Хэмжээс харуулах", Icon: Ruler, active: showDimensions, onClick: () => setShowDimensions(value => !value) },
+      ]} />
 
       {/* One shared right inspector; the catalog no longer consumes canvas width on the left. */}
       <Drawer
@@ -1125,11 +896,9 @@ export function RoomPlanner() {
         onClose={() => setLeftOpen(false)}
         title="Тавилгын каталог"
       >
-        <div className="border-b border-[var(--workspace-border)] p-4">
+        <div className="border-b border-[#293C32]/10 p-4">
           <div className="planner-panel-heading">
-            <span>
-              <LayoutGrid size={18} /> Тавилгын сан
-            </span>
+            <span><LayoutGrid size={18}/> Тавилгын сан</span>
             <small>Орон зайгаа бүтээх бүх сонголт</small>
           </div>
           <label className="planner-search">
@@ -1143,18 +912,12 @@ export function RoomPlanner() {
           </label>
           <label className="planner-reference-category">
             <span>Тавилгын ангилал</span>
-            <select
-              aria-label="Тавилгын ангилал"
-              value={paletteCat}
-              onChange={(event) =>
-                setPaletteCat(event.target.value as typeof paletteCat)
-              }
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
+            <select aria-label="Тавилгын ангилал" value={paletteCat} onChange={event => setPaletteCat(event.target.value as typeof paletteCat)}>
+            {CATEGORIES.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
             </select>
           </label>
         </div>
@@ -1210,9 +973,9 @@ export function RoomPlanner() {
               <button
                 key={p.id}
                 onClick={() => addPiece(p.id)}
-                className="group flex gap-3 rounded-lg border border-[var(--workspace-border)] bg-[var(--workspace-surface)] p-2 text-left transition hover:border-[var(--workspace-border)]"
+                className="group flex gap-3 rounded-lg border border-[#293C32]/10 bg-white p-2 text-left transition hover:border-[#293C32]/30"
               >
-                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-[var(--workspace-elevated)]">
+                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-[#EEEEE7]">
                   <Image
                     src={p.image}
                     alt={p.name}
@@ -1223,15 +986,15 @@ export function RoomPlanner() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{p.name}</p>
-                  <p className="mt-0.5 font-mono text-xs text-[var(--workspace-muted)]">
+                  <p className="mt-0.5 font-mono text-xs text-[#6C726B]">
                     {formatPrice(p.basePrice)}
                     <span className="mt-1 block text-xs">{stockLabel(p)}</span>
                   </p>
-                  <p className="mt-0.5 font-mono text-xs text-[var(--workspace-muted)]">
+                  <p className="mt-0.5 font-mono text-xs text-[#737D6C]/70">
                     {p.dimensions.w} × {p.dimensions.d} м
                   </p>
                 </div>
-                <div className="grid h-7 w-7 self-center place-items-center rounded-full bg-[var(--workspace-elevated)] text-[var(--workspace-ink)] group-hover:bg-[var(--workspace-primary)] group-hover:text-[#FFFFFF]">
+                <div className="grid h-7 w-7 self-center place-items-center rounded-full bg-[#293C32]/5 text-[#293C32] group-hover:bg-[#AD6547] group-hover:text-[#FFFFFF]">
                   <Plus className="h-3.5 w-3.5" />
                 </div>
               </button>
@@ -1264,9 +1027,9 @@ export function RoomPlanner() {
                     ),
                   )
                 }
-                className="group flex gap-3 rounded-lg border border-[var(--workspace-border)] bg-[var(--workspace-surface)] p-2 text-left transition hover:border-[var(--workspace-border)]"
+                className="group flex gap-3 rounded-lg border border-[#AD6547]/30 bg-white p-2 text-left transition hover:border-[#AD6547]/60"
               >
-                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-[var(--workspace-elevated)]">
+                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-[#EEEEE7]">
                   {m.thumbnailFile ? (
                     <Image
                       src={`/api/models/files/${m.fileModelId ?? m.id}/${m.thumbnailFile}`}
@@ -1278,28 +1041,28 @@ export function RoomPlanner() {
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">
-                      <Sparkles className="h-6 w-6 text-[var(--workspace-accent)]" />
+                      <Sparkles className="h-6 w-6 text-[#AD6547]/40" />
                     </div>
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <p className="truncate text-sm font-medium">{m.name}</p>
-                    <span className="flex-shrink-0 rounded-full bg-[var(--planner-selected)] px-1.5 py-0.5 text-[10px] text-[var(--workspace-accent)]">
+                    <span className="flex-shrink-0 rounded-full bg-[#AD6547]/10 px-1.5 py-0.5 text-[10px] text-[#AD6547]">
                       3D
                     </span>
                   </div>
-                  <p className="mt-0.5 font-mono text-xs text-[var(--workspace-muted)]">
+                  <p className="mt-0.5 font-mono text-xs text-[#6C726B]">
                     {m.basePrice > 0
                       ? formatPrice(m.basePrice)
                       : "Үнэ тогтоогдоогүй"}
                   </p>
-                  <p className="mt-0.5 font-mono text-xs text-[var(--workspace-muted)]">
+                  <p className="mt-0.5 font-mono text-xs text-[#737D6C]/70">
                     {m.dimensionsW} × {m.dimensionsD} м
                     <span className="mt-1 block text-xs">{stockLabel(m)}</span>
                   </p>
                 </div>
-                <div className="grid h-7 w-7 self-center place-items-center rounded-full bg-[var(--workspace-elevated)] text-[var(--workspace-ink)] group-hover:bg-[var(--workspace-primary)] group-hover:text-[#FFFFFF]">
+                <div className="grid h-7 w-7 self-center place-items-center rounded-full bg-[#293C32]/5 text-[#293C32] group-hover:bg-[#AD6547] group-hover:text-[#FFFFFF]">
                   <Plus className="h-3.5 w-3.5" />
                 </div>
               </button>
@@ -1344,68 +1107,42 @@ export function RoomPlanner() {
             </button>
           </div>
           <details className="planner-tools-menu">
-            <summary aria-label="Засварлах хэрэгслүүд">
-              <Settings size={17} />
-              <span>Засвар</span>
-            </summary>
+            <summary aria-label="Засварлах хэрэгслүүд"><Settings size={17}/><span>Засвар</span></summary>
             <div className="planner-tools-popover">
-              <button
-                title="25 см тор ба торонд тааруулах"
-                aria-label="Торонд тааруулах"
-                aria-pressed={gridEnabled}
-                onClick={() => setGridEnabled((v) => !v)}
-              >
-                <LayoutGrid size={18} />
-                <span>25 см тор</span>
-              </button>
-              <button
-                title="Хананд наалдуулах"
-                aria-label="Хананд наалдуулах"
-                aria-pressed={snapEnabled}
-                onClick={() => setSnapEnabled((v) => !v)}
-              >
-                <Magnet size={18} />
-                <span>Хананд тааруулах</span>
-              </button>
-              <button
-                title="Measure · тавилга сонгоод хэмжээ, зайг харах"
-                aria-label="Measure · хэмжих горим"
-                aria-pressed={showDimensions}
-                onClick={() => setShowDimensions((v) => !v)}
-              >
-                <Ruler size={18} />
-                <span>Хэмжээс</span>
-              </button>
+            <button
+              title="25 см тор ба торонд тааруулах"
+              aria-label="Торонд тааруулах"
+              aria-pressed={gridEnabled}
+              onClick={() => setGridEnabled((v) => !v)}
+            >
+              <LayoutGrid size={18} /><span>25 см тор</span>
+            </button>
+            <button
+              title="Хананд наалдуулах"
+              aria-label="Хананд наалдуулах"
+              aria-pressed={snapEnabled}
+              onClick={() => setSnapEnabled((v) => !v)}
+            >
+              <Magnet size={18} /><span>Хананд тааруулах</span>
+            </button>
+            <button
+              title="Measure · тавилга сонгоод хэмжээ, зайг харах"
+              aria-label="Measure · хэмжих горим"
+              aria-pressed={showDimensions}
+              onClick={() => setShowDimensions((v) => !v)}
+            >
+              <Ruler size={18} /><span>Хэмжээс</span>
+            </button>
             </div>
           </details>
         </div>
-        <ViewportControls
-          onAction={navigateView}
-          plan={view === "plan"}
-          disabled={locked}
-          extra={
-            <>
-              <button
-                type="button"
-                title="Камер түгжих"
-                aria-label="Камер түгжих"
-                aria-pressed={locked}
-                onClick={() => setLocked((value) => !value)}
-              >
-                {locked ? <Lock size={18} /> : <Unlock size={18} />}
-              </button>
-              <button
-                type="button"
-                title="Ажлын талбай томруулах"
-                aria-label="Ажлын талбай томруулах"
-                aria-pressed={expanded}
-                onClick={() => setExpanded((value) => !value)}
-              >
-                <Maximize size={18} />
-              </button>
-            </>
-          }
-        />
+        <ViewportControls onAction={navigateView} plan={view === "plan"} disabled={locked}
+          extra={<>
+            <button type="button" title="Камер түгжих" aria-label="Камер түгжих" aria-pressed={locked}
+              onClick={() => setLocked(value => !value)}>{locked ? <Lock size={18}/> : <Unlock size={18}/>}</button>
+            <button type="button" title="Ажлын талбай томруулах" aria-label="Ажлын талбай томруулах" aria-pressed={expanded}
+              onClick={() => setExpanded(value => !value)}><Maximize size={18}/></button>
+          </>}/>
         <div className="planner-room-caption">
           <strong>
             {current.roomName ?? "Зочны өрөө"} · {current.width} ×{" "}
@@ -1453,11 +1190,11 @@ export function RoomPlanner() {
 
         {/* preset loading status */}
         {(activePreset || localFile) && (
-          <div className="absolute left-1/2 top-24 z-20 -translate-x-1/2 rounded-full border border-[var(--workspace-border)] bg-[var(--workspace-surface)] px-4 py-2 text-xs shadow-sm backdrop-blur md:top-16">
+          <div className="absolute left-1/2 top-24 z-20 -translate-x-1/2 rounded-full border border-[#293C32]/10 bg-white/95 px-4 py-2 text-xs shadow-sm backdrop-blur md:top-16">
             {presetStatus === "loading" && "Загвар ачаалж байна…"}
             {presetStatus === "loaded" && "✓ Загвар амжилттай ачааллаа"}
             {presetStatus === "error" && (
-              <span className="text-[var(--workspace-danger)]">
+              <span className="text-red-600">
                 ⚠ Алдаа: {presetError ?? "загвар олдсонгүй"}
               </span>
             )}
@@ -1506,13 +1243,13 @@ export function RoomPlanner() {
               </button>
               <button
                 onClick={rotateSelected}
-                className="flex items-center gap-1.5 rounded-full bg-[var(--workspace-primary)] px-3 py-2 text-xs font-medium text-[#FFFFFF]"
+                className="flex items-center gap-1.5 rounded-full bg-[#293C32] px-3 py-2 text-xs font-medium text-[#FFFFFF]"
               >
                 <RotateCw className="h-3 w-3" /> 90°
               </button>
               <button
                 onClick={removeSelected}
-                className="flex items-center gap-1.5 rounded-full border border-[var(--workspace-danger)] bg-[var(--planner-error)] px-3 py-2 text-xs font-medium text-[var(--workspace-danger)]"
+                className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-50 px-3 py-2 text-xs font-medium text-red-700"
               >
                 <Trash2 className="h-3 w-3" /> Устгах
               </button>
@@ -1522,17 +1259,17 @@ export function RoomPlanner() {
 
         {/* bottom info bar */}
         <div className="planner-budget-bar">
-          <span className="whitespace-nowrap text-[var(--workspace-muted)]">
+          <span className="whitespace-nowrap text-[#6C726B]">
             {current.pieces.length} тавилга ·{" "}
-            <strong className="font-mono text-[var(--workspace-ink)]">
+            <strong className="font-mono text-[#293C32]">
               {formatPrice(totalPrice)}
             </strong>
           </span>
-          <span className="h-4 w-px bg-[var(--workspace-elevated)]" />
+          <span className="h-4 w-px bg-[#293C32]/10" />
           <button
             onClick={buyEverything}
             disabled={!current.pieces.length}
-            className="flex flex-shrink-0 items-center gap-1.5 text-[var(--workspace-accent)] font-medium hover:underline"
+            className="flex flex-shrink-0 items-center gap-1.5 text-[#AD6547] font-medium hover:underline"
           >
             <ShoppingBag className="h-3.5 w-3.5" /> Бүгдийг сагсанд
           </button>
@@ -1733,7 +1470,7 @@ export function RoomPlanner() {
           </>
         )}
         <div hidden={environmentTab !== "room"}>
-          <div className="border-b border-[var(--workspace-border)] p-4">
+          <div className="border-b border-[#293C32]/10 p-4">
             <p className="label mb-2">Загвар</p>
             <input
               aria-label="Загварын нэр"
@@ -1760,58 +1497,12 @@ export function RoomPlanner() {
               </button>
             </div>
             <p className="planner-storage-note">
-              Ажлын явц энэ төхөөрөмж дээр үлдэнэ. Нэвтэрсэн үед Хадгалах товч
-              cloud хувилбар үүсгэнэ.
+              Ажлын явц энэ төхөөрөмж дээр автоматаар үлдэнэ. Хадгалсан
+              хувилбараа доороос нээнэ.
             </p>
-            <ProjectSaveStatus
-              state={project.state}
-              revision={project.revision}
-            />
-            {project.storageError && <p role="alert">{project.storageError}</p>}
-            <button
-              className="btn-ghost mt-2"
-              type="button"
-              onClick={() =>
-                downloadRoomJson({
-                  schemaVersion: 1,
-                  design: useDesigns.getState().current,
-                })
-              }
-            >
-              Draft JSON татах
-            </button>
-            {!project.user && (
-              <Link
-                className="btn-ghost"
-                href={`/login?next=${encodeURIComponent(project.loginNext)}`}
-              >
-                Cloud хадгалалтад нэвтрэх
-              </Link>
-            )}
-            {project.user && project.cloudId && project.revision > 0 && (
-              <ProjectVersionHistory
-                id={project.cloudId}
-                revision={project.revision}
-                disabled={project.saving || project.loading}
-                loadVersions={loadRoomVersions}
-                loadVersion={loadRoomVersion}
-                onRestore={project.restore}
-                onBusyChange={setVersionBusy}
-              />
-            )}
-            {project.user && project.cloudId && project.revision > 0 && (
-              <button
-                className="btn-ghost mt-2"
-                type="button"
-                disabled={project.loading || project.saving}
-                onClick={() => void project.reload()}
-              >
-                Cloud-с сүүлийн загвар нээх
-              </button>
-            )}
           </div>
 
-          <div className="border-b border-[var(--workspace-border)] p-4">
+          <div className="border-b border-[#293C32]/10 p-4">
             <section className="planner-rooms" aria-label="Өрөөнүүд">
               <p className="label mb-3">
                 Өрөөнүүд · {current.rooms?.length ?? 1}
@@ -1924,7 +1615,7 @@ export function RoomPlanner() {
           </div>
 
           {selectedPiece && selectedDetails ? (
-            <div className="border-b border-[var(--workspace-border)] p-4">
+            <div className="border-b border-[#293C32]/10 p-4">
               <p className="label mb-3">Сонгосон</p>
 
               <div className="flex gap-3">
@@ -1946,8 +1637,8 @@ export function RoomPlanner() {
                     className="h-14 w-14 flex-shrink-0 rounded-lg object-cover"
                   />
                 ) : (
-                  <div className="grid h-14 w-14 flex-shrink-0 place-items-center rounded-lg bg-[var(--workspace-elevated)]">
-                    <Sparkles className="h-5 w-5 text-[var(--workspace-accent)]" />
+                  <div className="grid h-14 w-14 flex-shrink-0 place-items-center rounded-lg bg-[#EEEEE7]">
+                    <Sparkles className="h-5 w-5 text-[#AD6547]/50" />
                   </div>
                 )}
 
@@ -1958,7 +1649,7 @@ export function RoomPlanner() {
                       ? "Өөрийн гарнитур"
                       : stockLabel(selectedProduct ?? selectedDbModel ?? {})}
                   </p>
-                  <p className="font-mono text-xs text-[var(--workspace-muted)]">
+                  <p className="font-mono text-xs text-[#6C726B]">
                     {selectedDetails.basePrice > 0
                       ? formatPrice(getPiecePrice(selectedPiece))
                       : "Үнэ тогтоогдоогүй"}
@@ -2056,7 +1747,7 @@ export function RoomPlanner() {
                     <Copy size={15} /> Хуулах
                   </button>
                   <button
-                    className="btn-ghost !px-2 !py-2 text-[var(--workspace-danger)]"
+                    className="btn-ghost !px-2 !py-2 text-red-700"
                     onClick={removeSelected}
                   >
                     <Trash2 size={15} /> Устгах
@@ -2099,7 +1790,7 @@ export function RoomPlanner() {
                         className={cn(
                           "h-7 w-7 rounded-full border-2",
                           selectedPiece.color === color.id
-                            ? "border-[var(--workspace-border)]"
+                            ? "border-[#293C32]"
                             : "border-white",
                         )}
                         title={color.name}
@@ -2125,8 +1816,8 @@ export function RoomPlanner() {
                         className={cn(
                           "rounded-full border px-3 py-1.5 text-xs transition",
                           selectedPiece.material === material.id
-                            ? "border-[var(--workspace-border)] bg-[var(--workspace-primary)] text-white"
-                            : "border-[var(--workspace-border)] bg-[var(--workspace-surface)] text-[var(--workspace-muted)] hover:border-[var(--workspace-border)]",
+                            ? "border-[#293C32] bg-[#293C32] text-white"
+                            : "border-[#293C32]/15 bg-white text-[#6C726B] hover:border-[#293C32]/40",
                         )}
                       >
                         {material.name}
@@ -2139,7 +1830,7 @@ export function RoomPlanner() {
               )}
             </div>
           ) : (
-            <div className="border-b border-[var(--workspace-border)] p-4 text-xs text-[var(--workspace-muted)]">
+            <div className="border-b border-[#293C32]/10 p-4 text-xs text-[#737D6C]">
               Тавилга дээр дарж тохиргоог нь өөрчилнө үү.
             </div>
           )}
@@ -2189,7 +1880,7 @@ export function RoomPlanner() {
                     : "custom"
                 }
                 onChange={(e) => resizeRoom(e.target.value as RoomSize)}
-                className="rounded-full border border-[var(--workspace-border)] bg-[var(--workspace-surface)] px-3 py-2 text-xs font-medium backdrop-blur"
+                className="rounded-full border border-[#293C32]/10 bg-white/90 px-3 py-2 text-xs font-medium backdrop-blur"
               >
                 <option value="custom" disabled>
                   Өөрийн хэмжээ · {current.width} × {current.depth} м
@@ -2207,8 +1898,8 @@ export function RoomPlanner() {
                   className={cn(
                     "flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium backdrop-blur transition",
                     activePreset?.id === preset.id
-                      ? "border-[var(--workspace-border)] bg-[var(--workspace-primary)] text-[#FFFFFF]"
-                      : "border-[var(--workspace-border)] bg-[var(--workspace-surface)] text-[var(--workspace-muted)]",
+                      ? "border-[#AD6547] bg-[#AD6547] text-[#FFFFFF]"
+                      : "border-[#293C32]/10 bg-white/90 text-[#6C726B]",
                   )}
                   title="GLB загварыг ачаалах"
                 >
@@ -2220,8 +1911,8 @@ export function RoomPlanner() {
                 className={cn(
                   "flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium backdrop-blur transition",
                   localFile
-                    ? "border-[var(--workspace-border)] bg-[var(--workspace-primary)] text-[#FFFFFF]"
-                    : "border-[var(--workspace-border)] bg-[var(--workspace-surface)] text-[var(--workspace-muted)]",
+                    ? "border-[#AD6547] bg-[#AD6547] text-[#FFFFFF]"
+                    : "border-[#293C32]/10 bg-white/90 text-[#6C726B]",
                 )}
                 title="Компьютероосоо GLB файл сонгож турших"
               >
@@ -2254,12 +1945,12 @@ export function RoomPlanner() {
                       )
                     }
                     title="Масштаб (scale)"
-                    className="w-16 rounded-full border border-[var(--workspace-border)] bg-[var(--workspace-surface)] px-2 py-2 text-center text-xs font-mono backdrop-blur"
+                    className="w-16 rounded-full border border-[#293C32]/10 bg-white/90 px-2 py-2 text-center text-xs font-mono backdrop-blur"
                   />
                   <button
                     onClick={() => handleLocalGlbSelect(null)}
                     title="Локал файлыг цуцлах"
-                    className="flex items-center gap-1 rounded-full border border-[var(--workspace-danger)] bg-[var(--planner-error)] px-2 py-2 text-xs font-medium text-[var(--workspace-danger)]"
+                    className="flex items-center gap-1 rounded-full border border-red-500/30 bg-red-50 px-2 py-2 text-xs font-medium text-red-700"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -2296,14 +1987,14 @@ export function RoomPlanner() {
                       .length < 2
                   }
                   title="Доороос 2–4 загвар сонгож харьцуулна"
-                  className="text-xs font-medium text-[var(--workspace-accent)] hover:underline"
+                  className="text-xs font-medium text-[#AD6547] hover:underline"
                 >
                   <Layers className="mr-1 inline h-3 w-3" /> Харьцуулах
                 </button>
               )}
             </div>
             {designs.length === 0 && (
-              <p className="rounded-lg bg-[var(--workspace-elevated)] p-4 text-xs text-[var(--workspace-muted)]">
+              <p className="rounded-lg bg-[#293C32]/5 p-4 text-xs text-[#6C726B]">
                 Анхны загвараа хадгалснаар хэд хэдэн байрлалыг харьцуулах
                 боломжтой.
               </p>
@@ -2313,16 +2004,16 @@ export function RoomPlanner() {
                 <div
                   key={d.id}
                   className={cn(
-                    "rounded-lg border bg-[var(--workspace-surface)] p-3",
+                    "rounded-lg border bg-white p-3",
                     current.id === d.id
-                      ? "border-[var(--workspace-border)]"
-                      : "border-[var(--workspace-border)] hover:border-[var(--workspace-border)]",
+                      ? "border-[#AD6547]"
+                      : "border-[#293C32]/10 hover:border-[#293C32]/20",
                   )}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{d.name}</p>
-                      <p className="text-xs text-[var(--workspace-muted)]">
+                      <p className="text-xs text-[#6C726B]">
                         {d.rooms?.length ?? 1} өрөө ·{" "}
                         {d.roomName ?? "Зочны өрөө"} ·{" "}
                         {getRoomGeometry(d).area.toFixed(1)} м²
@@ -2331,21 +2022,21 @@ export function RoomPlanner() {
                     <div className="flex flex-shrink-0 gap-1">
                       <button
                         onClick={() => loadDesign(d.id)}
-                        className="rounded-md p-1.5 hover:bg-[var(--workspace-elevated)]"
+                        className="rounded-md p-1.5 hover:bg-[#293C32]/5"
                         title="Нээх"
                       >
                         <Maximize className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => duplicateDesign(d.id)}
-                        className="rounded-md p-1.5 hover:bg-[var(--workspace-elevated)]"
+                        className="rounded-md p-1.5 hover:bg-[#293C32]/5"
                         title="Хуулах"
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => deleteDesign(d.id)}
-                        className="rounded-md p-1.5 text-[var(--workspace-danger)] hover:bg-[var(--planner-error)]"
+                        className="rounded-md p-1.5 text-red-600 hover:bg-red-50"
                         title="Устгах"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -2366,7 +2057,7 @@ export function RoomPlanner() {
                       }
                       className="accent-[#AD6547]"
                     />
-                    <span className="text-xs text-[var(--workspace-muted)]">
+                    <span className="text-xs text-[#6C726B]">
                       Харьцуулахаар сонгох
                     </span>
                   </div>
@@ -2375,7 +2066,7 @@ export function RoomPlanner() {
             </div>
           </div>
 
-          <div className="border-t border-[var(--workspace-border)] p-4">
+          <div className="border-t border-[#293C32]/10 p-4">
             <button
               onClick={() => {
                 createNew("80", "Шинэ загвар", "living");
@@ -2414,3 +2105,5 @@ export function RoomPlanner() {
     </div>
   );
 }
+
+/** Sidebar that's a static column on desktop, slide-over drawer on mobile. */

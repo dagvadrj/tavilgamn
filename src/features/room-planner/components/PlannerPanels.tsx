@@ -8,7 +8,6 @@ import { getProduct } from "@/store/catalog";
 import { getDbModel } from "@/lib/modelRegistry";
 import { getRoomGeometry, roomPath } from "@/lib/roomGeometry";
 import { pieceRects } from "@/three/collision";
-import { PlannerDialog } from "@/features/planner/components/PlannerDialog";
 
 export function Drawer({
   side,
@@ -29,8 +28,7 @@ export function Drawer({
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   useEffect(() => {
-    if (!active || !open || window.matchMedia("(min-width: 960px)").matches)
-      return;
+    if (!active || !open || window.matchMedia("(min-width: 960px)").matches) return;
     const previous = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -73,28 +71,28 @@ export function Drawer({
       {open && (
         <div
           onClick={onClose}
-          className="planner-drawer-backdrop fixed inset-0 z-[60] bg-black/60 xl:hidden"
+          className="planner-drawer-backdrop fixed inset-0 z-[60] bg-[#293C32]/40 xl:hidden"
         />
       )}
       <aside
         ref={drawerRef}
         aria-label={title}
         className={cn(
-          "planner-drawer fixed inset-y-0 z-[70] flex w-[88vw] max-w-[340px] flex-col bg-[var(--workspace-surface)] shadow-2xl transition-transform duration-300 xl:relative xl:z-auto xl:w-auto xl:max-w-none xl:translate-x-0 xl:shadow-none",
+          "planner-drawer fixed inset-y-0 z-[70] flex w-[88vw] max-w-[340px] flex-col bg-[#FAF9F6] shadow-2xl transition-transform duration-300 xl:relative xl:z-auto xl:w-auto xl:max-w-none xl:translate-x-0 xl:shadow-none",
           side === "left"
-            ? "left-0 border-r border-[var(--workspace-border)] xl:flex"
-            : "right-0 border-l border-[var(--workspace-border)] xl:flex",
+            ? "left-0 border-r border-[#293C32]/10 xl:flex"
+            : "right-0 border-l border-[#293C32]/10 xl:flex",
           !open && "planner-drawer-closed",
           !open && side === "left" && "-translate-x-full xl:translate-x-0",
           !open && side === "right" && "translate-x-full xl:translate-x-0",
         )}
       >
-        <div className="planner-drawer-heading flex items-center justify-between border-b border-[var(--workspace-border)] p-4 xl:hidden">
-          <p className="text-lg text-[var(--workspace-ink)]">{title}</p>
+        <div className="planner-drawer-heading flex items-center justify-between border-b border-[#293C32]/10 p-4 xl:hidden">
+          <p className="text-lg text-[#293C32]">{title}</p>
           <button
             onClick={onClose}
             aria-label="Самбар хаах"
-            className="grid h-9 w-9 place-items-center rounded-full hover:bg-[var(--workspace-elevated)]"
+            className="grid h-9 w-9 place-items-center rounded-full hover:bg-[#293C32]/5"
           >
             <X className="h-4 w-4" />
           </button>
@@ -117,19 +115,16 @@ export function CompareModal({
   onLoad: (id: string) => void;
 }) {
   return (
-    <PlannerDialog
-      onClose={onClose}
-      label="Загваруудыг харьцуулах"
-      className="fixed inset-0 z-[80] grid place-items-center bg-black/60 p-6"
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[80] grid place-items-center bg-[#293C32]/60 p-6"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-lg bg-[var(--workspace-surface)] p-8"
+        className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-lg bg-[#FAF9F6] p-8"
       >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl text-[var(--workspace-ink)]">
-            Загваруудыг харьцуулах
-          </h2>
+          <h2 className="text-2xl text-[#293C32]">Загваруудыг харьцуулах</h2>
           <button onClick={onClose} className="btn-ghost !py-2">
             Хаах
           </button>
@@ -156,27 +151,25 @@ export function CompareModal({
             }, 0);
             return (
               <div key={d.id} className="card overflow-hidden">
-                <div className="aspect-video bg-[var(--workspace-elevated)]">
+                <div className="aspect-video bg-[#EEEEE7]">
                   <MiniTopDown design={d} />
                 </div>
                 <div className="p-5">
-                  <p className="text-lg text-[var(--workspace-ink)]">
-                    {d.name}
-                  </p>
-                  <p className="text-xs text-[var(--workspace-muted)]">
+                  <p className="text-lg text-[#293C32]">{d.name}</p>
+                  <p className="text-xs text-[#6C726B]">
                     {d.roomName ?? "Зочны өрөө"} ·{" "}
                     {getRoomGeometry(d).area.toFixed(1)} м²
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="label">Тавилга</p>
-                      <p className="font-mono font-medium text-[var(--workspace-ink)]">
+                      <p className="font-mono font-medium text-[#293C32]">
                         {d.pieces.length}
                       </p>
                     </div>
                     <div>
                       <p className="label">Нийт үнэ</p>
-                      <p className="font-mono font-medium text-[var(--workspace-ink)]">
+                      <p className="font-mono font-medium text-[#293C32]">
                         {formatPrice(total)}
                       </p>
                     </div>
@@ -193,7 +186,7 @@ export function CompareModal({
           })}
         </div>
       </div>
-    </PlannerDialog>
+    </div>
   );
 }
 
@@ -360,8 +353,8 @@ export function NumberControl({
 
 export function PlannerSkeleton() {
   return (
-    <div className="grid h-full w-full place-items-center bg-[var(--workspace-elevated)]">
-      <div className="text-sm text-[var(--workspace-muted)]">
+    <div className="grid h-full w-full place-items-center bg-[#EEEEE7]">
+      <div className="text-sm text-[#6C726B]">
         Өрөөний төлөвлөгчийг ачаалж байна…
       </div>
     </div>

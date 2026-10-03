@@ -11,7 +11,6 @@ import { setCartOwner } from "@/store/cart";
 import { setWishlistOwner } from "@/store/wishlist";
 import { setDesignOwner } from "@/store/designs";
 import { setKitchenOwner } from "@/store/kitchens";
-import { setRoomProjectOwner } from "@/store/roomProjects";
 
 import { rememberAuthDestination } from "@/lib/authRedirect";
 import { authErrorMessage } from "@/lib/authErrors";
@@ -42,8 +41,6 @@ interface AuthState {
 
 let authListenerStarted = false;
 let initialization: Promise<void> | null = null;
-let authResolution = 0;
-let authResolutionOwner: string | null = null;
 
 const toAppUser = (user: SupabaseUser): User => ({
   id: user.id,
@@ -61,12 +58,9 @@ function setLocalDataOwner(user: SupabaseUser | null) {
   setWishlistOwner(userId);
   setDesignOwner(userId);
   setKitchenOwner(userId);
-  setRoomProjectOwner(userId);
 }
 
 async function resolveAuthUser(user: SupabaseUser | null) {
-  const epoch = ++authResolution;
-  authResolutionOwner = user?.id ?? null;
   setLocalDataOwner(user);
 
   if (!user) {
@@ -81,7 +75,6 @@ async function resolveAuthUser(user: SupabaseUser | null) {
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
-  if (epoch !== authResolution) return null;
 
   return {
     user: toAppUser(user),
@@ -110,14 +103,14 @@ export const useAuth = create<AuthState>((set, get) => ({
       }
       const { data } = await supabase.auth.getSession();
       const resolved = await resolveAuthUser(data.session?.user ?? null);
-      if (resolved) set({ ...resolved, initialized: true });
+      set({ ...resolved, initialized: true });
 
       if (!authListenerStarted) {
         authListenerStarted = true;
         supabase.auth.onAuthStateChange((_event, session) => {
           window.setTimeout(() => {
             void resolveAuthUser(session?.user ?? null).then((nextAuth) => {
-              if (nextAuth) set({ ...nextAuth, initialized: true });
+              set({ ...nextAuth, initialized: true });
             });
           }, 0);
         });
@@ -146,7 +139,6 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
 
     const resolved = await resolveAuthUser(data.user);
-    if (!resolved) return { error: authResolutionOwner === data.user?.id ? null : "Хэрэглэгч өөрчлөгдсөн байна. Нэвтрэх төлөвөө дахин шалгана уу." };
 
     set({
       ...resolved,
@@ -173,7 +165,10 @@ export const useAuth = create<AuthState>((set, get) => ({
     if (data.session && data.user) {
       const resolved = await resolveAuthUser(data.user);
 
-      if (resolved) set({ ...resolved, initialized: true });
+      set({
+        ...resolved,
+        initialized: true,
+      });
     }
 
     return {
@@ -183,8 +178,6 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
 signOut: async () => {
-  ++authResolution;
-  authResolutionOwner = null;
   await supabase.auth.signOut();
   setLocalDataOwner(null);
 
