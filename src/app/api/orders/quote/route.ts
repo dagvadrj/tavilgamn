@@ -3,11 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/supabase/requireUser";
 import { isRecord, OrderInputError, parseSelections } from "@/lib/orderValidation";
 import { quoteOrder } from "@/lib/orderService";
+import { enforceApiRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
   try {
     const auth = await requireUser(request);
     if (auth.error) return auth.error;
+    const rateLimitResponse = await enforceApiRateLimit(request, auth.userId);
+    if (rateLimitResponse) return rateLimitResponse;
     const body: unknown = await request.json();
     const items = parseSelections(isRecord(body) ? body.items : null);
     return NextResponse.json(await quoteOrder(items), { headers: { "Cache-Control": "no-store" } });

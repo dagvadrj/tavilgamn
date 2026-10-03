@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { uploadCloudinaryImage } from "@/lib/cloudinaryImageUpload";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/supabase/requireUser";
+import { enforceApiRateLimit } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "no-store" };
@@ -12,6 +13,8 @@ const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const routeParams = await params;
   const auth = await requireUser(request); if (auth.error) return auth.error;
+  const rateLimitResponse = await enforceApiRateLimit(request, auth.userId);
+  if (rateLimitResponse) return rateLimitResponse;
   if (!UUID.test(routeParams.id)) return apiErrorResponse({ error: "Загварын ID буруу байна." }, { status: 400, headers });
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > 6_000_000) return apiErrorResponse({ error: "Зураг 5MB-аас их байна." }, { status: 413, headers });

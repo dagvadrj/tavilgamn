@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { OrderHistory } from "@/components/OrderHistory";
 import { SavedKitchenList } from "@/components/SavedKitchenList";
+import { SavedRoomList } from "@/components/SavedRoomList";
 import { KitchenQuoteHistory } from "@/components/KitchenQuoteHistory";
 import { useAuth } from "@/store/auth";
 import { useWishlist } from "@/store/wishlist";
@@ -49,34 +50,30 @@ export default function AccountPage() {
 
   if (!initialized || !user) {
     return (
-      <div className="grid min-h-[50vh] place-items-center text-sm text-[#6C726B]">
+      <div className="grid min-h-[50vh] place-items-center text-sm text-[color:var(--market-muted,#6C726B)]">
         Хэрэглэгчийн мэдээллийг ачаалж байна…
       </div>
     );
   }
   return (
-    <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[260px_1fr]">
-      <aside>
-        <div className="rounded-lg border border-[#293C32]/10 bg-[#27292d] p-6">
-          <div className="grid h-16 w-16 place-items-center rounded-full bg-[#EEEEE7] font-mono text-2xl text-[#293C32]">
-            {user.name[0]?.toUpperCase()}
+    <div className="shop-container account-layout">
+      <aside className="account-sidebar shop-panel">
+        <div className="account-identity">
+          <div className="account-avatar" aria-hidden="true">
+            {user.name.trim()[0]?.toUpperCase() || "Х"}
           </div>
+          <strong>{user.name}</strong>
+          <p>{user.email}</p>
         </div>
-        <nav className="mt-4 space-y-1 text-sm">
+        <nav className="account-navigation" aria-label="Миний бүртгэлийн цэс">
           {role === "admin" && (
-            <Link
-              href="/admin"
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"
-            >
+            <Link href="/admin" className="font-medium">
               <LayoutGrid className="h-4 w-4" />
               Удирдлага
             </Link>
           )}
           {role === "merchant" && (
-            <Link
-              href="/merchant"
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"
-            >
+            <Link href="/merchant" className="font-medium">
               <Store className="h-4 w-4" />
               Миний дэлгүүр
             </Link>
@@ -97,11 +94,7 @@ export default function AccountPage() {
             { href: "/wishlist", label: "Хүслийн жагсаалт", icon: Heart },
             { href: "#profile", label: "Профайл", icon: User },
           ].map((n) => (
-            <a
-              key={n.href}
-              href={n.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#6C726B] hover:bg-[#27292d]/5 hover:text-[#293C32]"
-            >
+            <a key={n.href} href={n.href}>
               <n.icon className="h-4 w-4" />
               {n.label}
             </a>
@@ -113,32 +106,38 @@ export default function AccountPage() {
             router.replace("/login");
             router.refresh();
           }}
-          className="mt-6 inline-flex items-center gap-2 text-sm text-[#a395ff] hover:text-white"
+          type="button"
+          className="account-signout"
         >
           <LogOut className="h-4 w-4" /> Гарах
         </button>
       </aside>
 
-      <div className="space-y-10">
-        <section
-          id="profile"
-          className="scroll-mt-24 rounded-lg border border-[#293C32]/10 bg-[#27292d] p-6"
-        >
-          <h1 className="text-3xl text-white">Профайл</h1>
+      <div className="account-content">
+        <header>
+          <p className="account-eyebrow">ТАНЫ ОРОН ЗАЙ</p>
+          <h1 className="font-semibold">Миний бүртгэл</h1>
+          <p className="shop-muted mt-2 text-sm">
+            Загвар, захиалга болон хадгалсан тавилгаа нэг дороос.
+          </p>
+        </header>
+        <section id="profile" className="shop-panel">
+          <div className="account-section-heading">
+            <h2>Профайл</h2>
+            <User size={20} className="shop-muted" aria-hidden="true" />
+          </div>
           <dl className="mt-6 grid gap-5 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-[#ded6ff]">Нэр</dt>
-              <dd className="mt-1 font-medium">{user.name}</dd>
+              <dt className="shop-muted">Нэр</dt>
+              <dd className="mt-1 break-words font-medium">{user.name}</dd>
             </div>
             <div>
-              <dt className="text-[#ded6ff]">Имэйл</dt>
-              <dd className="mt-1 break-all text-white font-medium">
-                {user.email}
-              </dd>
+              <dt className="shop-muted">Имэйл</dt>
+              <dd className="mt-1 break-all font-medium">{user.email}</dd>
             </div>
           </dl>
         </section>
-        <section id="designs">
+        <section id="designs" className="shop-panel">
           {(catalog.loading || !catalog.ready) && (
             <CatalogStatus
               loading={catalog.loading}
@@ -146,29 +145,27 @@ export default function AccountPage() {
               retry={() => void catalog.refresh()}
             />
           )}
-          <div className="flex items-end justify-between">
+          <div className="account-section-heading">
             <div>
-              <p className="font-mono text-xs uppercase tracking-wide text-white">
-                Хадгалсан өрөөний загвар
-              </p>
-              <h2 className="text-3xl text-white">Таны загварууд</h2>
+              <p className="account-eyebrow">Өрөөний загвар</p>
+              <h2>Таны загварууд</h2>
             </div>
-            <Link
-              href="/planner"
-              className="rounded bg-[#27292d] px-6 py-3 text-sm font-medium text-[#FFFFFF] hover:bg-[#3C5446] transition inline-flex items-center gap-2"
-            >
+            <Link href="/planner" className="btn-primary">
               Шинэ загвар
             </Link>
           </div>
+          <SavedRoomList />
+          <h3 className="mt-6 mb-3">Энэ төхөөрөмжийн загварууд</h3>
           {designs.length === 0 ? (
-            <div className="mt-6 rounded-lg border border-dashed border-[#293C32]/20 p-12 text-center">
-              <p className="text-sm text-white">
+            <div className="shop-empty !px-5 !py-8">
+              <LayoutGrid size={28} aria-hidden="true" />
+              <p>
                 Та одоохондоо ямар нэг загвар хадгалаагүй байна. Төлөвлөгч дээр
                 эхний загвараа үүсгэнэ үү.
               </p>
             </div>
           ) : (
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 xl:grid-cols-2">
               {designs.map((d) => {
                 const total = d.pieces.reduce((sum, piece) => {
                   const product = getProduct(piece.productId);
@@ -181,19 +178,16 @@ export default function AccountPage() {
                   );
                 }, 0);
                 return (
-                  <div
-                    key={d.id}
-                    className="flex justify-between rounded-lg border border-[#293C32]/10 bg-[#FFFFFF] p-5"
-                  >
+                  <div key={d.id} className="account-design-card">
                     <div>
                       <p className="font-medium">{d.name}</p>
-                      <p className="mt-1 text-xs text-[#737D6C]">
+                      <p className="mt-1 text-xs text-[color:var(--market-muted,#737D6C)]">
                         {d.pieces.length} тавилга ·{" "}
                         {catalog.ready
                           ? formatPrice(total)
                           : "Үнэ ачаалагдаагүй"}
                       </p>
-                      <p className="mt-1 text-xs text-[#737D6C]/70">
+                      <p className="mt-1 text-xs text-[color:var(--market-muted,#737D6C)]">
                         Сүүлд шинэчилсэн{" "}
                         {new Date(d.updatedAt).toLocaleDateString("mn-MN", {
                           month: "short",
@@ -206,7 +200,7 @@ export default function AccountPage() {
                         href="/planner"
                         onClick={() => loadDesign(d.id)}
                         aria-label={`${d.name} загварыг нээх`}
-                        className="grid h-9 w-9 place-items-center rounded-full border border-[#293C32]/12 hover:bg-[#293C32]/5"
+                        className="account-icon-button"
                       >
                         <Maximize className="h-4 w-4" />
                       </Link>
@@ -221,7 +215,8 @@ export default function AccountPage() {
                           }
                         }}
                         aria-label={`${d.name} загварыг устгах`}
-                        className="grid h-9 w-9 place-items-center rounded-full border border-[#293C32]/12 text-[#AD6547] hover:bg-[#AD6547]/5"
+                        type="button"
+                        className="account-icon-button delete"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -233,28 +228,28 @@ export default function AccountPage() {
           )}
         </section>
 
-        <section id="kitchen-garniture" className="scroll-mt-24">
-          <h2 className="mb-5 text-3xl text-white">
-            Миний гал тогооны гарнитур
-          </h2>
+        <section id="kitchen-garniture" className="shop-panel">
+          <div className="account-section-heading">
+            <h2>Миний гал тогооны гарнитур</h2>
+          </div>
           <SavedKitchenList />
         </section>
-        <section id="kitchen-quotes" className="scroll-mt-24">
-          <p className="font-mono text-xs uppercase tracking-wide text-white">
-            Marketplace
-          </p>
-          <h2 className="mb-5 text-3xl text-white">Гал тогооны үнийн хүсэлт</h2>
+        <section id="kitchen-quotes" className="shop-panel">
+          <p className="account-eyebrow">Marketplace</p>
+          <div className="account-section-heading">
+            <h2>Гал тогооны үнийн хүсэлт</h2>
+          </div>
           <KitchenQuoteHistory />
         </section>
-        <section id="orders">
-          <p className="font-mono text-xs uppercase tracking-wide text-white">
-            Захиалгын түүх
-          </p>
-          <h2 className="text-3xl text-white">Захиалга</h2>
+        <section id="orders" className="shop-panel">
+          <p className="account-eyebrow">Захиалгын түүх</p>
+          <div className="account-section-heading">
+            <h2>Захиалга</h2>
+          </div>
           <OrderHistory />
         </section>
 
-        <section id="wishlist">
+        <section id="wishlist" className="shop-panel">
           {(catalog.loading || !catalog.ready) && (
             <CatalogStatus
               loading={catalog.loading}
@@ -262,12 +257,22 @@ export default function AccountPage() {
               retry={() => void catalog.refresh()}
             />
           )}
-          <p className="font-mono text-xs uppercase tracking-wide text-white">
-            Хүслийн жагсаалт
-          </p>
-          <h2 className="text-3xl text-white">
-            {wishlist.length} тавилга хадгалсан
-          </h2>
+          <p className="account-eyebrow">Хүслийн жагсаалт</p>
+          <div className="account-section-heading">
+            <h2>{wishlist.length} тавилга хадгалсан</h2>
+            <Link href="/wishlist" className="text-link">
+              Бүгдийг үзэх
+            </Link>
+          </div>
+          {wishlist.length === 0 && (
+            <div className="shop-empty !py-8">
+              <Heart size={28} aria-hidden="true" />
+              <p>Таалагдсан тавилгаа хадгалаад эндээс дахин олоорой.</p>
+              <Link href="/catalog" className="btn-ghost">
+                Тавилга үзэх
+              </Link>
+            </div>
+          )}
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
             {wishlist.slice(0, 4).map((w) => {
               const product = getProduct(w.productId);
@@ -278,7 +283,7 @@ export default function AccountPage() {
                   href={`/product/${product.id}`}
                   className="group"
                 >
-                  <div className="relative aspect-square overflow-hidden rounded-xl bg-[#EEEEE7]">
+                  <div className="relative aspect-square overflow-hidden rounded-xl bg-[var(--market-hover,#EEEEE7)]">
                     <Image
                       src={product.image}
                       alt={product.name}

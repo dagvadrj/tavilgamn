@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { enforceApiRateLimit } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,8 @@ async function readMetric(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimitResponse = await enforceApiRateLimit(request);
+  if (rateLimitResponse) return rateLimitResponse;
   const origin = request.headers.get("origin");
   const length = Number(request.headers.get("content-length") ?? 0);
   if (

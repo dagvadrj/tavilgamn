@@ -8,6 +8,7 @@ import { ModelOptionsError, parseModelColors, parseModelMaterials } from "@/lib/
 import { removeStoredModelFiles } from "@/lib/r2Models";
 import { CloudinaryModelError, uploadModelAsset } from "@/lib/cloudinaryModels";
 import { isCategory } from "@/lib/catalogCategories";
+import { enforceApiRateLimit } from "@/lib/rateLimit";
 const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024;
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -18,6 +19,8 @@ export async function POST(request: NextRequest) {
   if (adminAuth.error) {
     return adminAuth.error;
   }
+  const rateLimitResponse = await enforceApiRateLimit(request, adminAuth.userId);
+  if (rateLimitResponse) return rateLimitResponse;
 
   const supabase = getSupabaseAdmin();
   const uploadedPaths: string[] = [];

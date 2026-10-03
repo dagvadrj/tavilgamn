@@ -2,8 +2,11 @@ import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { parseContact } from "@/lib/contact";
+import { enforceApiRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
+  const rateLimitResponse = await enforceApiRateLimit(request);
+  if (rateLimitResponse) return rateLimitResponse;
   const headers = { "Cache-Control": "no-store" };
   let contact;
   try {

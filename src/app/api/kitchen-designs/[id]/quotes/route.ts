@@ -6,6 +6,7 @@ import {
 } from "@/lib/kitchenMarketplaceHttp";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/supabase/requireUser";
+import { enforceApiRateLimit } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,8 @@ export async function POST(
   try {
     const auth = await requireUser(request);
     if (auth.error) return auth.error;
+    const rateLimitResponse = await enforceApiRateLimit(request, auth.userId);
+    if (rateLimitResponse) return rateLimitResponse;
 
     const input = readKitchenQuoteRequest(
       routeParams.id,

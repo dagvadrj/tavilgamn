@@ -1,9 +1,12 @@
 "use client";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { RoomDesign, RoomSize, PlacedFurniture, RoomType } from "@/lib/types";
 import { activateDesignRoom, DEFAULT_FLOOR_MATERIAL, LEGACY_FLOOR_MATERIAL, newDesignRoom, syncDesignRooms } from "@/lib/roomDesign";
 import { ROOM_TYPES } from "@/lib/roomGeometry";
+import { parseRoomDesign, roomDocument, roomSignature } from "@/lib/roomProjectValidation";
+import type { RoomProject } from "@/lib/roomProjects";
+import { readRoomLocalState, roomStorage } from "@/lib/roomLocalStorage";
 
 export const ROOM_DIMENSIONS: Record<RoomSize, { w: number; d: number }> = {
   "40": { w: 6.3, d: 6.3 },
@@ -12,6 +15,12 @@ export const ROOM_DIMENSIONS: Record<RoomSize, { w: number; d: number }> = {
 };
 
 interface DesignState {
+  owner: string | null;
+  cloudLinks: Record<string, { id: string; revision: number; signature: string }>;
+  openCloud: (project: RoomProject) => void;
+  recordCloudSave: (localId: string, project: RoomProject) => void;
+  prepareCloudSave: (localId: string) => { id: string; revision: number; signature: string };
+  replaceCurrent: (design: RoomDesign) => void;
   designs: RoomDesign[];
   /** the design currently being edited */
   current: RoomDesign | null;
@@ -57,6 +66,34 @@ const blankDesign = (size: RoomSize, name = "Untitled Room", roomType?: RoomType
 export const useDesigns = create<DesignState>()(
   persist(
     (set, get) => ({
+      owner: null, cloudLinks: {},
+      prepareCloudSave: localId => {
+        const existing = get().cloudLinks[localId]; if (existing) return existing;
+        const link = { id: crypto.randomUUID(), revision: 0, signature: "" };
+        set({ cloudLinks: { ...get().cloudLinks, [localId]: link } }); return link;
+      },
+      replaceCurrent: design => {
+        get().endEdit(); const current = get().current;
+        set({ current: cloneDesign(design), past: current ? [...get().past, cloneDesign(current)].slice(-60) : [], future: [], transaction: null });
+      },
+      openCloud: project => {
+        const previous = get().current, link = previous ? get().cloudLinks[previous.id] : undefined;
+        let dirty = false;
+        if (previous && link) {
+          try { dirty = roomSignature(roomDocument(previous)) !== link.signature; } catch { dirty = true; }
+        }
+        if (get().current) get().saveCurrent();
+        const next = parseRoomDesign({ ...project.document.design, name: project.name });
+        if (previous && dirty && previous.id === next.id) {
+          // A later save of the reopened project must not replace this recovery copy.
+          set({ designs: get().designs.map(design => design.id === previous.id
+            ? { ...design, id: createDesignId(), name: `${design.name.slice(0, 84)} (local draft)` } : design) });
+        }
+        set({ current: next, past: [], future: [], transaction: null,
+          cloudLinks: { ...get().cloudLinks, [next.id]: { id: project.id, revision: project.revision, signature: roomSignature(project.document) } } });
+      },
+      recordCloudSave: (localId, project) => set({ cloudLinks: { ...get().cloudLinks,
+        [localId]: { id: project.id, revision: project.revision, signature: roomSignature(project.document) } } }),
       designs: [],
       current: null,
       past: [],
@@ -84,7 +121,10 @@ export const useDesigns = create<DesignState>()(
         if (!current || !future.length) return;
         set({ current: cloneDesign(future[0]), past: [...past, cloneDesign(current)].slice(-60), future: future.slice(1) });
       },
-      createNew: (size, name, roomType) => set({ current: blankDesign(size, name, roomType), past: [], future: [], transaction: null }),
+      createNew: (size, name, roomType) => {
+        if (get().current) get().saveCurrent();
+        set({ current: blankDesign(size, name, roomType), past: [], future: [], transaction: null });
+      },
       addRoom: (type) => {
         get().endEdit();
         const current = get().current;
@@ -178,10 +218,11 @@ export const useDesigns = create<DesignState>()(
         });
       },
     }),
-    { name: "casa-designs-guest", partialize: ({ designs, current }) => ({ designs, current }),
+    { name: "casa-designs-guest", storage: createJSONStorage(() => roomStorage),
+      partialize: ({ designs, current, cloudLinks }) => ({ schemaVersion: 1, designs, current, cloudLinks }),
       merge: (persisted, state) => {
         const saved = persisted as Partial<DesignState> | undefined;
-        return { ...state, designs: saved?.designs?.map(cloneDesign) ?? [], current: saved?.current ? cloneDesign(saved.current) : null };
+        return { ...state, designs: saved?.designs?.map(cloneDesign) ?? [], current: saved?.current ? cloneDesign(saved.current) : null, cloudLinks: saved?.cloudLinks ?? {} };
       },
     },
   ),
@@ -195,28 +236,17 @@ export function setDesignOwner(userId: string | null) {
   if (useDesigns.persist.getOptions().name === storageName && useDesigns.persist.hasHydrated()) return;
   let designs: RoomDesign[] = [];
   let current: RoomDesign | null = null;
+  let cloudLinks: DesignState["cloudLinks"] = {};
 
   try {
-    const saved = window.localStorage.getItem(storageName);
-    const parsed = saved
-      ? (JSON.parse(saved) as {
-          state?: {
-            designs?: RoomDesign[];
-            current?: RoomDesign | null;
-          };
-        })
-      : null;
-
-    if (Array.isArray(parsed?.state?.designs)) {
-      designs = parsed.state.designs.map(cloneDesign);
-    }
-
-    current = parsed?.state?.current ? cloneDesign(parsed.state.current) : null;
+    const saved = roomStorage.getItem(storageName);
+    const parsed = saved ? readRoomLocalState(saved) : null;
+    designs = parsed?.designs ?? []; current = parsed?.current ?? null; cloudLinks = parsed?.cloudLinks ?? {};
   } catch {
     designs = [];
     current = null;
   }
 
   useDesigns.persist.setOptions({ name: storageName });
-  useDesigns.setState({ designs, current, past: [], future: [], transaction: null });
+  useDesigns.setState({ owner: userId, designs, current, cloudLinks, past: [], future: [], transaction: null });
 }

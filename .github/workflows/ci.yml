@@ -14,8 +14,14 @@ jobs:
     timeout-minutes: 25
     env:
       APP_URL: https://ci.example.com
+      APP_ENV: staging
+      NEXT_DIST_DIR: .next-dashboard-reference-build
+      NEXT_PUBLIC_APP_ENV: staging
+      PRODUCTION_SUPABASE_PROJECT_REF: prodabcdefghijklmnop
+      STAGING_SUPABASE_PROJECT_REF: testabcdefghijklmnop
+      CRON_SECRET: ci-placeholder-not-a-real-secret-00000000
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
-      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_URL: https://testabcdefghijklmnop.supabase.co
       SUPABASE_SECRET_KEY: sb_secret_ci_placeholder
     steps:
       - uses: actions/checkout@v4
@@ -27,5 +33,38 @@ jobs:
       - run: npm run env:check:production
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run docs:check
       - run: npm test
       - run: npm run build
+        env:
+          APP_URL: http://127.0.0.1:3001
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:45432
+          NEXT_PUBLIC_TELEMETRY_SAMPLE_RATE: "0"
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:release:browser -- --fixtures
+        env:
+          PHASE6_FIXTURE_BUILD: "1"
+      - run: npm run test:planners:browser -- --fixtures
+        env:
+          PHASE6_FIXTURE_BUILD: "1"
+      - run: npm run test:projects:browser -- --fixtures
+        env:
+          PHASE6_FIXTURE_BUILD: "1"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase6-browser-report
+          path: .tools/phase6-browser/
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase7-planner-report
+          path: .tools/phase7-planners/
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase8-project-report
+          path: .tools/phase8-projects/
+          retention-days: 7
