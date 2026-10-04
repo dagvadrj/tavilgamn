@@ -5,6 +5,7 @@ export type GlbDimensions = { widthMm: number; heightMm: number; depthMm: number
 export type GlbInspection = {
   standard: string; bytes: number; dimensions: GlbDimensions; min: number[]; max: number[];
   meshes: number; materials: number; triangles: number; transformsApplied: boolean;
+  bottomCentered: boolean; compressed: boolean; warnings: string[];
   /** Explicitly confirmed front handle projection; module depth is carcass depth. */
   frontProjectionMm?: number;
 };
@@ -105,13 +106,14 @@ export function inspectGlb(bytes: ArrayBuffer): GlbInspection {
   for (const root of scene.nodes) walk(root, new Matrix4(), 0);
   const size = bounds.getSize(new Vector3()), center = bounds.getCenter(new Vector3());
   if (![size.x, size.y, size.z].every(value => Number.isFinite(value) && value > 0.000001) || !placedMeshes) fail("GLB dimensions хоосон/буруу байна.");
+  const bottomCentered = Math.max(Math.abs(center.x), Math.abs(bounds.min.y), Math.abs(center.z)) <= GLB_STANDARD.originToleranceMm / 1000;
   const warnings = ["+Y дээш, +Z нүүрэн талыг preview дээр хүн батална."];
   if (compressed) warnings.push("Compressed POSITION bounds-ийг worker decode хийж дахин шалгана.");
   for (const [kind, values] of [["mesh", gltf.meshes], ["material", gltf.materials ?? []]] as const) {
     const names = values.map(value => value.name ?? "");
     if (names.some(name => !/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/.test(name)) || new Set(names).size !== names.length) warnings.push(`${kind} нэрийг ASCII, unique, surface зориулалтаар нэрлэнэ.`);
   }
-  return { standard: GLB_STANDARD.version, bytes: bytes.byteLength, dimensions: { widthMm: size.x * 1000, heightMm: size.y * 1000, depthMm: size.z * 1000 }, min: bounds.min.toArray(), max: bounds.max.toArray(), meshes: placedMeshes, materials: gltf.materials?.length ?? 0, triangles, transformsApplied: applied};
+  return { standard: GLB_STANDARD.version, bytes: bytes.byteLength, dimensions: { widthMm: size.x * 1000, heightMm: size.y * 1000, depthMm: size.z * 1000 }, min: bounds.min.toArray(), max: bounds.max.toArray(), meshes: placedMeshes, materials: gltf.materials?.length ?? 0, triangles, transformsApplied: applied, bottomCentered, compressed, warnings };
 }
 
 export function validateCabinetGlb(report: GlbInspection, expected: GlbDimensions) {
@@ -122,5 +124,7 @@ export function validateCabinetGlb(report: GlbInspection, expected: GlbDimension
     const required = expected[key] + (key === "depthMm" ? projection : 0);
     if (!Number.isFinite(required) || Math.abs(report.dimensions[key] - required) > GLB_STANDARD.dimensionToleranceMm) errors.push(`${key}: GLB ${Math.round(report.dimensions[key])} мм / module ${expected[key]} мм${key === "depthMm" && projection ? ` + бариул ${projection} мм` : ""}.`);
   }
+  if (!report.bottomCentered) errors.push("Origin доод төвд биш. Blender дээр origin/geometry-г засна уу.");
+  if (!report.transformsApplied) errors.push("Node transform applied биш. Rotation, scale, translation-ийг mesh vertex-д bake хийнэ үү.");
   return errors;
 }
