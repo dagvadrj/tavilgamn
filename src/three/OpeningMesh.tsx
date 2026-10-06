@@ -7,6 +7,7 @@ import * as THREE from "three";
 import type { RoomDesign, RoomOpening } from "@/lib/types";
 import { openingWorldTransform, validateOpening, wallLength } from "@/lib/roomOpenings";
 import { animateToward } from "./demandAnimation";
+import { SCENE_NAVIGATION_START, isSceneNavigationGesture } from "./sceneNavigation";
 
 const noRaycast = () => {};
 type CaptureTarget = { setPointerCapture?: (id: number) => void; releasePointerCapture?: (id: number) => void };
@@ -192,19 +193,22 @@ export function OpeningMesh(props: OpeningMeshProps) {
     window.addEventListener("pointercancel", finish);
     const blur = () => finish();
     window.addEventListener("blur", blur);
+    gl.domElement.addEventListener(SCENE_NAVIGATION_START, blur);
     return () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", finish);
       window.removeEventListener("pointercancel", finish);
       window.removeEventListener("blur", blur);
+      gl.domElement.removeEventListener(SCENE_NAVIGATION_START, blur);
       finish();
     };
-  }, []);
+  }, [gl.domElement]);
 
   useEffect(() => { if (invalid) onError?.(invalid); }, [invalid, onError]);
 
   const start = (event: ThreeEvent<PointerEvent>) => {
     if (event.button !== 0) return;
+    if (event.pointerType === "touch" && isSceneNavigationGesture(gl.domElement)) return;
     event.stopPropagation();
     onSelect?.(opening.id);
     if (!onUpdate) return;

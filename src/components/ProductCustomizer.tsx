@@ -31,7 +31,10 @@ import type { Group } from "three";
 import { ProductScaleHUD } from "./ProductScaleHUD";
 import { ProductInstallments } from "./ProductInstallments";
 
-const ProductAR = dynamic(() => import("./ProductAR").then(module => module.ProductAR), { ssr: false });
+const ProductAR = dynamic(
+  () => import("./ProductAR").then((module) => module.ProductAR),
+  { ssr: false },
+);
 
 const ProductViewer = dynamic(
   () => import("@/three/ProductViewer").then((m) => m.ProductViewer),
@@ -46,18 +49,39 @@ function ViewerSkeleton() {
   );
 }
 
-export function ProductCustomizer({ product, initialView3D = false, initialColor }: { product: Product; initialView3D?: boolean; initialColor?: string }) {
+export function ProductCustomizer({
+  product,
+  initialView3D = false,
+  initialColor,
+}: {
+  product: Product;
+  initialView3D?: boolean;
+  initialColor?: string;
+}) {
   const galleryImages = useMemo(
     () => Array.from(new Set([product.image, ...(product.images ?? [])])),
     [product.image, product.images],
   );
-  const [color, setColor] = useState(product.colors.some(option => option.id === initialColor) ? initialColor! : product.defaultColor);
+  const [color, setColor] = useState(
+    product.colors.some((option) => option.id === initialColor)
+      ? initialColor!
+      : product.defaultColor,
+  );
   const [viewerActive, setViewerActive] = useState(initialView3D);
   const [arScene, setArScene] = useState<Group | null>(null);
   const [arOpen, setArOpen] = useState(false);
-  const handleRootReady = useCallback((root: Group | null) => setArScene(root), []);
-  const openAR = () => { if (!product.model) return; setViewerActive(true); setArOpen(true); };
-  useEffect(() => { if (initialView3D) setViewerActive(true); }, [initialView3D]);
+  const handleRootReady = useCallback(
+    (root: Group | null) => setArScene(root),
+    [],
+  );
+  const openAR = () => {
+    if (!product.model) return;
+    setViewerActive(true);
+    setArOpen(true);
+  };
+  useEffect(() => {
+    if (initialView3D) setViewerActive(true);
+  }, [initialView3D]);
   const [material, setMaterial] = useState(product.materials[0].id);
   const [qty, setQty] = useState(1);
   const [selectedImage, setSelectedImage] = useState(galleryImages[0]);
@@ -75,7 +99,10 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
     if (!product.promotionEndsAt) return;
     const expires = Date.parse(product.promotionEndsAt);
     if (!Number.isFinite(expires) || expires <= Date.now()) return;
-    const timer = window.setTimeout(() => setOfferNow(Date.now()), Math.max(0, Math.min(expires - Date.now() + 50, 2_147_483_647)));
+    const timer = window.setTimeout(
+      () => setOfferNow(Date.now()),
+      Math.max(0, Math.min(expires - Date.now() + 50, 2_147_483_647)),
+    );
     return () => window.clearTimeout(timer);
   }, [product.promotionEndsAt, offerNow]);
   useEffect(() => {
@@ -153,7 +180,14 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
 
   return (
     <section className="shop-container pdp-experience py-5 sm:py-8">
-      {arOpen && <ProductAR scene={arScene} name={product.name} selectionKey={`${color}:${material}`} close={() => setArOpen(false)} />}
+      {arOpen && (
+        <ProductAR
+          scene={arScene}
+          name={product.name}
+          selectionKey={`${color}:${material}`}
+          close={() => setArOpen(false)}
+        />
+      )}
       <nav className="breadcrumbs" aria-label="Хуудасны зам">
         <Link href="/">Нүүр</Link>
         <ChevronRight size={12} />
@@ -173,23 +207,47 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
                 <Box className="h-4 w-4 text-[#2563EB]" aria-hidden="true" />
                 {viewerActive ? "Интерактив 3D загвар" : "Барааны зураг"}
               </h2>
-              <div className="pdp-view-modes" role="group" aria-label="Бараа харах горим">
-                <button type="button" aria-pressed={!viewerActive} onClick={() => { setViewerActive(false); setViewerReady(false); setViewerError(false); }}><ImageIcon size={14} aria-hidden="true" />Фото</button>
-                <button type="button" aria-pressed={viewerActive} onClick={() => setViewerActive(true)}><Box size={14} aria-hidden="true" />3D</button>
+              <div
+                className="pdp-view-modes"
+                role="group"
+                aria-label="Бараа харах горим"
+              >
+                <button
+                  type="button"
+                  aria-pressed={!viewerActive}
+                  onClick={() => {
+                    setViewerActive(false);
+                    setViewerReady(false);
+                    setViewerError(false);
+                  }}
+                >
+                  <ImageIcon size={14} aria-hidden="true" />
+                  Фото
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={viewerActive}
+                  onClick={() => setViewerActive(true)}
+                >
+                  <Box size={14} aria-hidden="true" />
+                  3D
+                </button>
               </div>
             </div>
             <div className="product-gallery relative !aspect-[4/3] overflow-hidden lg:!min-h-[520px]">
-              {viewerActive && <ProductViewer
-                stockQuantity={product.stockQuantity}
-                model={product.model}
-                category={product.category}
-                color={colorHex}
-                material={material}
-                dimensions={product.dimensions}
-                onReady={handleViewerReady}
-                onError={handleViewerError}
-                onRootReady={handleRootReady}
-              />}
+              {viewerActive && (
+                <ProductViewer
+                  stockQuantity={product.stockQuantity}
+                  model={product.model}
+                  category={product.category}
+                  color={colorHex}
+                  material={material}
+                  dimensions={product.dimensions}
+                  onReady={handleViewerReady}
+                  onError={handleViewerError}
+                  onRootReady={handleRootReady}
+                />
+              )}
               <div
                 className={cn(
                   "pointer-events-none absolute inset-0 z-10 bg-[#F4F4F5] transition-opacity duration-700",
@@ -206,19 +264,35 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
                   className="object-cover"
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#111111]/45 to-transparent px-5 pb-5 pt-14 text-white">
-                  <p className="text-sm font-medium">{viewerActive ? "3D загварыг ачаалж байна…" : "Өнгө, хэмжээ, загвараа 3D-ээр хараарай"}</p>
-                  {viewerActive && <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/30">
-                    <span className="viewer-loading-bar block h-full w-1/3 rounded-full bg-white" />
-                  </div>}
+                  <p className="text-sm font-medium">
+                    {viewerActive
+                      ? "3D загварыг ачаалж байна…"
+                      : "Өнгө, хэмжээ, загвараа 3D-ээр хараарай"}
+                  </p>
+                  {viewerActive && (
+                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/30">
+                      <span className="viewer-loading-bar block h-full w-1/3 rounded-full bg-white" />
+                    </div>
+                  )}
                 </div>
               </div>
-              {!viewerActive && <button type="button" onClick={() => setViewerActive(true)} className="absolute left-1/2 top-1/2 z-20 inline-flex min-h-12 -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-medium text-[#111111] shadow-xl"><Box size={18} aria-hidden="true" />3D-ээр үзэх</button>}
+              {!viewerActive && (
+                <button
+                  type="button"
+                  onClick={() => setViewerActive(true)}
+                  className="absolute left-1/2 top-1/2 z-20 inline-flex min-h-12 -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-medium text-[#111111] shadow-xl"
+                >
+                  <Box size={18} aria-hidden="true" />
+                  3D-ээр үзэх
+                </button>
+              )}
               {viewerError && (
                 <p
                   className="pointer-events-none absolute inset-x-4 bottom-4 z-20 rounded-xl bg-white/95 px-4 py-3 text-center text-sm text-[#2563EB] shadow-lg"
                   role="status"
                 >
-                  3D загвар ачаалагдсангүй. Дэлгэц дээрх дахин ачаалах товчийг ашиглана уу.
+                  3D загвар ачаалагдсангүй. Дэлгэц дээрх дахин ачаалах товчийг
+                  ашиглана уу.
                 </p>
               )}
               <div
@@ -238,18 +312,43 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
             </div>
           </section>
           <div className="pdp-viewer-tools">
-            <p role="status">{selectedColor?.name} · {selectedMaterial?.name}<small>{viewerActive ? "Өнгө, материал 3D-д шууд шинэчлэгдэнэ" : "Өнгө эсвэл материал сонгоод 3D-д үзээрэй"}</small></p>
-            <button type="button" className="pdp-ar-entry" disabled={!product.model} onClick={openAR} aria-haspopup="dialog"><Camera size={18} aria-hidden="true" />Камераараа өрөөндөө байрлуулах (AR)</button>
-            {!product.model && <span className="pdp-ar-unavailable">AR ашиглахад барааны 3D модел шаардлагатай.</span>}
+            <p role="status">
+              {selectedColor?.name} · {selectedMaterial?.name}
+              <small>
+                {viewerActive
+                  ? "Өнгө, материал 3D-д шууд шинэчлэгдэнэ"
+                  : "Өнгө эсвэл материал сонгоод 3D-д үзээрэй"}
+              </small>
+            </p>
+            <button
+              type="button"
+              className="pdp-ar-entry"
+              disabled={!product.model}
+              onClick={openAR}
+              aria-haspopup="dialog"
+            >
+              <Camera size={18} aria-hidden="true" />
+              Камераараа өрөөндөө байрлуулах (AR)
+            </button>
+            {!product.model && (
+              <span className="pdp-ar-unavailable">
+                AR ашиглахад барааны 3D модел шаардлагатай.
+              </span>
+            )}
           </div>
 
           <section className="overflow-hidden rounded-[22px] border border-[#111111]/10 bg-white shadow-[0_18px_55px_rgba(17,17,17,.03)]">
             <div className="flex items-center justify-between gap-3 border-b border-[#111111]/10 px-4 py-4 sm:px-5">
               <h2 className="flex items-center gap-2 text-sm font-medium text-[#111111]">
-                <ImageIcon className="h-4 w-4 text-[#2563EB]" aria-hidden="true" />
+                <ImageIcon
+                  className="h-4 w-4 text-[#2563EB]"
+                  aria-hidden="true"
+                />
                 Барааны зургууд
               </h2>
-              <span className="text-xs text-[#68686F]">{galleryImages.length} зураг</span>
+              <span className="text-xs text-[#68686F]">
+                {galleryImages.length} зураг
+              </span>
             </div>
             <div className="relative aspect-[4/3] bg-[#F4F4F5]">
               <Image
@@ -261,7 +360,11 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
                 className="animate-[product-photo-in_.35s_ease-out] object-cover"
               />
             </div>
-            <div className="flex gap-3 overflow-x-auto p-4 sm:p-5" role="group" aria-label="Барааны зураг сонгох">
+            <div
+              className="flex gap-3 overflow-x-auto p-4 sm:p-5"
+              role="group"
+              aria-label="Барааны зураг сонгох"
+            >
               {galleryImages.map((image, index) => (
                 <button
                   key={image}
@@ -276,7 +379,13 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
                       : "border-transparent opacity-75 hover:opacity-100",
                   )}
                 >
-                  <Image src={image} alt="" fill sizes="112px" className="object-cover" />
+                  <Image
+                    src={image}
+                    alt=""
+                    fill
+                    sizes="112px"
+                    className="object-cover"
+                  />
                   <span className="absolute bottom-1.5 left-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-[#111111]/75 px-1 text-[10px] text-white">
                     {index + 1}
                   </span>
@@ -306,13 +415,19 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
             {product.name}
           </h1>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-[#111111]/10 pb-5">
-            {product.reviewCount > 0 ? <div className="flex items-center gap-1.5 text-sm text-[#68686F]">
-              <Star
-                className="h-4 w-4 fill-[#2563EB] text-[#2563EB]"
-                aria-hidden="true"
-              />
-              {product.rating} · {product.reviewCount} сэтгэгдэл
-            </div> : <span className="text-xs text-[#68686F]">Сэтгэгдэл хараахан байхгүй</span>}
+            {product.reviewCount > 0 ? (
+              <div className="flex items-center gap-1.5 text-sm text-[#68686F]">
+                <Star
+                  className="h-4 w-4 fill-[#2563EB] text-[#2563EB]"
+                  aria-hidden="true"
+                />
+                {product.rating} · {product.reviewCount} сэтгэгдэл
+              </div>
+            ) : (
+              <span className="text-xs text-[#68686F]">
+                Сэтгэгдэл хараахан байхгүй
+              </span>
+            )}
             <button
               type="button"
               onClick={() => toggleWish(product.id)}
@@ -340,15 +455,59 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
             <p className="mt-1 text-3xl font-semibold tabular-nums text-[#111111]">
               {formatPrice(price)}
             </p>
-            {offer.compareAtPrice != null && price === product.basePrice && <p className="mt-2 flex flex-wrap items-center gap-3 text-sm"><del className="text-[#68686F]">{formatPrice(offer.compareAtPrice)}</del>{offer.discountPercent && <span className="rounded-md bg-[#EFF6FF] px-2 py-1 text-xs font-medium text-[#2563EB]">−{offer.discountPercent}%</span>}</p>}
-            {offer.label && <p className="mt-2 text-sm text-[#2563EB]">{offer.label}{price !== product.basePrice && " · үндсэн загварын урамшуулал"}</p>}
+            {offer.compareAtPrice != null && price === product.basePrice && (
+              <p className="mt-2 flex flex-wrap items-center gap-3 text-sm">
+                <del className="text-[#68686F]">
+                  {formatPrice(offer.compareAtPrice)}
+                </del>
+                {offer.discountPercent && (
+                  <span className="rounded-md bg-[#EFF6FF] px-2 py-1 text-xs font-medium text-[#2563EB]">
+                    −{offer.discountPercent}%
+                  </span>
+                )}
+              </p>
+            )}
+            {offer.label && (
+              <p className="mt-2 text-sm text-[#2563EB]">
+                {offer.label}
+                {price !== product.basePrice && " · үндсэн загварын урамшуулал"}
+              </p>
+            )}
             <ProductInstallments total={price * qty} />
           </div>
 
           <p className="border-b border-[#111111]/10 pb-6 text-sm leading-7 text-[#68686F]">
             {product.description}
           </p>
-          <details className="mt-4 rounded-xl border border-[#111111]/10 bg-[#FAFAFA] p-4 text-sm"><summary className="cursor-pointer font-medium">Хүргэлт ба захиалгын нөхцөл</summary><div className="mt-3 space-y-2 text-xs leading-relaxed text-[#68686F]">{product.deliveryTerms && <p className="whitespace-pre-wrap break-words">Дэлгүүрийн нөхцөл: {product.deliveryTerms}</p>}<p>Хүргэлтийн төлбөр: захиалгын барааны дүн {formatPrice(FREE_SHIPPING_THRESHOLD)}-өөс бага бол {formatPrice(STANDARD_SHIPPING_FEE)}, түүнээс дээш бол 0₮. Баталгаажуулах дэлгэцийн нийт дүнг шалгана уу.</p><p>Хүргэлтэд гарахаас өмнө цуцлах хүсэлт гаргаж болно. Төлбөр төлсөн бол админ шалгаж, мөнгөний буцаалтыг тусад нь бүртгэнэ. Хүргэлтэд гарсан барааны буцаалтаар бидэнтэй холбоо барина уу.</p><Link className="inline-block min-h-11 pt-3 underline" href="/about#contact">Хүргэлтийн бүс, хугацааг лавлах</Link></div></details>
+          <details className="mt-4 rounded-xl border border-[#111111]/10 bg-[#FAFAFA] p-4 text-sm">
+            <summary className="cursor-pointer font-medium">
+              Хүргэлт ба захиалгын нөхцөл
+            </summary>
+            <div className="mt-3 space-y-2 text-xs leading-relaxed text-[#68686F]">
+              {product.deliveryTerms && (
+                <p className="whitespace-pre-wrap break-words">
+                  Дэлгүүрийн нөхцөл: {product.deliveryTerms}
+                </p>
+              )}
+              <p>
+                Хүргэлтийн төлбөр: захиалгын барааны дүн{" "}
+                {formatPrice(FREE_SHIPPING_THRESHOLD)}-өөс бага бол{" "}
+                {formatPrice(STANDARD_SHIPPING_FEE)}, түүнээс дээш бол 0₮.
+                Баталгаажуулах дэлгэцийн нийт дүнг шалгана уу.
+              </p>
+              <p>
+                Хүргэлтэд гарахаас өмнө цуцлах хүсэлт гаргаж болно. Төлбөр
+                төлсөн бол админ шалгаж, мөнгөний буцаалтыг тусад нь бүртгэнэ.
+                Хүргэлтэд гарсан барааны буцаалтаар бидэнтэй холбоо барина уу.
+              </p>
+              <Link
+                className="inline-block min-h-11 pt-3 underline"
+                href="/about#contact"
+              >
+                Хүргэлтийн бүс, хугацааг лавлах
+              </Link>
+            </div>
+          </details>
 
           <div className="border-b border-[#111111]/10 py-5">
             <div className="mb-3 flex items-center gap-2 text-sm font-medium">
@@ -375,17 +534,24 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
           <fieldset className="pt-6">
             <legend className="mb-3 flex w-full items-center justify-between gap-3 pr-1 text-sm font-medium">
               <span className="flex items-center gap-2">
-                <span className="grid h-6 w-6 place-items-center rounded-full bg-[#111111] text-[11px] text-white">1</span>
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-[#111111] text-[11px] text-white">
+                  1
+                </span>
                 Өнгө
               </span>
-              <span className="font-normal text-[#68686F]">{selectedColor?.name}</span>
+              <span className="font-normal text-[#68686F]">
+                {selectedColor?.name}
+              </span>
             </legend>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
               {product.colors.map((c) => (
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => { setColor(c.id); setViewerActive(true); }}
+                  onClick={() => {
+                    setColor(c.id);
+                    setViewerActive(true);
+                  }}
                   aria-pressed={color === c.id}
                   className={cn(
                     "relative inline-flex min-h-14 items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition",
@@ -400,7 +566,10 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
                   />
                   <span className="min-w-0 truncate">{c.name}</span>
                   {color === c.id && (
-                    <Check className="ml-auto h-3.5 w-3.5 shrink-0 text-[#2563EB]" aria-hidden="true" />
+                    <Check
+                      className="ml-auto h-3.5 w-3.5 shrink-0 text-[#2563EB]"
+                      aria-hidden="true"
+                    />
                   )}
                 </button>
               ))}
@@ -410,17 +579,24 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
           <fieldset className="mt-6 border-t border-[#111111]/10 pt-6">
             <legend className="mb-3 flex w-full items-center justify-between gap-3 pr-1 text-sm font-medium">
               <span className="flex items-center gap-2">
-                <span className="grid h-6 w-6 place-items-center rounded-full bg-[#111111] text-[11px] text-white">2</span>
+                <span className="grid h-6 w-6 place-items-center rounded-full bg-[#111111] text-[11px] text-white">
+                  2
+                </span>
                 Материал
               </span>
-              <span className="font-normal text-[#68686F]">{selectedMaterial?.name}</span>
+              <span className="font-normal text-[#68686F]">
+                {selectedMaterial?.name}
+              </span>
             </legend>
             <div className="grid gap-2">
               {product.materials.map((m) => (
                 <button
                   key={m.id}
                   type="button"
-                  onClick={() => { setMaterial(m.id); setViewerActive(true); }}
+                  onClick={() => {
+                    setMaterial(m.id);
+                    setViewerActive(true);
+                  }}
                   aria-pressed={material === m.id}
                   className={cn(
                     "flex min-h-12 items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm transition",
@@ -455,7 +631,9 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="flex items-center gap-2 text-sm font-medium">
-                  <span className="grid h-6 w-6 place-items-center rounded-full bg-[#111111] text-[11px] text-white">3</span>
+                  <span className="grid h-6 w-6 place-items-center rounded-full bg-[#111111] text-[11px] text-white">
+                    3
+                  </span>
                   Тоо ширхэг
                 </p>
                 <p className="mt-2 text-xs text-[#68686F]">
@@ -521,7 +699,10 @@ export function ProductCustomizer({ product, initialView3D = false, initialColor
                       ? "Сагсанд нэмэх"
                       : "Нөөц дууссан"}
               </button>
-              <Link href="/planner" className="pdp-room-link"><Box size={16} aria-hidden="true" />Өрөөнд үзэх</Link>
+              <Link href="/planner" className="pdp-room-link">
+                <Box size={16} aria-hidden="true" />
+                Өрөөнд үзэх
+              </Link>
             </div>
             {stockError && (
               <p role="alert" className="mt-3 text-sm text-red-700">

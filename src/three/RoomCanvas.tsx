@@ -42,6 +42,8 @@ import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
 import { CameraNavigation } from "./CameraNavigation";
 import type { CameraRequest } from "@/lib/plannerCamera";
+import { CursorNavigation } from "./CursorNavigationBinding";
+import { SCENE_NAVIGATION_START, isSceneNavigationGesture } from "./sceneNavigation";
 
 interface RoomCanvasProps {
   selectedWall?: RoomWall | null;
@@ -288,6 +290,7 @@ export function RoomCanvas({
           screenSpacePanning
           enableRotate
           enableZoom
+          zoomToCursor
           enableDamping
           dampingFactor={0.08}
           minDistance={0.8}
@@ -304,7 +307,8 @@ export function RoomCanvas({
           enableRotate={false}
           enablePan
           enableZoom
-          screenSpacePanning={false}
+          zoomToCursor
+          screenSpacePanning
           enableDamping
           dampingFactor={0.08}
           minDistance={4}
@@ -313,6 +317,7 @@ export function RoomCanvas({
       )}
       <CameraNavigation request={cameraRequest} plan={view === "plan"}
         bounds={{ width: spanX, depth: spanZ, height: roomHeight, centerX, centerZ }}/>
+      <CursorNavigation enabled={!locked} plan={view === "plan"} />
       </CameraMotionPreview>
     </Canvas>
   );
@@ -551,6 +556,7 @@ function DraggablePiece({
   const { camera, raycaster, gl } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const dragOffset = useRef(new THREE.Vector3());
+  const dragCapture = useRef<{ pointerId: number; target: Element } | null>(null);
   const product = getProduct(piece.productId);
   const dbModel = piece.modelId ? getDbModel(piece.modelId) : undefined;
   const [dragging, setDragging] = useState(false);
@@ -566,6 +572,9 @@ function DraggablePiece({
     if (!dragging) return;
 
     const finishDrag = () => {
+      const capture = dragCapture.current;
+      dragCapture.current = null;
+      try { capture?.target.releasePointerCapture?.(capture.pointerId); } catch { /* Capture may already be released. */ }
       setDragging(false);
       setInvalid(false);
       onDragChange(false);
@@ -574,14 +583,16 @@ function DraggablePiece({
 
     window.addEventListener("pointerup", finishDrag);
     window.addEventListener("pointercancel", finishDrag);
+    gl.domElement.addEventListener(SCENE_NAVIGATION_START, finishDrag);
 
     return () => {
       window.removeEventListener("pointerup", finishDrag);
       window.removeEventListener("pointercancel", finishDrag);
+      gl.domElement.removeEventListener(SCENE_NAVIGATION_START, finishDrag);
       onDragChange(false);
       onEditEnd?.();
     };
-  }, [dragging, onDragChange, onEditEnd]);
+  }, [dragging, onDragChange, onEditEnd, gl]);
 
   if (!product && !dbModel && !piece.kitchen) return null;
 
@@ -626,6 +637,7 @@ function DraggablePiece({
       }}
       onPointerDown={(event) => {
         if (event.button !== 0) return;
+        if (event.pointerType === "touch" && isSceneNavigationGesture(gl.domElement)) return;
         event.stopPropagation();
 
         if (measureMode) {
@@ -643,6 +655,7 @@ function DraggablePiece({
         onDragChange(true);
 
         (event.target as Element).setPointerCapture?.(event.pointerId);
+        dragCapture.current = { pointerId: event.pointerId, target: event.target as Element };
       }}
       onPointerMove={(e) => {
         if (!dragging || measureMode) return;

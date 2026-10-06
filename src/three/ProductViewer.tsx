@@ -10,9 +10,9 @@ import type { Product } from "@/lib/types";
 import { stockLabel } from "@/lib/inventory";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
-import { CameraMotionPreview } from "./CameraMotionPreview";
 import { ProductAppearance } from "./ProductAppearanceGroup";
 import type { Group } from "three";
+import { CursorNavigation } from "./CursorNavigationBinding";
 
 interface ProductViewerProps {
   stockQuantity?: number | null;
@@ -62,7 +62,6 @@ export function ProductViewer({
         className="!h-full !w-full"
         frameloop={performance.autoRotate ? "always" : "demand"}
       >
-        <CameraMotionPreview>
         <CanvasDiagnostics scene="product" />
         <color attach="background" args={["#EFE6D6"]} />
         <ambientLight intensity={0.55} />
@@ -106,14 +105,16 @@ export function ProductViewer({
         )}
         <Environment preset="apartment" />
         <OrbitControls
-          enablePan={false}
+          enablePan
+          screenSpacePanning
+          zoomToCursor
           minDistance={2}
           maxDistance={8}
           autoRotate={performance.autoRotate}
           autoRotateSpeed={0.45}
           makeDefault
         />
-        </CameraMotionPreview>
+        <CursorNavigation />
       </Canvas>
     </div>
   );

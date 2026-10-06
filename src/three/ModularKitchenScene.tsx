@@ -37,6 +37,8 @@ import { useRoomMaterial } from "./roomMaterials";
 import { KitchenExtraMesh } from "./KitchenExtraMesh";
 import { CameraNavigation } from "./CameraNavigation";
 import type { CameraRequest } from "@/lib/plannerCamera";
+import { CursorNavigation } from "./CursorNavigationBinding";
+import { SCENE_NAVIGATION_START, isSceneNavigationGesture } from "./sceneNavigation";
 
 export interface ModularSceneProps {
   exportRoot?: (root: Group | null) => void;
@@ -163,10 +165,12 @@ function Scene(props: ModularSceneProps) {
     window.addEventListener("keydown", escape);
     window.addEventListener("blur", cancel);
     gl.domElement.addEventListener("lostpointercapture", lostCapture);
+    gl.domElement.addEventListener(SCENE_NAVIGATION_START, cancel);
     return () => {
       window.removeEventListener("keydown", escape);
       window.removeEventListener("blur", cancel);
       gl.domElement.removeEventListener("lostpointercapture", lostCapture);
+      gl.domElement.removeEventListener(SCENE_NAVIGATION_START, cancel);
       cancel();
     };
   }, [gl]);
@@ -203,6 +207,7 @@ function Scene(props: ModularSceneProps) {
     cabinet: Pick<ModularCabinet, "id" | "position">,
   ) {
     if (event.button !== 0 || drag.current) return;
+    if (event.pointerType === "touch" && isSceneNavigationGesture(gl.domElement)) return;
     event.stopPropagation();
     props.onSelect(cabinet.id);
     if (mode !== "move") return;
@@ -257,6 +262,9 @@ function Scene(props: ModularSceneProps) {
       <OrbitControls
         makeDefault
         enabled={!dragActive}
+        enablePan
+        screenSpacePanning
+        zoomToCursor
         target={[focus.centerX / 1000, focus.h / 2, focus.centerZ / 1000]}
         minDistance={1}
         maxDistance={Math.max(18, Math.hypot(width, depth, roomHeight) * 4)}
@@ -264,6 +272,7 @@ function Scene(props: ModularSceneProps) {
       />
       <CameraNavigation request={props.cameraRequest}
         bounds={{ width, depth, height: roomHeight, centerX: width / 2, centerZ: depth / 2 }}/>
+      <CursorNavigation />
       <mesh position={[width / 2, -0.04, depth / 2]} receiveShadow>
         <boxGeometry args={[width, 0.08, depth]} />
         <meshStandardMaterial {...floorMaterial} />

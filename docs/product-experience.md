@@ -1,6 +1,6 @@
 # Product detail: materials, scale, AR and installments
 
-Validation: the full repository suite passes 390 tests, including regression tests for appearance-component initialization, compressed-texture AR exports, texture atlas orientation and React 19 AR interaction. TypeScript, targeted ESLint and the production build pass. The product route's first-load JavaScript is 133 kB; the Three.js viewer and AR tools remain on demand. The Google AR-library CDN responds HTTP 200.
+Validation: the full repository suite passes 399 tests, including regression tests for appearance-component initialization, compressed-texture AR exports, texture atlas orientation, React 19 AR interaction, cursor-centered navigation and product preview quality. TypeScript, targeted ESLint and the production build pass. The product route's first-load JavaScript is 133 kB; the Three.js viewer and AR tools remain on demand. The Google AR-library CDN responds HTTP 200.
 
 The appearance utility is named `productSurfaceController.ts` to keep its module path distinct from the React component on case-insensitive Windows filesystems. The active dev server serves the new import; executing its emitted webpack component/controller modules initializes and updates the product successfully. Catalog and 3D product HTTP smoke checks both return 200.
 
@@ -9,6 +9,10 @@ Color and material buttons start the on-demand 3D viewer and update the displaye
 The controller updates the per-instance cloned GLB materials, keeping pooled assets isolated. It preserves named frames, hardware, glass and decorative surfaces. Unnamed non-metal surfaces are configurable by default. Authors can explicitly set glTF mesh/material `extras.configurable` to `true` or `false` to override this classification. Procedural product meshes keep their fixed frames and metal parts too. Maps are cached per finish and disposed when the viewer unmounts.
 
 The photo/3D mode selector preserves the photo-first loading behavior. Color and material changes also update price, cart selection and the four-payment calculator. The size button opens an accessible 2D front-view comparison against a 170 cm human; both shapes use the same metres-to-pixels factor. Depth is shown separately, with a link to the existing room planner.
+
+Product, kitchen and room viewers zoom toward the mouse cursor. Two-finger gestures zoom around the moving finger midpoint and pan the camera, including at distance limits; native one-finger orbit or plan panning remains available. Starting a two-finger gesture ends furniture/opening editing, and an explicit room-camera lock remains respected. Tests use the installed OrbitControls/MapControls to verify projected world anchors, limits, gesture cleanup and resumed single-finger input in both perspective and top-plan views.
+
+Only the product detail viewer stops switching to the low-detail preview during camera motion. Initial progressive loading still shows a preview until the full asset is ready; after delivery, orbiting and zooming retain the full model. Room-planner camera-motion previews remain enabled. A viewer regression test and the existing progressive-loading tests cover this distinction. Browser and physical-phone gesture verification are unavailable in this session.
 
 AR is loaded only when opened and requires a product GLB. Its native modal has keyboard dismissal and restores focus on close. The snapshot waits for the delivery asset and appearance animation, removes retained previews and copies the selected materials/textures. It preserves the product's declared dimensions in metres. The AR library is loaded from the same Google CDN version already used by the kitchen viewer, with deduplicated requests, timeout, error and retry handling.
 

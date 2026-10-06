@@ -11,6 +11,7 @@ import { createWallGeometry, type WallCut } from "./wallCsg";
 import { useRoomMaterial } from "./roomMaterials";
 import { OpeningMesh } from "./OpeningMesh";
 import { animateToward } from "./demandAnimation";
+import { isSceneNavigationGesture } from "./sceneNavigation";
 
 const WALL_THICKNESS = 0.12;
 const noRaycast = () => {};
@@ -130,6 +131,7 @@ function RoomWallMesh({ segment, ...props }: RoomStructureProps & { segment: Roo
 }
 
 function RoomSurfaces({ design, view, onSelect, onSelectOpening }: RoomStructureProps) {
+  const gl = useThree(state => state.gl);
   const roomGeometry = getRoomGeometry(design);
   const bounds = roomGeometry.bounds;
   const spanX = bounds.maxX - bounds.minX, spanZ = bounds.maxZ - bounds.minZ;
@@ -157,6 +159,7 @@ function RoomSurfaces({ design, view, onSelect, onSelectOpening }: RoomStructure
   return <>
     <mesh rotation={[Math.PI / 2, 0, 0]} geometry={geometries.floor} receiveShadow onPointerDown={event => {
       if (event.button !== 0) return;
+      if (event.pointerType === "touch" && isSceneNavigationGesture(gl.domElement)) return;
       event.stopPropagation(); onSelect(null); onSelectOpening?.(null);
     }}><meshStandardMaterial {...floorProps} /></mesh>
     <mesh ref={ceiling} visible={false} position={[0, height, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={geometries.roof} receiveShadow raycast={noRaycast}>

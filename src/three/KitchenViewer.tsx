@@ -8,6 +8,7 @@ import { FINISHES, cornerFootprint, kitchenHeight, kitchenPlan, type Cabinet, ty
 import { createKitchenTexture } from "./kitchenTextures";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
+import { CursorNavigation } from "./CursorNavigationBinding";
 
 type XYZ = [number, number, number];
 type Surface = { color: string; map?: Texture | null; roughness?: number; metalness?: number };
@@ -191,7 +192,8 @@ function KitchenScene({ kitchen, selected, onSelect, open }: ViewerProps) {
       shadow-camera-top={5} shadow-camera-bottom={-5} shadow-bias={-0.0005} />
     <CameraFit width={width} height={fullHeight} depth={footprintDepth} mirrored={plan.mirrored} corner={kitchen.layout === "l"} />
     <OrbitControls makeDefault target={[0, fullHeight / 2, 0]} minDistance={1} maxDistance={45}
-      maxPolarAngle={Math.PI / 2 - 0.03} enablePan={false} />
+      maxPolarAngle={Math.PI / 2 - 0.03} enablePan screenSpacePanning zoomToCursor />
+    <CursorNavigation />
     <group position={[plan.mirrored ? width / 2 : -width / 2, 0, -footprintDepth / 2]} scale={[plan.mirrored ? -1 : 1, 1, 1]}>
       {kitchen.backsplash && <Board size={[width, kitchen.gap / 1000, 0.012]}
         at={[width / 2, height + kitchen.gap / 2000, -0.015]} surface={topSurface} />}
