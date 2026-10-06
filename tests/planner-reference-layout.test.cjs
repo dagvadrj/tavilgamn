@@ -53,7 +53,7 @@ test("reference grid reserves a bounded canvas row and mobile inspectors collaps
   assert.match(css, /\.kp-layout[^}]*grid-template-rows: minmax\(0,1fr\)[^}]*align-items: stretch[^}]*gap: 0/);
   assert.match(css, /\.kp-settings[^}]*min-height: 0/);
   assert.match(css, /@media \(max-width:959px\)/);
-  assert.match(css, /\.kp-settings\.is-open \{ display: flex; \}/);
+  assert.match(css, /\.kp-settings\.is-open\s*\{\s*display: flex;\s*\}/);
   assert.match(css, /\.planner-drawer-backdrop/);
 });
 

@@ -27,7 +27,9 @@
     "typecheck": "tsc --noEmit --incremental false",
     "test": "node --test tests/*.test.cjs",
     "test:visual": "node scripts/verify/kitchen-visual.cjs",
-    "verify": "npm run env:check && npm run lint && npm run typecheck && npm test && npm run build"
+    "verify": "npm run env:check && npm run styles:check && npm run lint && npm run typecheck && npm test && npm run build",
+    "styles:check": "node scripts/styles/check.mjs",
+    "styles:format": "node scripts/styles/check.mjs --write"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1126.0",
@@ -61,6 +63,7 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "15.5.26",
     "postcss": "^8.4.49",
+    "postcss-selector-parser": "^6.1.4",
     "sharp": "0.35.4",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.6.3"

@@ -61,7 +61,7 @@ Browser-ийн responsive override-ийг шалгалтын дараа reset х
 
 Нэмсэн:
 
-- `src/app/(shop)/homepage-marketplace.css`
+- `src/app/(shop)/storefront.css`
 - `src/components/HomeCarousel.tsx`
 - `src/components/HomeCountdown.tsx`
 - `src/components/ShopHeaderActions.tsx`

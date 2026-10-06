@@ -15,11 +15,13 @@ export function CatalogProducts({
   categories,
   initialSort,
   initialOffers = false,
+  onReset,
 }: {
   query: string;
   categories: Category[];
   initialSort?: string;
   initialOffers?: boolean;
+  onReset?: () => void;
 }) {
   const catalog = useCatalog();
   const [page, setPage] = useState(1);
@@ -37,7 +39,7 @@ export function CatalogProducts({
     setPage(1);
   }, [query, categoryKey, sort, minPrice, maxPrice, offersOnly, modelsOnly]);
 
-  if (catalog.loading || !catalog.ready) {
+  if (!catalog.ready) {
     return (
       <CatalogStatus
         loading={catalog.loading}
@@ -82,7 +84,7 @@ export function CatalogProducts({
         <h2>Тавилга <span aria-live="polite">{filtered.length} илэрц</span></h2>
         <select
           aria-label="Бараа эрэмбэлэх"
-          className="min-h-11 rounded-xl border border-[#293C32]/15 bg-[#FFFFFF] px-3 text-sm"
+          className="min-h-11 rounded-xl border border-[#111111]/15 bg-[#FFFFFF] px-3 text-sm"
           value={sort}
           onChange={(event) => setSort(event.target.value)}
         >
@@ -107,6 +109,10 @@ export function CatalogProducts({
           </div>
         </details>
       </div>
+      {(query || categories.length > 0 || minPrice || maxPrice || offersOnly || modelsOnly) && <div className="catalog-filter-summary">
+        <span>Сонгосон шүүлтүүрээр харуулж байна</span>
+        <button type="button" onClick={() => { setMinPrice(""); setMaxPrice(""); setOffersOnly(false); setModelsOnly(false); onReset?.(); }}>Бүх шүүлтүүрийг цэвэрлэх</button>
+      </div>}
       {minPrice && maxPrice && Number(minPrice) > Number(maxPrice) ? <p role="status" className="catalog-price-error">Дээд үнэ нь доод үнээс их байх ёстой.</p> : null}
       {catalog.error && (
         <CatalogStatus
@@ -117,10 +123,10 @@ export function CatalogProducts({
       )}
 
       {!filtered.length ? (
-        <div className="rounded-2xl border border-dashed border-[#293C32]/20 bg-[#FFFFFF] px-6 py-16 text-center">
+        <div className="rounded-2xl border border-dashed border-[#111111]/20 bg-[#FFFFFF] px-6 py-16 text-center">
           <h3 className="text-lg font-medium">Тавилга олдсонгүй</h3>
-          <p className="mt-2 text-sm text-[#6C726B]">
-            Хайх үгээ өөрчлөх эсвэл ангиллын шүүлтүүрээ цэвэрлээрэй.
+          <p className="mt-2 text-sm text-[#68686F]">
+            Хайх үг, ангилал эсвэл үнийн хүрээгээ өөрчлөөд дахин үзээрэй.
           </p>
         </div>
       ) : (
@@ -133,25 +139,25 @@ export function CatalogProducts({
       {pages > 1 && (
         <nav
           aria-label="Тавилгын хуудаслалт"
-          className="mt-8 flex flex-wrap items-center justify-center gap-4 border-t border-[#293C32]/10 pt-6"
+          className="mt-8 flex flex-wrap items-center justify-center gap-4 border-t border-[#111111]/10 pt-6"
         >
           <button
             type="button"
-            className="min-h-11 rounded-xl border border-[#293C32]/15 bg-[#FFFFFF] px-4 text-sm transition hover:border-[#42634F] disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-11 rounded-xl border border-[#111111]/15 bg-[#FFFFFF] px-4 text-sm transition hover:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-40"
             disabled={current === 1}
             onClick={() => setPage(current - 1)}
           >
             Өмнөх
           </button>
           <span
-            className="text-sm tabular-nums text-[#6C726B]"
+            className="text-sm tabular-nums text-[#68686F]"
             aria-live="polite"
           >
             {current} / {pages}
           </span>
           <button
             type="button"
-            className="min-h-11 rounded-xl border border-[#293C32]/15 bg-[#FFFFFF] px-4 text-sm transition hover:border-[#42634F] disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-11 rounded-xl border border-[#111111]/15 bg-[#FFFFFF] px-4 text-sm transition hover:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-40"
             disabled={current === pages}
             onClick={() => setPage(current + 1)}
           >
@@ -162,4 +168,3 @@ export function CatalogProducts({
     </section>
   );
 }
-

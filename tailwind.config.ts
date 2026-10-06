@@ -7,13 +7,37 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bone: "#F7F4EE",
-        ink: "#1A1814",
-        clay: "#B0654A",
-        sage: "#6B7A5A",
-        mocha: "#3D2F26",
-        cream: "#EFE6D6",
-        terracotta: "#C4633A",
+        bone: "#FFFFFF",
+        ink: "#111111",
+        clay: "#C58348",
+        sage: "#4D654E",
+        mocha: "#222222",
+        cream: "#F5F5F7",
+        terracotta: "#C58348",
+        // White & Black foundation
+        brand: {
+          white: "#FFFFFF",
+          black: "#111111",
+          surface: "#F5F5F7",
+          border: "#E5E5E7",
+          muted: "#666666",
+        },
+        // Segment Accent Colors
+        shop: {
+          DEFAULT: "#C58348",
+          hover: "#AE703A",
+          tint: "#FAF3EB",
+        },
+        kitchen: {
+          DEFAULT: "#2563EB",
+          hover: "#1D4ED8",
+          tint: "#EFF6FF",
+        },
+        room: {
+          DEFAULT: "#4D654E",
+          hover: "#3D523E",
+          tint: "#F0F4F0",
+        },
       },
       fontFamily: {
         display: ["var(--font-display)", "Georgia", "serif"],

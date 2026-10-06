@@ -1,46 +1,46 @@
 /* Marketplace tokens are scoped to the shop: neither fullscreen planner is affected. */
 .shop-shell {
-  --market-bg: #f1f2ef;
+  --market-bg: #ffffff;
   --market-surface: #ffffff;
-  --market-ink: #14202e;
-  --market-muted: #66707b;
-  --market-border: #e0e3df;
-  --market-primary: #1d3b66;
-  --market-accent: #f5b13d;
-  --market-sale: #ee4a21;
-  --market-sale-soft: #fde5dc;
+  --market-ink: #111111;
+  --market-muted: #737373;
+  --market-border: #e5e5e7;
+  --market-primary: #111111;
+  --market-accent: #c58348;
+  --market-sale: #c58348;
+  --market-sale-soft: #faf3eb;
   --market-success: #168a4a;
-  --market-navy: #142a49;
+  --market-navy: #111111;
   --market-on-primary: #ffffff;
-  --market-on-accent: #14202e;
-  --market-photo: #ffffff;
-  --market-hover: #eef3f8;
-  --market-saffron-soft: #fff3d7;
-  --market-rating: #b67408;
-  --market-footer-muted: #c2cddd;
-  --market-shadow: 0 5px 18px #14202e12;
-  --market-photo-shadow: 0 10px 30px #14202e18;
+  --market-on-accent: #ffffff;
+  --market-photo: #f5f5f7;
+  --market-hover: #f5f5f7;
+  --market-saffron-soft: #faf3eb;
+  --market-rating: #c58348;
+  --market-footer-muted: #888888;
+  --market-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+  --market-photo-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   --market-overlay: #ffffffed;
-  --market-hero-blue-start: #e5edf7;
-  --market-hero-blue-end: #d8e5f2;
-  --market-hero-warm-start: #f8eddf;
-  --market-hero-warm-end: #f2dfc9;
-  --market-hero-green-start: #e9eee1;
-  --market-hero-green-end: #dce5ce;
+  --market-hero-blue-start: #f5f5f7;
+  --market-hero-blue-end: #ebebef;
+  --market-hero-warm-start: #faf3eb;
+  --market-hero-warm-end: #f5e8d8;
+  --market-hero-green-start: #f2f4f0;
+  --market-hero-green-end: #e5e8e1;
   --market-line: var(--market-border);
   --paper: var(--market-bg);
   --paper-card: var(--market-surface);
   --ink: var(--market-ink);
   --grain-text: var(--market-muted);
   --line: var(--market-border);
-  --teal: var(--market-primary);
+  --teal: var(--market-accent);
   --lacquer: var(--market-sale);
   background: var(--market-bg);
   color: var(--market-ink);
   font-family: var(--font-market-body), sans-serif;
   font-size: 14px;
   line-height: 1.5;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 .shop-shell h1, .shop-shell h2, .shop-shell .brand { font-family: var(--font-market-heading), sans-serif; }
 .shop-shell .shop-container { width: 100%; max-width: 1280px; padding-inline: 16px; margin-inline: auto; }
@@ -287,38 +287,6 @@
   .shop-shell .market-flash-track { grid-auto-columns: calc((100% - 8px) / 2); }
   .shop-shell .marketplace-product-card .product-info { padding: 7px; }
   .shop-shell .product-add-cart { flex-basis: 30px; width: 30px; height: 30px; }
-}
-@media (prefers-color-scheme: dark) {
-  .shop-shell {
-    --market-bg: #0d141c;
-    --market-surface: #16202b;
-    --market-ink: #edf2f7;
-    --market-muted: #a7b3c1;
-    --market-border: #273341;
-    --market-sale: #ff7a55;
-    --market-sale-soft: #30252a;
-    --market-success: #64d996;
-    --market-primary: #1d3b66;
-    --market-hover: #23354b;
-    --market-rating: #f5b13d;
-    --market-overlay: #16202bef;
-    --market-shadow: 0 5px 18px #00000038;
-    --market-photo-shadow: 0 10px 30px #00000030;
-    --market-hero-blue-start: #1d2b3d;
-    --market-hero-blue-end: #233e5a;
-    --market-hero-warm-start: #302a28;
-    --market-hero-warm-end: #44352b;
-    --market-hero-green-start: #243229;
-    --market-hero-green-end: #334631;
-  }
-  .shop-shell .market-eyebrow, .shop-shell .market-section-heading > a, .shop-shell .market-category-all,
-  .shop-shell .product-add-cart, .shop-shell .market-load-more button, .shop-shell .store-monogram,
-  .shop-shell .mobile-bottom-nav :is(a,button).active, .shop-shell .market-carousel-pause,
-  .shop-shell .market-category-list a:hover, .shop-shell .desktop-nav a:hover { color: var(--market-ink); }
-  .shop-shell .market-planner-promo { color: var(--market-on-accent); }
-  .shop-shell .marketplace-product-card .product-3d { color: var(--market-ink); }
-  .shop-shell .product-cart-message { color: var(--market-ink); }
-  .shop-shell .market-carousel-dots button[aria-pressed="true"]::after { background: var(--market-ink); }
 }
 @media (prefers-reduced-motion: reduce) {
   .shop-shell *, .shop-shell *::before, .shop-shell *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

@@ -15,6 +15,8 @@ type State = {
 };
 
 let pending: Promise<void> | null = null;
+let lastLoadedAt = 0;
+const CATALOG_FRESH_MS = 30_000;
 
 export const useCatalogStore = create<State>((set) => ({
   products: [],
@@ -85,13 +87,14 @@ export const useCatalogStore = create<State>((set) => ({
             })),
         );
 
+        lastLoadedAt = Date.now();
         set({ products, ready: true });
       } catch (error) {
-        replaceDbModels([]);
+        const ready = useCatalogStore.getState().ready;
+        if (!ready) replaceDbModels([]);
 
         set({
-          products: [],
-          ready: false,
+          ...(ready ? {} : { products: [], ready: false }),
           error:
             error instanceof Error
               ? error.message
@@ -112,8 +115,11 @@ export function useCatalog() {
   const state = useCatalogStore();
 
   useEffect(() => {
-    const refresh = () => { if (document.visibilityState === "visible") void useCatalogStore.getState().refresh(); };
-    void useCatalogStore.getState().refresh();
+    const refresh = () => {
+      const catalog = useCatalogStore.getState();
+      if (document.visibilityState === "visible" && (!catalog.ready || Date.now() - lastLoadedAt >= CATALOG_FRESH_MS)) void catalog.refresh();
+    };
+    refresh();
     window.addEventListener("focus", refresh);
     return () => window.removeEventListener("focus", refresh);
   }, []);

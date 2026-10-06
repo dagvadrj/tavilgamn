@@ -26,6 +26,8 @@ export function CatalogView({
   const [categories, setCategories] = useState<Set<Category>>(
     new Set(initialCategory ? [initialCategory] : room?.categories ?? []),
   );
+  const [resetVersion, setResetVersion] = useState(0);
+  const resetFilters = () => { setCategories(new Set()); setQuery(""); setResetVersion(value => value + 1); };
   const [filtersOpen, setFiltersOpen] = useState(false);
   useEffect(() => {
     setQuery(initialQuery ?? "");
@@ -49,7 +51,7 @@ export function CatalogView({
     <div className="shop-container catalog-shell">
       <nav aria-label="Хуудасны зам" className="breadcrumbs"><Link href="/">Нүүр</Link><ChevronRight size={12} /><span>Тавилга</span>{initialCategory && <><ChevronRight size={12} /><span>{CATEGORY_LABEL[initialCategory]}</span></>}</nav>
       <header className="catalog-heading mb-6">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#6C726B]">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[#68686F]">
           Таны орон зай, таны сонголт
         </p>
         <div className="mt-3 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -57,14 +59,14 @@ export function CatalogView({
             <h1 className="text-3xl font-medium leading-tight tracking-tight sm:text-4xl">
               {initialCategory ? CATEGORY_LABEL[initialCategory] : roomFilterActive ? room.label : initialOffers ? "Хямдрал, урамшуулал" : "Тавилга, гэрийн сонголтууд"}
             </h1>
-            <p className="mt-3 text-sm leading-6 text-[#6C726B]">
+            <p className="mt-3 text-sm leading-6 text-[#68686F]">
               {roomFilterActive ? room.description : "Загвар, өнгө, материалаа харьцуулж, өөрт тохирохыг сонгоорой."}
             </p>
           </div>
           <div className="relative w-full shrink-0 lg:w-80">
             <Search
               aria-hidden="true"
-              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6C726B]"
+              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#68686F]"
             />
             <input
               type="search"
@@ -73,7 +75,7 @@ export function CatalogView({
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Тавилга хайх…"
-              className="h-12 w-full rounded-xl border border-[#293C32]/15 bg-[#FFFFFF] pl-11 pr-4 text-sm outline-none focus:border-[#42634F] focus:ring-2 focus:ring-[#42634F]/20"
+              className="h-12 w-full rounded-xl border border-[#111111]/15 bg-[#FFFFFF] pl-11 pr-4 text-sm outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20"
             />
           </div>
         </div>
@@ -84,7 +86,7 @@ export function CatalogView({
           aria-expanded={filtersOpen}
           aria-controls="catalog-filters"
           onClick={() => setFiltersOpen((open) => !open)}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#293C32]/15 px-4 text-sm lg:hidden"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#111111]/15 px-4 text-sm lg:hidden"
         >
           <SlidersHorizontal className="h-4 w-4" aria-hidden="true" /> Шүүлтүүр
           {categories.size > 0 && ` (${categories.size})`}
@@ -95,7 +97,7 @@ export function CatalogView({
         <aside
           id="catalog-filters"
           className={cn(
-            "catalog-sidebar rounded-2xl border border-[#293C32]/10 p-5 lg:sticky lg:block",
+            "catalog-sidebar rounded-2xl border border-[#111111]/10 p-5 lg:sticky lg:block",
             !filtersOpen && "hidden",
           )}
         >
@@ -108,7 +110,7 @@ export function CatalogView({
                   setCategories(new Set());
                   setQuery("");
                 }}
-                className="min-h-11 text-xs text-[#AD6547] underline underline-offset-4"
+                className="min-h-11 text-xs text-[#2563EB] underline underline-offset-4"
               >
                 Цэвэрлэх
               </button>
@@ -122,8 +124,8 @@ export function CatalogView({
               className={cn(
                 "min-h-11 rounded-lg px-3 text-left text-sm transition",
                 categories.size === 0
-                  ? "bg-[#42634F]/10 font-medium text-[#42634F]"
-                  : "text-[#6C726B] hover:bg-[#EEEEE7]/60",
+                  ? "bg-[#2563EB]/10 font-medium text-[#2563EB]"
+                  : "text-[#68686F] hover:bg-[#F4F4F5]/60",
               )}
             >
               Бүх ангилал
@@ -137,8 +139,8 @@ export function CatalogView({
                 className={cn(
                   "flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm transition",
                   categories.has(category.id)
-                    ? "bg-[#42634F]/10 font-medium text-[#42634F]"
-                    : "text-[#6C726B] hover:bg-[#EEEEE7]/60",
+                    ? "bg-[#2563EB]/10 font-medium text-[#2563EB]"
+                    : "text-[#68686F] hover:bg-[#F4F4F5]/60",
                 )}
               >
                 <span
@@ -146,8 +148,8 @@ export function CatalogView({
                   className={cn(
                     "grid h-4 w-4 shrink-0 place-items-center rounded border text-[10px]",
                     categories.has(category.id)
-                      ? "border-[#42634F] bg-[#42634F] text-white"
-                      : "border-[#293C32]/25",
+                      ? "border-[#2563EB] bg-[#2563EB] text-white"
+                      : "border-[#111111]/25",
                   )}
                 >
                   {categories.has(category.id) ? "✓" : ""}
@@ -170,7 +172,7 @@ export function CatalogView({
                   type="button"
                   onClick={() => toggleCategory(category)}
                   aria-label={`${CATEGORY_LABEL[category]} шүүлтүүрийг хасах`}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#42634F]/20 bg-[#42634F]/5 px-3 text-xs text-[#42634F]"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#2563EB]/20 bg-[#2563EB]/5 px-3 text-xs text-[#2563EB]"
                 >
                   {CATEGORY_LABEL[category]}
                   <X aria-hidden="true" className="h-3.5 w-3.5" />
@@ -178,7 +180,7 @@ export function CatalogView({
               ))}
             </div>
           )}
-          <CatalogProducts query={query} categories={[...categories]} initialSort={initialSort} initialOffers={initialOffers} />
+          <CatalogProducts key={resetVersion} query={query} categories={[...categories]} initialSort={initialSort} initialOffers={resetVersion === 0 && initialOffers} onReset={resetFilters} />
         </div>
       </div>
     </div>

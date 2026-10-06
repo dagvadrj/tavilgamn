@@ -1,7 +1,7 @@
 "use client";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, Environment } from "@react-three/drei";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { FurnitureMesh } from "./FurnitureMesh";
 import type { Category, Material } from "@/lib/types";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
@@ -11,6 +11,8 @@ import { stockLabel } from "@/lib/inventory";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
+import { ProductAppearance } from "./ProductAppearanceGroup";
+import type { Group } from "three";
 
 interface ProductViewerProps {
   stockQuantity?: number | null;
@@ -21,6 +23,7 @@ interface ProductViewerProps {
   dimensions: { w: number; d: number; h: number };
   onReady?: () => void;
   onError?: () => void;
+  onRootReady?: (root: Group | null) => void;
 }
 
 function ViewerReady({ onReady }: { onReady?: () => void }) {
@@ -40,8 +43,10 @@ export function ProductViewer({
   model,
   onReady,
   onError,
+  onRootReady,
 }: ProductViewerProps) {
   const performance = useCanvasPerformance();
+  const proceduralAppearance = useRef({ color, material });
   return (
     <div className="relative h-full w-full">
       <p
@@ -62,6 +67,7 @@ export function ProductViewer({
         <color attach="background" args={["#EFE6D6"]} />
         <ambientLight intensity={0.55} />
         <directionalLight castShadow intensity={1.1} position={[5, 8, 5]} />
+        <ProductAppearance color={color} material={material} onRootReady={onRootReady}>
         {model ? (
           <GLBFurnitureMesh
             modelId={model.id}
@@ -79,8 +85,8 @@ export function ProductViewer({
           <>
             <FurnitureMesh
               category={category}
-              color={color}
-              material={material}
+              color={proceduralAppearance.current.color}
+              material={proceduralAppearance.current.material}
               w={dimensions.w}
               d={dimensions.d}
               h={dimensions.h}
@@ -88,6 +94,7 @@ export function ProductViewer({
             <ViewerReady onReady={onReady} />
           </>
         )}
+        </ProductAppearance>
         {performance.contactShadows && (
           <ContactShadows
             position={[0, -0.01, 0]}

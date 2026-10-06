@@ -82,10 +82,10 @@ test("home promotion section is conditional on real currently available product 
 });
 
 test("store styling is isolated from fullscreen planners and supports small touch screens", () => {
-  const css = readFileSync("src/app/(shop)/marketplace.css", "utf8");
+  const css = readFileSync("src/app/(shop)/storefront.css", "utf8");
   assert.match(css, /\.shop-shell \.marketplace-product-card/);
   assert.match(css, /@media \(max-width: 420px\)/);
-  assert.match(css, /\.catalog-quick-filters > button \{ min-height: 44px/);
+  assert.match(css, /\.catalog-quick-filters > button \{\s*min-height: 44px/);
   const planner = readFileSync("src/app/(planner)/layout.tsx", "utf8");
-  assert.ok(!planner.includes("marketplace.css"));
+  assert.ok(!planner.includes("storefront.css"));
 });

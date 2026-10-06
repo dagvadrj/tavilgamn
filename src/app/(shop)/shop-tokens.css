@@ -1,0 +1,40 @@
+/* Storefront theme tokens. Keep dashboard and planner themes scoped to their own roots. */
+
+.shop-shell {
+  --market-ink: #111111;
+  --market-muted: #68686f;
+  --market-line: var(--market-border);
+  --market-accent: #2563eb;
+  --market-bg: #fafafa;
+  --market-surface: #ffffff;
+  --market-border: #e5e5e8;
+  --market-primary: #111111;
+  --market-sale: #2563eb;
+  --market-sale-soft: #eff6ff;
+  --market-success: #168a4a;
+  --market-navy: #111111;
+  --market-on-primary: #ffffff;
+  --market-on-accent: #ffffff;
+  --market-photo: #ffffff;
+  --market-hover: #f4f4f5;
+  --market-saffron-soft: #2563eb;
+  --market-rating: #b67408;
+  --market-footer-muted: #c2cddd;
+  --market-shadow: 0 5px 18px #14202e12;
+  --market-photo-shadow: 0 10px 30px #14202e18;
+  --market-overlay: #ffffffed;
+  --market-hero-blue-start: #ffffff;
+  --market-hero-blue-end: #f4f4f5;
+  --market-hero-warm-start: #ffffff;
+  --market-hero-warm-end: #f5f3f0;
+  --market-hero-green-start: #ffffff;
+  --market-hero-green-end: #f1f4f1;
+  --paper: var(--market-bg);
+  --paper-card: var(--market-surface);
+  --ink: var(--market-ink);
+  --grain-text: var(--market-muted);
+  --line: var(--market-border);
+  --teal: var(--market-primary);
+  --lacquer: var(--market-sale)
+;
+}

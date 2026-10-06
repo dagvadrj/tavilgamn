@@ -363,9 +363,9 @@ export function GLBFurnitureMesh({
   const placement = ready && valid ? modelPlacement(ready.asset.bounds, { w, h, d }, preservePhysicalSize) : null;
   const previewPlacement = hasRetainedPreview && retainedPreview ? modelPlacement(retainedPreview.asset.bounds, { w, h, d }, preservePhysicalSize, { w: size!.x, h: size!.y, d: size!.z }) : null;
   return (
-    <group ref={root} userData={{ deliveryPending: !ready || ready.variant !== "high" || showingMotionPreview }}>
+    <group ref={root} userData={{ deliveryReady: ready?.variant === "high", deliveryPending: !ready || ready.variant !== "high" || showingMotionPreview }}>
       {ready && valid ? (
-        <group scale={placement!.scale} visible={!showingMotionPreview}
+        <group scale={placement!.scale} visible={!showingMotionPreview} userData={{ productDelivery: true }}
           raycast={raycastVisibleVariant} dispose={null}>
           <primitive
             object={ready.asset.scene}

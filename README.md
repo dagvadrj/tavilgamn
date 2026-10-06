@@ -1,4 +1,4 @@
-# Casa Nova — Modern Furniture & 3D Room Planner
+# taivlgamn — Modern Furniture & 3D Room Planner
 
 A furniture e-commerce experience built around an immersive 3D room planner. Browse, customize materials and colors live in 3D, then drag and drop pieces into a virtual room of your size.
 

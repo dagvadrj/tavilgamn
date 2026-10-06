@@ -1,163 +1,760 @@
 /* Reference layout shared by both editors. Scoped so shop and review dialogs stay unchanged. */
-.planner-reference { --reference-rail: 56px; --reference-panel: 320px; --reference-header: 60px; background: #eeefec; }
+
+.planner-reference {
+  --reference-rail: 56px;
+  --reference-panel: 320px;
+  --reference-header: 60px;
+  background: #eeefec;
+}
+
 .planner-reference .studio-header,
-.planner-reference .kp-planner-topbar { background: #fff; color: #283c32; border-bottom: 1px solid #e3e7e1; box-shadow: none; min-height: var(--reference-header); }
-.planner-reference .room-studio-header { height: var(--reference-header); padding: 0 18px; }
+.planner-reference .kp-planner-topbar {
+  background: #fff;
+  color: #283c32;
+  border-bottom: 1px solid #e3e7e1;
+  box-shadow: none;
+  min-height: var(--reference-header);
+}
+
+.planner-reference .room-studio-header {
+  height: var(--reference-header);
+  padding: 0 18px;
+}
+
 .planner-reference .studio-brand,
-.planner-reference .kp-planner-brand { font-size: 14px; letter-spacing: -.3px; color: #283c32; }
+.planner-reference .kp-planner-brand {
+  font-size: 14px;
+  letter-spacing: -.3px;
+  color: #283c32;
+}
+
 .planner-reference .studio-brand > svg,
-.planner-reference .kp-planner-brand > svg { color: #3a6c50; }
-.planner-reference .studio-heading { display: flex; padding-left: 16px; border-left-color: #e1e6df; }
-.planner-reference .studio-heading > span { font-size: 13px; font-weight: 600; }
-.planner-reference .studio-heading small { font-size: 10px; color: #7b857e; }
-.planner-reference .studio-switch { background: #f1f4ee; padding: 3px; }
-.planner-reference .studio-switch > * { color: #6d7a71; min-height: 32px; font-size: 11px; }
-.planner-reference .studio-switch [aria-current] { color: #28513a; background: #fff; box-shadow: 0 1px 4px #243c2b0c; }
+.planner-reference .kp-planner-brand > svg {
+  color: #3a6c50;
+}
+
+.planner-reference .studio-heading {
+  display: flex;
+  padding-left: 16px;
+  border-left-color: #e1e6df;
+}
+
+.planner-reference .studio-heading > span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.planner-reference .studio-heading small {
+  font-size: 10px;
+  color: #7b857e;
+}
+
+.planner-reference .studio-switch {
+  background: #f1f4ee;
+  padding: 3px;
+}
+
+.planner-reference .studio-switch > * {
+  color: #6d7a71;
+  min-height: 32px;
+  font-size: 11px;
+}
+
+.planner-reference .studio-switch [aria-current] {
+  color: #28513a;
+  background: #fff;
+  box-shadow: 0 1px 4px #243c2b0c;
+}
+
 .planner-reference .studio-file-actions button,
 .planner-reference .kp-top-actions > button,
 .planner-reference .kp-top-menu > summary,
-.planner-reference .kp-close-planner { min-height: 36px; border-color: #e4e8e1; background: #fff; color: #526658; border-radius: 7px; }
+.planner-reference .kp-close-planner {
+  min-height: 36px;
+  border-color: #e4e8e1;
+  background: #fff;
+  color: #526658;
+  border-radius: 7px;
+}
+
 .planner-reference .studio-file-actions button:hover,
 .planner-reference .kp-top-actions > button:hover:not(:disabled),
-.planner-reference .kp-top-menu > summary:hover { background: #f0f4ec; }
+.planner-reference .kp-top-menu > summary:hover {
+  background: #f0f4ec;
+}
+
 .planner-reference .studio-file-actions .studio-primary,
 .planner-reference .kp-top-actions > .kp-save-button,
-.planner-reference .kp-top-actions > a.kp-save-button { background: #315b41; border-color: #315b41; color: #fff; border-radius: 7px; min-height: 36px; }
-.planner-reference .kp-project-name input { color: #344b3b; background: #f6f8f3; border-color: #e5e9e0; min-height: 36px; }
+.planner-reference .kp-top-actions > a.kp-save-button {
+  background: #315b41;
+  border-color: #315b41;
+  color: #fff;
+  border-radius: 7px;
+  min-height: 36px;
+}
+
+.planner-reference .kp-project-name input {
+  color: #344b3b;
+  background: #f6f8f3;
+  border-color: #e5e9e0;
+  min-height: 36px;
+}
+
 .planner-reference.kitchen-reference .kp-top-actions > button[aria-label="Нэмэх"],
-.planner-reference.kitchen-reference .kp-top-actions > button[aria-label="Тохиргоо"] { display: none; }
-.planner-reference .planner-mobile-toolbar { display: none; }
-.planner-reference-rail { min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 6px; background: #fff; border-right: 1px solid #e3e7e1; z-index: 25; }
-.planner-reference-rail-items { display: flex; flex-direction: column; gap: 7px; width: 100%; }
+.planner-reference.kitchen-reference .kp-top-actions > button[aria-label="Тохиргоо"] {
+  display: none;
+}
+
+.planner-reference .planner-mobile-toolbar {
+  display: none;
+}
+
+.planner-reference-rail {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 6px;
+  background: #fff;
+  border-right: 1px solid #e3e7e1;
+  z-index: 25;
+}
+
+.planner-reference-rail-items {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+}
+
 .planner-reference-rail button,
-.planner-reference-rail > a { position: relative; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 8px; color: #7b8a7e; flex-shrink: 0; }
+.planner-reference-rail > a {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  color: #7b8a7e;
+  flex-shrink: 0;
+}
+
 .planner-reference-rail button:hover:not(:disabled),
-.planner-reference-rail > a:hover { color: #2a573b; background: #f0f4eb; }
-.planner-reference-rail button[aria-pressed="true"] { color: #fff; background: #385e45; }
-.planner-reference-rail button:disabled { opacity: .35; cursor: not-allowed; }
+.planner-reference-rail > a:hover {
+  color: #2a573b;
+  background: #f0f4eb;
+}
+
+.planner-reference-rail button[aria-pressed="true"] {
+  color: #fff;
+  background: #385e45;
+}
+
+.planner-reference-rail button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
 .planner-reference-rail button > span,
-.planner-reference-rail > a > span { position: absolute; left: 48px; padding: 8px 11px; border-radius: 6px; background: #293e30; color: #fff; font-size: 11px; white-space: nowrap; pointer-events: none; visibility: hidden; opacity: 0; z-index: 100; }
+.planner-reference-rail > a > span {
+  position: absolute;
+  left: 48px;
+  padding: 8px 11px;
+  border-radius: 6px;
+  background: #293e30;
+  color: #fff;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  z-index: 100;
+}
+
 .planner-reference-rail button:hover > span,
 .planner-reference-rail button:focus-visible > span,
 .planner-reference-rail > a:hover > span,
-.planner-reference-rail > a:focus-visible > span { visibility: visible; opacity: 1; }
-.planner-reference.room-reference { display: grid; grid-template-columns: var(--reference-rail) minmax(0, 1fr) var(--reference-panel); grid-template-rows: minmax(0,1fr); gap: 0; padding: var(--reference-header) 0 0; }
-.room-reference > .planner-reference-rail { grid-column: 1; grid-row: 1; }
-.planner-reference.room-reference > .planner-stage { grid-column: 2; grid-row: 1; border: 0; border-radius: 0; }
-.planner-reference.room-reference > .planner-drawer { grid-column: 3; grid-row: 1; min-height: 0; max-width: none; border: 0; border-left: 1px solid #e3e7e1; border-radius: 0; background: #fff; box-shadow: none; }
-.planner-reference .planner-view-toolbar { top: 12px; left: auto; right: 12px; max-width: calc(100% - 24px); }
-.planner-reference .planner-room-caption { top: auto; bottom: 88px; left: 16px; padding: 0; background: none; }
-.planner-reference .planner-room-caption strong { font-size: 12px; }
-.planner-reference .planner-room-caption span { font-size: 10px; }
-.planner-reference .planner-canvas { padding-top: 0; }
+.planner-reference-rail > a:focus-visible > span {
+  visibility: visible;
+  opacity: 1;
+}
+
+.planner-reference.room-reference {
+  display: grid;
+  grid-template-columns: var(--reference-rail) minmax(0, 1fr) var(--reference-panel);
+  grid-template-rows: minmax(0,1fr);
+  gap: 0;
+  padding: var(--reference-header) 0 0;
+}
+
+.room-reference > .planner-reference-rail {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.planner-reference.room-reference > .planner-stage {
+  grid-column: 2;
+  grid-row: 1;
+  border: 0;
+  border-radius: 0;
+}
+
+.planner-reference.room-reference > .planner-drawer {
+  grid-column: 3;
+  grid-row: 1;
+  min-height: 0;
+  max-width: none;
+  border: 0;
+  border-left: 1px solid #e3e7e1;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+
+.planner-reference .planner-view-toolbar {
+  top: 12px;
+  left: auto;
+  right: 12px;
+  max-width: calc(100% - 24px);
+}
+
+.planner-reference .planner-room-caption {
+  top: auto;
+  bottom: 88px;
+  left: 16px;
+  padding: 0;
+  background: none;
+}
+
+.planner-reference .planner-room-caption strong {
+  font-size: 12px;
+}
+
+.planner-reference .planner-room-caption span {
+  font-size: 10px;
+}
+
+.planner-reference .planner-canvas {
+  padding-top: 0;
+}
+
 .planner-reference .planner-segment,
 .planner-reference .planner-tool-group,
-.planner-reference .planner-tools-menu > summary { border-radius: 7px; box-shadow: none; min-height: 42px; }
-.planner-reference .planner-tools-menu { margin-left: 0; }
-.planner-reference .planner-search { background: #f5f7f2; border-radius: 7px; }
-.planner-reference .studio-catalog-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
-.planner-reference .studio-catalog-list > button { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 9px; padding: 7px; border-radius: 8px; background: #fff; }
-.planner-reference .studio-catalog-list > button > div:first-child { width: 100%; height: 100px; border-radius: 5px; }
-.planner-reference .studio-catalog-list > button > div:last-child { display: none; }
-.planner-reference .studio-catalog-list > button p { white-space: normal; line-height: 1.4; font-size: 11px; }
-.planner-reference .studio-catalog-list > button p:first-child { font-size: 12px; }
-.planner-reference .planner-reference-category { display: flex; flex-direction: column; gap: 7px; color: #617165; font-size: 11px; }
-.planner-reference-category select { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid #e2e7dc; border-radius: 7px; background: #f5f7f2; color: #344d3b; }
-.planner-reference .room-environment-tabs { display: none; }
-.planner-reference .room-panel-intro { padding-top: 18px; }
-.planner-reference .room-panel-intro h3 { font-size: 16px; }
-.planner-reference .room-material-sample { border-radius: 6px; }
-.planner-reference .planner-budget-bar { padding: 10px 12px; border-radius: 8px; box-shadow: none; }
-.planner-reference .planner-budget-bar strong { font-size: 15px; }
-.planner-reference .room-camera-guide { bottom: 65px; background: none; }
-.planner-reference .planner-measure-readout { top: 66px; left: 12px; }
-.planner-reference .viewport-controls { bottom: 108px; right: 14px; }
+.planner-reference .planner-tools-menu > summary {
+  border-radius: 7px;
+  box-shadow: none;
+  min-height: 42px;
+}
+
+.planner-reference .planner-tools-menu {
+  margin-left: 0;
+}
+
+.planner-reference .planner-search {
+  background: #f5f7f2;
+  border-radius: 7px;
+}
+
+.planner-reference .studio-catalog-list {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 10px;
+}
+
+.planner-reference .studio-catalog-list > button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+  padding: 7px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.planner-reference .studio-catalog-list > button > div:first-child {
+  width: 100%;
+  height: 100px;
+  border-radius: 5px;
+}
+
+.planner-reference .studio-catalog-list > button > div:last-child {
+  display: none;
+}
+
+.planner-reference .studio-catalog-list > button p {
+  white-space: normal;
+  line-height: 1.4;
+  font-size: 11px;
+}
+
+.planner-reference .studio-catalog-list > button p:first-child {
+  font-size: 12px;
+}
+
+.planner-reference .planner-reference-category {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #617165;
+  font-size: 11px;
+}
+
+.planner-reference-category select {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #e2e7dc;
+  border-radius: 7px;
+  background: #f5f7f2;
+  color: #344d3b;
+}
+
+.planner-reference .room-environment-tabs {
+  display: none;
+}
+
+.planner-reference .room-panel-intro {
+  padding-top: 18px;
+}
+
+.planner-reference .room-panel-intro h3 {
+  font-size: 16px;
+}
+
+.planner-reference .room-material-sample {
+  border-radius: 6px;
+}
+
+.planner-reference .planner-budget-bar {
+  padding: 10px 12px;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.planner-reference .planner-budget-bar strong {
+  font-size: 15px;
+}
+
+.planner-reference .room-camera-guide {
+  bottom: 65px;
+  background: none;
+}
+
+.planner-reference .planner-measure-readout {
+  top: 66px;
+  left: 12px;
+}
+
+.planner-reference .viewport-controls {
+  bottom: 108px;
+  right: 14px;
+}
+
 .planner-reference .viewport-zoom,
 .planner-reference .viewport-more > summary,
-.planner-reference .viewport-extra { border-radius: 8px; box-shadow: none; }
-.planner-reference.kitchen-reference .kp-layout { display: grid; grid-template-columns: var(--reference-rail) minmax(0,1fr) var(--reference-panel); grid-template-rows: minmax(0,1fr); align-items: stretch; gap: 0; margin: 0; border: 0; border-radius: 0; }
-.planner-reference.kitchen-reference .kp-workspace { position: relative; inset: auto; grid-column: 2; grid-row: 1; min-width: 0; min-height: 0; }
-.planner-reference.kitchen-reference .planner-reference-rail { grid-column: 1; grid-row: 1; }
-.planner-reference.kitchen-reference .kp-settings { position: relative; inset: auto; grid-column: 3; grid-row: 1; width: auto; min-height: 0; max-height: none; display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 0; border-left: 1px solid #e3e7e1; border-radius: 0; background: #fff; box-shadow: none; backdrop-filter: none; }
-.planner-reference.kitchen-reference .kp-settings-head { flex-shrink: 0; top: -14px; margin: -14px -14px 0; padding: 14px 18px; min-height: 58px; background: #fff; border-radius: 0; font-size: 15px; }
-.planner-reference.kitchen-reference .kp-settings-head > button { display: none; }
-.planner-reference.kitchen-reference .kp-settings > [data-inspector-section] { display: none; flex-shrink: 0; }
+.planner-reference .viewport-extra {
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.planner-reference.kitchen-reference .kp-layout {
+  display: grid;
+  grid-template-columns: var(--reference-rail) minmax(0,1fr) var(--reference-panel);
+  grid-template-rows: minmax(0,1fr);
+  align-items: stretch;
+  gap: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.planner-reference.kitchen-reference .kp-workspace {
+  position: relative;
+  inset: auto;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.planner-reference.kitchen-reference .planner-reference-rail {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.planner-reference.kitchen-reference .kp-settings {
+  position: relative;
+  inset: auto;
+  grid-column: 3;
+  grid-row: 1;
+  width: auto;
+  min-height: 0;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 0;
+  border-left: 1px solid #e3e7e1;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.planner-reference.kitchen-reference .kp-settings-head {
+  flex-shrink: 0;
+  top: -14px;
+  margin: -14px -14px 0;
+  padding: 14px 18px;
+  min-height: 58px;
+  background: #fff;
+  border-radius: 0;
+  font-size: 15px;
+}
+
+.planner-reference.kitchen-reference .kp-settings-head > button {
+  display: none;
+}
+
+.planner-reference.kitchen-reference .kp-settings > [data-inspector-section] {
+  display: none;
+  flex-shrink: 0;
+}
+
 .planner-reference.kitchen-reference .kp-settings[data-inspector="materials"] > [data-inspector-section="materials"],
 .planner-reference.kitchen-reference .kp-settings[data-inspector="catalog"] > [data-inspector-section="catalog"],
 .planner-reference.kitchen-reference .kp-settings[data-inspector="room"] > [data-inspector-section="room"],
 .planner-reference.kitchen-reference .kp-settings[data-inspector="selection"] > [data-inspector-section="selection"],
-.planner-reference.kitchen-reference .kp-settings[data-inspector="extras"] > [data-inspector-section="extras"] { display: block; }
-.planner-reference.kitchen-reference .kp-settings > details { padding: 12px; border: 1px solid #e4e9de; border-radius: 8px; box-shadow: none; background: #fff; }
-.planner-reference.kitchen-reference .kp-settings .kp-panel { padding: 12px; }
-.planner-reference.kitchen-reference .kp-preview-bar { left: 14px; right: 14px; }
-.planner-reference.kitchen-reference:has(.kp-settings.is-open) .kp-preview-bar,
-.planner-reference.kitchen-reference:has(.kp-settings.is-open) .viewport-controls { right: 14px; }
-.planner-reference.kitchen-reference:has(.kp-settings.is-open) .km-feedback { right: auto; }
-.planner-reference.kitchen-reference .kp-preview-bar > span { align-self: flex-start; font-size: 10px; min-height: 36px; padding: 10px; border-radius: 7px; }
-.planner-reference.kitchen-reference .km-view-tools { margin-left: auto; border-radius: 7px; }
-.planner-reference.kitchen-reference .km-view-tools button { min-width: 34px; padding: 6px; border-radius: 5px; }
-.planner-reference.kitchen-reference .km-view-tools button span { display: none; }
-.planner-reference.kitchen-reference .viewport-controls { right: 14px; bottom: 82px; }
-.planner-reference.kitchen-reference .kp-preview-hint { bottom: 12px; padding: 7px 10px; font-size: 10px; max-width: calc(100% - 28px); background: #ffffffb8; border: 0; }
-.planner-reference.kitchen-reference .km-feedback { right: auto; left: 14px; bottom: 49px; max-width: calc(100% - 28px); width: auto; min-height: 0; padding: 7px 10px; transform: none; border-radius: 7px; font-size: 10px; }
-.planner-reference .reference-type-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; margin: 10px 0 16px; }
-.reference-type-grid button { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 104px; padding: 8px; border: 1px solid #e1e6da; border-radius: 7px; font-size: 10px; background: #f6f8f2; }
-.reference-type-grid button[aria-pressed="true"] { border-color: #5d8262; background: #edf4e7; }
-.reference-cabinet-symbol { position: relative; display: block; width: 40px; height: 43px; margin-top: 9px; background: linear-gradient(110deg,#e8e2d1,#d0c6aa); border: 1px solid #abb29c; box-shadow: 5px 4px 0 #b4bda7; }
-.reference-cabinet-symbol::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px solid #afb49e; }
-.reference-cabinet-symbol::after { content: ""; position: absolute; right: 14px; top: 20px; width: 7px; height: 2px; background: #7d8a72; }
-.reference-cabinet-symbol[data-type="tall"] { height: 62px; margin-top: 0; }
-.reference-cabinet-symbol[data-type="wall"] { height: 31px; margin-top: 8px; }
-@media (min-width:960px) {
-  .planner-reference.room-reference > .planner-drawer { position: relative; inset: auto; width: auto; height: 100%; transform: none; visibility: visible; }
-  .planner-reference .planner-drawer-backdrop,
-  .planner-reference .planner-drawer-heading { display: none; }
+.planner-reference.kitchen-reference .kp-settings[data-inspector="extras"] > [data-inspector-section="extras"] {
+  display: block;
 }
-@media (max-width:1199px) { .planner-reference { --reference-panel: 290px; } .planner-reference .studio-heading small { display: none; } .planner-reference .kp-project-name { display: none; } }
+
+.planner-reference.kitchen-reference .kp-settings > details {
+  padding: 12px;
+  border: 1px solid #e4e9de;
+  border-radius: 8px;
+  box-shadow: none;
+  background: #fff;
+}
+
+.planner-reference.kitchen-reference .kp-settings .kp-panel {
+  padding: 12px;
+}
+
+.planner-reference.kitchen-reference .kp-preview-bar {
+  left: 14px;
+  right: 14px;
+}
+
+.planner-reference.kitchen-reference:has(.kp-settings.is-open) .kp-preview-bar,
+.planner-reference.kitchen-reference:has(.kp-settings.is-open) .viewport-controls {
+  right: 14px;
+}
+
+.planner-reference.kitchen-reference:has(.kp-settings.is-open) .km-feedback {
+  right: auto;
+}
+
+.planner-reference.kitchen-reference .kp-preview-bar > span {
+  align-self: flex-start;
+  font-size: 10px;
+  min-height: 36px;
+  padding: 10px;
+  border-radius: 7px;
+}
+
+.planner-reference.kitchen-reference .km-view-tools {
+  margin-left: auto;
+  border-radius: 7px;
+}
+
+.planner-reference.kitchen-reference .km-view-tools button {
+  min-width: 34px;
+  padding: 6px;
+  border-radius: 5px;
+}
+
+.planner-reference.kitchen-reference .km-view-tools button span {
+  display: none;
+}
+
+.planner-reference.kitchen-reference .viewport-controls {
+  right: 14px;
+  bottom: 82px;
+}
+
+.planner-reference.kitchen-reference .kp-preview-hint {
+  bottom: 12px;
+  padding: 7px 10px;
+  font-size: 10px;
+  max-width: calc(100% - 28px);
+  background: #ffffffb8;
+  border: 0;
+}
+
+.planner-reference.kitchen-reference .km-feedback {
+  right: auto;
+  left: 14px;
+  bottom: 49px;
+  max-width: calc(100% - 28px);
+  width: auto;
+  min-height: 0;
+  padding: 7px 10px;
+  transform: none;
+  border-radius: 7px;
+  font-size: 10px;
+}
+
+.planner-reference .reference-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 7px;
+  margin: 10px 0 16px;
+}
+
+.reference-type-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-height: 104px;
+  padding: 8px;
+  border: 1px solid #e1e6da;
+  border-radius: 7px;
+  font-size: 10px;
+  background: #f6f8f2;
+}
+
+.reference-type-grid button[aria-pressed="true"] {
+  border-color: #5d8262;
+  background: #edf4e7;
+}
+
+.reference-cabinet-symbol {
+  position: relative;
+  display: block;
+  width: 40px;
+  height: 43px;
+  margin-top: 9px;
+  background: linear-gradient(110deg,#e8e2d1,#d0c6aa);
+  border: 1px solid #abb29c;
+  box-shadow: 5px 4px 0 #b4bda7;
+}
+
+.reference-cabinet-symbol::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid #afb49e;
+}
+
+.reference-cabinet-symbol::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: 20px;
+  width: 7px;
+  height: 2px;
+  background: #7d8a72;
+}
+
+.reference-cabinet-symbol[data-type="tall"] {
+  height: 62px;
+  margin-top: 0;
+}
+
+.reference-cabinet-symbol[data-type="wall"] {
+  height: 31px;
+  margin-top: 8px;
+}
+
+@media (min-width:960px) {
+  .planner-reference.room-reference > .planner-drawer {
+    position: relative;
+    inset: auto;
+    width: auto;
+    height: 100%;
+    transform: none;
+    visibility: visible;
+  }
+  .planner-reference .planner-drawer-backdrop,
+  .planner-reference .planner-drawer-heading {
+    display: none;
+  }
+}
+
+@media (max-width:1199px) {
+  .planner-reference {
+    --reference-panel: 290px;
+  }
+  .planner-reference .studio-heading small {
+    display: none;
+  }
+  .planner-reference .kp-project-name {
+    display: none;
+  }
+}
+
 @media (max-width:959px) {
-  .planner-reference { --reference-rail: 50px; --reference-header: 56px; }
+  .planner-reference {
+    --reference-rail: 50px;
+    --reference-header: 56px;
+  }
   .planner-reference.room-reference,
-  .planner-reference.kitchen-reference .kp-layout { grid-template-columns: var(--reference-rail) minmax(0,1fr); }
-  .planner-reference .studio-heading { display: none; }
-  .planner-reference-rail { padding: 10px 4px; }
+  .planner-reference.kitchen-reference .kp-layout {
+    grid-template-columns: var(--reference-rail) minmax(0,1fr);
+  }
+  .planner-reference .studio-heading {
+    display: none;
+  }
+  .planner-reference-rail {
+    padding: 10px 4px;
+  }
   .planner-reference-rail button,
-  .planner-reference-rail > a { width: 42px; height: 44px; }
-  .planner-reference.room-reference > .planner-drawer { position: fixed; top: var(--reference-header); bottom: 0; right: 0; width: min(340px,calc(100vw - 60px)); max-width: none; height: auto; z-index: 70; }
-  .planner-reference .planner-drawer-heading { display: flex; }
-  .planner-reference.kitchen-reference .kp-settings { position: absolute; top: 0; bottom: 0; right: 0; width: min(340px,calc(100vw - 60px)); z-index: 30; display: none; box-shadow: -12px 0 40px #24382c14; }
-  .planner-reference.kitchen-reference .kp-settings.is-open { display: flex; }
-  .planner-reference.kitchen-reference .kp-settings-head > button { display: grid; }
-  .planner-reference .studio-file-actions button { min-height: 40px; }
+  .planner-reference-rail > a {
+    width: 42px;
+    height: 44px;
+  }
+  .planner-reference.room-reference > .planner-drawer {
+    position: fixed;
+    top: var(--reference-header);
+    bottom: 0;
+    right: 0;
+    width: min(340px,calc(100vw - 60px));
+    max-width: none;
+    height: auto;
+    z-index: 70;
+  }
+  .planner-reference .planner-drawer-heading {
+    display: flex;
+  }
+  .planner-reference.kitchen-reference .kp-settings {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: min(340px,calc(100vw - 60px));
+    z-index: 30;
+    display: none;
+    box-shadow: -12px 0 40px #24382c14;
+  }
+  .planner-reference.kitchen-reference .kp-settings.is-open {
+    display: flex;
+  }
+  .planner-reference.kitchen-reference .kp-settings-head > button {
+    display: grid;
+  }
+  .planner-reference .studio-file-actions button {
+    min-height: 40px;
+  }
   .planner-reference .kp-top-actions > button,
-  .planner-reference .kp-top-menu > summary { min-height: 40px; }
+  .planner-reference .kp-top-menu > summary {
+    min-height: 40px;
+  }
   .planner-reference.kitchen-reference .kp-top-actions > button[aria-label="Нэмэх"],
   .planner-reference.kitchen-reference .kp-top-actions > button[aria-label="Тохиргоо"],
   .planner-reference.kitchen-reference .km-layout-menu,
-  .planner-reference.kitchen-reference .kp-close-planner { display: none; }
-  .planner-reference.kitchen-reference .viewport-controls { display: flex; right: 12px; bottom: 112px; }
-  .planner-reference.kitchen-reference:has(.kp-settings.is-open) .viewport-controls { display: none; }
+  .planner-reference.kitchen-reference .kp-close-planner {
+    display: none;
+  }
+  .planner-reference.kitchen-reference .viewport-controls {
+    display: flex;
+    right: 12px;
+    bottom: 112px;
+  }
+  .planner-reference.kitchen-reference:has(.kp-settings.is-open) .viewport-controls {
+    display: none;
+  }
 }
+
 @media (max-width:600px) {
   .planner-reference .studio-brand > span,
-  .planner-reference .kp-planner-brand > span { display: none; }
-  .planner-reference .studio-switch { display: flex; margin-left: 0; }
-  .planner-reference .studio-switch > * { padding: 0 8px; }
-  .planner-reference .studio-header { gap: 7px; padding: 0 10px; }
-  .planner-reference .studio-file-actions { margin-left: auto; }
-  .planner-reference .kp-planner-topbar { padding: 7px 10px; min-height: 56px; gap: 6px; }
-  .planner-reference .kp-top-actions { margin-left: auto; }
-  .planner-reference .kp-top-actions > .kp-save-button > span { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .planner-reference .planner-tools-menu > summary > span { display: none; }
-  .planner-reference .planner-view-toolbar { gap: 4px; left: 8px; right: 8px; justify-content: flex-end; }
-  .planner-reference .planner-view-toolbar button { min-width: 32px; }
-  .planner-reference .planner-budget-bar { left: 8px; right: 8px; bottom: 9px; padding: 9px; font-size: 10px; }
-  .planner-reference .planner-budget-bar strong { font-size: 13px; }
-  .planner-reference .planner-budget-bar > span:nth-child(2) { display: none; }
-  .planner-reference .planner-budget-bar button { padding: 6px; font-size: 10px; }
-  .planner-reference .room-camera-guide { display: none; }
-  .planner-reference .planner-room-caption { bottom: 76px; }
-  .planner-reference.kitchen-reference .kp-preview-bar > span { display: none; }
-  .planner-reference.kitchen-reference .km-feedback { bottom: 44px; }
-  .planner-reference.kitchen-reference .kp-preview-hint { padding: 6px; font-size: 9px; }
+  .planner-reference .kp-planner-brand > span {
+    display: none;
+  }
+  .planner-reference .studio-switch {
+    display: flex;
+    margin-left: 0;
+  }
+  .planner-reference .studio-switch > * {
+    padding: 0 8px;
+  }
+  .planner-reference .studio-header {
+    gap: 7px;
+    padding: 0 10px;
+  }
+  .planner-reference .studio-file-actions {
+    margin-left: auto;
+  }
+  .planner-reference .kp-planner-topbar {
+    padding: 7px 10px;
+    min-height: 56px;
+    gap: 6px;
+  }
+  .planner-reference .kp-top-actions {
+    margin-left: auto;
+  }
+  .planner-reference .kp-top-actions > .kp-save-button > span {
+    max-width: 92px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .planner-reference .planner-tools-menu > summary > span {
+    display: none;
+  }
+  .planner-reference .planner-view-toolbar {
+    gap: 4px;
+    left: 8px;
+    right: 8px;
+    justify-content: flex-end;
+  }
+  .planner-reference .planner-view-toolbar button {
+    min-width: 32px;
+  }
+  .planner-reference .planner-budget-bar {
+    left: 8px;
+    right: 8px;
+    bottom: 9px;
+    padding: 9px;
+    font-size: 10px;
+  }
+  .planner-reference .planner-budget-bar strong {
+    font-size: 13px;
+  }
+  .planner-reference .planner-budget-bar > span:nth-child(2) {
+    display: none;
+  }
+  .planner-reference .planner-budget-bar button {
+    padding: 6px;
+    font-size: 10px;
+  }
+  .planner-reference .room-camera-guide {
+    display: none;
+  }
+  .planner-reference .planner-room-caption {
+    bottom: 76px;
+  }
+  .planner-reference.kitchen-reference .kp-preview-bar > span {
+    display: none;
+  }
+  .planner-reference.kitchen-reference .km-feedback {
+    bottom: 44px;
+  }
+  .planner-reference.kitchen-reference .kp-preview-hint {
+    padding: 6px;
+    font-size: 9px;
+  }
 }
-@media (prefers-reduced-motion:reduce) { .planner-reference * { transition: none; } }
+
+@media (prefers-reduced-motion:reduce) {
+  .planner-reference * {
+    transition: none;
+  }
+}

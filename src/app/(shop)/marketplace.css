@@ -1,17 +1,17 @@
 /* Storefront-only styling: the fullscreen room and kitchen planners stay isolated. */
 .shop-shell {
-  --market-ink: #24352d;
-  --market-muted: #69716c;
-  --market-line: #e4e7e2;
-  --market-accent: #355c48;
-  background: #f8f9f6;
+  --market-ink: #111111;
+  --market-muted: #737373;
+  --market-line: #e5e5e7;
+  --market-accent: #c58348;
+  background: #ffffff;
 }
 .shop-shell .shop-container { max-width: 1380px; }
-.shop-shell .store-announcement { background: #f0f2ee; color: #69716c; }
+.shop-shell .store-announcement { background: #111111; color: #a3a3a3; }
 .shop-shell .store-announcement > div { min-height: 28px; }
 .shop-shell .store-header { background: #fffffffa; border-color: var(--market-line); }
 .shop-shell .header-main { gap: 30px; min-height: 82px; }
-.shop-shell .store-search { max-width: 620px; height: 46px; background: #f5f6f3; border-color: #dee3dc; border-radius: 12px; }
+.shop-shell .store-search { max-width: 620px; height: 46px; background: #f5f5f7; border-color: #e5e5e7; border-radius: 12px; }
 .shop-shell .store-search button { color: white; background: var(--market-accent); border-radius: 9px; margin-right: 5px; width: 36px; height: 36px; }
 .shop-shell .desktop-nav { gap: 28px; border-top-color: #eef0eb; }
 .shop-shell .desktop-nav .planner-link { margin-left: auto; }

@@ -4,6 +4,12 @@ import * as THREE from "three";
 import type { Category, Material } from "@/lib/types";
 import { cushionColor, makeMaterial } from "./materials";
 
+function configurableMaterial(color: string, material: Material) {
+  const result = makeMaterial({ color, material });
+  result.userData.configurable = true;
+  return result;
+}
+
 export interface FurnitureMeshProps {
   category: Category;
   color: string;
@@ -27,16 +33,17 @@ export function FurnitureMesh({
   selected,
 }: FurnitureMeshProps) {
   const mat = useMemo(
-    () => makeMaterial({ color, material }),
+    () => configurableMaterial(color, material),
     [color, material],
   );
   const cushionMat = useMemo(
-    () => makeMaterial({ color: cushionColor(color, -0.05), material }),
+    () => configurableMaterial(cushionColor(color, -0.05), material),
     [color, material],
   );
   const frameMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
+        name: "fixed-frame",
         color: new THREE.Color("#3D2F26"),
         roughness: 0.7,
       }),
@@ -45,6 +52,7 @@ export function FurnitureMesh({
   const metalMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
+        name: "fixed-metal",
         color: new THREE.Color("#7A7A7E"),
         roughness: 0.3,
         metalness: 0.9,
@@ -340,7 +348,7 @@ export function FurnitureMesh({
                 key={i}
                 position={[x, y, 0]}
                 material={
-                  new THREE.MeshStandardMaterial({ color: c, roughness: 0.8 })
+                  new THREE.MeshStandardMaterial({ name: "book-decoration", color: c, roughness: 0.8 })
                 }
               >
                 <boxGeometry args={[0.05, 0.22, d * 0.7]} />

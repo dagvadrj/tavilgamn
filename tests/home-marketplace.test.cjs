@@ -122,10 +122,13 @@ test("quick cart uses actual stock across variants and reports success or a full
   assert.equal(message, "Сагс дахь тоо үлдэгдлийн хязгаарт хүрсэн");
 });
 
-test("responsive, dark and reduced-motion contracts stay scoped to the shop", () => {
-  const css = readFileSync("src/app/(shop)/homepage-marketplace.css", "utf8");
-  for (const token of ["#f1f2ef", "#1d3b66", "#f5b13d", "#ee4a21", "#0d141c", "#ff7a55"]) assert.ok(css.includes(token));
-  assert.match(css, /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
+test("studio theme, responsive and reduced-motion contracts stay scoped to the shop", () => {
+  const css = readFileSync("src/app/(shop)/storefront.css", "utf8");
+  const tokens = readFileSync("src/app/(shop)/shop-tokens.css", "utf8");
+  for (const token of ["#fafafa", "#111111", "#2563eb"]) assert.ok(tokens.includes(token));
+  assert.match(tokens, /\.shop-shell\s*\{/);
+  assert.match(css, /color-scheme: light/);
+  assert.match(css, /grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);
   assert.match(css, /@media \(max-width: 999px\)/);
   assert.match(css, /@media \(max-width: 639px\)/);
   assert.match(css, /prefers-reduced-motion: reduce/);
@@ -135,6 +138,6 @@ test("responsive, dark and reduced-motion contracts stay scoped to the shop", ()
   assert.match(carousel, /5000/);
   assert.match(carousel, /aria-pressed/);
   const layout = readFileSync("src/app/(shop)/layout.tsx", "utf8");
-  assert.match(layout, /Manrope/); assert.match(layout, /Unbounded/); assert.match(layout, /"cyrillic"/);
+  assert.match(layout, /Manrope/); assert.match(layout, /"cyrillic"/);
   for (const path of ["src/app/(shop)/page.tsx", "src/components/Header.tsx", "src/components/Footer.tsx", "src/components/FeaturedMerchants.tsx"]) assert.ok(!readFileSync(path, "utf8").includes('"use client"'));
 });
