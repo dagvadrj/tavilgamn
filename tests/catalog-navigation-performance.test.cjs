@@ -5,13 +5,14 @@ const { loadSource } = require("./helpers/load-source.cjs");
 test("fast catalog remounts reuse data, stale refreshes keep results visible and explicit refreshes always run", async () => {
   const original = { fetch: global.fetch, window: global.window, document: global.document, now: Date.now };
   let now = 100000, requests = 0, fail = false;
+  const urls = [];
   const listeners = new Map();
   const product = { id: "sofa", image: "/sofa.jpg" };
   try {
     Date.now = () => now;
     global.document = { visibilityState: "visible" };
     global.window = { addEventListener(name, fn) { listeners.set(name, fn); }, removeEventListener() {} };
-    global.fetch = async () => { requests++; if (fail) throw new Error("offline"); return { ok: true, json: async () => ({ products: [product] }) }; };
+    global.fetch = async (url) => { urls.push(url); requests++; if (fail) throw new Error("offline"); return { ok: true, json: async () => ({ products: [product] }) }; };
     const lib = loadSource("src/store/catalog.ts", {
       react: { useEffect(fn) { fn(); } },
       zustand: { create(init) {
@@ -27,6 +28,8 @@ test("fast catalog remounts reuse data, stale refreshes keep results visible and
     });
     await lib.useCatalogStore.getState().refresh();
     assert.equal(requests, 1);
+    await lib.useCatalogStore.getState().refresh();
+    assert.equal(requests, 1, "ordinary refresh reuses the fresh client catalog");
     lib.useCatalog();
     listeners.get("focus")();
     assert.equal(requests, 1);
@@ -47,10 +50,40 @@ test("fast catalog remounts reuse data, stale refreshes keep results visible and
     assert.equal(lib.useCatalogStore.getState().error, null);
     await lib.useCatalogStore.getState().refresh(true);
     assert.equal(requests, 4);
+    assert.deepEqual(urls.slice(-2), ["/api/products?fresh=1", "/api/products?fresh=1"]);
   } finally {
     global.fetch = original.fetch;
     global.window = original.window;
     global.document = original.document;
     Date.now = original.now;
   }
+});
+
+test("forced client refreshes queue one fresh read after an older in-flight catalog and retain the bypass URL", async () => {
+  const originalFetch = global.fetch;
+  const urls = [], complete = [];
+  try {
+    global.fetch = url => { urls.push(url); return new Promise(resolve => complete.push(() => resolve({ ok: true, json: async () => ({ products: [{ id: String(urls.length) }] }) }))); };
+    const lib = loadSource("src/store/catalog.ts", {
+      react: { useEffect() {} },
+      zustand: { create(init) {
+        let state; const set = patch => { state = { ...state, ...patch }; };
+        const store = () => state; store.getState = () => state; state = init(set); return store;
+      } },
+      "@/lib/modelRegistry": { replaceDbModels() {} },
+      "@/lib/catalogValidation": { parseProduct: value => value },
+    });
+    const first = lib.useCatalogStore.getState().refresh();
+    const forced = lib.useCatalogStore.getState().refresh(true);
+    const simultaneous = lib.useCatalogStore.getState().refresh(true);
+    assert.equal(urls.length, 1);
+    complete[0]();
+    await first;
+    await Promise.resolve();
+    assert.deepEqual(urls, ["/api/products", "/api/products?fresh=1"]);
+    complete[1]();
+    await Promise.all([forced, simultaneous]);
+    assert.equal(lib.useCatalogStore.getState().products[0].id, "2");
+    assert.equal(urls.length, 2);
+  } finally { global.fetch = originalFetch; }
 });

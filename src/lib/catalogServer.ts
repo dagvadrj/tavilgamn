@@ -56,6 +56,7 @@ export async function readProducts(db = getSupabaseAdmin()): Promise<Product[]> 
       if (!data?.length) return products;
       const rows = data as unknown as FurnitureRow[];
       products.push(...rows.map(productFromRow));
+      if (rows.length < 500) return products;
       after = rows[rows.length - 1].id;
     }
   };

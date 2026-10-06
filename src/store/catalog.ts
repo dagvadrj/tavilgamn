@@ -15,6 +15,7 @@ type State = {
 };
 
 let pending: Promise<void> | null = null;
+let queuedRefresh: Promise<void> | null = null;
 let lastLoadedAt = 0;
 const CATALOG_FRESH_MS = 30_000;
 
@@ -26,18 +27,21 @@ export const useCatalogStore = create<State>((set) => ({
 
   refresh: (force = false): Promise<void> => {
     if (force && pending) {
-      return pending.then(() =>
-        useCatalogStore.getState().refresh(),
-      );
+      if (!queuedRefresh) queuedRefresh = pending.then(() =>
+        useCatalogStore.getState().refresh(true),
+      ).finally(() => { queuedRefresh = null; });
+      return queuedRefresh;
     }
 
     if (pending) return pending;
+    const catalog = useCatalogStore.getState();
+    if (!force && catalog.ready && !catalog.error && Date.now() - lastLoadedAt < CATALOG_FRESH_MS) return Promise.resolve();
 
     set({ loading: true, error: null });
 
     pending = (async () => {
       try {
-        const response = await fetch("/api/products", {
+        const response = await fetch(force ? "/api/products?fresh=1" : "/api/products", {
           cache: "no-store",
         });
 

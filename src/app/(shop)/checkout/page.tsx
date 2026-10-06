@@ -38,7 +38,7 @@ export default function CheckoutPage() {
         const response = await authFetch("/api/orders/quote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: selections }) }, ownerId);
         const result = await response.json();
         if (!response.ok) {
-        void useCatalogStore.getState().refresh(true); void useCatalogStore.getState().refresh(true); throw new Error(result.error ?? "Үнийг шалгаж чадсангүй."); }
+        void useCatalogStore.getState().refresh(true); throw new Error(result.error ?? "Үнийг шалгаж чадсангүй."); }
         if (useAuth.getState().user?.id === ownerId) setQuote({ signature, userId: ownerId, value: result });
         return;
       }
@@ -105,4 +105,3 @@ export default function CheckoutPage() {
     </form>
   </div>;
 }
-
