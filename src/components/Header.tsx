@@ -1,6 +1,5 @@
 import Link from "next/link";
-import Form from "next/form";
-import { Search } from "lucide-react";
+import { ProductSearch } from "./ProductSearch";
 import { ShopHeaderActions, MobileShopNavigation, ShopRoleLinks } from "./ShopHeaderActions";
 
 export function Header() {
@@ -15,10 +14,7 @@ export function Header() {
           <Link href="/stores">Дэлгүүрүүд</Link>
           <ShopRoleLinks />
         </nav>
-        <Form action="/catalog" role="search" className="store-search">
-          <input type="search" name="q" aria-label="Тавилга хайх" placeholder="Тавилга хайх…" />
-          <button type="submit" aria-label="Хайх"><Search size={18} aria-hidden="true" /></button>
-        </Form>
+        <ProductSearch />
         <ShopHeaderActions />
       </div>
     </header>

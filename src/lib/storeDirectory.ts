@@ -36,3 +36,21 @@ export async function readStoreDirectory({ includeInactive = false }: { includeI
 export async function readDirectoryStore(id: string): Promise<Store | undefined> {
   return (await readStoreDirectory()).find(store => store.id === id);
 }
+
+/** Count catalog entries, rather than categories or the number of units in stock. */
+export async function readStoreProductCounts(db = getSupabaseAdmin()): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  let after = "";
+  for (;;) {
+    let query = db.from("furniture_models").select("id,store_ids").is("archived_at", null).order("id").limit(500);
+    if (after) query = query.gt("id", after);
+    const { data, error } = await query;
+    if (error) throw error;
+    if (!data?.length) return counts;
+    for (const row of data) {
+      const stores = new Set<string>(Array.isArray(row.store_ids) ? row.store_ids.filter((id): id is string => typeof id === "string") : []);
+      for (const id of stores) counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    after = data[data.length - 1].id;
+  }
+}

@@ -5,6 +5,9 @@ import { Drawer, CompareModal, NumberControl, PlannerSkeleton } from "@/features
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ViewportControls } from "@/features/planner/components/ViewportControls";
 import { PlannerRail } from "@/features/planner/components/PlannerRail";
+import { PlannerSwitcher, PlannerWorkflow } from "@/features/planner/components/PlannerWorkflow";
+import { matchesProductSearch } from "@/lib/productSearch";
+import { PlannerModelCard } from "@/features/planner/components/PlannerModelCard";
 import type { CameraAction, CameraRequest } from "@/lib/plannerCamera";
 import Image from "next/image";
 import Link from "next/link";
@@ -89,6 +92,9 @@ import {
 import "./room-planner.css";
 import "@/features/planner/components/planner-studio.css";
 import "@/features/planner/components/planner-reference.css";
+import "@/features/planner/components/planner-usability.css";
+import "@/features/planner/components/planner-sidebar.css";
+import "@/features/planner/components/planner-geometry.css";
 import { type DbModelInfo, getDbModel } from "@/lib/modelRegistry";
 
 const RoomCanvas = dynamic(
@@ -137,6 +143,8 @@ export function RoomPlanner() {
   const kitchenLibrary = useKitchens(),
     kitchenUser = useAuth((state) => state.user);
   const handledKitchen = useRef<string | null>(null);
+  const [roomDetailsTab, setRoomDetailsTab] = useState<"room" | "selection" | "project">("room");
+  const [catalogFormat, setCatalogFormat] = useState<"glb" | "photo">("glb");
   const {
     inspector, setInspector,
     selected, setSelected, environmentTab, setEnvironmentTab, surface,
@@ -333,8 +341,8 @@ export function RoomPlanner() {
         (product) =>
           hasAvailableStock(product) &&
           !product.model &&
-          product.category === paletteCat &&
-          product.name.toLowerCase().includes(query.trim().toLowerCase()),
+          (paletteCat === "all" || product.category === paletteCat) &&
+          matchesProductSearch(product, query),
       ),
     [catalog.products, paletteCat, query],
   );
@@ -343,8 +351,8 @@ export function RoomPlanner() {
       dbModels.filter(
         (m) =>
           hasAvailableStock(m) &&
-          m.category === paletteCat &&
-          m.name.toLowerCase().includes(query.trim().toLowerCase()),
+          (paletteCat === "all" || m.category === paletteCat) &&
+          matchesProductSearch(m, query),
       ),
     [dbModels, paletteCat, query],
   );
@@ -840,10 +848,7 @@ export function RoomPlanner() {
           <House size={19}/><span>tavilga.mn</span>
         </Link>
         <div className="studio-heading"><span>Өрөөний төлөвлөгч</span><small>{current.roomName ?? current.name}</small></div>
-        <nav className="studio-switch" aria-label="Planner сонгох">
-          <span aria-current="page">Өрөө</span>
-          <Link href="/kitchen">Гал тогоо</Link>
-        </nav>
+        <PlannerSwitcher current="room"/>
         <div className="studio-file-actions">
           <button type="button" title="PNG зураг татах" aria-label="Зураг татах" onClick={exportImage}>
             <Download size={17}/><span>Зураг</span>
@@ -880,12 +885,13 @@ export function RoomPlanner() {
       </div>
 
       <PlannerRail items={[
-        { id: "room", label: "Өрөө", Icon: House, active: inspector === "environment" && environmentTab === "room", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("room"); setRightOpen(true); } },
+        { id: "room", label: "Өрөөний хэмжээ", Icon: House, active: inspector === "environment" && environmentTab === "room" && roomDetailsTab === "room", onClick: () => { endEdit(); setPlacementTemplate(null); setRoomDetailsTab("room"); setEnvironmentTab("room"); setRightOpen(true); } },
         { id: "catalog", label: "Тавилгын каталог", Icon: LayoutGrid, active: inspector === "catalog", onClick: () => setLeftOpen(true) },
         { id: "materials", label: "Өнгө, материал", Icon: Paintbrush, active: inspector === "environment" && environmentTab === "surfaces", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("surfaces"); setRightOpen(true); } },
         { id: "openings", label: "Хаалга, цонх", Icon: DoorOpen, active: inspector === "environment" && environmentTab === "openings", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("openings"); setRightOpen(true); } },
         { id: "lighting", label: "Гэрэлтүүлэг", Icon: Lightbulb, active: inspector === "environment" && environmentTab === "lighting", onClick: () => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("lighting"); setRightOpen(true); } },
         { id: "measure", label: "Хэмжээс харуулах", Icon: Ruler, active: showDimensions, onClick: () => setShowDimensions(value => !value) },
+        { id: "project", label: "Хадгалсан загвар", Icon: Save, active: inspector === "environment" && environmentTab === "room" && roomDetailsTab === "project", onClick: () => { endEdit(); setRoomDetailsTab("project"); setEnvironmentTab("room"); setRightOpen(true); } },
       ]} />
 
       {/* One shared right inspector; the catalog no longer consumes canvas width on the left. */}
@@ -899,7 +905,7 @@ export function RoomPlanner() {
         <div className="border-b border-[#293C32]/10 p-4">
           <div className="planner-panel-heading">
             <span><LayoutGrid size={18}/> Тавилгын сан</span>
-            <small>Орон зайгаа бүтээх бүх сонголт</small>
+            <small>Загвараа сонгоод бодит хэмжээгээр нэмээрэй.</small>
           </div>
           <label className="planner-search">
             <Search size={17} />
@@ -910,9 +916,14 @@ export function RoomPlanner() {
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
+          <div className="planner-filter-pills" aria-label="Тавилгын загварын хэлбэр">
+            <button type="button" aria-pressed={catalogFormat === "glb"} onClick={() => setCatalogFormat("glb")}>GLB загвар · {dbPaletteItems.length}</button>
+            <button type="button" aria-pressed={catalogFormat === "photo"} onClick={() => setCatalogFormat("photo")}>Бусад тавилга · {paletteItems.length}</button>
+          </div>
           <label className="planner-reference-category">
             <span>Тавилгын ангилал</span>
             <select aria-label="Тавилгын ангилал" value={paletteCat} onChange={event => setPaletteCat(event.target.value as typeof paletteCat)}>
+            <option value="all">Бүх тавилга</option>
             {CATEGORIES.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -960,16 +971,15 @@ export function RoomPlanner() {
               retry={() => void catalog.refresh()}
             />
           )}
-          <div className="studio-catalog-list grid gap-3">
+          <div className={catalogFormat === "glb" ? "planner-model-grid" : "studio-catalog-list grid gap-3"}>
             {catalog.ready &&
               !catalog.loading &&
-              !paletteItems.length &&
-              !dbPaletteItems.length && (
+              !(catalogFormat === "glb" ? dbPaletteItems.length : paletteItems.length) && (
                 <p className="planner-empty">
                   Энэ ангилалд тохирох тавилга олдсонгүй.
                 </p>
               )}
-            {paletteItems.map((p) => (
+            {catalogFormat === "photo" && paletteItems.map((p) => (
               <button
                 key={p.id}
                 onClick={() => addPiece(p.id)}
@@ -999,73 +1009,13 @@ export function RoomPlanner() {
                 </div>
               </button>
             ))}
-            {dbPaletteItems.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => addModelPiece(m)}
-                onPointerEnter={() =>
-                  void prefetchModel(
-                    modelDeliveryUrl(
-                      m.fileModelId ?? m.id,
-                      m.previewGlbFile ?? m.glbFile,
-                    ),
-                  )
-                }
-                onFocus={() =>
-                  void prefetchModel(
-                    modelDeliveryUrl(
-                      m.fileModelId ?? m.id,
-                      m.previewGlbFile ?? m.glbFile,
-                    ),
-                  )
-                }
-                onTouchStart={() =>
-                  void prefetchModel(
-                    modelDeliveryUrl(
-                      m.fileModelId ?? m.id,
-                      m.previewGlbFile ?? m.glbFile,
-                    ),
-                  )
-                }
-                className="group flex gap-3 rounded-lg border border-[#AD6547]/30 bg-white p-2 text-left transition hover:border-[#AD6547]/60"
-              >
-                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-[#EEEEE7]">
-                  {m.thumbnailFile ? (
-                    <Image
-                      src={`/api/models/files/${m.fileModelId ?? m.id}/${m.thumbnailFile}`}
-                      alt={m.name}
-                      width={64}
-                      height={64}
-                      unoptimized
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center">
-                      <Sparkles className="h-6 w-6 text-[#AD6547]/40" />
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <p className="truncate text-sm font-medium">{m.name}</p>
-                    <span className="flex-shrink-0 rounded-full bg-[#AD6547]/10 px-1.5 py-0.5 text-[10px] text-[#AD6547]">
-                      3D
-                    </span>
-                  </div>
-                  <p className="mt-0.5 font-mono text-xs text-[#6C726B]">
-                    {m.basePrice > 0
-                      ? formatPrice(m.basePrice)
-                      : "Үнэ тогтоогдоогүй"}
-                  </p>
-                  <p className="mt-0.5 font-mono text-xs text-[#737D6C]/70">
-                    {m.dimensionsW} × {m.dimensionsD} м
-                    <span className="mt-1 block text-xs">{stockLabel(m)}</span>
-                  </p>
-                </div>
-                <div className="grid h-7 w-7 self-center place-items-center rounded-full bg-[#293C32]/5 text-[#293C32] group-hover:bg-[#AD6547] group-hover:text-[#FFFFFF]">
-                  <Plus className="h-3.5 w-3.5" />
-                </div>
-              </button>
+            {catalogFormat === "glb" && dbPaletteItems.map((m) => (
+              <PlannerModelCard key={m.id} name={m.name}
+                image={m.thumbnailFile ? `/api/models/files/${m.fileModelId ?? m.id}/${m.thumbnailFile}` : null}
+                dimensions={`${Math.round(m.dimensionsW * 1000)} × ${Math.round(m.dimensionsD * 1000)} × ${Math.round(m.dimensionsH * 1000)} мм`}
+                detail={m.basePrice > 0 ? formatPrice(m.basePrice) : stockLabel(m)} file={m.glbFile}
+                onAdd={() => addModelPiece(m)}
+                onPrefetch={() => void prefetchModel(modelDeliveryUrl(m.fileModelId ?? m.id, m.previewGlbFile ?? m.glbFile))}/>
             ))}
           </div>
         </div>
@@ -1073,6 +1023,12 @@ export function RoomPlanner() {
 
       {/* CENTER: canvas */}
       <div className="planner-stage relative h-full">
+        <PlannerWorkflow active={inspector === "catalog" ? "catalog" : environmentTab === "room" ? "room" : environmentTab === "surfaces" ? "materials" : null}
+          onSelect={step => {
+            endEdit(); setPlacementTemplate(null);
+            if (step === "catalog") setLeftOpen(true);
+            else { setRoomDetailsTab("room"); setEnvironmentTab(step === "room" ? "room" : "surfaces"); setRightOpen(true); }
+          }}/>
         <div className="planner-view-toolbar">
           <div className="planner-segment" aria-label="Харах горим">
             <button
@@ -1225,6 +1181,7 @@ export function RoomPlanner() {
             <>
               <button
                 onClick={() => {
+                  setRoomDetailsTab("selection");
                   setEnvironmentTab("room");
                   setRightOpen(true);
                 }}
@@ -1267,11 +1224,10 @@ export function RoomPlanner() {
           </span>
           <span className="h-4 w-px bg-[#293C32]/10" />
           <button
-            onClick={buyEverything}
-            disabled={!current.pieces.length}
+            onClick={current.pieces.length ? buyEverything : () => setLeftOpen(true)}
             className="flex flex-shrink-0 items-center gap-1.5 text-[#AD6547] font-medium hover:underline"
           >
-            <ShoppingBag className="h-3.5 w-3.5" /> Бүгдийг сагсанд
+            {current.pieces.length ? <><ShoppingBag className="h-3.5 w-3.5" /> Бүгдийг сагсанд</> : <><Plus size={16}/> Тавилга нэмэх</>}
           </button>
         </div>
 
@@ -1320,6 +1276,7 @@ export function RoomPlanner() {
                 setSelectedOpening(null);
                 setSelectedWall(null);
                 setPlacementTemplate(null);
+                setRoomDetailsTab("selection");
                 setEnvironmentTab("room");
               }
             }}
@@ -1470,6 +1427,13 @@ export function RoomPlanner() {
           </>
         )}
         <div hidden={environmentTab !== "room"}>
+          <div className="planner-inspector-intro"><h2>Өрөөгөө тохижуулах</h2><p>Хэмжээ, тавилга, хадгалалтаа тус тусад нь тохируулаарай.</p></div>
+          <nav className="planner-inspector-tabs" aria-label="Төлөвлөгчийн тохиргоо">
+            {([['room', 'Өрөө'], ['selection', 'Тавилга'], ['project', 'Хадгалалт']] as const).map(([tab, label]) =>
+              <button type="button" key={tab} aria-pressed={roomDetailsTab === tab}
+                onClick={() => { endEdit(); setRoomDetailsTab(tab); }}>{label}</button>)}
+          </nav>
+          <div hidden={roomDetailsTab !== "project"}>
           <div className="border-b border-[#293C32]/10 p-4">
             <p className="label mb-2">Загвар</p>
             <input
@@ -1502,6 +1466,8 @@ export function RoomPlanner() {
             </p>
           </div>
 
+          </div>
+          <div hidden={roomDetailsTab !== "room"}>
           <div className="border-b border-[#293C32]/10 p-4">
             <section className="planner-rooms" aria-label="Өрөөнүүд">
               <p className="label mb-3">
@@ -1614,6 +1580,8 @@ export function RoomPlanner() {
             </button>
           </div>
 
+          </div>
+          <div hidden={roomDetailsTab !== "selection"}>
           {selectedPiece && selectedDetails ? (
             <div className="border-b border-[#293C32]/10 p-4">
               <p className="label mb-3">Сонгосон</p>
@@ -1840,7 +1808,7 @@ export function RoomPlanner() {
               <Layers size={15} /> Өрөөн дэх тавилга · {current.pieces.length}
             </p>
             {!current.pieces.length && (
-              <p className="planner-empty">Одоогоор тавилга нэмээгүй байна.</p>
+              <div className="planner-empty"><p>Одоогоор тавилга нэмээгүй байна.</p><button type="button" className="planner-secondary-button" onClick={() => setLeftOpen(true)}><Plus size={16}/> GLB загвар нэмэх</button></div>
             )}
             {current.pieces.map((piece, index) => (
               <button
@@ -1869,6 +1837,8 @@ export function RoomPlanner() {
               </button>
             ))}
           </section>
+          </div>
+          <div hidden={roomDetailsTab !== "project"}>
           <details className="planner-advanced">
             <summary>Нэмэлт · 3D файл оруулах</summary>
             <div className="planner-advanced-fields">
@@ -2078,6 +2048,7 @@ export function RoomPlanner() {
             >
               <Plus className="h-4 w-4" /> Шинэ загвар үүсгэх
             </button>
+          </div>
           </div>
         </div>
       </Drawer>

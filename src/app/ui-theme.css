@@ -1,0 +1,14 @@
+/* Shared visual vocabulary; scoped to the storefront and the two planner workspaces. */
+
+.shop-shell,
+.planner-reference {
+  --ui-ink: #171717;
+  --ui-muted: #71717a;
+  --ui-line: #e4e4e7;
+  --ui-surface: #fff;
+  --ui-background: #fafafa;
+  --ui-primary: #171717;
+  --ui-accent: #2563eb;
+  --ui-selected: #eff6ff;
+  --ui-radius: 14px;
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { Ruler, X } from "lucide-react";
 import type { RoomShape, PlacedFurniture } from "@/lib/types";
 import type { Point } from "@/lib/roomGeometry";
 import { RoomGeometryEditor } from "./RoomGeometryEditor";
@@ -35,7 +35,9 @@ export function RoomGeometryModal({ room, onApply, onClose, beginEdit, endEdit }
     onCancel={event => { event.preventDefault(); onClose(); }}
     onKeyDown={event => event.stopPropagation()}>
     <header className="room-geometry-modal-header">
-      <h2 id="room-geometry-title" tabIndex={-1} autoFocus>Өрөөний бодит хэмжээ, хэлбэр</h2>
+      <div className="geometry-modal-heading"><span className="geometry-modal-icon"><Ruler size={21}/></span>
+        <div><h2 id="room-geometry-title" tabIndex={-1} autoFocus>Өрөөний хэмжээ, хэлбэр</h2>
+          <p>Бодит хэмжээгээр өрөөгөө төлөвлөх</p></div></div>
       <button type="button" aria-label="Хэмжээ, хэлбэрийн цонхыг хаах" onClick={onClose}><X size={20} /></button>
     </header>
     <div className="room-geometry-modal-body">

@@ -102,7 +102,7 @@ export function RoomWallPlan({ room, pieces, onChange }: {
   };
 
   return <section className="room-wall-plan" aria-label="Хана чирж төлөвлөх">
-    <p id={helpId} className="room-shape-help">Хана эсвэл дугуй бариулыг чирнэ. Хэмжээ 1 мм-ийн алхмаар өөрчлөгдөнө. Ханыг сонгоод сумтай товчоор 1 мм, Shift + сумаар 10 мм зөөнө.</p>
+    <p id={helpId} className="room-shape-help">Хана эсвэл дугуй бариулыг чирж хэмжээг өөрчилнө. Сум: 1 мм · Shift + сум: 10 мм.</p>
     <div className="room-wall-live" aria-live="polite" aria-atomic="true">
       <span><strong>{Math.round(room.width * 1000)} × {Math.round(room.depth * 1000)}</strong> мм</span>
       <span><strong>{geometry.area.toFixed(2)}</strong> м²</span>

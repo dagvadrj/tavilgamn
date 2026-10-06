@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, useEffect, useRef, useState, type ReactNode } from "react";
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Canvas,
   useFrame,
@@ -30,6 +30,7 @@ import { CabinetBody, KitchenTops } from "./KitchenAssemblyMesh";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import { fitBacksplashes } from "@/lib/kitchenBacksplash";
 import type { KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
+import { kitchenForGeneratedParts } from "@/lib/kitchenGeneratedParts";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { DEFAULT_FLOOR_MATERIAL } from "@/lib/roomDesign";
@@ -120,6 +121,10 @@ type CaptureTarget = {
 };
 function Scene(props: ModularSceneProps) {
   const { capture: registerCapture, kitchen, selectedId, mode } = props;
+  const generatedPartsKitchen = useMemo(
+    () => kitchenForGeneratedParts(kitchen, props.variantModels),
+    [kitchen, props.variantModels],
+  );
   // Stable while dragging; layout selection remounts this view to frame the new layout.
   const focus = useRef(kitchenEnvelope(kitchen)).current;
   const { camera, gl, invalidate, scene } = useThree();
@@ -393,10 +398,10 @@ function Scene(props: ModularSceneProps) {
           <KitchenExtraMesh extra={extra} selected={selectedId===extra.id}/>
         </group>)}
         <KitchenTops
-          kitchen={kitchen}
+          kitchen={generatedPartsKitchen}
           materialDefinitions={props.materialDefinitions}
           onBacksplashPointerDown={(event, id) => {
-            const panel = fitBacksplashes(kitchen).find(
+            const panel = fitBacksplashes(generatedPartsKitchen).find(
               (item) => item.id === id,
             );
             if (panel) start(event, panel);

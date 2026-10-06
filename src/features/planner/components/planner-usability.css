@@ -1,0 +1,630 @@
+/* Shared planner controls use the storefront's neutral surfaces and blue selections. */
+
+.planner-reference {
+  --reference-rail: 158px;
+  --reference-panel: 340px;
+  --reference-header: 68px;
+  --studio-ink: var(--ui-ink);
+  --studio-muted: var(--ui-muted);
+  --studio-line: var(--ui-line);
+  color: var(--ui-ink);
+  background: var(--ui-background);
+}
+
+.planner-reference :focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 3px;
+}
+
+.planner-reference .studio-header, .planner-reference .kp-planner-topbar {
+  border-color: var(--ui-line);
+  gap: 14px;
+  padding-inline: 18px;
+}
+
+.planner-reference .studio-brand, .planner-reference .kp-planner-brand {
+  color: var(--ui-ink);
+  font-weight: 750;
+}
+
+.planner-reference .studio-brand > svg, .planner-reference .kp-planner-brand > svg {
+  color: var(--ui-accent);
+}
+
+.planner-reference .studio-heading {
+  border-color: var(--ui-line);
+}
+
+.planner-reference .studio-heading small {
+  color: var(--ui-muted);
+}
+
+.planner-reference .studio-switch {
+  display: flex;
+  flex-shrink: 0;
+  margin-left: auto;
+  background: #f4f4f5;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+}
+
+.planner-reference .studio-switch > * {
+  min-height: 36px;
+  padding-inline: 12px;
+  font-size: 12px;
+  border-radius: 8px;
+  color: var(--ui-muted);
+}
+
+.planner-reference .studio-switch [aria-current] {
+  background: white;
+  color: var(--ui-ink);
+}
+
+.planner-reference .studio-switch a:hover {
+  color: var(--ui-ink);
+  background: white;
+}
+
+.planner-reference .kp-top-actions {
+  display: flex;
+  margin-left: 0;
+  gap: 6px;
+}
+
+.planner-reference .studio-file-actions button,
+.planner-reference .kp-top-actions > button,
+.planner-reference .kp-top-menu > summary,
+.planner-reference .kp-close-planner {
+  min-height: 44px;
+  border-radius: 10px;
+  border-color: var(--ui-line);
+  color: var(--ui-ink);
+}
+
+.planner-reference .studio-file-actions .studio-primary,
+.planner-reference .kp-top-actions > .kp-save-button,
+.planner-reference .kp-top-actions > a.kp-save-button {
+  min-height: 44px;
+  border-radius: 10px;
+  background: var(--ui-primary);
+  border-color: var(--ui-primary);
+  color: white;
+}
+
+.planner-reference .studio-file-actions .studio-primary:hover,
+.planner-reference .kp-top-actions > .kp-save-button:hover:not(:disabled) {
+  background: #333;
+}
+
+.planner-reference .kp-top-actions > .kp-save-button {
+  width: auto;
+}
+
+.planner-reference .kp-top-actions > .kp-save-button > span {
+  display: inline;
+}
+
+.planner-reference .studio-file-actions .studio-primary > span {
+  display: inline;
+}
+
+.planner-reference .kp-project-name input {
+  color: var(--ui-ink);
+  background: #fafafa;
+  border-color: var(--ui-line);
+  border-radius: 10px;
+}
+
+.planner-reference-rail {
+  align-items: stretch;
+  padding: 16px 10px;
+  border-color: var(--ui-line);
+}
+
+.planner-reference-rail button, .planner-reference-rail > a {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  height: auto;
+  min-height: 48px;
+  padding: 10px;
+  border-radius: 12px;
+  color: var(--ui-muted);
+}
+
+.planner-reference-rail :is(button, a) > svg {
+  flex-shrink: 0;
+}
+
+.planner-reference-rail button > span, .planner-reference-rail > a > span {
+  position: static;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.5;
+  white-space: normal;
+  visibility: visible;
+  opacity: 1;
+}
+
+.planner-reference-rail button[aria-pressed="true"] {
+  background: var(--ui-selected);
+  color: var(--ui-accent);
+}
+
+.planner-reference-rail button:hover:not(:disabled), .planner-reference-rail > a:hover {
+  background: #f4f4f5;
+  color: var(--ui-ink);
+}
+
+.planner-reference-rail button[aria-pressed="true"]:hover {
+  background: #dbeafe;
+  color: var(--ui-accent);
+}
+
+.planner-reference-rail-items {
+  gap: 6px;
+}
+
+.planner-workflow {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 26;
+  display: flex;
+  gap: 4px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 5px;
+  background: white;
+  border: 1px solid var(--ui-line);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px #18181b06;
+}
+
+.planner-workflow button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--ui-muted);
+}
+
+.planner-workflow button[aria-pressed="true"] {
+  background: var(--ui-selected);
+  color: var(--ui-accent);
+}
+
+.planner-workflow button:hover:not(:disabled) {
+  background: #f4f4f5;
+}
+
+.workflow-number {
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 10px;
+}
+
+.planner-workflow button > svg {
+  display: none;
+}
+
+.planner-reference .planner-view-toolbar, .planner-reference.kitchen-reference .kp-preview-bar {
+  top: 80px;
+}
+
+.planner-reference .planner-segment, .planner-reference .planner-tool-group, .planner-reference .planner-tools-menu > summary, .planner-reference.kitchen-reference .km-view-tools {
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: white;
+}
+
+.planner-reference .planner-segment button {
+  min-height: 38px;
+  border-radius: 9px;
+}
+
+.planner-reference .planner-segment button[aria-pressed="true"], .planner-reference.kitchen-reference .km-view-tools button[aria-pressed="true"] {
+  color: var(--ui-accent);
+  background: var(--ui-selected);
+}
+
+.planner-reference.kitchen-reference .km-view-tools {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 3px;
+  padding: 4px;
+  max-width: 100%;
+}
+
+.planner-reference.kitchen-reference .km-view-tools button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  min-width: 38px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.planner-reference.kitchen-reference .km-view-tools button span {
+  display: inline;
+}
+
+.planner-reference.kitchen-reference .kp-preview-bar > span {
+  display: none;
+}
+
+.planner-reference .planner-measure-readout {
+  top: 140px;
+}
+
+.planner-reference .kitchen-project-caption {
+  position: absolute;
+  bottom: 104px;
+  left: 16px;
+  z-index: 20;
+  display: grid;
+  gap: 5px;
+  color: var(--ui-ink);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.planner-reference .kitchen-project-caption span {
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+
+.planner-reference .planner-search, .planner-reference-category select {
+  min-height: 44px;
+  color: var(--ui-ink);
+  border-color: var(--ui-line);
+  background: #fafafa;
+  border-radius: 10px;
+}
+
+.planner-reference .planner-search input {
+  font-size: 13px;
+}
+
+.planner-reference .studio-catalog-list > button {
+  border-color: var(--ui-line);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.planner-reference .studio-catalog-list > button:hover {
+  border-color: #93c5fd;
+  background: var(--ui-selected);
+}
+
+.planner-reference .studio-catalog-list > button > div:last-child {
+  display: grid;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  background: white;
+  color: var(--ui-accent);
+  border: 1px solid var(--ui-line);
+}
+
+.planner-reference .studio-catalog-list > button p {
+  font-size: 12px;
+}
+
+.planner-reference .planner-reference-category {
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+.planner-reference .planner-panel-heading small {
+  margin-left: 0;
+  line-height: 1.7;
+  margin-top: 6px;
+}
+
+.planner-reference .kp-settings-head {
+  color: var(--ui-ink);
+  border-color: var(--ui-line);
+}
+
+.planner-reference .kp-settings :is(input, select) {
+  min-height: 44px;
+  font-size: 13px;
+  border-color: var(--ui-line);
+  border-radius: 10px;
+}
+
+.planner-reference .kp-settings .kp-field {
+  font-size: 13px;
+}
+
+.planner-reference.kitchen-reference .kp-settings > details {
+  padding: 14px;
+  border-color: var(--ui-line);
+  border-radius: 12px;
+}
+
+.planner-reference .kp-settings > details > summary {
+  font-size: 13px;
+  min-height: 32px;
+}
+
+.planner-reference :is(.km-finishes, .reference-type-grid) button[aria-pressed="true"] {
+  border-color: var(--ui-accent);
+  background: var(--ui-selected);
+}
+
+.planner-reference .room-material-swatch[aria-pressed="true"] {
+  border-color: var(--ui-accent);
+  background: var(--ui-selected);
+  color: var(--ui-accent);
+}
+
+.planner-reference .room-material-swatch[aria-pressed="true"] .room-material-sample {
+  border-color: var(--ui-accent);
+}
+
+.planner-reference .planner-budget-bar button:not(:disabled) {
+  background: var(--ui-primary);
+  border-radius: 10px;
+}
+
+.planner-reference .viewport-zoom, .planner-reference .viewport-more > summary, .planner-reference .viewport-extra {
+  color: var(--ui-ink);
+  border-color: var(--ui-line);
+  border-radius: 12px;
+}
+
+.planner-reference .viewport-controls button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.planner-reference .planner-tools-menu > summary > span {
+  display: inline;
+}
+
+.planner-inspector-backdrop {
+  display: none;
+}
+
+@media (max-width: 1399px) {
+  .planner-reference .kp-project-name, .planner-reference .kitchen-studio-heading {
+    display: none;
+  }
+}
+
+@media (max-width: 1199px) {
+  .planner-reference {
+    --reference-rail: 134px;
+    --reference-panel: 310px;
+  }
+  .planner-reference .studio-heading {
+    display: none;
+  }
+  .planner-reference.kitchen-reference .km-view-tools button {
+    font-size: 11px;
+    padding-inline: 7px;
+  }
+}
+
+@media (max-width: 959px) {
+  .planner-reference {
+    --reference-header: 64px;
+    --reference-rail: 0px;
+  }
+  .planner-reference.room-reference {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .planner-reference.room-reference > .planner-stage {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .planner-reference.kitchen-reference .kp-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .planner-reference.kitchen-reference .kp-workspace {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .planner-reference.room-reference > .planner-reference-rail, .planner-reference.kitchen-reference .planner-reference-rail {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .planner-reference-rail {
+    min-width: 0;
+    flex-direction: row;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    border: 0;
+    border-top: 1px solid var(--ui-line);
+    gap: 0;
+  }
+  .planner-reference-rail-items {
+    flex-direction: row;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    gap: 4px;
+    scrollbar-width: none;
+  }
+  .planner-reference-rail-items::-webkit-scrollbar {
+    display: none;
+  }
+  .planner-reference-rail button {
+    flex-direction: column;
+    gap: 4px;
+    min-width: 74px;
+    width: auto;
+    min-height: 58px;
+    padding: 7px 8px;
+    border-radius: 10px;
+  }
+  .planner-reference-rail button > span {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  .planner-reference-rail > a {
+    display: none;
+  }
+  .planner-reference .studio-heading {
+    display: none;
+  }
+  .planner-reference .room-studio-header {
+    padding-inline: 12px;
+  }
+  .planner-reference .kp-top-actions > button[aria-label="Буцаах"], .planner-reference .kp-top-actions > button[aria-label="Дахин хийх"], .planner-reference .km-layout-menu {
+    display: none;
+  }
+  .planner-reference.room-reference > .planner-drawer {
+    width: min(380px, 100vw);
+    top: var(--reference-header);
+    z-index: 70;
+  }
+  .planner-reference.kitchen-reference .kp-settings {
+    position: fixed;
+    top: var(--reference-header);
+    bottom: 0;
+    left: auto;
+    right: 0;
+    width: min(380px, 100vw);
+    z-index: 70;
+  }
+  .planner-reference .planner-drawer-heading, .planner-reference .kp-settings-head {
+    min-height: 64px;
+    padding: 16px;
+    font-size: 16px;
+  }
+  .planner-reference .planner-drawer-heading button, .planner-reference .kp-settings-head > button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .planner-reference .planner-drawer-backdrop, .planner-inspector-backdrop {
+    position: fixed;
+    inset: var(--reference-header) 0 0;
+    z-index: 60;
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #18181b45;
+  }
+  .planner-reference .planner-drawer-backdrop {
+    display: block;
+  }
+  .planner-reference .studio-brand > span, .planner-reference .kp-planner-brand > span {
+    display: none;
+  }
+  .planner-reference .studio-switch {
+    margin-left: 0;
+  }
+  .planner-reference .studio-file-actions, .planner-reference .kp-top-actions {
+    margin-left: auto;
+  }
+  .planner-reference .kp-planner-topbar {
+    min-height: var(--reference-header);
+    padding: 8px 12px;
+  }
+  .planner-reference .studio-file-actions button {
+    padding: 8px 10px;
+  }
+  .planner-reference .studio-file-actions button:first-child > span {
+    display: none;
+  }
+  .planner-reference .kp-top-actions > .kp-save-button > span {
+    max-width: 100px;
+    font-size: 11px;
+  }
+  .planner-reference .kp-settings :is(input, select), .planner-reference .planner-drawer :is(input, select) {
+    font-size: 16px;
+  }
+  .planner-reference .planner-workflow {
+    top: 12px;
+    left: 12px;
+    max-width: calc(100% - 24px);
+  }
+  .planner-reference .planner-view-toolbar, .planner-reference.kitchen-reference .kp-preview-bar {
+    top: 76px;
+    left: 12px;
+    right: 12px;
+  }
+  .planner-reference.kitchen-reference .km-view-tools button {
+    padding: 8px;
+  }
+  .planner-reference.kitchen-reference .km-view-tools button:nth-child(3) {
+    display: none;
+  }
+  .planner-reference.kitchen-reference .km-view-tools button:last-child span {
+    display: none;
+  }
+  .planner-reference.kitchen-reference .kp-preview-hint {
+    display: none;
+  }
+  .planner-reference.kitchen-reference .km-feedback {
+    bottom: 14px;
+    left: 12px;
+    max-width: calc(100% - 84px);
+    font-size: 11px;
+  }
+  .planner-reference.kitchen-reference .viewport-controls {
+    bottom: 70px;
+  }
+  .planner-reference .kitchen-project-caption {
+    bottom: 76px;
+    left: 12px;
+    max-width: calc(100% - 90px);
+  }
+}
+
+@media (max-width: 420px) {
+  .planner-reference .studio-header, .planner-reference .kp-planner-topbar {
+    gap: 6px;
+    padding-inline: 8px;
+  }
+  .planner-reference .studio-switch > * {
+    padding-inline: 8px;
+    font-size: 11px;
+  }
+  .planner-reference .studio-file-actions {
+    gap: 5px;
+  }
+  .planner-reference .kp-top-actions {
+    gap: 4px;
+  }
+  .planner-reference .kp-top-actions > a.kp-save-button {
+    padding-inline: 8px;
+  }
+  .planner-reference .planner-workflow {
+    width: calc(100% - 24px);
+  }
+  .planner-workflow button {
+    flex: 1;
+    padding-inline: 6px;
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planner-reference button {
+    transition: none;
+  }
+}

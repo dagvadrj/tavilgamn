@@ -27,7 +27,7 @@ export function useRoomPlannerUi() {
   const [view, setView] = useState<"plan" | "perspective">("perspective");
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [locked, setLocked] = useState(false);
-  const [paletteCat, setPaletteCat] = useState<Category>("sofa");
+  const [paletteCat, setPaletteCat] = useState<Category | "all">("all");
   const [showCompare, setShowCompare] = useState(false);
   const [showRoomGeometry, setShowRoomGeometry] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);

@@ -2,14 +2,20 @@
 
 import dynamic from "next/dynamic";
 import { useKitchenCatalog } from "@/features/kitchen-planner/hooks/useKitchenCatalog";
+import { KitchenModelLibrary } from "@/features/kitchen-planner/components/KitchenModelLibrary";
+import { cabinetFromCatalog } from "@/lib/kitchenCatalogInsertion";
 import { EditorHistory } from "@/lib/editorHistory";
 import { extraFromProduct, findExtraSpace, parseKitchenExtras, type KitchenExtra } from "@/lib/kitchenExtras";
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
 import { ProjectReport } from "@/features/kitchen-planner/components/ProjectReport";
 import { ViewportControls } from "@/features/planner/components/ViewportControls";
 import { PlannerRail } from "@/features/planner/components/PlannerRail";
+import { PlannerSwitcher, PlannerWorkflow } from "@/features/planner/components/PlannerWorkflow";
+import { usePlannerPanel } from "@/features/planner/components/usePlannerPanel";
 import "@/features/planner/components/planner-studio.css";
 import "@/features/planner/components/planner-reference.css";
+import "@/features/planner/components/planner-usability.css";
+import "@/features/planner/components/planner-sidebar.css";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { VersionHistory } from "@/features/kitchen-planner/components/VersionHistory";
 import { useCatalog } from "@/store/catalog";
@@ -182,9 +188,10 @@ export function ModularKitchenPlanner({
   const [open, setOpen] = useState(false);
   const [componentOverview, setComponentOverview] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [inspectorTab, setInspector] = useState<keyof typeof KITCHEN_INSPECTOR_LABELS>("materials");
+  const settingsRef = usePlannerPanel(settingsOpen, () => setSettingsOpen(false));
+  const [inspectorTab, setInspector] = useState<keyof typeof KITCHEN_INSPECTOR_LABELS>("catalog");
   const [reviewOpen, setReviewOpen] = useState(false);
-  const { moduleCatalog, materialCatalog } = useKitchenCatalog(active);
+  const { moduleCatalog, materialCatalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useKitchenCatalog(active);
   const [exportRoot, setExportRoot] = useState<Group | null>(null);
   const captureKitchen = useRef<(() => Promise<Blob | null>) | null>(null);
   const registerKitchenCapture = useCallback(
@@ -643,6 +650,19 @@ export function ModularKitchenPlanner({
       }).kitchen,
     );
   }
+  function addCatalogCabinet(module: KitchenCatalogModule, variant: KitchenCatalogVariant) {
+    if (busy || design.cabinets.length >= 80) return;
+    const cabinet = cabinetFromCatalog(module, variant, crypto.randomUUID(), design.room.height);
+    if (!cabinet) return;
+    const issue = validateCabinet(cabinet);
+    if (issue) { setMessage(issue); return; }
+    const next = findCabinetSpace(design, cabinet);
+    if (!next) { setMessage("Энэ загвар багтах сул зай алга. Шүүгээ зөөх эсвэл өрөөний хэмжээг өөрчилнө үү."); return; }
+    if (commit(next)) {
+      setSelectedId(cabinet.id);
+      setMessage(`${variant.modelName || module.name} нэмэгдлээ.`);
+    }
+  }
   function addCabinet() {
     const id = crypto.randomUUID();
     const cabinet = addType.startsWith("fridge")
@@ -785,6 +805,7 @@ export function ModularKitchenPlanner({
           <House size={18} /> <span>tavilga.mn</span>
         </Link>
         <div className="studio-heading kitchen-studio-heading"><span>Гал тогооны төлөвлөгч</span><small>Өөрийнхөөрөө тохижуулах</small></div>
+        <PlannerSwitcher current="kitchen"/>
         <nav className="kp-planner-steps" aria-label="Төлөвлөх үе шат">
           <span className="is-active">3D төлөвлөх</span>
           <button type="button" onClick={() => setReviewOpen(true)}>
@@ -879,9 +900,10 @@ export function ModularKitchenPlanner({
             <Link
               className="kp-save-button"
               aria-label="Нэвтэрч хадгалах"
+              title="Нэвтэрч хадгалах"
               href={`/login?next=${encodeURIComponent(new URLSearchParams(queryString).has("design") ? `/kitchen?${queryString}` : `/kitchen?importGuest=1${draftToken?`&draft=${encodeURIComponent(draftToken)}`:''}`)}`}
             >
-              <Save size={18} /> <span>Нэвтэрч хадгалах</span>
+              <Save size={18} /> <span>Хадгалах</span>
             </Link>
           )}
           <details className="kp-top-menu kp-more-menu">
@@ -942,6 +964,8 @@ export function ModularKitchenPlanner({
         ]} />
         <div className="kp-workspace">
           <section className="kp-preview" aria-label="Модуль шүүгээ байрлуулах">
+            <PlannerWorkflow active={inspector === "room" || inspector === "catalog" || inspector === "materials" ? inspector : null}
+              disabled={busy} onSelect={step => { setInspector(step); setSettingsOpen(true); }}/>
             <div className="kp-preview-bar">
               <span>
                 {Math.round(bounds.w * 1000)} × {Math.round(bounds.d * 1000)} ×{" "}
@@ -1032,9 +1056,13 @@ export function ModularKitchenPlanner({
             </div>
             <p className="kp-preview-hint">
               {mode === "move"
-                ? "Зүүн товч: шүүгээ зөөх · Дунд товч: эргүүлэх · Esc: буцаах"
-                : "Дунд товч: эргүүлэх · Shift: шилжүүлэх · Дугуй: ойртуулах"}
+                ? "Шүүгээг чирж зөөнө · Хоёр хуруу: zoom, шилжүүлэх · Esc: буцаах"
+                : "Чирж эргүүлэх · Дугуй: заасан цэг рүү zoom · Хоёр хуруу: zoom, шилжүүлэх"}
             </p>
+            <div className="kitchen-project-caption">
+              <strong>Гал тогоо · {design.room.width / 1000} × {design.room.depth / 1000} м</strong>
+              <span>{kitchen.cabinets.length} шүүгээ · Тааз {design.room.height / 1000} м</span>
+            </div>
             <p
               className={`km-feedback ${issues.some((issue) => issue.severity === "error") ? "has-error" : ""}`}
               role="status"
@@ -1103,7 +1131,10 @@ export function ModularKitchenPlanner({
             )}
           </section>
         </div>
+        {settingsOpen && <button type="button" className="planner-inspector-backdrop" aria-label="Самбар хаах"
+          onClick={() => setSettingsOpen(false)}/>}
         <aside
+          ref={settingsRef}
           className={`kp-settings ${settingsOpen ? "is-open" : ""} ${selected || selectedExtra ? "is-selected" : "is-tools"}`}
           data-inspector={inspector}
           aria-label={
@@ -1556,22 +1587,17 @@ export function ModularKitchenPlanner({
               onOverviewClose={() => setComponentOverview(false)}
             />
           )}
-          <details className="kp-panel km-details" data-inspector-section="materials" open>
-            <summary>Өнгө, материал, бариул · нийт загвар</summary>
+          <details className="kp-panel km-details planner-material-section" data-inspector-section="materials" open>
+            <summary>Шүүгээний өнгө, материал</summary>
             <fieldset className="km-fields" disabled={busy}>
-              <label className="kp-field">
-                <span>Өөрчлөх хэсэг</span>
-                <select
-                  value={scope}
-                  onChange={(e) => setScope(e.target.value as typeof scope)}
-                >
-                  <option value="all">Бүх шүүгээ</option>
-                  <option value="base">Доод ба өндөр шүүгээ</option>
-                  <option value="wall">Дээд шүүгээ</option>
-                  <option value="selected">Сонгосон шүүгээ</option>
-                </select>
-              </label>
-              <p className="kp-help">Фасад</p>
+              <div className="planner-scope-control"><strong>Хаана хэрэглэх вэ?</strong>
+                <div className="planner-filter-pills" aria-label="Материал өөрчлөх хэсэг">
+                  {([['all', 'Бүгд'], ['base', 'Доод'], ['wall', 'Дээд'], ['selected', 'Сонгосон']] as const).map(([value, label]) =>
+                    <button key={value} type="button" aria-pressed={scope === value} disabled={value === 'selected' && !selected}
+                      onClick={() => setScope(value)}>{label}</button>)}
+                </div>
+              </div>
+              <p className="planner-section-label">Хаалганы материал</p>
               <div
                 className="km-finishes"
                 role="group"
@@ -1601,7 +1627,7 @@ export function ModularKitchenPlanner({
                   </button>
                 ))}
               </div>
-              <p className="kp-help">Шүүгээний их бие</p>
+              <p className="planner-section-label">Шүүгээний их бие</p>
               <div
                 className="km-finishes"
                 role="group"
@@ -1885,12 +1911,15 @@ export function ModularKitchenPlanner({
               )}
             </fieldset>
           </details>
-          <details className="kp-panel km-details km-add-menu" data-inspector-section="catalog" open>
+          <KitchenModelLibrary modules={moduleCatalog} loading={catalogLoading} error={catalogError}
+            retry={retryCatalog} disabled={busy || kitchen.cabinets.length >= 80} onAdd={addCatalogCabinet}/>
+          <details className="kp-panel km-details km-add-menu planner-standard-builder" data-inspector-section="catalog">
             <summary>
               <Plus size={17} />
-              Шүүгээ, төхөөрөмж нэмэх
+              Хэмжээгээр шүүгээ үүсгэх
             </summary>
             <div className="km-fields">
+              <p className="kp-help">Энгийн загвар үүсгэнэ. Бэлэн GLB загвар сонгох бол дээрх санг ашиглаарай.</p>
               <div className="reference-type-grid" role="group" aria-label="Шүүгээний төрөл сонгох">
                 {Object.entries(CABINET_DEFAULTS).map(([type, spec]) => <button
                   type="button" key={type} disabled={busy} aria-pressed={addType === type}

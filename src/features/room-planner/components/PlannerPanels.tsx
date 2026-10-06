@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { usePlannerPanel } from "@/features/planner/components/usePlannerPanel";
 import { X } from "lucide-react";
 import { cn, formatPrice } from "@/lib/format";
 import type { RoomDesign } from "@/lib/types";
@@ -24,46 +25,7 @@ export function Drawer({
   active?: boolean;
   children: React.ReactNode;
 }) {
-  const drawerRef = useRef<HTMLElement>(null);
-  const closeRef = useRef(onClose);
-  closeRef.current = onClose;
-  useEffect(() => {
-    if (!active || !open || window.matchMedia("(min-width: 960px)").matches) return;
-    const previous = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const elements = () =>
-      Array.from(
-        drawerRef.current?.querySelectorAll<HTMLElement>(
-          'button:not(:disabled), input, select, summary, [tabindex="0"]',
-        ) ?? [],
-      ).filter((element) => element.getClientRects().length);
-    elements()[0]?.focus();
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        closeRef.current();
-      }
-      if (event.key !== "Tab") return;
-      const items = elements();
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last?.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first?.focus();
-      }
-    };
-    const drawer = drawerRef.current;
-    drawer?.addEventListener("keydown", handleKey);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      drawer?.removeEventListener("keydown", handleKey);
-      if (previous?.isConnected) previous.focus();
-    };
-  }, [open, active]);
+  const drawerRef = usePlannerPanel(active && open, onClose);
   if (!active) return null;
   return (
     <>

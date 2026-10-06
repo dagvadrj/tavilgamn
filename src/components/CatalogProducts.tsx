@@ -8,6 +8,7 @@ import { ProductCard } from "./ProductCard";
 import { CatalogStatus } from "./CatalogStatus";
 import { hasAvailableStock } from "@/lib/inventory";
 import { hasProductOffer } from "@/lib/catalogPresentation";
+import { matchesProductSearch } from "@/lib/productSearch";
 import { Box, Tag, SlidersHorizontal } from "lucide-react";
 
 export function CatalogProducts({
@@ -58,9 +59,7 @@ export function CatalogProducts({
       (!maxPrice || product.basePrice <= Number(maxPrice)) &&
       (!offersOnly || hasProductOffer(product, checkedAt)) &&
       (!modelsOnly || !!product.model) &&
-      `${product.name} ${product.description} ${CATEGORY_LABEL[product.category]}`
-        .toLowerCase()
-        .includes(query.trim().toLowerCase()),
+      matchesProductSearch(product, query),
   );
 
   filtered.sort((a, b) =>

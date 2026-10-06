@@ -4,6 +4,9 @@ import type { KitchenCatalogModule } from "@/lib/kitchenModuleCatalog";
 import { normalizeKitchenMaterials, type KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 
 export function useKitchenCatalog(active: boolean) {
+  const [loading, setLoading] = useState(active);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [moduleCatalog, setModuleCatalog] = useState<KitchenCatalogModule[]>(
     [],
   );
@@ -13,6 +16,8 @@ export function useKitchenCatalog(active: boolean) {
   useEffect(() => {
     if (!active) return;
     const controller = new AbortController();
+    setLoading(true);
+    setError(false);
     fetch("/api/kitchen-modules", {
       signal: controller.signal,
       cache: "no-store",
@@ -26,11 +31,13 @@ export function useKitchenCatalog(active: boolean) {
       })
       .catch((error) => {
         if (error?.name !== "AbortError") {
-          setModuleCatalog([]);
-          setMaterialCatalog([]);
+          setError(true);
         }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [active]);
-  return { moduleCatalog, materialCatalog };
+  }, [active, attempt]);
+  return { moduleCatalog, materialCatalog, loading, error, retry: () => setAttempt(value => value + 1) };
 }

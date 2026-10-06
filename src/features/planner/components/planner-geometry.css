@@ -1,0 +1,346 @@
+.planner-reference .room-geometry-modal {
+  width: min(1040px, calc(100% - 40px));
+  max-height: calc(100dvh - 40px);
+  background: #fff;
+  border-color: var(--ui-line);
+  color: var(--ui-ink);
+  border-radius: 22px;
+  box-shadow: 0 24px 80px #18181b26;
+}
+
+.planner-reference .room-geometry-modal::backdrop {
+  background: #18181b66;
+  backdrop-filter: blur(3px);
+}
+
+.planner-reference .room-geometry-modal-header {
+  padding: 20px 24px;
+  border-color: var(--ui-line);
+}
+
+.geometry-modal-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.geometry-modal-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  background: var(--ui-selected);
+  color: var(--ui-accent);
+  border-radius: 13px;
+}
+
+.planner-reference .room-geometry-modal-header h2 {
+  font-size: 19px;
+  color: var(--ui-ink);
+}
+
+.geometry-modal-heading p {
+  font-size: 12px;
+  color: var(--ui-muted);
+  margin-top: 4px;
+}
+
+.planner-reference .room-geometry-modal-header > button {
+  border: 1px solid var(--ui-line);
+  background: #fafafa;
+  color: var(--ui-ink);
+  border-radius: 50%;
+}
+
+.planner-reference .room-geometry-modal-header > button:hover {
+  background: #f4f4f5;
+}
+
+.planner-reference .room-geometry-modal-body {
+  padding: 0;
+}
+
+.planner-reference .room-geometry-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.planner-reference .room-wall-plan {
+  padding: 20px 24px;
+  background: #fafafa;
+  border-right: 1px solid var(--ui-line);
+}
+
+.planner-reference .room-wall-plan > .room-shape-help {
+  margin: 0 0 14px;
+}
+
+.planner-reference .room-wall-live {
+  background: #fff;
+  border-color: var(--ui-line);
+  color: var(--ui-muted);
+  padding: 12px 14px;
+}
+
+.planner-reference .room-wall-live strong {
+  font-size: 18px;
+  color: var(--ui-ink);
+}
+
+.planner-reference .room-measured-plan {
+  border-color: var(--ui-line);
+  background: white;
+  border-radius: 16px;
+}
+
+.planner-reference .room-measured-plan figcaption {
+  color: var(--ui-ink);
+}
+
+.planner-reference .room-measured-plan svg text {
+  fill: var(--ui-ink);
+  stroke: #fff;
+}
+
+.planner-reference .room-plan-floor {
+  fill: #f4f4f5;
+  stroke: #a1a1aa;
+}
+
+.planner-reference .room-plan-dimension line {
+  stroke: #a1a1aa;
+}
+
+.planner-reference .room-plan-furniture {
+  fill: #dbeafe;
+  stroke: var(--ui-accent);
+}
+
+.planner-reference .room-wall-highlight {
+  stroke: #71717a;
+}
+
+.planner-reference .room-wall-grip {
+  fill: #fff;
+  stroke: var(--ui-accent);
+}
+
+.planner-reference .room-wall-grip-arrow {
+  stroke: var(--ui-accent);
+}
+
+.planner-reference .room-wall-handle:is(:hover, .is-selected) .room-wall-highlight {
+  stroke: var(--ui-accent);
+}
+
+.planner-reference .room-wall-handle:is(:hover, .is-selected) .room-wall-grip {
+  fill: #dbeafe;
+  stroke: var(--ui-accent);
+}
+
+.planner-reference .room-wall-grip:focus-visible {
+  stroke: var(--ui-accent);
+}
+
+.planner-reference :is(.room-wall-feedback, .room-measured-plan > p, .room-measured-plan > ul) {
+  color: var(--ui-muted);
+}
+
+.planner-reference .room-wall-feedback {
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.geometry-settings {
+  min-width: 0;
+  padding: 20px 24px 24px;
+}
+
+.geometry-section-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: #fafafa;
+  margin-bottom: 22px;
+}
+
+.geometry-section-tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 1;
+  min-height: 42px;
+  padding: 6px;
+  border-radius: 8px;
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+
+.geometry-section-tabs button[aria-pressed="true"] {
+  color: var(--ui-accent);
+  background: var(--ui-selected);
+  font-weight: 650;
+}
+
+.geometry-settings-section[hidden] {
+  display: none;
+}
+
+.geometry-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.planner-reference .geometry-settings-section h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--ui-ink);
+}
+
+.geometry-section-heading > span {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #f4f4f5;
+  font-size: 11px;
+  color: var(--ui-muted);
+}
+
+.planner-reference .room-exact-dimensions {
+  border: 0;
+  padding: 10px 0 0;
+}
+
+.planner-reference .room-geometry-editor .planner-number span {
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+
+.planner-reference .room-geometry-editor :is(input, select) {
+  min-height: 46px;
+  background: #fff;
+  border-color: var(--ui-line);
+  border-radius: 10px;
+  color: var(--ui-ink);
+  font-size: 15px;
+}
+
+.planner-reference .room-shape-feature {
+  background: #fafafa;
+  border-color: var(--ui-line);
+  border-radius: 12px;
+}
+
+.planner-reference .room-shape-add {
+  justify-content: center;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px dashed #d4d4d8;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ui-accent);
+  text-decoration: none;
+}
+
+.planner-reference .room-shape-add:hover:not(:disabled) {
+  border-color: var(--ui-accent);
+  background: var(--ui-selected);
+}
+
+.geometry-editor-footer {
+  grid-column: 1 / -1;
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--ui-line);
+  background: #fff;
+}
+
+.geometry-editor-footer > p:not(.room-shape-error) {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ui-muted);
+}
+
+.planner-reference .room-shape-apply {
+  width: auto;
+  min-width: 140px;
+  min-height: 46px;
+  margin: 0;
+  background: var(--ui-primary);
+  color: #fff;
+  border-color: var(--ui-primary);
+  border-radius: 10px;
+  justify-content: center;
+}
+
+.planner-reference .room-shape-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.planner-reference .room-wall-feedback.has-error {
+  color: #b91c1c;
+}
+
+@media (max-width: 759px) {
+  .planner-reference .room-geometry-modal {
+    width: calc(100% - 20px);
+    max-height: calc(100dvh - 24px);
+    border-radius: 18px;
+  }
+  .planner-reference .room-geometry-modal-header {
+    padding: 14px 16px;
+  }
+  .planner-reference .room-geometry-modal-header h2 {
+    font-size: 16px;
+  }
+  .geometry-modal-icon {
+    display: none;
+  }
+  .planner-reference .room-geometry-editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .planner-reference .room-wall-plan {
+    padding: 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--ui-line);
+  }
+  .planner-reference .room-measured-plan svg {
+    max-height: 300px;
+  }
+  .geometry-settings {
+    padding: 16px;
+  }
+  .geometry-section-tabs {
+    margin-bottom: 18px;
+  }
+  .planner-reference .room-geometry-editor :is(input, select) {
+    font-size: 16px;
+  }
+  .geometry-editor-footer {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    gap: 8px;
+  }
+  .geometry-editor-footer > p:not(.room-shape-error) {
+    font-size: 11px;
+  }
+  .planner-reference .room-shape-apply {
+    min-width: 110px;
+  }
+}
