@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Form from "next/form";
 import Image from "next/image";
 import {
   ArrowRight,
@@ -30,7 +29,7 @@ import { HomeCarousel } from "@/components/HomeCarousel";
 import { configuredPaymentLabels } from "@/lib/paymentPresentationServer";
 import { ShopTheLook } from "@/components/ShopTheLook";
 import { buildRoomLooks } from "@/lib/shopTheLook";
-import { HomeRecommendationsRefresh } from "@/components/HomeRecommendationsRefresh";
+import { HomeRecommendations } from "@/components/HomeRecommendations";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage({
@@ -53,7 +52,6 @@ export default async function HomePage({
     Number.isInteger(parsedLimit) && parsedLimit >= 10
       ? Math.min(parsedLimit, 100)
       : 10;
-  const featured = recommended.slice(0, limit);
   const offerCheckedAt = Date.now();
   const paymentLabels = configuredPaymentLabels();
   const offers = products.filter((product) =>
@@ -331,34 +329,12 @@ export default async function HomePage({
               <ArrowRight size={15} aria-hidden="true" />
             </Link>
           </div>
-          {featured.length > 0 ? (
-            <>
-              <div className="market-product-grid">
-                {featured.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    offerCheckedAt={offerCheckedAt}
-                  />
-                ))}
-              </div>
-              <div className="market-load-more">
-                {featured.length < recommended.length && limit < 100 && (
-                  <Form action="/#recommendations">
-                    <input
-                      type="hidden"
-                      name="limit"
-                      value={Math.min(limit + 10, 100)}
-                    />
-                    <button type="submit">
-                      Дахин үзүүлэх
-                      <ChevronRight size={16} aria-hidden="true" />
-                    </button>
-                  </Form>
-                )}
-                <HomeRecommendationsRefresh />
-              </div>
-            </>
+          {recommended.length > 0 ? (
+            <HomeRecommendations
+              products={recommended}
+              initialCount={limit}
+              offerCheckedAt={offerCheckedAt}
+            />
           ) : (
             <div className="shop-empty">
               <Box size={28} aria-hidden="true" />
