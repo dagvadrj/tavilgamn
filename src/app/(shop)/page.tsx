@@ -30,6 +30,7 @@ import { HomeCarousel } from "@/components/HomeCarousel";
 import { configuredPaymentLabels } from "@/lib/paymentPresentationServer";
 import { ShopTheLook } from "@/components/ShopTheLook";
 import { buildRoomLooks } from "@/lib/shopTheLook";
+import { HomeRecommendationsRefresh } from "@/components/HomeRecommendationsRefresh";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage({
@@ -341,25 +342,22 @@ export default async function HomePage({
                   />
                 ))}
               </div>
-              {featured.length < recommended.length && limit < 100 && (
-                <Form
-                  action="/#recommendations"
-                  className="market-load-more"
-                >
-                  <input
-                    type="hidden"
-                    name="limit"
-                    value={Math.min(limit + 10, 100)}
-                  />
-                  <button type="submit">
-                    Дахин үзүүлэх
-                    <ChevronRight size={16} aria-hidden="true" />
-                  </button>
-                  <span>
-                    {featured.length} / {recommended.length} бараа
-                  </span>
-                </Form>
-              )}
+              <div className="market-load-more">
+                {featured.length < recommended.length && limit < 100 && (
+                  <Form action="/#recommendations">
+                    <input
+                      type="hidden"
+                      name="limit"
+                      value={Math.min(limit + 10, 100)}
+                    />
+                    <button type="submit">
+                      Дахин үзүүлэх
+                      <ChevronRight size={16} aria-hidden="true" />
+                    </button>
+                  </Form>
+                )}
+                <HomeRecommendationsRefresh />
+              </div>
             </>
           ) : (
             <div className="shop-empty">

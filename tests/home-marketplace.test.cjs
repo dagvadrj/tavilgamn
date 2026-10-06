@@ -71,6 +71,7 @@ test("homepage stays server-rendered, load-more is bounded, and placeholder or u
     "@/lib/catalogServer": { readProducts: async () => products },
     "@/lib/storeDirectory": { readStoreDirectory: async () => [] },
     "@/components/FeaturedMerchants": { FeaturedMerchants: () => null },
+    "@/components/HomeRecommendationsRefresh": { HomeRecommendationsRefresh: () => null },
     "@/components/ProductCard": { ProductCard: ({ product }) => React.createElement("article", { "data-product": product.id }) },
     "next/image": { default: ({ alt }) => React.createElement("span", { "aria-label": alt }) },
   }).default;
