@@ -182,7 +182,7 @@ export function RoomCanvas({
         onSelectOpening?.(null);
       }}
     >
-      <CameraMotionPreview>
+      <CameraMotionPreview interactionActive={isDraggingPiece}>
       <CanvasDiagnostics scene="room" />
       <CameraRig
         view={view}
@@ -583,11 +583,13 @@ function DraggablePiece({
 
     window.addEventListener("pointerup", finishDrag);
     window.addEventListener("pointercancel", finishDrag);
+    window.addEventListener("blur", finishDrag);
     gl.domElement.addEventListener(SCENE_NAVIGATION_START, finishDrag);
 
     return () => {
       window.removeEventListener("pointerup", finishDrag);
       window.removeEventListener("pointercancel", finishDrag);
+      window.removeEventListener("blur", finishDrag);
       gl.domElement.removeEventListener(SCENE_NAVIGATION_START, finishDrag);
       onDragChange(false);
       onEditEnd?.();

@@ -1,4 +1,7 @@
 "use client";
+import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
+import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
+
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -153,7 +156,7 @@ function MerchantWorkspace({
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
-  const [tab, setTab] = useState<MerchantTab>("overview");
+  const [tab, setTab] = useDraftState<MerchantTab>(`merchant:${owner}:navigation`, "tab", "overview");
   const [focusedKitchenId, setFocusedKitchenId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -163,10 +166,10 @@ function MerchantWorkspace({
       setFocusedKitchenId(location.designId);
     };
 
-    syncLocation();
+    if (window.location.search) syncLocation();
     window.addEventListener("popstate", syncLocation);
     return () => window.removeEventListener("popstate", syncLocation);
-  }, []);
+  }, [setTab]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -663,7 +666,8 @@ function StoreProfile({
   store: Store | null;
   onSave: (store: Store) => void;
 }) {
-  const [draft, setDraft] = useState(() => ({
+  const draftScope = `merchant:${owner}:store`;
+  const [draft, setDraft] = useDraftState(draftScope, "draft", () => ({
     name: store?.name ?? "",
     storeType: store?.storeType ?? "factory",
     city: store?.city ?? "Улаанбаатар",
@@ -677,6 +681,7 @@ function StoreProfile({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const draftStatus = useDraftStatus(draftScope);
   function field<K extends keyof typeof draft>(
     key: K,
     value: (typeof draft)[K],
@@ -689,7 +694,7 @@ function StoreProfile({
       className="merchant-panel"
       onSubmit={async (event) => {
         event.preventDefault();
-        if (busy) return;
+        if (busy || draftStatus.loading) return;
         setError(null);
         setSaved(false);
         if (!draft.categories.length) {
@@ -707,6 +712,7 @@ function StoreProfile({
               body: JSON.stringify(draft),
             },
           );
+          void clearDashboardDraft(draftScope, false);
           onSave(result.store);
           setSaved(true);
         } catch (reason) {
@@ -724,7 +730,8 @@ function StoreProfile({
           ? "Энэ мэдээлэл хэрэглэгчдэд таны дэлгүүрийн хуудсанд харагдана."
           : "Эхлээд дэлгүүрийн мэдээллээ бүртгээд бүтээгдэхүүнээ нэмээрэй."}
       </p>
-      <fieldset disabled={busy}>
+      <DashboardDraftNotice scope={draftScope} disabled={busy} />
+      <fieldset disabled={busy || draftStatus.loading}>
         <div className="merchant-form-grid">
           <label>
             Дэлгүүрийн нэр
@@ -871,10 +878,10 @@ function MerchantProducts({ owner }: { owner: string }) {
   const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
   const [query, setQuery] = useState("");
-  const [editing, setEditing] = useState<{
+  const [editing, setEditing] = useDraftState<{
     product: MerchantProduct;
     create: boolean;
-  } | null>(null);
+  } | null>(`merchant:${owner}:products-navigation`, "editing", null);
   const [saved, setSaved] = useState(false);
   const [includeArchived, setIncludeArchived] = useState(false);
   const [archiveBusy, setArchiveBusy] = useState<string | null>(null);
@@ -1053,16 +1060,18 @@ function MerchantProductEditor({
   close: () => void;
   onSave: () => void;
 }) {
-  const [draft, setDraft] = useState(product);
+  const draftScope = `merchant:${owner}:product:${create ? "new" : product.id}`;
+  const [draft, setDraft] = useDraftState(draftScope, "draft", product);
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useDraftState<File | null>(draftScope, "imageFile", null);
 
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryFiles, setGalleryFiles] = useDraftState<File[]>(draftScope, "galleryFiles", []);
 
-  const [modelRequested, setModelRequested] = useState(
+  const [modelRequested, setModelRequested] = useDraftState(draftScope, "modelRequested",
     Boolean(product.modelRequested),
   );
 
+  const draftStatus = useDraftStatus(draftScope);
   const [busy, setBusy] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
@@ -1116,7 +1125,7 @@ function MerchantProductEditor({
       className="merchant-panel"
       onSubmit={async (event) => {
         event.preventDefault();
-        if (busy) return;
+        if (busy || draftStatus.loading) return;
         setError(null);
         setBusy(true);
         try {
@@ -1163,6 +1172,7 @@ function MerchantProductEditor({
               }),
             },
           );
+          void clearDashboardDraft(draftScope);
           onSave();
         } catch (reason) {
           setError(
@@ -1185,7 +1195,8 @@ function MerchantProductEditor({
         Бүтээгдэхүүн рүү буцах
       </button>
       <h2>{create ? "Бараа нэмэх" : "Бүтээгдэхүүн засах"}</h2>
-      <fieldset disabled={busy}>
+      <DashboardDraftNotice scope={draftScope} disabled={busy} files={[imageFile, ...galleryFiles]} />
+      <fieldset disabled={busy || draftStatus.loading}>
         <div className="merchant-form-grid">
           <label>
             Барааны нэр

@@ -4,10 +4,10 @@ import Link from "next/link";
 import { ArrowLeft, MapPin, Phone } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { cache } from "react";
-import { readDirectoryStore } from "@/lib/storeDirectory";
+import { readCachedDirectoryStore as readDirectoryStore } from "@/lib/publicCatalog";
 import { STORE_TYPES } from "@/lib/storeTypes";
 import { CATEGORY_LABEL } from "@/lib/products";
-import { readProducts } from "@/lib/catalogServer";
+import { readCachedProducts as readProducts } from "@/lib/publicCatalog";
 import { hasAvailableStock } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";

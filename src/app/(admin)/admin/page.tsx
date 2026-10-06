@@ -1,4 +1,7 @@
 "use client";
+import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
+import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
+
 import Link from "next/link";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -54,11 +57,11 @@ const TABS = ADMIN_TABS;
 type Tab = AdminTab;
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<Tab>("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
   const router = useRouter();
   const user = useAuth((s) => s.user);
+  const [tab, setTab] = useDraftState<Tab>(`admin:${user?.id ?? "guest"}:navigation`, "tab", "dashboard");
   const role = useAuth((s) => s.role);
   const initialized = useAuth((s) => s.initialized);
   const initializeAuth = useAuth((s) => s.initialize);
@@ -244,7 +247,7 @@ function ModelsTab({
 
   onOpenProduct: (productId: string) => void;
 }) {
-  const [modelSection, setModelSection] = useState<ModelSection>("requests");
+  const [modelSection, setModelSection] = useDraftState<ModelSection>(`admin:${owner}:models-navigation`, "modelSection", "requests");
 
   const [modelStatuses, setModelStatuses] = useState<
     Record<string, ModelStatus>
@@ -266,34 +269,36 @@ function ModelsTab({
 
   const [modelActionError, setModelActionError] = useState<string | null>(null);
 
+  const draftScope = `admin:${owner}:model-upload`;
   // Basic info
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("sofa");
-  const [description, setDescription] = useState("");
-  const [basePrice, setBasePrice] = useState("0");
-  const [stockQuantity, setStockQuantity] = useState("0");
-  const [scale, setScale] = useState("1");
-  const [dimW, setDimW] = useState("1.0");
-  const [dimD, setDimD] = useState("1.0");
-  const [dimH, setDimH] = useState("1.0");
+  const [name, setName] = useDraftState(draftScope, "name", "");
+  const [category, setCategory] = useDraftState(draftScope, "category", "sofa");
+  const [description, setDescription] = useDraftState(draftScope, "description", "");
+  const [basePrice, setBasePrice] = useDraftState(draftScope, "basePrice", "0");
+  const [stockQuantity, setStockQuantity] = useDraftState(draftScope, "stockQuantity", "0");
+  const [scale, setScale] = useDraftState(draftScope, "scale", "1");
+  const [dimW, setDimW] = useDraftState(draftScope, "dimW", "1.0");
+  const [dimD, setDimD] = useDraftState(draftScope, "dimD", "1.0");
+  const [dimH, setDimH] = useDraftState(draftScope, "dimH", "1.0");
 
   // Files
-  const [glbFile, setGlbFile] = useState<File | null>(null);
+  const [glbFile, setGlbFile] = useDraftState<File | null>(draftScope, "glbFile", null);
   const [preview, setPreview] = useState<GlbPreviewResult | null>(null);
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [thumbnail, setThumbnail] = useDraftState<File | null>(draftScope, "thumbnail", null);
   const glbRef = useRef<HTMLInputElement>(null);
   const thumbRef = useRef<HTMLInputElement>(null);
 
   // Colors
-  const [colors, setColors] = useState<ColorEntry[]>([
+  const [colors, setColors] = useDraftState<ColorEntry[]>(draftScope, "colors", [
     { name: "Үндсэн өнгө", hex: "#C9A37A", priceDelta: "0" },
   ]);
 
   // Materials
-  const [selMaterials, setSelMaterials] = useState<MaterialEntry[]>([
+  const [selMaterials, setSelMaterials] = useDraftState<MaterialEntry[]>(draftScope, "selMaterials", [
     { id: "wood", priceDelta: "0" },
   ]);
 
+  const draftStatus = useDraftStatus(draftScope);
   const load = useCallback(async () => {
     setFetching(true);
     setLoadError(null);
@@ -572,6 +577,7 @@ function ModelsTab({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (uploading || draftStatus.loading) return;
     if (!name.trim() || !glbFile) {
       setError("Нэр болон GLB файл заавал шаардлагатай.");
       return;
@@ -728,6 +734,7 @@ function ModelsTab({
       }
 
       resetForm();
+      void clearDashboardDraft(draftScope);
       setSuccess(true);
       await load();
     } catch (err) {
@@ -877,7 +884,8 @@ function ModelsTab({
               <Plus size={18} />
               Шинэ загвар нэмэх
             </h2>
-            <fieldset disabled={uploading} className="min-w-0 space-y-6">
+            <DashboardDraftNotice scope={draftScope} disabled={uploading} files={[glbFile, thumbnail]} />
+            <fieldset disabled={uploading || draftStatus.loading} className="min-w-0 space-y-6">
               {/* — Үндсэн мэдээлэл — */}
               <section>
                 <p className="label mb-3">Үндсэн мэдээлэл</p>
@@ -1095,7 +1103,7 @@ function ModelsTab({
                       ref={glbRef}
                       type="file"
                       accept=".glb,model/gltf-binary"
-                      required
+                      required={!glbFile}
                       onChange={(event) =>
                         setGlbFile(event.target.files?.[0] ?? null)
                       }

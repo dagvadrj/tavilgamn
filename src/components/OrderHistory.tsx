@@ -306,7 +306,7 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
     <div className="mt-6">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <select
-          className="min-h-11 rounded-xl border border-[#293C32]/15 bg-white px-3 text-sm"
+          className="min-h-11 rounded-xl border border-[#e4e4e7] bg-white px-3 text-sm"
           aria-label="Захиалгын төлөвөөр шүүх"
           value={status}
           onChange={(event) => setStatus(event.target.value)}
@@ -340,7 +340,7 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
       )}
       {loading ? (
         <div
-          className="grid min-h-36 place-items-center rounded-2xl border border-[#293C32]/10 bg-{#27292d} text-sm text-white"
+          className="grid min-h-36 place-items-center rounded-2xl border border-[#e4e4e7] bg-white text-sm text-[#68686f]"
           role="status"
         >
           <span className="flex items-center gap-2">
@@ -369,17 +369,17 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
             return (
               <article
                 key={order.id}
-                className="overflow-hidden rounded-2xl border border-[#293C32]/10 bg-[#27292d] shadow-[0_10px_35px_rgba(41,60,50,.04)]"
+                className="overflow-hidden rounded-2xl border border-[#e4e4e7] bg-white shadow-[0_10px_35px_rgba(41,60,50,.04)]"
               >
-                <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[#293C32]/10 bg-[#27292d] px-5 py-4">
+                <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[#e4e4e7] bg-white px-5 py-4">
                   <div>
                     <p
-                      className="text-sm font-semibold text-white"
+                      className="text-sm font-semibold text-[#171717]"
                       title={order.id}
                     >
                       Захиалга #{shortOrderId(order.id)}
                     </p>
-                    <p className="mt-1 flex items-center gap-1.5 text-xs text-white">
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-[#68686f]">
                       <CalendarDays size={13} />
                       {formatDateTime(order.created_at)}
                     </p>
@@ -392,7 +392,7 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
                 </header>
                 <div className="grid gap-5 p-5 sm:grid-cols-[1fr_auto] sm:items-end">
                   <div className="min-w-0">
-                    <p className="text-xs font-medium uppercase tracking-[.08em] text-white">
+                    <p className="text-xs font-medium uppercase tracking-[.08em] text-[#68686f]">
                       {quantity} ширхэг · {order.items.length} нэр төрөл
                     </p>
                     <ul className="mt-3 space-y-2">
@@ -408,18 +408,18 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
                           <span className="min-w-0 truncate">
                             {item.name} × {item.qty}
                           </span>
-                          <span className="shrink-0 tabular-nums text-white">
+                          <span className="shrink-0 tabular-nums text-[#68686f]">
                             {formatPrice(item.lineTotal)}
                           </span>
                         </li>
                       ))}
                     </ul>
                     {order.items.length > 3 && (
-                      <p className="mt-2 text-xs text-white">
+                      <p className="mt-2 text-xs text-[#68686f]">
                         +{order.items.length - 3} нэр төрөл
                       </p>
                     )}
-                    <p className="mt-4 flex items-center gap-2 text-xs text-white">
+                    <p className="mt-4 flex items-center gap-2 text-xs text-[#68686f]">
                       <CreditCard size={14} />
                       {order.order_payments
                         ? PAYMENT_METHOD_LABEL[order.order_payments.method]
@@ -434,12 +434,12 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
                     )}
                   </div>
                   <div className="sm:text-right">
-                    <p className="text-xs text-white`">Нийт дүн</p>
-                    <p className="mt-1 text-xl font-semibold tabular-nums text-[#AD6547]">
+                    <p className="text-xs text-[#68686f]">Нийт дүн</p>
+                    <p className="mt-1 text-xl font-semibold tabular-nums text-[#171717]">
                       {formatPrice(order.total)}
                     </p>
                     <Link
-                      className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#293C32]/15 px-4 text-sm font-medium transition hover:bg-[#293C32] hover:text-white"
+                      className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#e4e4e7] px-4 text-sm font-medium transition hover:bg-[#171717] hover:text-white"
                       href={`/orders/${order.id}`}
                     >
                       Дэлгэрэнгүй{" "}
@@ -461,21 +461,21 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
       >
         <button
           disabled={page === 0 || loading}
-          className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-[#293C32]/15 px-3 text-sm disabled:opacity-40"
+          className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-[#e4e4e7] px-3 text-sm disabled:opacity-40"
           onClick={() => setPage(page - 1)}
         >
           <ChevronLeft size={15} />
           Өмнөх
         </button>
         <span
-          className="min-w-20 text-center text-sm text-white"
+          className="min-w-20 text-center text-sm text-[#68686f]"
           aria-live="polite"
         >
           Хуудас {page + 1}
         </span>
         <button
           disabled={!current?.hasMore || loading}
-          className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-[#293C32]/15 px-3 text-sm disabled:opacity-40"
+          className="inline-flex min-h-11 items-center gap-1 rounded-xl border border-[#e4e4e7] px-3 text-sm disabled:opacity-40"
           onClick={() => setPage(page + 1)}
         >
           Дараах

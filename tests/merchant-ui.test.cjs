@@ -55,6 +55,14 @@ function harness(role = "merchant") {
       useCatalogStore: { getState: () => ({ refresh() {} }) },
     },
   };
+  // This action harness invokes components directly rather than mounting React.
+  // Persistent fields use the same indexed state inputs; durable restore/races
+  // are exercised separately in dashboard-drafts.test.cjs.
+  mocks["@/hooks/useDashboardDraft"] = {
+    useDraftState: (_scope, _field, initial) => mocks.react.useState(initial),
+    useDraftStatus: () => ({ loading: false, saving: false, dirty: false }),
+    clearDashboardDraft: async () => {},
+  };
   return {
     auth,
     mocks,

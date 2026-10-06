@@ -1,4 +1,6 @@
 "use client";
+import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
+import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -101,10 +103,10 @@ function ProductList({
   const [page, setPage] = useState(1);
   const [storeId, setStoreId] = useState("");
   const [stores, setStores] = useState<Store[]>([]);
-  const [editing, setEditing] = useState<{
+  const [editing, setEditing] = useDraftState<{
     product: Product;
     create: boolean;
-  } | null>(null);
+  } | null>(`admin:${owner}:products-navigation`, "editing", null);
   useEffect(() => {
     if (!initialProductId || !catalog.ready) {
       return;
@@ -120,7 +122,7 @@ function ProductList({
         create: false,
       });
     }
-  }, [initialProductId, catalog.ready, catalog.products]);
+  }, [initialProductId, catalog.ready, catalog.products, setEditing]);
   useEffect(() => {
     const controller = new AbortController();
 
@@ -450,13 +452,14 @@ function ProductEditor({
   create: boolean;
   close: () => void;
 }) {
-  const [draft, setDraft] = useState<Product>(() => structuredClone(product));
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
-  const [glbFile, setGlbFile] = useState<File | null>(null);
+  const draftScope = `admin:${owner}:product:${create ? "new" : product.id}`;
+  const [draft, setDraft] = useDraftState<Product>(draftScope, "draft", () => structuredClone(product));
+  const [imageFile, setImageFile] = useDraftState<File | null>(draftScope, "imageFile", null);
+  const [galleryFiles, setGalleryFiles] = useDraftState<File[]>(draftScope, "galleryFiles", []);
+  const [glbFile, setGlbFile] = useDraftState<File | null>(draftScope, "glbFile", null);
   const [glbPreview, setGlbPreview] = useState<GlbPreviewResult | null>(null);
   const { moduleCatalog } = useKitchenCatalog(draft.category === "kitchen-cabinet");
-  const [cabinetModuleId, setCabinetModuleId] = useState("");
+  const [cabinetModuleId, setCabinetModuleId] = useDraftState(draftScope, "cabinetModuleId", "");
   const [glbMessage, setGlbMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   type FieldErrors = {
@@ -479,6 +482,7 @@ function ProductEditor({
   const [stores, setStores] = useState<Store[]>([]);
   const [storesError, setStoresError] = useState(false);
   const [storesRefresh, setStoresRefresh] = useState(0);
+  const draftStatus = useDraftStatus(draftScope);
   const editorRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
     editorRef.current?.focus({ preventScroll: true });
@@ -511,7 +515,7 @@ function ProductEditor({
       className="admin-editor space-y-6"
       onSubmit={async (event) => {
         event.preventDefault();
-        if (busy) return;
+        if (busy || draftStatus.loading) return;
         if (glbFile) {
           setFieldErrors((current) => ({
             ...current,
@@ -672,6 +676,7 @@ function ProductEditor({
           }
 
           await useCatalogStore.getState().refresh(true);
+          void clearDashboardDraft(draftScope);
           close();
         } catch (error) {
           setError(error instanceof Error ? error.message : "Алдаа гарлаа.");
@@ -691,7 +696,8 @@ function ProductEditor({
       </button>
       <h2>{create ? "Шинэ бүтээгдэхүүн" : "Бүтээгдэхүүн засах"}</h2>
 
-      <fieldset disabled={busy} className="space-y-4">
+      <DashboardDraftNotice scope={draftScope} disabled={busy} files={[imageFile, glbFile, ...galleryFiles]} />
+      <fieldset disabled={busy || draftStatus.loading} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm">
             Нэр
@@ -794,7 +800,7 @@ function ProductEditor({
               className="input mt-1"
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              required={!draft.image}
+              required={!draft.image && !imageFile}
               onChange={(event) => {
                 setImageFile(event.target.files?.[0] ?? null);
 

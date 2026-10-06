@@ -6,7 +6,7 @@ const { renderToStaticMarkup } = require("react-dom/server");
 
 test("store product counts paginate non-archived entries and count each product once per assigned store", async () => {
   const calls = [], cursors = [], batches = [
-    { data: [{ id: "a", store_ids: ["store-1", "store-1", "store-2"] }, { id: "b", store_ids: ["store-1"] }, { id: "c", store_ids: null }], error: null },
+    { data: [{ id: "a", store_ids: ["store-1", "store-1", "store-2"] }, { id: "b", store_ids: ["store-1"] }, { id: "c", store_ids: null }, ...Array.from({ length: 497 }, (_, index) => ({ id: `c${String(index).padStart(3, "0")}`, store_ids: null }))], error: null },
     { data: [{ id: "d", store_ids: ["store-2"] }], error: null },
     { data: [], error: null },
   ];
@@ -18,8 +18,8 @@ test("store product counts paginate non-archived entries and count each product 
   } };
   const { readStoreProductCounts } = loadSource("src/lib/storeDirectory.ts");
   assert.deepEqual([...await readStoreProductCounts(db)], [["store-1", 2], ["store-2", 2]]);
-  assert.deepEqual(cursors, ["c", "d"]);
-  assert.deepEqual(calls, Array(3).fill("id,store_ids"));
+  assert.deepEqual(cursors, ["c496"]);
+  assert.deepEqual(calls, Array(2).fill("id,store_ids"));
 });
 
 test("store product counts propagate database failures instead of fabricating zero totals", async () => {

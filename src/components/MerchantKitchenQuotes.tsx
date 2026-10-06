@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
+import { DashboardDraftNotice } from "./DashboardDraftNotice";
 import {
   ChevronLeft,
   ChevronRight,
@@ -188,15 +190,17 @@ function MerchantKitchenQuoteCard({
   quote: MerchantKitchenQuote;
   onUpdated: (id: string, changes: Partial<MerchantKitchenQuote>) => void;
 }) {
-  const [price, setPrice] = useState(quote.quotedPrice?.toString() ?? "");
-  const [note, setNote] = useState(quote.merchantNote);
+  const draftScope = `merchant:${owner}:kitchen-quote:${quote.id}`;
+  const [price, setPrice] = useDraftState(draftScope, "price", quote.quotedPrice?.toString() ?? "");
+  const [note, setNote] = useDraftState(draftScope, "note", quote.merchantNote);
+  const draftStatus = useDraftStatus(draftScope);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const room = quote.roomDetails;
 
   const changeStatus = async (status: "reviewing" | "quoted" | "closed") => {
-    if (busy) return;
+    if (busy || draftStatus.loading) return;
     setBusy(true);
     setError(null);
     setMessage(null);
@@ -224,6 +228,7 @@ function MerchantKitchenQuoteCard({
           data?.error ?? "Үнийн хүсэлтийн төлөвийг шинэчилж чадсангүй.",
         );
       if (isOwner(owner)) {
+        void clearDashboardDraft(draftScope, false);
         onUpdated(quote.id, { status, quotedPrice, merchantNote: note });
         setMessage("Хэрэглэгчид шинэ төлөвийн мэдэгдэл илгээгдлээ.");
       }
@@ -310,7 +315,8 @@ function MerchantKitchenQuoteCard({
         </div>
       ) : null}
       {quote.status !== "closed" ? (
-        <fieldset className="mt-5 space-y-3" disabled={busy}>
+        <fieldset className="mt-5 space-y-3" disabled={busy || draftStatus.loading}>
+          <DashboardDraftNotice scope={draftScope} disabled={busy} />
           {quote.status === "submitted" ? (
             <button
               type="button"

@@ -1,4 +1,6 @@
 "use client";
+import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
+import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -110,10 +112,12 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
   const [materials, setMaterials] = useState<AdminKitchenMaterialDefinition[]>(
     [],
   );
-  const [form, setForm] = useState<MaterialForm>(emptyForm);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const draftScope = `admin:${owner}:kitchen-material`;
+  const [form, setForm] = useDraftState<MaterialForm>(draftScope, "form", emptyForm);
+  const [editingId, setEditingId] = useDraftState<string | null>(draftScope, "editingId", null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const draftStatus = useDraftStatus(draftScope);
   const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -155,6 +159,7 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
+    if (busy || draftStatus.loading) return;
     setBusy("save");
     setError(null);
     setMessage(null);
@@ -192,6 +197,7 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
       );
       setEditingId(saved.id);
       setForm(formFor(saved));
+      void clearDashboardDraft(draftScope, false);
       setMessage(
         editingId
           ? "Материалын өөрчлөлтийг хадгаллаа."
@@ -308,7 +314,9 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
         </button>
       </div>
 
+      <DashboardDraftNotice scope={draftScope} disabled={Boolean(busy)} />
       <form
+        inert={draftStatus.loading || undefined}
         onSubmit={save}
         className="space-y-4 rounded-xl bg-black/[0.03] p-4"
       >

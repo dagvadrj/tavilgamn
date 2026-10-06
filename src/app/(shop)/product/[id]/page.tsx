@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { readProduct, readProducts } from "@/lib/catalogServer";
+import { readProduct } from "@/lib/catalogServer";
+import { readCachedProducts as readProducts } from "@/lib/publicCatalog";
 
 export const dynamic = "force-dynamic";
 import { ProductCustomizer } from "@/components/ProductCustomizer";

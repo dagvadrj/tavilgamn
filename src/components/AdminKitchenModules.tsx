@@ -1,4 +1,6 @@
 "use client";
+import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
+import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -177,27 +179,31 @@ const variantLabel = (
         : openingLabel[variant.opening];
 
 export function AdminKitchenModules({ owner }: { owner: string }) {
+  const draftScope = `admin:${owner}:kitchen-module`;
+  const uploadScope = `admin:${owner}:kitchen-module-upload`;
   const [modules, setModules] = useState<KitchenCatalogModule[]>([]);
   const [models, setModels] = useState<KitchenModelCandidate[]>([]);
-  const [modelId, setModelId] = useState("");
-  const [moduleId, setModuleId] = useState("");
-  const [presetId, setPresetId] = useState("door-1");
-  const [opening, setOpening] = useState<KitchenOpening>("doors");
-  const [variantCode, setVariantCode] = useState("");
-  const [designCode, setDesignCode] = useState("");
-  const [doorCount, setDoorCount] = useState(1);
-  const [drawerCount, setDrawerCount] = useState(0);
-  const [isDefault, setIsDefault] = useState(false);
+  const [modelId, setModelId] = useDraftState(draftScope, "modelId", "");
+  const [moduleId, setModuleId] = useDraftState(draftScope, "moduleId", "");
+  const [presetId, setPresetId] = useDraftState(draftScope, "presetId", "door-1");
+  const [opening, setOpening] = useDraftState<KitchenOpening>(draftScope, "opening", "doors");
+  const [variantCode, setVariantCode] = useDraftState(draftScope, "variantCode", "");
+  const [designCode, setDesignCode] = useDraftState(draftScope, "designCode", "");
+  const [doorCount, setDoorCount] = useDraftState(draftScope, "doorCount", 1);
+  const [drawerCount, setDrawerCount] = useDraftState(draftScope, "drawerCount", 0);
+  const [isDefault, setIsDefault] = useDraftState(draftScope, "isDefault", false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [uploadName, setUploadName] = useState("");
-  const [uploadModuleId, setUploadModuleId] = useState("");
-  const [uploadGlb, setUploadGlb] = useState<File | null>(null);
+  const [uploadName, setUploadName] = useDraftState(uploadScope, "uploadName", "");
+  const [uploadModuleId, setUploadModuleId] = useDraftState(uploadScope, "uploadModuleId", "");
+  const [uploadGlb, setUploadGlb] = useDraftState<File | null>(uploadScope, "uploadGlb", null);
   const [preview, setPreview] = useState<GlbPreviewResult | null>(null);
-  const [uploadThumbnail, setUploadThumbnail] = useState<File | null>(null);
+  const [uploadThumbnail, setUploadThumbnail] = useDraftState<File | null>(uploadScope, "uploadThumbnail", null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const draftStatus = useDraftStatus(draftScope);
+  const uploadStatus = useDraftStatus(uploadScope);
   const glbInput = useRef<HTMLInputElement>(null);
   const thumbnailInput = useRef<HTMLInputElement>(null);
 
@@ -248,14 +254,15 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   );
 
   useEffect(() => {
+    if (draftStatus.loading) return;
     if (
       selectedModel &&
       !matchingModules.some((module) => module.id === moduleId)
     )
       setModuleId(matchingModules[0]?.id ?? "");
-  }, [matchingModules, moduleId, selectedModel]);
+  }, [matchingModules, moduleId, selectedModel, setModuleId, draftStatus.loading]);
   useEffect(() => {
-    if (!selectedModule) return;
+    if (!selectedModule || draftStatus.loading) return;
     const preset =
       availablePresets.find((item) => item.id === presetId) ??
       availablePresets[0];
@@ -266,7 +273,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     setDrawerCount(preset.drawerCount);
     try { setVariantCode(cabinetVariantCode(selectedModule.code, preset.opening, preset.doorCount, preset.drawerCount, designCode)); }
     catch { setVariantCode(""); }
-  }, [availablePresets, presetId, selectedModule, designCode]);
+  }, [availablePresets, presetId, selectedModule, designCode, draftStatus.loading, setPresetId, setOpening, setDoorCount, setDrawerCount, setVariantCode]);
 
   function choosePreset(value: string) {
     const preset = availablePresets.find((item) => item.id === value);
@@ -283,6 +290,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
 
   async function uploadModel(event: React.FormEvent) {
     event.preventDefault();
+    if (uploading || uploadStatus.loading) return;
     setUploadError(null);
     setUploadSuccess(null);
     if (!uploadModule || !uploadGlb || !uploadName.trim()) {
@@ -406,6 +414,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           completed?.error ?? "GLB боловсруулалтыг эхлүүлж чадсангүй.",
         );
 
+      void clearDashboardDraft(uploadScope);
       const uploadedModelId = model.id as string;
       const uploadedModuleId = uploadModule.id;
       setUploadName("");
@@ -433,6 +442,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
+    if (busy || draftStatus.loading) return;
     setBusy("save");
     setError(null);
     try {
@@ -458,6 +468,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       const data = await response.json().catch(() => null);
       if (!response.ok)
         throw new Error(data?.error ?? "Variant хадгалж чадсангүй.");
+      void clearDashboardDraft(draftScope);
       setModelId("");
       setModuleId("");
       setVariantCode("");
@@ -563,7 +574,9 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             module-ийн хэмжээ GLB-ийн бодит хэмжээтэй таарах ёстой. Метр · +Y дээш · +Z нүүр · origin доод төв · applied transform.
           </p>
         </div>
+        <DashboardDraftNotice scope={uploadScope} disabled={uploading} files={[uploadGlb, uploadThumbnail]} />
         <form
+          inert={uploadStatus.loading || undefined}
           onSubmit={uploadModel}
           className="grid gap-3 rounded-xl bg-black/[0.03] p-4 md:grid-cols-2 xl:grid-cols-4"
         >
@@ -599,10 +612,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             GLB файл
             <input
               ref={glbInput}
+              key={uploadGlb ? `${uploadGlb.name}:${uploadGlb.lastModified}` : "empty-glb"}
               className="input mt-1 w-full !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs"
               type="file"
               accept=".glb,model/gltf-binary"
-              required
+              required={!uploadGlb}
               onChange={(event) =>
                 setUploadGlb(event.target.files?.[0] ?? null)
               }
@@ -613,6 +627,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             Thumbnail зураг
             <input
               ref={thumbnailInput}
+              key={uploadThumbnail ? `${uploadThumbnail.name}:${uploadThumbnail.lastModified}` : "empty-thumbnail"}
               className="input mt-1 w-full !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs"
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -687,7 +702,9 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             {error}
           </p>
         )}
+        <DashboardDraftNotice scope={draftScope} disabled={Boolean(busy)} />
         <form
+          inert={draftStatus.loading || undefined}
           onSubmit={save}
           className="grid gap-3 rounded-xl bg-black/[0.03] p-4 md:grid-cols-2 xl:grid-cols-4"
         >

@@ -51,6 +51,7 @@ export async function readStoreProductCounts(db = getSupabaseAdmin()): Promise<M
       const stores = new Set<string>(Array.isArray(row.store_ids) ? row.store_ids.filter((id): id is string => typeof id === "string") : []);
       for (const id of stores) counts.set(id, (counts.get(id) ?? 0) + 1);
     }
+    if (data.length < 500) return counts;
     after = data[data.length - 1].id;
   }
 }

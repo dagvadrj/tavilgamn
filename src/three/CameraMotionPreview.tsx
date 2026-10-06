@@ -13,7 +13,11 @@ type MotionControls = {
   removeEventListener(type: "start" | "change" | "end", listener: () => void): void;
 };
 
-export function CameraMotionPreview({ children }: { children: ReactNode }) {
+export function CameraMotionPreview({ children, interactionActive = false }: {
+  children: ReactNode;
+  /** Use retained preview assets during furniture placement as well as camera motion. */
+  interactionActive?: boolean;
+}) {
   const controls = useThree(state => state.controls) as MotionControls | undefined;
   const invalidate = useThree(state => state.invalidate);
   const [moving, setMoving] = useState(false);
@@ -38,5 +42,5 @@ export function CameraMotionPreview({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", hidden);
     };
   }, [controls, invalidate]);
-  return <MotionPreviewContext.Provider value={moving}>{children}</MotionPreviewContext.Provider>;
+  return <MotionPreviewContext.Provider value={moving || interactionActive}>{children}</MotionPreviewContext.Provider>;
 }

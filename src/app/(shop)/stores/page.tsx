@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Factory, Hammer, Store as StoreIcon } from "lucide-react";
-import { readStoreDirectory, readStoreProductCounts } from "@/lib/storeDirectory";
+import { readCachedStoreDirectory as readStoreDirectory, readCachedStoreProductCounts as readStoreProductCounts } from "@/lib/publicCatalog";
 import { STORE_TYPES, isStoreType } from "@/lib/storeTypes";
 import { CATEGORY_LABEL } from "@/lib/products";
 import { DirectoryHeading } from "@/components/DirectoryHeading";

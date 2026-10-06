@@ -1,4 +1,6 @@
 "use client";
+import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
+import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -101,29 +103,35 @@ async function request<T>(
 }
 
 function VersionEditor({
+  owner,
   design,
   mode,
   busy,
   onCancel,
   onSave,
 }: {
+  owner: string;
   design: KitchenDesignSummary;
   mode: KitchenVersionSaveMode;
   busy: boolean;
   onCancel: () => void;
   onSave: (form: ListingForm) => void;
 }) {
-  const [form, setForm] = useState(() => listingForm(design));
+  const draftScope = `merchant:${owner}:kitchen-version:${design.versionId}:${mode}`;
+  const [form, setForm] = useDraftState(draftScope, "form", () => listingForm(design));
+  const draftStatus = useDraftStatus(draftScope);
   const field = <K extends keyof ListingForm>(name: K, value: ListingForm[K]) =>
     setForm((current) => ({ ...current, [name]: value }));
   return (
     <form
+      inert={draftStatus.loading || undefined}
       className="grid gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 md:grid-cols-2"
       onSubmit={(event) => {
         event.preventDefault();
-        onSave(form);
+        if (!busy && !draftStatus.loading) onSave(form);
       }}
     >
+      <DashboardDraftNotice scope={draftScope} disabled={busy} />
       <div className="md:col-span-2">
         <h4 className="font-medium">
           {mode === "edit"
@@ -309,37 +317,39 @@ export function MerchantKitchenDesigns({
   owner: string;
   focusedDesignId?: string | null;
 }) {
+  const draftScope = `merchant:${owner}:kitchen-create`;
   const [data, setData] = useState<LoadResult | null>(null);
   const [kitchens, setKitchens] = useState<SavedKitchen[]>([]);
-  const [sourceKitchenId, setSourceKitchenId] = useState("");
-  const [title, setTitle] = useState("");
-  const [shortDescription, setShortDescription] = useState("");
-  const [description, setDescription] = useState("");
-  const [style, setStyle] = useState("modern");
-  const [pricingMode, setPricingMode] = useState<"fixed" | "from" | "quote">(
+  const [sourceKitchenId, setSourceKitchenId] = useDraftState(draftScope, "sourceKitchenId", "");
+  const [title, setTitle] = useDraftState(draftScope, "title", "");
+  const [shortDescription, setShortDescription] = useDraftState(draftScope, "shortDescription", "");
+  const [description, setDescription] = useDraftState(draftScope, "description", "");
+  const [style, setStyle] = useDraftState(draftScope, "style", "modern");
+  const [pricingMode, setPricingMode] = useDraftState<"fixed" | "from" | "quote">(draftScope, "pricingMode",
     "quote",
   );
-  const [priceFrom, setPriceFrom] = useState("");
-  const [priceTo, setPriceTo] = useState("");
-  const [materials, setMaterials] = useState("");
-  const [renderConsent, setRenderConsent] = useState<Record<string, boolean>>({});
-  const [leadTimeDays, setLeadTimeDays] = useState("");
-  const [warrantyMonths, setWarrantyMonths] = useState("");
-  const [installationIncluded, setInstallationIncluded] = useState(false);
-  const [tags, setTags] = useState("");
-  const [serviceAreas, setServiceAreas] = useState("");
-  const [inclusions, setInclusions] = useState("");
-  const [exclusions, setExclusions] = useState("");
-  const [renderDirections, setRenderDirections] = useState<
+  const [priceFrom, setPriceFrom] = useDraftState(draftScope, "priceFrom", "");
+  const [priceTo, setPriceTo] = useDraftState(draftScope, "priceTo", "");
+  const [materials, setMaterials] = useDraftState(draftScope, "materials", "");
+  const [renderConsent, setRenderConsent] = useDraftState<Record<string, boolean>>(`merchant:${owner}:kitchen-navigation`, "renderConsent", {});
+  const [leadTimeDays, setLeadTimeDays] = useDraftState(draftScope, "leadTimeDays", "");
+  const [warrantyMonths, setWarrantyMonths] = useDraftState(draftScope, "warrantyMonths", "");
+  const [installationIncluded, setInstallationIncluded] = useDraftState(draftScope, "installationIncluded", false);
+  const [tags, setTags] = useDraftState(draftScope, "tags", "");
+  const [serviceAreas, setServiceAreas] = useDraftState(draftScope, "serviceAreas", "");
+  const [inclusions, setInclusions] = useDraftState(draftScope, "inclusions", "");
+  const [exclusions, setExclusions] = useDraftState(draftScope, "exclusions", "");
+  const [renderDirections, setRenderDirections] = useDraftState<
     Record<string, string>
-  >({});
-  const [editing, setEditing] = useState<{
+  >(`merchant:${owner}:kitchen-navigation`, "renderDirections", {});
+  const [editing, setEditing] = useDraftState<{
     designId: string;
     mode: KitchenVersionSaveMode;
-  } | null>(null);
+  } | null>(`merchant:${owner}:kitchen-navigation`, "editing", null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const draftStatus = useDraftStatus(draftScope);
   const load = useCallback(async () => {
     setError(null);
     try {
@@ -349,7 +359,7 @@ export function MerchantKitchenDesigns({
       ]);
       setData(marketplace);
       setKitchens(saved.kitchens);
-      setSourceKitchenId((current) => current || saved.kitchens[0]?.id || "");
+
     } catch (reason) {
       setError(
         reason instanceof Error
@@ -358,6 +368,10 @@ export function MerchantKitchenDesigns({
       );
     }
   }, [owner]);
+
+  useEffect(() => {
+    if (!draftStatus.loading && !sourceKitchenId && kitchens[0]) setSourceKitchenId(kitchens[0].id);
+  }, [draftStatus.loading, sourceKitchenId, kitchens, setSourceKitchenId]);
 
   useEffect(() => {
     void load();
@@ -383,6 +397,7 @@ export function MerchantKitchenDesigns({
 
   async function createDraft(event: React.FormEvent) {
     event.preventDefault();
+    if (busy || draftStatus.loading) return;
     setBusy("create");
     setError(null);
     try {
@@ -408,6 +423,7 @@ export function MerchantKitchenDesigns({
           exclusions: splitList(exclusions),
         }),
       });
+      void clearDashboardDraft(draftScope);
       setTitle("");
       setShortDescription("");
       setDescription("");
@@ -550,6 +566,7 @@ export function MerchantKitchenDesigns({
           ...listingPayload(form),
         }),
       });
+      void clearDashboardDraft(`merchant:${owner}:kitchen-version:${design.versionId}:${mode}`);
       setEditing(null);
       await load();
     } catch (reason) {
@@ -591,7 +608,9 @@ export function MerchantKitchenDesigns({
         </div>
       ) : (
         <>
+          <DashboardDraftNotice scope={draftScope} disabled={Boolean(busy)} />
           <form
+            inert={draftStatus.loading || undefined}
             onSubmit={createDraft}
             className="grid gap-4 rounded-2xl border border-black/10 bg-white p-5 lg:grid-cols-2"
           >
@@ -1053,6 +1072,7 @@ export function MerchantKitchenDesigns({
                     </div>
                     {editing?.designId === design.id && (
                       <VersionEditor
+                        owner={owner}
                         key={`${design.versionId}:${editing.mode}`}
                         design={design}
                         mode={editing.mode}

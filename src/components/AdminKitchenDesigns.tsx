@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDraftState, useDraftStatus } from "@/hooks/useDashboardDraft";
+import { DashboardDraftNotice } from "./DashboardDraftNotice";
 import {
   Check,
   EyeOff,
@@ -27,7 +29,9 @@ type AdminAction = ReviewAction | "published" | "suspended";
 export function AdminKitchenDesigns({ owner }: { owner: string }) {
   const [designs, setDesigns] = useState<KitchenDesignSummary[]>([]);
   const [filter, setFilter] = useState("all");
-  const [note, setNote] = useState<Record<string, string>>({});
+  const draftScope = `admin:${owner}:kitchen-review-notes`;
+  const [note, setNote] = useDraftState<Record<string, string>>(draftScope, "note", {});
+  const draftStatus = useDraftStatus(draftScope);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const load = useCallback(async () => {
@@ -66,6 +70,7 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
   );
 
   async function review(design: KitchenDesignSummary, action: AdminAction) {
+    if (busy || draftStatus.loading) return;
     setBusy(`${design.id}:${action}`);
     setError(null);
     try {
@@ -141,6 +146,7 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
 
   return (
     <section className="space-y-5">
+      <DashboardDraftNotice scope={draftScope} disabled={Boolean(busy)} />
       <div className="admin-page-heading">
         <div>
           <span className="admin-eyebrow">MARKETPLACE</span>
@@ -362,7 +368,7 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                 </div>
               )}
               {(design.reviewStatus === "submitted" || ["published", "suspended"].includes(design.publicationStatus)) && (
-                <textarea className="input min-h-20 w-full" aria-label={`${design.title} хяналтын тайлбар`}
+                <textarea disabled={draftStatus.loading} className="input min-h-20 w-full" aria-label={`${design.title} хяналтын тайлбар`}
                   placeholder="Засвар хүсэх, түдгэлзүүлэх үед шалтгаан заавал бичнэ" maxLength={5000}
                   value={note[design.id] ?? ""} onChange={event => setNote(current => ({ ...current, [design.id]: event.target.value }))} />
               )}

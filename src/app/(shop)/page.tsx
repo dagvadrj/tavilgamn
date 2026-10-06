@@ -15,8 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/products";
-import { readStoreDirectory } from "@/lib/storeDirectory";
-import { readProducts } from "@/lib/catalogServer";
+import { readCachedStoreDirectory as readStoreDirectory, readCachedProducts as readProducts } from "@/lib/publicCatalog";
 import { ProductCard } from "@/components/ProductCard";
 import { hasAvailableStock } from "@/lib/inventory";
 import { FeaturedMerchants } from "@/components/FeaturedMerchants";

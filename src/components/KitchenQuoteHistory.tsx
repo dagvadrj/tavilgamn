@@ -84,7 +84,7 @@ export function KitchenQuoteHistory() {
   if (loading)
     return (
       <div
-        className="rounded-lg border border-[#293C32]/10 p-8 text-sm text-white"
+        className="account-card p-8 text-sm text-[#68686f]"
         role="status"
       >
         Үнийн хүсэлтүүдийг ачаалж байна…
@@ -98,7 +98,7 @@ export function KitchenQuoteHistory() {
         </p>
         <button
           type="button"
-          className="mt-3 inline-flex items-center gap-2 text-sm"
+          className="account-button mt-3"
           onClick={() => setRefresh((value) => value + 1)}
         >
           <RefreshCw size={15} />
@@ -108,14 +108,14 @@ export function KitchenQuoteHistory() {
     );
   if (!result?.quotes.length)
     return (
-      <div className="rounded-lg border border-dashed border-[#293C32]/20 p-10 text-center">
-        <MessageSquareQuote className="mx-auto text-[#293C32]/35" />
-        <p className="mt-3 text-sm text-[#737D6C]">
+      <div className="account-empty">
+        <MessageSquareQuote aria-hidden="true" />
+        <p>
           Та одоогоор гал тогооны үнийн хүсэлт илгээгээгүй байна.
         </p>
         <Link
           href="/kitchens"
-          className="mt-4 inline-flex text-sm font-medium text-[#42634f]"
+          className="account-button"
         >
           Marketplace загвар үзэх
         </Link>
@@ -140,62 +140,62 @@ export function KitchenQuoteHistory() {
         <article
           id={`quote-${quote.id}`}
           key={quote.id}
-          className="rounded-xl border border-[#293C32]/10 bg-[#27292d] p-5"
+          className="account-card p-5"
         >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <Link
                 href={`/kitchens/${quote.designSlug}`}
-                className="font-medium text-white hover:underline"
+                className="font-semibold text-[#171717] hover:underline"
               >
                 {quote.projectName}
               </Link>
-              <p className="mt-1 text-xs text-white">
+              <p className="mt-2 text-xs text-[#68686f]">
                 {quote.storeName} ·{" "}
                 {new Date(quote.createdAt).toLocaleDateString("mn-MN")}
               </p>
             </div>
-            <span className="rounded-full bg-white px-3 py-1 text-xs text-black">
+            <span className="account-quote-status" data-status={quote.status}>
               {STATUS_LABEL[quote.status]}
             </span>
           </div>
           {quote.quotedPrice != null ? (
-            <p className="mt-4 text-sm">
+            <p className="mt-4 border-t border-[#e4e4e7] pt-4 text-sm text-[#68686f]">
               Үнийн санал:{" "}
-              <strong className="text-lg text-white">
+              <strong className="text-lg text-[#171717]">
                 {formatPrice(quote.quotedPrice)}
               </strong>
             </p>
           ) : null}
           {quote.merchantNote ? (
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white">
+            <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-[#52525b]">
               {quote.merchantNote}
             </p>
           ) : null}
         </article>
       ))}
       <nav
-        className="flex items-center justify-end gap-2"
+        className="flex flex-wrap items-center justify-end gap-2"
         aria-label="Үнийн хүсэлтийн хуудаслалт"
       >
-        <span className="mr-auto text-xs text-white">Хуудас {page + 1}</span>
+        <span className="mr-auto text-xs text-[#68686f]" aria-live="polite">Хуудас {page + 1}</span>
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm disabled:opacity-40 text-white"
+          className="account-button disabled:opacity-40"
           disabled={page === 0}
           onClick={() => setPage((value) => value - 1)}
         >
-          <ChevronLeft className="text-white" size={15} />
+          <ChevronLeft size={15} />
           Өмнөх
         </button>
         <button
           type="button"
-          className="inline-flex items-center gap-1 rounded-full border px-3 py-2 text-sm disabled:opacity-40 text-white"
+          className="account-button disabled:opacity-40"
           disabled={!result.hasMore}
           onClick={() => setPage((value) => value + 1)}
         >
           Дараах
-          <ChevronRight className="text-white" size={15} />
+          <ChevronRight size={15} />
         </button>
       </nav>
     </div>

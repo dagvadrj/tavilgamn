@@ -13,6 +13,8 @@ import {
   Trash2,
   Store,
   MessageSquareQuote,
+  Plus,
+  ArrowUpRight,
 } from "lucide-react";
 import { OrderHistory } from "@/components/OrderHistory";
 import { SavedKitchenList } from "@/components/SavedKitchenList";
@@ -24,6 +26,7 @@ import { priceFor } from "@/lib/products";
 import { getProduct, useCatalog } from "@/store/catalog";
 import { CatalogStatus } from "@/components/CatalogStatus";
 import { formatPrice } from "@/lib/format";
+import "./account.css";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -55,18 +58,25 @@ export default function AccountPage() {
     );
   }
   return (
-    <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[260px_1fr]">
-      <aside>
-        <div className="rounded-lg border border-[#293C32]/10 bg-[#27292d] p-6">
-          <div className="grid h-16 w-16 place-items-center rounded-full bg-[#EEEEE7] font-mono text-2xl text-[#293C32]">
+    <div className="account-layout">
+      <aside className="account-sidebar" aria-label="Бүртгэлийн цэс">
+        <div className="account-identity">
+          <div className="account-avatar" aria-hidden="true">
             {user.name[0]?.toUpperCase()}
           </div>
+          <div className="min-w-0">
+            <p className="account-identity-name">{user.name}</p>
+            <p className="account-muted break-all text-xs">{user.email}</p>
+            <span className="account-role">
+              {role === "admin" ? "Админ" : role === "merchant" ? "Худалдаа эрхлэгч" : "Хэрэглэгч"}
+            </span>
+          </div>
         </div>
-        <nav className="mt-4 space-y-1 text-sm">
+        <nav className="account-nav" aria-label="Миний бүртгэл">
           {role === "admin" && (
             <Link
               href="/admin"
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"
+              className="account-nav-link account-portal-link"
             >
               <LayoutGrid className="h-4 w-4" />
               Удирдлага
@@ -75,7 +85,7 @@ export default function AccountPage() {
           {role === "merchant" && (
             <Link
               href="/merchant"
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 font-medium text-[#42634f]"
+              className="account-nav-link account-portal-link"
             >
               <Store className="h-4 w-4" />
               Миний дэлгүүр
@@ -100,7 +110,7 @@ export default function AccountPage() {
             <a
               key={n.href}
               href={n.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[#6C726B] hover:bg-[#27292d]/5 hover:text-[#293C32]"
+              className="account-nav-link"
             >
               <n.icon className="h-4 w-4" />
               {n.label}
@@ -113,26 +123,28 @@ export default function AccountPage() {
             router.replace("/login");
             router.refresh();
           }}
-          className="mt-6 inline-flex items-center gap-2 text-sm text-[#a395ff] hover:text-white"
+          className="account-signout"
         >
           <LogOut className="h-4 w-4" /> Гарах
         </button>
       </aside>
 
-      <div className="space-y-10">
+      <div className="account-content">
         <section
           id="profile"
-          className="scroll-mt-24 rounded-lg border border-[#293C32]/10 bg-[#27292d] p-6"
+          className="account-profile account-card"
         >
-          <h1 className="text-3xl text-white">Профайл</h1>
-          <dl className="mt-6 grid gap-5 text-sm sm:grid-cols-2">
+          <p className="account-eyebrow">Миний бүртгэл</p>
+          <h1>Профайл</h1>
+          <p className="account-muted mt-2 text-sm">Таны мэдээлэл, хадгалсан загварууд болон захиалга нэг дор.</p>
+          <dl className="account-profile-details">
             <div>
-              <dt className="text-[#ded6ff]">Нэр</dt>
+              <dt>Нэр</dt>
               <dd className="mt-1 font-medium">{user.name}</dd>
             </div>
             <div>
-              <dt className="text-[#ded6ff]">Имэйл</dt>
-              <dd className="mt-1 break-all text-white font-medium">
+              <dt>Имэйл</dt>
+              <dd className="mt-1 break-all font-medium">
                 {user.email}
               </dd>
             </div>
@@ -146,29 +158,33 @@ export default function AccountPage() {
               retry={() => void catalog.refresh()}
             />
           )}
-          <div className="flex items-end justify-between">
+          <div className="account-section-heading">
             <div>
-              <p className="font-mono text-xs uppercase tracking-wide text-white">
+              <p className="account-eyebrow">
                 Хадгалсан өрөөний загвар
               </p>
-              <h2 className="text-3xl text-white">Таны загварууд</h2>
+              <h2>
+                Таны загварууд <span className="account-count">{designs.length}</span>
+              </h2>
             </div>
             <Link
               href="/planner"
-              className="rounded bg-[#27292d] px-6 py-3 text-sm font-medium text-[#FFFFFF] hover:bg-[#3C5446] transition inline-flex items-center gap-2"
+              className="account-button account-button-primary"
             >
+              <Plus size={16} aria-hidden="true" />
               Шинэ загвар
             </Link>
           </div>
           {designs.length === 0 ? (
-            <div className="mt-6 rounded-lg border border-dashed border-[#293C32]/20 p-12 text-center">
-              <p className="text-sm text-white">
+            <div className="account-empty mt-5">
+              <LayoutGrid size={28} aria-hidden="true" />
+              <p>
                 Та одоохондоо ямар нэг загвар хадгалаагүй байна. Төлөвлөгч дээр
                 эхний загвараа үүсгэнэ үү.
               </p>
             </div>
           ) : (
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {designs.map((d) => {
                 const total = d.pieces.reduce((sum, piece) => {
                   const product = getProduct(piece.productId);
@@ -183,17 +199,17 @@ export default function AccountPage() {
                 return (
                   <div
                     key={d.id}
-                    className="flex justify-between rounded-lg border border-[#293C32]/10 bg-[#FFFFFF] p-5"
+                    className="account-card account-room-card"
                   >
                     <div>
                       <p className="font-medium">{d.name}</p>
-                      <p className="mt-1 text-xs text-[#737D6C]">
+                      <p className="account-muted mt-1 text-xs">
                         {d.pieces.length} тавилга ·{" "}
                         {catalog.ready
                           ? formatPrice(total)
                           : "Үнэ ачаалагдаагүй"}
                       </p>
-                      <p className="mt-1 text-xs text-[#737D6C]/70">
+                      <p className="account-muted mt-2 text-xs">
                         Сүүлд шинэчилсэн{" "}
                         {new Date(d.updatedAt).toLocaleDateString("mn-MN", {
                           month: "short",
@@ -206,7 +222,7 @@ export default function AccountPage() {
                         href="/planner"
                         onClick={() => loadDesign(d.id)}
                         aria-label={`${d.name} загварыг нээх`}
-                        className="grid h-9 w-9 place-items-center rounded-full border border-[#293C32]/12 hover:bg-[#293C32]/5"
+                        className="account-icon-button"
                       >
                         <Maximize className="h-4 w-4" />
                       </Link>
@@ -221,7 +237,7 @@ export default function AccountPage() {
                           }
                         }}
                         aria-label={`${d.name} загварыг устгах`}
-                        className="grid h-9 w-9 place-items-center rounded-full border border-[#293C32]/12 text-[#AD6547] hover:bg-[#AD6547]/5"
+                        className="account-icon-button account-danger"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -234,23 +250,29 @@ export default function AccountPage() {
         </section>
 
         <section id="kitchen-garniture" className="scroll-mt-24">
-          <h2 className="mb-5 text-3xl text-white">
-            Миний гал тогооны гарнитур
-          </h2>
-          <SavedKitchenList />
+          <div className="account-section-heading">
+            <div>
+              <p className="account-eyebrow">Хадгалсан гарнитур</p>
+              <h2>Миний гал тогооны гарнитур</h2>
+            </div>
+            <Link href="/kitchen" className="account-button">
+              <Plus size={16} aria-hidden="true" />Шинэ гарнитур
+            </Link>
+          </div>
+          <SavedKitchenList variant="account" />
         </section>
         <section id="kitchen-quotes" className="scroll-mt-24">
-          <p className="font-mono text-xs uppercase tracking-wide text-white">
+          <p className="account-eyebrow">
             Marketplace
           </p>
-          <h2 className="mb-5 text-3xl text-white">Гал тогооны үнийн хүсэлт</h2>
+          <h2 className="mb-5">Гал тогооны үнийн хүсэлт</h2>
           <KitchenQuoteHistory />
         </section>
         <section id="orders">
-          <p className="font-mono text-xs uppercase tracking-wide text-white">
+          <p className="account-eyebrow">
             Захиалгын түүх
           </p>
-          <h2 className="text-3xl text-white">Захиалга</h2>
+          <h2>Захиалга</h2>
           <OrderHistory />
         </section>
 
@@ -262,12 +284,22 @@ export default function AccountPage() {
               retry={() => void catalog.refresh()}
             />
           )}
-          <p className="font-mono text-xs uppercase tracking-wide text-white">
-            Хүслийн жагсаалт
-          </p>
-          <h2 className="text-3xl text-white">
-            {wishlist.length} тавилга хадгалсан
-          </h2>
+          <div className="account-section-heading">
+            <div>
+              <p className="account-eyebrow">Хүслийн жагсаалт</p>
+              <h2>Хадгалсан тавилга <span className="account-count">{wishlist.length}</span></h2>
+            </div>
+            <Link href="/wishlist" className="account-button">
+              Бүгдийг үзэх <ArrowUpRight size={16} aria-hidden="true" />
+            </Link>
+          </div>
+          {wishlist.length === 0 && (
+            <div className="account-empty">
+              <Heart size={28} aria-hidden="true" />
+              <p>Таалагдсан тавилгынхаа зүрх дээр дарж энд хадгалаарай.</p>
+              <Link href="/catalog" className="account-button">Тавилга үзэх</Link>
+            </div>
+          )}
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
             {wishlist.slice(0, 4).map((w) => {
               const product = getProduct(w.productId);
@@ -276,9 +308,9 @@ export default function AccountPage() {
                 <Link
                   key={product.id}
                   href={`/product/${product.id}`}
-                  className="group"
+                  className="account-wishlist-card group"
                 >
-                  <div className="relative aspect-square overflow-hidden rounded-xl bg-[#EEEEE7]">
+                  <div className="relative aspect-square overflow-hidden rounded-xl bg-[#f4f4f5]">
                     <Image
                       src={product.image}
                       alt={product.name}
@@ -288,6 +320,7 @@ export default function AccountPage() {
                     />
                   </div>
                   <p className="mt-2 truncate text-sm">{product.name}</p>
+                  <p className="mt-1 text-sm font-semibold">{formatPrice(product.basePrice)}</p>
                 </Link>
               );
             })}

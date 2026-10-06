@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
 import {
   BadgeDollarSign,
   Box,
@@ -309,20 +310,22 @@ function MerchantRow({
   merchant: MerchantOverview;
   onSaved: () => void;
 }) {
-  const [commission, setCommission] = useState(merchant.commissionBps / 100);
+  const draftScope = `admin:${owner}:merchant:${merchant.id}`;
+  const [commission, setCommission] = useDraftState(draftScope, "commission", merchant.commissionBps / 100);
 
-  const [featured, setFeatured] = useState(merchant.isFeatured);
+  const [featured, setFeatured] = useDraftState(draftScope, "featured", merchant.isFeatured);
 
-  const [featuredRank, setFeaturedRank] = useState(merchant.featuredRank ?? 1);
+  const [featuredRank, setFeaturedRank] = useDraftState(draftScope, "featuredRank", merchant.featuredRank ?? 1);
 
-  const [active, setActive] = useState(merchant.active);
+  const [active, setActive] = useDraftState(draftScope, "active", merchant.active);
+  const draftStatus = useDraftStatus(draftScope);
 
   const [saving, setSaving] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
 
   async function save() {
-    if (saving) return;
+    if (saving || draftStatus.loading) return;
 
     setSaving(true);
     setError(null);
@@ -358,6 +361,7 @@ function MerchantRow({
         throw new Error(data?.error ?? "Хадгалж чадсангүй.");
       }
 
+      void clearDashboardDraft(draftScope, false);
       onSaved();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Хадгалж чадсангүй.");
@@ -367,7 +371,7 @@ function MerchantRow({
   }
 
   return (
-    <div className="admin-merchant-row">
+    <div className="admin-merchant-row" inert={draftStatus.loading || undefined}>
       <div className="admin-merchant-store">
         <span className="admin-merchant-avatar">
           {merchant.name.slice(0, 1).toUpperCase()}
@@ -455,6 +459,7 @@ function MerchantRow({
         </button>
 
         {error && <small title={error}>{error}</small>}
+        {draftStatus.dirty && <small role="status">{draftStatus.error ? "Ноорог хадгалагдсангүй" : draftStatus.saving ? "Ноорог хадгалж байна…" : "Ноорог хадгалагдсан"}</small>}
       </div>
     </div>
   );
