@@ -55,8 +55,9 @@ export async function exportProductForAR(root: THREE.Group) {
         renderer ??= new THREE.WebGLRenderer({ antialias: false });
         const readable = decompress(texture, Math.min(maxTextureSize ?? 2048, 2048), renderer);
         readableTextures.set(texture, readable);
-        // glTF textures typically use flipY=false; the helper defaults to true.
-        readable.flipY = texture.flipY;
+        // GPU readback reverses image rows. Keep the helper's flipY=true so the
+        // exporter restores their original order; copying compressed flipY=false
+        // would vertically mirror the upholstery atlas against the mesh's UVs.
         readable.channel = texture.channel;
         readable.offset.copy(texture.offset);
         readable.repeat.copy(texture.repeat);

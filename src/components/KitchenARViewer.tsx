@@ -70,6 +70,7 @@ declare module "react" {
         React.HTMLAttributes<HTMLElement>,
         HTMLElement
       > & {
+        ar?: boolean;
         [attribute: string]: unknown;
       };
     }
@@ -190,7 +191,7 @@ export function KitchenARViewer({
             }}
             src={source}
             alt={`${name} 3D загвар`}
-            ar=""
+            ar={true}
             ar-modes="webxr scene-viewer quick-look"
             camera-controls=""
             shadow-intensity="1"

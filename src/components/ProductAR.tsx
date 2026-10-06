@@ -76,7 +76,7 @@ export function ProductAR({ scene, name, selectionKey, close }: {
     <div className="pdp-ar-heading"><div><h2>Өрөөндөө байрлуулж үзэх</h2><p>Сонгосон өнгө, материал · бодит хэмжээ</p></div><button type="button" onClick={close} aria-label="AR цонх хаах"><X size={20} /></button></div>
     <div className="pdp-ar-canvas">
       {source ? <model-viewer ref={(element: HTMLElement | null) => { viewer.current = element as ARElement | null; }} src={source} alt={name}
-        ar="" ar-modes="webxr quick-look" ar-scale="fixed" camera-controls="" shadow-intensity="1" exposure="1" />
+        ar={true} ar-modes="webxr quick-look" ar-scale="fixed" camera-controls="" shadow-intensity="1" exposure="1" />
         : !error && <p role="status"><Loader2 size={22} className="animate-spin" aria-hidden="true" />Сонгосон 3D загварыг AR-д бэлдэж байна…</p>}
     </div>
     <div className="pdp-ar-footer">
