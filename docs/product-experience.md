@@ -1,6 +1,6 @@
 # Product detail: materials, scale, AR and installments
 
-Validation: the full repository suite passes 384 tests, including a regression test that initializes the real appearance controller through the 3D component. TypeScript and targeted ESLint pass after the runtime import fix. The prior production build passed with 133 kB of first-load JavaScript on the product route; the Three.js viewer and AR tools remain on demand. The Google AR-library CDN responds HTTP 200.
+Validation: the full repository suite passes 387 tests, including regression tests for appearance-component initialization and compressed-texture AR exports. TypeScript, targeted ESLint and the production build pass. The product route's first-load JavaScript is 133 kB; the Three.js viewer and AR tools remain on demand. The Google AR-library CDN responds HTTP 200.
 
 The appearance utility is named `productSurfaceController.ts` to keep its module path distinct from the React component on case-insensitive Windows filesystems. The active dev server serves the new import; executing its emitted webpack component/controller modules initializes and updates the product successfully. Catalog and 3D product HTTP smoke checks both return 200.
 
@@ -11,6 +11,8 @@ The controller updates the per-instance cloned GLB materials, keeping pooled ass
 The photo/3D mode selector preserves the photo-first loading behavior. Color and material changes also update price, cart selection and the four-payment calculator. The size button opens an accessible 2D front-view comparison against a 170 cm human; both shapes use the same metres-to-pixels factor. Depth is shown separately, with a link to the existing room planner.
 
 AR is loaded only when opened and requires a product GLB. Its native modal has keyboard dismissal and restores focus on close. The snapshot waits for the delivery asset and appearance animation, removes retained previews and copies the selected materials/textures. It preserves the product's declared dimensions in metres. The AR library is loaded from the same Google CDN version already used by the kitchen viewer, with deduplicated requests, timeout, error and retry handling.
+
+AR GLB export registers `GLTFExporter.setTextureUtils` with Three.js's WebGL decompression utility so KTX2/compressed surfaces can be embedded as readable images. One separate WebGL context is created lazily per export, decoded maps are cached and limited to 2048 pixels, and the original UV transforms/orientation are preserved. The decoded maps, context and snapshot are released on success or failure. Regression tests use the real GLTFExporter and mocked GPU readback to check embedded PNG data, selected color, shared-texture reuse and cleanup; physical-device GPU/Quick Look testing remains unavailable.
 
 `model-viewer` uses `ar-modes="webxr quick-look"` and `ar-scale="fixed"`. iOS receives an automatically generated USDZ. Android uses WebXR when supported. Scene Viewer is deliberately omitted: it downloads a URL rather than the browser's exported blob and would not reliably retain the selected finish. Supported devices need HTTPS; unsupported devices can inspect the exported product as ordinary 3D in the dialog. See the [official AR documentation](https://modelviewer.dev/docs/index.html#section-augmentedreality) and [material/scene behavior](https://modelviewer.dev/examples/scenegraph/).
 
