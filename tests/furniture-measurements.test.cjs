@@ -80,7 +80,7 @@ function nodes(node) {
 
 test('Measure click selects the piece without moving it, capturing a pointer or starting history', () => {
   let selected, moved = 0, started = 0, ended = 0, captured = 0;
-  const react = { ...React, useState: init => [typeof init === 'function' ? init() : init, () => {}], useRef: value => ({ current: value }), useEffect: () => {} };
+  const react = { ...React, useState: init => [typeof init === 'function' ? init() : init, () => {}], useRef: value => ({ current: value }), useEffect: () => {}, useMemo: fn => fn() };
   const { RoomCanvas } = loadSource('src/three/RoomCanvas.tsx', {
     react,
     '@react-three/fiber': { Canvas: 'canvas', useThree: () => ({ camera: {}, raycaster: {}, gl: {} }) },

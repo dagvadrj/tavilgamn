@@ -1,7 +1,7 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import * as THREE from "three";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import {
   OrbitControls,
   Grid,
@@ -10,7 +10,6 @@ import {
   ContactShadows,
   MapControls,
   Html,
-  Line,
   Edges,
   useCursor,
 } from "@react-three/drei";
@@ -21,6 +20,9 @@ import type {
   RoomWall,
   RoomOpening,
 } from "@/lib/types";
+import { connectionGeometry, layoutBounds, roomPosition } from "@/lib/roomLayout";
+import { roomLabelOpacity, solarLighting } from "@/lib/roomLighting";
+import { animateToward } from "./demandAnimation";
 import { getRoomGeometry } from "@/lib/roomGeometry";
 import { RoomStructure, RoomLighting } from "./RoomStructure";
 import { FurnitureMesh } from "./FurnitureMesh";
@@ -28,10 +30,12 @@ import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import { InteriorModel } from "./InteriorModel";
 import { getProduct } from "@/store/catalog";
 import { getDbModel } from "@/lib/modelRegistry";
+import { roomPlacementContext } from "./roomPlacement";
 import { isPlacementValid, snapToWall } from "./collision";
 import type { Measurement } from "@/lib/furnitureMeasurements";
 import { KitchenAssemblyMesh } from "./KitchenAssemblyMesh";
 import { dimsFor } from "./collision";
+import { RoomDimensions } from "./RoomDimensions";
 import { FurnitureMeasurements } from "./FurnitureMeasurements";
 import {
   normalizeKitchenMaterials,
@@ -40,12 +44,17 @@ import {
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
+import { RoomCameraRig } from "./RoomCameraRig";
 import { CameraNavigation } from "./CameraNavigation";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { CursorNavigation } from "./CursorNavigationBinding";
 import { SCENE_NAVIGATION_START, isSceneNavigationGesture } from "./sceneNavigation";
 
+// The camera and WebGL renderer survive room selection; the rig owns their pose.
+const ROOM_CAMERA = { position: [6, 5, 6] as [number, number, number], fov: 40, near: .1, far: 300 };
+
 interface RoomCanvasProps {
+  onSelectRoom?: (id: string) => void;
   selectedWall?: RoomWall | null;
   onSelectWall?: (wall: RoomWall) => void;
   selectedOpening?: string | null;
@@ -81,6 +90,7 @@ interface RoomCanvasProps {
 
 export function RoomCanvas({
   design,
+  onSelectRoom,
   selected,
   onSelect,
   onMove,
@@ -104,12 +114,17 @@ export function RoomCanvas({
   onPlaceOpening,
   onPlacementError,
 }: RoomCanvasProps) {
+  const placement = useMemo(() => roomPlacementContext(design), [design]);
   const performance = useCanvasPerformance();
   const [isDraggingPiece, setIsDraggingPiece] = useState(false);
   const [kitchenMaterials, setKitchenMaterials] = useState<
     Record<string, KitchenMaterialDefinition>
   >({});
-  const hasKitchen = design.pieces.some((piece) => piece.kitchen);
+  const rooms = design.rooms ?? [];
+  const activeRoom = rooms.find(room => room.id === design.activeRoomId);
+  const origin = activeRoom ? roomPosition(activeRoom) : { x: 0, z: 0 };
+  const solar = solarLighting(design.lighting);
+  const hasKitchen = (rooms.length ? rooms.flatMap(room => room.pieces) : design.pieces).some((piece) => piece.kitchen);
   useEffect(() => {
     if (!hasKitchen) return;
     const controller = new AbortController();
@@ -135,12 +150,13 @@ export function RoomCanvas({
       });
     return () => controller.abort();
   }, [hasKitchen]);
-  const bounds = getRoomGeometry(design).bounds;
+  const worldBounds = !customInterior && rooms.length ? layoutBounds(rooms) : getRoomGeometry(design).bounds;
+  const bounds = !customInterior && rooms.length ? {minX:worldBounds.minX-origin.x,maxX:worldBounds.maxX-origin.x,minZ:worldBounds.minZ-origin.z,maxZ:worldBounds.maxZ-origin.z} : worldBounds;
   const spanX = bounds.maxX - bounds.minX,
     spanZ = bounds.maxZ - bounds.minZ;
   const centerX = (bounds.minX + bounds.maxX) / 2,
     centerZ = (bounds.minZ + bounds.maxZ) / 2;
-  const roomHeight = design.height ?? 2.7;
+  const roomHeight = Math.max(design.height ?? 2.7, ...rooms.map(room => room.height ?? 2.7));
   return (
     <Canvas
       shadows={performance.shadows}
@@ -154,28 +170,11 @@ export function RoomCanvas({
       }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.05;
+        gl.toneMappingExposure = 1;
+        gl.shadowMap.type = THREE.PCFSoftShadowMap;
         gl.outputColorSpace = THREE.SRGBColorSpace;
       }}
-      camera={
-        view === "plan"
-          ? {
-              position: [0, 14, 0.01],
-              fov: 35,
-              near: 0.1,
-              far: 300,
-            }
-          : {
-              position: [
-                design.width * 0.78,
-                Math.max(design.width, design.depth) * 0.62,
-                design.depth * 0.82,
-              ],
-              fov: 40,
-              near: 0.1,
-              far: 300,
-            }
-      }
+      camera={ROOM_CAMERA}
       className="!h-full !w-full"
       onPointerMissed={() => {
         onSelect(null);
@@ -184,7 +183,7 @@ export function RoomCanvas({
     >
       <CameraMotionPreview interactionActive={isDraggingPiece}>
       <CanvasDiagnostics scene="room" />
-      <CameraRig
+      <RoomCameraRig
         view={view}
         width={spanX}
         depth={spanZ}
@@ -192,26 +191,34 @@ export function RoomCanvas({
         centerX={centerX}
         centerZ={centerZ}
         resetKey={resetKey}
+        originX={origin.x}
+        originZ={origin.z}
       />
-      <color attach="background" args={["#F1F0ED"]} />
-      <RoomLighting design={design} />
-      <Environment resolution={64} frames={1}>
+      <color attach="background" args={[solar.night ? "#252c38" : "#F1F0ED"]} />
+      <RoomLighting fixtureShadows={performance.shadows && rooms.length <= 6} design={{...design, lighting: customInterior ? design.lighting : {...design.lighting!, fixtures: []}}} extent={Math.max(spanX, spanZ) * .8 + 4} centre={[centerX,centerZ]} />
+      <Environment resolution={128} frames={1} environmentIntensity={.08 + .92 * solar.daylight}>
+        {/* Neutral room bounce surrounds the model, including the areas between softboxes. */}
+        <color attach="background" args={["#bcbcbc"]}/>
         <Lightformer
           form="rect"
-          intensity={1.3}
+          intensity={.8}
           color="#ffffff"
           scale={[8, 6, 1]}
           position={[0, 5, -8]}
         />
         <Lightformer
           form="rect"
-          intensity={0.65}
-          color="#fff1db"
+          intensity={.35}
+          color="#ffffff"
           scale={[6, 6, 1]}
           position={[-6, 3, 0]}
           rotation={[0, Math.PI / 2, 0]}
         />
+        <Lightformer form="rect" intensity={.65} color="#ffffff" scale={[12, 12, 1]} position={[0, 10, 0]} rotation={[Math.PI / 2, 0, 0]}/>
       </Environment>
+      {!customInterior && view === "perspective" && <mesh position={[centerX, -.091, centerZ]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow raycast={() => {}}>
+        <planeGeometry args={[Math.max(60, spanX * 4), Math.max(60, spanZ * 4)]}/><meshStandardMaterial color={solar.night ? "#252c38" : "#eeece7"} roughness={1}/>
+      </mesh>}
       {customInterior ? (
         <InteriorModel
           basePath={customInterior.basePath}
@@ -221,22 +228,30 @@ export function RoomCanvas({
           onLoaded={customInterior.onLoaded}
         />
       ) : (
-        <RoomStructure
-          design={design}
-          onSelect={onSelect}
-          view={view}
-          selectedWall={selectedWall}
-          onSelectWall={onSelectWall}
-          selectedOpening={selectedOpening}
-          onSelectOpening={onSelectOpening}
-          onUpdateOpening={onUpdateOpening}
-          placementTemplate={placementTemplate}
-          onPlaceOpening={onPlaceOpening}
-          onPlacementError={onPlacementError}
-          onDragChange={setIsDraggingPiece}
-          onEditStart={onEditStart}
-          onEditEnd={onEditEnd}
-        />
+        rooms.length ? <>{rooms.map(room => {
+          const active = room.id === design.activeRoomId, p = roomPosition(room);
+          const shared = connectionGeometry(room, rooms, design.connections ?? []);
+          const roomDesign = {...design, ...room, id: design.id, roomName: room.name, roomType: room.type, openings: shared.visibleOpenings};
+          return <group key={room.id} position={[p.x-origin.x,0,p.z-origin.z]}>
+            <RoomStructure design={roomDesign} view={view} sharedCuts={shared.cuts} sharedBoundaries={shared.boundaries} connectionOpenings={shared.openings} readOnly={!active}
+              onSelect={active ? onSelect : () => onSelectRoom?.(room.id)} selectedWall={active ? selectedWall : null}
+              onSelectWall={active ? onSelectWall : undefined} selectedOpening={active ? selectedOpening : null}
+              onSelectOpening={active ? onSelectOpening : () => onSelectRoom?.(room.id)} onUpdateOpening={active ? onUpdateOpening : undefined}
+              placementTemplate={active ? placementTemplate : null} onPlaceOpening={active ? onPlaceOpening : undefined}
+              onPlacementError={onPlacementError} onDragChange={setIsDraggingPiece} onEditStart={onEditStart} onEditEnd={onEditEnd} />
+            <RoomLighting design={roomDesign} includeSun={false} fixtureShadows={performance.shadows && rooms.length <= 6} />
+            {!active && room.pieces.map(piece => <DraggablePiece key={piece.instanceId} piece={piece} allPieces={room.pieces}
+              roomDims={room} selected={false} onSelect={() => onSelectRoom?.(room.id)} onMove={() => {}}
+              onDragChange={setIsDraggingPiece} snapEnabled={false} gridEnabled={false} measureMode={true} kitchenMaterials={kitchenMaterials} />)}
+            <RoomCaption name={room.name} area={getRoomGeometry(room).area} span={Math.max(room.width,room.depth)} active={active} onSelect={() => onSelectRoom?.(room.id)} />
+          </group>;
+        })}</> : <>
+          <RoomStructure design={design} onSelect={onSelect} view={view} selectedWall={selectedWall} onSelectWall={onSelectWall}
+            selectedOpening={selectedOpening} onSelectOpening={onSelectOpening} onUpdateOpening={onUpdateOpening}
+            placementTemplate={placementTemplate} onPlaceOpening={onPlaceOpening} onPlacementError={onPlacementError}
+            onDragChange={setIsDraggingPiece} onEditStart={onEditStart} onEditEnd={onEditEnd} />
+          <RoomLighting design={design} includeSun={false} fixtureShadows={performance.shadows} />
+        </>
       )}
 
       {!customInterior && gridEnabled && (
@@ -245,9 +260,12 @@ export function RoomCanvas({
         </group>
       )}
       {!customInterior && showDimensions && !selected && (
-        <group position={[centerX, 0, centerZ]}>
-          <RoomDimensions width={spanX} depth={spanZ} />
-        </group>
+        rooms.length ? rooms.map(room=>{
+          const p=roomPosition(room);
+          return <group key={"dimensions-"+room.id} position={[p.x-origin.x,0,p.z-origin.z]}>
+            <RoomDimensions room={room} neighbours={rooms} name={room.name} active={room.id===design.activeRoomId}/>
+          </group>;
+        }) : <RoomDimensions room={design} name={design.roomName}/>
       )}
       {showDimensions && selected && (
         <FurnitureMeasurements measurements={measurements} view={view} />
@@ -257,8 +275,8 @@ export function RoomCanvas({
         <DraggablePiece
           key={piece.instanceId}
           piece={piece}
-          allPieces={design.pieces}
-          roomDims={design}
+          allPieces={customInterior ? design.pieces : placement.pieces}
+          roomDims={customInterior ? design : placement.room}
           selected={selected === piece.instanceId}
           onSelect={onSelect}
           onMove={onMove}
@@ -274,18 +292,18 @@ export function RoomCanvas({
 
       {view === "perspective" && performance.contactShadows && (
         <ContactShadows
-          position={[0, 0.006, 0]}
-          opacity={0.24}
-          scale={Math.max(design.width, design.depth) * 1.15}
-          blur={2.8}
-          far={4}
+          position={[centerX, -.082, centerZ]}
+          opacity={.2}
+          scale={Math.max(spanX, spanZ) * 1.15}
+          blur={3.5}
+          far={2.8}
+          color="#766c5d"
         />
       )}
       {view === "perspective" && (
         <OrbitControls
           makeDefault
           enabled={!locked && !isDraggingPiece}
-          target={[centerX, roomHeight * 0.4, centerZ]}
           enablePan
           screenSpacePanning
           enableRotate
@@ -303,7 +321,6 @@ export function RoomCanvas({
         <MapControls
           makeDefault
           enabled={!locked && !isDraggingPiece}
-          target={[centerX, 0, centerZ]}
           enableRotate={false}
           enablePan
           enableZoom
@@ -322,93 +339,23 @@ export function RoomCanvas({
     </Canvas>
   );
 }
-function CameraRig({
-  view,
-  width,
-  depth,
-  height,
-  centerX,
-  centerZ,
-  resetKey,
-}: {
-  view: "plan" | "perspective";
-  width: number;
-  depth: number;
-  height: number;
-  centerX: number;
-  centerZ: number;
-  resetKey: number;
-}) {
-  const camera = useThree((state) => state.camera);
-  const controls = useThree((state) => state.controls);
-  const size = useThree((state) => state.size);
-  const invalidate = useThree((state) => state.invalidate);
-
-  useEffect(() => {
-    const target = new THREE.Vector3();
-
-    if (view === "plan") {
-      target.set(centerX, 0, centerZ);
-
-      camera.up.set(0, 0, -1);
-      const aspect = size.width / Math.max(size.height, 1);
-      const fov = (camera as THREE.PerspectiveCamera).fov || 40;
-      const distance =
-        Math.max(depth + 1.8, (width + 1.8) / aspect) /
-        (2 * Math.tan(THREE.MathUtils.degToRad(fov / 2)));
-      camera.position.set(centerX, distance, centerZ + 0.001);
-    } else {
-      const targetHeight = height * 0.4;
-      target.set(centerX, targetHeight, centerZ);
-      camera.up.set(0, 1, 0);
-      // Fit the entire room, including the far upper corners, into both camera axes.
-      const aspect = size.width / Math.max(size.height, 1);
-      const verticalHalfFov = THREE.MathUtils.degToRad(
-        ((camera as THREE.PerspectiveCamera).fov || 40) / 2,
-      );
-      const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
-      const radius = Math.hypot(
-        width / 2,
-        depth / 2,
-        Math.max(targetHeight, height - targetHeight),
-      );
-      const distance =
-        (radius / Math.sin(Math.min(verticalHalfFov, horizontalHalfFov))) *
-        1.08;
-      const direction = new THREE.Vector3(0.8, 0.68, 0.82).normalize();
-      camera.position.copy(target).addScaledVector(direction, distance);
-      camera.far = Math.max(300, distance * 4);
-    }
-
-    camera.lookAt(target);
-    camera.updateProjectionMatrix();
-
-    if (controls && "target" in controls && "update" in controls) {
-      const orbitControls = controls as {
-        target: THREE.Vector3;
-        update: () => void;
-      };
-
-      orbitControls.target.copy(target);
-      orbitControls.update();
-    }
-    invalidate();
-  }, [
-    camera,
-    controls,
-    view,
-    width,
-    depth,
-    height,
-    centerX,
-    centerZ,
-    resetKey,
-    size.width,
-    size.height,
-    invalidate,
-  ]);
-
-  return null;
+function RoomCaption({ name, area, span, active, onSelect }: { name: string; area: number; span: number; active: boolean; onSelect: () => void }) {
+  const anchor = useRef<THREE.Group>(null), button = useRef<HTMLButtonElement>(null);
+  const world = useMemo(() => new THREE.Vector3(), []);
+  useFrame(({camera,invalidate},delta) => {
+    if (!anchor.current || !button.current) return;
+    anchor.current.getWorldPosition(world);
+    const target = roomLabelOpacity(camera.position.distanceTo(world), span);
+    const current = Number(button.current.style.opacity || 1);
+    const animation = animateToward(current,target,9,delta);
+    button.current.style.opacity=String(animation.value);
+    button.current.style.visibility=animation.value<.015?"hidden":"visible";
+    button.current.style.pointerEvents=animation.value<.1?"none":"auto";
+    if(animation.moving)invalidate();
+  });
+  return <group ref={anchor} position={[0,.35,0]}><Html center zIndexRange={[12,0]}>
+    <button ref={button} type="button" className="room-world-label" aria-pressed={active} onClick={onSelect}><strong>{name}</strong><small>{area.toFixed(1)} м²</small></button>
+  </Html></group>;
 }
 
 function FloorGrid({ width, depth }: { width: number; depth: number }) {
@@ -429,100 +376,6 @@ function FloorGrid({ width, depth }: { width: number; depth: number }) {
     />
   );
 }
-function RoomDimensions({ width, depth }: { width: number; depth: number }) {
-  const y = 0.035;
-  const offset = 0.45;
-  const tickSize = 0.12;
-  const lineColor = "#535960";
-
-  const labelClass =
-    "whitespace-nowrap rounded-full border border-black/10 bg-white/95 px-2.5 py-1 text-[11px] font-medium text-[#171C24] shadow-sm";
-
-  return (
-    <group>
-      {/* Width */}
-      <Line
-        points={[
-          [-width / 2, y, depth / 2 + offset],
-          [width / 2, y, depth / 2 + offset],
-        ]}
-        color={lineColor}
-        lineWidth={1}
-      />
-
-      <Line
-        points={[
-          [-width / 2, y, depth / 2 + offset - tickSize],
-          [-width / 2, y, depth / 2 + offset + tickSize],
-        ]}
-        color={lineColor}
-        lineWidth={1}
-      />
-
-      <Line
-        points={[
-          [width / 2, y, depth / 2 + offset - tickSize],
-          [width / 2, y, depth / 2 + offset + tickSize],
-        ]}
-        color={lineColor}
-        lineWidth={1}
-      />
-
-      <Html
-        position={[0, y, depth / 2 + offset]}
-        center
-        style={{ pointerEvents: "none" }}
-      >
-        <span className={labelClass}>{width.toFixed(2)} м</span>
-      </Html>
-
-      {/* Depth */}
-      <Line
-        points={[
-          [width / 2 + offset, y, -depth / 2],
-          [width / 2 + offset, y, depth / 2],
-        ]}
-        color={lineColor}
-        lineWidth={1}
-      />
-
-      <Line
-        points={[
-          [width / 2 + offset - tickSize, y, -depth / 2],
-          [width / 2 + offset + tickSize, y, -depth / 2],
-        ]}
-        color={lineColor}
-        lineWidth={1}
-      />
-
-      <Line
-        points={[
-          [width / 2 + offset - tickSize, y, depth / 2],
-          [width / 2 + offset + tickSize, y, depth / 2],
-        ]}
-        color={lineColor}
-        lineWidth={1}
-      />
-
-      <Html
-        position={[width / 2 + offset, y, 0]}
-        center
-        style={{ pointerEvents: "none" }}
-      >
-        <span
-          className={labelClass}
-          style={{
-            display: "inline-block",
-            transform: "rotate(-90deg)",
-          }}
-        >
-          {depth.toFixed(2)} м
-        </span>
-      </Html>
-    </group>
-  );
-}
-
 function DraggablePiece({
   piece,
   allPieces,
@@ -702,6 +555,8 @@ function DraggablePiece({
           glbFile={dbModel.glbFile}
           previewGlbFile={dbModel.previewGlbFile}
           preservePhysicalSize={dbModel.physicalSize}
+          bakedOcclusionIntensity={0}
+          trackFloorBand
           w={dims.w}
           d={dims.d}
           h={dims.h}

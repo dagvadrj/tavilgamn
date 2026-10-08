@@ -1,0 +1,7 @@
+import { windowLayout, type OpeningTemplate } from "@/lib/roomOpenings";
+export function OpeningTemplatePreview({template}:{template:OpeningTemplate}) {
+  const {panes,operation}=windowLayout({templateId:template.id,width:template.width});
+  if(template.kind==="door")return <svg viewBox="0 0 108 70" aria-hidden="true"><path d="M30 61V9H78V61M27 61H81" fill="none" stroke="currentColor" strokeWidth="3"/>{template.id==="door-double"?<path d="M54 12V60M48 39H50M58 39H60" stroke="currentColor" strokeWidth="2"/>:<path d="M66 39H70" stroke="currentColor" strokeWidth="3"/>}</svg>;
+  const left=8,right=100,top=template.id==="window-floor"?5:17,bottom=61,inner=(right-left-8)/panes;
+  return <svg viewBox="0 0 108 70" aria-hidden="true"><rect x={left} y={top} width={right-left} height={bottom-top} fill="#e5f0f5" stroke="currentColor" strokeWidth="3"/>{Array.from({length:panes},(_,i)=><g key={i}><rect x={left+4+i*inner} y={top+4} width={inner-2} height={bottom-top-8} fill="none" stroke="currentColor" strokeWidth="1"/>{i>0&&<path d={"M"+(left+4+i*inner-1)+" "+top+"V"+bottom} stroke="currentColor" strokeWidth="3"/>}{operation==="casement"&&<path d={"M"+(left+5+i*inner)+" "+(top+5)+"L"+(left+inner+i*inner-2)+" "+((top+bottom)/2)+"L"+(left+5+i*inner)+" "+(bottom-5)} fill="none" stroke="currentColor" strokeWidth="1"/>}</g>)}<path d={"M5 "+(bottom+3)+"H103"} stroke="currentColor" strokeWidth="3"/>{operation==="sliding"&&<path d="M40 39H67M62 35L67 39L62 43" fill="none" stroke="currentColor" strokeWidth="2"/>}</svg>;
+}

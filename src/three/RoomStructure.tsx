@@ -2,10 +2,16 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { Edges } from "@react-three/drei";
+import { Edges, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
-import type { RoomDesign, RoomOpening, RoomWall } from "@/lib/types";
+import type { CeilingFixture, RoomDesign, RoomOpening, RoomWall } from "@/lib/types";
 import { getRoomGeometry, polygonArea, type RoomSegment } from "@/lib/roomGeometry";
+import { sharedCutsForSegment, type SharedWallCut } from "@/lib/roomLayout";
+import { TrayCeiling } from "./TrayCeiling";
+import { fixtureMountHeight } from "@/lib/roomCeiling";
+import { ROOM_WALL_THICKNESS, ROOM_SKIRTING_DEPTH, ROOM_SKIRTING_HEIGHT, wallMiterEnds } from "@/lib/roomRendering";
+import { sunDirection, exteriorWindowBearing } from "@/lib/roomSunlight";
+import { solarLighting } from "@/lib/roomLighting";
 import { openingWorldTransform } from "@/lib/roomOpenings";
 import { createWallGeometry, type WallCut } from "./wallCsg";
 import { useRoomMaterial } from "./roomMaterials";
@@ -13,12 +19,17 @@ import { OpeningMesh } from "./OpeningMesh";
 import { animateToward } from "./demandAnimation";
 import { isSceneNavigationGesture } from "./sceneNavigation";
 
-const WALL_THICKNESS = 0.12;
+const WALL_THICKNESS = ROOM_WALL_THICKNESS;
 const noRaycast = () => {};
 const WALL_IDS: RoomWall[] = ["north", "east", "south", "west"];
 
 export interface RoomStructureProps {
   design: RoomDesign;
+  sharedCuts?: SharedWallCut[];
+  sharedBoundaries?: SharedWallCut[];
+  wallEnds?: { start: number; end: number };
+  connectionOpenings?: RoomOpening[];
+  readOnly?: boolean;
   view: "plan" | "perspective";
   onSelect: (id: string | null) => void;
   selectedWall?: RoomWall | null;
@@ -59,7 +70,7 @@ function RoomWallMesh({ segment, ...props }: RoomStructureProps & { segment: Roo
   const rotation = -Math.atan2(segment.b.z - segment.a.z, segment.b.x - segment.a.x);
   const base = isBaseWall(design, segment, id);
   const finish = design.wallMaterials?.[id];
-  const materialProps = useRoomMaterial(finish?.mode === "wallpaper" ? finish.materialId : undefined, segment.length, height, finish?.color ?? design.wallColor);
+  const materialProps = useRoomMaterial(finish?.mode === "wallpaper" ? finish.materialId : "wall-paint", segment.length, height, finish?.color ?? design.wallColor);
   const meshRef = useRef<THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>>(null);
   const openingCuts = (design.openings ?? []).filter(opening => opening.wallId === id && base).flatMap(opening => {
     const world = openingWorldTransform(design, opening);
@@ -67,12 +78,20 @@ function RoomWallMesh({ segment, ...props }: RoomStructureProps & { segment: Roo
     if (along - opening.width / 2 < -segment.length / 2 - 0.001 || along + opening.width / 2 > segment.length / 2 + 0.001) return [];
     return [{ x: along, width: opening.width, height: opening.height, sillHeight: opening.sillHeight }];
   });
+  const startExtension = props.wallEnds?.start ?? 0, endExtension = props.wallEnds?.end ?? 0;
+  const connectionCuts = sharedCutsForSegment(design, segment, props.sharedCuts ?? []).map(cut => {
+    if (cut.height < height) return cut;
+    const from = cut.x - cut.width / 2 - (cut.x - cut.width / 2 <= -segment.length / 2 + .002 ? Math.max(0, startExtension) : 0);
+    const to = cut.x + cut.width / 2 + (cut.x + cut.width / 2 >= segment.length / 2 - .002 ? Math.max(0, endExtension) : 0);
+    return { ...cut, x: (from + to) / 2, width: to - from };
+  });
+  openingCuts.push(...connectionCuts);
   // A door's open state or selection does not invalidate its expensive CSG geometry.
   const cutKey = JSON.stringify(openingCuts);
-  const wallGeometry = useMemo(() => createWallGeometry(segment.length, height, WALL_THICKNESS, JSON.parse(cutKey) as WallCut[]), [segment.length, height, cutKey]);
+  const wallGeometry = useMemo(() => createWallGeometry(segment.length, height, WALL_THICKNESS, JSON.parse(cutKey) as WallCut[], { start: startExtension, end: endExtension }), [segment.length, height, cutKey, startExtension, endExtension]);
   useEffect(() => () => wallGeometry.dispose(), [wallGeometry]);
   const baseboardPieces = useMemo(() => {
-    const cuts = (JSON.parse(cutKey) as WallCut[]).filter(cut => cut.sillHeight < 0.1).sort((a, b) => a.x - b.x);
+    const cuts = (JSON.parse(cutKey) as WallCut[]).filter(cut => cut.sillHeight < ROOM_SKIRTING_HEIGHT).sort((a, b) => a.x - b.x);
     const pieces: { x: number; width: number }[] = [];
     let start = -segment.length / 2;
     for (const cut of cuts) {
@@ -83,20 +102,23 @@ function RoomWallMesh({ segment, ...props }: RoomStructureProps & { segment: Roo
     return pieces;
   }, [segment.length, cutKey]);
 
+  const worldCentre = useMemo(() => new THREE.Vector3(), []);
   useFrame(({ camera, invalidate }, delta) => {
     const mesh = meshRef.current;
     if (!mesh) return;
-    const outside = (camera.position.x - x) * segment.nx + (camera.position.z - z) * segment.nz < -0.06;
+    mesh.getWorldPosition(worldCentre);
+    const outside = (camera.position.x - worldCentre.x) * segment.nx + (camera.position.z - worldCentre.z) * segment.nz < -0.06;
     const faded = view === "plan" || outside;
     const animation = animateToward(mesh.material.opacity, faded ? 0.065 : 1, 12, delta);
     mesh.material.opacity = animation.value;
     if (animation.moving) invalidate();
     mesh.material.depthWrite = !faded;
-    mesh.castShadow = !faded;
+    mesh.castShadow = true;
   });
 
   const click = (event: ThreeEvent<MouseEvent>) => {
     if (event.delta > 4) return;
+    if (props.readOnly) { event.stopPropagation(); onSelect(null); return; }
     event.stopPropagation();
     if (placementTemplate) {
       if (!base) { onPlacementError?.("Хаалга, цонхыг үндсэн ханын шулуун хэсэгт байрлуулна уу."); return; }
@@ -109,7 +131,7 @@ function RoomWallMesh({ segment, ...props }: RoomStructureProps & { segment: Roo
 
   return <group position={[x, 0, z]} rotation={[0, rotation, 0]}>
     <mesh ref={meshRef} geometry={wallGeometry} position={[0, height / 2, -WALL_THICKNESS / 2]} receiveShadow
-      userData={{ openingWall: base ? id : null }} onClick={click}
+      userData={{ openingWall: base && !props.readOnly ? id : null }} onClick={click}
       raycast={function (this: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>, raycaster, intersections) {
         const mesh = this;
         if (mesh.material.opacity < 0.2 && !placementTemplate) return;
@@ -117,17 +139,32 @@ function RoomWallMesh({ segment, ...props }: RoomStructureProps & { segment: Roo
       }}>
       <meshStandardMaterial {...materialProps} transparent emissive={selectedWall === id ? "#1677b8" : "#000000"} emissiveIntensity={selectedWall === id ? 0.09 : 0} />
     </mesh>
-    {baseboardPieces.map((piece, index) => <mesh key={index} position={[piece.x, 0.065, 0.018]} receiveShadow onClick={click}>
-      <boxGeometry args={[piece.width, 0.13, 0.036]} />
+    {baseboardPieces.map((piece, index) => <RoundedBox key={index} args={[piece.width, ROOM_SKIRTING_HEIGHT, ROOM_SKIRTING_DEPTH]} radius={Math.min(.004, piece.width / 4)} smoothness={2} position={[piece.x, ROOM_SKIRTING_HEIGHT / 2, ROOM_SKIRTING_DEPTH / 2]} receiveShadow onClick={click}>
       <meshStandardMaterial color={selectedWall === id ? "#5aa0cf" : "#eeece5"} roughness={0.7} />
       {selectedWall === id && <Edges color="#006ab5" raycast={noRaycast} />}
-    </mesh>)}
+    </RoundedBox>)}
+    <WallContactShade pieces={baseboardPieces} />
     {/* A low perimeter remains clickable from every angle and in the top-down plan. */}
-    <mesh position={[0, 0.075, -WALL_THICKNESS / 2]} onClick={click}>
-      <boxGeometry args={[segment.length, 0.15, WALL_THICKNESS]} />
+    {baseboardPieces.map((piece, index) => <mesh key={`hit-${index}`} position={[piece.x, 0.075, -WALL_THICKNESS / 2]} onClick={click}>
+      <boxGeometry args={[piece.width, 0.15, WALL_THICKNESS]} />
       <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
-    </mesh>
+    </mesh>)}
   </group>;
+}
+
+/** Subtle contact shade keeps walls grounded even when the camera hides their fronts. */
+function WallContactShade({ pieces }: { pieces: { x: number; width: number }[] }) {
+  const texture = useMemo(() => {
+    const pixels = new Uint8Array(2 * 32 * 4);
+    for (let y = 0; y < 32; y++) for (let x = 0; x < 2; x++) pixels[(y * 2 + x) * 4 + 3] = Math.round((y / 31) ** 2 * 255);
+    const map = new THREE.DataTexture(pixels, 2, 32, THREE.RGBAFormat);
+    map.magFilter = THREE.LinearFilter; map.minFilter = THREE.LinearFilter; map.needsUpdate = true;
+    return map;
+  }, []);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return <group>{pieces.map((piece, index) => <mesh key={index} position={[piece.x, .003, .12]} rotation={[-Math.PI / 2, 0, 0]} raycast={noRaycast}>
+    <planeGeometry args={[piece.width, .24]}/><meshBasicMaterial map={texture} color="#594b3b" transparent opacity={.18} depthWrite={false}/>
+  </mesh>)}</group>;
 }
 
 function RoomSurfaces({ design, view, onSelect, onSelectOpening }: RoomStructureProps) {
@@ -136,6 +173,7 @@ function RoomSurfaces({ design, view, onSelect, onSelectOpening }: RoomStructure
   const bounds = roomGeometry.bounds;
   const spanX = bounds.maxX - bounds.minX, spanZ = bounds.maxZ - bounds.minZ;
   const floorProps = useRoomMaterial(design.floorMaterial, spanX, spanZ, design.floorColor);
+  const woodFloor = design.floorMaterial?.startsWith("parquet-") || design.floorMaterial?.startsWith("laminate-");
   const ceilingProps = useRoomMaterial(design.ceilingMaterial ?? "ceiling-white", spanX, spanZ, "#ffffff");
   const ceiling = useRef<THREE.Mesh>(null);
   const height = design.height ?? 2.7;
@@ -161,7 +199,12 @@ function RoomSurfaces({ design, view, onSelect, onSelectOpening }: RoomStructure
       if (event.button !== 0) return;
       if (event.pointerType === "touch" && isSceneNavigationGesture(gl.domElement)) return;
       event.stopPropagation(); onSelect(null); onSelectOpening?.(null);
-    }}><meshStandardMaterial {...floorProps} /></mesh>
+    }}><meshPhysicalMaterial {...floorProps} clearcoat={woodFloor ? .18 : 0} clearcoatRoughness={.42} envMapIntensity={.65}/></mesh>
+    <TrayCeiling design={design} view={view}/>
+    {/* An invisible roof still casts a physical shadow: sun enters through openings. */}
+    <mesh position={[0, height, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={geometries.roof} castShadow raycast={noRaycast}>
+      <meshBasicMaterial colorWrite={false} depthWrite={false} side={THREE.DoubleSide} />
+    </mesh>
     <mesh ref={ceiling} visible={false} position={[0, height, 0]} rotation={[Math.PI / 2, 0, 0]} geometry={geometries.roof} receiveShadow raycast={noRaycast}>
       <meshStandardMaterial {...ceilingProps} side={THREE.DoubleSide} />
     </mesh>
@@ -224,7 +267,7 @@ export function RoomStructure(props: RoomStructureProps) {
         const left = column.x - design.width / 2, top = column.z - design.depth / 2;
         return x >= left - 1e-6 && x <= left + column.width + 1e-6 && z >= top - 1e-6 && z <= top + column.depth + 1e-6;
       });
-      return onColumn ? null : <RoomWallMesh key={index} {...props} segment={segment} />;
+      return onColumn ? null : <RoomWallMesh key={index} {...props} segment={segment} wallEnds={wallMiterEnds(design, segment, geometry.segments, props.sharedBoundaries)} />;
     })}
     {(design.columns ?? []).map(column => <mesh key={column.id}
       position={[column.x + column.width / 2 - design.width / 2, (view === "plan" ? 0.2 : height) / 2, column.z + column.depth / 2 - design.depth / 2]} castShadow receiveShadow>
@@ -234,25 +277,51 @@ export function RoomStructure(props: RoomStructureProps) {
     {(design.openings ?? []).map(opening => <OpeningMesh key={opening.id} design={design} opening={opening} view={view}
       selected={props.selectedOpening === opening.id} onSelect={props.onSelectOpening} onUpdate={props.onUpdateOpening}
       onDragChange={props.onDragChange} onEditStart={props.onEditStart} onEditEnd={props.onEditEnd} onError={props.onPlacementError} />)}
-    <OpeningDropTarget {...props} />
+    {(props.connectionOpenings ?? []).map(opening => <OpeningMesh key={opening.id} design={design} opening={opening} view={view} selected={false} onDragChange={props.onDragChange} />)}
+    {!props.readOnly && <OpeningDropTarget {...props} />}
   </group>;
 }
 
-export function RoomLighting({ design }: { design: RoomDesign }) {
-  const lighting = design.lighting;
-  const evening = lighting?.mode === "evening";
-  const height = design.height ?? 2.7;
+function CeilingLamp({ fixture, height, span, on, shadows }: { fixture: CeilingFixture; height: number; span: number; on: boolean; shadows: boolean }) {
+  const target = useMemo(() => new THREE.Object3D(), []);
+  const invalidate = useThree(state => state.invalidate);
+  useEffect(() => { target.position.set(0, -height + .13, 0); target.updateMatrixWorld(); invalidate(); }, [height, target, invalidate]);
+  const intensity = on ? fixture.intensity : 0,kind=fixture.kind??"flush",drop=kind==="pendant"?Math.max(.2,Math.min(1.2,fixture.pendantDrop??.6)):0;
+  const radius=kind==="recessed"?.08:.19;
+  return <group position={[fixture.x, height - .035, fixture.z]}>
+    <primitive object={target}/>
+    {kind==="pendant"&&<mesh position={[0,-drop/2,0]} raycast={noRaycast}><cylinderGeometry args={[.004,.004,drop,12]}/><meshStandardMaterial color="#5c6267" metalness={.65} roughness={.3}/></mesh>}
+    {kind==="linear"?<>
+      <mesh castShadow raycast={noRaycast}><boxGeometry args={[1,.045,.12]}/><meshStandardMaterial color="#f0efeb" metalness={.12} roughness={.3}/></mesh>
+      <mesh position={[0,-.028,0]} raycast={noRaycast}><boxGeometry args={[.94,.008,.1]}/><meshStandardMaterial color="#ffffff" emissive={fixture.color} emissiveIntensity={intensity>0?.9:0}/></mesh>
+    </>:<>
+      <mesh position={[0,-drop,0]} castShadow raycast={noRaycast}><cylinderGeometry args={[kind==="pendant"?.13:radius,kind==="pendant"?.22:radius,kind==="pendant"?.15:kind==="recessed"?.015:.045,40]}/><meshStandardMaterial color={kind==="recessed"?"#ffffff":"#f0efeb"} metalness={.12} roughness={.3}/></mesh>
+      <mesh position={[0,-drop-(kind==="pendant"?.08:kind==="recessed"?.009:.028),0]} rotation={[Math.PI/2,0,0]} raycast={noRaycast}><circleGeometry args={[kind==="pendant"?.2:radius*.87,40]}/><meshStandardMaterial color={intensity>0?"#fff6de":"#e8e6de"} emissive={fixture.color} emissiveIntensity={intensity>0?.9:0} roughness={.65} side={THREE.DoubleSide}/></mesh>
+    </>}
+    <spotLight target={target} position={[0,-drop-.12,0]} intensity={intensity*1.25} color={fixture.color} angle={kind==="recessed"?.65:1.23} penumbra={.65} distance={Math.max(span*1.6,height*2)} decay={2}
+      castShadow={shadows&&intensity>0} shadow-mapSize-width={512} shadow-mapSize-height={512} shadow-bias={-.0002} shadow-normalBias={.015} shadow-camera-near={.05} shadow-radius={2}/>
+    <pointLight position={[0,-drop-.15,0]} intensity={intensity*.18} color={fixture.color} distance={span*1.5} decay={2}/>
+  </group>;
+}
+
+export function RoomLighting({ design, includeSun = true, extent = 20, centre = [0, 0], fixtureShadows = true }: { design: RoomDesign; includeSun?: boolean; extent?: number; centre?: [number, number]; fixtureShadows?: boolean }) {
+  const lighting = design.lighting, solar = solarLighting(lighting);
+  const target = useMemo(() => new THREE.Object3D(), []);
+  const invalidate = useThree(state => state.invalidate);
+  const [centreX, centreZ] = centre;
+  useEffect(() => { target.position.set(centreX, 0, centreZ); target.updateMatrixWorld(); invalidate(); }, [target, centreX, centreZ, invalidate]);
+  const radius = Math.max(18, extent * 1.5);
+  const sun = sunDirection(lighting, includeSun ? exteriorWindowBearing(design) : 0);
   return <>
-    <ambientLight intensity={lighting?.ambient ?? 0.55} color={evening ? "#ffdeba" : "#f8fbff"} />
-    <hemisphereLight intensity={evening ? 0.22 : 0.7} color="#e5efff" groundColor="#bda88c" />
-    <directionalLight castShadow color={evening ? "#f2ad73" : "#fff7e9"} intensity={lighting?.sunlight ?? 1.8} position={[6, 10, 7]}
-      shadow-mapSize-width={2048} shadow-mapSize-height={2048} shadow-camera-left={-20} shadow-camera-right={20}
-      shadow-camera-top={20} shadow-camera-bottom={-20} shadow-bias={-0.0002} shadow-normalBias={0.025} />
-    <directionalLight color="#dce7f2" intensity={evening ? 0.08 : 0.35} position={[-5, 5, -4]} />
-    {(lighting?.fixtures ?? []).map(fixture => <group key={fixture.id} position={[fixture.x, height - 0.1, fixture.z]}>
-      <mesh castShadow raycast={noRaycast}><cylinderGeometry args={[0.12, 0.12, 0.08, 24]} /><meshStandardMaterial color="#e7e5df" metalness={0.15} roughness={0.3} /></mesh>
-      <mesh position={[0, -0.045, 0]} raycast={noRaycast}><sphereGeometry args={[0.085, 16, 12]} /><meshStandardMaterial color={fixture.color} emissive={fixture.color} emissiveIntensity={fixture.intensity > 0 ? 1 : 0} /></mesh>
-      <pointLight position={[0, -0.12, 0]} intensity={fixture.intensity} color={fixture.color} distance={Math.max(design.width, design.depth) * 2} decay={2} />
-    </group>)}
+    {includeSun && <>
+      <primitive object={target}/>
+      <ambientLight intensity={(lighting?.ambient ?? .65) * (.2 + .9 * solar.daylight)} color={solar.night ? "#a0b7db" : "#ffffff"}/>
+      <hemisphereLight intensity={.08 + .6 * solar.daylight} color="#f1f6ff" groundColor="#c6beb0"/>
+      <directionalLight target={target} castShadow color={solar.warm ? "#ffbf7d" : "#fff7e9"} intensity={(lighting?.sunlight ?? 1.8) * solar.daylight}
+        position={[centreX + sun.x * radius, sun.y * radius, centreZ + sun.z * radius]}
+        shadow-mapSize-width={2048} shadow-mapSize-height={2048} shadow-camera-left={-extent} shadow-camera-right={extent}
+        shadow-camera-top={extent} shadow-camera-bottom={-extent} shadow-camera-far={radius * 4} shadow-bias={-.00015} shadow-normalBias={.012} shadow-radius={2}/>
+    </>}
+    {(lighting?.fixtures ?? []).map((fixture, index) => <CeilingLamp key={fixture.id} fixture={fixture} height={fixtureMountHeight(design,fixture)} span={Math.max(design.width, design.depth)} on={solar.lampsOn} shadows={fixtureShadows && index === 0}/>)}
   </>;
 }

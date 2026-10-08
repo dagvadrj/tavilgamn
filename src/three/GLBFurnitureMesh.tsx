@@ -19,11 +19,17 @@ import {
   type LoadedModel,
 } from "./modelLoader";
 import { reportModelPerformance } from "@/lib/modelPerformance";
+import { registerModelFloorBand } from "./furnitureFloorBand";
 import { modelPlacement } from "@/lib/modelPlacement";
 import { useCameraMotionPreview } from "./CameraMotionPreview";
 
 export interface GLBFurnitureMeshProps {
   preservePhysicalSize?: boolean;
+  /** Reflection fill for room lighting; leaves authored colour and texture factors intact. */
+  environmentBoost?: number;
+  /** Room scenes already render geometric shadows; disable broken baked AO there. */
+  bakedOcclusionIntensity?: number;
+  trackFloorBand?: boolean;
   modelId: string;
   basePath: string;
   glbFile: string;
@@ -100,6 +106,9 @@ export function GLBFurnitureMesh({
   onReady,
   onError,
   preservePhysicalSize = false,
+  environmentBoost = 1,
+  bakedOcclusionIntensity,
+  trackFloorBand = false,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
   const motionPreview = useCameraMotionPreview();
@@ -183,6 +192,7 @@ export function GLBFurnitureMesh({
         ]);
         if (cancelled) return;
         const cloned = cloneModel(asset);
+        if (trackFloorBand) registerModelFloorBand(modelId, cloned.scene, cloned.bounds, {w,h,d}, preservePhysicalSize, url, final);
 
         cloned.scene.traverse((object) => {
           if (!(object instanceof THREE.Mesh)) return;
@@ -193,8 +203,9 @@ export function GLBFurnitureMesh({
           const clonedMaterials = materials.map((material) => {
             const clonedMaterial = material.clone();
             if (clonedMaterial instanceof THREE.MeshStandardMaterial) {
-              clonedMaterial.normalMap = null;
-              clonedMaterial.aoMap = null;
+              // Preserve imported fabric grain, colour maps and baked occlusion.
+              clonedMaterial.envMapIntensity *= environmentBoost;
+              if (bakedOcclusionIntensity !== undefined) clonedMaterial.aoMapIntensity = Math.max(0, Math.min(1, bakedOcclusionIntensity));
               clonedMaterial.side = THREE.DoubleSide;
               const surface = kitchenCabinetSurface(
                 object.name,
@@ -328,6 +339,9 @@ export function GLBFurnitureMesh({
     frontTexturePaths,
     carcassTexturePaths,
     retainPreview,
+    environmentBoost,
+    bakedOcclusionIntensity, trackFloorBand,
+    modelId, w, h, d, preservePhysicalSize,
   ]);
 
   useEffect(() => {

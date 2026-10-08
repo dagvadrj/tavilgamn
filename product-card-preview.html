@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tavilga.mn · Шинэ Үеийн Product Card UI Концепт</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           1. MODERN LUXURY DESIGN TOKENS (Light / Dark Mode Ready)
+           ========================================================================== */
+        :root {
+            --bg-page: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-surface-subtle: #f1f5f9;
+            --bg-glass: rgba(255, 255, 255, 0.85);
+            --border-subtle: #e2e8f0;
+            --border-hover: #cbd5e1;
+            
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            --text-subtle: #94a3b8;
+            
+            /* Premium Accent / Brand */
+            --brand-primary: #1e293b;
+            --brand-accent: #c58348;      /* Luxury Warm Amber/Cognac Wood */
+            --brand-accent-soft: #fbf5ee;
+            --brand-accent-glow: rgba(197, 131, 72, 0.25);
+            
+            /* Functional Accents */
+            --color-sale: #e11d48;        /* Rosy Red */
+            --color-sale-soft: #ffe4e6;
+            --color-success: #059669;     /* Emerald Green */
+            --color-success-soft: #ecfdf5;
+            --color-3d: #4f46e5;          /* Indigo for 3D/AR */
+            --color-3d-soft: #eef2ff;
+            --color-star: #f59e0b;
+            
+            /* Elevation Shadows */
+            --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+            --shadow-hover: 0 20px 35px -8px rgba(15, 23, 42, 0.12), 0 6px 12px -3px rgba(15, 23, 42, 0.04);
+            --shadow-pill: 0 4px 12px rgba(0, 0, 0, 0.08);
+            
+            --radius-card: 20px;
+            --radius-btn: 12px;
+            --radius-pill: 9999px;
+            
+            --transition-smooth: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-page: #0b0f17;
+            --bg-surface: #131a26;
+            --bg-surface-subtle: #1c2638;
+            --bg-glass: rgba(19, 26, 38, 0.85);
+            --border-subtle: #243044;
+            --border-hover: #334155;
+            
+            --text-heading: #f8fafc;
+            --text-body: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-subtle: #64748b;
+            
+            --brand-primary: #f8fafc;
+            --brand-accent-soft: #28211a;
+            --color-sale-soft: #3f121d;
+            --color-success-soft: #063327;
+            --color-3d-soft: #1e1b4b;
+            
+            --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.3);
+            --shadow-hover: 0 24px 45px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-body);
+            min-height: 100vh;
+            padding: 2.5rem 1.5rem 5rem;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1360px;
+            margin: 0 auto;
+        }
+
+        /* Header / Top Toolbar */
+        .page-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.75rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .header-title-group h1 {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-title-group h1 span.badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: var(--brand-accent);
+            color: #fff;
+            padding: 0.25rem 0.65rem;
+            border-radius: var(--radius-pill);
+            letter-spacing: normal;
+            text-transform: uppercase;
+        }
+
+        .header-title-group p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 0.35rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .toolbar-btn {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-heading);
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius-btn);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition-smooth);
+        }
+
+        .toolbar-btn:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+        }
+
+        .cart-pill-indicator {
+            position: relative;
+            background: var(--text-heading);
+            color: var(--bg-surface);
+            border: none;
+        }
+
+        .cart-pill-indicator .cart-count {
+            background: var(--brand-accent);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.15rem 0.45rem;
+            border-radius: var(--radius-pill);
+        }
+
+        /* Banner Summary Notice */
+        .design-notice {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-left: 4px solid var(--brand-accent);
+            padding: 1.25rem 1.5rem;
+            border-radius: 14px;
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            box-shadow: var(--shadow-card);
+        }
+
+        .design-notice-icon {
+            background: var(--brand-accent-soft);
+            color: var(--brand-accent);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .design-notice-text h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            margin-bottom: 0.25rem;
+        }
+
+        .design-notice-text p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ==========================================================================
+           2. PRODUCT CARD COMPONENT GRID
+           ========================================================================== */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+            gap: 1.75rem;
+        }
+
+        /* ==========================================================================
+           3. THE NEXT-GEN PRODUCT CARD
+           ========================================================================== */
+        .ui-product-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: var(--transition-smooth);
+            box-shadow: var(--shadow-card);
+        }
+
+        .ui-product-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* Media Container (Photo + Badges + Quick Actions) */
+        .card-media {
+            position: relative;
+            width: 100%;
+            padding-top: 85%; /* 4:3.4 Aspect Ratio */
+            background: var(--bg-surface-subtle);
+            overflow: hidden;
+        }
+
+        .card-media img.primary-img,
+        .card-media img.secondary-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        }
+
+        .card-media img.secondary-img {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .ui-product-card:hover .card-media img.primary-img {
+            transform: scale(1.05);
+        }
+
+        /* When secondary image exists, crossfade on hover */
+        .card-media.has-secondary:hover img.secondary-img {
+            opacity: 1;
+            transform: scale(1.04);
+        }
+        .card-media.has-secondary:hover img.primary-img {
+            opacity: 0;
+        }
+
+        /* Top Tag Stack (Left) */
+        .card-badges-top-left {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            backdrop-filter: blur(8px);
+        }
+
+        .badge-sale {
+            background: var(--color-sale);
+            color: #ffffff;
+        }
+
+        .badge-new {
+            background: var(--brand-accent);
+            color: #ffffff;
+        }
+
+        .badge-bestseller {
+            background: #0f172a;
+            color: #f8fafc;
+        }
+
+        /* Top Action Bar (Right) */
+        .card-actions-top-right {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 5;
+        }
+
+        .circle-action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-glass);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            transition: var(--transition-smooth);
+        }
+
+        .circle-action-btn:hover {
+            transform: scale(1.1);
+            background: #ffffff;
+            color: var(--color-sale);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+        }
+
+        .circle-action-btn.active {
+            color: var(--color-sale);
+            background: #ffffff;
+        }
+
+        .circle-action-btn.active svg {
+            fill: var(--color-sale);
+            animation: heartPop 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+        }
+
+        @keyframes heartPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.35); }
+            100% { transform: scale(1); }
+        }
+
+        /* Bottom Floating Badges inside Photo */
+        .card-media-bottom {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .badge-3d-interactive {
+            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.85);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            padding: 5px 10px;
+            border-radius: var(--radius-pill);
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .badge-3d-interactive:hover {
+            background: var(--brand-accent);
+            border-color: var(--brand-accent);
+            transform: translateY(-2px);
+        }
+
+        .badge-3d-interactive svg.spin-icon {
+            animation: spinSlow 8s linear infinite;
+        }
+
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-quick-view {
+            pointer-events: auto;
+            background: #ffffff;
+            color: #0f172a;
+            border: none;
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: var(--transition-smooth);
+        }
+
+        .ui-product-card:hover .btn-quick-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .btn-quick-view:hover {
+            background: var(--brand-primary);
+            color: #ffffff;
+        }
+
+        /* ==========================================================================
+           4. CARD BODY CONTENT & TYPOGRAPHY
+           ========================================================================== */
+        .card-content {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        /* Merchant / Verified Shop Bar */
+        .card-merchant-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .merchant-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .merchant-brand:hover {
+            color: var(--text-heading);
+        }
+
+        .merchant-verified-icon {
+            color: #2563eb;
+            display: inline-flex;
+        }
+
+        .rating-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-weight: 700;
+            color: var(--text-heading);
+            font-size: 0.75rem;
+        }
+
+        .rating-chip svg {
+            color: var(--color-star);
+            fill: var(--color-star);
+        }
+
+        .rating-count {
+            color: var(--text-subtle);
+            font-weight: 400;
+        }
+
+        /* Product Title */
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            line-height: 1.35;
+            margin-bottom: 0.35rem;
+            text-decoration: none;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color 0.2s ease;
+        }
+
+        .card-title:hover {
+            color: var(--brand-accent);
+        }
+
+        /* Dimensions / Specifications */
+        .card-specs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 0.85rem;
+        }
+
+        .spec-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .spec-divider {
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--text-subtle);
+        }
+
+        /* Color Swatches (Fully Interactive) */
+        .card-swatches-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px dashed var(--border-subtle);
+        }
+
+        .swatches-list {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .swatch-btn {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-surface);
+            outline: 1.5px solid transparent;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.2s ease, outline-color 0.2s ease;
+        }
+
+        .swatch-btn:hover {
+            transform: scale(1.15);
+        }
+
+        .swatch-btn.selected {
+            outline: 2px solid var(--text-heading);
+            transform: scale(1.1);
+        }
+
+        .swatch-color-name {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Price Group & Installment */
+        .card-price-group {
+            margin-bottom: 1rem;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .current-price {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            letter-spacing: -0.02em;
+        }
+
+        .old-price {
+            font-size: 0.9rem;
+            color: var(--text-subtle);
+            text-decoration: line-through;
+        }
+
+        .discount-save-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--color-sale);
+            background: var(--color-sale-soft);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Installment (BNPL - StorePay / Pocket) */
+        .bnpl-calc-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 5px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--brand-accent);
+            background: var(--brand-accent-soft);
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .bnpl-calc-pill svg {
+            color: var(--brand-accent);
+        }
+
+        /* Trust & Delivery micro-row */
+        .card-delivery-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            margin-bottom: 1.15rem;
+        }
+
+        .delivery-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stock-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+
+        .stock-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--color-success);
+        }
+
+        .stock-dot.low {
+            background: var(--color-sale);
+            animation: pulseAlert 1.5s infinite;
+        }
+
+        @keyframes pulseAlert {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ==========================================================================
+           5. ACTION FOOTER (Add to Cart & 3D Planner button)
+           ========================================================================== */
+        .card-footer-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .btn-add-cart {
+            flex-grow: 1;
+            background: var(--text-heading);
+            color: var(--bg-surface);
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-btn);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-add-cart:hover {
+            opacity: 0.92;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-add-cart.added {
+            background: var(--color-success);
+            color: #ffffff;
+        }
+
+        .btn-3d-planner {
+            background: var(--bg-surface-subtle);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-heading);
+            padding: 0.75rem 0.9rem;
+            border-radius: var(--radius-btn);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: var(--transition-smooth);
+            white-space: nowrap;
+        }
+
+        .btn-3d-planner:hover {
+            background: var(--color-3d-soft);
+            color: var(--color-3d);
+            border-color: var(--color-3d);
+            transform: translateY(-2px);
+        }
+
+        /* ==========================================================================
+           6. QUICK VIEW MODAL (Interactive Preview)
+           ========================================================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .modal-window {
+            background: var(--bg-surface);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 880px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border: 1px solid var(--border-subtle);
+        }
+
+        @media (max-width: 768px) {
+            .modal-window {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--bg-surface-subtle);
+            border: none;
+            color: var(--text-heading);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .modal-left-media {
+            background: var(--bg-surface-subtle);
+            position: relative;
+            min-height: 380px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .modal-left-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-right-info {
+            padding: 2.25rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toast notification */
+        .ui-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 2000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .ui-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Top Header & Live Controls -->
+    <header class="page-header">
+        <div class="header-title-group">
+            <h1>tavilga.mn <span class="badge">Next-Gen Card UI 2026</span></h1>
+            <p>Хэрэглэгчийн туршлага, 3D/AR харагдац, хуваан төлөлт болон өнгөний интерактив солигч бүхий шинэ загвар</p>
+        </div>
+        <div class="header-actions">
+            <button class="toolbar-btn" onclick="toggleTheme()" id="theme-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <span>Харанхуй горим</span>
+            </button>
+            <div class="toolbar-btn cart-pill-indicator">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                <span>Сагс</span>
+                <span class="cart-count" id="header-cart-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Design Highlights Info Banner -->
+    <div class="design-notice">
+        <div class="design-notice-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <div class="design-notice-text">
+            <h3>Шинэ Product Card UI-ийн Гол Сайжруулалтууд:</h3>
+            <p>1. <strong>Өнгө солигч:</strong> Өнгөний тойрог дээр дарахад картын зураг, нэр, үнэ бодит цагт шууд шинэчлэгдэнэ. <br>
+               2. <strong>3D & AR:</strong> 360° эргүүлэх болон AR камерын тод тэмдэглэгээ. <br>
+               3. <strong>Хуваан төлөлт:</strong> StorePay/Pocket хүүгүй лизингийн сарын дүнг автоматаар тооцоолсон. <br>
+               4. <strong>Шуурхай харах:</strong> Каталогиос гарахгүйгээр Quick View modal нээж параметрийг үзэх боломжтой.</p>
+        </div>
+    </div>
+
+    <!-- Product Cards Grid -->
+    <div class="product-grid">
+
+        <!-- ==========================================================================
+             CARD 1: Luna 3-Seater Minimal Sofa (Multi-Color Interactive Swatch)
+             ========================================================================== -->
+        <article class="ui-product-card" id="card-luna">
+            <!-- Media Area -->
+            <div class="card-media has-secondary">
+                <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1789663972/casa-nova/products/8e5b47a7-3a4e-4c57-a0b6-183a70fc224c.png" 
+                     alt="Luna 3-Seater Sofa" class="primary-img" id="img-luna">
+                <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1789663973/casa-nova/products/9d892a99-e106-47c8-bc20-2c16ccc1f901.png" 
+                     alt="Luna 3-Seater Sofa angle view" class="secondary-img">
+
+                <!-- Badges Top Left -->
+                <div class="card-badges-top-left">
+                    <span class="badge-pill badge-sale">−15% ХЯМДРАЛ</span>
+                    <span class="badge-pill badge-bestseller">Эрэлттэй</span>
+                </div>
+
+                <!-- Top Right Actions -->
+                <div class="card-actions-top-right">
+                    <button class="circle-action-btn" title="Хадгалах" onclick="toggleWishlist(this, 'Luna 3 хүний буйдан')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    </button>
+                </div>
+
+                <!-- Bottom Floating Controls -->
+                <div class="card-media-bottom">
+                    <button class="badge-3d-interactive" onclick="openQuickView('Luna 3-Seater Sofa', '1,598,000₮', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1789663972/casa-nova/products/8e5b47a7-3a4e-4c57-a0b6-183a70fc224c.png')">
+                        <svg class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        <span>3D & AR Үзэх</span>
+                    </button>
+                    <button class="btn-quick-view" onclick="openQuickView('Luna 3-Seater Sofa', '1,598,000₮', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1789663972/casa-nova/products/8e5b47a7-3a4e-4c57-a0b6-183a70fc224c.png')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>Шуурхай</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="card-content">
+                <!-- Merchant info -->
+                <div class="card-merchant-bar">
+                    <a href="#" class="merchant-brand">
+                        <span>Casa Nova Furniture</span>
+                        <span class="merchant-verified-icon" title="Баталгаажсан үйлдвэрлэгч">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </span>
+                    </a>
+                    <div class="rating-chip">
+                        <svg width="13" height="13" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span>4.9</span>
+                        <span class="rating-count">(38)</span>
+                    </div>
+                </div>
+
+                <!-- Product Title -->
+                <a href="#" class="card-title">Luna Минимал 3 Хүний Буйдан</a>
+
+                <!-- Dimensions -->
+                <div class="card-specs">
+                    <span class="spec-item">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                        180 × 77 × 60 см
+                    </span>
+                    <span class="spec-divider"></span>
+                    <span class="spec-item">Бөх царс мод</span>
+                </div>
+
+                <!-- Interactive Color Swatches -->
+                <div class="card-swatches-wrap">
+                    <div class="swatches-list">
+                        <button class="swatch-btn selected" style="background-color: #E6DFD5;" title="Зааны ясан цагаан" 
+                                onclick="changeSwatch('luna', 'Зааны ясан цагаан', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1789663972/casa-nova/products/8e5b47a7-3a4e-4c57-a0b6-183a70fc224c.png', '1,598,000₮', this)"></button>
+                        <button class="swatch-btn" style="background-color: #9A948C;" title="Саарал туяатай" 
+                                onclick="changeSwatch('luna', 'Саарал туяатай', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1789663975/casa-nova/products/e592eaf7-3f4b-4c6d-80e1-9ade9e86adec.png', '1,598,000₮', this)"></button>
+                        <button class="swatch-btn" style="background-color: #5C4E43;" title="Шоколадан бор" 
+                                onclick="changeSwatch('luna', 'Шоколадан бор', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1789663975/casa-nova/products/7d2556dd-52e8-40e1-a5a2-47b092d5a7c8.png', '1,648,000₮', this)"></button>
+                    </div>
+                    <span class="swatch-color-name" id="swatch-name-luna">Зааны ясан цагаан</span>
+                </div>
+
+                <!-- Price & Installments -->
+                <div class="card-price-group">
+                    <div class="price-row">
+                        <span class="current-price" id="price-luna">1,598,000₮</span>
+                        <span class="old-price">1,880,000₮</span>
+                        <span class="discount-save-tag">Хэмнэлт 282,000₮</span>
+                    </div>
+                    <div class="bnpl-calc-pill">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        <span>Сард <strong>266,300₮</strong> × 6 сар (StorePay)</span>
+                    </div>
+                </div>
+
+                <!-- Delivery & Stock status -->
+                <div class="card-delivery-status">
+                    <span class="delivery-tag">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        Үнэгүй хүргэлт & угсралт
+                    </span>
+                    <span class="stock-indicator">
+                        <span class="stock-dot"></span>
+                        Үлдэгдэл 5 ширхэг
+                    </span>
+                </div>
+
+                <!-- Actions Footer -->
+                <div class="card-footer-actions">
+                    <button class="btn-add-cart" onclick="handleAddToCart(this, 'Luna 3 хүний буйдан')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <span>Сагсанд нэмэх</span>
+                    </button>
+                    <button class="btn-3d-planner" title="3D Өрөөний төлөвлөгчид турших" onclick="notifyToast('3D Өрөө төлөвлөгч рүү шилжиж байна...')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        <span>Өрөөнд үзэх</span>
+                    </button>
+                </div>
+            </div>
+        </article>
+
+        <!-- ==========================================================================
+             CARD 2: Royal Classic Upholstered Bed (Luxury Style)
+             ========================================================================== -->
+        <article class="ui-product-card" id="card-bed">
+            <div class="card-media has-secondary">
+                <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1791039999/casa-nova/products/f957d77f-6d0d-43b8-ae6e-48406a822c45.jpg" 
+                     alt="Royal Classic Bed" class="primary-img" id="img-bed">
+                <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1791040003/casa-nova/products/717f517c-f9dd-465a-864a-4abcbabefb66.jpg" 
+                     alt="Royal Classic Bed detail" class="secondary-img">
+
+                <div class="card-badges-top-left">
+                    <span class="badge-pill badge-new">Шинэ Загвар</span>
+                </div>
+
+                <div class="card-actions-top-right">
+                    <button class="circle-action-btn" title="Хадгалах" onclick="toggleWishlist(this, 'Royal Classic Ор')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    </button>
+                </div>
+
+                <div class="card-media-bottom">
+                    <button class="badge-3d-interactive" onclick="openQuickView('Royal Classic Upholstered Bed', '899,000₮', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1791039999/casa-nova/products/f957d77f-6d0d-43b8-ae6e-48406a822c45.jpg')">
+                        <svg class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        <span>3D & AR Үзэх</span>
+                    </button>
+                    <button class="btn-quick-view" onclick="openQuickView('Royal Classic Upholstered Bed', '899,000₮', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1791039999/casa-nova/products/f957d77f-6d0d-43b8-ae6e-48406a822c45.jpg')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>Шуурхай</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-content">
+                <div class="card-merchant-bar">
+                    <a href="#" class="merchant-brand">
+                        <span>Top Mebel Home</span>
+                        <span class="merchant-verified-icon">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </span>
+                    </a>
+                    <div class="rating-chip">
+                        <svg width="13" height="13" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span>5.0</span>
+                        <span class="rating-count">(19)</span>
+                    </div>
+                </div>
+
+                <a href="#" class="card-title">Royal Classic Зөөлөн Бүрээстэй Ор (Кинг сайз)</a>
+
+                <div class="card-specs">
+                    <span class="spec-item">166 × 200 × 145 см</span>
+                    <span class="spec-divider"></span>
+                    <span class="spec-item">Эргономик толгойтой</span>
+                </div>
+
+                <div class="card-swatches-wrap">
+                    <div class="swatches-list">
+                        <button class="swatch-btn selected" style="background-color: #d5cfc4;" title="Байгалийн царс" 
+                                onclick="changeSwatch('bed', 'Байгалийн царс', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1791039999/casa-nova/products/f957d77f-6d0d-43b8-ae6e-48406a822c45.jpg', '899,000₮', this)"></button>
+                        <button class="swatch-btn" style="background-color: #a28363;" title="Кофены бор" 
+                                onclick="changeSwatch('bed', 'Кофены бор', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1791040003/casa-nova/products/717f517c-f9dd-465a-864a-4abcbabefb66.jpg', '929,000₮', this)"></button>
+                    </div>
+                    <span class="swatch-color-name" id="swatch-name-bed">Байгалийн царс</span>
+                </div>
+
+                <div class="card-price-group">
+                    <div class="price-row">
+                        <span class="current-price" id="price-bed">899,000₮</span>
+                        <span class="old-price">1,050,000₮</span>
+                    </div>
+                    <div class="bnpl-calc-pill">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        <span>Сард <strong>149,800₮</strong> × 6 сар (Pocket)</span>
+                    </div>
+                </div>
+
+                <div class="card-delivery-status">
+                    <span class="delivery-tag">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        Маргааш бэлэн хүргэгдэнэ
+                    </span>
+                    <span class="stock-indicator">
+                        <span class="stock-dot low"></span>
+                        Үлдэгдэл 2 ширхэг!
+                    </span>
+                </div>
+
+                <div class="card-footer-actions">
+                    <button class="btn-add-cart" onclick="handleAddToCart(this, 'Royal Classic Ор')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <span>Сагсанд нэмэх</span>
+                    </button>
+                    <button class="btn-3d-planner" title="3D Өрөөний төлөвлөгчид турших" onclick="notifyToast('3D Өрөө төлөвлөгч рүү шилжиж байна...')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        <span>Өрөөнд үзэх</span>
+                    </button>
+                </div>
+            </div>
+        </article>
+
+        <!-- ==========================================================================
+             CARD 3: Modern Marble Dining Table (Material Swatches)
+             ========================================================================== -->
+        <article class="ui-product-card" id="card-table">
+            <div class="card-media has-secondary">
+                <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1791104006/casa-nova/products/92127f64-f6c0-438c-b231-6ad2eb1ede3d.jpg" 
+                     alt="Dining Table" class="primary-img" id="img-table">
+                <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1791104009/casa-nova/products/b0bc2ca4-974f-4c7f-83ff-41e1f729a663.jpg" 
+                     alt="Dining Table detail" class="secondary-img">
+
+                <div class="card-badges-top-left">
+                    <span class="badge-pill badge-bestseller">Монголд Үйлдвэрлэв</span>
+                </div>
+
+                <div class="card-actions-top-right">
+                    <button class="circle-action-btn" title="Хадгалах" onclick="toggleWishlist(this, 'Гантиг Хоолны Ширээ')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    </button>
+                </div>
+
+                <div class="card-media-bottom">
+                    <button class="badge-3d-interactive" onclick="openQuickView('Modern Marble Dining Table', '1,190,000₮', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1791104006/casa-nova/products/92127f64-f6c0-438c-b231-6ad2eb1ede3d.jpg')">
+                        <svg class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        <span>3D & AR Үзэх</span>
+                    </button>
+                    <button class="btn-quick-view" onclick="openQuickView('Modern Marble Dining Table', '1,190,000₮', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1791104006/casa-nova/products/92127f64-f6c0-438c-b231-6ad2eb1ede3d.jpg')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>Шуурхай</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-content">
+                <div class="card-merchant-bar">
+                    <a href="#" class="merchant-brand">
+                        <span>Говь Хангай Тавилга</span>
+                        <span class="merchant-verified-icon">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </span>
+                    </a>
+                    <div class="rating-chip">
+                        <svg width="13" height="13" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span>4.8</span>
+                        <span class="rating-count">(64)</span>
+                    </div>
+                </div>
+
+                <a href="#" class="card-title">Итали Хийцийн Гантиг Тавцантай Хоолны Ширээ</a>
+
+                <div class="card-specs">
+                    <span class="spec-item">200 × 100 × 75 см</span>
+                    <span class="spec-divider"></span>
+                    <span class="spec-item">6-8 хүний суудал</span>
+                </div>
+
+                <div class="card-swatches-wrap">
+                    <div class="swatches-list">
+                        <button class="swatch-btn selected" style="background-color: #E2E1DD;" title="Цагаан гантиг" 
+                                onclick="changeSwatch('table', 'Цагаан гантиг', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1791104006/casa-nova/products/92127f64-f6c0-438c-b231-6ad2eb1ede3d.jpg', '1,190,000₮', this)"></button>
+                        <button class="swatch-btn" style="background-color: #2D2D2D;" title="Хар Nero Marquina" 
+                                onclick="changeSwatch('table', 'Хар Nero Marquina', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1791104011/casa-nova/products/27898401-5b1c-496d-afaf-e6db0fe1ad47.jpg', '1,280,000₮', this)"></button>
+                    </div>
+                    <span class="swatch-color-name" id="swatch-name-table">Цагаан гантиг</span>
+                </div>
+
+                <div class="card-price-group">
+                    <div class="price-row">
+                        <span class="current-price" id="price-table">1,190,000₮</span>
+                        <span class="old-price">1,350,000₮</span>
+                    </div>
+                    <div class="bnpl-calc-pill">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        <span>Сард <strong>198,300₮</strong> × 6 сар (StorePay)</span>
+                    </div>
+                </div>
+
+                <div class="card-delivery-status">
+                    <span class="delivery-tag">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        Үнэгүй хүргэлт & угсралт
+                    </span>
+                    <span class="stock-indicator">
+                        <span class="stock-dot"></span>
+                        Бэлэн 8 ширхэг
+                    </span>
+                </div>
+
+                <div class="card-footer-actions">
+                    <button class="btn-add-cart" onclick="handleAddToCart(this, 'Гантиг Хоолны Ширээ')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <span>Сагсанд нэмэх</span>
+                    </button>
+                    <button class="btn-3d-planner" title="3D Өрөөний төлөвлөгчид турших" onclick="notifyToast('3D Өрөө төлөвлөгч рүү шилжиж байна...')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        <span>Өрөөнд үзэх</span>
+                    </button>
+                </div>
+            </div>
+        </article>
+
+        <!-- ==========================================================================
+             CARD 4: LUNO Minimalist Lounge Sofa
+             ========================================================================== -->
+        <article class="ui-product-card" id="card-luno">
+            <div class="card-media">
+                <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1788544055/casa-nova/products/be0c56fe-db20-4431-b9fc-57c94e02ebfe.jpg" 
+                     alt="LUNO Modern Sofa" class="primary-img" id="img-luno">
+
+                <div class="card-badges-top-left">
+                    <span class="badge-pill badge-sale">−10% ХЯМДРАЛ</span>
+                </div>
+
+                <div class="card-actions-top-right">
+                    <button class="circle-action-btn" title="Хадгалах" onclick="toggleWishlist(this, 'LUNO Modern Буйдан')">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    </button>
+                </div>
+
+                <div class="card-media-bottom">
+                    <button class="badge-3d-interactive" onclick="openQuickView('LUNO Modern Sofa', '1,200,000₮', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1788544055/casa-nova/products/be0c56fe-db20-4431-b9fc-57c94e02ebfe.jpg')">
+                        <svg class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        <span>3D & AR Үзэх</span>
+                    </button>
+                    <button class="btn-quick-view" onclick="openQuickView('LUNO Modern Sofa', '1,200,000₮', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1788544055/casa-nova/products/be0c56fe-db20-4431-b9fc-57c94e02ebfe.jpg')">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>Шуурхай</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-content">
+                <div class="card-merchant-bar">
+                    <a href="#" class="merchant-brand">
+                        <span>Casa Nova Studio</span>
+                        <span class="merchant-verified-icon">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </span>
+                    </a>
+                    <div class="rating-chip">
+                        <svg width="13" height="13" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <span>4.7</span>
+                        <span class="rating-count">(42)</span>
+                    </div>
+                </div>
+
+                <a href="#" class="card-title">LUNO Модерн Металл Хүрээтэй 3 Хүний Буйдан</a>
+
+                <div class="card-specs">
+                    <span class="spec-item">200 × 150 × 150 см</span>
+                    <span class="spec-divider"></span>
+                    <span class="spec-item">Металл карказ</span>
+                </div>
+
+                <div class="card-swatches-wrap">
+                    <div class="swatches-list">
+                        <button class="swatch-btn selected" style="background-color: #f1ede6;" title="Крем цагаан" 
+                                onclick="changeSwatch('luno', 'Крем цагаан', 'https://res.cloudinary.com/drc6tboyr/image/upload/v1788544055/casa-nova/products/be0c56fe-db20-4431-b9fc-57c94e02ebfe.jpg', '1,200,000₮', this)"></button>
+                    </div>
+                    <span class="swatch-color-name" id="swatch-name-luno">Крем цагаан</span>
+                </div>
+
+                <div class="card-price-group">
+                    <div class="price-row">
+                        <span class="current-price" id="price-luno">1,200,000₮</span>
+                        <span class="old-price">1,335,000₮</span>
+                    </div>
+                    <div class="bnpl-calc-pill">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        <span>Сард <strong>200,000₮</strong> × 6 сар (StorePay)</span>
+                    </div>
+                </div>
+
+                <div class="card-delivery-status">
+                    <span class="delivery-tag">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                        Үнэгүй хүргэлт & угсралт
+                    </span>
+                    <span class="stock-indicator">
+                        <span class="stock-dot"></span>
+                        Үлдэгдэл 5 ширхэг
+                    </span>
+                </div>
+
+                <div class="card-footer-actions">
+                    <button class="btn-add-cart" onclick="handleAddToCart(this, 'LUNO Modern Буйдан')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        <span>Сагсанд нэмэх</span>
+                    </button>
+                    <button class="btn-3d-planner" title="3D Өрөөний төлөвлөгчид турших" onclick="notifyToast('3D Өрөө төлөвлөгч рүү шилжиж байна...')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                        <span>Өрөөнд үзэх</span>
+                    </button>
+                </div>
+            </div>
+        </article>
+
+    </div>
+</div>
+
+<!-- Quick View Modal -->
+<div class="modal-overlay" id="quick-modal">
+    <div class="modal-window">
+        <button class="modal-close-btn" onclick="closeQuickView()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="modal-left-media">
+            <img id="modal-img" src="" alt="Product Quick View">
+        </div>
+        <div class="modal-right-info">
+            <div class="card-merchant-bar" style="margin-bottom: 0.75rem;">
+                <span class="merchant-brand" style="color: var(--brand-accent); font-weight:700;">БАТАЛГААЖСАН ТАВИЛГА</span>
+                <span class="rating-chip">⭐ 4.9 (42 сэтгэгдэл)</span>
+            </div>
+            <h2 id="modal-title" style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-heading);"></h2>
+            <div id="modal-price" style="font-size: 1.6rem; font-weight: 800; color: var(--text-heading); margin-bottom: 1.25rem;"></div>
+            
+            <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem;">
+                Эргономик хийцтэй, байгалийн цэвэр модон карказтай, олон улсын E1 стандартын дагуу үйлдвэрлэгдсэн Монгол тавилга. 3D өрөө төлөвлөгч дээр байрлуулж, өрөөнийхөө бодит хэмжээнд тохируулах боломжтой.
+            </p>
+
+            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn-add-cart" style="padding: 0.9rem;" onclick="handleAddToCart(this, 'Бараа'); closeQuickView();">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    <span>Сагсанд хийх & Захиалах</span>
+                </button>
+                <button class="btn-3d-planner" style="padding: 0.85rem;" onclick="notifyToast('3D Өрөө төлөвлөгч рүү нээж байна...'); closeQuickView();">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                    <span>3D Төлөвлөгч дээр өрөөндөө байрлуулах</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Toast -->
+<div class="ui-toast" id="ui-toast">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="toast-text">Сагсанд амжилттай нэмэгдлээ!</span>
+</div>
+
+<script>
+    let cartTotal = 0;
+
+    // Toggle Theme (Dark / Light)
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        const btn = document.getElementById('theme-btn');
+        btn.querySelector('span').textContent = next === 'dark' ? 'Гэгээлэг горим' : 'Харанхуй горим';
+    }
+
+    // Interactive Color Swatch Switcher
+    function changeSwatch(cardId, colorName, newImgUrl, priceStr, btnElement) {
+        // Update Swatch button active ring
+        const parent = btnElement.closest('.swatches-list');
+        parent.querySelectorAll('.swatch-btn').forEach(b => b.classList.remove('selected'));
+        btnElement.classList.add('selected');
+
+        // Update image
+        const img = document.getElementById('img-' + cardId);
+        if (img) {
+            img.style.opacity = '0.3';
+            setTimeout(() => {
+                img.src = newImgUrl;
+                img.style.opacity = '1';
+            }, 150);
+        }
+
+        // Update label
+        const nameLabel = document.getElementById('swatch-name-' + cardId);
+        if (nameLabel) nameLabel.textContent = colorName;
+
+        // Update price
+        const priceLabel = document.getElementById('price-' + cardId);
+        if (priceLabel && priceStr) priceLabel.textContent = priceStr;
+    }
+
+    // Wishlist Toggle
+    function toggleWishlist(btn, productName) {
+        btn.classList.toggle('active');
+        const isSaved = btn.classList.contains('active');
+        notifyToast(isSaved ? `“${productName}” хүслийн жагсаалтад нэмэгдлээ` : `“${productName}” хадгалснаас хасагдлаа`);
+    }
+
+    // Add to Cart
+    function handleAddToCart(btn, productName) {
+        cartTotal++;
+        document.getElementById('header-cart-count').textContent = cartTotal;
+
+        const originalText = btn.innerHTML;
+        btn.classList.add('added');
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span>Нэмэгдлээ!</span>`;
+        
+        notifyToast(`“${productName}” сагсанд амжилттай нэмэгдлээ!`);
+
+        setTimeout(() => {
+            btn.classList.remove('added');
+            btn.innerHTML = originalText;
+        }, 1800);
+    }
+
+    // Quick View Modal
+    function openQuickView(title, price, imgSrc) {
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-price').textContent = price;
+        document.getElementById('modal-img').src = imgSrc;
+        document.getElementById('quick-modal').classList.add('open');
+    }
+
+    function closeQuickView() {
+        document.getElementById('quick-modal').classList.remove('open');
+    }
+
+    // Toast Helper
+    let toastTimeout;
+    function notifyToast(text) {
+        const toast = document.getElementById('ui-toast');
+        document.getElementById('toast-text').textContent = text;
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2600);
+    }
+
+    // Close modal on escape
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeQuickView();
+    });
+</script>
+
+</body>
+</html>

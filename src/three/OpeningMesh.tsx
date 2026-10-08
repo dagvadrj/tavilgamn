@@ -5,7 +5,9 @@ import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Edges, Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { RoomDesign, RoomOpening } from "@/lib/types";
-import { openingWorldTransform, validateOpening, wallLength } from "@/lib/roomOpenings";
+import { ROOM_WALL_THICKNESS } from "@/lib/roomRendering";
+import { openingWorldTransform, validateOpening, wallLength, windowLayout } from "@/lib/roomOpenings";
+import { RoomWindow } from "./RoomWindow";
 import { animateToward } from "./demandAnimation";
 import { SCENE_NAVIGATION_START, isSceneNavigationGesture } from "./sceneNavigation";
 
@@ -45,41 +47,15 @@ function Door({ opening }: { opening: RoomOpening }) {
   const frame = 0.05;
   const double = opening.templateId === "door-double";
   return <group>
-    {[-1, 1].map(side => <mesh key={side} position={[side * (w / 2 - frame / 2), h / 2, -0.05]} castShadow receiveShadow>
-      <boxGeometry args={[frame, h, 0.2]} /><meshStandardMaterial color="#f2eee6" roughness={0.62} />
+    {[-1, 1].map(side => <mesh key={side} position={[side * (w / 2 - frame / 2), h / 2, -ROOM_WALL_THICKNESS / 2 + .015]} castShadow receiveShadow>
+      <boxGeometry args={[frame, h, ROOM_WALL_THICKNESS + .06]} /><meshStandardMaterial color="#f2eee6" roughness={0.62} />
     </mesh>)}
-    <mesh position={[0, h - frame / 2, -0.05]} castShadow receiveShadow>
-      <boxGeometry args={[w, frame, 0.2]} /><meshStandardMaterial color="#f2eee6" roughness={0.62} />
+    <mesh position={[0, h - frame / 2, -ROOM_WALL_THICKNESS / 2 + .015]} castShadow receiveShadow>
+      <boxGeometry args={[w, frame, ROOM_WALL_THICKNESS + .06]} /><meshStandardMaterial color="#f2eee6" roughness={0.62} />
     </mesh>
     {double ? [-1, 1].map(side => <group key={side} position={[side * (w - 2 * frame) / 4, 0.012, 0]}>
       <DoorLeaf width={(w - 2 * frame) / 2 - 0.006} height={h - frame - 0.018} hinge={side === -1 ? "left" : "right"} swing={opening.swing} open={opening.open} />
     </group>) : <group position={[0, 0.012, 0]}><DoorLeaf width={w - 2 * frame - 0.006} height={h - frame - 0.018} hinge={opening.hinge} swing={opening.swing} open={opening.open} /></group>}
-  </group>;
-}
-
-function Window({ opening }: { opening: RoomOpening }) {
-  const { width: w, height: h } = opening;
-  const sliding = opening.templateId === "window-sliding";
-  const frame = 0.055;
-  return <group>
-    {[-1, 1].map(side => <group key={side}>
-      <mesh position={[side * (w - frame) / 2, h / 2, -0.05]} castShadow receiveShadow>
-        <boxGeometry args={[frame, h, 0.19]} /><meshStandardMaterial color="#f5f4ef" roughness={0.48} />
-      </mesh>
-      <mesh position={[0, side === -1 ? frame / 2 : h - frame / 2, -0.05]} castShadow receiveShadow>
-        <boxGeometry args={[w, frame, 0.19]} /><meshStandardMaterial color="#f5f4ef" roughness={0.48} />
-      </mesh>
-    </group>)}
-    {(sliding ? [-1, 1] : [0]).map(side => <mesh key={side} position={[side * (w - 2 * frame) / 4, h / 2, -0.05 + side * 0.015]} receiveShadow>
-      <boxGeometry args={[sliding ? (w - 2 * frame) / 2 : w - 2 * frame, h - 2 * frame, 0.016]} />
-      <meshPhysicalMaterial color="#e2f2f7" transmission={0.82} transparent opacity={0.64} roughness={0.06} thickness={0.016} ior={1.45} metalness={0} depthWrite={false} />
-    </mesh>)}
-    {sliding && <mesh position={[0, h / 2, -0.025]} castShadow>
-      <boxGeometry args={[frame, h - frame * 2, 0.12]} /><meshStandardMaterial color="#ebece6" roughness={0.48} />
-    </mesh>}
-    <mesh position={[0, -0.025, 0.035]} receiveShadow castShadow>
-      <boxGeometry args={[w + 0.14, 0.05, 0.32]} /><meshStandardMaterial color="#f3f1e9" roughness={0.48} />
-    </mesh>
   </group>;
 }
 
@@ -106,6 +82,7 @@ export function OpeningMesh(props: OpeningMeshProps) {
   const [isDragging, setIsDragging] = useState(false);
   const transform = openingWorldTransform(design, opening);
   const groupRef = useRef<THREE.Group>(null);
+  const paneCount = windowLayout(opening).panes;
   const ghosted = useRef(false);
   const visualMeshes = useRef<{ mesh: THREE.Mesh; material: THREE.MeshStandardMaterial; opacity: number; castShadow: boolean }[]>([]);
 
@@ -128,11 +105,12 @@ export function OpeningMesh(props: OpeningMeshProps) {
       for (const { mesh, raycast } of originalRaycasts) mesh.raycast = raycast;
       for (const { material, opacity, mesh, castShadow } of visualMeshes.current) { material.opacity = opacity; mesh.castShadow = castShadow; }
     };
-  }, [opening.kind, opening.templateId, selected]);
+  }, [opening.kind, opening.templateId, selected, paneCount]);
 
   useFrame(({ camera, invalidate }, delta) => {
     const normalX = Math.sin(transform.rotation), normalZ = Math.cos(transform.rotation);
-    ghosted.current = props.view !== "plan" && (camera.position.x - transform.x) * normalX + (camera.position.z - transform.z) * normalZ < -0.06;
+    const world = groupRef.current?.getWorldPosition(new THREE.Vector3());
+    ghosted.current = props.view !== "plan" && !!world && (camera.position.x - world.x) * normalX + (camera.position.z - world.z) * normalZ < -0.06;
     const fade = ghosted.current ? selected ? 0.78 : 0.09 : 1;
     let moving = false;
     for (const { mesh, material, opacity, castShadow } of visualMeshes.current) {
@@ -140,7 +118,7 @@ export function OpeningMesh(props: OpeningMeshProps) {
       material.opacity = animation.value;
       moving ||= animation.moving;
       material.depthWrite = !ghosted.current && !(material instanceof THREE.MeshPhysicalMaterial);
-      mesh.castShadow = castShadow && !ghosted.current;
+      mesh.castShadow = castShadow;
     }
     if (moving) invalidate();
   });
@@ -227,9 +205,9 @@ export function OpeningMesh(props: OpeningMeshProps) {
     onClick={event => event.stopPropagation()}
     onDoubleClick={event => {
       event.stopPropagation();
-      if (opening.kind === "door") onUpdate?.({ ...opening, open: !opening.open });
+      if (opening.kind === "door" || windowLayout(opening).operation !== "fixed") onUpdate?.({ ...opening, open: !opening.open });
     }}>
-    {opening.kind === "door" ? <Door opening={opening} /> : <Window opening={opening} />}
+    {opening.kind === "door" ? <Door opening={opening} /> : <RoomWindow opening={opening} />}
     {/* An invisible hit target makes thin frames and transparent glass easy to grab. */}
     <mesh position={[0, opening.height / 2, 0]}>
       <boxGeometry args={[opening.width + 0.07, opening.height + 0.07, 0.22]} />

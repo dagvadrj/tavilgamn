@@ -12,9 +12,11 @@ import {
   SRGBColorSpace,
   UnsignedByteType,
   Vector2,
+  type Texture,
   type MeshStandardMaterial,
   type MeshStandardMaterialParameters,
 } from "three";
+import { loadRoomAssetTextures } from "./roomTextureAssets";
 import { getRoomMaterial, type RoomMaterialDefinition } from "@/lib/roomMaterials";
 
 interface MaterialPixels {
@@ -26,9 +28,9 @@ interface MaterialPixels {
 
 interface RoomTextureSet {
   materialId: string;
-  map: DataTexture;
-  normalMap: DataTexture;
-  roughnessMap: DataTexture;
+  map: Texture;
+  normalMap: Texture;
+  roughnessMap: Texture;
   normalScale: Vector2;
 }
 
@@ -277,14 +279,28 @@ export function useRoomMaterial(
       normalScale: new Vector2(definition.normalStrength, definition.normalStrength),
     };
     setTextures(next);
+    let cancelled = false;
+    let photoTextures: Awaited<ReturnType<typeof loadRoomAssetTextures>> | null = null;
+    if (definition.texturePaths) {
+      loadRoomAssetTextures(definition.texturePaths, anisotropy).then(loaded => {
+        if (cancelled) { loaded.map.dispose(); loaded.normalMap.dispose(); loaded.roughnessMap.dispose(); return; }
+        photoTextures = loaded;
+        setTextures({ ...loaded, materialId: definition.id, normalScale: next.normalScale });
+        invalidate();
+      }).catch(() => { /* Keep the procedural material if an asset cannot load. */ });
+    }
     // Allocate after commit so abandoned renders never retain GPU resources.
     // StrictMode's second setup receives a new set after the first is disposed.
     return () => {
+      cancelled = true;
+      photoTextures?.map.dispose();
+      photoTextures?.normalMap.dispose();
+      photoTextures?.roughnessMap.dispose();
       next.map.dispose();
       next.normalMap.dispose();
       next.roughnessMap.dispose();
     };
-  }, [definition, gl]);
+  }, [definition, gl, invalidate]);
 
   useEffect(() => {
     if (!textures || !definition || textures.materialId !== definition.id) return;
@@ -298,14 +314,14 @@ export function useRoomMaterial(
   }, [definition, textures, width, height, invalidate]);
 
   if (!textures || !definition || textures.materialId !== definition.id) {
-    return { map: null, normalMap: null, roughnessMap: null, color: definition?.color ?? color, roughness: definition?.roughness ?? 0.86, metalness: 0, onUpdate: refreshMaterialProgram };
+    return { map: null, normalMap: null, roughnessMap: null, color: definition?.tintColor ? color : definition?.color ?? color, roughness: definition?.roughness ?? 0.86, metalness: 0, onUpdate: refreshMaterialProgram };
   }
   return {
     map: textures.map,
     normalMap: textures.normalMap,
     roughnessMap: textures.roughnessMap,
     normalScale: textures.normalScale,
-    color: "#ffffff",
+    color: definition.tintColor ? color : "#ffffff",
     roughness: 1,
     metalness: 0,
     onUpdate: refreshMaterialProgram,

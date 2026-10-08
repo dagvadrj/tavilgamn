@@ -26,6 +26,8 @@ export interface RoomMaterialDefinition {
   tileMetersY: number;
   roughness: number;
   normalStrength: number;
+  tintColor?: boolean;
+  texturePaths?: { color: string; normal: string; roughness: string };
 }
 
 function woodSwatch(base: string, dark: string): string {
@@ -38,7 +40,7 @@ function textileSwatch(base: string, thread: string): string {
 
 export const FLOOR_MATERIALS: readonly RoomMaterialDefinition[] = [
   { id: "parquet-birch", label: "Хус", category: "Паркет", description: "Цайвар хус · 90 × 20 см", color: "#d9bc8c", accent: "#a98656", pattern: "wood", tileMetersX: 1.8, tileMetersY: 1.2, roughness: 0.55, normalStrength: 0.48, swatch: woodSwatch("#d9bc8c", "#a98656") },
-  { id: "parquet-oak", label: "Царс", category: "Паркет", description: "Байгалийн царс · 90 × 20 см", color: "#b98c59", accent: "#825933", pattern: "wood", tileMetersX: 1.8, tileMetersY: 1.2, roughness: 0.51, normalStrength: 0.5, swatch: woodSwatch("#b98c59", "#825933") },
+  { id: "parquet-oak", label: "Царс", category: "Паркет", description: "Байгалийн царс · 90 × 20 см", color: "#b98c59", accent: "#825933", pattern: "wood", tileMetersX: 1.8, tileMetersY: 1.4, roughness: 0.51, normalStrength: 0.32, texturePaths: { color: "/textures/room/oak-natural-v1-color.webp", normal: "/textures/room/oak-natural-v1-normal.png", roughness: "/textures/room/oak-natural-v1-roughness.png" }, swatch: woodSwatch("#b98c59", "#825933") },
   { id: "parquet-walnut", label: "Хушга", category: "Паркет", description: "Бараан хушга · 90 × 20 см", color: "#76503a", accent: "#422d23", pattern: "wood", tileMetersX: 1.8, tileMetersY: 1.2, roughness: 0.46, normalStrength: 0.45, swatch: woodSwatch("#76503a", "#422d23") },
   { id: "laminate-ash", label: "Цайвар ламинат", category: "Ламинат", description: "Үнсэн саарал мод · 120 × 20 см", color: "#c9c0ac", accent: "#968d7b", pattern: "laminate", tileMetersX: 2.4, tileMetersY: 1.2, roughness: 0.42, normalStrength: 0.23, swatch: woodSwatch("#c9c0ac", "#968d7b") },
   { id: "laminate-smoked", label: "Бараан ламинат", category: "Ламинат", description: "Утсан царс · 120 × 20 см", color: "#74685c", accent: "#473f38", pattern: "laminate", tileMetersX: 2.4, tileMetersY: 1.2, roughness: 0.44, normalStrength: 0.23, swatch: woodSwatch("#74685c", "#473f38") },
@@ -62,6 +64,7 @@ export const CEILING_MATERIALS: readonly RoomMaterialDefinition[] = [
 ];
 
 export const ROOM_MATERIALS: readonly RoomMaterialDefinition[] = [
+  { id: "wall-paint", label: "Ханын будаг", category: "Будаг", description: "Нарийн барзгар матт будаг", color: "#ffffff", accent: "#f0efec", pattern: "paint", tileMetersX: .6, tileMetersY: .6, roughness: .89, normalStrength: .16, tintColor: true, swatch: "#ffffff" },
   ...FLOOR_MATERIALS,
   ...WALLPAPER_MATERIALS,
   ...CEILING_MATERIALS,

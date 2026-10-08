@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tavilga.mn · Өрөө Төлөвлөгчийн Сайдбарын Шинэ Боломжууд ба Засварын Санаа</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ==========================================================================
+           tavilga.mn-ийн ЯГ ОДООГИЙН ӨНГИЙН СИСТЕМ БА ДИЗАЙН ТОКЕНУУД
+           ========================================================================== */
+        :root {
+            --canvas-bg: #f1f0ed;         /* Төлөвлөгчийн өрөөний суурь дэвсгэр */
+            --drawer-bg: #ffffff;         /* Сайдбарын цагаан дэвсгэр */
+            --ink: #293c32;               /* Үндсэн хар ногоон текст */
+            --muted: #737b73;             /* Саарал тайлбар текст */
+            --line: #dce1db;              /* Хүрээний нарийн зураас */
+            --line-light: #ecefe9;
+            --accent: #ad6547;            /* tavilga.mn-ийн үндсэн тоосгон/модон өнгө */
+            --accent-soft: #faf3eb;
+            --brand-green: #168a4a;
+            --brand-navy: #111111;
+            
+            --radius-btn: 10px;
+            --radius-pill: 30px;
+            --radius-card: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--canvas-bg);
+            color: var(--ink);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 1. TOP NAVBAR (tavilga.mn-ийн яг одоогийн навигаци) */
+        .top-navbar {
+            height: 56px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+
+        .brand-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-logo {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--ink);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .brand-logo .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--brand-green);
+        }
+
+        .breadcrumb-text {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .breadcrumb-text strong {
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        .top-tools-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add-furniture-top {
+            background: #293c32;
+            color: #ffffff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-pill-light {
+            background: #ffffff;
+            color: var(--ink);
+            border: 1px solid var(--line);
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .top-actions-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-checkout-primary {
+            background: #293c32;
+            color: #ffffff;
+            border: none;
+            padding: 7px 18px;
+            border-radius: var(--radius-pill);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 2. MAIN WORKSPACE */
+        .workspace-body {
+            flex-grow: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 2.1 3D Room Canvas Area */
+        .canvas-container {
+            flex-grow: 1;
+            position: relative;
+            background: var(--canvas-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Canvas Room Graphic (Screenshot-той адил өрөө) */
+        .canvas-room-svg {
+            width: 580px;
+            max-width: 90%;
+            height: auto;
+            filter: drop-shadow(0 15px 30px rgba(41, 60, 50, 0.08));
+        }
+
+        /* Bottom Toolbar Floating (Screenshot-той яг адилхан) */
+        .bottom-floating-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffffff;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-pill);
+            padding: 4px 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+            z-index: 10;
+        }
+
+        .float-bar-btn {
+            background: transparent;
+            border: none;
+            color: var(--ink);
+            padding: 6px 10px;
+            border-radius: var(--radius-pill);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .float-bar-btn.active {
+            background: #f1f0ed;
+            font-weight: 600;
+        }
+
+        /* 2.2 THE SIDEBAR DRAWER (tavilga.mn-ийн одоогийн сайдбар + сайжруулалтууд) */
+        .planner-drawer {
+            width: 380px;
+            background: #ffffff;
+            border-left: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            flex-shrink: 0;
+            z-index: 15;
+            box-shadow: -4px 0 16px rgba(0, 0, 0, 0.03);
+        }
+
+        /* Drawer Header */
+        .drawer-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .drawer-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .btn-drawer-close {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+
+        /* ==========================================================================
+           САЙДБАРЫН ШИНЭ FEATURE 1: ЦЭГЦТЭЙ TAB ШИЛЖИЛТ (Navigation Pills)
+           ========================================================================== */
+        .sidebar-feature-tabs {
+            display: flex;
+            padding: 8px 14px 0;
+            gap: 6px;
+            border-bottom: 1px solid var(--line-light);
+            background: #fafafa;
+        }
+
+        .feature-tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 8px 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .feature-tab-btn.active {
+            color: var(--ink);
+            border-bottom-color: var(--accent);
+            font-weight: 700;
+        }
+
+        .tab-count-badge {
+            background: var(--accent);
+            color: #fff;
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 10px;
+            margin-left: 3px;
+        }
+
+        /* Drawer Scroll Content */
+        .drawer-content-scroll {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .planner-panel-heading {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .planner-panel-heading span {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .planner-panel-heading small {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* Гал тогоо төлөвлөх shortcut карт */
+        .room-kitchen-shortcut {
+            background: #fafafa;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--ink);
+            transition: border-color 0.15s;
+        }
+
+        .room-kitchen-shortcut:hover {
+            border-color: var(--accent);
+        }
+
+        .room-kitchen-shortcut span {
+            flex-grow: 1;
+        }
+
+        .room-kitchen-shortcut strong {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .room-kitchen-shortcut small {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        /* Search input */
+        .planner-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+
+        .planner-search input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+            color: var(--ink);
+        }
+
+        /* Filter Pills */
+        .planner-filter-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .planner-filter-pills button {
+            background: #ffffff;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-pill);
+            padding: 6px 12px;
+            font-size: 12px;
+            color: var(--muted);
+            cursor: pointer;
+        }
+
+        .planner-filter-pills button.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-soft);
+            font-weight: 600;
+        }
+
+        /* Category Select */
+        .category-select-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .category-select-wrap label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .category-select-wrap select {
+            width: 100%;
+            height: 38px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 0 10px;
+            font-size: 13px;
+            color: var(--ink);
+            outline: none;
+        }
+
+        /* ==========================================================================
+           САЙДБАРЫН ЗАСВАР: БАРААНЫ КАРТЫГ ЦЭВЭРХЭН БОЛГОСОН БАЙДАЛ
+           ========================================================================== */
+        .planner-model-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .room-product-card {
+            background: #ffffff;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .room-product-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(41, 60, 50, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .room-product-image {
+            aspect-ratio: 1;
+            background: #f8f8f7;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .room-product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Шинэ засвар: Хэмжээсийн наалт & 3D badge */
+        .badge-3d-tag {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--ink);
+            border: 1px solid var(--line);
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        .room-product-info {
+            padding: 9px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .room-product-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ink);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .room-product-price {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .room-product-dimensions {
+            font-size: 10px;
+            color: var(--muted);
+            font-family: monospace;
+        }
+
+        .room-product-stock {
+            font-size: 10px;
+            color: var(--brand-green);
+            font-weight: 500;
+        }
+
+        .card-add-icon-btn {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #f1f0ed;
+            border: none;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .room-product-card:hover .card-add-icon-btn {
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        /* ==========================================================================
+           САЙДБАРЫН ШИНЭ FEATURE 2: СОНГОСОН ТАВИЛГЫН ТОХИРУУЛГА (PROPERTY INSPECTOR)
+           ========================================================================== */
+        .inspector-box {
+            background: #fafafa;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .inspector-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .inspector-title-row h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .swatch-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .swatch-circle {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            outline: 1px solid var(--line);
+            cursor: pointer;
+        }
+
+        .swatch-circle.selected {
+            outline: 2px solid var(--ink);
+        }
+
+        .btn-action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn-secondary-tool {
+            background: #ffffff;
+            border: 1px solid var(--line);
+            padding: 7px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ink);
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-secondary-tool:hover {
+            border-color: var(--accent);
+        }
+
+        .btn-secondary-tool.danger {
+            color: #c2410c;
+        }
+
+        /* ==========================================================================
+           САЙДБАРЫН ШИНЭ FEATURE 3: ӨРӨӨНИЙ ТӨСӨВ БА "БҮГДИЙГ САГСЛАХ" FOOTER
+           ========================================================================== */
+        .drawer-sticky-bottom-summary {
+            padding: 12px 16px;
+            border-top: 1px solid var(--line);
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .budget-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+
+        .budget-row span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .budget-row strong {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .btn-add-all-cart {
+            width: 100%;
+            background: #293c32;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            border-radius: var(--radius-btn);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-add-all-cart:hover {
+            background: var(--accent);
+        }
+
+        /* Toast */
+        .toast-popup {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background: #293c32;
+            color: #ffffff;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. TOP NAVBAR (tavilga.mn-ийн одоогийн загвар) -->
+    <header class="top-navbar">
+        <div class="brand-group">
+            <a href="#" class="brand-logo">
+                tavilga<span class="dot"></span>mn
+            </a>
+            <div class="breadcrumb-text">
+                Өрөөний төлөвлөгч: <strong>Гал тогоо загвар</strong>
+            </div>
+        </div>
+
+        <div class="top-tools-center">
+            <button class="btn-add-furniture-top" onclick="switchSidebarTab('catalog')">
+                <span>+ Тавилга нэмэх</span>
+            </button>
+            <button class="btn-pill-light" onclick="switchSidebarTab('kitchen')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/></svg>
+                <span>Гарнитур нэмэх</span>
+            </button>
+        </div>
+
+        <div class="top-actions-right">
+            <span style="font-size: 12px; color: var(--muted);">Хадгалсан</span>
+            <button class="btn-checkout-primary" onclick="switchSidebarTab('budget')">
+                Тооцоо (3 бараа) >
+            </button>
+        </div>
+    </header>
+
+    <!-- 2. MAIN WORKSPACE -->
+    <div class="workspace-body">
+
+        <!-- 2.1 3D CANVAS (Screenshot дээрх өрөөний дүрслэл) -->
+        <main class="canvas-container">
+            <!-- Simulated Isometric 3D Room matching screenshot -->
+            <svg class="canvas-room-svg" viewBox="0 0 700 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Parquet Floor -->
+                <polygon points="350,220 580,350 350,470 120,350" fill="#c49a6c" stroke="#ad7d4f" stroke-width="1.5" />
+                <!-- Left Wall -->
+                <polygon points="120,350 350,220 350,70 120,180" fill="#edeae1" stroke="#d5cfbf" stroke-width="2" />
+                <!-- Right Wall -->
+                <polygon points="350,220 580,350 580,180 350,70" fill="#e2ded3" stroke="#ccc5b2" stroke-width="2" />
+                
+                <!-- Placed Sofa in 3D (Clickable to trigger Inspector) -->
+                <g transform="translate(230, 260)" style="cursor: pointer;" onclick="openInspector('Luna 3 хүний буйдан', '1,598,000₮', '180 × 77 × 60 см')">
+                    <polygon points="60,20 120,50 120,100 60,70" fill="#e8e2d8" stroke="#ad6547" stroke-width="2" />
+                    <polygon points="10,50 60,20 60,70 10,100" fill="#ded7cc" stroke="#ad6547" stroke-width="2" />
+                    <polygon points="10,50 60,20 120,50 70,80" fill="#ffffff" stroke="#ad6547" stroke-width="1.5" />
+                </g>
+
+                <!-- Placed Cabinet in 3D -->
+                <g transform="translate(340, 200)" style="cursor: pointer;" onclick="openInspector('BASE-600 Доод шүүгээ', '380,000₮', '600 × 820 × 600 мм')">
+                    <polygon points="50,20 90,40 90,90 50,70" fill="#ffffff" stroke="#293c32" stroke-width="1.5" />
+                    <polygon points="10,40 50,20 50,70 10,90" fill="#f4f4f4" stroke="#293c32" stroke-width="1.5" />
+                    <polygon points="10,40 50,20 90,40 50,60" fill="#293c32" />
+                </g>
+            </svg>
+
+            <!-- Bottom Floating bar from screenshot -->
+            <div class="bottom-floating-bar">
+                <button class="float-bar-btn active">Өрөөний харагдац</button>
+                <button class="float-bar-btn">Дээрээс</button>
+                <button class="float-bar-btn">Урдаас</button>
+                <button class="float-bar-btn">Өнгө</button>
+                <button class="float-bar-btn">Хэмжээс</button>
+                <button class="float-bar-btn">Өрөө засах</button>
+            </div>
+        </main>
+
+        <!-- 2.2 THE UPGRADED PLANNER SIDEBAR DRAWER -->
+        <aside class="planner-drawer">
+            <!-- Header -->
+            <div class="drawer-header">
+                <h2 id="drawer-main-title">Тавилга нэмэх</h2>
+                <button class="btn-drawer-close" title="Хаах">✕</button>
+            </div>
+
+            <!-- ШИНЭ ЗАСВАР: АЖЛЫН 4 ГОРИМТ ТАВУУД (Шинэ боломж) -->
+            <div class="sidebar-feature-tabs">
+                <button class="feature-tab-btn active" id="tab-btn-catalog" onclick="switchSidebarTab('catalog')">
+                    Тавилга
+                </button>
+                <button class="feature-tab-btn" id="tab-btn-kitchen" onclick="switchSidebarTab('kitchen')">
+                    Гал тогоо
+                </button>
+                <button class="feature-tab-btn" id="tab-btn-inspector" onclick="switchSidebarTab('inspector')">
+                    Тохируулга
+                </button>
+                <button class="feature-tab-btn" id="tab-btn-budget" onclick="switchSidebarTab('budget')">
+                    Төсөв <span class="tab-count-badge">2</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: ТАВИЛГЫН САН (Одоогийн байдлыг зассан хувилбар) -->
+            <div id="panel-catalog" class="drawer-content-scroll">
+                <div class="planner-panel-heading">
+                    <span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        Тавилгын сан
+                    </span>
+                    <small>Таалагдсан тавилга дээр дарж өрөөндөө нэмээрэй.</small>
+                </div>
+
+                <!-- Shortcut карт -->
+                <a href="javascript:void(0)" class="room-kitchen-shortcut" onclick="switchSidebarTab('kitchen')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ad6547" stroke-width="2"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/></svg>
+                    <span>
+                        <strong>Гал тогоо төлөвлөх горим</strong>
+                        <small>Бэлэн модуль шүүгээ, плитка, угаалтуур</small>
+                    </span>
+                    <span style="color: var(--muted); font-size: 14px;">›</span>
+                </a>
+
+                <!-- Хайлт -->
+                <div class="planner-search">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="Тавилга хайх…">
+                </div>
+
+                <!-- Шүүлтүүрийн товчнууд (Зассан) -->
+                <div class="planner-filter-pills">
+                    <button class="active">Бүгд</button>
+                    <button>3D тавилга · 8</button>
+                    <button>Бэлэн үлдэгдэлтэй</button>
+                </div>
+
+                <!-- Өрөөний ангилал (Зассан) -->
+                <div class="category-select-wrap">
+                    <label>Өрөөний төрөл</label>
+                    <select>
+                        <option>Бүх тавилга</option>
+                        <option>Зочны өрөө (Буйдан, ТВ тавиур)</option>
+                        <option>Унтлагын өрөө (Ор, Шкаф)</option>
+                        <option>Хооллох хэсэг (Ширээ, Сандал)</option>
+                        <option>Ажлын өрөө (Бичгийн ширээ)</option>
+                    </select>
+                </div>
+
+                <!-- Барааны 2 баганат жагсаалт (Хог өгөгдлийг цэвэрлэсэн, бодит үнэ, хэмжээтэй) -->
+                <div class="planner-model-grid">
+                    <!-- Бараа 1 -->
+                    <div class="room-product-card" onclick="addFurnitureToRoom('Luna 3 хүний буйдан', '1,598,000₮')">
+                        <div class="room-product-image">
+                            <span class="badge-3d-tag">3D</span>
+                            <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1789663972/casa-nova/products/8e5b47a7-3a4e-4c57-a0b6-183a70fc224c.png" alt="Luna sofa">
+                        </div>
+                        <div class="room-product-info">
+                            <p class="room-product-title">Luna 3 хүний буйдан</p>
+                            <p class="room-product-price">1,598,000₮</p>
+                            <p class="room-product-stock">Үлдэгдэл 5 ширхэг</p>
+                            <p class="room-product-dimensions">1.80 × 0.77 м</p>
+                        </div>
+                        <button class="card-add-icon-btn" title="Өрөөнд нэмэх">+</button>
+                    </div>
+
+                    <!-- Бараа 2 -->
+                    <div class="room-product-card" onclick="addFurnitureToRoom('Royal Classic Ор', '899,000₮')">
+                        <div class="room-product-image">
+                            <span class="badge-3d-tag">3D</span>
+                            <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1791039999/casa-nova/products/f957d77f-6d0d-43b8-ae6e-48406a822c45.jpg" alt="Bed">
+                        </div>
+                        <div class="room-product-info">
+                            <p class="room-product-title">Royal Classic Ор</p>
+                            <p class="room-product-price">899,000₮</p>
+                            <p class="room-product-stock">Үлдэгдэл 4 ширхэг</p>
+                            <p class="room-product-dimensions">1.66 × 2.00 м</p>
+                        </div>
+                        <button class="card-add-icon-btn" title="Өрөөнд нэмэх">+</button>
+                    </div>
+
+                    <!-- Бараа 3 -->
+                    <div class="room-product-card" onclick="addFurnitureToRoom('Гантиг Хоолны Ширээ', '1,190,000₮')">
+                        <div class="room-product-image">
+                            <span class="badge-3d-tag">3D</span>
+                            <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1791104006/casa-nova/products/92127f64-f6c0-438c-b231-6ad2eb1ede3d.jpg" alt="Dining table">
+                        </div>
+                        <div class="room-product-info">
+                            <p class="room-product-title">Гантиг Хоолны Ширээ</p>
+                            <p class="room-product-price">1,190,000₮</p>
+                            <p class="room-product-stock">Үлдэгдэл 9 ширхэг</p>
+                            <p class="room-product-dimensions">2.00 × 1.00 м</p>
+                        </div>
+                        <button class="card-add-icon-btn" title="Өрөөнд нэмэх">+</button>
+                    </div>
+
+                    <!-- Бараа 4 -->
+                    <div class="room-product-card" onclick="addFurnitureToRoom('Альпайн шкаф', '1,890,000₮')">
+                        <div class="room-product-image">
+                            <img src="https://images.unsplash.com/photo-1558997519-83ea9252edf8?auto=format&fit=crop&w=400&q=80" alt="Wardrobe">
+                        </div>
+                        <div class="room-product-info">
+                            <p class="room-product-title">Альпайн толин шкаф</p>
+                            <p class="room-product-price">1,890,000₮</p>
+                            <p class="room-product-stock">Үлдэгдэл 5 ширхэг</p>
+                            <p class="room-product-dimensions">2.00 × 0.65 м</p>
+                        </div>
+                        <button class="card-add-icon-btn" title="Өрөөнд нэмэх">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: ГАЛ ТОГООНЫ МОДУЛЬ ШҮҮГЭЭНИЙ САН (Шинэ Feature) -->
+            <div id="panel-kitchen" class="drawer-content-scroll" style="display: none;">
+                <div class="planner-panel-heading">
+                    <span>Модуль Шүүгээний Сан</span>
+                    <small>Хэмжээгээр шүүж, хананд автоматаар залгаарай.</small>
+                </div>
+
+                <!-- Өргөний шүүлтүүр (Шинэ санаа) -->
+                <div class="planner-filter-pills">
+                    <button class="active">Бүх өргөн</button>
+                    <button>400мм</button>
+                    <button>600мм</button>
+                    <button>800мм</button>
+                    <button>Булан 900</button>
+                </div>
+
+                <div class="category-select-wrap">
+                    <label>Шүүгээний төрөл</label>
+                    <select>
+                        <option>Доод шүүгээ (Base)</option>
+                        <option>Дээд өлгөдөг шүүгээ (Wall)</option>
+                        <option>Өндөр багана шүүгээ (Tall)</option>
+                        <option>Плитка, сорогч, угаалтуур</option>
+                    </select>
+                </div>
+
+                <div class="planner-model-grid">
+                    <div class="room-product-card" onclick="addFurnitureToRoom('BASE-600 Доод шүүгээ', '380,000₮')">
+                        <div class="room-product-image" style="background: #fafafa; padding: 10px;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#293c32" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="10" y1="14" x2="10" y2="17"/></svg>
+                        </div>
+                        <div class="room-product-info">
+                            <p class="room-product-title">BASE-600 (1 хаалга)</p>
+                            <p class="room-product-price">380,000₮</p>
+                            <p class="room-product-dimensions">600 × 820 × 600 мм</p>
+                        </div>
+                        <button class="card-add-icon-btn">+</button>
+                    </div>
+
+                    <div class="room-product-card" onclick="addFurnitureToRoom('BASE-800 Угаалтуур', '495,000₮')">
+                        <div class="room-product-image" style="background: #fafafa; padding: 10px;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#293c32" stroke-width="1.8"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="7" y1="12" x2="7" y2="14"/><line x1="17" y1="12" x2="17" y2="14"/></svg>
+                        </div>
+                        <div class="room-product-info">
+                            <p class="room-product-title">BASE-800 Угаалтуур</p>
+                            <p class="room-product-price">495,000₮</p>
+                            <p class="room-product-dimensions">800 × 820 × 600 мм</p>
+                        </div>
+                        <button class="card-add-icon-btn">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: СОНГОСОН ТАВИЛГЫН ТОХИРУУЛГА - INSPECTOR (Шинэ Feature) -->
+            <div id="panel-inspector" class="drawer-content-scroll" style="display: none;">
+                <div class="planner-panel-heading">
+                    <span>Сонгосон Тавилгын Тохируулга</span>
+                    <small>3D өрөөнөөс дарагдсан элементийг удирдах</small>
+                </div>
+
+                <div class="inspector-box">
+                    <div class="inspector-title-row">
+                        <h4 id="inspector-name">Luna 3 хүний буйдан</h4>
+                        <span style="font-weight: 700; font-size: 13px;" id="inspector-price">1,598,000₮</span>
+                    </div>
+                    <p style="font-size: 11px; color: var(--muted);" id="inspector-dim">Хэмжээ: 180 × 77 × 60 см</p>
+
+                    <!-- Өнгө солих swatch -->
+                    <div>
+                        <label style="font-size: 11px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 6px;">ӨНГӨ СОЛИХ</label>
+                        <div class="swatch-row">
+                            <div class="swatch-circle selected" style="background: #e6dfd5;" title="Цагаан" onclick="showToast('Өнгө солигдлоо: Цагаан')"></div>
+                            <div class="swatch-circle" style="background: #9a948c;" title="Саарал" onclick="showToast('Өнгө солигдлоо: Саарал')"></div>
+                            <div class="swatch-circle" style="background: #5c4e43;" title="Бор" onclick="showToast('Өнгө солигдлоо: Бор')"></div>
+                        </div>
+                    </div>
+
+                    <!-- Тохируулах үйлдлүүд -->
+                    <div>
+                        <label style="font-size: 11px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 6px;">ҮЙЛДЛҮҮД</label>
+                        <div class="btn-action-grid">
+                            <button class="btn-secondary-tool" onclick="showToast('90° эргүүллээ')">🔄 90° Эргүүлэх</button>
+                            <button class="btn-secondary-tool" onclick="showToast('Хувиллаа (+1)')">📋 Хувилах</button>
+                            <button class="btn-secondary-tool" onclick="showToast('Хаалганы чиглэл солигдлоо')">🚪 Хаалга нээх</button>
+                            <button class="btn-secondary-tool danger" onclick="showToast('Өрөөнөөс хаслаа')">🗑️ Устгах</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: ӨРӨӨНИЙ ТӨСӨВ БА САГСЛАХ (Шинэ Feature) -->
+            <div id="panel-budget" class="drawer-content-scroll" style="display: none;">
+                <div class="planner-panel-heading">
+                    <span>Өрөөний Төсвийн Задаргаа</span>
+                    <small>Өрөөнд байрлуулсан нийт тавилга</small>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="background: #fafafa; border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; font-size: 12px;">
+                        <span>1x Luna 3 хүний буйдан</span>
+                        <strong>1,598,000₮</strong>
+                    </div>
+                    <div style="background: #fafafa; border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; font-size: 12px;">
+                        <span>1x BASE-600 Доод шүүгээ</span>
+                        <strong>380,000₮</strong>
+                    </div>
+                    <div style="background: #fafafa; border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; font-size: 12px;">
+                        <span>1x Гантиг Хоолны Ширээ</span>
+                        <strong>1,190,000₮</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ШИНЭ FEATURE: ДООД ТАЛЫН ТӨСВИЙН ХУРААНГУЙ & САГСАНД НЭМЭХ FOOTER -->
+            <div class="drawer-sticky-bottom-summary">
+                <div class="budget-row">
+                    <span>Нийт төсөв (3 тавилга):</span>
+                    <strong>3,168,000₮</strong>
+                </div>
+                <button class="btn-add-all-cart" onclick="showToast('Өрөөний бүх тавилга сагсанд нэмэгдлээ!')">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    <span>Бүгдийг сагсанд нэмэх</span>
+                </button>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-popup" id="toast">
+        Мэдэгдэл
+    </div>
+
+    <script>
+        function switchSidebarTab(tabName) {
+            // Tab buttons
+            document.querySelectorAll('.feature-tab-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('tab-btn-' + tabName);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            // Panels
+            document.getElementById('panel-catalog').style.display = 'none';
+            document.getElementById('panel-kitchen').style.display = 'none';
+            document.getElementById('panel-inspector').style.display = 'none';
+            document.getElementById('panel-budget').style.display = 'none';
+
+            document.getElementById('panel-' + tabName).style.display = 'flex';
+
+            // Title
+            const titles = {
+                catalog: 'Тавилга нэмэх',
+                kitchen: 'Гал тогоо төлөвлөх',
+                inspector: 'Тавилгын тохируулга',
+                budget: 'Өрөөний төсөв'
+            };
+            document.getElementById('drawer-main-title').textContent = titles[tabName] || 'Тавилга нэмэх';
+        }
+
+        function openInspector(name, price, dim) {
+            document.getElementById('inspector-name').textContent = name;
+            document.getElementById('inspector-price').textContent = price;
+            document.getElementById('inspector-dim').textContent = 'Хэмжээ: ' + dim;
+            switchSidebarTab('inspector');
+            showToast('3D өрөөнөөс “' + name + '” сонгогдлоо');
+        }
+
+        function addFurnitureToRoom(name, price) {
+            showToast('“' + name + '” өрөөнд нэмэгдлээ');
+        }
+
+        let toastTimer;
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            toast.textContent = text;
+            toast.style.display = 'block';
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2200);
+        }
+    </script>
+</body>
+</html>

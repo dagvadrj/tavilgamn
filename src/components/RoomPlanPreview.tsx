@@ -2,7 +2,7 @@
 import type { ReactNode, Ref, SVGProps } from "react";
 import type { PlacedFurniture, RoomOpening, RoomShape } from "@/lib/types";
 import { getRoomGeometry, roomPath, type Bounds, type Point } from "@/lib/roomGeometry";
-import { openingWorldTransform, validateOpening } from "@/lib/roomOpenings";
+import { openingWorldTransform, validateOpening, windowLayout } from "@/lib/roomOpenings";
 import { pieceRects } from "@/three/collision";
 
 function OpeningPlanMark({ room, opening, index, font }: { room: RoomShape; opening: RoomOpening; index: number; font: number }) {
@@ -26,7 +26,7 @@ function OpeningPlanMark({ room, opening, index, font }: { room: RoomShape; open
       }) : <>
         <rect x={-half} y={-.065} width={opening.width} height={.13} fill="#deedf4" vectorEffect="non-scaling-stroke" />
         <line x1={-half} y1={0} x2={half} y2={0} vectorEffect="non-scaling-stroke" />
-        <line x1={0} y1={-.065} x2={0} y2={.065} vectorEffect="non-scaling-stroke" />
+        {Array.from({length:windowLayout(opening).panes-1},(_,i)=>{const x=-half+opening.width*(i+1)/windowLayout(opening).panes;return <line key={i} className="room-plan-window-mullion" x1={x} y1={-.065} x2={x} y2={.065} vectorEffect="non-scaling-stroke"/>;})}
       </>}
     </g>
     <text x={0} y={font * 1.7} fontSize={font * .7} textAnchor="middle">{isDoor ? "Ха" : "Ц"}{index + 1} · {Math.round(opening.width * 1000)} мм</text>

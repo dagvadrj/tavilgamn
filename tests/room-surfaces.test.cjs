@@ -27,7 +27,7 @@ function memoryStore(saved = new Map()) {
 }
 
 test('opening templates have unique IDs, safe dimensions, and independent instance IDs', () => {
-  assert.equal(new Set(openings.OPENING_TEMPLATES.map(t => t.id)).size, 4);
+  assert.equal(new Set(openings.OPENING_TEMPLATES.map(t => t.id)).size, openings.OPENING_TEMPLATES.length);
   for (const template of openings.OPENING_TEMPLATES) for (const wall of ['north', 'east', 'south', 'west']) {
     const opening = openings.createOpening(template.id, wall);
     assert.equal(opening.wallId, wall); assert.equal(opening.kind, template.kind);
@@ -117,7 +117,9 @@ test('legacy migration gives every wall its old paint and independent room surfa
   for (const wall of ['north', 'east', 'south', 'west']) assert.deepEqual(migrated.wallMaterials[wall], { mode: 'color', color: '#aabbcc' });
   const copy = rooms.syncDesignRooms(migrated);
   copy.wallMaterials.north.color = '#000000'; copy.lighting.fixtures.push({ id: 'new', x: 0, z: 0, intensity: 1, color: '#ffffff' });
-  assert.equal(migrated.wallMaterials.north.color, '#aabbcc'); assert.equal(migrated.lighting.fixtures.length, 0);
+  assert.equal(migrated.wallMaterials.north.color, '#aabbcc'); assert.equal(migrated.lighting.fixtures.length, 1);
+  assert.equal(migrated.lighting.fixtures[0].id, "ceiling-saved-room-1");
+  assert.equal(migrated.lighting.autoLights, true);
   assert.equal(rooms.DEFAULT_ROOM_LIGHTING.fixtures.length, 0);
 });
 
@@ -125,7 +127,8 @@ test('surface and opening state survives room switching, deep cloning, and JSON 
   const first = decorated(), firstId = first.activeRoomId;
   const second = rooms.newDesignRoom('bedroom', first.rooms);
   let design = rooms.activateDesignRoom({ ...first, rooms: [...first.rooms, second] }, second.id);
-  assert.equal(design.floorMaterial, 'parquet-oak'); assert.deepEqual(design.openings, []); assert.deepEqual(design.lighting.fixtures, []);
+  assert.equal(design.floorMaterial, 'parquet-oak'); assert.deepEqual(design.openings, []); assert.equal(design.lighting.fixtures.length, 1);
+  assert.equal(design.lighting.fixtures[0].intensity, 18);
   design = rooms.syncDesignRooms({ ...design, floorMaterial: 'tile-stone', openings: [windowOpening('west')] });
   design = rooms.activateDesignRoom(design, firstId);
   assert.equal(design.floorMaterial, 'parquet-walnut'); assert.equal(design.ceilingMaterial, 'ceiling-plaster');

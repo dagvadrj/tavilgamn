@@ -13,14 +13,30 @@ export interface OpeningTemplate {
   width: number;
   height: number;
   sillHeight: number;
+  panes?: number;
+  operation?: "fixed" | "sliding" | "casement";
 }
 
 export const OPENING_TEMPLATES: OpeningTemplate[] = [
   { id: "door-single", label: "Нэг хавтаст хаалга", kind: "door", width: 0.9, height: 2.1, sillHeight: 0 },
   { id: "door-double", label: "Хоёр хавтаст хаалга", kind: "door", width: 1.6, height: 2.1, sillHeight: 0 },
-  { id: "window-fixed", label: "Битүү цонх", kind: "window", width: 1.2, height: 1.2, sillHeight: 0.9 },
-  { id: "window-sliding", label: "Гүйдэг цонх", kind: "window", width: 1.8, height: 1.2, sillHeight: 0.9 },
+  { id: "window-fixed", label: "Битүү цонх", kind: "window", width: 1.2, height: 1.2, sillHeight: 0.9, panes: 1, operation: "fixed" },
+  { id: "window-sliding", label: "Гүйдэг цонх", kind: "window", width: 1.8, height: 1.2, sillHeight: 0.9, panes: 2, operation: "sliding" },
+  { id: "window-casement", label: "Хоёр хавтаст нээгддэг цонх", kind: "window", width: 1.5, height: 1.35, sillHeight: .85, panes: 2, operation: "casement" },
+  { id: "window-triple", label: "Гурван хэсэгтэй цонх", kind: "window", width: 2.1, height: 1.3, sillHeight: .9, panes: 3, operation: "fixed" },
+  { id: "window-panoramic", label: "Өргөн панорам цонх", kind: "window", width: 2.8, height: 1.35, sillHeight: .85, panes: 3, operation: "fixed" },
+  { id: "window-floor", label: "Шал хүртэл өндөр цонх", kind: "window", width: 1.8, height: 2.2, sillHeight: .08, panes: 2, operation: "fixed" },
 ];
+
+export function windowLayout(opening: Pick<RoomOpening,"templateId"|"width">) {
+  const template = OPENING_TEMPLATES.find(t => t.id === opening.templateId);
+  return { panes: template?.panes ?? (opening.width >= 1.05 ? 2 : 1), operation: template?.operation ?? "fixed" as const };
+}
+
+export function openingMinimumWidth(opening: Pick<RoomOpening,"templateId"|"width"|"kind">) {
+  const panes = windowLayout(opening).panes;
+  return opening.kind === "window" ? Math.max(.3, .12 + panes * .15 + (panes - 1) * .048) : .3;
+}
 
 export function createOpening(templateId: string, wallId: RoomWall, position = 0.5): RoomOpening {
   const template = OPENING_TEMPLATES.find(item => item.id === templateId);
@@ -51,6 +67,7 @@ function openingError(opening: RoomOpening): string | null {
   if (!template || template.kind !== opening.kind) return "Хаалга, цонхны загвар тохирохгүй байна.";
   if (![opening.width, opening.height, opening.sillHeight, opening.position].every(Number.isFinite)) return "Хаалга, цонхны хэмжээнд зөв тоо оруулна уу.";
   if (opening.width < 0.3 || opening.height < 0.3 || opening.sillHeight < 0 || opening.position < 0 || opening.position > 1) return "Хаалга, цонхны хэмжээ 30 см-ээс эхэлж, байрлал хананы дотор байна.";
+  if (opening.width < openingMinimumWidth(opening) - EPSILON) return "Энэ төрлийн цонхны хүрээ, хуваалтад өргөн нь хүрэлцэхгүй байна.";
   if (opening.kind === "door" && Math.abs(opening.sillHeight) > EPSILON) return "Хаалга шалнаас эхэлнэ.";
   if (!["left", "right"].includes(opening.hinge) || !["inward", "outward"].includes(opening.swing) || typeof opening.open !== "boolean") return "Хаалганы нээгдэх чиглэлийг зөв сонгоно уу.";
   return null;

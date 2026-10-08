@@ -66,9 +66,9 @@ function harness(patch = {}) {
     }
     return null;
   }
-  function resolve(index) {
+  function resolve(index, material = new THREE.MeshStandardMaterial()) {
     const scene = new THREE.Group();
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial());
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), material);
     mesh.name = "front"; scene.add(mesh);
     requests[index].resolve({ scene,
       bounds: new THREE.Box3(new THREE.Vector3(-.5,0,-.5), new THREE.Vector3(.5,1,.5)),
@@ -289,4 +289,27 @@ test("deselecting a room piece does not restart its progressive loading", async 
     assert.equal(run.requests.length, 2, "selection changes must not reacquire the same assets");
     assert.equal(run.tree.props.userData.deliveryPending, false);
   } finally { run.unmount(); global.window = originalWindow; }
+});
+
+ test("room GLBs retain authored colour and surface textures on independent material clones", async () => {
+  const originalWindow=global.window;global.window={location:{origin:'https://shop.example'}};
+  const source=new THREE.MeshStandardMaterial({color:'#d2cbc0',normalMap:new THREE.Texture(),aoMap:new THREE.Texture(),map:new THREE.Texture()});
+  source.envMapIntensity=.8;
+  const run=harness({previewGlbFile:undefined,environmentBoost:1.25});
+  try {
+    await run.flush();run.resolve(0,source);await run.flush();
+    const material=run.primitive().props.object.children[0].material;
+    assert.notEqual(material,source);assert.equal(material.color.getHex(),source.color.getHex());
+    assert.equal(material.map,source.map);assert.equal(material.normalMap,source.normalMap);assert.equal(material.aoMap,source.aoMap);
+    assert.equal(material.envMapIntensity,1);assert.equal(source.envMapIntensity,.8);
+  } finally {run.unmount();global.window=originalWindow;}
+});
+
+test("room-only baked AO is disabled without changing colour maps or the shared source",async()=>{
+  const originalWindow=global.window;global.window={location:{origin:'https://shop.example'}};
+  const source=new THREE.MeshStandardMaterial({color:'#bbbbbb',map:new THREE.Texture(),aoMap:new THREE.Texture()});source.aoMapIntensity=1;
+  const run=harness({previewGlbFile:undefined,bakedOcclusionIntensity:0});
+  try{await run.flush();run.resolve(0,source);await run.flush();const material=run.primitive().props.object.children[0].material;
+    assert.equal(material.aoMapIntensity,0);assert.equal(source.aoMapIntensity,1);assert.equal(material.aoMap,source.aoMap);assert.equal(material.map,source.map);assert.equal(material.color.getHex(),source.color.getHex());
+  }finally{run.unmount();global.window=originalWindow;}
 });

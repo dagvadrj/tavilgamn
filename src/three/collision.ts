@@ -1,10 +1,19 @@
 import { cabinetFrontExtra } from "@/lib/plitka";
 import type { PlacedFurniture, RoomShape } from "@/lib/types";
-import { getRoomGeometry } from "@/lib/roomGeometry";
+import { modelFloorBand } from "./furnitureFloorBand";
+import { ROOM_SKIRTING_DEPTH } from "@/lib/roomRendering";
+import { getRoomGeometry, type Bounds, type RoomGeometry } from "@/lib/roomGeometry";
 import { getProduct } from "@/store/catalog";
 import { getDbModel } from "@/lib/modelRegistry";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import { fitCountertops, cabinetAxes } from "@/lib/kitchenPlacement";
+
+export type PlacementRoom = RoomShape & {
+  placementGeometry?: Pick<RoomGeometry, "bounds" | "voids" | "segments" | "connected" | "simple">;
+  skirting?: Bounds[];
+  heightZones?: Array<Bounds & { height: number }>;
+};
+const placementGeometry = (room: PlacementRoom) => room.placementGeometry ?? getRoomGeometry(room);
 
 interface Rect {
   cx: number;
@@ -91,15 +100,15 @@ export function rectsOverlap(a: Rect, b: Rect, allowContact = false): boolean {
 }
 
 /** Test the complete footprint: corners alone miss narrow notches and columns. */
-export function isInsideRoom(candidate: PlacedFurniture, room: RoomShape): boolean {
+export function isInsideRoom(candidate: PlacedFurniture, room: PlacementRoom): boolean {
   if (![candidate.x, candidate.z, candidate.rotation, room.width, room.depth].every(Number.isFinite) || room.width <= 0 || room.depth <= 0) return false;
   let geometry;
-  try { geometry = getRoomGeometry(room); } catch { return false; }
+  try { geometry = placementGeometry(room); } catch { return false; }
   if (!geometry.connected || !geometry.simple) return false;
   return pieceRects(candidate).every(r => rectInsideGeometry(r, geometry));
 }
 
-function rectInsideGeometry(r: Rect, geometry: ReturnType<typeof getRoomGeometry>): boolean {
+function rectInsideGeometry(r: Rect, geometry: Pick<RoomGeometry, "bounds" | "voids">): boolean {
   if (![r.w, r.d].every(value => Number.isFinite(value) && value > 0)) return false;
   const cos = Math.cos(r.rot);
   const sin = Math.sin(r.rot);
@@ -117,11 +126,27 @@ function rectInsideGeometry(r: Rect, geometry: ReturnType<typeof getRoomGeometry
     w: rect.maxX - rect.minX, d: rect.maxZ - rect.minZ, rot: 0 }, true));
 }
 
+/** Only the part below the skirting top collides with the skirting. */
+export function floorBandRects(piece: PlacedFurniture): Rect[] {
+  const dims=dimsFor(piece),model=piece.modelId?getDbModel(piece.modelId):undefined;
+  const band=model ? modelFloorBand(model.fileModelId??model.id,dims) : undefined;
+  if(!band)return pieceRects(piece); // Conservative while an imported model is still downloading.
+  const cos=Math.cos(piece.rotation),sin=Math.sin(piece.rotation);
+  return band.map(b=>{const x=(b.minX+b.maxX)/2,z=(b.minZ+b.maxZ)/2;
+    return {cx:piece.x+x*cos+z*sin,cz:piece.z-x*sin+z*cos,w:b.maxX-b.minX,d:b.maxZ-b.minZ,rot:-piece.rotation};});
+}
+const hitsSkirting=(piece:PlacedFurniture,room:PlacementRoom)=>{
+  if(!room.skirting?.length)return false;
+  const feet=floorBandRects(piece);
+  return room.skirting.some(b=>feet.some(r=>rectsOverlap(r,{cx:(b.minX+b.maxX)/2,cz:(b.minZ+b.maxZ)/2,w:b.maxX-b.minX,d:b.maxZ-b.minZ,rot:0},true)));
+};
+
 /** Check furniture against the actual room shape, columns and other furniture. */
-export function isPlacementValid(candidate: PlacedFurniture, others: PlacedFurniture[], room: RoomShape): boolean {
-  if (!isInsideRoom(candidate, room)) return false;
-  if (room.height !== undefined && dimsFor(candidate).h > room.height + 1e-6) return false;
+export function isPlacementValid(candidate: PlacedFurniture, others: PlacedFurniture[], room: PlacementRoom): boolean {
+  if (!isInsideRoom(candidate, room) || hitsSkirting(candidate,room)) return false;
+  if (!room.heightZones && room.height !== undefined && dimsFor(candidate).h > room.height + 1e-6) return false;
   const rectangles = pieceRects(candidate);
+  if (room.heightZones?.some(zone => dimsFor(candidate).h > zone.height + 1e-6 && rectangles.some(r => rectsOverlap(r, {cx:(zone.minX+zone.maxX)/2,cz:(zone.minZ+zone.maxZ)/2,w:zone.maxX-zone.minX,d:zone.maxZ-zone.minZ,rot:0}, true)))) return false;
   for (const other of others) {
     if (other.instanceId === candidate.instanceId) continue;
     if (rectangles.some(r => pieceRects(other).some(o => rectsOverlap(r, o, true)))) return false;
@@ -130,17 +155,17 @@ export function isPlacementValid(candidate: PlacedFurniture, others: PlacedFurni
 }
 
 /** Deterministic nearest free location; returns null instead of overlapping. */
-export function findFreePlacement(piece: PlacedFurniture, others: PlacedFurniture[], room: RoomShape): PlacedFurniture | null {
+export function findFreePlacement(piece: PlacedFurniture, others: PlacedFurniture[], room: PlacementRoom): PlacedFurniture | null {
   if (isPlacementValid(piece, others, room)) return piece;
   let bounds;
-  try { bounds = getRoomGeometry(room).bounds; } catch { return null; }
+  try { bounds = placementGeometry(room).bounds; } catch { return null; }
   const positions: { x: number; z: number }[] = [];
   const { w, d } = dimsFor(piece), cos = Math.abs(Math.cos(piece.rotation)), sin = Math.abs(Math.sin(piece.rotation));
   const hx = (w * cos + d * sin) / 2, hz = (w * sin + d * cos) / 2;
   // Include exact wall-aligned centres: a 0.25 m search grid misses snug fits.
   const xs = new Set([piece.x, (bounds.minX + bounds.maxX) / 2, bounds.minX + hx, bounds.maxX - hx]);
   const zs = new Set([piece.z, (bounds.minZ + bounds.maxZ) / 2, bounds.minZ + hz, bounds.maxZ - hz]);
-  for (const wall of getRoomGeometry(room).segments) {
+  for (const wall of placementGeometry(room).segments) {
     if (wall.nx) xs.add(wall.a.x + wall.nx * hx);
     if (wall.nz) zs.add(wall.a.z + wall.nz * hz);
   }
@@ -158,7 +183,7 @@ export function findFreePlacement(piece: PlacedFurniture, others: PlacedFurnitur
 /** Snap a piece's center to the nearest wall when within `threshold` meters. */
 export function snapToWall(
   piece: PlacedFurniture,
-  room: RoomShape,
+  room: PlacementRoom,
   threshold = 0.4,
 ): PlacedFurniture {
   const { w, d } = dimsFor(piece);
@@ -168,20 +193,23 @@ export function snapToWall(
   const halfZ = (w * sin + d * cos) / 2;
 
   let geometry;
-  try { geometry = getRoomGeometry(room); } catch { return piece; }
+  try { geometry = placementGeometry(room); } catch { return piece; }
+  const feet=floorBandRects(piece),footCorners=feet.flatMap(r=>[[-r.w/2,-r.d/2],[r.w/2,-r.d/2],[r.w/2,r.d/2],[-r.w/2,r.d/2]].map(([x,z])=>({x:r.cx-piece.x+x*Math.cos(r.rot)-z*Math.sin(r.rot),z:r.cz-piece.z+x*Math.sin(r.rot)+z*Math.cos(r.rot)})));
+  const board=room.skirting?ROOM_SKIRTING_DEPTH:0;
+  const minFootX=Math.min(...footCorners.map(p=>p.x)),maxFootX=Math.max(...footCorners.map(p=>p.x)),minFootZ=Math.min(...footCorners.map(p=>p.z)),maxFootZ=Math.max(...footCorners.map(p=>p.z));
   const xs: number[] = [], zs: number[] = [];
   for (const wall of geometry.segments) {
     if (wall.nx && piece.z + halfZ >= Math.min(wall.a.z, wall.b.z) && piece.z - halfZ <= Math.max(wall.a.z, wall.b.z)) {
-      const x = wall.a.x + wall.nx * halfX;
+      const x = wall.a.x + wall.nx * Math.max(halfX,board+(wall.nx>0?-minFootX:maxFootX));
       if (Math.abs(x - piece.x) <= threshold) xs.push(x);
     }
     if (wall.nz && piece.x + halfX >= Math.min(wall.a.x, wall.b.x) && piece.x - halfX <= Math.max(wall.a.x, wall.b.x)) {
-      const z = wall.a.z + wall.nz * halfZ;
+      const z = wall.a.z + wall.nz * Math.max(halfZ,board+(wall.nz>0?-minFootZ:maxFootZ));
       if (Math.abs(z - piece.z) <= threshold) zs.push(z);
     }
   }
   const candidates = [...xs.flatMap(x => zs.map(z => ({ ...piece, x, z }))),
     ...xs.map(x => ({ ...piece, x })), ...zs.map(z => ({ ...piece, z }))];
   candidates.sort((a, b) => Math.hypot(a.x - piece.x, a.z - piece.z) - Math.hypot(b.x - piece.x, b.z - piece.z));
-  return candidates.find(candidate => isInsideRoom(candidate, room)) ?? piece;
+  return candidates.find(candidate => isInsideRoom(candidate, room) && !hitsSkirting(candidate,room)) ?? piece;
 }

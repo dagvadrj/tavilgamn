@@ -63,6 +63,10 @@ import type {
   RoomOpening,
 } from "@/lib/types";
 import { getRoomGeometry, ROOM_TYPES } from "@/lib/roomGeometry";
+import { RoomPlacementMap } from "./RoomPlacementMap";
+import { exteriorWindowBearing } from "@/lib/roomSunlight";
+import { fixtureFitsCeiling } from "@/lib/roomCeiling";
+import { roomsOverlap } from "@/lib/roomLayout";
 import { RoomGeometryModal } from "./RoomGeometryModal";
 import {
   RoomEnvironmentPanel,
@@ -79,6 +83,8 @@ import { assessKitchenRoomFit } from "@/lib/kitchenRoomFit";
 import type { SavedKitchen } from "@/lib/kitchenAssembly";
 import { formatPrice, cn } from "@/lib/format";
 import { modelDeliveryUrl, prefetchModel } from "@/lib/modelPrefetch";
+import { roomPlacementContext, layoutFurnitureIssue, layoutClearanceIssue } from "@/three/roomPlacement";
+import { syncDesignRooms } from "@/lib/roomDesign";
 import {
   isPlacementValid,
   findFreePlacement,
@@ -95,6 +101,7 @@ import "@/features/planner/components/planner-usability.css";
 import "@/features/planner/components/planner-sidebar.css";
 import "@/features/planner/components/planner-geometry.css";
 import "@/features/room-planner/components/room-planner-simple.css";
+import "@/features/room-planner/components/room-panel-theme.css";
 import { type DbModelInfo, getDbModel } from "@/lib/modelRegistry";
 
 const RoomCanvas = dynamic(
@@ -125,6 +132,8 @@ export function RoomPlanner() {
     designs,
     createNew,
     addRoom,
+    moveRoom,
+    updateConnection,
     selectRoom,
     loadDesign,
     saveCurrent,
@@ -148,6 +157,7 @@ export function RoomPlanner() {
   const [catalogFormat, setCatalogFormat] = useState<"all" | "glb" | "photo">("all");
   const [roomStartOpen, setRoomStartOpen] = useState(true);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [roomMapOpen, setRoomMapOpen] = useState(false);
   const [roomView, setRoomView] = useState<RoomView>("dollhouse");
   const {
     inspector, setInspector,
@@ -204,21 +214,28 @@ export function RoomPlanner() {
     )
       setSelected(null);
   }, [current, selected, setSelected]);
+  const selectionDesignId = useRef(current?.id);
   useEffect(() => {
-    setSelected(null);
+    const sameDesign = selectionDesignId.current === current?.id;
+    selectionDesignId.current = current?.id;
+    const activePieces = useDesigns.getState().current?.pieces;
+    setSelected(id => sameDesign && activePieces?.some(piece => piece.instanceId === id) ? id : null);
     setSelectedWall(null);
     setSelectedOpening(null);
     setPlacementTemplate(null);
     setActivePreset(null);
     setLocalFile(null);
     setLocalUrl(null);
-    setResetKey((key) => key + 1);
     setPaletteCat("all");
-    setRoomView("dollhouse");
-    setView("perspective");
   }, [current?.id, current?.activeRoomId, current?.roomType, setSelected,
     setSelectedWall, setSelectedOpening, setPlacementTemplate, setActivePreset,
     setLocalFile, setLocalUrl, setResetKey, setPaletteCat, setView]);
+  useEffect(() => {
+    setResetKey((key) => key + 1);
+    setRoomView("dollhouse");
+    setView("perspective");
+    setCameraRequest(undefined);
+  }, [current?.id, setView, setResetKey]);
   useEffect(() => {
     if (
       selectedOpening &&
@@ -354,7 +371,8 @@ export function RoomPlanner() {
       ),
     [dbModels, paletteCat, query],
   );
-  if (roomStartOpen || !current) {
+  const placement = useMemo(() => current ? roomPlacementContext(current) : null, [current]);
+  if (roomStartOpen || !current || !placement) {
     shortcuts.current = {};
     return <RoomPlannerStart draft={current} onResume={() => setRoomStartOpen(false)}
       onStart={(type, dimensions) => {
@@ -378,8 +396,7 @@ export function RoomPlanner() {
       color: product.defaultColor,
       material: product.materials[0].id,
     };
-    const room = current;
-    const placed = findFreePlacement(piece, current.pieces, room);
+    const placed = findFreePlacement(piece, placement.pieces, placement.room);
     if (!placed) {
       setNotice(
         "Тавилга байрлуулах сул зай хүрэлцэхгүй байна. Өрөөг томруулах эсвэл байрлалаа өөрчилнө үү.",
@@ -408,8 +425,7 @@ export function RoomPlanner() {
       color: defaultColor,
       material: defaultMaterial,
     };
-    const room = current;
-    const placed = findFreePlacement(piece, current.pieces, room);
+    const placed = findFreePlacement(piece, placement.pieces, placement.room);
     if (!placed) {
       setNotice("Энэ загварыг байрлуулах сул зай хүрэлцэхгүй байна.");
       return;
@@ -437,8 +453,7 @@ export function RoomPlanner() {
       ...piece,
       rotation: (piece.rotation + Math.PI / 2) % (Math.PI * 2),
     };
-    const room = current;
-    if (!isPlacementValid(rotated, current.pieces, room)) {
+    if (!isPlacementValid(rotated, placement.pieces, placement.room)) {
       setNotice("Эргүүлэхэд хана эсвэл бусад тавилгатай давхцаж байна.");
       return;
     }
@@ -475,31 +490,15 @@ export function RoomPlanner() {
       setNotice(shapeError);
       return;
     }
-    const resizedGeometry = getRoomGeometry(resizedRoom);
-    if (
-      current.lighting?.fixtures.some(
-        (fixture) =>
-          fixture.x < resizedGeometry.bounds.minX ||
-          fixture.x > resizedGeometry.bounds.maxX ||
-          fixture.z < resizedGeometry.bounds.minZ ||
-          fixture.z > resizedGeometry.bounds.maxZ ||
-          resizedGeometry.voids.some(
-            (rect) =>
-              fixture.x >= rect.minX &&
-              fixture.x <= rect.maxX &&
-              fixture.z >= rect.minZ &&
-              fixture.z <= rect.maxZ,
-          ),
-      )
-    ) {
+    if (current.lighting?.fixtures.some(fixture => !fixtureFitsCeiling(resizedRoom, fixture))) {
       setNotice(
         "Таазны гэрэл шинэ өрөөний гадна үлдэж байна. Эхлээд гэрлийн байрлалыг өөрчилнө үү.",
       );
       return;
     }
-    const allPiecesValid = current.pieces.every((p) =>
-      isPlacementValid(p, current.pieces, resizedRoom),
-    );
+    const resizedDesign = syncDesignRooms({...current,...resizedRoom});
+    const resizedPlacement = roomPlacementContext(resizedDesign);
+    const allPiecesValid = !layoutFurnitureIssue(current,resizedDesign.rooms??[],resizedDesign.connections??[]) && !layoutClearanceIssue(current,resizedDesign) && current.pieces.every(p => isPlacementValid(p,resizedPlacement.pieces,resizedPlacement.room));
     if (!allPiecesValid) {
       setNotice(
         "Энэ хэмжээнд тавилга багтахгүй байна. Эхлээд байрлалыг нь өөрчилнө үү.",
@@ -632,7 +631,7 @@ export function RoomPlanner() {
   ) => {
     if (!selectedPiece) return;
     const candidate = { ...selectedPiece, ...patch };
-    if (!isPlacementValid(candidate, current.pieces, current)) {
+    if (!isPlacementValid(candidate, placement.pieces, placement.room)) {
       setNotice("Энэ байрлалд хана эсвэл өөр тавилга байна.");
       return;
     }
@@ -646,8 +645,8 @@ export function RoomPlanner() {
     if (!selectedPiece) return;
     const copy = findFreePlacement(
       { ...selectedPiece, instanceId: `p_${crypto.randomUUID()}` },
-      current.pieces,
-      current,
+      placement.pieces,
+      placement.room,
     );
     if (!copy) {
       setNotice("Хуулбар байрлуулах зай хүрэлцэхгүй байна.");
@@ -747,27 +746,15 @@ export function RoomPlanner() {
       pieces,
       lighting,
     };
+    const active = latest.rooms?.find(room => room.id === latest.activeRoomId);
+    if (active && latest.rooms?.some(room => room.id !== active.id && roomsOverlap({ ...active, ...shape }, room))) return "Өрөөний шинэ хэмжээ хөрш өрөөтэй давхцаж байна. Эхлээд зураглал дээр зайлуулна уу.";
     const issue = validateRoomOpenings(next);
     if (issue) return issue;
-    if (!pieces.every((piece) => isPlacementValid(piece, pieces, next)))
+    const nextDesign = syncDesignRooms(next);
+    const nextPlacement = roomPlacementContext(nextDesign);
+    if (layoutFurnitureIssue(latest,nextDesign.rooms??[],nextDesign.connections??[]) || layoutClearanceIssue(latest,nextDesign) || !pieces.every((piece) => isPlacementValid(piece, nextPlacement.pieces, nextPlacement.room)))
       return "Хана, товойлт эсвэл багана тавилгатай давхцаж байна. Эхлээд тавилгын байрлалыг өөрчилнө үү.";
-    const nextGeometry = getRoomGeometry(next);
-    if (
-      lighting?.fixtures.some(
-        (fixture) =>
-          fixture.x < nextGeometry.bounds.minX ||
-          fixture.x > nextGeometry.bounds.maxX ||
-          fixture.z < nextGeometry.bounds.minZ ||
-          fixture.z > nextGeometry.bounds.maxZ ||
-          nextGeometry.voids.some(
-            (rect) =>
-              fixture.x >= rect.minX &&
-              fixture.x <= rect.maxX &&
-              fixture.z >= rect.minZ &&
-              fixture.z <= rect.maxZ,
-          ),
-      )
-    )
+    if (lighting?.fixtures.some(fixture => !fixtureFitsCeiling(next,fixture)))
       return "Таазны гэрэл шинэ өрөөний гадна үлдэж байна. Эхлээд гэрлийн байрлалыг өөрчилнө үү.";
     updateRoom({ ...shape, openings: next.openings, pieces, lighting });
     setActivePreset(null);
@@ -1041,12 +1028,20 @@ export function RoomPlanner() {
           </div>
           <button type="button" className="room-help-button" aria-label="Ашиглах заавар" aria-pressed={showStartHint} onClick={() => setShowStartHint(value => !value)}><HelpCircle size={20}/></button>
         </div>
+        {!localUrl && !activePreset && <RoomPlacementMap design={current} open={roomMapOpen} onOpen={setRoomMapOpen}
+          onSelect={id => { selectRoom(id); setSelected(null); setSelectedOpening(null); setSelectedWall(null); setPlacementTemplate(null); }}
+          onAdd={type => { addRoom(type); setRoomMapOpen(true); setShowStartHint(false); setLeftOpen(false); setRightOpen(false); }}
+          onMove={moveRoom} onConnection={updateConnection} onNotice={setNotice} beginEdit={beginEdit} endEdit={endEdit} />}
         <RoomPlannerControls view={roomView} onView={next => {
           setLocked(false); setRoomView(next); setView(next === "top" ? "plan" : "perspective");
           setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: next === "top" ? "top" : next === "front" ? "front" : "fit" }));
         }} onZoom={navigateView} onRotate={navigateView}
+          windowBearing={exteriorWindowBearing(current)} ceiling={current.ceiling} lighting={current.lighting} onLightingChange={patch => updateRoom({ lighting: { ...current.lighting!, ...patch } })}
+          beginLightingEdit={beginEdit} endLightingEdit={endEdit}
+          onWindows={() => { endEdit(); setRoomDetailsTab("room"); setSelected(null); setSelectedOpening(null); setSelectedWall(null); setPlacementTemplate("window-panoramic"); setEnvironmentTab("openings"); setRightOpen(true); }}
+          onLightingSettings={() => { endEdit(); setRoomDetailsTab("room"); setPlacementTemplate(null); setEnvironmentTab("lighting"); setRightOpen(true); }}
           onRoom={() => { endEdit(); setPlacementTemplate(null); setRoomDetailsTab("room"); setEnvironmentTab("room"); setRightOpen(true); }}
-          onMaterials={() => { endEdit(); setPlacementTemplate(null); setEnvironmentTab("surfaces"); setRightOpen(true); }}
+          onMaterials={() => { endEdit(); setRoomDetailsTab("room"); setPlacementTemplate(null); setEnvironmentTab("surfaces"); setRightOpen(true); }}
           onHelp={() => setShowStartHint(value => !value)} dimensions={showDimensions} onDimensions={() => setShowDimensions(value => !value)}
           grid={gridEnabled} onGrid={() => setGridEnabled(value => !value)} snap={snapEnabled} onSnap={() => setSnapEnabled(value => !value)}
           locked={locked} onLock={() => setLocked(value => !value)} expanded={expanded} onExpand={() => setExpanded(value => !value)}/>
@@ -1090,7 +1085,12 @@ export function RoomPlanner() {
                 )}
               </>
             ) : (
-              <span>Хэмжих тавилга дээр дарна уу.</span>
+              (activePreset || localUrl) ? <span>Хэмжих тавилга дээр дарна уу.</span> : <>
+                <span>{current.roomName ?? "Өрөө"}</span>
+                <span>{formatMeasurement(current.width)} × {formatMeasurement(current.depth)} · үндсэн өргөн × урт</span>
+                <span>Таазны өндөр · {formatMeasurement(current.height ?? 2.7)}</span>
+                <span>Өрөө тус бүрийг ханын дагуу хэмжинэ. Тавилгын хэмжээг харах бол дээр нь дарна уу.</span>
+              </>
             )}
           </div>
         )}
@@ -1188,8 +1188,9 @@ export function RoomPlanner() {
 
         <div className="planner-canvas h-full w-full pt-10 xl:pt-0">
           <RoomCanvas
-            key={`${current.id}-${current.activeRoomId ?? "room"}`}
+            key={current.id}
             design={current}
+            onSelectRoom={id => { selectRoom(id); setSelected(null); setSelectedOpening(null); setSelectedWall(null); setPlacementTemplate(null); }}
             selected={selected}
             onSelect={(id) => {
               setSelected(id);
@@ -1343,6 +1344,12 @@ export function RoomPlanner() {
               onAddOpening={addOpening}
               onUpdateOpening={changeOpening}
               onUpdate={(patch) => {
+                if(patch.ceiling || patch.lighting?.fixtures){
+                  const next=syncDesignRooms({...current,...patch});
+                  if(layoutClearanceIssue(current,next)){
+                    setNotice("Тааз эсвэл гэрэл тавилгатай тулж байна. Уналт, унжих уртыг багасгах эсвэл тавилгыг зөөнө үү.");return;
+                  }
+                }
                 updateRoom(patch);
                 setShowStartHint(false);
                 setActivePreset(null);
@@ -1480,7 +1487,7 @@ export function RoomPlanner() {
                     addRoom(newRoomType);
                     setLeftOpen(false);
                     setRightOpen(false);
-                    setShowRoomGeometry(true);
+                    setRoomMapOpen(true);
                   }}
                 >
                   <Plus size={16} /> Нэмэх

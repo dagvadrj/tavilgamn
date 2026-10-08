@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tavilga.mn · Олон Өрөө Төлөвлөгч (Multi-Room Snapping & Auto Door)</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-main: #0c1017;
+      --bg-panel: rgba(18, 24, 38, 0.88);
+      --bg-surface: #151d2d;
+      --bg-card: #1c273c;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: #10b981;
+      
+      --text-title: #f8fafc;
+      --text-body: #94a3b8;
+      --text-muted: #64748b;
+      
+      --brand: #10b981;
+      --brand-glow: rgba(16, 185, 129, 0.35);
+      --cyan-glow: rgba(6, 182, 212, 0.35);
+      --accent-warm: #d97706;
+      --accent-wood: #c49a6c;
+      --wall-color: #334155;
+      
+      --snap-cyan: #06b6d4;
+      --snap-emerald: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-title);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==========================================================================
+       TOP APP HEADER
+       ========================================================================== */
+    header {
+      height: 60px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 50;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 17px;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    .logo-badge svg {
+      color: var(--brand);
+    }
+
+    .feature-tag {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .top-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .view-toggle {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      padding: 3px;
+    }
+
+    .view-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-body);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .view-btn.active {
+      background: #2563eb;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+    }
+
+    .view-btn:hover:not(.active) {
+      color: #fff;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #23314d;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-color: transparent;
+      box-shadow: 0 4px 14px var(--brand-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+    }
+
+    .btn-concept {
+      background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+      border-color: transparent;
+    }
+
+    /* ==========================================================================
+       MAIN WORKSPACE LAYOUT
+       ========================================================================== */
+    .workspace {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Interactive Canvas Area */
+    .viewport-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 50%, #111726 0%, #080c13 100%);
+      cursor: grab;
+    }
+
+    .viewport-container:active {
+      cursor: grabbing;
+    }
+
+    /* Grid pattern background */
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+      pointer-events: none;
+    }
+
+    .grid-major {
+      position: absolute;
+      inset: 0;
+      background-size: 200px 200px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      pointer-events: none;
+    }
+
+    /* Floating Snap Banner */
+    .snap-toast {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      opacity: 0;
+      visibility: hidden;
+      background: rgba(16, 185, 129, 0.95);
+      backdrop-filter: blur(12px);
+      color: #032b1f;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 10px 22px;
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 40;
+      pointer-events: none;
+    }
+
+    .snap-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Bottom HUD Instructions */
+    .canvas-hud {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 13px;
+      z-index: 30;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .hud-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-body);
+    }
+
+    .hud-item strong {
+      color: #fff;
+    }
+
+    .hud-pill {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    /* RIGHT INSPECTOR PANEL */
+    .inspector-panel {
+      width: 380px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 40;
+      overflow-y: auto;
+    }
+
+    .panel-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-header h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .panel-header p {
+      font-size: 12px;
+      color: var(--text-body);
+    }
+
+    .section-box {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .room-list-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .room-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .room-card:hover {
+      background: var(--bg-card);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .room-card.selected {
+      border-color: var(--brand);
+      background: rgba(16, 185, 129, 0.06);
+      box-shadow: 0 0 0 1px var(--brand);
+    }
+
+    .room-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .room-card-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .room-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    .room-card-meta {
+      font-size: 12px;
+      color: var(--text-body);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .connected-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.12);
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    /* Auto Doorway Settings Section */
+    .door-type-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .door-option-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-body);
+    }
+
+    .door-option-btn:hover {
+      background: var(--bg-card);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .door-option-btn.active {
+      border-color: #06b6d4;
+      background: rgba(6, 182, 212, 0.12);
+      color: #fff;
+      box-shadow: 0 0 0 1px #06b6d4;
+    }
+
+    .door-option-icon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .door-option-label {
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .door-option-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Total Stats */
+    .total-banner {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .stat-lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* ==========================================================================
+       MODAL: 3D CONCEPT PHOTO
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      padding: 20px;
+    }
+
+    .modal-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      max-width: 1080px;
+      width: 100%;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+      transform: scale(0.95);
+      transition: transform 0.3s;
+    }
+
+    .modal-backdrop.active .modal-content {
+      transform: scale(1);
+    }
+
+    .modal-head {
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-head h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-img-wrap {
+      width: 100%;
+      max-height: 580px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #000;
+    }
+
+    .modal-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* ==========================================================================
+       CANVAS ELEMENTS SVG STYLING
+       ========================================================================== */
+    svg#floorplan {
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+    }
+
+    svg#floorplan:active {
+      cursor: grabbing;
+    }
+
+    .room-group {
+      cursor: move;
+      transition: filter 0.2s;
+    }
+
+    .room-group:hover .room-floor {
+      filter: brightness(1.08);
+    }
+
+    .room-group.active-drag .room-floor {
+      filter: brightness(1.15);
+    }
+
+    /* Magnetic Snap Guide Line */
+    .snap-line {
+      stroke: #06b6d4;
+      stroke-width: 4;
+      stroke-dasharray: 8 6;
+      filter: drop-shadow(0 0 8px #06b6d4);
+      animation: dash 1s linear infinite;
+    }
+
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -14;
+      }
+    }
+
+    .doorway-highlight {
+      stroke: #10b981;
+      stroke-width: 6;
+      filter: drop-shadow(0 0 10px #10b981);
+    }
+
+    .door-arc {
+      stroke: #10b981;
+      stroke-width: 2.5;
+      stroke-dasharray: 4 4;
+      fill: none;
+    }
+
+    .door-leaf {
+      stroke: #10b981;
+      stroke-width: 4;
+    }
+
+    /* Floating Snap Badge in SVG */
+    .snap-badge-svg {
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP APP HEADER -->
+  <header>
+    <div class="brand-section">
+      <div class="logo-badge">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span>tavilga.mn</span>
+      </div>
+      <div class="feature-tag">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        Multi-Room Engine v2.0
+      </div>
+    </div>
+
+    <!-- Center Mode Switch -->
+    <div class="top-toolbar">
+      <div class="view-toggle">
+        <button class="view-btn active" id="btn2D" onclick="setViewMode('2d')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+            <path d="M3 9h18"></path>
+            <path d="M9 21V9"></path>
+          </svg>
+          2D Төлөвлөлт (Plan)
+        </button>
+        <button class="view-btn" id="btn3D" onclick="setViewMode('3d')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m21.12 6.4-6.05-4.06a2 2 0 0 0-2.17-.05L2.95 8.41a2 2 0 0 0-.95 1.7v5.82a2 2 0 0 0 .98 1.72l9.95 6.07a2 2 0 0 0 2.07 0l6.12-3.82a2 2 0 0 0 .96-1.71V8.12a2 2 0 0 0-.86-1.72z"></path>
+          </svg>
+          3D Перспектив (Isometric)
+        </button>
+      </div>
+
+      <button class="btn" onclick="toggleSnap()" id="btnSnapToggle">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m19 12-7 7-7-7"></path>
+          <path d="M12 19V5"></path>
+        </svg>
+        Соронзлох: <span id="snapStatusTxt" style="color:#10b981; margin-left:4px;">Асаалттай</span>
+      </button>
+
+      <button class="btn" onclick="addNewRoom()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        + Өрөө нэмэх
+      </button>
+    </div>
+
+    <!-- Right Concept Button -->
+    <div class="top-actions">
+      <button class="btn btn-concept" onclick="openConceptModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polygon points="12 8 8 12 12 16 16 12 12 8"></polygon>
+        </svg>
+        3D Рендер Концепт Үзэх
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="workspace">
+    <!-- Viewport Container -->
+    <div class="viewport-container" id="viewport">
+      <div class="grid-overlay"></div>
+      <div class="grid-major"></div>
+
+      <!-- Magnetic Snap Notification Banner -->
+      <div class="snap-toast" id="snapToast">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span id="snapToastMsg">Хоёр өрөө соронзлогдож автоматаар хаалга үүслээ!</span>
+      </div>
+
+      <!-- Interactive SVG Floorplan Canvas -->
+      <svg id="floorplan" viewBox="0 0 1600 1000">
+        <defs>
+          <!-- Parquet Pattern for Living Room -->
+          <pattern id="pat-wood" width="30" height="15" patternUnits="userSpaceOnUse">
+            <rect width="30" height="15" fill="#3d2a1d"/>
+            <rect x="0" y="0" width="14" height="6.5" fill="#523927" stroke="#2c1e14" stroke-width="0.5"/>
+            <rect x="15" y="0" width="14" height="6.5" fill="#473121" stroke="#2c1e14" stroke-width="0.5"/>
+            <rect x="7" y="7.5" width="14" height="6.5" fill="#5a3f2b" stroke="#2c1e14" stroke-width="0.5"/>
+          </pattern>
+
+          <!-- Tiles Pattern for Kitchen -->
+          <pattern id="pat-tile" width="40" height="40" patternUnits="userSpaceOnUse">
+            <rect width="40" height="40" fill="#242c3d"/>
+            <rect x="2" y="2" width="36" height="36" fill="#2f3b52" rx="2"/>
+            <line x1="0" y1="40" x2="40" y2="40" stroke="#181f2c" stroke-width="2"/>
+            <line x1="40" y1="0" x2="40" y2="40" stroke="#181f2c" stroke-width="2"/>
+          </pattern>
+
+          <!-- Light Oak Parquet Pattern for Bedroom -->
+          <pattern id="pat-oak" width="24" height="12" patternUnits="userSpaceOnUse">
+            <rect width="24" height="12" fill="#4a3828"/>
+            <rect x="0" y="0" width="22" height="5.5" fill="#664d37" stroke="#3b2b1d" stroke-width="0.5"/>
+            <rect x="2" y="6" width="22" height="5.5" fill="#5c4531" stroke="#3b2b1d" stroke-width="0.5"/>
+          </pattern>
+
+          <!-- Marble Pattern for Bathroom -->
+          <pattern id="pat-marble" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="#1e293b"/>
+            <rect x="1" y="1" width="28" height="28" fill="#334155" rx="1"/>
+          </pattern>
+        </defs>
+
+        <!-- Dynamic Group Container for Rooms & Guides -->
+        <g id="worldLayer">
+          <!-- Snap Connection Guidelines -->
+          <g id="snapGuidesLayer"></g>
+
+          <!-- Rooms -->
+          <g id="roomsLayer"></g>
+
+          <!-- Shared Auto-Generated Doorways -->
+          <g id="doorsLayer"></g>
+
+          <!-- Dimensions & Labels Layer -->
+          <g id="labelsLayer"></g>
+        </g>
+      </svg>
+
+      <!-- Bottom HUD -->
+      <div class="canvas-hud">
+        <div class="hud-item">
+          <span class="hud-pill">Хулгана</span>
+          <span>Өрөөг чирч зөөнө</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-pill" style="background:rgba(6,182,212,0.2); color:#22d3ee;">Соронз</span>
+          <span>Хана хооронд ойртоход автоматаар наалдана</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-pill" style="background:rgba(16,185,129,0.2); color:#34d399;">Авто-Хаалга</span>
+          <span>Нийтлэг ханан дээр хаалга шууд үүснэ</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT INSPECTOR PANEL -->
+    <div class="inspector-panel">
+      <div class="panel-header">
+        <h2>Өрөө ба Холболтын Удирдлага</h2>
+        <p>Өрөөг чөлөөтэй зөөж, байрлуулан хаалга үүсгэх тохиргоо</p>
+      </div>
+
+      <!-- Active Selection Section -->
+      <div class="section-box">
+        <div class="section-title">
+          <span>Сонгосон Өрөө</span>
+          <span id="selectedRoomBadge" style="color:var(--brand); font-weight:700;">Зочны өрөө</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div style="background:var(--bg-surface); padding:10px; border-radius:10px; border:1px solid var(--border);">
+              <div style="font-size:11px; color:var(--text-muted);">Өргөн (Width)</div>
+              <div style="font-size:16px; font-weight:700; color:#fff;" id="roomWidthTxt">5.20 м</div>
+            </div>
+            <div style="background:var(--bg-surface); padding:10px; border-radius:10px; border:1px solid var(--border);">
+              <div style="font-size:11px; color:var(--text-muted);">Урт (Depth)</div>
+              <div style="font-size:16px; font-weight:700; color:#fff;" id="roomDepthTxt">4.00 м</div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button class="btn" style="flex:1; justify-content:center;" onclick="rotateSelectedRoom()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+                <path d="M21 3v5h-5"></path>
+              </svg>
+              90° Эргүүлэх
+            </button>
+            <button class="btn" style="flex:1; justify-content:center; color:#f87171;" onclick="detachSelectedRoom()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m15 15 6 6m0-6-6 6"></path>
+                <path d="M4 14a4 4 0 0 1 0-8h4"></path>
+                <path d="M12 6h4a4 4 0 0 1 4 4"></path>
+              </svg>
+              Салгах
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auto Doorway Types -->
+      <div class="section-box">
+        <div class="section-title">
+          <span>Холболтын Хаалганы Төрөл</span>
+          <span style="font-size:11px; color:#06b6d4;">Автомат</span>
+        </div>
+
+        <p style="font-size:12px; color:var(--text-body); margin-bottom:10px;">
+          Хоёр өрөө соронзлогдон нийлэх үед нийтлэг ханан дээр автоматаар үүсэх хаалганы хэлбэр:
+        </p>
+
+        <div class="door-type-options">
+          <div class="door-option-btn active" onclick="setDoorType('single', this)">
+            <div class="door-option-icon">🚪</div>
+            <div class="door-option-label">Нэг хаалга</div>
+            <div class="door-option-sub">Өргөн: 90 см</div>
+          </div>
+          <div class="door-option-btn" onclick="setDoorType('double', this)">
+            <div class="door-option-icon">🚪🚪</div>
+            <div class="door-option-label">Хос хаалга</div>
+            <div class="door-option-sub">Өргөн: 140 см</div>
+          </div>
+          <div class="door-option-btn" onclick="setDoorType('arch', this)">
+            <div class="door-option-icon">⛩️</div>
+            <div class="door-option-label">Нуман хаалга</div>
+            <div class="door-option-sub">Задгай / 120 см</div>
+          </div>
+          <div class="door-option-btn" onclick="setDoorType('open', this)">
+            <div class="door-option-icon">✨</div>
+            <div class="door-option-label">Нээлттэй (Studio)</div>
+            <div class="door-option-sub">Хана нурааж нэгтгэх</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current Room List -->
+      <div class="section-box" style="flex:1;">
+        <div class="section-title">
+          <span>Нийт Өрөөнүүд (<span id="roomCountTxt">3</span>)</span>
+        </div>
+
+        <div class="room-list-cards" id="roomCardsList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Total Stats -->
+      <div class="section-box" style="padding:16px 20px;">
+        <div class="total-banner">
+          <div>
+            <div class="stat-val" id="totalAreaTxt">64.5 м²</div>
+            <div class="stat-lbl">Нийт Төлөвлөлтийн Талбай</div>
+          </div>
+          <div style="border-left:1px solid rgba(255,255,255,0.1); padding-left:16px;">
+            <div class="stat-val" id="connectionsCountTxt" style="color:#10b981;">1</div>
+            <div class="stat-lbl">Холбогдсон Хаалга</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HIGH-RES 3D CONCEPT PHOTO -->
+  <div class="modal-backdrop" id="conceptModal" onclick="closeConceptModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <h3>3D Multi-Room Snapping & Auto-Doorway Архитектур Концепт</h3>
+        <button class="modal-close" onclick="closeConceptModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-img-wrap">
+          <img src="multi_room_snap.jpg" alt="3D Multi-room snapping and auto doorway concept render">
+        </div>
+        <div style="background:var(--bg-card); padding:16px; border-radius:12px; font-size:13px; line-height:1.6; color:#cbd5e1;">
+          <strong style="color:#fff;">Системийн Архитектур (How it works):</strong>
+          <ul style="margin-left:18px; margin-top:6px; display:flex; flex-direction:column; gap:4px;">
+            <li><strong>1. World Coordinates:</strong> Өрөө бүр өөрийн <code style="color:#38bdf8;">(x, z, rotation)</code> дэлхийн солбицолтой болно.</li>
+            <li><strong>2. Magnetic Snapping:</strong> Өрөөг чирэх явцад зэргэлдээ хана хоорондын зай 30 см-ээс бага болоход хана ханандаа соронзлогдон зэрэгцэнэ.</li>
+            <li><strong>3. Auto Doorway CSG:</strong> Зэрэгцсэн нийтлэг хананд Three.js CSG ашиглан хоёр ханыг нэгэн зэрэг нэвт онгойлгох хаалганы хөндий (Cutout) үүсгэнэ.</li>
+            <li><strong>4. Real-time BOM:</strong> Өрөөнүүд нэгдсэнээр нийт талбай болон материалын тооцоо автоматаар нэгдэнэ.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       ROOM DATA & STATE
+       ========================================================================== */
+    const SCALE = 50; // 1 meter = 50 pixels in 2D view
+    const SNAP_THRESHOLD = 35; // Pixels distance to trigger magnetic snap
+
+    let snapEnabled = true;
+    let selectedRoomId = 'room-1';
+    let currentDoorType = 'single'; // 'single' | 'double' | 'arch' | 'open'
+    let viewMode = '2d'; // '2d' | '3d'
+
+    // Rooms List
+    let rooms = [
+      {
+        id: 'room-1',
+        name: 'Зочны өрөө (Living)',
+        type: 'living',
+        width: 5.2, // meters
+        depth: 4.0,
+        x: 350, // pixel position
+        y: 280,
+        rotation: 0,
+        color: '#c49a6c',
+        pattern: 'pat-wood',
+        furniture: [
+          { type: 'sofa', x: 0.5, y: 0.5, w: 2.2, h: 0.9, label: 'Буйдан' },
+          { type: 'tv', x: 0.5, y: 3.5, w: 1.8, h: 0.4, label: 'ТВ Тавиур' }
+        ]
+      },
+      {
+        id: 'room-2',
+        name: 'Гал тогоо (Kitchen)',
+        type: 'kitchen',
+        width: 3.8,
+        depth: 4.0,
+        x: 610, // 350 + 5.2*50 = 610 (Snapped to right wall of living room)
+        y: 280,
+        rotation: 0,
+        color: '#64748b',
+        pattern: 'pat-tile',
+        furniture: [
+          { type: 'kitchen-counter', x: 0.2, y: 0.2, w: 3.4, h: 0.6, label: 'Гарнитур' },
+          { type: 'island', x: 1.2, y: 1.6, w: 1.4, h: 0.8, label: 'Арал' }
+        ]
+      },
+      {
+        id: 'room-3',
+        name: 'Унтлагын өрөө (Bedroom)',
+        type: 'bedroom',
+        width: 4.0,
+        depth: 3.5,
+        x: 350,
+        y: 520, // Offset placed nearby
+        rotation: 0,
+        color: '#e2e8f0',
+        pattern: 'pat-oak',
+        furniture: [
+          { type: 'bed', x: 0.8, y: 0.8, w: 1.8, h: 2.0, label: 'Ор' }
+        ]
+      }
+    ];
+
+    // Auto-detected connections
+    let connections = [];
+
+    /* ==========================================================================
+       DRAG & DROP PHYSICS WITH MAGNETIC SNAPPING
+       ========================================================================== */
+    let isDragging = false;
+    let dragRoom = null;
+    let dragStartPos = { x: 0, y: 0 };
+    let roomStartPos = { x: 0, y: 0 };
+    let activeSnapLine = null;
+
+    const svg = document.getElementById('floorplan');
+
+    function getSvgCoordinates(event) {
+      const pt = svg.createSVGPoint();
+      pt.x = event.clientX;
+      pt.y = event.clientY;
+      return pt.matrixTransform(svg.getScreenCTM().inverse());
+    }
+
+    function initInteractions() {
+      svg.addEventListener('mousedown', onPointerDown);
+      window.addEventListener('mousemove', onPointerMove);
+      window.addEventListener('mouseup', onPointerUp);
+
+      // Touch events
+      svg.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) onPointerDown(e.touches[0]);
+      });
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1) onPointerMove(e.touches[0]);
+      });
+      window.addEventListener('touchend', onPointerUp);
+    }
+
+    function onPointerDown(e) {
+      const coords = getSvgCoordinates(e);
+      // Find clicked room
+      for (let i = rooms.length - 1; i >= 0; i--) {
+        const r = rooms[i];
+        const rw = r.width * SCALE;
+        const rh = r.depth * SCALE;
+        if (coords.x >= r.x && coords.x <= r.x + rw &&
+            coords.y >= r.y && coords.y <= r.y + rh) {
+          isDragging = true;
+          dragRoom = r;
+          selectedRoomId = r.id;
+          dragStartPos = { x: coords.x, y: coords.y };
+          roomStartPos = { x: r.x, y: r.y };
+          updateInspector();
+          render();
+          return;
+        }
+      }
+    }
+
+    function onPointerMove(e) {
+      if (!isDragging || !dragRoom) return;
+      const coords = getSvgCoordinates(e);
+      const dx = coords.x - dragStartPos.x;
+      const dy = coords.y - dragStartPos.y;
+
+      let targetX = roomStartPos.x + dx;
+      let targetY = roomStartPos.y + dy;
+
+      activeSnapLine = null;
+
+      if (snapEnabled) {
+        const rW = dragRoom.width * SCALE;
+        const rH = dragRoom.depth * SCALE;
+
+        // Check snapping against all other rooms
+        for (const other of rooms) {
+          if (other.id === dragRoom.id) continue;
+
+          const oW = other.width * SCALE;
+          const oH = other.depth * SCALE;
+
+          // 1. Snapping: dragRoom Left wall to other Right wall
+          if (Math.abs(targetX - (other.x + oW)) < SNAP_THRESHOLD) {
+            // Check Y overlap
+            const overlapYStart = Math.max(targetY, other.y);
+            const overlapYEnd = Math.min(targetY + rH, other.y + oH);
+            if (overlapYEnd - overlapYStart > 30) {
+              targetX = other.x + oW;
+              // Snap Y if corners are close
+              if (Math.abs(targetY - other.y) < 20) targetY = other.y;
+              else if (Math.abs((targetY + rH) - (other.y + oH)) < 20) targetY = other.y + oH - rH;
+              
+              activeSnapLine = {
+                x1: targetX, y1: overlapYStart,
+                x2: targetX, y2: overlapYEnd,
+                side: 'vertical',
+                roomA: other, roomB: dragRoom
+              };
+              break;
+            }
+          }
+
+          // 2. Snapping: dragRoom Right wall to other Left wall
+          if (Math.abs((targetX + rW) - other.x) < SNAP_THRESHOLD) {
+            const overlapYStart = Math.max(targetY, other.y);
+            const overlapYEnd = Math.min(targetY + rH, other.y + oH);
+            if (overlapYEnd - overlapYStart > 30) {
+              targetX = other.x - rW;
+              if (Math.abs(targetY - other.y) < 20) targetY = other.y;
+              else if (Math.abs((targetY + rH) - (other.y + oH)) < 20) targetY = other.y + oH - rH;
+
+              activeSnapLine = {
+                x1: targetX + rW, y1: overlapYStart,
+                x2: targetX + rW, y2: overlapYEnd,
+                side: 'vertical',
+                roomA: dragRoom, roomB: other
+              };
+              break;
+            }
+          }
+
+          // 3. Snapping: dragRoom Top wall to other Bottom wall
+          if (Math.abs(targetY - (other.y + oH)) < SNAP_THRESHOLD) {
+            const overlapXStart = Math.max(targetX, other.x);
+            const overlapXEnd = Math.min(targetX + rW, other.x + oW);
+            if (overlapXEnd - overlapXStart > 30) {
+              targetY = other.y + oH;
+              if (Math.abs(targetX - other.x) < 20) targetX = other.x;
+              else if (Math.abs((targetX + rW) - (other.x + oW)) < 20) targetX = other.x + oW - rW;
+
+              activeSnapLine = {
+                x1: overlapXStart, y1: targetY,
+                x2: overlapXEnd, y2: targetY,
+                side: 'horizontal',
+                roomA: other, roomB: dragRoom
+              };
+              break;
+            }
+          }
+
+          // 4. Snapping: dragRoom Bottom wall to other Top wall
+          if (Math.abs((targetY + rH) - other.y) < SNAP_THRESHOLD) {
+            const overlapXStart = Math.max(targetX, other.x);
+            const overlapXEnd = Math.min(targetX + rW, other.x + oW);
+            if (overlapXEnd - overlapXStart > 30) {
+              targetY = other.y - rH;
+              if (Math.abs(targetX - other.x) < 20) targetX = other.x;
+              else if (Math.abs((targetX + rW) - (other.x + oW)) < 20) targetX = other.x + oW - rW;
+
+              activeSnapLine = {
+                x1: overlapXStart, y1: targetY + rH,
+                x2: overlapXEnd, y2: targetY + rH,
+                side: 'horizontal',
+                roomA: dragRoom, roomB: other
+              };
+              break;
+            }
+          }
+        }
+      }
+
+      dragRoom.x = targetX;
+      dragRoom.y = targetY;
+
+      detectConnections();
+      render();
+    }
+
+    function onPointerUp() {
+      if (isDragging && activeSnapLine) {
+        showSnapNotification(`✨ ${activeSnapLine.roomA.name.split(' ')[0]} ба ${activeSnapLine.roomB.name.split(' ')[0]} өрөөнүүд соронзлогдож авто-хаалга үүслээ!`);
+      }
+      isDragging = false;
+      dragRoom = null;
+      activeSnapLine = null;
+      detectConnections();
+      render();
+      updateInspector();
+    }
+
+    /* ==========================================================================
+       CONNECTION & AUTO-DOORWAY DETECTION
+       ========================================================================== */
+    function detectConnections() {
+      connections = [];
+
+      for (let i = 0; i < rooms.length; i++) {
+        for (let j = i + 1; j < rooms.length; j++) {
+          const rA = rooms[i];
+          const rB = rooms[j];
+
+          const wA = rA.width * SCALE;
+          const hA = rA.depth * SCALE;
+          const wB = rB.width * SCALE;
+          const hB = rB.depth * SCALE;
+
+          // Check Vertical touch: rA right wall touches rB left wall
+          if (Math.abs((rA.x + wA) - rB.x) < 2) {
+            const startY = Math.max(rA.y, rB.y);
+            const endY = Math.min(rA.y + hA, rB.y + hB);
+            const overlap = endY - startY;
+            if (overlap >= 45) { // At least 0.9m
+              connections.push({
+                roomA: rA,
+                roomB: rB,
+                type: currentDoorType,
+                orientation: 'vertical',
+                x: rA.x + wA,
+                y: startY + overlap / 2,
+                length: overlap
+              });
+            }
+          }
+          // rB right wall touches rA left wall
+          else if (Math.abs((rB.x + wB) - rA.x) < 2) {
+            const startY = Math.max(rA.y, rB.y);
+            const endY = Math.min(rA.y + hA, rB.y + hB);
+            const overlap = endY - startY;
+            if (overlap >= 45) {
+              connections.push({
+                roomA: rB,
+                roomB: rA,
+                type: currentDoorType,
+                orientation: 'vertical',
+                x: rB.x + wB,
+                y: startY + overlap / 2,
+                length: overlap
+              });
+            }
+          }
+
+          // Check Horizontal touch: rA bottom touches rB top
+          if (Math.abs((rA.y + hA) - rB.y) < 2) {
+            const startX = Math.max(rA.x, rB.x);
+            const endX = Math.min(rA.x + wA, rB.x + wB);
+            const overlap = endX - startX;
+            if (overlap >= 45) {
+              connections.push({
+                roomA: rA,
+                roomB: rB,
+                type: currentDoorType,
+                orientation: 'horizontal',
+                x: startX + overlap / 2,
+                y: rA.y + hA,
+                length: overlap
+              });
+            }
+          }
+          // rB bottom touches rA top
+          else if (Math.abs((rB.y + hB) - rA.y) < 2) {
+            const startX = Math.max(rA.x, rB.x);
+            const endX = Math.min(rA.x + wA, rB.x + wB);
+            const overlap = endX - startX;
+            if (overlap >= 45) {
+              connections.push({
+                roomA: rB,
+                roomB: rA,
+                type: currentDoorType,
+                orientation: 'horizontal',
+                x: startX + overlap / 2,
+                y: rB.y + hB,
+                length: overlap
+              });
+            }
+          }
+        }
+      }
+    }
+
+    /* ==========================================================================
+       SVG RENDERING (2D & 3D ISOMETRIC PROJECTION)
+       ========================================================================== */
+    function render() {
+      const roomsLayer = document.getElementById('roomsLayer');
+      const doorsLayer = document.getElementById('doorsLayer');
+      const snapLayer = document.getElementById('snapGuidesLayer');
+      const labelsLayer = document.getElementById('labelsLayer');
+
+      roomsLayer.innerHTML = '';
+      doorsLayer.innerHTML = '';
+      snapLayer.innerHTML = '';
+      labelsLayer.innerHTML = '';
+
+      // 1. Render Snap Guidelines if active
+      if (activeSnapLine) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', activeSnapLine.x1);
+        line.setAttribute('y1', activeSnapLine.y1);
+        line.setAttribute('x2', activeSnapLine.x2);
+        line.setAttribute('y2', activeSnapLine.y2);
+        line.setAttribute('class', 'snap-line');
+        snapLayer.appendChild(line);
+
+        // Center indicator dot
+        const cx = (activeSnapLine.x1 + activeSnapLine.x2) / 2;
+        const cy = (activeSnapLine.y1 + activeSnapLine.y2) / 2;
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', cy);
+        circle.setAttribute('r', '8');
+        circle.setAttribute('fill', '#06b6d4');
+        circle.setAttribute('filter', 'drop-shadow(0 0 10px #06b6d4)');
+        snapLayer.appendChild(circle);
+      }
+
+      // 2. Render Rooms
+      rooms.forEach((room) => {
+        const isSelected = room.id === selectedRoomId;
+        const rw = room.width * SCALE;
+        const rh = room.depth * SCALE;
+
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.setAttribute('class', `room-group ${isSelected ? 'active-drag' : ''}`);
+
+        // Floor Polygon/Rect
+        const floor = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        floor.setAttribute('x', room.x);
+        floor.setAttribute('y', room.y);
+        floor.setAttribute('width', rw);
+        floor.setAttribute('height', rh);
+        floor.setAttribute('rx', '4');
+        floor.setAttribute('fill', `url(#${room.pattern})`);
+        floor.setAttribute('class', 'room-floor');
+        floor.setAttribute('stroke', isSelected ? '#10b981' : '#334155');
+        floor.setAttribute('stroke-width', isSelected ? '4' : '3');
+        if (isSelected) {
+          floor.setAttribute('filter', 'drop-shadow(0 0 12px rgba(16, 185, 129, 0.4))');
+        }
+        g.appendChild(floor);
+
+        // Furniture items
+        room.furniture.forEach((f) => {
+          const fx = room.x + f.x * SCALE;
+          const fy = room.y + f.y * SCALE;
+          const fw = f.w * SCALE;
+          const fh = f.h * SCALE;
+
+          const furnRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          furnRect.setAttribute('x', fx);
+          furnRect.setAttribute('y', fy);
+          furnRect.setAttribute('width', fw);
+          furnRect.setAttribute('height', fh);
+          furnRect.setAttribute('rx', '4');
+          furnRect.setAttribute('fill', 'rgba(255, 255, 255, 0.12)');
+          furnRect.setAttribute('stroke', 'rgba(255, 255, 255, 0.3)');
+          furnRect.setAttribute('stroke-width', '1.5');
+          g.appendChild(furnRect);
+
+          const furnText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          furnText.setAttribute('x', fx + fw / 2);
+          furnText.setAttribute('y', fy + fh / 2 + 4);
+          furnText.setAttribute('text-anchor', 'middle');
+          furnText.setAttribute('font-size', '10');
+          furnText.setAttribute('font-weight', '600');
+          furnText.setAttribute('fill', '#e2e8f0');
+          furnText.textContent = f.label;
+          g.appendChild(furnText);
+        });
+
+        // Room Center Label
+        const labelG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        const bgLabel = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bgLabel.setAttribute('x', room.x + rw / 2 - 65);
+        bgLabel.setAttribute('y', room.y + rh / 2 - 20);
+        bgLabel.setAttribute('width', '130');
+        bgLabel.setAttribute('height', '40');
+        bgLabel.setAttribute('rx', '8');
+        bgLabel.setAttribute('fill', 'rgba(15, 23, 42, 0.85)');
+        bgLabel.setAttribute('stroke', isSelected ? '#10b981' : 'rgba(255,255,255,0.15)');
+        bgLabel.setAttribute('stroke-width', '1');
+        labelG.appendChild(bgLabel);
+
+        const txtTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txtTitle.setAttribute('x', room.x + rw / 2);
+        txtTitle.setAttribute('y', room.y + rh / 2 - 4);
+        txtTitle.setAttribute('text-anchor', 'middle');
+        txtTitle.setAttribute('font-size', '12');
+        txtTitle.setAttribute('font-weight', '700');
+        txtTitle.setAttribute('fill', '#fff');
+        txtTitle.textContent = room.name.split(' ')[0];
+        labelG.appendChild(txtTitle);
+
+        const txtSub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txtSub.setAttribute('x', room.x + rw / 2);
+        txtSub.setAttribute('y', room.y + rh / 2 + 12);
+        txtSub.setAttribute('text-anchor', 'middle');
+        txtSub.setAttribute('font-size', '11');
+        txtSub.setAttribute('fill', '#94a3b8');
+        txtSub.textContent = `${(room.width * room.depth).toFixed(1)} м² · ${room.width}×${room.depth}м`;
+        labelG.appendChild(txtSub);
+
+        labelsLayer.appendChild(labelG);
+        roomsLayer.appendChild(g);
+      });
+
+      // 3. Render Auto-Generated Doors
+      connections.forEach((conn, index) => {
+        const doorG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        doorG.setAttribute('class', 'door-connection');
+
+        const doorWidthPx = 45; // ~90 cm width
+
+        if (conn.type === 'open') {
+          // Open studio concept: cutout line with dashed opening
+          const openLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          if (conn.orientation === 'vertical') {
+            openLine.setAttribute('x1', conn.x);
+            openLine.setAttribute('y1', conn.y - doorWidthPx);
+            openLine.setAttribute('x2', conn.x);
+            openLine.setAttribute('y2', conn.y + doorWidthPx);
+          } else {
+            openLine.setAttribute('x1', conn.x - doorWidthPx);
+            openLine.setAttribute('y1', conn.y);
+            openLine.setAttribute('x2', conn.x + doorWidthPx);
+            openLine.setAttribute('y2', conn.y);
+          }
+          openLine.setAttribute('stroke', '#0c1017');
+          openLine.setAttribute('stroke-width', '8');
+          doorG.appendChild(openLine);
+
+          // Studio dashed opening tag
+          const dashLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          dashLine.setAttribute('stroke', '#10b981');
+          dashLine.setAttribute('stroke-width', '2');
+          dashLine.setAttribute('stroke-dasharray', '4 4');
+          if (conn.orientation === 'vertical') {
+            dashLine.setAttribute('x1', conn.x);
+            dashLine.setAttribute('y1', conn.y - doorWidthPx);
+            dashLine.setAttribute('x2', conn.x);
+            dashLine.setAttribute('y2', conn.y + doorWidthPx);
+          } else {
+            dashLine.setAttribute('x1', conn.x - doorWidthPx);
+            dashLine.setAttribute('y1', conn.y);
+            dashLine.setAttribute('x2', conn.x + doorWidthPx);
+            dashLine.setAttribute('y2', conn.y);
+          }
+          doorG.appendChild(dashLine);
+        } else {
+          // Standard / Double / Arch Door
+          // First, clear the wall seam with background color
+          const maskLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          if (conn.orientation === 'vertical') {
+            maskLine.setAttribute('x1', conn.x);
+            maskLine.setAttribute('y1', conn.y - doorWidthPx / 2);
+            maskLine.setAttribute('x2', conn.x);
+            maskLine.setAttribute('y2', conn.y + doorWidthPx / 2);
+          } else {
+            maskLine.setAttribute('x1', conn.x - doorWidthPx / 2);
+            maskLine.setAttribute('y1', conn.y);
+            maskLine.setAttribute('x2', conn.x + doorWidthPx / 2);
+            maskLine.setAttribute('y2', conn.y);
+          }
+          maskLine.setAttribute('stroke', '#0c1017');
+          maskLine.setAttribute('stroke-width', '8');
+          doorG.appendChild(maskLine);
+
+          // Door Frame jambs
+          const jambColor = '#10b981';
+
+          if (conn.orientation === 'vertical') {
+            // Door swing arc
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const startY = conn.y - doorWidthPx / 2;
+            const endY = conn.y + doorWidthPx / 2;
+            path.setAttribute('d', `M ${conn.x} ${startY} A ${doorWidthPx} ${doorWidthPx} 0 0 1 ${conn.x + doorWidthPx} ${endY}`);
+            path.setAttribute('class', 'door-arc');
+            doorG.appendChild(path);
+
+            // Door leaf (the door panel itself)
+            const leaf = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            leaf.setAttribute('x1', conn.x);
+            leaf.setAttribute('y1', startY);
+            leaf.setAttribute('x2', conn.x + doorWidthPx);
+            leaf.setAttribute('y2', endY);
+            leaf.setAttribute('class', 'door-leaf');
+            doorG.appendChild(leaf);
+          } else {
+            // Horizontal door arc
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const startX = conn.x - doorWidthPx / 2;
+            const endX = conn.x + doorWidthPx / 2;
+            path.setAttribute('d', `M ${startX} ${conn.y} A ${doorWidthPx} ${doorWidthPx} 0 0 1 ${endX} ${conn.y + doorWidthPx}`);
+            path.setAttribute('class', 'door-arc');
+            doorG.appendChild(path);
+
+            const leaf = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            leaf.setAttribute('x1', startX);
+            leaf.setAttribute('y1', conn.y);
+            leaf.setAttribute('x2', endX);
+            leaf.setAttribute('y2', conn.y + doorWidthPx);
+            leaf.setAttribute('class', 'door-leaf');
+            doorG.appendChild(leaf);
+          }
+
+          // Auto Door Tag Badge
+          const badgeG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          badgeG.setAttribute('class', 'snap-badge-svg');
+          const badgeBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          badgeBg.setAttribute('x', conn.x - 45);
+          badgeBg.setAttribute('y', conn.y - 12);
+          badgeBg.setAttribute('width', '90');
+          badgeBg.setAttribute('height', '24');
+          badgeBg.setAttribute('rx', '12');
+          badgeBg.setAttribute('fill', '#059669');
+          badgeBg.setAttribute('filter', 'drop-shadow(0 2px 8px rgba(16, 185, 129, 0.5))');
+          badgeG.appendChild(badgeBg);
+
+          const badgeTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          badgeTxt.setAttribute('x', conn.x);
+          badgeTxt.setAttribute('y', conn.y + 4);
+          badgeTxt.setAttribute('text-anchor', 'middle');
+          badgeTxt.setAttribute('font-size', '10');
+          badgeTxt.setAttribute('font-weight', '700');
+          badgeTxt.setAttribute('fill', '#fff');
+          badgeTxt.textContent = '✨ Хаалга: 90 см';
+          badgeG.appendChild(badgeTxt);
+
+          doorG.appendChild(badgeG);
+        }
+
+        doorsLayer.appendChild(doorG);
+      });
+    }
+
+    /* ==========================================================================
+       SIDEBAR & STATE CONTROLS
+       ========================================================================== */
+    function updateInspector() {
+      const selected = rooms.find(r => r.id === selectedRoomId) || rooms[0];
+      if (!selected) return;
+
+      document.getElementById('selectedRoomBadge').textContent = selected.name.split(' ')[0];
+      document.getElementById('roomWidthTxt').textContent = `${selected.width.toFixed(2)} м`;
+      document.getElementById('roomDepthTxt').textContent = `${selected.depth.toFixed(2)} м`;
+      document.getElementById('roomCountTxt').textContent = rooms.length;
+      document.getElementById('connectionsCountTxt').textContent = connections.length;
+
+      // Calculate Total Area
+      const totalArea = rooms.reduce((sum, r) => sum + (r.width * r.depth), 0);
+      document.getElementById('totalAreaTxt').textContent = `${totalArea.toFixed(1)} м²`;
+
+      // Render Room Cards
+      const listContainer = document.getElementById('roomCardsList');
+      listContainer.innerHTML = '';
+
+      rooms.forEach(r => {
+        const isConnected = connections.some(c => c.roomA.id === r.id || c.roomB.id === r.id);
+        const card = document.createElement('div');
+        card.className = `room-card ${r.id === selectedRoomId ? 'selected' : ''}`;
+        card.onclick = () => {
+          selectedRoomId = r.id;
+          updateInspector();
+          render();
+        };
+
+        card.innerHTML = `
+          <div class="room-card-head">
+            <div class="room-card-title">
+              <span class="room-indicator" style="background:${r.color};"></span>
+              ${r.name}
+            </div>
+            ${isConnected ? '<span class="connected-tag">✓ Холбогдсон</span>' : ''}
+          </div>
+          <div class="room-card-meta">
+            <span>${(r.width * r.depth).toFixed(1)} м²</span>
+            <span>·</span>
+            <span>${r.width} × ${r.depth} м</span>
+            <span>·</span>
+            <span>X: ${Math.round(r.x / 50 * 10) / 10}м, Y: ${Math.round(r.y / 50 * 10) / 10}м</span>
+          </div>
+        `;
+        listContainer.appendChild(card);
+      });
+    }
+
+    function rotateSelectedRoom() {
+      const room = rooms.find(r => r.id === selectedRoomId);
+      if (!room) return;
+      // Swap width and depth
+      const temp = room.width;
+      room.width = room.depth;
+      room.depth = temp;
+      detectConnections();
+      render();
+      updateInspector();
+    }
+
+    function detachSelectedRoom() {
+      const room = rooms.find(r => r.id === selectedRoomId);
+      if (!room) return;
+      // Move room by 60 pixels to detach from snap
+      room.x += 60;
+      room.y += 60;
+      detectConnections();
+      render();
+      updateInspector();
+      showSnapNotification('Өрөөг салгалаа.');
+    }
+
+    function setDoorType(type, btn) {
+      currentDoorType = type;
+      document.querySelectorAll('.door-option-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      detectConnections();
+      render();
+    }
+
+    function toggleSnap() {
+      snapEnabled = !snapEnabled;
+      const statusTxt = document.getElementById('snapStatusTxt');
+      if (snapEnabled) {
+        statusTxt.textContent = 'Асаалттай';
+        statusTxt.style.color = '#10b981';
+      } else {
+        statusTxt.textContent = 'Унтарсан';
+        statusTxt.style.color = '#f87171';
+      }
+    }
+
+    function addNewRoom() {
+      const types = [
+        { name: 'Унтлагын өрөө', type: 'bedroom', w: 4.2, d: 3.6, pat: 'pat-oak', col: '#e2e8f0' },
+        { name: 'Ариун цэврийн өрөө', type: 'bathroom', w: 2.6, d: 2.2, pat: 'pat-marble', col: '#93c5fd' },
+        { name: 'Ажлын өрөө', type: 'office', w: 3.5, d: 3.0, pat: 'pat-wood', col: '#f59e0b' }
+      ];
+      const template = types[rooms.length % types.length];
+      const newId = `room-${Date.now()}`;
+      
+      const newRoom = {
+        id: newId,
+        name: `${template.name} ${rooms.length + 1}`,
+        type: template.type,
+        width: template.w,
+        depth: template.d,
+        x: 100 + (rooms.length * 60) % 300,
+        y: 100 + (rooms.length * 70) % 300,
+        rotation: 0,
+        color: template.col,
+        pattern: template.pat,
+        furniture: []
+      };
+
+      rooms.push(newRoom);
+      selectedRoomId = newId;
+      detectConnections();
+      render();
+      updateInspector();
+      showSnapNotification(`+ ${newRoom.name} нэмэгдлээ. Чирж одоо байгаа өрөөндөө соронзлуулаарай.`);
+    }
+
+    function setViewMode(mode) {
+      viewMode = mode;
+      document.getElementById('btn2D').classList.toggle('active', mode === '2d');
+      document.getElementById('btn3D').classList.toggle('active', mode === '3d');
+
+      const world = document.getElementById('worldLayer');
+      if (mode === '3d') {
+        // Isometric 3D Transform on SVG group
+        world.setAttribute('transform', 'translate(800, 480) scale(1, 0.6) rotate(-35) translate(-800, -480)');
+        showSnapNotification('📐 3D Isometric горимд шилжлээ');
+      } else {
+        world.removeAttribute('transform');
+      }
+    }
+
+    function showSnapNotification(text) {
+      const toast = document.getElementById('snapToast');
+      document.getElementById('snapToastMsg').textContent = text;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3500);
+    }
+
+    function openConceptModal() {
+      document.getElementById('conceptModal').classList.add('active');
+    }
+
+    function closeConceptModal(e) {
+      if (!e || e.target.id === 'conceptModal' || e.target.classList.contains('modal-close')) {
+        document.getElementById('conceptModal').classList.remove('active');
+      }
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      initInteractions();
+      detectConnections();
+      render();
+      updateInspector();
+    });
+  </script>
+</body>
+</html>

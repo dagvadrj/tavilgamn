@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tavilga.mn · 3D Planner Шинэ Үеийн Sidebar UI Концепт</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* ==========================================================================
+           1. CAD & INTERIOR STUDIO DESIGN SYSTEM (3D Planner Theme)
+           ========================================================================== */
+        :root {
+            --bg-canvas: #e8ecf1;
+            --bg-sidebar: #ffffff;
+            --bg-surface: #ffffff;
+            --bg-subtle: #f8fafc;
+            --bg-hover: #f1f5f9;
+            --border-light: #e2e8f0;
+            --border-medium: #cbd5e1;
+            
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            --text-subtle: #94a3b8;
+            
+            /* Professional Studio Accents */
+            --brand-primary: #1e293b;
+            --brand-accent: #c58348;      /* Warm Architectural Amber/Wood */
+            --brand-accent-soft: #fbf5ee;
+            --brand-accent-glow: rgba(197, 131, 72, 0.2);
+            
+            --accent-blue: #2563eb;
+            --accent-blue-soft: #eff6ff;
+            --accent-green: #059669;
+            --accent-green-soft: #ecfdf5;
+            --accent-red: #e11d48;
+            --accent-red-soft: #fff1f2;
+            
+            --shadow-sidebar: -4px 0 24px rgba(15, 23, 42, 0.06);
+            --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+            --shadow-card-hover: 0 10px 20px -3px rgba(15, 23, 42, 0.08);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-pill: 9999px;
+            
+            --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-canvas: #090d14;
+            --bg-sidebar: #111827;
+            --bg-surface: #182234;
+            --bg-subtle: #141c2c;
+            --bg-hover: #1f2b42;
+            --border-light: #243044;
+            --border-medium: #334155;
+            
+            --text-heading: #f8fafc;
+            --text-body: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-subtle: #64748b;
+            
+            --brand-primary: #f8fafc;
+            --brand-accent-soft: #272018;
+            --accent-blue-soft: #172554;
+            --accent-green-soft: #064e3b;
+            --shadow-sidebar: -6px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-body);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ==========================================================================
+           2. TOP STUDIO HEADER (Clean, Minimal, Professional)
+           ========================================================================== */
+        .studio-topbar {
+            height: 58px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.25rem;
+            z-index: 50;
+            flex-shrink: 0;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .studio-brand {
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--text-heading);
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .studio-brand span.dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--brand-accent);
+        }
+
+        .project-title-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            padding: 5px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-heading);
+        }
+
+        .topbar-center {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .canvas-tool-btn {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            color: var(--text-body);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .canvas-tool-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-heading);
+        }
+
+        .canvas-tool-btn.active {
+            background: var(--brand-accent);
+            color: #ffffff;
+            border-color: var(--brand-accent);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-theme {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            color: var(--text-heading);
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-checkout-cta {
+            background: var(--brand-accent);
+            color: #ffffff;
+            border: none;
+            padding: 7px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px var(--brand-accent-glow);
+            transition: var(--transition);
+        }
+
+        .btn-checkout-cta:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        /* ==========================================================================
+           3. MAIN WORKSPACE LAYOUT (3D Canvas on Left, Dock + Sidebar on Right)
+           ========================================================================== */
+        .studio-workspace {
+            flex-grow: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Simulated 3D Canvas Area (mimicking user's screenshot) */
+        .studio-canvas-area {
+            flex-grow: 1;
+            position: relative;
+            background: radial-gradient(circle at 50% 45%, rgba(255,255,255,0.7) 0%, rgba(220, 226, 235, 0.4) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .studio-canvas-area {
+            background: radial-gradient(circle at 50% 45%, #151d2c 0%, #090d14 100%);
+        }
+
+        /* Canvas Mock Illustration (Room corner matching screenshot) */
+        .canvas-mock-room {
+            width: 620px;
+            height: 480px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .canvas-mock-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 25px 40px rgba(0,0,0,0.12));
+        }
+
+        /* Canvas Floating Bottom Controls (View Angles, Dimensions) */
+        .canvas-floating-controls {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-pill);
+            padding: 5px 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+            z-index: 20;
+        }
+
+        .canvas-float-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-body);
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: var(--transition);
+        }
+
+        .canvas-float-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-heading);
+        }
+
+        .canvas-float-btn.active {
+            background: var(--text-heading);
+            color: var(--bg-surface);
+        }
+
+        /* Active Selected Object Hint in Canvas */
+        .canvas-object-selection-hint {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            background: rgba(15, 23, 42, 0.85);
+            color: #ffffff;
+            backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .canvas-object-selection-hint .dot-live {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ==========================================================================
+           4. THE NEW UPGRADED SIDEBAR (Vertical Dock + Panel Content)
+           ========================================================================== */
+        .planner-sidebar-container {
+            width: 440px;
+            background: var(--bg-sidebar);
+            border-left: 1px solid var(--border-light);
+            display: flex;
+            height: 100%;
+            box-shadow: var(--shadow-sidebar);
+            z-index: 40;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        /* Leftmost Vertical Icon Dock (Switcher between Tabs) */
+        .sidebar-icon-dock {
+            width: 64px;
+            background: var(--bg-subtle);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem 0;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .dock-item-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .dock-item-btn span.label {
+            font-size: 0.58rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .dock-item-btn:hover {
+            color: var(--text-heading);
+            background: var(--bg-hover);
+        }
+
+        .dock-item-btn.active {
+            color: var(--brand-accent);
+            background: var(--brand-accent-soft);
+            box-shadow: 0 2px 8px var(--brand-accent-glow);
+        }
+
+        .dock-item-btn.active::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 12px;
+            bottom: 12px;
+            width: 3px;
+            border-radius: 0 4px 4px 0;
+            background: var(--brand-accent);
+        }
+
+        .dock-badge-counter {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: var(--brand-accent);
+            color: #fff;
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 1px 4px;
+            border-radius: 6px;
+        }
+
+        /* Sidebar Main Content Area */
+        .sidebar-panel-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg-sidebar);
+        }
+
+        /* Panel Header */
+        .panel-header {
+            padding: 1.15rem 1.25rem 0.85rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .panel-header-title h2 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            letter-spacing: -0.015em;
+        }
+
+        .panel-header-title p {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .panel-close-btn {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            color: var(--text-muted);
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .panel-close-btn:hover {
+            color: var(--text-heading);
+            background: var(--bg-hover);
+        }
+
+        /* Scrollable Content Body */
+        .panel-scroll-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* Custom Scrollbar */
+        .panel-scroll-body::-webkit-scrollbar {
+            width: 5px;
+        }
+        .panel-scroll-body::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: 10px;
+        }
+
+        /* Search & Filter Bar */
+        .search-box-wrap {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-box-wrap svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-subtle);
+        }
+
+        .search-input {
+            width: 100%;
+            height: 40px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding-left: 38px;
+            padding-right: 12px;
+            font-size: 0.85rem;
+            color: var(--text-heading);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--brand-accent);
+            background: var(--bg-surface);
+            box-shadow: 0 0 0 3px var(--brand-accent-glow);
+        }
+
+        /* Quick Dimension Filters (300, 400, 600, 800 mm chips) */
+        .dimension-pills-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .dim-pill {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            color: var(--text-body);
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            font-size: 0.74rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+
+        .dim-pill:hover {
+            border-color: var(--border-medium);
+            background: var(--bg-hover);
+        }
+
+        .dim-pill.active {
+            background: var(--text-heading);
+            color: var(--bg-surface);
+            border-color: var(--text-heading);
+        }
+
+        /* Sub-category segmented chips */
+        .subcat-segmented {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: var(--bg-subtle);
+            padding: 3px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-light);
+            gap: 2px;
+        }
+
+        .subcat-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 2px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .subcat-btn:hover {
+            color: var(--text-heading);
+        }
+
+        .subcat-btn.active {
+            background: var(--bg-surface);
+            color: var(--text-heading);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        /* ==========================================================================
+           5. UPGRADED CABINET & FURNITURE CARDS
+           ========================================================================== */
+        .cabinet-cards-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .cabinet-ui-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-card);
+            position: relative;
+        }
+
+        .cabinet-ui-card:hover {
+            border-color: var(--brand-accent);
+            box-shadow: var(--shadow-card-hover);
+            transform: translateY(-2px);
+        }
+
+        .cabinet-thumb-box {
+            width: 74px;
+            height: 74px;
+            border-radius: 10px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cabinet-thumb-box img {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
+        }
+
+        .cabinet-card-body {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .cabinet-tag-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .badge-type {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--accent-blue-soft);
+            color: var(--accent-blue);
+        }
+
+        .badge-snap {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: var(--brand-accent-soft);
+            color: var(--brand-accent);
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .cabinet-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+
+        .cabinet-dimensions {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cabinet-price {
+            font-size: 0.86rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            margin-top: 4px;
+        }
+
+        .btn-add-to-scene {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .cabinet-ui-card:hover .btn-add-to-scene {
+            background: var(--brand-accent);
+            color: #ffffff;
+            border-color: var(--brand-accent);
+            transform: scale(1.05);
+        }
+
+        /* ==========================================================================
+           6. VIEW 2: PROPERTY INSPECTOR (Active Selection in 3D)
+           ========================================================================== */
+        .inspector-panel-view {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .selected-object-banner {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .selected-icon-preview {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--brand-accent);
+        }
+
+        .selected-meta h3 {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-heading);
+        }
+
+        .selected-meta p {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .property-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .property-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .property-inputs-3col {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .dimension-input-box {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dimension-input-box span.axis {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: var(--text-subtle);
+            text-transform: uppercase;
+        }
+
+        .dimension-input-box input {
+            background: transparent;
+            border: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            outline: none;
+            width: 100%;
+        }
+
+        /* Handle Style Picker */
+        .handles-choice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .handle-choice-btn {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            padding: 8px 4px;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-body);
+            transition: var(--transition);
+        }
+
+        .handle-choice-btn:hover {
+            border-color: var(--border-medium);
+        }
+
+        .handle-choice-btn.selected {
+            border-color: var(--brand-accent);
+            background: var(--brand-accent-soft);
+            color: var(--brand-accent);
+        }
+
+        /* Door opening direction */
+        .door-direction-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .door-dir-btn {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+            color: var(--text-body);
+            transition: var(--transition);
+        }
+
+        .door-dir-btn.selected {
+            background: var(--text-heading);
+            color: var(--bg-surface);
+            border-color: var(--text-heading);
+        }
+
+        /* Inspector Quick Actions (Rotate 90, Duplicate, Delete) */
+        .inspector-actions-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .insp-action-btn {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: var(--text-body);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: var(--transition);
+        }
+
+        .insp-action-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-heading);
+        }
+
+        .insp-action-btn.danger:hover {
+            background: var(--accent-red-soft);
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+
+        /* ==========================================================================
+           7. VIEW 3: LIVE BILL OF MATERIALS & BUDGET (BOM)
+           ========================================================================== */
+        .bom-panel-view {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .bom-cost-card {
+            background: linear-gradient(135deg, var(--text-heading) 0%, #1e293b 100%);
+            color: #ffffff;
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .bom-cost-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .bom-cost-total {
+            font-size: 1.85rem;
+            font-weight: 800;
+            margin: 4px 0 8px;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+        }
+
+        .bom-bnpl-sub {
+            font-size: 0.78rem;
+            color: #f1f5f9;
+            background: rgba(255, 255, 255, 0.12);
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bom-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .bom-line-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-light);
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+        }
+
+        .bom-item-name {
+            font-weight: 700;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bom-item-qty {
+            font-size: 0.72rem;
+            background: var(--bg-surface);
+            padding: 1px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-light);
+            color: var(--text-muted);
+        }
+
+        .bom-item-price {
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-heading);
+        }
+
+        /* ==========================================================================
+           8. STICKY PANEL FOOTER (Live Price & Actions)
+           ========================================================================== */
+        .sidebar-sticky-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid var(--border-light);
+            background: var(--bg-surface);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .footer-price-summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.82rem;
+        }
+
+        .footer-price-summary span.amount {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .btn-full-cta {
+            width: 100%;
+            background: var(--brand-accent);
+            color: #ffffff;
+            border: none;
+            padding: 0.85rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition);
+            box-shadow: 0 4px 14px var(--brand-accent-glow);
+        }
+
+        .btn-full-cta:hover {
+            opacity: 0.94;
+            transform: translateY(-2px);
+        }
+
+        /* Material Swatch Grid for Finishes Tab */
+        .materials-swatch-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .material-box-btn {
+            background: var(--bg-subtle);
+            border: 1.5px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            padding: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .material-box-btn:hover {
+            border-color: var(--border-medium);
+        }
+
+        .material-box-btn.selected {
+            border-color: var(--brand-accent);
+            background: var(--brand-accent-soft);
+        }
+
+        .material-color-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .material-box-btn span {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        /* Toast */
+        .studio-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background: var(--text-heading);
+            color: var(--bg-surface);
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            font-size: 0.82rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .studio-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. STUDIO TOPBAR -->
+    <header class="studio-topbar">
+        <div class="topbar-left">
+            <a href="#" class="studio-brand">
+                tavilga<span class="dot"></span>studio
+            </a>
+            <div class="project-title-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <span>Гал тогооны өрөө · 3.2 × 2.4 м</span>
+            </div>
+        </div>
+
+        <div class="topbar-center">
+            <button class="canvas-tool-btn active">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                <span>3D Өрөөний харагдац</span>
+            </button>
+            <button class="canvas-tool-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                <span>2D План зураг</span>
+            </button>
+            <button class="canvas-tool-btn" onclick="notify('Ханын хэмжээсүүд 3D орчинд идэвхжлээ')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0l12.6 12.6z"/></svg>
+                <span>Хэмжээс (мм)</span>
+            </button>
+        </div>
+
+        <div class="topbar-right">
+            <button class="btn-theme" onclick="toggleTheme()" title="Theme солих">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            </button>
+            <button class="btn-checkout-cta" onclick="switchTab('bom')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                <span>Төсөв харах (3,410,000₮)</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 2. STUDIO WORKSPACE -->
+    <div class="studio-workspace">
+
+        <!-- 2.1 SIMULATED 3D CANVAS (Left Area) -->
+        <div class="studio-canvas-area">
+            <!-- Object selection notification in 3D -->
+            <div class="canvas-object-selection-hint">
+                <span class="dot-live"></span>
+                <span>Сонгогдсон: BASE-600 (Доод шүүгээ · 600мм)</span>
+            </div>
+
+            <!-- SVG 3D Isometric Room Mockup -->
+            <div class="canvas-mock-room">
+                <svg class="canvas-mock-svg" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Floor Parquet Grid -->
+                    <polygon points="400,280 680,440 400,580 120,440" fill="#d2ab7f" opacity="0.9" />
+                    <!-- Left Wall -->
+                    <polygon points="120,440 400,280 400,100 120,240" fill="#f1ece5" stroke="#d5cebe" stroke-width="2" />
+                    <!-- Right Wall -->
+                    <polygon points="400,280 680,440 680,240 400,100" fill="#e5dfd5" stroke="#ccc4b4" stroke-width="2" />
+                    <!-- Corner line -->
+                    <line x1="400" y1="100" x2="400" y2="280" stroke="#b8af9e" stroke-width="3" />
+
+                    <!-- Base Cabinet 1 (Left Wall) -->
+                    <g transform="translate(190, 310)" style="cursor: pointer;" onclick="switchTab('inspector')">
+                        <polygon points="100,50 170,90 170,170 100,130" fill="#ffffff" stroke="#c58348" stroke-width="2.5" />
+                        <polygon points="30,90 100,50 100,130 30,170" fill="#f8fafc" stroke="#c58348" stroke-width="2.5" />
+                        <polygon points="30,90 100,50 170,90 100,130" fill="#2b2622" /> <!-- Countertop -->
+                        <!-- Handles & details -->
+                        <line x1="95" y1="80" x2="95" y2="120" stroke="#c58348" stroke-width="3" stroke-linecap="round" />
+                    </g>
+
+                    <!-- Base Cabinet 2 (Center Snapped) -->
+                    <g transform="translate(260, 270)" style="cursor: pointer;" onclick="switchTab('inspector')">
+                        <polygon points="100,50 170,90 170,170 100,130" fill="#ffffff" stroke="#10b981" stroke-width="2" />
+                        <polygon points="30,90 100,50 100,130 30,170" fill="#f8fafc" stroke="#10b981" stroke-width="2" />
+                        <polygon points="30,90 100,50 170,90 100,130" fill="#2b2622" />
+                    </g>
+
+                    <!-- Wall Cabinet 1 (Hanging) -->
+                    <g transform="translate(190, 190)" style="cursor: pointer;" onclick="switchTab('inspector')">
+                        <polygon points="100,30 160,65 160,135 100,100" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" />
+                        <polygon points="40,65 100,30 100,100 40,135" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" />
+                        <polygon points="40,65 100,30 160,65 100,100" fill="#ffffff" />
+                    </g>
+                </svg>
+            </div>
+
+            <!-- Canvas Bottom Floating Controls -->
+            <div class="canvas-floating-controls">
+                <button class="canvas-float-btn active">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    <span>Орчин</span>
+                </button>
+                <button class="canvas-float-btn">
+                    <span>Дээрээс</span>
+                </button>
+                <button class="canvas-float-btn">
+                    <span>Урдаас</span>
+                </button>
+                <button class="canvas-float-btn">
+                    <span>Нар/Өдөр</span>
+                </button>
+                <button class="canvas-float-btn" onclick="notify('Камер төвлөрлөө')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+                    <span>Төвд авах</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 2.2 THE NEW UPGRADED PLANNER SIDEBAR (Right Area) -->
+        <aside class="planner-sidebar-container">
+
+            <!-- Vertical Switcher Dock (Left sub-column of sidebar) -->
+            <nav class="sidebar-icon-dock" aria-label="Сайдбарын цэс">
+                <button class="dock-item-btn active" id="dock-btn-cabinets" onclick="switchTab('cabinets')" title="Модуль шүүгээ">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18M12 3v18"/></svg>
+                    <span class="label">Шүүгээ</span>
+                </button>
+
+                <button class="dock-item-btn" id="dock-btn-catalog" onclick="switchTab('catalog')" title="Каталөг тавилга">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 9v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9"/><path d="M9 22V12h6v10M2 10.6L12 2l10 8.6"/></svg>
+                    <span class="label">Тавилга</span>
+                </button>
+
+                <button class="dock-item-btn" id="dock-btn-materials" onclick="switchTab('materials')" title="Өнгө & Материал">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    <span class="label">Өнгө</span>
+                </button>
+
+                <button class="dock-item-btn" id="dock-btn-inspector" onclick="switchTab('inspector')" title="Сонгосон шүүгээний тохиргоо">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <span class="label">Тохиргоо</span>
+                    <span class="dock-badge-counter">1</span>
+                </button>
+
+                <button class="dock-item-btn" id="dock-btn-bom" onclick="switchTab('bom')" title="Үнийн тооцоо & BOM">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span class="label">Төсөв</span>
+                </button>
+            </nav>
+
+            <!-- Main Panel Content Area -->
+            <div class="sidebar-panel-content">
+
+                <!-- ==========================================================
+                     TAB 1: MODULAR CABINETS LIBRARY
+                     ========================================================== -->
+                <div id="tab-panel-cabinets" class="tab-pane active" style="display: flex; flex-direction: column; height: 100%;">
+                    <div class="panel-header">
+                        <div class="panel-header-title">
+                            <h2>Модуль Шүүгээний Сан</h2>
+                            <p>Бодит хэмжээтэй стандарт модуль сонгох</p>
+                        </div>
+                        <button class="panel-close-btn" title="Хаах" onclick="notify('Сайдбар нуугдлаа')">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="panel-scroll-body">
+                        <!-- Search -->
+                        <div class="search-box-wrap">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" class="search-input" placeholder="Шүүгээ, хэмжээгээр хайх (жишээ: 600)...">
+                        </div>
+
+                        <!-- Sub-categories (Base, Wall, Tall, Appliances) -->
+                        <div class="subcat-segmented">
+                            <button class="subcat-btn active">Доод</button>
+                            <button class="subcat-btn">Дээд</button>
+                            <button class="subcat-btn">Багана</button>
+                            <button class="subcat-btn">Төхөөрөмж</button>
+                        </div>
+
+                        <!-- Quick Dimension Filter Pills -->
+                        <div>
+                            <p style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Шүүгээний өргөн (W mm):</p>
+                            <div class="dimension-pills-bar">
+                                <button class="dim-pill active">Бүгд</button>
+                                <button class="dim-pill">300мм</button>
+                                <button class="dim-pill">400мм</button>
+                                <button class="dim-pill">600мм</button>
+                                <button class="dim-pill">800мм</button>
+                                <button class="dim-pill">1000мм</button>
+                                <button class="dim-pill">Булан 900</button>
+                            </div>
+                        </div>
+
+                        <!-- Cabinet Cards List -->
+                        <div class="cabinet-cards-grid">
+                            <!-- Card 1 -->
+                            <div class="cabinet-ui-card" onclick="selectCabinet('BASE-600 (1 хаалгатай доод шүүгээ)', '380,000₮')">
+                                <div class="cabinet-thumb-box">
+                                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="10" y1="14" x2="10" y2="17"/></svg>
+                                </div>
+                                <div class="cabinet-card-body">
+                                    <div class="cabinet-tag-row">
+                                        <span class="badge-type">Доод шүүгээ</span>
+                                        <span class="badge-snap">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg> Auto-Snap
+                                        </span>
+                                    </div>
+                                    <h4 class="cabinet-title">BASE-600 Стандарт шүүгээ</h4>
+                                    <p class="cabinet-dimensions">600 × 820 × 600 мм</p>
+                                    <p class="cabinet-price">380,000₮</p>
+                                </div>
+                                <button class="btn-add-to-scene" title="Өрөөнд нэмэх">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                </button>
+                            </div>
+
+                            <!-- Card 2 -->
+                            <div class="cabinet-ui-card" onclick="selectCabinet('BASE-800 (2 хаалга, угаалтуур)', '495,000₮')">
+                                <div class="cabinet-thumb-box">
+                                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="7" y1="12" x2="7" y2="14"/><line x1="17" y1="12" x2="17" y2="14"/></svg>
+                                </div>
+                                <div class="cabinet-card-body">
+                                    <div class="cabinet-tag-row">
+                                        <span class="badge-type">Угаалтуур</span>
+                                        <span class="badge-snap">Auto-Snap</span>
+                                    </div>
+                                    <h4 class="cabinet-title">BASE-800 Хос хаалгатай</h4>
+                                    <p class="cabinet-dimensions">800 × 820 × 600 мм</p>
+                                    <p class="cabinet-price">495,000₮</p>
+                                </div>
+                                <button class="btn-add-to-scene" title="Өрөөнд нэмэх">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                </button>
+                            </div>
+
+                            <!-- Card 3 -->
+                            <div class="cabinet-ui-card" onclick="selectCabinet('BASE-600 DRAWER (3 шургуулга)', '540,000₮')">
+                                <div class="cabinet-thumb-box">
+                                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="10" y1="6" x2="14" y2="6"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+                                </div>
+                                <div class="cabinet-card-body">
+                                    <div class="cabinet-tag-row">
+                                        <span class="badge-type">3 Шургуулга</span>
+                                        <span class="badge-snap">Blum зам</span>
+                                    </div>
+                                    <h4 class="cabinet-title">BASE-600-D3 Шургуулгатай</h4>
+                                    <p class="cabinet-dimensions">600 × 820 × 600 мм</p>
+                                    <p class="cabinet-price">540,000₮</p>
+                                </div>
+                                <button class="btn-add-to-scene" title="Өрөөнд нэмэх">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                </button>
+                            </div>
+
+                            <!-- Card 4 -->
+                            <div class="cabinet-ui-card" onclick="selectCabinet('WALL-600 (Дээд шүүгээ)', '320,000₮')">
+                                <div class="cabinet-thumb-box">
+                                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="15" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="14" x2="10" y2="16"/></svg>
+                                </div>
+                                <div class="cabinet-card-body">
+                                    <div class="cabinet-tag-row">
+                                        <span class="badge-type">Дээд шүүгээ</span>
+                                        <span class="badge-snap">H550 Өргөгдөнө</span>
+                                    </div>
+                                    <h4 class="cabinet-title">WALL-600 Хананд өлгөгдөх</h4>
+                                    <p class="cabinet-dimensions">600 × 720 × 350 мм</p>
+                                    <p class="cabinet-price">320,000₮</p>
+                                </div>
+                                <button class="btn-add-to-scene" title="Өрөөнд нэмэх">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sticky Bottom Summary -->
+                    <div class="sidebar-sticky-footer">
+                        <div class="footer-price-summary">
+                            <span>Нийт (7 шүүгээ сонгогдсон):</span>
+                            <span class="amount">2,890,000₮</span>
+                        </div>
+                        <button class="btn-full-cta" onclick="switchTab('bom')">
+                            <span>Төсвийн задаргаа харах</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     TAB 2: GENERAL FURNITURE CATALOG
+                     ========================================================== -->
+                <div id="tab-panel-catalog" class="tab-pane" style="display: none; flex-direction: column; height: 100%;">
+                    <div class="panel-header">
+                        <div class="panel-header-title">
+                            <h2>Каталөг Тавилга</h2>
+                            <p>Бэлэн тавилга өрөөндөө нэмж турших</p>
+                        </div>
+                        <button class="panel-close-btn" onclick="switchTab('cabinets')">✕</button>
+                    </div>
+                    <div class="panel-scroll-body">
+                        <div class="search-box-wrap">
+                            <input type="text" class="search-input" placeholder="Буйдан, ширээ, ор хайх...">
+                        </div>
+                        <div class="cabinet-cards-grid">
+                            <div class="cabinet-ui-card">
+                                <div class="cabinet-thumb-box">
+                                    <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1789663972/casa-nova/products/8e5b47a7-3a4e-4c57-a0b6-183a70fc224c.png" alt="Luna sofa">
+                                </div>
+                                <div class="cabinet-card-body">
+                                    <span class="badge-type">Зочны өрөө</span>
+                                    <h4 class="cabinet-title">Luna 3 Хүний Буйдан</h4>
+                                    <p class="cabinet-dimensions">180 × 77 × 60 см</p>
+                                    <p class="cabinet-price">1,598,000₮</p>
+                                </div>
+                                <button class="btn-add-to-scene">+</button>
+                            </div>
+                            <div class="cabinet-ui-card">
+                                <div class="cabinet-thumb-box">
+                                    <img src="https://res.cloudinary.com/drc6tboyr/image/upload/v1791104006/casa-nova/products/92127f64-f6c0-438c-b231-6ad2eb1ede3d.jpg" alt="Dining table">
+                                </div>
+                                <div class="cabinet-card-body">
+                                    <span class="badge-type">Хоолны өрөө</span>
+                                    <h4 class="cabinet-title">Гантиг Хоолны Ширээ</h4>
+                                    <p class="cabinet-dimensions">200 × 100 × 75 см</p>
+                                    <p class="cabinet-price">1,190,000₮</p>
+                                </div>
+                                <button class="btn-add-to-scene">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     TAB 3: PROPERTY INSPECTOR (Active 3D Selection)
+                     ========================================================== -->
+                <div id="tab-panel-inspector" class="tab-pane" style="display: none; flex-direction: column; height: 100%;">
+                    <div class="panel-header">
+                        <div class="panel-header-title">
+                            <h2>Шүүгээний Тохиргоо</h2>
+                            <p>Сонгогдсон элементийн параметр</p>
+                        </div>
+                        <button class="panel-close-btn" onclick="switchTab('cabinets')">✕</button>
+                    </div>
+
+                    <div class="panel-scroll-body inspector-panel-view">
+                        <!-- Active Banner -->
+                        <div class="selected-object-banner">
+                            <div class="selected-icon-preview">
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+                            </div>
+                            <div class="selected-meta">
+                                <h3 id="insp-selected-name">BASE-600 Доод шүүгээ</h3>
+                                <p>Код: <code style="font-family: monospace;">K-MOD-600-B1</code> · <span id="insp-selected-price">380,000₮</span></p>
+                            </div>
+                        </div>
+
+                        <!-- Dimension Adjusters -->
+                        <div class="property-group">
+                            <div class="property-label">
+                                <span>Хэмжээсүүд (Миллиметрээр)</span>
+                                <span style="font-size: 0.68rem; color: var(--accent-green); font-weight:700;">Стандарт хэмжээ</span>
+                            </div>
+                            <div class="property-inputs-3col">
+                                <div class="dimension-input-box">
+                                    <span class="axis">Өргөн (W)</span>
+                                    <input type="number" value="600" step="50" onchange="notify('Шүүгээний өргөн өөрчлөгдлөө: ' + this.value + 'мм')">
+                                </div>
+                                <div class="dimension-input-box">
+                                    <span class="axis">Өндөр (H)</span>
+                                    <input type="number" value="820" step="10">
+                                </div>
+                                <div class="dimension-input-box">
+                                    <span class="axis">Гүн (D)</span>
+                                    <input type="number" value="600" step="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Handle Styles -->
+                        <div class="property-group">
+                            <div class="property-label">
+                                <span>Бариулын Загвар</span>
+                            </div>
+                            <div class="handles-choice-grid">
+                                <button class="handle-choice-btn selected" onclick="selectHandle(this)">J-Pull (Бариулгүй)</button>
+                                <button class="handle-choice-btn" onclick="selectHandle(this)">Хар Bar бариул</button>
+                                <button class="handle-choice-btn" onclick="selectHandle(this)">Гуулин Knob</button>
+                            </div>
+                        </div>
+
+                        <!-- Door Opening Direction -->
+                        <div class="property-group">
+                            <div class="property-label">
+                                <span>Хаалганы нээгдэх чиглэл</span>
+                            </div>
+                            <div class="door-direction-grid">
+                                <button class="door-dir-btn selected" onclick="selectDoorDir(this)">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                                    <span>Зүүн тийш</span>
+                                </button>
+                                <button class="door-dir-btn" onclick="selectDoorDir(this)">
+                                    <span>Баруун тийш</span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Internal Shelf Options -->
+                        <div class="property-group">
+                            <div class="property-label">
+                                <span>Дотор тавиурын тоо</span>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="dim-pill active" style="flex:1;">1 Тавиуртай</button>
+                                <button class="dim-pill" style="flex:1;">2 Тавиуртай</button>
+                                <button class="dim-pill" style="flex:1;">Хоосон</button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions (Rotate 90, Duplicate, Delete) -->
+                        <div class="property-group" style="margin-top: 6px;">
+                            <div class="property-label"><span>Үйлдлүүд</span></div>
+                            <div class="inspector-actions-row">
+                                <button class="insp-action-btn" onclick="notify('90° эргүүллээ')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                    <span>90° Эргүүлэх</span>
+                                </button>
+                                <button class="insp-action-btn" onclick="notify('Шүүгээ хувилагдлаа (+1)')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    <span>Хувилах</span>
+                                </button>
+                                <button class="insp-action-btn danger" onclick="notify('Шүүгээ өрөөнөөс устгагдлаа')">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    <span>Устгах</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     TAB 4: FINISHES & MATERIALS
+                     ========================================================== -->
+                <div id="tab-panel-materials" class="tab-pane" style="display: none; flex-direction: column; height: 100%;">
+                    <div class="panel-header">
+                        <div class="panel-header-title">
+                            <h2>Өнгө & Гадаргуу</h2>
+                            <p>Шүүгээний фасад, тавцангийн чулуу сонгох</p>
+                        </div>
+                        <button class="panel-close-btn" onclick="switchTab('cabinets')">✕</button>
+                    </div>
+
+                    <div class="panel-scroll-body">
+                        <!-- Cabinet Front Finishes -->
+                        <div class="property-group">
+                            <div class="property-label">
+                                <span>Кабинетийн Фасад</span>
+                                <span style="color: var(--brand-accent); font-weight:700;">МДФ Будаг</span>
+                            </div>
+                            <div class="materials-swatch-grid">
+                                <button class="material-box-btn selected" onclick="selectMaterial(this)">
+                                    <div class="material-color-circle" style="background: #F4F1EA;"></div>
+                                    <span>Цасан цагаан</span>
+                                </button>
+                                <button class="material-box-btn" onclick="selectMaterial(this)">
+                                    <div class="material-color-circle" style="background: #B6B0A5;"></div>
+                                    <span>Кашемир саарал</span>
+                                </button>
+                                <button class="material-box-btn" onclick="selectMaterial(this)">
+                                    <div class="material-color-circle" style="background: #4A5B4F;"></div>
+                                    <span>Ойн ногоон</span>
+                                </button>
+                                <button class="material-box-btn" onclick="selectMaterial(this)">
+                                    <div class="material-color-circle" style="background: #252A34;"></div>
+                                    <span>Шөнийн хар</span>
+                                </button>
+                                <button class="material-box-btn" onclick="selectMaterial(this)">
+                                    <div class="material-color-circle" style="background: #A07855;"></div>
+                                    <span>Байгалийн царс</span>
+                                </button>
+                                <button class="material-box-btn" onclick="selectMaterial(this)">
+                                    <div class="material-color-circle" style="background: #5E4334;"></div>
+                                    <span>Хушга мод</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Countertop Stone Finishes -->
+                        <div class="property-group" style="margin-top: 10px;">
+                            <div class="property-label">
+                                <span>Ажлын Тавцан (Countertop)</span>
+                                <span style="color: var(--accent-blue); font-weight:700;">Кварц чулуу</span>
+                            </div>
+                            <div class="materials-swatch-grid">
+                                <button class="material-box-btn selected" onclick="selectMaterial(this)">
+                                    <div class="material-color-circle" style="background: radial-gradient(#e5e7eb, #ffffff);"></div>
+                                    <span>Calacatta Marble</span>
+                                </button>
+                                <button class="material-box-btn" onclick="selectMaterial(this)">
+                                    <div class="material-color-circle" style="background: radial-gradient(#374151, #111827);"></div>
+                                    <span>Nero Granite</span>
+                                </button>
+                                <button class="material-box-btn" onclick="selectMaterial(this)">
+                                    <div class="material-color-circle" style="background: #C49E72;"></div>
+                                    <span>Байгалийн царс</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==========================================================
+                     TAB 5: LIVE BILL OF MATERIALS & ESTIMATE (BOM)
+                     ========================================================== -->
+                <div id="tab-panel-bom" class="tab-pane" style="display: none; flex-direction: column; height: 100%;">
+                    <div class="panel-header">
+                        <div class="panel-header-title">
+                            <h2>Төслийн Үнийн Задаргаа</h2>
+                            <p>Бодит цагийн BOM тооцоолол</p>
+                        </div>
+                        <button class="panel-close-btn" onclick="switchTab('cabinets')">✕</button>
+                    </div>
+
+                    <div class="panel-scroll-body bom-panel-view">
+                        <!-- Big Total Card -->
+                        <div class="bom-cost-card">
+                            <p class="bom-cost-label">Нийт Төсөв (Бүх модуль & тавцан)</p>
+                            <h3 class="bom-cost-total">3,410,000₮</h3>
+                            <div class="bom-bnpl-sub">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                                <span>Сард <strong>568,300₮</strong> × 6 сар (StorePay)</span>
+                            </div>
+                        </div>
+
+                        <!-- Line Items -->
+                        <div class="bom-items-list">
+                            <div class="bom-line-item">
+                                <div class="bom-item-name">
+                                    <span class="bom-item-qty">4x</span>
+                                    <span>Доод шүүгээ (Base modules)</span>
+                                </div>
+                                <span class="bom-item-price">1,480,000₮</span>
+                            </div>
+                            <div class="bom-line-item">
+                                <div class="bom-item-name">
+                                    <span class="bom-item-qty">3x</span>
+                                    <span>Дээд шүүгээ (Wall modules)</span>
+                                </div>
+                                <span class="bom-item-price">890,000₮</span>
+                            </div>
+                            <div class="bom-line-item">
+                                <div class="bom-item-name">
+                                    <span class="bom-item-qty">2.4м</span>
+                                    <span>Calacatta Кварц тавцан (у/м)</span>
+                                </div>
+                                <span class="bom-item-price">720,000₮</span>
+                            </div>
+                            <div class="bom-line-item">
+                                <div class="bom-item-name">
+                                    <span class="bom-item-qty">Ком</span>
+                                    <span>Blum зөөлөн хаагч нугас тоноглол</span>
+                                </div>
+                                <span class="bom-item-price">320,000₮</span>
+                            </div>
+                            <div class="bom-line-item" style="background: var(--accent-green-soft); border-color: rgba(5,150,105,0.2);">
+                                <div class="bom-item-name" style="color: var(--accent-green);">
+                                    <span>🚚 Хүргэлт & Угсралт</span>
+                                </div>
+                                <span class="bom-item-price" style="color: var(--accent-green);">ҮНЭГҮЙ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Checkout -->
+                    <div class="sidebar-sticky-footer">
+                        <button class="btn-full-cta" onclick="notify('Бүх 7 шүүгээ сагсанд амжилттай нэмэгдлээ!')">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                            <span>Бүгдийг сагсанд нэмэх</span>
+                        </button>
+                        <button class="canvas-tool-btn" style="width:100%; justify-content:center; padding:9px;" onclick="notify('PDF Үнийн санал бэлтгэгдэж байна...')">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span>PDF Үнийн санал татах</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="studio-toast" id="toast">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span id="toast-msg">Шүүгээ амжилттай сонгогдлоо</span>
+    </div>
+
+    <script>
+        // Switch between Sidebar Dock Tabs
+        function switchTab(tabId) {
+            // Update dock button states
+            document.querySelectorAll('.dock-item-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('dock-btn-' + tabId);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            // Update tab pane visibility
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.style.display = 'none';
+                pane.classList.remove('active');
+            });
+
+            const activePane = document.getElementById('tab-panel-' + tabId);
+            if (activePane) {
+                activePane.style.display = 'flex';
+                activePane.classList.add('active');
+            }
+        }
+
+        // Select cabinet from list and switch to inspector
+        function selectCabinet(name, price) {
+            document.getElementById('insp-selected-name').textContent = name;
+            document.getElementById('insp-selected-price').textContent = price;
+            switchTab('inspector');
+            notify(name + ' өрөөнд сонгогдож тохиргоо нээгдлээ');
+        }
+
+        function selectHandle(btn) {
+            btn.closest('.handles-choice-grid').querySelectorAll('.handle-choice-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            notify('Бариулын загвар солигдлоо: ' + btn.textContent);
+        }
+
+        function selectDoorDir(btn) {
+            btn.closest('.door-direction-grid').querySelectorAll('.door-dir-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            notify('Хаалганы чиглэл: ' + btn.textContent.trim());
+        }
+
+        function selectMaterial(btn) {
+            btn.closest('.materials-swatch-grid').querySelectorAll('.material-box-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            notify('Материал шинэчлэгдлээ: ' + btn.querySelector('span').textContent);
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+        }
+
+        let toastTimer;
+        function notify(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>

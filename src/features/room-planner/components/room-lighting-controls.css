@@ -1,0 +1,291 @@
+.room-scene-light-anchor {
+  position: absolute;
+  top: 260px;
+  right: 24px;
+  z-index: 28;
+}
+
+.room-scene-lighting {
+  position: relative;
+}
+
+.room-scene-lighting > summary {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fff;
+  color: #263848;
+  box-shadow: 0 3px 16px #20212408;
+  list-style: none;
+  cursor: pointer;
+}
+
+.room-scene-lighting > summary::-webkit-details-marker {
+  display: none;
+}
+
+.room-scene-lighting[open] > summary,
+.room-scene-lighting > summary:hover {
+  background: #eaf5ff;
+  color: #075eaa;
+}
+
+.room-scene-lighting > summary:focus-visible {
+  outline: 3px solid #075eaa;
+  outline-offset: 3px;
+}
+
+.room-lighting-popup {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 12px);
+  width: 320px;
+  max-width: calc(100vw - 108px);
+  max-height: min(440px, calc(100dvh - 350px));
+  overflow-y: auto;
+  padding: 18px;
+  border: 1px solid #dde4eb;
+  border-radius: 18px;
+  background: #fff;
+  color: #263848;
+  box-shadow: 0 12px 40px #2021241a;
+  font-size: 12px;
+}
+
+.room-lighting-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.room-lighting-popup-header strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+}
+
+.room-lighting-popup-header button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  min-height: 30px;
+  padding: 4px;
+  border-radius: 7px;
+}
+
+.room-time-control {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+
+.room-time-heading {
+  display: grid;
+  gap: 10px;
+}
+
+.room-time-heading > span {
+  color: #637182;
+  font-size: 11px;
+}
+
+.room-time-heading strong {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-time-control input[type="range"] {
+  width: 100%;
+  accent-color: #0876c2;
+}
+
+.room-time-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: -6px;
+  color: #7b8793;
+  font-size: 10px;
+}
+
+.room-light-time-presets {
+  display: flex;
+  gap: 5px;
+}
+
+.room-light-time-presets button,
+.room-view-dock .room-light-time-presets button {
+  flex: 1;
+  min-height: 32px;
+  padding: 6px;
+  border: 1px solid #dce3e9;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.room-light-time-presets button[aria-pressed="true"],
+.room-view-dock .room-light-time-presets button[aria-pressed="true"] {
+  border-color: #0876c2;
+  background: #eaf5ff;
+  color: #075eaa;
+}
+
+.room-auto-light {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-block: 5px;
+}
+
+.room-auto-light input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0876c2;
+}
+
+.room-auto-light small {
+  display: block;
+  margin-top: 4px;
+  color: #7b8793;
+  font-size: 10px;
+}
+
+.room-time-status {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  padding: 9px;
+  border-radius: 8px;
+  background: #eef6fd;
+  color: #21648d;
+  font-size: 11px;
+}
+
+.room-light-intensity {
+  display: grid;
+  gap: 8px;
+  padding-top: 5px;
+}
+
+.room-light-intensity > span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.room-lighting-popup .room-lighting-more {
+  width: 100%;
+  min-height: 34px;
+  padding: 7px;
+  border-radius: 9px;
+  background: #f3f6f9;
+  color: #075eaa;
+  font-size: 11px;
+}
+
+@media (max-width: 600px) {
+  .room-simple .room-view-dock .room-dock-edit {
+    grid-template-columns: 1fr 1fr 1fr 1.3fr 36px;
+  }
+  .room-simple .room-view-dock .room-dock-edit > button {
+    flex-direction: column;
+    gap: 2px;
+    min-height: 44px;
+    padding: 4px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .room-scene-light-anchor {
+    top: 232px;
+    right: 12px;
+  }
+  .room-scene-lighting > summary {
+    width: 50px;
+    height: 50px;
+  }
+  .room-lighting-popup {
+    max-width: calc(100vw - 86px);
+    max-height: min(400px, calc(100dvh - 315px));
+    padding: 14px;
+  }
+}
+
+@media (max-height: 560px) {
+  .room-lighting-popup {
+    top: auto;
+    bottom: 0;
+    max-height: calc(100dvh - 115px);
+  }
+}
+
+.room-sun-controls {
+  display: grid;
+  gap: 10px;
+  padding-block: 14px;
+  border-top: 1px solid #e0e5ea;
+}
+
+.room-sun-modes {
+  display: flex;
+  gap: 6px;
+}
+
+.room-sun-modes button {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #e0e5ea;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #637182;
+}
+
+.room-sun-modes button[aria-pressed="true"] {
+  border-color: #0876c2;
+  background: #eaf5ff;
+  color: #0876c2;
+}
+
+.room-sun-compass {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.room-sun-compass svg {
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+}
+
+.room-sun-compass text {
+  fill: #637182;
+  font-size: 10px;
+}
+
+.room-sun-compass p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #637182;
+}
+
+.room-sun-controls input[type="range"] {
+  width: 100%;
+  accent-color: #0876c2;
+}
+
+.room-sun-controls input[type="checkbox"] {
+  accent-color: #0876c2;
+}
+
+.room-opening-illustration svg {
+  width: 100%;
+  height: 100%;
+}

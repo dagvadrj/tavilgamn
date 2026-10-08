@@ -112,8 +112,19 @@ export interface WallMaterial {
   color: string;
   materialId?: string;
 }
+export type CeilingFixtureKind = "flush" | "recessed" | "pendant" | "linear";
+export interface RoomCeiling {
+  kind: "flat" | "tray";
+  drop: number;
+  borderWidth: number;
+  coveEnabled: boolean;
+  coveColor: string;
+  coveIntensity: number;
+}
 export interface CeilingFixture {
   id: string;
+  kind?: CeilingFixtureKind;
+  pendantDrop?: number;
   /** Position in metres in the room's world coordinates. */
   x: number;
   z: number;
@@ -122,6 +133,13 @@ export interface CeilingFixture {
 }
 export interface RoomLighting {
   mode: "day" | "evening";
+  /** Local solar time, 0–24 hours. Shared by all rooms in a design. */
+  timeOfDay?: number;
+  autoLights?: boolean;
+  /** Sun source bearing at 13:00; absent follows the largest exterior window. */
+  sunAzimuth?: number;
+  /** Optional elevation in degrees; absent follows the visual solar clock. */
+  sunElevation?: number;
   ambient: number;
   sunlight: number;
   fixtures: CeilingFixture[];
@@ -130,6 +148,7 @@ export interface RoomSurfaces {
   floorMaterial?: string;
   wallMaterials?: Partial<Record<RoomWall, WallMaterial>>;
   ceilingMaterial?: string;
+  ceiling?: RoomCeiling;
   lighting?: RoomLighting;
 }
 export interface WallFeature {
@@ -157,10 +176,27 @@ export interface RoomShape {
   columns?: RoomColumn[];
   openings?: RoomOpening[];
 }
+export interface RoomPosition { x: number; z: number }
+export interface RoomConnection {
+  id: string;
+  roomA: string;
+  roomB: string;
+  wallA: RoomWall;
+  wallB: RoomWall;
+  kind: "door" | "open";
+  doorWidth: number;
+  doorHeight: number;
+  /** Door centre along the shared span, 0–1. */
+  position: number;
+  hinge: "left" | "right";
+  swing: "inward" | "outward";
+}
+
 export interface DesignRoom extends RoomShape, RoomSurfaces {
   id: string;
   name: string;
   type: RoomType;
+  position?: RoomPosition;
   wallColor: string;
   floorColor: string;
   pieces: PlacedFurniture[];
@@ -178,6 +214,7 @@ export interface RoomDesign extends RoomShape, RoomSurfaces {
   roomName?: string;
   roomType?: RoomType;
   rooms?: DesignRoom[];
+  connections?: RoomConnection[];
   wallColor: string;
   floorColor: string;
   pieces: PlacedFurniture[];

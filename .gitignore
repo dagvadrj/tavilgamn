@@ -97,3 +97,7 @@ Thumbs.db
 /scripts/models/__pycache__/
 /supabase/.temp/
 /scripts/sketchup/__pycache__/
+
+# Local project archives
+/ProjectN2.rar
+/docs.zip

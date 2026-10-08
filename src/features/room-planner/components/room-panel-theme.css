@@ -1,0 +1,271 @@
+/* The room sidebars use the same white cards, blue selection and fields as the map. */
+
+.planner-reference.room-simple {
+  --room-panel-line: #e0e5ea;
+  --room-panel-ink: #263848;
+  --room-panel-muted: #637182;
+  --room-panel-blue: #0876c2;
+  --ui-ink: #263848;
+  --ui-muted: #637182;
+  --ui-line: #e0e5ea;
+  --ui-accent: #0876c2;
+  --ui-selected: #eaf5ff;
+  --ui-primary: #076bb5;
+}
+
+.planner-reference.room-simple > .planner-drawer {
+  border: 1px solid var(--room-panel-line);
+  border-radius: 16px;
+  background: #ffffffed;
+  box-shadow: 0 8px 32px #152e4212;
+  color: var(--room-panel-ink);
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
+.planner-reference.room-simple .planner-drawer-heading {
+  min-height: 58px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--room-panel-line);
+}
+
+.planner-reference.room-simple .planner-drawer-heading button {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  color: var(--room-panel-muted);
+}
+
+.planner-reference.room-simple :is(.room-environment-tabs, .room-surface-tabs, .planner-inspector-tabs) {
+  margin: 12px 14px;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--room-panel-line);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.planner-reference.room-simple :is(.room-environment-tabs, .room-surface-tabs, .planner-inspector-tabs) button {
+  min-height: 38px;
+  border-radius: 7px;
+  font-size: 11px;
+  color: var(--room-panel-muted);
+}
+
+.planner-reference.room-simple :is(.room-environment-tabs, .room-surface-tabs, .planner-inspector-tabs) button[aria-pressed="true"] {
+  background: #eaf5ff;
+  color: var(--room-panel-blue);
+  box-shadow: none;
+}
+
+.planner-reference.room-simple :is(.room-control-section, .room-opening-inspector) {
+  margin: 12px 14px;
+  padding: 14px;
+  border: 1px solid var(--room-panel-line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.planner-reference.room-simple :is(.room-panel-intro, .planner-inspector-intro) {
+  padding: 12px 14px 0;
+}
+
+.planner-reference.room-simple :is(.room-panel-intro p, .room-control-help) {
+  color: var(--room-panel-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.planner-reference.room-simple :is(.planner-number, .room-ceiling-number, .room-dimension-field) :is(input[type="number"], select) {
+  width: 100%;
+  min-height: 36px;
+  padding: 8px;
+  border: 1px solid var(--room-panel-line);
+  border-radius: 7px;
+  background: #f8fafc;
+  color: var(--room-panel-ink);
+}
+
+.planner-reference.room-simple .room-secondary-action {
+  min-height: 38px;
+  margin-top: 10px;
+  border: 1px solid var(--room-panel-line);
+  border-radius: 8px;
+  background: #f8fafc;
+  color: var(--room-panel-ink);
+  font-size: 12px;
+}
+
+.planner-reference.room-simple .room-fixture {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--room-panel-line);
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.room-ceiling-controls {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.room-ceiling-types {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.room-ceiling-types button {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid #e0e5ea;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #637182;
+  text-align: left;
+}
+
+.room-ceiling-types button[aria-pressed="true"] {
+  border-color: #0876c2;
+  background: #eaf5ff;
+  color: #0876c2;
+}
+
+.room-ceiling-types svg {
+  width: 100%;
+  height: 40px;
+}
+
+.room-ceiling-types small {
+  color: #637182;
+  font-size: 10px;
+}
+
+.room-ceiling-number {
+  display: grid;
+  gap: 6px;
+  margin-block: 8px;
+  font-size: 11px;
+  color: #637182;
+}
+
+.room-ceiling-cove {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e5ea;
+}
+
+.room-panel-badge {
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: #eaf5ff;
+  color: #0876c2;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.room-light-colors {
+  display: flex;
+  gap: 6px;
+}
+
+.room-light-colors button {
+  flex: 1;
+  padding: 7px;
+  border: 1px solid #e0e5ea;
+  border-radius: 7px;
+  color: #637182;
+  font-size: 11px;
+}
+
+.room-light-colors button[aria-pressed="true"] {
+  border-color: #0876c2;
+  background: #eaf5ff;
+  color: #0876c2;
+}
+
+.room-ceiling-controls input[type="range"] {
+  width: 100%;
+  accent-color: #0876c2;
+}
+
+.planner-reference.room-simple .planner-drawer :is(input, select, button):focus-visible {
+  outline: 2px solid #0876c2;
+  outline-offset: 2px;
+}
+
+@media (min-width: 960px) {
+  .planner-reference.room-simple > .planner-drawer {
+    margin: 12px 12px 12px 0;
+  }
+}
+
+@media (max-width: 959px) {
+  .planner-reference.room-simple > .planner-drawer {
+    top: calc(var(--reference-header) + 8px);
+    right: 8px;
+    bottom: 8px;
+    width: min(380px, calc(100% - 16px));
+  }
+}
+
+.planner-reference.room-simple .room-dimension-field {
+  color: var(--room-panel-muted);
+}
+
+.planner-reference.room-simple .room-dimension-field > span:last-child {
+  border: 1px solid var(--room-panel-line);
+  border-radius: 7px;
+  background: #f8fafc;
+}
+
+.planner-reference.room-simple .room-dimension-field input {
+  border: 0;
+  background: transparent;
+}
+
+.planner-reference.room-simple .room-material-swatch[aria-pressed="true"] .room-material-sample {
+  border-color: var(--room-panel-blue);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px #0876c233;
+}
+
+.planner-reference.room-simple .room-material-sample svg {
+  background: var(--room-panel-blue);
+}
+
+.planner-reference.room-simple .planner-search {
+  border-color: var(--room-panel-line);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.planner-reference.room-simple .room-opening-illustration {
+  width: 108px;
+  height: 70px;
+  margin: 0 0 6px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #899aa5;
+}
+
+.planner-reference.room-simple .room-opening-illustration::before, .planner-reference.room-simple .room-opening-illustration::after {
+  content: none;
+}
+
+.planner-reference.room-simple .room-opening-card[data-active="true"] {
+  outline-color: var(--room-panel-blue);
+}
+
+.planner-reference.room-simple .room-opening-quick-add {
+  border-color: var(--room-panel-line);
+  background: #f8fafc;
+  color: var(--room-panel-blue);
+}
+
+.planner-reference.room-simple .room-opening-card strong {
+  min-height: 33px;
+}
