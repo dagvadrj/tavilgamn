@@ -64,7 +64,8 @@ test('the add library exposes real GLBs and omits inactive and specification-onl
     loading: false, error: false, retry() {}, disabled: false, onAdd() {},
   }));
   assert.equal((html.match(/class="planner-model-card"/g) || []).length, 1);
-  assert.match(html, /cabinet\.glb/);
+  assert.match(html, /800 mm cabinet — гарнитурт нэмэх/);
+  assert.doesNotMatch(html, /cabinet\.glb/);
   assert.match(html, /800 × 598 × 740 мм/);
 });
 

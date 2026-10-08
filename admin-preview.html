@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tavilga.mn · Modern Clean SaaS Dashboard (Admin & Merchant)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================================================
+           1. MODERN CLEAN SAAS DESIGN SYSTEM (SaaSable / Tailwind / Linear Aesthetic)
+           ========================================================================== */
+        :root {
+            --bg-page: #f4f6fa;
+            --bg-sidebar: #ffffff;
+            --bg-card: #ffffff;
+            --bg-hover: #f8fafc;
+            
+            --border-light: #eef2f6;
+            --border-medium: #e2e8f0;
+            
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            
+            /* Accent / Brand Colors (Clean Indigo / Violet like screenshot) */
+            --brand-primary: #5b5bd6;
+            --brand-light: #ede9fe;
+            --brand-glow: rgba(91, 91, 214, 0.15);
+            
+            --accent-green: #10b981;
+            --accent-green-bg: #ecfdf5;
+            --accent-red: #ef4444;
+            --accent-red-bg: #fef2f2;
+            --accent-amber: #f59e0b;
+            
+            --radius-card: 16px;
+            --radius-sm: 8px;
+            --radius-pill: 9999px;
+            
+            --shadow-subtle: 0 2px 8px -2px rgba(0, 0, 0, 0.04), 0 4px 16px -4px rgba(0, 0, 0, 0.02);
+            --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            position: relative;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 10% 20%, rgba(91, 91, 214, 0.03) 0%, transparent 40%),
+                              radial-gradient(circle at 90% 80%, rgba(91, 91, 214, 0.02) 0%, transparent 40%);
+        }
+
+        /* Subtle Background Wave Rings (from reference design) */
+        .bg-rings {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 1400px;
+            height: 1400px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.45;
+        }
+
+        /* ==========================================================================
+           2. SIDEBAR NAVIGATION (Pure White, Crisp Groupings, Purple Active Pill)
+           ========================================================================== */
+        .sidebar {
+            width: 250px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1rem;
+            flex-shrink: 0;
+            z-index: 10;
+            min-height: 100vh;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.01);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 0.5rem 1.75rem;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            text-decoration: none;
+            color: var(--brand-primary);
+            font-weight: 800;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon-svg {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #5b5bd6, #7c7cf8);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(91, 91, 214, 0.3);
+        }
+
+        .sidebar-collapse-btn {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .sidebar-collapse-btn:hover {
+            color: var(--text-main);
+            border-color: var(--border-medium);
+        }
+
+        .nav-group-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 1rem 0.6rem 0.4rem;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-main);
+        }
+
+        .nav-btn.active {
+            background: var(--brand-light);
+            color: var(--brand-primary);
+            font-weight: 600;
+        }
+
+        .nav-btn-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .nav-btn-content svg {
+            stroke: currentColor;
+            width: 18px;
+            height: 18px;
+        }
+
+        .nav-btn.active .nav-btn-content svg {
+            stroke: var(--brand-primary);
+        }
+
+        .chevron-icon {
+            width: 14px;
+            height: 14px;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        /* Sidebar Bottom Switcher Pill */
+        .sidebar-bottom {
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .mode-toggle-pill {
+            background: var(--bg-hover);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 0.35rem;
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.45rem 0.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+        }
+
+        .mode-btn.active {
+            background: #ffffff;
+            color: var(--brand-primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        /* ==========================================================================
+           3. MAIN CONTAINER & TOPBAR
+           ========================================================================== */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .top-navbar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-light);
+            padding: 0.85rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumbs a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .breadcrumbs a:hover {
+            color: var(--text-main);
+        }
+        .breadcrumbs span.current {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .top-right-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        /* Search input with ⌘+K shortcut pill */
+        .search-container {
+            position: relative;
+            width: 280px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.55rem 3.2rem 0.55rem 2.2rem;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            background: #ffffff;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 0 3px var(--brand-glow);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        .search-shortcut {
+            position: absolute;
+            right: 0.6rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-hover);
+            border: 1px solid var(--border-medium);
+            padding: 0.15rem 0.4rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .icon-action-btn {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .icon-action-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-main);
+            border-color: var(--border-medium);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            width: 6px;
+            height: 6px;
+            background: var(--accent-red);
+            border-radius: 50%;
+        }
+
+        .user-profile-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.2rem 0.4rem;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .user-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .user-role-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        /* ==========================================================================
+           4. WORKSPACE & DASHBOARD BODY
+           ========================================================================== */
+        .workspace-content {
+            padding: 1.75rem 2rem 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Clean Underline Tabs (Overview, User Behavior, Performance) */
+        .subnav-tabs {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 0.2rem;
+        }
+
+        .tab-link {
+            padding: 0.5rem 0.2rem 0.75rem;
+            font-size: 0.92rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s;
+        }
+
+        .tab-link:hover {
+            color: var(--text-main);
+        }
+
+        .tab-link.active {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .tab-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2.5px;
+            background: var(--brand-primary);
+            border-radius: 2px;
+        }
+
+        /* ==========================================================================
+           5. KPI STAT CARDS ROW (Exact replication of screenshot)
+           ========================================================================== */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-card);
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card);
+            border-color: var(--border-medium);
+        }
+
+        .kpi-title {
+            font-size: 0.88rem;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .kpi-metric-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            margin-top: 0.25rem;
+        }
+
+        .kpi-number {
+            font-size: 1.85rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .trend-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.15rem 0.55rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .trend-pill.up {
+            background: var(--accent-green-bg);
+            color: var(--accent-green);
+        }
+
+        .trend-pill.down {
+            background: var(--accent-red-bg);
+            color: var(--accent-red);
+        }
+
+        .kpi-compare-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        /* ==========================================================================
+           6. MAIN ANALYSIS CARD (CHART WITH DAILY/MONTHLY/YEARLY TOGGLES)
+           ========================================================================== */
+        .card-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-card);
+            padding: 1.5rem 1.75rem;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .panel-header-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .panel-heading-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .panel-heading-sub {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+        }
+
+        /* Segmented control: Daily | Monthly | Yearly */
+        .segmented-filter {
+            background: var(--bg-page);
+            border: 1px solid var(--border-light);
+            padding: 0.25rem;
+            border-radius: 10px;
+            display: flex;
+            gap: 0.2rem;
+        }
+
+        .seg-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.35rem 0.85rem;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .seg-btn.active {
+            background: #ffffff;
+            color: var(--text-main);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .chart-legends-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 1.5rem;
+            margin-bottom: 0.85rem;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .dot-legend {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-pageview {
+            background: #a5b4fc; /* Light purple */
+        }
+
+        .dot-unique {
+            background: #5b5bd6; /* Deep brand purple */
+        }
+
+        /* SVG Spline Area Chart */
+        .chart-viewport {
+            width: 100%;
+            height: 260px;
+            position: relative;
+        }
+
+        .svg-chart {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* ==========================================================================
+           7. BOTTOM ROW: REFERRERS, TOP PAGES, TOP SOURCES
+           ========================================================================== */
+        .bottom-three-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr;
+            gap: 1.25rem;
+        }
+
+        .sub-panel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-card);
+            padding: 1.25rem 1.5rem;
+            box-shadow: var(--shadow-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sub-panel-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .data-mini-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.55rem 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.82rem;
+        }
+        .data-mini-row:last-child {
+            border-bottom: none;
+        }
+
+        .row-label-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            color: var(--text-secondary);
+        }
+
+        .rank-num {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            width: 16px;
+        }
+
+        .row-val-bold {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Pill segmented in Top Sources */
+        .sources-filter-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .source-pill-group {
+            background: var(--bg-page);
+            border: 1px solid var(--border-light);
+            padding: 0.2rem;
+            border-radius: 8px;
+            display: flex;
+            gap: 0.15rem;
+        }
+        .source-btn {
+            border: none;
+            background: transparent;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .source-btn.active {
+            background: #ffffff;
+            color: var(--brand-primary);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Toast Container */
+        .toast-shelf {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .toast-bubble {
+            background: #ffffff;
+            border: 1px solid var(--border-medium);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Floating Modern Framework Badges at bottom like screenshot (React, Next, MUI) */
+        .floating-tech-pills {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+            padding: 0.45rem 0.85rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 99;
+        }
+        .tech-icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .tech-icon-box:hover {
+            transform: scale(1.08);
+        }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+            .bottom-three-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; min-height: auto; }
+            .kpi-row { grid-template-columns: 1fr; }
+            .floating-tech-pills { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Concentric Background Ripple Circles SVG (from reference) -->
+    <svg class="bg-rings" viewBox="0 0 1000 1000" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="500" cy="500" r="200" stroke="#5b5bd6" stroke-width="0.75" stroke-dasharray="4 6"/>
+        <circle cx="500" cy="500" r="320" stroke="#5b5bd6" stroke-width="0.75"/>
+        <circle cx="500" cy="500" r="450" stroke="#5b5bd6" stroke-width="0.75" stroke-dasharray="6 8"/>
+    </svg>
+
+    <!-- ==========================================================================
+       SIDEBAR (White, Grouped items, Purple Active selection)
+       ========================================================================== -->
+    <aside class="sidebar">
+        <!-- Logo -->
+        <div class="sidebar-header">
+            <a href="#" class="brand-logo">
+                <div class="logo-icon-svg">
+                    <!-- Clean geometric chair icon -->
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"></path>
+                        <path d="M3 11v5a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2Z"></path>
+                    </svg>
+                </div>
+                <span id="sidebar-brand-name">tavilga.mn</span>
+            </a>
+            <button class="sidebar-collapse-btn" title="Хураах">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+            </button>
+        </div>
+
+        <!-- Sidebar Navigation Items (Admin vs. Merchant dynamically adjusted) -->
+        <div id="sidebar-nav-container">
+            <!-- Manage Section -->
+            <div class="nav-group-label" id="label-group-manage">Manage</div>
+            <ul class="nav-list">
+                <li>
+                    <button class="nav-btn active" onclick="setTab('dashboard', this)">
+                        <div class="nav-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                            <span id="nav-item-1">Dashboard</span>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-btn" onclick="setTab('billing', this)">
+                        <div class="nav-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                            <span id="nav-item-2">Billing & QPay</span>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-btn" onclick="setTab('products', this)">
+                        <div class="nav-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                            <span id="nav-item-3">Products & 3D</span>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-btn" onclick="setTab('settings', this)">
+                        <div class="nav-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            <span>Setting</span>
+                        </div>
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Manage Accounts Section -->
+            <div class="nav-group-label" id="label-group-accounts">Manage Accounts</div>
+            <ul class="nav-list">
+                <li>
+                    <button class="nav-btn" onclick="showToast('Дансны тохиргоо')">
+                        <div class="nav-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            <span>Account</span>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-btn" onclick="showToast('Хэрэглэгчдийн жагсаалт')">
+                        <div class="nav-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span id="nav-item-users">Merchants & Users</span>
+                        </div>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-btn" onclick="showToast('Хандах эрхийн тохиргоо (RBAC)')">
+                        <div class="nav-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m10 15 5-3-5-3v6Z"></path></svg>
+                            <span>Roles & Permissions</span>
+                        </div>
+                    </button>
+                </li>
+            </ul>
+
+            <!-- UI Elements Collapsible -->
+            <div class="nav-group-label">UI Elements</div>
+            <ul class="nav-list">
+                <li>
+                    <button class="nav-btn" onclick="showToast('3D Room Planner загвар')">
+                        <div class="nav-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                            <span>Data Display</span>
+                        </div>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-btn" onclick="showToast('Хэрэглэгчийн санал хүсэлт')">
+                        <div class="nav-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                            <span>Feedback</span>
+                        </div>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </li>
+                <li>
+                    <button class="nav-btn" onclick="showToast('Маягтын элементүүд')">
+                        <div class="nav-btn-content">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                            <span>Inputs</span>
+                        </div>
+                        <svg class="chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Sidebar Bottom: Role Switcher (Super Admin vs Merchant Studio) -->
+        <div class="sidebar-bottom">
+            <div class="mode-toggle-pill">
+                <button class="mode-btn active" id="btn-role-admin" onclick="toggleRole('admin')">
+                    👑 Super Admin
+                </button>
+                <button class="mode-btn" id="btn-role-merchant" onclick="toggleRole('merchant')">
+                    🏪 Merchant
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ==========================================================================
+       MAIN CONTENT AREA
+       ========================================================================== -->
+    <main class="main-wrapper">
+        
+        <!-- Top Navbar with Breadcrumb, Search, Notification, Profile -->
+        <header class="top-navbar">
+            <div class="breadcrumbs">
+                <a href="#">Home</a>
+                <span>›</span>
+                <a href="#" id="crumb-category">Analytics</a>
+                <span>›</span>
+                <span class="current" id="crumb-current">Overview</span>
+            </div>
+
+            <div class="top-right-actions">
+                <!-- Search with Command Shortcut -->
+                <div class="search-container">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" class="search-input" placeholder="Search here" id="global-search-input">
+                    <span class="search-shortcut">⌘ + K</span>
+                </div>
+
+                <!-- Action icons -->
+                <button class="icon-action-btn" title="Шүүлтүүр" onclick="showToast('Шүүлтүүр нээгдлээ')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                </button>
+                <button class="icon-action-btn" title="Мэдэгдэл" onclick="showToast('Танд 3 шинэ мэдэгдэл байна!')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    <span class="notification-badge"></span>
+                </button>
+
+                <!-- User profile pill -->
+                <div class="user-profile-pill" onclick="showToast('Профайл мэдээлэл')">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="John Charly" class="user-avatar" id="header-avatar">
+                    <div class="user-info">
+                        <span class="user-name" id="header-username">John Charly</span>
+                        <span class="user-role-label" id="header-userrole">Super Admin</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Workspace Body -->
+        <div class="workspace-content">
+            
+            <!-- Subnav Underline Tabs: Overview | User Behavior | Performance -->
+            <nav class="subnav-tabs">
+                <button class="tab-link active" onclick="switchSubnav('overview', this)">Overview</button>
+                <button class="tab-link" onclick="switchSubnav('behavior', this)">User Behavior</button>
+                <button class="tab-link" onclick="switchSubnav('performance', this)">Performance</button>
+            </nav>
+
+            <!-- 1. KPI Cards Row (4 cards) -->
+            <section class="kpi-row" id="kpi-cards-container">
+                <!-- Card 1 -->
+                <div class="kpi-card">
+                    <div class="kpi-title" id="kpi-title-1">Unique Visitors</div>
+                    <div class="kpi-metric-wrap">
+                        <span class="kpi-number" id="kpi-val-1">23,876</span>
+                        <span class="trend-pill up" id="kpi-trend-1">↑ 24.5%</span>
+                    </div>
+                    <div class="kpi-compare-text">Compare to last week</div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="kpi-card">
+                    <div class="kpi-title" id="kpi-title-2">Page View</div>
+                    <div class="kpi-metric-wrap">
+                        <span class="kpi-number" id="kpi-val-2">30,450</span>
+                        <span class="trend-pill up" id="kpi-trend-2">↑ 20.5%</span>
+                    </div>
+                    <div class="kpi-compare-text">Compare to last week</div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="kpi-card">
+                    <div class="kpi-title" id="kpi-title-3">Events</div>
+                    <div class="kpi-metric-wrap">
+                        <span class="kpi-number" id="kpi-val-3">34,789</span>
+                        <span class="trend-pill down" id="kpi-trend-3">↓ 20.5%</span>
+                    </div>
+                    <div class="kpi-compare-text">Compare to last week</div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="kpi-card">
+                    <div class="kpi-title" id="kpi-title-4">Live Visitor</div>
+                    <div class="kpi-metric-wrap">
+                        <span class="kpi-number" id="kpi-val-4">45,687</span>
+                        <span class="trend-pill up" id="kpi-trend-4">↑ 24.5%</span>
+                    </div>
+                    <div class="kpi-compare-text">Compare to last week</div>
+                </div>
+            </section>
+
+            <!-- 2. Main Analysis Card (Area Chart with Daily/Monthly/Yearly) -->
+            <section class="card-panel">
+                <div class="panel-header-row">
+                    <div>
+                        <h2 class="panel-heading-title" id="chart-main-title">Analysis</h2>
+                        <p class="panel-heading-sub" id="chart-main-sub">Analyze user engagement and improve your product with real-time analytics.</p>
+                    </div>
+
+                    <!-- Daily / Monthly / Yearly segmented buttons -->
+                    <div class="segmented-filter">
+                        <button class="seg-btn" onclick="setGranularity('daily', this)">Daily</button>
+                        <button class="seg-btn active" onclick="setGranularity('monthly', this)">Monthly</button>
+                        <button class="seg-btn" onclick="setGranularity('yearly', this)">Yearly</button>
+                    </div>
+                </div>
+
+                <!-- Legend indicators -->
+                <div class="chart-legends-row">
+                    <div class="legend-item">
+                        <span class="dot-legend dot-pageview"></span>
+                        <span id="legend-label-1">Page View</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="dot-legend dot-unique"></span>
+                        <span id="legend-label-2">Unique Visitor</span>
+                    </div>
+                </div>
+
+                <!-- Spline SVG Area Chart -->
+                <div class="chart-viewport">
+                    <svg class="svg-chart" viewBox="0 0 1000 240" preserveAspectRatio="none">
+                        <defs>
+                            <!-- Linear gradients for the soft fills -->
+                            <linearGradient id="gradPageView" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#c7d2fe" stop-opacity="0.35"/>
+                                <stop offset="100%" stop-color="#c7d2fe" stop-opacity="0.0"/>
+                            </linearGradient>
+                            <linearGradient id="gradUnique" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#5b5bd6" stop-opacity="0.18"/>
+                                <stop offset="100%" stop-color="#5b5bd6" stop-opacity="0.0"/>
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Horizontal Grid Lines -->
+                        <line x1="30" y1="20" x2="980" y2="20" stroke="#f1f5f9" stroke-width="1"/>
+                        <line x1="30" y1="65" x2="980" y2="65" stroke="#f1f5f9" stroke-width="1"/>
+                        <line x1="30" y1="110" x2="980" y2="110" stroke="#f1f5f9" stroke-width="1"/>
+                        <line x1="30" y1="155" x2="980" y2="155" stroke="#f1f5f9" stroke-width="1"/>
+                        <line x1="30" y1="200" x2="980" y2="200" stroke="#f1f5f9" stroke-width="1"/>
+
+                        <!-- Y-Axis Labels -->
+                        <text x="20" y="24" font-size="10" fill="#94a3b8" text-anchor="end">1,000</text>
+                        <text x="20" y="69" font-size="10" fill="#94a3b8" text-anchor="end">800</text>
+                        <text x="20" y="114" font-size="10" fill="#94a3b8" text-anchor="end">600</text>
+                        <text x="20" y="159" font-size="10" fill="#94a3b8" text-anchor="end">400</text>
+                        <text x="20" y="204" font-size="10" fill="#94a3b8" text-anchor="end">200</text>
+                        <text x="20" y="235" font-size="10" fill="#94a3b8" text-anchor="end">0</text>
+
+                        <!-- Area Fill 1: Page View (Light purple curve) -->
+                        <path id="chart-area-1" d="M 40,60 Q 110,50 180,75 T 320,65 T 460,80 T 600,60 T 740,110 T 880,105 T 980,45 L 980,220 L 40,220 Z" fill="url(#gradPageView)" />
+                        <!-- Stroke Line 1 -->
+                        <path id="chart-line-1" d="M 40,60 Q 110,50 180,75 T 320,65 T 460,80 T 600,60 T 740,110 T 880,105 T 980,45" fill="none" stroke="#a5b4fc" stroke-width="2.2" stroke-linecap="round"/>
+
+                        <!-- Area Fill 2: Unique Visitor (Deep violet curve) -->
+                        <path id="chart-area-2" d="M 40,175 Q 110,165 180,150 T 320,165 T 460,135 T 600,145 T 740,175 T 880,155 T 980,110 L 980,220 L 40,220 Z" fill="url(#gradUnique)" />
+                        <!-- Stroke Line 2 -->
+                        <path id="chart-line-2" d="M 40,175 Q 110,165 180,150 T 320,165 T 460,135 T 600,145 T 740,175 T 880,155 T 980,110" fill="none" stroke="#5b5bd6" stroke-width="2.5" stroke-linecap="round"/>
+
+                        <!-- X-Axis Month Labels -->
+                        <text x="50" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Jan</text>
+                        <text x="135" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Feb</text>
+                        <text x="220" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Mar</text>
+                        <text x="305" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Apr</text>
+                        <text x="390" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">May</text>
+                        <text x="475" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Jun</text>
+                        <text x="560" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Jul</text>
+                        <text x="645" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Aug</text>
+                        <text x="730" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Sep</text>
+                        <text x="815" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Oct</text>
+                        <text x="900" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Nov</text>
+                        <text x="970" y="235" font-size="10.5" fill="#94a3b8" text-anchor="middle">Dec</text>
+                    </svg>
+                </div>
+            </section>
+
+            <!-- 3. Bottom Row: Top HTTP Referrers, Top Pages, Top Sources -->
+            <section class="bottom-three-grid">
+                
+                <!-- Card 1: Top HTTP Referrers -->
+                <div class="sub-panel-card">
+                    <h3 class="sub-panel-title" id="bottom-col-1-title">Top HTTP Referrers</h3>
+                    <div id="bottom-col-1-rows">
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span class="rank-num">01</span>
+                                <span>Landing Page / 3D Room</span>
+                            </div>
+                            <span class="row-val-bold">14,290</span>
+                        </div>
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span class="rank-num">02</span>
+                                <span>Direct Traffic</span>
+                            </div>
+                            <span class="row-val-bold">9,410</span>
+                        </div>
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span class="rank-num">03</span>
+                                <span>Instagram / Facebook Ad</span>
+                            </div>
+                            <span class="row-val-bold">6,820</span>
+                        </div>
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span class="rank-num">04</span>
+                                <span>Google Search (Organic)</span>
+                            </div>
+                            <span class="row-val-bold">4,120</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Top Pages / Products -->
+                <div class="sub-panel-card">
+                    <h3 class="sub-panel-title" id="bottom-col-2-title">Top Pages</h3>
+                    <div id="bottom-col-2-rows">
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span class="rank-num">01</span>
+                                <span>/catalog (Бүх тавилга)</span>
+                            </div>
+                            <span class="row-val-bold">18,340</span>
+                        </div>
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span class="rank-num">02</span>
+                                <span>/planner (3D Өрөө төлөвлөгч)</span>
+                            </div>
+                            <span class="row-val-bold">12,504</span>
+                        </div>
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span class="rank-num">03</span>
+                                <span>/product/sofa-scandi</span>
+                            </div>
+                            <span class="row-val-bold">8,912</span>
+                        </div>
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span class="rank-num">04</span>
+                                <span>/checkout (QPay төлбөр)</span>
+                            </div>
+                            <span class="row-val-bold">3,680</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Top Sources with Segment Filter -->
+                <div class="sub-panel-card">
+                    <div class="sources-filter-row">
+                        <h3 class="sub-panel-title" id="bottom-col-3-title">Top Sources</h3>
+                        <div class="source-pill-group">
+                            <button class="source-btn active" onclick="setSourceTab('affiliate', this)">Affiliate</button>
+                            <button class="source-btn" onclick="setSourceTab('campaign', this)">Campaign</button>
+                            <button class="source-btn" onclick="setSourceTab('marketing', this)">Marketing</button>
+                        </div>
+                    </div>
+
+                    <div id="bottom-col-3-rows">
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span>No-Refference (Direct)</span>
+                            </div>
+                            <span class="row-val-bold">16,890</span>
+                        </div>
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span>QPay Mobile App</span>
+                            </div>
+                            <span class="row-val-bold">8,340</span>
+                        </div>
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span>ArtWood Merchant Referral</span>
+                            </div>
+                            <span class="row-val-bold">5,120</span>
+                        </div>
+                        <div class="data-mini-row">
+                            <div class="row-label-meta">
+                                <span>Interior Designer Club</span>
+                            </div>
+                            <span class="row-val-bold">2,490</span>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Floating modern tech stack badges matching the prompt image (React, Next.js, Material-UI / Three.js) -->
+    <div class="floating-tech-pills">
+        <div class="tech-icon-box" style="background:#087ea4;" title="React 19 + Three.js">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V18h-2v-1.07a5 5 0 0 1-3.93-3.93H6v-2h1.07A5 5 0 0 1 11 7.07V6h2v1.07a5 5 0 0 1 3.93 3.93H18v2h-1.07A5 5 0 0 1 13 16.93z"></path></svg>
+        </div>
+        <div class="tech-icon-box" style="background:#000000;" title="Next.js 15 App Router">
+            <span style="color:#ffffff; font-weight:900; font-size:1.15rem; font-family:sans-serif;">N</span>
+        </div>
+        <div class="tech-icon-box" style="background:#007fff;" title="Modern Clean Component Design System">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+        </div>
+    </div>
+
+    <!-- Toast shelf for micro-interactions -->
+    <div class="toast-shelf" id="toast-shelf"></div>
+
+    <!-- ==========================================================================
+       8. INTERACTIVE JAVASCRIPT LOGIC
+       ========================================================================== -->
+    <script>
+        const state = {
+            role: 'admin', // 'admin' | 'merchant'
+            granularity: 'monthly',
+            subnav: 'overview'
+        };
+
+        // Toggle Role between Admin and Merchant
+        function toggleRole(role) {
+            state.role = role;
+            document.getElementById('btn-role-admin').classList.toggle('active', role === 'admin');
+            document.getElementById('btn-role-merchant').classList.toggle('active', role === 'merchant');
+            
+            const brandName = document.getElementById('sidebar-brand-name');
+            const username = document.getElementById('header-username');
+            const userrole = document.getElementById('header-userrole');
+            const avatar = document.getElementById('header-avatar');
+            
+            // Subnav labels & Content adjustments
+            if (role === 'admin') {
+                brandName.innerText = 'tavilga.mn';
+                username.innerText = 'John Charly';
+                userrole.innerText = 'Super Admin';
+                avatar.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80';
+                
+                // KPIs
+                document.getElementById('kpi-title-1').innerText = 'Unique Visitors';
+                document.getElementById('kpi-val-1').innerText = '23,876';
+                document.getElementById('kpi-trend-1').innerHTML = '↑ 24.5%';
+                document.getElementById('kpi-trend-1').className = 'trend-pill up';
+
+                document.getElementById('kpi-title-2').innerText = 'Page View';
+                document.getElementById('kpi-val-2').innerText = '30,450';
+                document.getElementById('kpi-trend-2').innerHTML = '↑ 20.5%';
+                document.getElementById('kpi-trend-2').className = 'trend-pill up';
+
+                document.getElementById('kpi-title-3').innerText = 'Events (3D Room)';
+                document.getElementById('kpi-val-3').innerText = '34,789';
+                document.getElementById('kpi-trend-3').innerHTML = '↓ 20.5%';
+                document.getElementById('kpi-trend-3').className = 'trend-pill down';
+
+                document.getElementById('kpi-title-4').innerText = 'Live Visitor';
+                document.getElementById('kpi-val-4').innerText = '45,687';
+                document.getElementById('kpi-trend-4').innerHTML = '↑ 24.5%';
+                document.getElementById('kpi-trend-4').className = 'trend-pill up';
+
+                document.getElementById('chart-main-title').innerText = 'Analysis';
+                document.getElementById('chart-main-sub').innerText = 'Analyze user engagement and improve your product with real-time analytics.';
+                document.getElementById('legend-label-1').innerText = 'Page View';
+                document.getElementById('legend-label-2').innerText = 'Unique Visitor';
+
+                showToast('👑 Super Admin горимд шилжлээ');
+            } else {
+                brandName.innerText = 'ArtWood Studio';
+                username.innerText = 'М. Ганбаатар';
+                userrole.innerText = 'Verified Merchant';
+                avatar.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80';
+
+                // KPIs for Merchant
+                document.getElementById('kpi-title-1').innerText = 'Дэлгүүрийн Орлого';
+                document.getElementById('kpi-val-1').innerText = '₮28.4M';
+                document.getElementById('kpi-trend-1').innerHTML = '↑ 18.2%';
+                document.getElementById('kpi-trend-1').className = 'trend-pill up';
+
+                document.getElementById('kpi-title-2').innerText = 'Идэвхтэй Захиалга';
+                document.getElementById('kpi-val-2').innerText = '142 ш';
+                document.getElementById('kpi-trend-2').innerHTML = '↑ 12.0%';
+                document.getElementById('kpi-trend-2').className = 'trend-pill up';
+
+                document.getElementById('kpi-title-3').innerText = '3D Үнийн Хүсэлт';
+                document.getElementById('kpi-val-3').innerText = '18 шинэ';
+                document.getElementById('kpi-trend-3').innerHTML = '↑ 32.5%';
+                document.getElementById('kpi-trend-3').className = 'trend-pill up';
+
+                document.getElementById('kpi-title-4').innerText = 'Агуулахын Үлдэгдэл';
+                document.getElementById('kpi-val-4').innerText = '84 бараа';
+                document.getElementById('kpi-trend-4').innerHTML = '↓ 4.1%';
+                document.getElementById('kpi-trend-4').className = 'trend-pill down';
+
+                document.getElementById('chart-main-title').innerText = 'Дэлгүүрийн Борлуулалт ба QPay Орлого';
+                document.getElementById('chart-main-sub').innerText = 'Таны бүтээгдэхүүний сар бүрийн цэвэр борлуулалт ба 3D өрөөний захиалгууд.';
+                document.getElementById('legend-label-1').innerText = '3D Өрөөний захиалга';
+                document.getElementById('legend-label-2').innerText = 'Бэлэн тавилгын борлуулалт';
+
+                showToast('🏪 ArtWood Merchant Studio горимд шилжлээ');
+            }
+        }
+
+        // Granularity segmented toggle (Daily / Monthly / Yearly)
+        function setGranularity(granularity, btn) {
+            state.granularity = granularity;
+            document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const area1 = document.getElementById('chart-area-1');
+            const line1 = document.getElementById('chart-line-1');
+            const area2 = document.getElementById('chart-area-2');
+            const line2 = document.getElementById('chart-line-2');
+
+            if (granularity === 'daily') {
+                // Variations for smooth feeling
+                line1.setAttribute('d', "M 40,80 Q 110,35 180,60 T 320,40 T 460,95 T 600,50 T 740,80 T 880,65 T 980,30");
+                area1.setAttribute('d', "M 40,80 Q 110,35 180,60 T 320,40 T 460,95 T 600,50 T 740,80 T 880,65 T 980,30 L 980,220 L 40,220 Z");
+                line2.setAttribute('d', "M 40,160 Q 110,120 180,140 T 320,110 T 460,160 T 600,120 T 740,150 T 880,130 T 980,90");
+                area2.setAttribute('d', "M 40,160 Q 110,120 180,140 T 320,110 T 460,160 T 600,120 T 740,150 T 880,130 T 980,90 L 980,220 L 40,220 Z");
+                showToast('Өдрөөр харах горим');
+            } else if (granularity === 'monthly') {
+                line1.setAttribute('d', "M 40,60 Q 110,50 180,75 T 320,65 T 460,80 T 600,60 T 740,110 T 880,105 T 980,45");
+                area1.setAttribute('d', "M 40,60 Q 110,50 180,75 T 320,65 T 460,80 T 600,60 T 740,110 T 880,105 T 980,45 L 980,220 L 40,220 Z");
+                line2.setAttribute('d', "M 40,175 Q 110,165 180,150 T 320,165 T 460,135 T 600,145 T 740,175 T 880,155 T 980,110");
+                area2.setAttribute('d', "M 40,175 Q 110,165 180,150 T 320,165 T 460,135 T 600,145 T 740,175 T 880,155 T 980,110 L 980,220 L 40,220 Z");
+                showToast('Сараар харах горим');
+            } else {
+                line1.setAttribute('d', "M 40,100 Q 200,60 400,80 T 700,50 T 980,40");
+                area1.setAttribute('d', "M 40,100 Q 200,60 400,80 T 700,50 T 980,40 L 980,220 L 40,220 Z");
+                line2.setAttribute('d', "M 40,180 Q 200,150 400,160 T 700,130 T 980,100");
+                area2.setAttribute('d', "M 40,180 Q 200,150 400,160 T 700,130 T 980,100 L 980,220 L 40,220 Z");
+                showToast('Жилээр харах горим');
+            }
+        }
+
+        // Subnav Tab switch
+        function switchSubnav(tab, btn) {
+            state.subnav = tab;
+            document.querySelectorAll('.tab-link').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('crumb-current').innerText = btn.innerText;
+            showToast(`${btn.innerText} цонх нээгдлээ`);
+        }
+
+        // Sidebar Nav switch
+        function setTab(name, btn) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            showToast(`${name.toUpperCase()} сонгогдлоо`);
+        }
+
+        // Bottom sources tab
+        function setSourceTab(type, btn) {
+            document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            showToast(`Эх сурвалж: ${type}`);
+        }
+
+        // Toast Helper
+        function showToast(message) {
+            const shelf = document.getElementById('toast-shelf');
+            const bubble = document.createElement('div');
+            bubble.className = 'toast-bubble';
+            bubble.innerHTML = `<span>✨</span><span>${message}</span>`;
+            shelf.appendChild(bubble);
+            setTimeout(() => {
+                bubble.style.opacity = '0';
+                bubble.style.transform = 'translateY(10px)';
+                bubble.style.transition = 'all 0.25s ease';
+                setTimeout(() => bubble.remove(), 250);
+            }, 2500);
+        }
+
+        // Keyboard Shortcut ⌘+K or Ctrl+K
+        window.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                const search = document.getElementById('global-search-input');
+                search.focus();
+                showToast('Хайх утгаа бичнэ үү (⌘+K)');
+            }
+        });
+    </script>
+</body>
+</html>

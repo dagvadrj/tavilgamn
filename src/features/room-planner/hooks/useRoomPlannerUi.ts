@@ -15,14 +15,14 @@ export interface CustomInterior {
 export function useRoomPlannerUi() {
   const [selected, setSelected] = useState<string | null>(null);
   const [environmentTab, setEnvironmentTab] =
-    useState<EnvironmentTab>("surfaces");
+    useState<EnvironmentTab>("room");
   const [surface, setSurface] = useState<"floor" | "wall" | "ceiling">("floor");
   const [selectedWall, setSelectedWall] = useState<RoomWall | null>(null);
   const [selectedOpening, setSelectedOpening] = useState<string | null>(null);
   const [placementTemplate, setPlacementTemplate] = useState<string | null>(
     null,
   );
-  const [showStartHint, setShowStartHint] = useState(false);
+  const [showStartHint, setShowStartHint] = useState(true);
   const [inspector, setInspector] = useState<"catalog" | "environment">("environment");
   const [view, setView] = useState<"plan" | "perspective">("perspective");
   const [snapEnabled, setSnapEnabled] = useState(true);

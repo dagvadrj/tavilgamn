@@ -1,0 +1,241 @@
+.kitchen-reference .kitchen-inspector-help {
+  margin: 0;
+  padding: 0 4px 8px;
+  color: var(--ui-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.kitchen-reference .kitchen-catalog-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: #f4f6f8;
+}
+
+.kitchen-reference .kitchen-catalog-tabs button {
+  flex: 1;
+  min-height: 44px;
+  padding: 8px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-muted);
+}
+
+.kitchen-reference .kitchen-catalog-tabs button[aria-pressed="true"] {
+  background: #fff;
+  color: var(--ui-accent);
+  box-shadow: 0 2px 6px #18181b0d;
+}
+
+.kitchen-reference .planner-standard-builder {
+  margin: 12px 0 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.kitchen-reference .planner-standard-builder .planner-inspector-intro {
+  padding: 10px 0 16px;
+}
+
+.kitchen-reference .planner-standard-builder .planner-inspector-intro h2 {
+  font-size: 16px;
+}
+
+.kitchen-reference .planner-standard-builder .km-fields {
+  gap: 20px;
+  padding: 0;
+}
+
+.kitchen-choice-group h3 {
+  margin-bottom: 9px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--ui-muted);
+}
+
+.kitchen-reference .reference-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.kitchen-reference .reference-type-grid button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: 70px;
+  padding: 12px 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ui-ink);
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.kitchen-reference .reference-type-grid button:hover:not(:disabled) {
+  border-color: var(--ui-accent);
+  background: #f8fbff;
+}
+
+.kitchen-reference .reference-type-grid button[aria-pressed="true"] {
+  border-color: var(--ui-accent);
+  background: var(--ui-selected);
+  color: var(--ui-accent);
+  box-shadow: inset 0 0 0 1px var(--ui-accent);
+}
+
+.kitchen-reference .reference-cabinet-symbol {
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.kitchen-add-summary {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid #d5e4f3;
+  border-radius: 14px;
+  background: #f5f9fd;
+}
+
+.kitchen-eyebrow {
+  font-size: 11px;
+  color: var(--ui-muted);
+}
+
+.kitchen-add-summary > strong {
+  font-size: 15px;
+  color: var(--ui-ink);
+}
+
+.kitchen-add-summary p, .kitchen-section-help {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ui-muted);
+}
+
+.kitchen-section-help {
+  margin: 12px 0 16px;
+}
+
+.kitchen-width-control > span {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0 8px;
+  font-size: 12px;
+}
+
+.kitchen-width-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kitchen-width-options button {
+  flex: 1 0 42px;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--ui-line);
+  border-radius: 9px;
+  background: #fff;
+  font-size: 12px;
+}
+
+.kitchen-width-options button[aria-pressed="true"] {
+  border-color: var(--ui-accent);
+  background: var(--ui-selected);
+  color: var(--ui-accent);
+  font-weight: 700;
+}
+
+.kitchen-reference .kitchen-add-summary .kp-primary {
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.kitchen-reference .kitchen-step-footer {
+  position: sticky;
+  bottom: -14px;
+  z-index: 3;
+  display: grid;
+  gap: 10px;
+  flex-shrink: 0;
+  margin: auto -14px -14px;
+  padding: 14px;
+  border-top: 1px solid var(--ui-line);
+  background: #fffffffa;
+  box-shadow: 0 -4px 16px #18181b06;
+}
+
+.kitchen-step-footer > span {
+  font-size: 11px;
+  color: var(--ui-muted);
+}
+
+.kitchen-step-footer button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--ui-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kitchen-reference .planner-model-library {
+  padding-top: 4px;
+}
+
+.kitchen-result-count {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--ui-muted);
+}
+
+.kitchen-result-count button {
+  min-height: 44px;
+  color: var(--ui-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.kitchen-reference .kp-settings button:focus-visible {
+  outline: 3px solid var(--ui-accent);
+  outline-offset: 3px;
+}
+
+.kitchen-reference .kp-settings button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.kitchen-reference .kp-settings [hidden] {
+  display: none;
+}
+
+@media (max-width: 959px) {
+  .kitchen-reference .kitchen-step-footer {
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+}

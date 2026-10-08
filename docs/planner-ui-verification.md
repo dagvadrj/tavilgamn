@@ -1,5 +1,57 @@
 # Planner UI and map controls
 
+2026-10-07 — restore discoverable standard kitchen choices.
+
+- Standard cabinets and appliances are visible at the beginning of the kitchen
+  add inspector, before the remote model library, rather than inside collapsed
+  "create by size" details. All previous cabinet, oven, hood and refrigerator
+  choices remain; hob and sink cabinets can also be added directly.
+- Offered widths respect the appliance minimums. Placement, undo/history and
+  saved component data continue through the existing kitchen commit path.
+- The room furniture catalog exposes a named kitchen-planner link; kitchen
+  rooms also have a "plan garniture" action on the canvas toolbar.
+- Validation: 23 relevant tests, TypeScript, lint and stylesheet checks passed.
+  Production compilation succeeded, but the remaining build phases stalled;
+  the build was interrupted and the local dev server restarted.
+  Native browser interaction verification remains incomplete: the automation
+  session reported an active application change when navigating to `/kitchen`.
+
+2026-10-07 — room planner entry and size selection.
+
+- Entering `/planner` first shows six room types. Choosing a type opens four
+  example floor areas, with width/depth displayed and a recommended default.
+- A custom option accepts width, depth and ceiling height in centimetres, with
+  validation and a live floor-plan preview. The completed dimensions create the
+  design atomically, including its room snapshot and persisted draft.
+- Users can resume their previous draft. Creating another room preserves the
+  earlier design in the saved-project list.
+- Validation: 22 relevant tests, lint, TypeScript, stylesheet checks and an
+  isolated production build passed; local `/planner` responds with HTTP 200.
+  Browser interaction verification remains incomplete because native browser
+  automation repeatedly reported that the active application had changed.
+
+2026-10-07 — room planner simplified around the supplied IKEA reference.
+
+- The room canvas occupies the full width until an inspector is opened. Catalog,
+  room settings and project summary are mutually exclusive and dismissible on
+  desktop as well as mobile.
+- One bottom dock exposes dollhouse, top and front views, materials, dimensions
+  and room editing. Advanced camera/grid options live in a dismissible menu.
+- Room width, depth and height can be entered directly in centimetres. Existing
+  opening, furniture, wall-feature and lighting validation still applies;
+  complex geometry remains available in the original editor.
+- The furniture catalog starts with all available furniture, supports search and
+  categories, and avoids GLB filenames in the room UI. Selecting furniture keeps
+  the canvas open and exposes named rotate/copy/move/delete actions.
+- A three-step introduction, project-name field, save/image actions and a price
+  summary with the existing stock-checked cart action complete the workflow.
+- Validation: 441 tests passed; lint, TypeScript, stylesheet checks and isolated
+  production build passed. Initial desktop layout and catalog opening were
+  inspected through native browser UI. Full drag/camera and mobile browser QA
+  could not be completed because the native browser automation session repeatedly
+  changed windows and finally closed its pipe. No claim of full interaction or
+  mobile visual verification is made for this update.
+
 2026-10-02 — local `/planner` and `/kitchen` UI refresh. No deployment, database
 change, project deletion or asset changes in this update.
 

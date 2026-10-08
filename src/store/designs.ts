@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 import type { RoomDesign, RoomSize, PlacedFurniture, RoomType } from "@/lib/types";
 import { activateDesignRoom, DEFAULT_FLOOR_MATERIAL, LEGACY_FLOOR_MATERIAL, newDesignRoom, syncDesignRooms } from "@/lib/roomDesign";
 import { ROOM_TYPES } from "@/lib/roomGeometry";
+import { validateRoomSetup, type RoomSetupDimensions } from "@/lib/roomSetup";
 
 export const ROOM_DIMENSIONS: Record<RoomSize, { w: number; d: number }> = {
   "40": { w: 6.3, d: 6.3 },
@@ -22,7 +23,7 @@ interface DesignState {
   endEdit: () => void;
   undo: () => void;
   redo: () => void;
-  createNew: (size: RoomSize, name?: string, roomType?: RoomType) => void;
+  createNew: (size: RoomSize, name?: string, roomType?: RoomType, dimensions?: RoomSetupDimensions) => void;
   addRoom: (type: RoomType) => void;
   selectRoom: (id: string) => void;
   loadDesign: (id: string) => void;
@@ -36,14 +37,19 @@ const createDesignId = () => `d_${crypto.randomUUID()}`;
 
 const cloneDesign = syncDesignRooms;
   
-const blankDesign = (size: RoomSize, name = "Untitled Room", roomType?: RoomType): RoomDesign => {
+const blankDesign = (size: RoomSize, name = "Untitled Room", roomType?: RoomType, dimensions?: RoomSetupDimensions): RoomDesign => {
+  if (dimensions) {
+    const issue = validateRoomSetup(dimensions);
+    if (issue) throw new Error(issue);
+  }
   const dims = ROOM_DIMENSIONS[size];
   return cloneDesign({
     id: createDesignId(),
     name,
     size,
-    width: roomType ? ROOM_TYPES[roomType].width : dims.w,
-    depth: roomType ? ROOM_TYPES[roomType].depth : dims.d,
+    width: dimensions?.width ?? (roomType ? ROOM_TYPES[roomType].width : dims.w),
+    depth: dimensions?.depth ?? (roomType ? ROOM_TYPES[roomType].depth : dims.d),
+    height: dimensions?.height ?? 2.7,
     roomType: roomType ?? "living",
     wallColor: "#EFE6D6",
     floorColor: "#C9A37A",
@@ -84,7 +90,7 @@ export const useDesigns = create<DesignState>()(
         if (!current || !future.length) return;
         set({ current: cloneDesign(future[0]), past: [...past, cloneDesign(current)].slice(-60), future: future.slice(1) });
       },
-      createNew: (size, name, roomType) => set({ current: blankDesign(size, name, roomType), past: [], future: [], transaction: null }),
+      createNew: (size, name, roomType, dimensions) => set({ current: blankDesign(size, name, roomType, dimensions), past: [], future: [], transaction: null }),
       addRoom: (type) => {
         get().endEdit();
         const current = get().current;

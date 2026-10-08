@@ -21,17 +21,17 @@ test("shared planner rail exposes accessible active and disabled tools without c
   assert.doesNotMatch(source("src/features/planner/components/PlannerRail.tsx"), /useAuth|localStorage|commit\(/);
 });
 
-test("both planners use the shared reference layout while retaining lazy 3D scenes", () => {
+test("both planners retain lazy 3D scenes and only open room inspectors reserve space", () => {
   for (const file of ["src/components/RoomPlanner.tsx", "src/components/ModularKitchenPlanner.tsx"]) {
     const text = source(file);
     assert.match(text, /planner-reference/);
-    assert.match(text, /<PlannerRail/);
     assert.match(text, /planner-reference\.css/);
     assert.match(text, /ssr: false/);
   }
   const room = source("src/components/RoomPlanner.tsx");
-  assert.match(room, /active=\{inspector === "catalog"\}/);
-  assert.match(room, /active=\{inspector === "environment"\}/);
+  assert.match(source("src/components/ModularKitchenPlanner.tsx"), /<PlannerRail/);
+  assert.match(room, /active=\{inspector === "catalog" && leftOpen\}/);
+  assert.match(room, /active=\{inspector === "environment" && rightOpen\}/);
   assert.match(room, /aria-label="Тавилгын ангилал"/);
   assert.match(source("src/features/room-planner/components/PlannerPanels.tsx"), /if \(!active\) return null/);
 });

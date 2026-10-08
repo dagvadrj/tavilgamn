@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useKitchenCatalog } from "@/features/kitchen-planner/hooks/useKitchenCatalog";
+import { KitchenStandardLibrary } from "@/features/kitchen-planner/components/KitchenStandardLibrary";
+import { createStandardKitchenCabinet, type KitchenStandardType } from "@/lib/kitchenStandardCatalog";
 import { KitchenModelLibrary } from "@/features/kitchen-planner/components/KitchenModelLibrary";
 import { cabinetFromCatalog } from "@/lib/kitchenCatalogInsertion";
 import { EditorHistory } from "@/lib/editorHistory";
@@ -16,6 +18,7 @@ import "@/features/planner/components/planner-studio.css";
 import "@/features/planner/components/planner-reference.css";
 import "@/features/planner/components/planner-usability.css";
 import "@/features/planner/components/planner-sidebar.css";
+import "@/features/kitchen-planner/components/kitchen-editor.css";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { VersionHistory } from "@/features/kitchen-planner/components/VersionHistory";
 import { useCatalog } from "@/store/catalog";
@@ -26,6 +29,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronDown,
+  ChevronRight,
   ClipboardCheck,
   House,
   Layers3,
@@ -187,9 +191,10 @@ export function ModularKitchenPlanner({
   const [versionBusy,setVersionBusy]=useState(false);
   const [open, setOpen] = useState(false);
   const [componentOverview, setComponentOverview] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(() => new URLSearchParams(queryString).get("new") === "1");
+  const [catalogSource, setCatalogSource] = useState<"standard" | "models">("standard");
   const settingsRef = usePlannerPanel(settingsOpen, () => setSettingsOpen(false));
-  const [inspectorTab, setInspector] = useState<keyof typeof KITCHEN_INSPECTOR_LABELS>("catalog");
+  const [inspectorTab, setInspector] = useState<keyof typeof KITCHEN_INSPECTOR_LABELS>(() => new URLSearchParams(queryString).get("new") === "1" ? "room" : "catalog");
   const [reviewOpen, setReviewOpen] = useState(false);
   const { moduleCatalog, materialCatalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useKitchenCatalog(active);
   const [exportRoot, setExportRoot] = useState<Group | null>(null);
@@ -302,15 +307,7 @@ export function ModularKitchenPlanner({
   const dragBase = useRef<ModularKitchen | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<"move" | "orbit">("orbit");
-  const [addType, setAddType] = useState<
-    | CabinetType
-    | "oven-base"
-    | "oven-tall"
-    | "hood-integrated"
-    | "hood-wall"
-    | "fridge-top"
-    | "fridge-side"
-  >("base");
+  const [addType, setAddType] = useState<KitchenStandardType>("base");
   const [addWidth, setAddWidth] = useState<CabinetWidth>(600);
   const [message, setMessage] = useState("");
   const [snapMessage, setSnapMessage] = useState("");
@@ -665,33 +662,8 @@ export function ModularKitchenPlanner({
   }
   function addCabinet() {
     const id = crypto.randomUUID();
-    const cabinet = addType.startsWith("fridge")
-      ? createRefrigerator(
-          id,
-          addType === "fridge-side" ? "side-by-side" : "top-bottom",
-        )
-      : addType.startsWith("hood")
-        ? createHood(
-            id,
-            addType === "hood-integrated" ? "under-cabinet" : "wall",
-            addWidth,
-          )
-        : addType.startsWith("oven")
-          ? withOpening(
-              createCabinet(
-                addType === "oven-tall" ? "tall" : "base",
-                id,
-                600,
-                design.room.height,
-              ),
-              "oven",
-            )
-          : createCabinet(
-              addType as CabinetType,
-              id,
-              addWidth,
-              design.room.height,
-            );
+    if (busy || design.cabinets.length >= 80) return;
+    const cabinet = createStandardKitchenCabinet(addType, id, addWidth, design.room.height);
     if (appearance)
       Object.assign(cabinet, {
         finish: appearance.finish,
@@ -707,7 +679,10 @@ export function ModularKitchenPlanner({
       );
       return;
     }
-    if (commit(next)) setSelectedId(cabinet.id);
+    if (commit(next)) {
+      setSelectedId(cabinet.id);
+      setMessage(`${cabinetLabel(cabinet)} нэмэгдлээ. 3D дээр дарж сонгоод тохируулаарай.`);
+    }
   }
   function replaceCabinet(cabinet: ModularCabinet) {
     const next = resolveElevations({
@@ -1153,6 +1128,7 @@ export function ModularKitchenPlanner({
               <X size={19} />
             </button>
           </div>
+          <p className="kitchen-inspector-help">{inspector === "room" ? "1. Өрөөний хэмжээ, гарнитурын хэлбэрээ тохируулна." : inspector === "catalog" ? "2. Шүүгээ, төхөөрөмжөө сонгож нэмнэ." : inspector === "materials" ? "3. Өнгө, материал, тавцангаа тохируулна." : inspector === "selection" ? "Сонгосон шүүгээний хэмжээ, хаалга, байрлалыг өөрчилнө." : "Гал тогоондоо нэмэлт тавилга байрлуулна."}</p>
           <div data-inspector-section="extras"><ExtrasPanel products={products.products} selected={selectedExtra} room={design.room} disabled={busy}
             error={products.error} loading={products.loading} onAdd={addExtra} onChange={changeExtra} onDuplicate={duplicateExtra}
             onDelete={()=>{if(commit({...design,extras:design.extras?.filter(e=>e.id!==selectedId)}))setSelectedId(null);}}/></div>
@@ -1911,94 +1887,23 @@ export function ModularKitchenPlanner({
               )}
             </fieldset>
           </details>
-          <KitchenModelLibrary modules={moduleCatalog} loading={catalogLoading} error={catalogError}
-            retry={retryCatalog} disabled={busy || kitchen.cabinets.length >= 80} onAdd={addCatalogCabinet}/>
-          <details className="kp-panel km-details km-add-menu planner-standard-builder" data-inspector-section="catalog">
-            <summary>
-              <Plus size={17} />
-              Хэмжээгээр шүүгээ үүсгэх
-            </summary>
-            <div className="km-fields">
-              <p className="kp-help">Энгийн загвар үүсгэнэ. Бэлэн GLB загвар сонгох бол дээрх санг ашиглаарай.</p>
-              <div className="reference-type-grid" role="group" aria-label="Шүүгээний төрөл сонгох">
-                {Object.entries(CABINET_DEFAULTS).map(([type, spec]) => <button
-                  type="button" key={type} disabled={busy} aria-pressed={addType === type}
-                  onClick={() => { setAddType(type as CabinetType); setAddWidth(600); }}>
-                  <span className="reference-cabinet-symbol" data-type={type} aria-hidden="true" />{spec.label}
-                </button>)}
-              </div>
-              <label className="kp-field">
-                <span>Төрөл</span>
-                <select
-                  value={addType}
-                  disabled={busy}
-                  onChange={(e) => {
-                    setAddType(e.target.value as typeof addType);
-                    setAddWidth(600);
-                  }}
-                >
-                  <optgroup label="Шүүгээ">
-                    {Object.entries(CABINET_DEFAULTS).map(([type, spec]) => (
-                      <option key={type} value={type}>
-                        {spec.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Зуух">
-                    <option value="oven-base">Тавцангийн доор</option>
-                    <option value="oven-tall">Өндөр шүүгээнд</option>
-                  </optgroup>
-                  <optgroup label="Утаа сорогч">
-                    <option value="hood-integrated">Шүүгээний доор</option>
-                    <option value="hood-wall">Шууд хананд</option>
-                  </optgroup>
-                  <optgroup label="Хөргөгч">
-                    <option value="fridge-top">Дээр, доор хаалгатай</option>
-                    <option value="fridge-side">
-                      Зэрэгцээ хоёр том хаалгатай
-                    </option>
-                  </optgroup>
-                </select>
-              </label>
-              {!addType.startsWith("fridge") && !addType.startsWith("oven") && (
-                <label className="kp-field">
-                  <span>Өргөн</span>
-                  <select
-                    value={addWidth}
-                    disabled={busy}
-                    onChange={(e) =>
-                      setAddWidth(Number(e.target.value) as CabinetWidth)
-                    }
-                  >
-                    {cabinetWidths(
-                      addType.startsWith("hood")
-                        ? "wall"
-                        : (addType as CabinetType),
-                    )
-                      .filter(
-                        (width) => !addType.startsWith("hood") || width >= 600,
-                      )
-                      .map((width) => (
-                        <option key={width} value={width}>
-                          {width / 10} см
-                        </option>
-                      ))}
-                  </select>
-                </label>
-              )}
-              <button
-                type="button"
-                className="kp-primary"
-                onClick={addCabinet}
-                disabled={busy || kitchen.cabinets.length >= 80}
-              >
-                <Plus size={16} />
-                Нэмэх
-              </button>
+          <section className="kitchen-catalog-panel" data-inspector-section="catalog" aria-label="Нэмэх загварын сан">
+            <div className="kitchen-catalog-tabs" role="group" aria-label="Загварын сан сонгох">
+              <button type="button" aria-pressed={catalogSource === "standard"} onClick={() => setCatalogSource("standard")}>Бэлэн шүүгээ</button>
+              <button type="button" aria-pressed={catalogSource === "models"} onClick={() => setCatalogSource("models")}>3D загварын сан</button>
             </div>
-          </details>
+            <div hidden={catalogSource !== "standard"}>
+              <KitchenStandardLibrary type={addType} width={addWidth} disabled={busy} atLimit={kitchen.cabinets.length >= 80}
+                onType={type => { setAddType(type); setAddWidth(600); }} onWidth={setAddWidth} onAdd={addCabinet}/>
+            </div>
+            <div hidden={catalogSource !== "models"}>
+              <KitchenModelLibrary modules={moduleCatalog} loading={catalogLoading} error={catalogError}
+                retry={retryCatalog} disabled={busy || kitchen.cabinets.length >= 80} onAdd={addCatalogCabinet}/>
+            </div>
+          </section>
           <details className="kp-panel km-details" data-inspector-section="room" open>
-            <summary>Өрөөний хэмжээ ба дээд шүүгээний зай</summary>
+            <summary>Хэмжээ, байрлал</summary>
+            <p className="kitchen-section-help">Өрөөний бодит хэмжээг миллиметрээр оруулна. Жишээ нь 4 метр = 4000 мм.</p>
             <fieldset className="km-fields" disabled={busy}>
               <label className="kp-field">
                 <span>Гарнитурын байрлал</span>
@@ -2044,6 +1949,14 @@ export function ModularKitchenPlanner({
               />
             </fieldset>
           </details>
+          {(["room", "catalog", "materials"] as string[]).includes(inspector) && <div className="kitchen-step-footer">
+            <span>{kitchen.cabinets.length} шүүгээ · {inspector === "room" ? "Алхам 1 / 3" : inspector === "catalog" ? "Алхам 2 / 3" : "Алхам 3 / 3"}</span>
+            <button type="button" disabled={busy} onClick={() => {
+              if (inspector === "room") setInspector("catalog");
+              else if (inspector === "catalog") setInspector("materials");
+              else setReviewOpen(true);
+            }}>{inspector === "room" ? "Шүүгээ нэмэх" : inspector === "catalog" ? "Өнгө тохируулах" : "Төлөвлөгөөг шалгах"}<ChevronRight size={16} aria-hidden="true" /></button>
+          </div>}
         </aside>
       </div>
       {reviewOpen && (
