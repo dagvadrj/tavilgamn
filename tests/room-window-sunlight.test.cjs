@@ -94,3 +94,40 @@ test('scene sunlight uses the chosen window direction and has zero direct intens
  near(day.props.position[0]-2,direction.x*18);near(day.props.position[2]-1,direction.z*18);assert.ok(day.props.intensity>0);
  assert.equal(nodes(RoomLighting({design:{...d,lighting:{...lighting,timeOfDay:21}}})).find(n=>n.type==='directionalLight').props.intensity,0);
 });
+
+
+test('closed window parts stay within the wall and clear a headboard on all four walls',()=>{
+ const {ROOM_WALL_THICKNESS:t}=loadSource('src/lib/roomRendering.ts');
+ const {RoomWindow}=loadSource('src/three/RoomWindow.tsx',{
+  react:{...React,useRef:()=>({current:new THREE.Group()}),useEffect:()=>{}},
+  '@react-three/drei':{RoundedBox:'rounded'},
+  '@react-three/fiber':{useThree:select=>select({invalidate:()=>{}}),useFrame:()=>{}},
+ });
+ const objects=element=>{
+  if(!element||typeof element!=='object')return null;
+  if(typeof element.type==='function')return objects(element.type(element.props));
+  if(element.type===React.Fragment){const group=new THREE.Group();React.Children.toArray(element.props.children).forEach(child=>{const object=objects(child);if(object)group.add(object);});return group;}
+  if(!['mesh','group','rounded'].includes(element.type))return null;
+  const children=React.Children.toArray(element.props.children);let geometry;
+  if(element.type==='rounded')geometry=new THREE.BoxGeometry(...element.props.args);
+  else if(element.type==='mesh'){
+   const definition=children.find(child=>['boxGeometry','cylinderGeometry'].includes(child.type));
+   if(definition)geometry=definition.type==='boxGeometry'?new THREE.BoxGeometry(...definition.props.args):new THREE.CylinderGeometry(...definition.props.args);
+  }
+  const object=geometry?new THREE.Mesh(geometry):new THREE.Group();
+  if(element.props.position)object.position.fromArray(element.props.position);
+  if(element.props.rotation)object.rotation.fromArray(element.props.rotation);
+  children.forEach(child=>{const inner=objects(child);if(inner)object.add(inner);});return object;
+ };
+ for(const template of openings.OPENING_TEMPLATES.filter(option=>option.kind==='window')){
+  const opening={...openings.createOpening(template.id,'north'),open:false},root=objects(RoomWindow({opening}));root.updateMatrixWorld(true);
+  root.traverse(mesh=>{if(!mesh.isMesh)return;const box=new THREE.Box3().setFromObject(mesh);assert.ok(box.min.z>=-t-1e-6,template.id+' exceeds the outside wall face');assert.ok(box.max.z<=1e-6,template.id+' protrudes into the furnished room');});
+  for(const wall of ['north','east','south','west']){
+   const transform=openings.openingWorldTransform(shape,{...opening,wallId:wall}),world=new THREE.Group();world.position.set(transform.x,opening.sillHeight,transform.z);world.rotation.y=transform.rotation;world.add(root);world.updateMatrixWorld(true);
+   const headboard=new THREE.Mesh(new THREE.BoxGeometry(opening.width+.3,1.3,.2));headboard.position.set(0,.65-opening.sillHeight,.02+.1);world.add(headboard);world.updateMatrixWorld(true);
+   const bedBounds=new THREE.Box3().setFromObject(headboard);root.traverse(mesh=>{if(mesh.isMesh)assert.equal(new THREE.Box3().setFromObject(mesh).intersectsBox(bedBounds),false,template.id+' intersects headboard on '+wall);});
+   world.remove(root);headboard.geometry.dispose();headboard.material.dispose();
+  }
+  root.traverse(mesh=>{if(mesh.isMesh){mesh.geometry.dispose();mesh.material.dispose();}});
+ }
+});
