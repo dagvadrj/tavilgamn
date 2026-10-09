@@ -67,7 +67,8 @@ export function ProductCustomizer({
       ? initialColor!
       : product.defaultColor,
   );
-  const [viewerActive, setViewerActive] = useState(initialView3D);
+  const [viewerRequested, setViewerActive] = useState(initialView3D);
+  const viewerActive = Boolean(product.model) && viewerRequested;
   const [arScene, setArScene] = useState<Group | null>(null);
   const [arOpen, setArOpen] = useState(false);
   const handleRootReady = useCallback(
@@ -227,6 +228,8 @@ export function ProductCustomizer({
                 <button
                   type="button"
                   aria-pressed={viewerActive}
+                  disabled={!product.model}
+                  title={!product.model ? "3D загвар хараахан бэлэн болоогүй" : undefined}
                   onClick={() => setViewerActive(true)}
                 >
                   <Box size={14} aria-hidden="true" />
@@ -239,7 +242,6 @@ export function ProductCustomizer({
                 <ProductViewer
                   stockQuantity={product.stockQuantity}
                   model={product.model}
-                  category={product.category}
                   color={colorHex}
                   material={material}
                   dimensions={product.dimensions}
@@ -267,7 +269,7 @@ export function ProductCustomizer({
                   <p className="text-sm font-medium">
                     {viewerActive
                       ? "3D загварыг ачаалж байна…"
-                      : "Өнгө, хэмжээ, загвараа 3D-ээр хараарай"}
+                      : product.model ? "Өнгө, хэмжээ, загвараа 3D-ээр хараарай" : "Барааны зураг"}
                   </p>
                   {viewerActive && (
                     <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/30">
@@ -276,7 +278,7 @@ export function ProductCustomizer({
                   )}
                 </div>
               </div>
-              {!viewerActive && (
+              {!viewerActive && product.model && (
                 <button
                   type="button"
                   onClick={() => setViewerActive(true)}
@@ -315,7 +317,9 @@ export function ProductCustomizer({
             <p role="status">
               {selectedColor?.name} · {selectedMaterial?.name}
               <small>
-                {viewerActive
+                {!product.model
+                  ? "Энэ барааны 3D загвар хараахан бэлэн болоогүй."
+                  : viewerActive
                   ? "Өнгө, материал 3D-д шууд шинэчлэгдэнэ"
                   : "Өнгө эсвэл материал сонгоод 3D-д үзээрэй"}
               </small>

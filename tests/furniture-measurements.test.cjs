@@ -81,13 +81,14 @@ function nodes(node) {
 test('Measure click selects the piece without moving it, capturing a pointer or starting history', () => {
   let selected, moved = 0, started = 0, ended = 0, captured = 0;
   const react = { ...React, useState: init => [typeof init === 'function' ? init() : init, () => {}], useRef: value => ({ current: value }), useEffect: () => {}, useMemo: fn => fn() };
+  let catalogProduct = { dimensions: dims, model: { id: 'model', file: 'delivery.glb', scale: 1 } };
   const { RoomCanvas } = loadSource('src/three/RoomCanvas.tsx', {
     react,
     '@react-three/fiber': { Canvas: 'canvas', useThree: () => ({ camera: {}, raycaster: {}, gl: {} }) },
     '@react-three/drei': new Proxy({}, { get: (_, key) => key === 'useCursor' ? () => {} : String(key) }),
-    '@/store/catalog': { getProduct: () => ({ dimensions: dims }) },
+    '@/store/catalog': { getProduct: () => catalogProduct },
     '@/lib/modelRegistry': { getDbModel: () => undefined },
-    './FurnitureMesh': { FurnitureMesh: 'furniture' }, './GLBFurnitureMesh': { GLBFurnitureMesh: 'glb' },
+    './GLBFurnitureMesh': { GLBFurnitureMesh: 'glb' },
     './InteriorModel': { InteriorModel: 'interior' }, './FurnitureMeasurements': { FurnitureMeasurements: 'measurements' },
   });
   const props = { design: { ...room, pieces: [piece] }, selected: null, onSelect: id => selected = id,
@@ -96,6 +97,7 @@ test('Measure click selects the piece without moving it, capturing a pointer or 
   const draggable = nodes(tree).find(n => n.type?.name === 'DraggablePiece');
   assert.equal(draggable.props.measureMode, true);
   const mesh = draggable.type(draggable.props);
+  assert.equal(nodes(mesh).find(n => n.type === 'glb').props.glbFile, 'delivery.glb');
   mesh.props.onPointerDown({ button: 0, stopPropagation() {}, target: { setPointerCapture() { captured++; } } });
   mesh.props.onPointerMove({}); mesh.props.onPointerUp({});
   assert.equal(selected, piece.instanceId); assert.equal(moved, 0); assert.equal(started, 0); assert.equal(ended, 0); assert.equal(captured, 0);
@@ -103,6 +105,8 @@ test('Measure click selects the piece without moving it, capturing a pointer or 
   const measured = RoomCanvas({ ...props, selected: 'one', showDimensions: true, measurements: getFurnitureMeasurements(room, piece, dims) });
   assert.equal(nodes(measured).filter(n => n.type === 'measurements').length, 1);
   assert.equal(nodes(RoomCanvas({ ...props, selected: 'one', showDimensions: false })).filter(n => n.type === 'measurements').length, 0);
+  catalogProduct = { dimensions: dims };
+  assert.equal(draggable.type(draggable.props), null, 'saved furniture without a real GLB must not generate a default mesh');
 });
 
 test('2D avoids collapsed vertical lines while 3D includes height and ceiling', () => {

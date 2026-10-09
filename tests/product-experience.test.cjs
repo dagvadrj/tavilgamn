@@ -137,4 +137,9 @@ test("PDP initial color selection feeds the same actual variant price into the f
   assert.ok(html.includes("310,000₮ × 4"));
   assert.ok(html.includes("Хэмжээ шалгах") && html.includes("Бараа харах горим"));
   assert.ok(html.includes("AR ашиглахад барааны 3D модел шаардлагатай"));
+  const requested3D = renderToStaticMarkup(React.createElement(ProductCustomizer, { product, initialView3D: true }));
+  assert.ok(requested3D.includes("3D загвар хараахан бэлэн болоогүй"));
+  assert.ok(!requested3D.includes("Интерактив 3D загвар") && !requested3D.includes("3D загварыг ачаалж байна"));
+  assert.match(requested3D, /<button[^>]*disabled=""[^>]*title="3D загвар хараахан бэлэн болоогүй"/);
+  assert.ok(!requested3D.includes("3D-ээр үзэх"), "photo-only products cannot open a generated replacement model");
 });

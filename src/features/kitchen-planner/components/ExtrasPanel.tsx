@@ -31,6 +31,7 @@ export function ExtrasPanel({
     [query, setQuery] = useState("");
   const options = products.filter(
     (p) =>
+      Boolean(p.model) &&
       EXTRA_CATEGORIES.includes(p.category) &&
       (p.category === "dining-table") === (tab === "dining") &&
       p.name.toLowerCase().includes(query.toLowerCase()),
@@ -158,7 +159,7 @@ export function ExtrasPanel({
           ) : loading ? (
             <p role="status">Каталог ачаалж байна…</p>
           ) : !options.length ? (
-            <p>Энэ төрлийн бүтээгдэхүүн каталогт алга.</p>
+            <p>Энэ төрөлд 3D загвартай бүтээгдэхүүн олдсонгүй.</p>
           ) : null}
           <div className="km-extras-list">
             {options.map((product) => (

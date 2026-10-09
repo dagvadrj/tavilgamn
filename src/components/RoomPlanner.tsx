@@ -387,6 +387,10 @@ export function RoomPlanner() {
   const addPiece = (productId: string) => {
     const product = getProduct(productId);
     if (!product) return;
+    if (!product.model) {
+      setNotice("Энэ барааны 3D загвар хараахан бэлэн болоогүй.");
+      return;
+    }
     const piece: PlacedFurniture = {
       instanceId: `p_${Math.random().toString(36).slice(2, 10)}`,
       productId,
@@ -977,6 +981,8 @@ export function RoomPlanner() {
             {catalogFormat !== "glb" && paletteItems.map((p) => (
               <button
                 key={p.id}
+                disabled={!p.model}
+                title={!p.model ? "3D загвар хараахан бэлэн болоогүй" : undefined}
                 onClick={() => addPiece(p.id)}
                 className="room-product-card"
               >
@@ -996,11 +1002,8 @@ export function RoomPlanner() {
                     <span className="mt-1 block text-xs">{stockLabel(p)}</span>
                   </p>
                   <p className="mt-0.5 font-mono text-xs text-[#737D6C]/70">
-                    {p.dimensions.w} × {p.dimensions.d} м
+                    3D загвар хараахан бэлэн болоогүй
                   </p>
-                </div>
-                <div className="grid h-7 w-7 self-center place-items-center rounded-full bg-[#293C32]/5 text-[#293C32] group-hover:bg-[#AD6547] group-hover:text-[#FFFFFF]">
-                  <Plus className="h-3.5 w-3.5" />
                 </div>
               </button>
             ))}

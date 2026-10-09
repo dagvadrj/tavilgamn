@@ -408,6 +408,7 @@ export function ModularKitchenPlanner({
   }
   function addExtra(product: Product) {
     if (busy) return;
+    if (!product.model) { setMessage("Энэ барааны 3D загвар хараахан бэлэн болоогүй."); return; }
     const extra=findExtraSpace(design,extraFromProduct(product,crypto.randomUUID()));
     if(!extra){setMessage("Энэ тавилга байрлуулах сул зай алга.");return;}
     if(commit({...design,extras:[...(design.extras??[]),extra]}))selectCabinet(extra.id);
@@ -417,6 +418,7 @@ export function ModularKitchenPlanner({
   }
   function duplicateExtra() {
     if(!selectedExtra||busy)return;
+    if(!selectedExtra.model){setMessage("Энэ тавилгын 3D загвар хараахан бэлэн болоогүй.");return;}
     const copy=findExtraSpace(design,{...selectedExtra,id:crypto.randomUUID()});
     if(!copy){setMessage("Хуулбар тавилга байрлуулах сул зай алга.");return;}
     if(commit({...design,extras:[...(design.extras??[]),copy]}))selectCabinet(copy.id);
