@@ -1,0 +1,237 @@
+/* Catalog and standard alternatives for the cabinet selected in the scene. */
+
+.ksc-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.ksc-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ksc-heading p {
+  margin: 0 0 4px;
+  color: #6f7a73;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.ksc-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.ksc-heading > span {
+  flex: none;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #e9eee9;
+  color: #43604e;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.ksc-search {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid #cfd7d0;
+  border-radius: 9px;
+  background: #fff;
+  color: #647068;
+}
+
+.ksc-search:focus-within {
+  border-color: #2f6a4b;
+  box-shadow: 0 0 0 2px #2f6a4b1c;
+}
+
+.ksc-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.ksc-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ksc-list > button {
+  width: 100%;
+  min-height: 104px;
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 8px;
+  border: 1px solid #dfe4df;
+  border-radius: 10px;
+  background: #fff;
+  color: #17231c;
+  text-align: left;
+  transition: border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+.ksc-list > button:not(:disabled):hover {
+  border-color: #6e947e;
+  box-shadow: 0 8px 20px #1c392719;
+  transform: translateY(-1px);
+}
+
+.ksc-list > button.is-current {
+  border-color: #72a083;
+  background: #f2f8f4;
+}
+
+.ksc-list > button:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.ksc-image,
+.ksc-fallback {
+  position: relative;
+  width: 86px;
+  height: 86px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: #f1f2ef;
+}
+
+.ksc-image img {
+  object-fit: contain;
+  padding: 5px;
+}
+
+.ksc-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.ksc-copy strong {
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+}
+
+.ksc-copy small {
+  color: #68736c;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.ksc-replace,
+.ksc-current {
+  align-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: #265f42;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ksc-current {
+  background: #deebe2;
+  color: #28573c;
+}
+
+.ksc-fallback {
+  border: 1px solid #d8ddd7;
+  color: #809087;
+}
+
+.ksc-fallback i {
+  position: absolute;
+  left: 19px;
+  right: 19px;
+  height: 1px;
+  background: #aeb9b1;
+}
+
+.ksc-fallback i:nth-child(1) {
+  top: 22px;
+}
+
+.ksc-fallback i:nth-child(2) {
+  top: 42px;
+}
+
+.ksc-fallback i:nth-child(3) {
+  top: 62px;
+}
+
+.ksc-drawers i:nth-child(1) {
+  top: 27px;
+}
+
+.ksc-drawers i:nth-child(2) {
+  top: 48px;
+}
+
+.ksc-drawers i:nth-child(3) {
+  top: 69px;
+}
+
+.ksc-open svg {
+  display: none;
+}
+
+.ksc-empty {
+  margin: 0;
+  padding: 18px 10px;
+  border: 1px dashed #cbd3cc;
+  border-radius: 9px;
+  color: #69756d;
+  font-size: 12px;
+  text-align: center;
+}
+
+.ksc-panel .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 420px) {
+  .ksc-list > button {
+    grid-template-columns: 74px minmax(0, 1fr);
+  }
+  .ksc-image,
+  .ksc-fallback {
+    width: 74px;
+    height: 78px;
+  }
+  .ksc-replace,
+  .ksc-current {
+    grid-column: 2;
+    justify-self: start;
+  }
+}

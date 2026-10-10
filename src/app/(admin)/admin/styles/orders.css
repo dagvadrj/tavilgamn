@@ -1,0 +1,52 @@
+/* ORDERS */
+
+.admin-orders-overview {
+  margin-top: 22px;
+}
+
+.admin-orders-overview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 13px;
+}
+
+.admin-orders-overview-heading > div > span {
+  color: #989da6;
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: 0.13em;
+}
+
+.admin-orders-overview-heading h2 {
+  margin-top: 5px;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+}
+
+.admin-orders-overview-heading p {
+  margin-top: 4px;
+  color: #969ba3;
+  font-size: 10px;
+}
+
+.admin-order-heading-icon {
+  width: 43px;
+  height: 43px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: white;
+  border: 1px solid var(--admin-border);
+  color: #5f6570;
+}
+
+.admin-footer {
+  margin: 0 18px;
+  padding: 20px 0;
+  border-top: 1px solid var(--admin-border);
+  color: #9a9fa7;
+  font-size: 9px;
+}

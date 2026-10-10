@@ -1,0 +1,30 @@
+/* =========================================================
+   PREMIUM ADMIN SHELL
+   ========================================================= */
+
+body:has(.admin-shell) .store-header,
+body:has(.admin-shell) .store-footer,
+body:has(.admin-shell) .store-announcement {
+  display: none;
+}
+
+body:has(.admin-shell) {
+  padding-bottom: 0;
+  background: #f5f6f8;
+}
+
+body:has(.admin-shell) #main-content {
+  min-height: 100dvh;
+}
+
+.admin-shell {
+  --admin-border: #e9eaed;
+  --admin-muted: #8d929b;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 16px;
+  padding: 8px;
+  background: #f5f6f8;
+  color: #17191d;
+}

@@ -76,7 +76,7 @@ test("cards and the 3D viewer display numeric inventory including zero", () => {
   const empty=()=>null;
   const {ProductViewer}=loadSource("src/three/ProductViewer.tsx",{
     "@react-three/fiber":{Canvas:empty},"@react-three/drei":{OrbitControls:empty,ContactShadows:empty,Environment:empty},
-    "./FurnitureMesh":{FurnitureMesh:empty},"./GLBFurnitureMesh":{GLBFurnitureMesh:empty},
+    "./GLBFurnitureMesh":{GLBFurnitureMesh:empty},
   });
   assert.ok(renderToStaticMarkup(React.createElement(ProductViewer,{category:"sofa",color:"#fff",material:"wood",dimensions:{w:1,d:1,h:1},stockQuantity:7})).includes("Үлдэгдэл: 7 ширхэг"));
 });

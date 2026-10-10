@@ -1,0 +1,201 @@
+/* studio-commerce — preserved cascade order */
+
+/* Shared shopping surfaces follow the white, black and Studio Blue identity. */
+
+.shop-shell .btn-primary {
+  background: #111;
+  color: #fff;
+  border: 1px solid #111;
+  border-radius: 14px;
+  min-height: 48px;
+  box-shadow: none;
+}
+
+.shop-shell .btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.shop-shell .btn-primary:disabled {
+  cursor: not-allowed;
+}
+
+.shop-shell .text-link {
+  color: #111;
+}
+
+.shop-shell .breadcrumbs {
+  color: var(--market-muted);
+  flex-wrap: wrap;
+}
+
+.shop-shell .catalog-heading {
+  padding-bottom: 28px;
+}
+
+.shop-shell .catalog-heading h1 {
+  font-weight: 800;
+  letter-spacing: -.04em;
+}
+
+.shop-shell .catalog-sidebar {
+  background: #fff;
+  border-color: var(--market-border);
+  border-radius: 20px;
+}
+
+.shop-shell .catalog-toolbar select {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+.shop-shell .catalog-quick-filters > button, .shop-shell .catalog-price-filter summary {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+.shop-shell .catalog-quick-filters > button[aria-pressed="true"] {
+  color: #2563eb;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.shop-shell .catalog-price-fields {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.shop-shell .catalog-price-fields input {
+  background: #fafafa;
+}
+
+.shop-shell .catalog-price-error {
+  color: #b91c1c;
+}
+
+.shop-shell .catalog-filter-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin-bottom: 20px;
+  padding: 8px 14px;
+  background: #f4f4f5;
+  border-radius: 12px;
+  font-size: 12px;
+  color: var(--market-muted);
+}
+
+.shop-shell .catalog-filter-summary button {
+  min-height: 44px;
+  color: #2563eb;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.shop-shell .cart-item, .shop-shell .cart-summary {
+  background: #fff;
+  border: 1px solid var(--market-border);
+  border-radius: 22px;
+  box-shadow: 0 2px 4px #11111104;
+}
+
+.shop-shell .cart-item {
+  padding: 20px;
+}
+
+.shop-shell .cart-item-bottom button:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+
+.shop-shell .cart-summary {
+  padding: 28px;
+  top: 112px;
+}
+
+.shop-shell .checkout-steps {
+  color: var(--market-muted);
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.shop-shell .checkout-steps .current {
+  color: #2563eb;
+  background: #eff6ff;
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+
+.shop-shell .shipping-progress {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.shop-shell .shipping-progress progress {
+  accent-color: #2563eb;
+  background: #dbeafe;
+}
+
+.shop-shell .shipping-progress progress::-webkit-progress-bar {
+  background: #dbeafe;
+}
+
+.shop-shell .shipping-progress progress::-webkit-progress-value {
+  background: #2563eb;
+}
+
+.shop-shell .shipping-progress progress::-moz-progress-bar {
+  background: #2563eb;
+}
+
+.shop-shell .shop-empty {
+  background: #fff;
+  border: 1px solid var(--market-border);
+  border-radius: 24px;
+}
+
+.shop-shell .shop-empty > svg {
+  color: #2563eb;
+}
+
+.shop-shell .product-purchase {
+  border-color: var(--market-border);
+  border-radius: 20px;
+  background: #fff;
+}
+
+@media (max-width: 1199px) {
+  .shop-shell .cart-summary {
+    top: 160px;
+  }
+}
+
+@media (max-width: 639px) {
+  .shop-shell .cart-item {
+    padding: 14px;
+    border-radius: 16px;
+  }
+  .shop-shell .cart-summary {
+    padding: 20px;
+  }
+  .shop-shell .checkout-steps {
+    font-size: 11px;
+    gap: 8px;
+  }
+  .shop-shell .catalog-toolbar {
+    align-items: center;
+  }
+  .shop-shell .catalog-toolbar select {
+    width: 100%;
+  }
+  .shop-shell .catalog-filter-summary {
+    font-size: 12px;
+  }
+}

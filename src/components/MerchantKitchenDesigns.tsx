@@ -1,5 +1,9 @@
 "use client";
-import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
+import {
+  useDraftState,
+  useDraftStatus,
+  clearDashboardDraft,
+} from "@/hooks/useDashboardDraft";
 import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 
 import Image from "next/image";
@@ -23,7 +27,10 @@ import type {
   KitchenVersionSaveMode,
   KitchenRenderUsage,
 } from "@/lib/kitchenMarketplace";
-import { kitchenLifecycle, kitchenLifecycleLabel } from "@/lib/kitchenMarketplace";
+import {
+  kitchenLifecycle,
+  kitchenLifecycleLabel,
+} from "@/lib/kitchenMarketplace";
 import { KitchenReviewTimeline } from "./KitchenReviewTimeline";
 
 type SavedKitchen = { id: string; name: string };
@@ -118,7 +125,9 @@ function VersionEditor({
   onSave: (form: ListingForm) => void;
 }) {
   const draftScope = `merchant:${owner}:kitchen-version:${design.versionId}:${mode}`;
-  const [form, setForm] = useDraftState(draftScope, "form", () => listingForm(design));
+  const [form, setForm] = useDraftState(draftScope, "form", () =>
+    listingForm(design),
+  );
   const draftStatus = useDraftStatus(draftScope);
   const field = <K extends keyof ListingForm>(name: K, value: ListingForm[K]) =>
     setForm((current) => ({ ...current, [name]: value }));
@@ -215,13 +224,25 @@ function VersionEditor({
       </label>
       <label className="label">
         Үнийн хүрээний дээд үнэ (₮)
-        <input className="input mt-1 w-full" type="number" min={form.priceFrom || 0} disabled={form.pricingMode !== "from"}
-          value={form.priceTo} onChange={event => field("priceTo", event.target.value)} placeholder="Заавал биш" />
+        <input
+          className="input mt-1 w-full"
+          type="number"
+          min={form.priceFrom || 0}
+          disabled={form.pricingMode !== "from"}
+          value={form.priceTo}
+          onChange={(event) => field("priceTo", event.target.value)}
+          placeholder="Заавал биш"
+        />
       </label>
       <label className="label">
         Материалууд
-        <textarea className="input mt-1 min-h-20 w-full" value={form.materials} onChange={event => field("materials", event.target.value)}
-          placeholder="Царс, MDF, чулуун тавцан" maxLength={5000} />
+        <textarea
+          className="input mt-1 min-h-20 w-full"
+          value={form.materials}
+          onChange={(event) => field("materials", event.target.value)}
+          placeholder="Царс, MDF, чулуун тавцан"
+          maxLength={5000}
+        />
       </label>
       <label className="label">
         Үйлдвэрлэх хоног
@@ -320,25 +341,63 @@ export function MerchantKitchenDesigns({
   const draftScope = `merchant:${owner}:kitchen-create`;
   const [data, setData] = useState<LoadResult | null>(null);
   const [kitchens, setKitchens] = useState<SavedKitchen[]>([]);
-  const [sourceKitchenId, setSourceKitchenId] = useDraftState(draftScope, "sourceKitchenId", "");
-  const [title, setTitle] = useDraftState(draftScope, "title", "");
-  const [shortDescription, setShortDescription] = useDraftState(draftScope, "shortDescription", "");
-  const [description, setDescription] = useDraftState(draftScope, "description", "");
-  const [style, setStyle] = useDraftState(draftScope, "style", "modern");
-  const [pricingMode, setPricingMode] = useDraftState<"fixed" | "from" | "quote">(draftScope, "pricingMode",
-    "quote",
+  const [sourceKitchenId, setSourceKitchenId] = useDraftState(
+    draftScope,
+    "sourceKitchenId",
+    "",
   );
+  const [title, setTitle] = useDraftState(draftScope, "title", "");
+  const [shortDescription, setShortDescription] = useDraftState(
+    draftScope,
+    "shortDescription",
+    "",
+  );
+  const [description, setDescription] = useDraftState(
+    draftScope,
+    "description",
+    "",
+  );
+  const [style, setStyle] = useDraftState(draftScope, "style", "modern");
+  const [pricingMode, setPricingMode] = useDraftState<
+    "fixed" | "from" | "quote"
+  >(draftScope, "pricingMode", "quote");
   const [priceFrom, setPriceFrom] = useDraftState(draftScope, "priceFrom", "");
   const [priceTo, setPriceTo] = useDraftState(draftScope, "priceTo", "");
   const [materials, setMaterials] = useDraftState(draftScope, "materials", "");
-  const [renderConsent, setRenderConsent] = useDraftState<Record<string, boolean>>(`merchant:${owner}:kitchen-navigation`, "renderConsent", {});
-  const [leadTimeDays, setLeadTimeDays] = useDraftState(draftScope, "leadTimeDays", "");
-  const [warrantyMonths, setWarrantyMonths] = useDraftState(draftScope, "warrantyMonths", "");
-  const [installationIncluded, setInstallationIncluded] = useDraftState(draftScope, "installationIncluded", false);
+  const [renderConsent, setRenderConsent] = useDraftState<
+    Record<string, boolean>
+  >(`merchant:${owner}:kitchen-navigation`, "renderConsent", {});
+  const [leadTimeDays, setLeadTimeDays] = useDraftState(
+    draftScope,
+    "leadTimeDays",
+    "",
+  );
+  const [warrantyMonths, setWarrantyMonths] = useDraftState(
+    draftScope,
+    "warrantyMonths",
+    "",
+  );
+  const [installationIncluded, setInstallationIncluded] = useDraftState(
+    draftScope,
+    "installationIncluded",
+    false,
+  );
   const [tags, setTags] = useDraftState(draftScope, "tags", "");
-  const [serviceAreas, setServiceAreas] = useDraftState(draftScope, "serviceAreas", "");
-  const [inclusions, setInclusions] = useDraftState(draftScope, "inclusions", "");
-  const [exclusions, setExclusions] = useDraftState(draftScope, "exclusions", "");
+  const [serviceAreas, setServiceAreas] = useDraftState(
+    draftScope,
+    "serviceAreas",
+    "",
+  );
+  const [inclusions, setInclusions] = useDraftState(
+    draftScope,
+    "inclusions",
+    "",
+  );
+  const [exclusions, setExclusions] = useDraftState(
+    draftScope,
+    "exclusions",
+    "",
+  );
   const [renderDirections, setRenderDirections] = useDraftState<
     Record<string, string>
   >(`merchant:${owner}:kitchen-navigation`, "renderDirections", {});
@@ -359,7 +418,6 @@ export function MerchantKitchenDesigns({
       ]);
       setData(marketplace);
       setKitchens(saved.kitchens);
-
     } catch (reason) {
       setError(
         reason instanceof Error
@@ -370,7 +428,8 @@ export function MerchantKitchenDesigns({
   }, [owner]);
 
   useEffect(() => {
-    if (!draftStatus.loading && !sourceKitchenId && kitchens[0]) setSourceKitchenId(kitchens[0].id);
+    if (!draftStatus.loading && !sourceKitchenId && kitchens[0])
+      setSourceKitchenId(kitchens[0].id);
   }, [draftStatus.loading, sourceKitchenId, kitchens, setSourceKitchenId]);
 
   useEffect(() => {
@@ -430,7 +489,8 @@ export function MerchantKitchenDesigns({
       setStyle("modern");
       setPricingMode("quote");
       setPriceFrom("");
-      setPriceTo(""); setMaterials("");
+      setPriceTo("");
+      setMaterials("");
       setLeadTimeDays("");
       setWarrantyMonths("");
       setInstallationIncluded(false);
@@ -500,7 +560,10 @@ export function MerchantKitchenDesigns({
   }
 
   async function requestRender(design: KitchenDesignSummary) {
-    if (!renderConsent[design.id]) { setError("AI render зөвшөөрлийг баталгаажуулна уу."); return; }
+    if (!renderConsent[design.id]) {
+      setError("AI render зөвшөөрлийг баталгаажуулна уу.");
+      return;
+    }
     const source =
       design.media.find(
         (item) => item.kind === "thumbnail" && item.isPrimary,
@@ -524,7 +587,7 @@ export function MerchantKitchenDesigns({
         },
       );
       setRenderDirections((current) => ({ ...current, [design.id]: "" }));
-      setRenderConsent(current => ({ ...current, [design.id]: false }));
+      setRenderConsent((current) => ({ ...current, [design.id]: false }));
       await load();
     } catch (reason) {
       setError(
@@ -538,15 +601,26 @@ export function MerchantKitchenDesigns({
   }
 
   async function cancelRender(jobId: string) {
-    if (!window.confirm("Хүлээгдэж буй AI render хүсэлтийг цуцлах уу? 24 цагийн хүсэлтийн тоо буурахгүй.")) return;
-    setBusy(`render:${jobId}`); setError(null);
+    if (
+      !window.confirm(
+        "Хүлээгдэж буй AI render хүсэлтийг цуцлах уу? 24 цагийн хүсэлтийн тоо буурахгүй.",
+      )
+    )
+      return;
+    setBusy(`render:${jobId}`);
+    setError(null);
     try {
       await request(`/api/kitchen-render-jobs/${jobId}/cancel`, owner, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: "Merchant хүсэлтээ цуцалсан" }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: "Merchant хүсэлтээ цуцалсан" }),
       });
       await load();
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Цуцалж чадсангүй."); }
-    finally { setBusy(null); }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Цуцалж чадсангүй.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function saveVersion(
@@ -566,7 +640,9 @@ export function MerchantKitchenDesigns({
           ...listingPayload(form),
         }),
       });
-      void clearDashboardDraft(`merchant:${owner}:kitchen-version:${design.versionId}:${mode}`);
+      void clearDashboardDraft(
+        `merchant:${owner}:kitchen-version:${design.versionId}:${mode}`,
+      );
       setEditing(null);
       await load();
     } catch (reason) {
@@ -709,13 +785,25 @@ export function MerchantKitchenDesigns({
             </label>
             <label className="label">
               Үнийн хүрээний дээд үнэ (₮)
-              <input className="input mt-1 w-full" type="number" min={priceFrom || 0} disabled={pricingMode !== "from"}
-                value={priceTo} onChange={event => setPriceTo(event.target.value)} placeholder="Заавал биш" />
+              <input
+                className="input mt-1 w-full"
+                type="number"
+                min={priceFrom || 0}
+                disabled={pricingMode !== "from"}
+                value={priceTo}
+                onChange={(event) => setPriceTo(event.target.value)}
+                placeholder="Заавал биш"
+              />
             </label>
             <label className="label">
               Материалууд
-              <textarea className="input mt-1 min-h-20 w-full" maxLength={5000} value={materials}
-                onChange={event => setMaterials(event.target.value)} placeholder="Царс, MDF, чулуун тавцан" />
+              <textarea
+                className="input mt-1 min-h-20 w-full"
+                maxLength={5000}
+                value={materials}
+                onChange={(event) => setMaterials(event.target.value)}
+                placeholder="Царс, MDF, чулуун тавцан"
+              />
             </label>
             <label className="label">
               Үйлдвэрлэх хоног
@@ -802,7 +890,9 @@ export function MerchantKitchenDesigns({
           <div className="grid gap-4 xl:grid-cols-2">
             {data?.designs.map((design) => {
               const isFocused = focusedDesignId === design.id;
-              const editable = !["archived", "suspended"].includes(design.publicationStatus);
+              const editable = !["archived", "suspended"].includes(
+                design.publicationStatus,
+              );
               return (
                 <article
                   id={`merchant-kitchen-${design.id}`}
@@ -829,7 +919,16 @@ export function MerchantKitchenDesigns({
                       <div>
                         <h3 className="font-semibold">{design.title}</h3>
                         <p className="text-xs text-black/50">
-                          v{design.versionNo} ({kitchenLifecycleLabel[kitchenLifecycle({ publicationStatus: "draft", reviewStatus: design.reviewStatus })]}) · {design.cabinetCount} шүүгээ ·{" "}
+                          v{design.versionNo} (
+                          {
+                            kitchenLifecycleLabel[
+                              kitchenLifecycle({
+                                publicationStatus: "draft",
+                                reviewStatus: design.reviewStatus,
+                              })
+                            ]
+                          }
+                          ) · {design.cabinetCount} шүүгээ ·{" "}
                           {design.roomWidthMm}×{design.roomDepthMm} мм
                         </p>
                       </div>
@@ -840,9 +939,24 @@ export function MerchantKitchenDesigns({
                     <p className="text-sm text-black/60">
                       {design.shortDescription || "Тайлбар оруулаагүй"}
                     </p>
-                    <p className="text-xs text-black/55">{design.materials?.join(", ") || "Материал оруулаагүй"}</p>
-                    {design.publicationStatus === "published" && <Link className="text-sm underline" href={`/kitchens/${design.slug}`}>Marketplace дээр харах</Link>}
-                    {!editable && <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-950">{design.publicationStatus === "suspended" ? "Admin түдгэлзүүлсэн. Шалтгааныг түүхээс харж, admin-тай холбогдоно уу." : "Архивласан загвар засагдахгүй."}</p>}
+                    <p className="text-xs text-black/55">
+                      {design.materials?.join(", ") || "Материал оруулаагүй"}
+                    </p>
+                    {design.publicationStatus === "published" && (
+                      <Link
+                        className="text-sm underline"
+                        href={`/kitchens/${design.slug}`}
+                      >
+                        Marketplace дээр харах
+                      </Link>
+                    )}
+                    {!editable && (
+                      <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-950">
+                        {design.publicationStatus === "suspended"
+                          ? "Admin түдгэлзүүлсэн. Шалтгааныг түүхээс харж, admin-тай холбогдоно уу."
+                          : "Архивласан загвар засагдахгүй."}
+                      </p>
+                    )}
                     <KitchenReviewTimeline
                       key={`${design.id}:${isFocused}`}
                       design={design}
@@ -896,14 +1010,24 @@ export function MerchantKitchenDesigns({
                                 {job.error}
                               </span>
                             )}
-                            {job.status === "queued" && <button type="button" className="mt-1 underline" disabled={!!busy} onClick={() => void cancelRender(job.id)}>Хүсэлт цуцлах</button>}
+                            {job.status === "queued" && (
+                              <button
+                                type="button"
+                                className="mt-1 underline"
+                                disabled={!!busy}
+                                onClick={() => void cancelRender(job.id)}
+                              >
+                                Хүсэлт цуцлах
+                              </button>
+                            )}
                           </div>
                         ))}
                       </div>
                     )}
-                    {editable && (["draft", "changes_requested"] as const).includes(
-                      design.reviewStatus as "draft" | "changes_requested",
-                    ) &&
+                    {editable &&
+                      (["draft", "changes_requested"] as const).includes(
+                        design.reviewStatus as "draft" | "changes_requested",
+                      ) &&
                       design.thumbnailUrl && (
                         <details className="rounded-xl border border-violet-200 bg-violet-50/60 p-3">
                           <summary className="cursor-pointer text-sm font-medium text-violet-950">
@@ -913,12 +1037,26 @@ export function MerchantKitchenDesigns({
                             </span>
                           </summary>
                           <div className="mt-3 space-y-2">
-                            <p className="text-xs text-violet-950">Сүүлийн 24 цаг: {data.renderUsage?.used ?? 0}/{data.renderUsage?.limit ?? 0} хүсэлт.
-                              Цуцалсан болон амжилтгүй хүсэлт мөн тоологдоно. Admin зөвшөөрсний дараа зураг үүснэ.</p>
+                            <p className="text-xs text-violet-950">
+                              Сүүлийн 24 цаг: {data.renderUsage?.used ?? 0}/
+                              {data.renderUsage?.limit ?? 0} хүсэлт. Цуцалсан
+                              болон амжилтгүй хүсэлт мөн тоологдоно. Admin
+                              зөвшөөрсний дараа зураг үүснэ.
+                            </p>
                             <label className="flex items-start gap-2 text-xs text-violet-950">
-                              <input type="checkbox" checked={renderConsent[design.id] ?? false}
-                                onChange={event => setRenderConsent(current => ({ ...current, [design.id]: event.target.checked }))} />
-                              Энэ зураг миний ашиглах эрхтэй зураг бөгөөд AI provider руу илгээхийг зөвшөөрч байна. AI зураг нь үйлдвэрлэлийн баталгаа биш.
+                              <input
+                                type="checkbox"
+                                checked={renderConsent[design.id] ?? false}
+                                onChange={(event) =>
+                                  setRenderConsent((current) => ({
+                                    ...current,
+                                    [design.id]: event.target.checked,
+                                  }))
+                                }
+                              />
+                              Энэ зураг миний ашиглах эрхтэй зураг бөгөөд AI
+                              provider руу илгээхийг зөвшөөрч байна. AI зураг нь
+                              үйлдвэрлэлийн баталгаа биш.
                             </label>
                             <textarea
                               className="input min-h-20 w-full bg-white"
@@ -937,7 +1075,10 @@ export function MerchantKitchenDesigns({
                               className="btn-primary"
                               disabled={
                                 !!busy ||
-                                !renderConsent[design.id] || !data.renderUsage?.enabled || data.renderUsage.used >= data.renderUsage.limit ||
+                                !renderConsent[design.id] ||
+                                !data.renderUsage?.enabled ||
+                                data.renderUsage.used >=
+                                  data.renderUsage.limit ||
                                 design.renderJobs.some(
                                   (job) =>
                                     job.status === "queued" ||
@@ -964,101 +1105,140 @@ export function MerchantKitchenDesigns({
                         </details>
                       )}
                     <div className="flex flex-wrap gap-2">
-                      {editable && design.sourceKitchenId && <Link className="btn-ghost" href={`/kitchen?design=${design.sourceKitchenId}`}>3D editor нээх</Link>}
-                      {editable && ["draft", "changes_requested"].includes(design.reviewStatus) && design.sourceKitchenId &&
-                        <button type="button" className="btn-ghost" disabled={!!busy} onClick={() => {
-                          if (window.confirm("Editor дээр хадгалсан загвараар энэ нооргийг шинэчлэх үү? Өмнөх thumbnail болон AI зургууд шинэ snapshot-д ашиглагдахгүй.")) void saveVersion(design, "sync_project", listingForm(design));
-                        }}>Хадгалсан 3D загвартай шинэчлэх</button>}
-                      {editable && (["draft", "changes_requested"] as const).includes(
-                        design.reviewStatus as "draft" | "changes_requested",
-                      ) && (
-                        <button
-                          type="button"
+                      {editable && design.sourceKitchenId && (
+                        <Link
                           className="btn-ghost"
-                          disabled={!!busy}
-                          onClick={() =>
-                            setEditing({ designId: design.id, mode: "edit" })
-                          }
+                          href={`/kitchen?design=${design.sourceKitchenId}`}
                         >
-                          <Pencil size={15} />
-                          Мэдээлэл засах
-                        </button>
+                          3D editor нээх
+                        </Link>
                       )}
-                      {editable && (design.reviewStatus === "rejected" ||
-                        (design.publicationStatus === "published" &&
-                          design.publishedVersionId === design.versionId)) && (
-                        <button
-                          type="button"
-                          className="btn-ghost"
-                          disabled={!!busy}
-                          onClick={() =>
-                            setEditing({
-                              designId: design.id,
-                              mode: "new_version",
-                            })
-                          }
-                        >
-                          <GitBranch size={15} />
-                          Шинэ version
-                        </button>
-                      )}
-                      {editable && (["draft", "changes_requested"] as const).includes(
-                        design.reviewStatus as "draft" | "changes_requested",
-                      ) && (
-                        <label className="btn-ghost cursor-pointer">
-                          <ImagePlus size={15} />
-                          {design.thumbnailUrl
-                            ? "Thumbnail солих"
-                            : "Thumbnail нэмэх"}
-                          <input
-                            className="sr-only"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={(e) =>
-                              void uploadMedia(
-                                design,
-                                e.target.files?.[0] ?? null,
-                                "thumbnail",
+                      {editable &&
+                        ["draft", "changes_requested"].includes(
+                          design.reviewStatus,
+                        ) &&
+                        design.sourceKitchenId && (
+                          <button
+                            type="button"
+                            className="btn-ghost"
+                            disabled={!!busy}
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  "Editor дээр хадгалсан загвараар энэ нооргийг шинэчлэх үү? Өмнөх thumbnail болон AI зургууд шинэ snapshot-д ашиглагдахгүй.",
+                                )
                               )
+                                void saveVersion(
+                                  design,
+                                  "sync_project",
+                                  listingForm(design),
+                                );
+                            }}
+                          >
+                            Хадгалсан 3D загвартай шинэчлэх
+                          </button>
+                        )}
+                      {editable &&
+                        (["draft", "changes_requested"] as const).includes(
+                          design.reviewStatus as "draft" | "changes_requested",
+                        ) && (
+                          <button
+                            type="button"
+                            className="btn-ghost"
+                            disabled={!!busy}
+                            onClick={() =>
+                              setEditing({ designId: design.id, mode: "edit" })
                             }
-                          />
-                        </label>
-                      )}
-                      {editable && (["draft", "changes_requested"] as const).includes(
-                        design.reviewStatus as "draft" | "changes_requested",
-                      ) && (
-                        <label className="btn-ghost cursor-pointer">
-                          <ImagePlus size={15} />
-                          Render жишээ нэмэх
-                          <input
-                            className="sr-only"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={(e) =>
-                              void uploadMedia(
-                                design,
-                                e.target.files?.[0] ?? null,
-                                "render",
-                              )
+                          >
+                            <Pencil size={15} />
+                            Мэдээлэл засах
+                          </button>
+                        )}
+                      {editable &&
+                        (design.reviewStatus === "rejected" ||
+                          (design.publicationStatus === "published" &&
+                            design.publishedVersionId ===
+                              design.versionId)) && (
+                          <button
+                            type="button"
+                            className="btn-ghost"
+                            disabled={!!busy}
+                            onClick={() =>
+                              setEditing({
+                                designId: design.id,
+                                mode: "new_version",
+                              })
                             }
-                          />
-                        </label>
-                      )}
-                      {editable && (["draft", "changes_requested"] as const).includes(
-                        design.reviewStatus as "draft" | "changes_requested",
-                      ) && (
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          disabled={!design.thumbnailUrl || !!busy}
-                          onClick={() => void action(design, "submit")}
-                        >
-                          <Send size={15} />
-                          Хяналтад илгээх
-                        </button>
-                      )}
-                      {editable && design.reviewStatus === "approved" && design.publishedVersionId !== design.versionId &&
-                        <p className="text-xs text-emerald-800">Admin-аас нийтлэхийг хүлээж байна.</p>}
+                          >
+                            <GitBranch size={15} />
+                            Шинэ version
+                          </button>
+                        )}
+                      {editable &&
+                        (["draft", "changes_requested"] as const).includes(
+                          design.reviewStatus as "draft" | "changes_requested",
+                        ) && (
+                          <label className="btn-ghost cursor-pointer">
+                            <ImagePlus size={15} />
+                            {design.thumbnailUrl
+                              ? "Thumbnail солих"
+                              : "Thumbnail нэмэх"}
+                            <input
+                              className="sr-only"
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              onChange={(e) =>
+                                void uploadMedia(
+                                  design,
+                                  e.target.files?.[0] ?? null,
+                                  "thumbnail",
+                                )
+                              }
+                            />
+                          </label>
+                        )}
+                      {editable &&
+                        (["draft", "changes_requested"] as const).includes(
+                          design.reviewStatus as "draft" | "changes_requested",
+                        ) && (
+                          <label className="btn-ghost cursor-pointer">
+                            <ImagePlus size={15} />
+                            Render жишээ нэмэх
+                            <input
+                              className="sr-only"
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              onChange={(e) =>
+                                void uploadMedia(
+                                  design,
+                                  e.target.files?.[0] ?? null,
+                                  "render",
+                                )
+                              }
+                            />
+                          </label>
+                        )}
+                      {editable &&
+                        (["draft", "changes_requested"] as const).includes(
+                          design.reviewStatus as "draft" | "changes_requested",
+                        ) && (
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={!design.thumbnailUrl || !!busy}
+                            onClick={() => void action(design, "submit")}
+                          >
+                            <Send size={15} />
+                            Хяналтад илгээх
+                          </button>
+                        )}
+                      {editable &&
+                        design.reviewStatus === "approved" &&
+                        design.publishedVersionId !== design.versionId && (
+                          <p className="text-xs text-emerald-800">
+                            Admin-аас нийтлэхийг хүлээж байна.
+                          </p>
+                        )}
                       {design.publicationStatus !== "archived" && (
                         <button
                           type="button"

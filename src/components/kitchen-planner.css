@@ -1,28 +1,10 @@
-.kp {
-  padding-top: 28px;
-  padding-bottom: 48px;
-  color: #293c32;
-}
+@import "./../features/kitchen-planner/styles/editor-base.css";
 
-.km-mode-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 24px;
-}
+@import "./../features/kitchen-planner/styles/suggestions.css";
 
-.km-mode-picker button {
-  min-height: 44px;
-  padding: 10px 16px;
-  border: 1px solid #cbd3c7;
-  border-radius: 8px;
-  font-size: 14px;
-}
+@import "./../features/kitchen-planner/styles/fullscreen.css";
 
-.km-mode-picker button[aria-pressed="true"] {
-  background: #293c32;
-  color: #fff;
-}
+@import "./../features/kitchen-planner/styles/workspace.css";
 
 .km-mode-picker button:focus-visible {
   outline: 2px solid #426d59;

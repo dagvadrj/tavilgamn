@@ -19,14 +19,23 @@ import type {
   RoomLighting,
   CeilingFixtureKind,
 } from "@/lib/types";
-import { CEILING_FIXTURE_TYPES, fixtureFitsCeiling, ceilingFixturesOverlap } from "@/lib/roomCeiling";
+import {
+  CEILING_FIXTURE_TYPES,
+  fixtureFitsCeiling,
+  ceilingFixturesOverlap,
+} from "@/lib/roomCeiling";
 import { exteriorWindowBearing } from "@/lib/roomSunlight";
 import { OpeningTemplatePreview } from "@/features/room-planner/components/OpeningTemplatePreview";
 import { RoomMeasureInput as MeasureInput } from "@/features/room-planner/components/RoomMeasureInput";
 import { RoomCeilingControls } from "@/features/room-planner/components/RoomCeilingControls";
 import { RoomLightingTimeControls } from "@/features/room-planner/components/RoomLightingTimeControls";
 import { ROOM_WALLS, getRoomGeometry } from "@/lib/roomGeometry";
-import { OPENING_TEMPLATES, wallLength, windowLayout, openingMinimumWidth } from "@/lib/roomOpenings";
+import {
+  OPENING_TEMPLATES,
+  wallLength,
+  windowLayout,
+  openingMinimumWidth,
+} from "@/lib/roomOpenings";
 import {
   CEILING_MATERIALS,
   FLOOR_MATERIALS,
@@ -203,7 +212,8 @@ export function RoomEnvironmentPanel(props: Props) {
   };
   const opening = design.openings?.find((item) => item.id === selectedOpening);
   const lighting = design.lighting ?? DEFAULT_LIGHTING;
-  const [newFixtureKind,setNewFixtureKind]=useState<CeilingFixtureKind>("flush");
+  const [newFixtureKind, setNewFixtureKind] =
+    useState<CeilingFixtureKind>("flush");
   const edit = { beginEdit, endEdit };
   const applyWall = (next: WallMaterial) => {
     const walls = { ...design.wallMaterials };
@@ -217,10 +227,24 @@ export function RoomEnvironmentPanel(props: Props) {
     });
   };
   const updateLighting = (patch: Partial<RoomLighting>) => {
-    const next={...lighting,...patch};
-    if(next.fixtures.some(f=>!fixtureFitsCeiling(design,f))){onNotice("Гэрлийн хэмжээ таазны дотор багтах ёстой. Байрлал эсвэл төрлийг өөрчилнө үү.");return;}
-    if(next.fixtures.some((f,i)=>next.fixtures.slice(i+1).some(other=>ceilingFixturesOverlap(f,other)))){onNotice("Таазны гэрлүүд давхцаж байна. Байрлалыг нь өөрчилнө үү.");return;}
-    onUpdate({lighting:next});
+    const next = { ...lighting, ...patch };
+    if (next.fixtures.some((f) => !fixtureFitsCeiling(design, f))) {
+      onNotice(
+        "Гэрлийн хэмжээ таазны дотор багтах ёстой. Байрлал эсвэл төрлийг өөрчилнө үү.",
+      );
+      return;
+    }
+    if (
+      next.fixtures.some((f, i) =>
+        next.fixtures
+          .slice(i + 1)
+          .some((other) => ceilingFixturesOverlap(f, other)),
+      )
+    ) {
+      onNotice("Таазны гэрлүүд давхцаж байна. Байрлалыг нь өөрчилнө үү.");
+      return;
+    }
+    onUpdate({ lighting: next });
   };
 
   return (
@@ -417,7 +441,12 @@ export function RoomEnvironmentPanel(props: Props) {
 
           {surface === "ceiling" && (
             <section className="room-control-section">
-              <RoomCeilingControls design={design} onChange={ceiling=>onUpdate({ceiling})} beginEdit={beginEdit} endEdit={endEdit}/>
+              <RoomCeilingControls
+                design={design}
+                onChange={(ceiling) => onUpdate({ ceiling })}
+                beginEdit={beginEdit}
+                endEdit={endEdit}
+              />
               <LightRange
                 label="Таазны өндөр"
                 value={(design.height ?? 2.7) * 100}
@@ -486,7 +515,7 @@ export function RoomEnvironmentPanel(props: Props) {
                     <span
                       className={`room-opening-illustration ${template.kind} ${template.id.includes("double") ? "double" : ""}`}
                     >
-                      <OpeningTemplatePreview template={template}/>
+                      <OpeningTemplatePreview template={template} />
                     </span>
                     <strong>{template.label}</strong>
                     <small>
@@ -564,7 +593,30 @@ export function RoomEnvironmentPanel(props: Props) {
                   <Trash2 size={16} />
                 </button>
               </div>
-              {opening.kind==="window"&&<label className="planner-number"><span>Цонхны төрөл</span><select aria-label="Цонхны төрөл" value={opening.templateId} onChange={e=>onUpdateOpening({...opening,templateId:e.target.value,open:false})}>{OPENING_TEMPLATES.filter(t=>t.kind==="window").map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select></label>}
+              {opening.kind === "window" && (
+                <label className="planner-number">
+                  <span>Цонхны төрөл</span>
+                  <select
+                    aria-label="Цонхны төрөл"
+                    value={opening.templateId}
+                    onChange={(e) =>
+                      onUpdateOpening({
+                        ...opening,
+                        templateId: e.target.value,
+                        open: false,
+                      })
+                    }
+                  >
+                    {OPENING_TEMPLATES.filter((t) => t.kind === "window").map(
+                      (t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.label}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </label>
+              )}
               <label className="planner-number">
                 <span>Байрлах хана</span>
                 <select
@@ -588,7 +640,7 @@ export function RoomEnvironmentPanel(props: Props) {
                 <MeasureInput
                   label="Нээлхийн өргөн"
                   value={opening.width * 100}
-                  min={Math.ceil(openingMinimumWidth(opening)*100)}
+                  min={Math.ceil(openingMinimumWidth(opening) * 100)}
                   max={wallLength(design, opening.wallId) * 100}
                   onChange={(v) =>
                     onUpdateOpening({ ...opening, width: v / 100 })
@@ -675,17 +727,28 @@ export function RoomEnvironmentPanel(props: Props) {
                 </>
               ) : (
                 <>
-                <MeasureInput
-                  label="Шалнаас тавцан хүртэл"
-                  value={opening.sillHeight * 100}
-                  min={0}
-                  max={((design.height ?? 2.7) - opening.height) * 100}
-                  onChange={(v) =>
-                    onUpdateOpening({ ...opening, sillHeight: v / 100 })
-                  }
-                  {...edit}
-                />
-                {windowLayout(opening).operation!=="fixed"&&<button type="button" className="room-secondary-action" onClick={()=>onUpdateOpening({...opening,open:!opening.open})}><DoorOpen size={16}/>{opening.open?"Цонхыг хаах":"Цонхыг нээх"}</button>}
+                  <MeasureInput
+                    label="Шалнаас тавцан хүртэл"
+                    value={opening.sillHeight * 100}
+                    min={0}
+                    max={((design.height ?? 2.7) - opening.height) * 100}
+                    onChange={(v) =>
+                      onUpdateOpening({ ...opening, sillHeight: v / 100 })
+                    }
+                    {...edit}
+                  />
+                  {windowLayout(opening).operation !== "fixed" && (
+                    <button
+                      type="button"
+                      className="room-secondary-action"
+                      onClick={() =>
+                        onUpdateOpening({ ...opening, open: !opening.open })
+                      }
+                    >
+                      <DoorOpen size={16} />
+                      {opening.open ? "Цонхыг хаах" : "Цонхыг нээх"}
+                    </button>
+                  )}
                 </>
               )}
             </section>
@@ -730,12 +793,24 @@ export function RoomEnvironmentPanel(props: Props) {
             <p>Цагийг өөрчлөхөд нарны чиглэл, цонхоор тусах гэрэл хөдөлнө.</p>
           </div>
           <section className="room-control-section">
-            <RoomLightingTimeControls windowBearing={exteriorWindowBearing(design)} ceiling={design.ceiling} lighting={lighting} onChange={updateLighting} beginEdit={beginEdit} endEdit={endEdit} />
+            <RoomLightingTimeControls
+              windowBearing={exteriorWindowBearing(design)}
+              ceiling={design.ceiling}
+              lighting={lighting}
+              onChange={updateLighting}
+              beginEdit={beginEdit}
+              endEdit={endEdit}
+            />
             <div className="room-light-presets">
               <button
                 aria-pressed={lighting.mode === "day"}
                 onClick={() =>
-                  updateLighting({ mode: "day", timeOfDay: 12, ambient: 0.65, sunlight: 1.8 })
+                  updateLighting({
+                    mode: "day",
+                    timeOfDay: 12,
+                    ambient: 0.65,
+                    sunlight: 1.8,
+                  })
                 }
               >
                 <Sun size={23} />
@@ -773,13 +848,36 @@ export function RoomEnvironmentPanel(props: Props) {
               {...edit}
             />
           </section>
-          <section className="room-control-section"><RoomCeilingControls design={design} onChange={ceiling=>onUpdate({ceiling})} beginEdit={beginEdit} endEdit={endEdit} structure={false}/></section>
+          <section className="room-control-section">
+            <RoomCeilingControls
+              design={design}
+              onChange={(ceiling) => onUpdate({ ceiling })}
+              beginEdit={beginEdit}
+              endEdit={endEdit}
+              structure={false}
+            />
+          </section>
           <section className="room-control-section">
             <div className="room-section-heading">
               <h4>Таазны гэрэл · {lighting.fixtures.length}</h4>
               <Lightbulb size={18} />
             </div>
-            <label className="room-ceiling-number"><span>Нэмэх гэрлийн төрөл</span><select aria-label="Нэмэх гэрлийн төрөл" value={newFixtureKind} onChange={e=>setNewFixtureKind(e.target.value as CeilingFixtureKind)}>{CEILING_FIXTURE_TYPES.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
+            <label className="room-ceiling-number">
+              <span>Нэмэх гэрлийн төрөл</span>
+              <select
+                aria-label="Нэмэх гэрлийн төрөл"
+                value={newFixtureKind}
+                onChange={(e) =>
+                  setNewFixtureKind(e.target.value as CeilingFixtureKind)
+                }
+              >
+                {CEILING_FIXTURE_TYPES.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
               className="room-secondary-action"
               disabled={lighting.fixtures.length >= 8}
@@ -793,7 +891,14 @@ export function RoomEnvironmentPanel(props: Props) {
                         bounds.minX + ((bounds.maxX - bounds.minX) * ix) / 12,
                       z = bounds.minZ + ((bounds.maxZ - bounds.minZ) * iz) / 12;
                     if (
-                      fixtureFitsCeiling(design,{id:"candidate",x,z,kind:newFixtureKind,intensity:18,color:"#ffe3b3"}) &&
+                      fixtureFitsCeiling(design, {
+                        id: "candidate",
+                        x,
+                        z,
+                        kind: newFixtureKind,
+                        intensity: 18,
+                        color: "#ffe3b3",
+                      }) &&
                       !geometry.voids.some(
                         (rect) =>
                           x >= rect.minX &&
@@ -802,7 +907,16 @@ export function RoomEnvironmentPanel(props: Props) {
                           z <= rect.maxZ,
                       ) &&
                       !lighting.fixtures.some(
-                        (f) => Math.hypot(x - f.x, z - f.z) < 0.6 || ceilingFixturesOverlap(f,{id:"candidate",x,z,kind:newFixtureKind,intensity:18,color:"#ffe3b3"}),
+                        (f) =>
+                          Math.hypot(x - f.x, z - f.z) < 0.6 ||
+                          ceilingFixturesOverlap(f, {
+                            id: "candidate",
+                            x,
+                            z,
+                            kind: newFixtureKind,
+                            intensity: 18,
+                            color: "#ffe3b3",
+                          }),
                       )
                     ) {
                       point = { x, z };
@@ -819,7 +933,13 @@ export function RoomEnvironmentPanel(props: Props) {
                 };
                 if (
                   !lighting.fixtures.length &&
-                  fixtureFitsCeiling(design,{id:"candidate",...center,kind:newFixtureKind,intensity:18,color:"#ffe3b3"}) &&
+                  fixtureFitsCeiling(design, {
+                    id: "candidate",
+                    ...center,
+                    kind: newFixtureKind,
+                    intensity: 18,
+                    color: "#ffe3b3",
+                  }) &&
                   !geometry.voids.some(
                     (rect) =>
                       center.x >= rect.minX &&
@@ -835,7 +955,7 @@ export function RoomEnvironmentPanel(props: Props) {
                     {
                       id: crypto.randomUUID(),
                       kind: newFixtureKind,
-                      pendantDrop: .6,
+                      pendantDrop: 0.6,
                       ...point,
                       intensity: 18,
                       color: "#ffe3b3",
@@ -868,8 +988,49 @@ export function RoomEnvironmentPanel(props: Props) {
                     <Trash2 size={15} />
                   </button>
                 </div>
-                <label className="room-ceiling-number"><span>Гэрлийн төрөл</span><select aria-label={`Гэрэл ${index+1} төрөл`} value={fixture.kind??"flush"} onChange={e=>updateLighting({fixtures:lighting.fixtures.map(f=>f.id===fixture.id?{...f,kind:e.target.value as CeilingFixtureKind}:f)})}>{CEILING_FIXTURE_TYPES.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
-                {fixture.kind==="pendant"&&<MeasureInput label="Унжих урт" value={(fixture.pendantDrop??.6)*100} min={20} max={120} onChange={v=>updateLighting({fixtures:lighting.fixtures.map(f=>f.id===fixture.id?{...f,pendantDrop:v/100}:f)})} {...edit}/>}
+                <label className="room-ceiling-number">
+                  <span>Гэрлийн төрөл</span>
+                  <select
+                    aria-label={`Гэрэл ${index + 1} төрөл`}
+                    value={fixture.kind ?? "flush"}
+                    onChange={(e) =>
+                      updateLighting({
+                        fixtures: lighting.fixtures.map((f) =>
+                          f.id === fixture.id
+                            ? {
+                                ...f,
+                                kind: e.target.value as CeilingFixtureKind,
+                              }
+                            : f,
+                        ),
+                      })
+                    }
+                  >
+                    {CEILING_FIXTURE_TYPES.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {fixture.kind === "pendant" && (
+                  <MeasureInput
+                    label="Унжих урт"
+                    value={(fixture.pendantDrop ?? 0.6) * 100}
+                    min={20}
+                    max={120}
+                    onChange={(v) =>
+                      updateLighting({
+                        fixtures: lighting.fixtures.map((f) =>
+                          f.id === fixture.id
+                            ? { ...f, pendantDrop: v / 100 }
+                            : f,
+                        ),
+                      })
+                    }
+                    {...edit}
+                  />
+                )}
                 <div className="room-field-pair">
                   {(["x", "z"] as const).map((axis) => (
                     <MeasureInput

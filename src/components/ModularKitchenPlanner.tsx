@@ -5,16 +5,27 @@ import { KitchenSpaceEditor } from "@/features/kitchen-planner/components/Kitche
 import { parseKitchenSpace } from "@/lib/kitchenSpace";
 import { useKitchenCatalog } from "@/features/kitchen-planner/hooks/useKitchenCatalog";
 import { KitchenStandardLibrary } from "@/features/kitchen-planner/components/KitchenStandardLibrary";
-import { createStandardKitchenCabinet, type KitchenStandardType } from "@/lib/kitchenStandardCatalog";
+import {
+  createStandardKitchenCabinet,
+  type KitchenStandardType,
+} from "@/lib/kitchenStandardCatalog";
 import { KitchenModelLibrary } from "@/features/kitchen-planner/components/KitchenModelLibrary";
 import { cabinetFromCatalog } from "@/lib/kitchenCatalogInsertion";
 import { EditorHistory } from "@/lib/editorHistory";
-import { extraFromProduct, findExtraSpace, parseKitchenExtras, type KitchenExtra } from "@/lib/kitchenExtras";
+import {
+  extraFromProduct,
+  findExtraSpace,
+  parseKitchenExtras,
+  type KitchenExtra,
+} from "@/lib/kitchenExtras";
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
 import { ProjectReport } from "@/features/kitchen-planner/components/ProjectReport";
 import { ViewportControls } from "@/features/planner/components/ViewportControls";
 import { PlannerRail } from "@/features/planner/components/PlannerRail";
-import { PlannerSwitcher, PlannerWorkflow } from "@/features/planner/components/PlannerWorkflow";
+import {
+  PlannerSwitcher,
+  PlannerWorkflow,
+} from "@/features/planner/components/PlannerWorkflow";
 import { usePlannerPanel } from "@/features/planner/components/usePlannerPanel";
 import "@/features/planner/components/planner-studio.css";
 import "@/features/planner/components/planner-reference.css";
@@ -25,7 +36,10 @@ import type { CameraRequest } from "@/lib/plannerCamera";
 import { VersionHistory } from "@/features/kitchen-planner/components/VersionHistory";
 import { useCatalog } from "@/store/catalog";
 import type { Product } from "@/lib/types";
-import { DimensionInput, Plan } from "@/features/kitchen-planner/components/PlannerPanels";
+import {
+  DimensionInput,
+  Plan,
+} from "@/features/kitchen-planner/components/PlannerPanels";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -112,9 +126,7 @@ import {
   type KitchenCatalogModule,
   type KitchenCatalogVariant,
 } from "@/lib/kitchenModuleCatalog";
-import {
-  type KitchenMaterialDefinition,
-} from "@/lib/kitchenMaterials";
+import { type KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 
 const FALLBACK_MATERIALS: KitchenMaterialDefinition[] = FINISHES.map(
   (finish) => ({
@@ -180,17 +192,22 @@ export function ModularKitchenPlanner({
   const user = useAuth((state) => state.user),
     library = useKitchens(),
     router = useRouter();
-  const draftToken=new URLSearchParams(queryString).get('draft')??new URLSearchParams(queryString).get('design');
-  const draftSuffix=draftToken&&/^[0-9a-f-]{36}$/i.test(draftToken)?`-${draftToken}`:'';
-  const legacyDraftKey=`tavilga-kitchen-draft-${user?.id??'guest'}`;
+  const draftToken =
+    new URLSearchParams(queryString).get("draft") ??
+    new URLSearchParams(queryString).get("design");
+  const draftSuffix =
+    draftToken && /^[0-9a-f-]{36}$/i.test(draftToken) ? `-${draftToken}` : "";
+  const legacyDraftKey = `tavilga-kitchen-draft-${user?.id ?? "guest"}`;
   const draftKey = `${legacyDraftKey}${draftSuffix}`;
   const [ready, setReady] = useState(false),
     [saving, setSaving] = useState(false);
   const [name, setName] = useState("Миний гал тогоо"),
     [savedId, setSavedId] = useState("");
-  const [revision,setRevision]=useState(0);
-  const marketplaceSource = library.items.find(item => item.id === savedId)?.sourceMarketplaceDesignId;
-  const [versionBusy,setVersionBusy]=useState(false);
+  const [revision, setRevision] = useState(0);
+  const marketplaceSource = library.items.find(
+    (item) => item.id === savedId,
+  )?.sourceMarketplaceDesignId;
+  const [versionBusy, setVersionBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [componentOverview, setComponentOverview] = useState(false);
   const [spaceOpen, setSpaceOpen] = useState(() => new URLSearchParams(queryString).get("space") === "1");
@@ -199,7 +216,13 @@ export function ModularKitchenPlanner({
   const settingsRef = usePlannerPanel(settingsOpen && !spaceOpen, () => setSettingsOpen(false));
   const [inspectorTab, setInspector] = useState<keyof typeof KITCHEN_INSPECTOR_LABELS>(() => new URLSearchParams(queryString).get("new") === "1" ? "room" : "catalog");
   const [reviewOpen, setReviewOpen] = useState(false);
-  const { moduleCatalog, materialCatalog, loading: catalogLoading, error: catalogError, retry: retryCatalog } = useKitchenCatalog(active);
+  const {
+    moduleCatalog,
+    materialCatalog,
+    loading: catalogLoading,
+    error: catalogError,
+    retry: retryCatalog,
+  } = useKitchenCatalog(active);
   const [exportRoot, setExportRoot] = useState<Group | null>(null);
   const captureKitchen = useRef<(() => Promise<Blob | null>) | null>(null);
   const registerKitchenCapture = useCallback(
@@ -236,7 +259,7 @@ export function ModularKitchenPlanner({
         designRef.current = next;
         setName(saved.name);
         setSavedId(saved.id);
-        setRevision(saved.revision??1);
+        setRevision(saved.revision ?? 1);
         setSelectedId(null);
         initialRead.current = true;
         setReady(true);
@@ -256,9 +279,14 @@ export function ModularKitchenPlanner({
       try {
         const fromGuest = !!user && query.get("importGuest") === "1";
         const guestRaw = fromGuest
-          ? localStorage.getItem(`tavilga-kitchen-draft-guest${draftSuffix}`)??localStorage.getItem("tavilga-kitchen-draft-guest")
+          ? (localStorage.getItem(
+              `tavilga-kitchen-draft-guest${draftSuffix}`,
+            ) ?? localStorage.getItem("tavilga-kitchen-draft-guest"))
           : null;
-        const raw = guestRaw ?? localStorage.getItem(draftKey) ?? localStorage.getItem(legacyDraftKey);
+        const raw =
+          guestRaw ??
+          localStorage.getItem(draftKey) ??
+          localStorage.getItem(legacyDraftKey);
         if (raw && query.get("new") !== "1") {
           const draft = JSON.parse(raw),
             next = parseKitchen(draft.design);
@@ -271,7 +299,13 @@ export function ModularKitchenPlanner({
               : "Миний гал тогоо",
           );
           setSavedId(!guestRaw && typeof draft.id === "string" ? draft.id : "");
-          setRevision(!guestRaw&&Number.isSafeInteger(draft.revision)&&draft.revision>=0?draft.revision:0);
+          setRevision(
+            !guestRaw &&
+              Number.isSafeInteger(draft.revision) &&
+              draft.revision >= 0
+              ? draft.revision
+              : 0,
+          );
           if (guestRaw) {
             localStorage.setItem(
               draftKey,
@@ -297,7 +331,7 @@ export function ModularKitchenPlanner({
     } catch {
       /* Saving to the account remains available. */
     }
-  }, [ready, draftKey, savedId, name, design,revision]);
+  }, [ready, draftKey, savedId, name, design, revision]);
   const designRef = useRef(design);
   designRef.current = design;
   useEffect(() => {
@@ -320,8 +354,9 @@ export function ModularKitchenPlanner({
   const [dragging, setDragging] = useState(false);
   const kitchen = preview ?? design;
   const selected = kitchen.cabinets.find((c) => c.id === selectedId);
-  const inspector = inspectorTab === "selection" && !selected ? "materials" : inspectorTab;
-  const selectedExtra = kitchen.extras?.find(e => e.id === selectedId);
+  const inspector =
+    inspectorTab === "selection" && !selected ? "materials" : inspectorTab;
+  const selectedExtra = kitchen.extras?.find((e) => e.id === selectedId);
   const variantModels = useMemo(
     () =>
       Object.fromEntries(
@@ -397,35 +432,71 @@ export function ModularKitchenPlanner({
   useEffect(() => {
     const shortcut = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest("input,textarea,select,[contenteditable='true']") || !(event.ctrlKey || event.metaKey)) return;
+      if (
+        target?.closest("input,textarea,select,[contenteditable='true']") ||
+        !(event.ctrlKey || event.metaKey)
+      )
+        return;
       const key = event.key.toLowerCase();
       if (key !== "z" && key !== "y") return;
-      event.preventDefault(); historyAction(key === "y" || event.shiftKey ? "redo" : "undo");
+      event.preventDefault();
+      historyAction(key === "y" || event.shiftKey ? "redo" : "undo");
     };
     window.addEventListener("keydown", shortcut);
     return () => window.removeEventListener("keydown", shortcut);
   }, [historyAction]);
   function duplicateCabinet() {
     if (!selected || busy) return;
-    const copy = { ...cloneKitchen(design).cabinets.find(c => c.id === selected.id)!, id: crypto.randomUUID() };
+    const copy = {
+      ...cloneKitchen(design).cabinets.find((c) => c.id === selected.id)!,
+      id: crypto.randomUUID(),
+    };
     const result = findCabinetSpace(design, copy);
-    if (!result) { setMessage("Хуулбар шүүгээ байрлуулах сул зай алга."); return; }
+    if (!result) {
+      setMessage("Хуулбар шүүгээ байрлуулах сул зай алга.");
+      return;
+    }
     if (commit(result)) selectCabinet(copy.id);
   }
   function addExtra(product: Product) {
     if (busy) return;
-    const extra=findExtraSpace(design,extraFromProduct(product,crypto.randomUUID()));
-    if(!extra){setMessage("Энэ тавилга байрлуулах сул зай алга.");return;}
-    if(commit({...design,extras:[...(design.extras??[]),extra]}))selectCabinet(extra.id);
+    if (!product.model) {
+      setMessage("Энэ барааны 3D загвар хараахан бэлэн болоогүй.");
+      return;
+    }
+    const extra = findExtraSpace(
+      design,
+      extraFromProduct(product, crypto.randomUUID()),
+    );
+    if (!extra) {
+      setMessage("Энэ тавилга байрлуулах сул зай алга.");
+      return;
+    }
+    if (commit({ ...design, extras: [...(design.extras ?? []), extra] }))
+      selectCabinet(extra.id);
   }
   function changeExtra(extra: KitchenExtra) {
-    commit({...design,extras:design.extras?.map(e=>e.id===extra.id?extra:e)});
+    commit({
+      ...design,
+      extras: design.extras?.map((e) => (e.id === extra.id ? extra : e)),
+    });
   }
   function duplicateExtra() {
-    if(!selectedExtra||busy)return;
-    const copy=findExtraSpace(design,{...selectedExtra,id:crypto.randomUUID()});
-    if(!copy){setMessage("Хуулбар тавилга байрлуулах сул зай алга.");return;}
-    if(commit({...design,extras:[...(design.extras??[]),copy]}))selectCabinet(copy.id);
+    if (!selectedExtra || busy) return;
+    if (!selectedExtra.model) {
+      setMessage("Энэ тавилгын 3D загвар хараахан бэлэн болоогүй.");
+      return;
+    }
+    const copy = findExtraSpace(design, {
+      ...selectedExtra,
+      id: crypto.randomUUID(),
+    });
+    if (!copy) {
+      setMessage("Хуулбар тавилга байрлуулах сул зай алга.");
+      return;
+    }
+    if (commit({ ...design, extras: [...(design.extras ?? []), copy] }))
+      selectCabinet(copy.id);
   }
   async function save(place = false) {
     if (busy || !user) return;
@@ -446,9 +517,9 @@ export function ModularKitchenPlanner({
     setSavedId(id);
     setSaving(true);
     try {
-      const saved = await library.save(id, name.trim(), checked,revision);
+      const saved = await library.save(id, name.trim(), checked, revision);
       if (saved) {
-        setRevision(saved.revision??1);
+        setRevision(saved.revision ?? 1);
         let image: Blob | null = null;
         try {
           image = (await captureKitchen.current?.()) ?? null;
@@ -456,7 +527,7 @@ export function ModularKitchenPlanner({
           /* The JSON project is already safe. */
         }
         const thumbnail = image
-          ? await library.saveThumbnail(saved.id, image,saved.revision)
+          ? await library.saveThumbnail(saved.id, image, saved.revision)
           : null;
         setSuccessMessage(
           thumbnail
@@ -489,7 +560,11 @@ export function ModularKitchenPlanner({
     try {
       parseKitchenSpace(next.room);
       parseBacksplashSettings(next.backsplashSettings, next.room);
-      parseKitchenExtras(next.extras,new Set(next.cabinets.map(c=>c.id)),next.room);
+      parseKitchenExtras(
+        next.extras,
+        new Set(next.cabinets.map((c) => c.id)),
+        next.room,
+      );
     } catch (error) {
       setMessage((error as Error).message);
       return false;
@@ -503,7 +578,7 @@ export function ModularKitchenPlanner({
       return false;
     }
     history.current.record(designRef.current, next);
-    redrawHistory(value => value + 1);
+    redrawHistory((value) => value + 1);
     designRef.current = next;
     setDesign(next);
     setMessage("");
@@ -517,7 +592,9 @@ export function ModularKitchenPlanner({
       return;
     }
     setSelectedId(id);
-    setInspector(design.extras?.some(extra => extra.id === id) ? "extras" : "selection");
+    setInspector(
+      design.extras?.some((extra) => extra.id === id) ? "extras" : "selection",
+    );
     setSettingsOpen(true);
   }
   function start(id: string) {
@@ -533,12 +610,39 @@ export function ModularKitchenPlanner({
   }
   function move(id: string, pose: CabinetPose) {
     if (!dragBase.current) return;
-    const base=dragBase.current,extra=base.extras?.find(e=>e.id===id);
-    if(extra) {
-      const footprint=(e:KitchenExtra):ModularCabinet=>({...createCabinet("base",e.id),width:e.width,height:e.height,depth:e.depth,position:e.position});
-      const result=snapCabinet(footprint(extra),pose,[...base.cabinets,...(base.extras??[]).filter(e=>e.id!==id).map(footprint)],roomWalls(base.room));
-      const next={...base,extras:base.extras?.map(e=>e.id===id?{...e,position:result.position}:e)};
-      draftRef.current=next;setPreview(next);setSnapMessage(result.wallId?"Нэмэлт тавилга хананд таарлаа":"Нэмэлт тавилга зөөж байна");return;
+    const base = dragBase.current,
+      extra = base.extras?.find((e) => e.id === id);
+    if (extra) {
+      const footprint = (e: KitchenExtra): ModularCabinet => ({
+        ...createCabinet("base", e.id),
+        width: e.width,
+        height: e.height,
+        depth: e.depth,
+        position: e.position,
+      });
+      const result = snapCabinet(
+        footprint(extra),
+        pose,
+        [
+          ...base.cabinets,
+          ...(base.extras ?? []).filter((e) => e.id !== id).map(footprint),
+        ],
+        roomWalls(base.room),
+      );
+      const next = {
+        ...base,
+        extras: base.extras?.map((e) =>
+          e.id === id ? { ...e, position: result.position } : e,
+        ),
+      };
+      draftRef.current = next;
+      setPreview(next);
+      setSnapMessage(
+        result.wallId
+          ? "Нэмэлт тавилга хананд таарлаа"
+          : "Нэмэлт тавилга зөөж байна",
+      );
+      return;
     }
     const panels = fitBacksplashes(dragBase.current);
     if (panels.some((panel) => panel.id === id)) {
@@ -658,14 +762,30 @@ export function ModularKitchenPlanner({
       }).kitchen,
     );
   }
-  function addCatalogCabinet(module: KitchenCatalogModule, variant: KitchenCatalogVariant) {
+  function addCatalogCabinet(
+    module: KitchenCatalogModule,
+    variant: KitchenCatalogVariant,
+  ) {
     if (busy || design.cabinets.length >= 80) return;
-    const cabinet = cabinetFromCatalog(module, variant, crypto.randomUUID(), design.room.height);
+    const cabinet = cabinetFromCatalog(
+      module,
+      variant,
+      crypto.randomUUID(),
+      design.room.height,
+    );
     if (!cabinet) return;
     const issue = validateCabinet(cabinet);
-    if (issue) { setMessage(issue); return; }
+    if (issue) {
+      setMessage(issue);
+      return;
+    }
     const next = findCabinetSpace(design, cabinet);
-    if (!next) { setMessage("Энэ загвар багтах сул зай алга. Шүүгээ зөөх эсвэл өрөөний хэмжээг өөрчилнө үү."); return; }
+    if (!next) {
+      setMessage(
+        "Энэ загвар багтах сул зай алга. Шүүгээ зөөх эсвэл өрөөний хэмжээг өөрчилнө үү.",
+      );
+      return;
+    }
     if (commit(next)) {
       setSelectedId(cabinet.id);
       setSuccessMessage(`${variant.modelName || module.name} нэмэгдлээ.`);
@@ -795,8 +915,11 @@ export function ModularKitchenPlanner({
         >
           <House size={18} /> <span>tavilga.mn</span>
         </Link>
-        <div className="studio-heading kitchen-studio-heading"><span>Гал тогооны төлөвлөгч</span><small>Өөрийнхөөрөө тохижуулах</small></div>
-        <PlannerSwitcher current="kitchen"/>
+        <div className="studio-heading kitchen-studio-heading">
+          <span>Гал тогооны төлөвлөгч</span>
+          <small>Өөрийнхөөрөө тохижуулах</small>
+        </div>
+        <PlannerSwitcher current="kitchen" />
         <nav className="kp-planner-steps" aria-label="Төлөвлөх үе шат">
           <button type="button" onClick={() => setSpaceOpen(true)}>Өрөөгөө тохируулах</button>
           <span className="is-active">3D төлөвлөх</span>
@@ -814,8 +937,24 @@ export function ModularKitchenPlanner({
           )}
         </nav>
         <div className="kp-top-actions">
-          <button type="button" aria-label="Буцаах" title="Ctrl/Cmd+Z" disabled={busy || !history.current.undoCount} onClick={() => historyAction("undo")}><Undo2 size={18} /></button>
-          <button type="button" aria-label="Дахин хийх" title="Ctrl/Cmd+Shift+Z" disabled={busy || !history.current.redoCount} onClick={() => historyAction("redo")}><Redo2 size={18} /></button>
+          <button
+            type="button"
+            aria-label="Буцаах"
+            title="Ctrl/Cmd+Z"
+            disabled={busy || !history.current.undoCount}
+            onClick={() => historyAction("undo")}
+          >
+            <Undo2 size={18} />
+          </button>
+          <button
+            type="button"
+            aria-label="Дахин хийх"
+            title="Ctrl/Cmd+Shift+Z"
+            disabled={busy || !history.current.redoCount}
+            onClick={() => historyAction("redo")}
+          >
+            <Redo2 size={18} />
+          </button>
           <details className="km-layout-menu kp-top-menu">
             <summary>
               <LayoutPanelTop size={18} />
@@ -893,7 +1032,7 @@ export function ModularKitchenPlanner({
               className="kp-save-button"
               aria-label="Нэвтэрч хадгалах"
               title="Нэвтэрч хадгалах"
-              href={`/login?next=${encodeURIComponent(new URLSearchParams(queryString).has("design") ? `/kitchen?${queryString}` : `/kitchen?importGuest=1${draftToken?`&draft=${encodeURIComponent(draftToken)}`:''}`)}`}
+              href={`/login?next=${encodeURIComponent(new URLSearchParams(queryString).has("design") ? `/kitchen?${queryString}` : `/kitchen?importGuest=1${draftToken ? `&draft=${encodeURIComponent(draftToken)}` : ""}`)}`}
             >
               <Save size={18} /> <span>Хадгалах</span>
             </Link>
@@ -912,9 +1051,37 @@ export function ModularKitchenPlanner({
                   Өөрийн гарнитурууд
                 </Link>
               )}
-              {user && savedId && revision>0 && <VersionHistory id={savedId} revision={revision} disabled={busy} onBusyChange={setVersionBusy}
-                onRestore={(versionName,versionDesign)=>{if(commit(cloneKitchen(versionDesign))){setName(versionName);setSelectedId(null);setViewKey(key=>key+1);setMessage('Өмнөх хувилбар редакторт ачааллаа. Хадгалахад шинэ хувилбар болно.');}}}/>}
-              {user&&savedId&&<button type="button" disabled={busy} onClick={()=>{setSavedId('');setRevision(0);setMessage('Дараагийн хадгалалт шинэ хуулбар үүсгэнэ.');}}>Шинэ хуулбар болгон хадгалах</button>}
+              {user && savedId && revision > 0 && (
+                <VersionHistory
+                  id={savedId}
+                  revision={revision}
+                  disabled={busy}
+                  onBusyChange={setVersionBusy}
+                  onRestore={(versionName, versionDesign) => {
+                    if (commit(cloneKitchen(versionDesign))) {
+                      setName(versionName);
+                      setSelectedId(null);
+                      setViewKey((key) => key + 1);
+                      setMessage(
+                        "Өмнөх хувилбар редакторт ачааллаа. Хадгалахад шинэ хувилбар болно.",
+                      );
+                    }
+                  }}
+                />
+              )}
+              {user && savedId && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setSavedId("");
+                    setRevision(0);
+                    setMessage("Дараагийн хадгалалт шинэ хуулбар үүсгэнэ.");
+                  }}
+                >
+                  Шинэ хуулбар болгон хадгалах
+                </button>
+              )}
               {ready && <KitchenRoomFitStatus kitchen={design} name={name} />}
               <KitchenExportButtons
                 root={exportRoot}
@@ -987,7 +1154,8 @@ export function ModularKitchenPlanner({
                     setOpen(false);
                   }}
                 >
-                  <Move size={17}/><span>Шүүгээ зөөх</span>
+                  <Move size={17} />
+                  <span>Шүүгээ зөөх</span>
                 </button>
                 <button
                   type="button"
@@ -1020,14 +1188,21 @@ export function ModularKitchenPlanner({
                     setOpen(!open);
                   }}
                 >
-                  <DoorOpen size={17}/><span>{open ? "Хаалгуудыг хаах" : "Хаалгуудыг нээх"}</span>
+                  <DoorOpen size={17} />
+                  <span>{open ? "Хаалгуудыг хаах" : "Хаалгуудыг нээх"}</span>
                 </button>
               </div>
             </div>
-            <ViewportControls disabled={busy || !ready} onAction={action => {
-              setMode("orbit");
-              setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action }));
-            }}/>
+            <ViewportControls
+              disabled={busy || !ready}
+              onAction={(action) => {
+                setMode("orbit");
+                setCameraRequest((previous) => ({
+                  id: (previous?.id ?? 0) + 1,
+                  action,
+                }));
+              }}
+            />
             <div className="kp-canvas">
               {active && ready && (
                 <Scene
@@ -1042,7 +1217,9 @@ export function ModularKitchenPlanner({
                   onSelect={selectCabinet}
                   onDeselect={() => {
                     setSelectedId(null);
-                    setInspector(previous => previous === "selection" ? "materials" : previous);
+                    setInspector((previous) =>
+                      previous === "selection" ? "materials" : previous,
+                    );
                     setSettingsOpen(false);
                     setComponentOverview(false);
                   }}
@@ -1062,8 +1239,14 @@ export function ModularKitchenPlanner({
                 : "Чирж эргүүлэх · Дугуй: заасан цэг рүү zoom · Хоёр хуруу: zoom, шилжүүлэх"}
             </p>
             <div className="kitchen-project-caption">
-              <strong>Гал тогоо · {design.room.width / 1000} × {design.room.depth / 1000} м</strong>
-              <span>{kitchen.cabinets.length} шүүгээ · Тааз {design.room.height / 1000} м</span>
+              <strong>
+                Гал тогоо · {design.room.width / 1000} ×{" "}
+                {design.room.depth / 1000} м
+              </strong>
+              <span>
+                {kitchen.cabinets.length} шүүгээ · Тааз{" "}
+                {design.room.height / 1000} м
+              </span>
             </div>
             <p
               className={`km-feedback ${issues.some((issue) => issue.severity === "error") ? "has-error" : ""}`}
@@ -1133,19 +1316,29 @@ export function ModularKitchenPlanner({
             )}
           </section>
         </div>
-        {settingsOpen && <button type="button" className="planner-inspector-backdrop" aria-label="Самбар хаах"
-          onClick={() => setSettingsOpen(false)}/>}
+        {settingsOpen && (
+          <button
+            type="button"
+            className="planner-inspector-backdrop"
+            aria-label="Самбар хаах"
+            onClick={() => setSettingsOpen(false)}
+          />
+        )}
         <aside
           ref={settingsRef}
           className={`kp-settings ${settingsOpen ? "is-open" : ""} ${selected || selectedExtra ? "is-selected" : "is-tools"}`}
           data-inspector={inspector}
           aria-label={
-            inspector === "selection" ? "Сонгосон шүүгээний тохиргоо" : KITCHEN_INSPECTOR_LABELS[inspector]
+            inspector === "selection"
+              ? "Сонгосон шүүгээний тохиргоо"
+              : KITCHEN_INSPECTOR_LABELS[inspector]
           }
         >
           <div className="kp-settings-head">
             <strong>
-              {inspector === "selection" && selected ? cabinetLabel(selected) : KITCHEN_INSPECTOR_LABELS[inspector]}
+              {inspector === "selection" && selected
+                ? cabinetLabel(selected)
+                : KITCHEN_INSPECTOR_LABELS[inspector]}
             </strong>
             <button
               type="button"
@@ -1155,15 +1348,51 @@ export function ModularKitchenPlanner({
               <X size={19} />
             </button>
           </div>
-          <p className="kitchen-inspector-help">{inspector === "room" ? "1. Өрөөний хэмжээ, гарнитурын хэлбэрээ тохируулна." : inspector === "catalog" ? "2. Шүүгээ, төхөөрөмжөө сонгож нэмнэ." : inspector === "materials" ? "3. Өнгө, материал, тавцангаа тохируулна." : inspector === "selection" ? "Сонгосон шүүгээний хэмжээ, хаалга, байрлалыг өөрчилнө." : "Гал тогоондоо нэмэлт тавилга байрлуулна."}</p>
-          <div data-inspector-section="extras"><ExtrasPanel products={products.products} selected={selectedExtra} room={design.room} disabled={busy}
-            error={products.error} loading={products.loading} onAdd={addExtra} onChange={changeExtra} onDuplicate={duplicateExtra}
-            onDelete={()=>{if(commit({...design,extras:design.extras?.filter(e=>e.id!==selectedId)}))setSelectedId(null);}}/></div>
+          <p className="kitchen-inspector-help">
+            {inspector === "room"
+              ? "1. Өрөөний хэмжээ, гарнитурын хэлбэрээ тохируулна."
+              : inspector === "catalog"
+                ? "2. Шүүгээ, төхөөрөмжөө сонгож нэмнэ."
+                : inspector === "materials"
+                  ? "3. Өнгө, материал, тавцангаа тохируулна."
+                  : inspector === "selection"
+                    ? "Сонгосон шүүгээний хэмжээ, хаалга, байрлалыг өөрчилнө."
+                    : "Гал тогоондоо нэмэлт тавилга байрлуулна."}
+          </p>
+          <div data-inspector-section="extras">
+            <ExtrasPanel
+              products={products.products}
+              selected={selectedExtra}
+              room={design.room}
+              disabled={busy}
+              error={products.error}
+              loading={products.loading}
+              onAdd={addExtra}
+              onChange={changeExtra}
+              onDuplicate={duplicateExtra}
+              onDelete={() => {
+                if (
+                  commit({
+                    ...design,
+                    extras: design.extras?.filter((e) => e.id !== selectedId),
+                  })
+                )
+                  setSelectedId(null);
+              }}
+            />
+          </div>
           {selected && (
             <section className="kp-panel" data-inspector-section="selection">
               <div className="kp-section-heading">
                 <h2>{cabinetLabel(selected)}</h2>
-                <button type="button" disabled={busy} aria-label="Сонгосон шүүгээг хувилах" onClick={duplicateCabinet}><Copy size={18} /></button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  aria-label="Сонгосон шүүгээг хувилах"
+                  onClick={duplicateCabinet}
+                >
+                  <Copy size={18} />
+                </button>
                 <button
                   type="button"
                   className="km-delete"
@@ -1590,14 +1819,37 @@ export function ModularKitchenPlanner({
               onOverviewClose={() => setComponentOverview(false)}
             />
           )}
-          <details className="kp-panel km-details planner-material-section" data-inspector-section="materials" open>
+          <details
+            className="kp-panel km-details planner-material-section"
+            data-inspector-section="materials"
+            open
+          >
             <summary>Шүүгээний өнгө, материал</summary>
             <fieldset className="km-fields" disabled={busy}>
-              <div className="planner-scope-control"><strong>Хаана хэрэглэх вэ?</strong>
-                <div className="planner-filter-pills" aria-label="Материал өөрчлөх хэсэг">
-                  {([['all', 'Бүгд'], ['base', 'Доод'], ['wall', 'Дээд'], ['selected', 'Сонгосон']] as const).map(([value, label]) =>
-                    <button key={value} type="button" aria-pressed={scope === value} disabled={value === 'selected' && !selected}
-                      onClick={() => setScope(value)}>{label}</button>)}
+              <div className="planner-scope-control">
+                <strong>Хаана хэрэглэх вэ?</strong>
+                <div
+                  className="planner-filter-pills"
+                  aria-label="Материал өөрчлөх хэсэг"
+                >
+                  {(
+                    [
+                      ["all", "Бүгд"],
+                      ["base", "Доод"],
+                      ["wall", "Дээд"],
+                      ["selected", "Сонгосон"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={scope === value}
+                      disabled={value === "selected" && !selected}
+                      onClick={() => setScope(value)}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
               </div>
               <p className="planner-section-label">Хаалганы материал</p>
@@ -1697,7 +1949,10 @@ export function ModularKitchenPlanner({
               </p>
             </fieldset>
           </details>
-          <details className="kp-panel km-details" data-inspector-section="materials">
+          <details
+            className="kp-panel km-details"
+            data-inspector-section="materials"
+          >
             <summary>Тавцан · нийт загвар</summary>
             <fieldset className="km-fields" disabled={busy}>
               <label className="kp-field">
@@ -1914,34 +2169,74 @@ export function ModularKitchenPlanner({
               )}
             </fieldset>
           </details>
-          <section className="kitchen-catalog-panel" data-inspector-section="catalog" aria-label="Нэмэх загварын сан">
-            <div className="kitchen-catalog-tabs" role="group" aria-label="Загварын сан сонгох">
-              <button type="button" aria-pressed={catalogSource === "standard"} onClick={() => setCatalogSource("standard")}>Бэлэн шүүгээ</button>
-              <button type="button" aria-pressed={catalogSource === "models"} onClick={() => setCatalogSource("models")}>3D загварын сан</button>
+          <section
+            className="kitchen-catalog-panel"
+            data-inspector-section="catalog"
+            aria-label="Нэмэх загварын сан"
+          >
+            <div
+              className="kitchen-catalog-tabs"
+              role="group"
+              aria-label="Загварын сан сонгох"
+            >
+              <button
+                type="button"
+                aria-pressed={catalogSource === "standard"}
+                onClick={() => setCatalogSource("standard")}
+              >
+                Бэлэн шүүгээ
+              </button>
+              <button
+                type="button"
+                aria-pressed={catalogSource === "models"}
+                onClick={() => setCatalogSource("models")}
+              >
+                3D загварын сан
+              </button>
             </div>
             <div hidden={catalogSource !== "standard"}>
               <KitchenStandardLibrary type={addType} width={addWidth} ceiling={design.room.height} disabled={busy} atLimit={kitchen.cabinets.length >= 80}
                 onType={type => { setAddType(type); setAddWidth(600); }} onWidth={setAddWidth} onAdd={addCabinet}/>
             </div>
             <div hidden={catalogSource !== "models"}>
-              <KitchenModelLibrary modules={moduleCatalog} loading={catalogLoading} error={catalogError}
-                retry={retryCatalog} disabled={busy || kitchen.cabinets.length >= 80} onAdd={addCatalogCabinet}/>
+              <KitchenModelLibrary
+                modules={moduleCatalog}
+                loading={catalogLoading}
+                error={catalogError}
+                retry={retryCatalog}
+                disabled={busy || kitchen.cabinets.length >= 80}
+                onAdd={addCatalogCabinet}
+              />
             </div>
           </section>
-          <details className="kp-panel km-details" data-inspector-section="room" open>
+          <details
+            className="kp-panel km-details"
+            data-inspector-section="room"
+            open
+          >
             <summary>Хэмжээ, байрлал</summary>
-            <p className="kitchen-section-help">Өрөөний бодит хэмжээг миллиметрээр оруулна. Жишээ нь 4 метр = 4000 мм.</p>
+            <p className="kitchen-section-help">
+              Өрөөний бодит хэмжээг миллиметрээр оруулна. Жишээ нь 4 метр = 4000
+              мм.
+            </p>
             <fieldset className="km-fields" disabled={busy}>
               <label className="kp-field">
                 <span>Гарнитурын байрлал</span>
                 <select
                   value={design.layout ?? "straight"}
-                  onChange={event => {
-                    const layout = KITCHEN_LAYOUT_OPTIONS.find(([value]) => value === event.target.value)?.[0];
-                    if (layout && commit(arrangeKitchen(design, layout))) setViewKey(key => key + 1);
+                  onChange={(event) => {
+                    const layout = KITCHEN_LAYOUT_OPTIONS.find(
+                      ([value]) => value === event.target.value,
+                    )?.[0];
+                    if (layout && commit(arrangeKitchen(design, layout)))
+                      setViewKey((key) => key + 1);
                   }}
                 >
-                  {KITCHEN_LAYOUT_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                  {KITCHEN_LAYOUT_OPTIONS.map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
                 </select>
               </label>
               {(
@@ -2133,13 +2428,34 @@ export function ModularKitchenPlanner({
                 name={name}
                 disabled={busy || !kitchen.cabinets.length}
               />
-              <ProjectReport name={name} kitchen={kitchen} modules={moduleCatalog} products={products.products}
-                disabled={busy} capture={async()=>await captureKitchen.current?.()??null}/>
+              <ProjectReport
+                name={name}
+                kitchen={kitchen}
+                modules={moduleCatalog}
+                products={products.products}
+                disabled={busy}
+                capture={async () => (await captureKitchen.current?.()) ?? null}
+              />
               {user && savedId && marketplaceSource && (
-                <KitchenQuoteRequest key={savedId} designId={marketplaceSource}
-                  projectId={savedId} returnPath={`/kitchen?design=${savedId}`} disabled={busy}
-                  defaultRoom={{ widthMm: kitchen.room.width, depthMm: kitchen.room.depth, heightMm: kitchen.room.height }}
-                  beforeSubmit={async () => { if (!await save()) throw new Error(useKitchens.getState().error || "Үнийн хүсэлт илгээхийн өмнө загвараа хадгална уу."); }} />
+                <KitchenQuoteRequest
+                  key={savedId}
+                  designId={marketplaceSource}
+                  projectId={savedId}
+                  returnPath={`/kitchen?design=${savedId}`}
+                  disabled={busy}
+                  defaultRoom={{
+                    widthMm: kitchen.room.width,
+                    depthMm: kitchen.room.depth,
+                    heightMm: kitchen.room.height,
+                  }}
+                  beforeSubmit={async () => {
+                    if (!(await save()))
+                      throw new Error(
+                        useKitchens.getState().error ||
+                          "Үнийн хүсэлт илгээхийн өмнө загвараа хадгална уу.",
+                      );
+                  }}
+                />
               )}
             </aside>
           </div>

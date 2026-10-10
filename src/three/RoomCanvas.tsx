@@ -29,7 +29,6 @@ import { roomLabelOpacity, solarLighting } from "@/lib/roomLighting";
 import { animateToward } from "./demandAnimation";
 import { getRoomGeometry } from "@/lib/roomGeometry";
 import { RoomStructure, RoomLighting } from "./RoomStructure";
-import { FurnitureMesh } from "./FurnitureMesh";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import { InteriorModel } from "./InteriorModel";
 import { getProduct } from "@/store/catalog";
@@ -608,6 +607,12 @@ function DraggablePiece({
   );
   const product = getProduct(piece.productId);
   const dbModel = piece.modelId ? getDbModel(piece.modelId) : undefined;
+  const fileModel = dbModel ? {
+    id: dbModel.fileModelId ?? dbModel.id,
+    file: dbModel.glbFile,
+    previewFile: dbModel.previewGlbFile,
+    physicalSize: dbModel.physicalSize,
+  } : product?.model;
   const [dragging, setDragging] = useState(false);
   const [invalid, setInvalid] = useState(false);
 
@@ -649,7 +654,7 @@ function DraggablePiece({
     };
   }, [dragging, onDragChange, onEditEnd, gl]);
 
-  if (!product && !dbModel && !piece.kitchen) return null;
+  if (!fileModel && !piece.kitchen) return null;
 
   const dims = piece.kitchen
     ? dimsFor(piece)
@@ -755,13 +760,13 @@ function DraggablePiece({
           centered
           materialDefinitions={kitchenMaterials}
         />
-      ) : dbModel ? (
+      ) : fileModel ? (
         <GLBFurnitureMesh
-          modelId={dbModel.fileModelId ?? dbModel.id}
-          basePath={`/api/models/files/${dbModel.fileModelId ?? dbModel.id}/`}
-          glbFile={dbModel.glbFile}
-          previewGlbFile={dbModel.previewGlbFile}
-          preservePhysicalSize={dbModel.physicalSize}
+          modelId={fileModel.id}
+          basePath={`/api/models/files/${fileModel.id}/`}
+          glbFile={fileModel.file}
+          previewGlbFile={fileModel.previewFile}
+          preservePhysicalSize={fileModel.physicalSize}
           bakedOcclusionIntensity={0}
           trackFloorBand
           w={dims.w}
@@ -770,16 +775,7 @@ function DraggablePiece({
           selected={selected}
           deferUntilVisible
         />
-      ) : (
-        <FurnitureMesh
-          category={product!.category}
-          color={piece.color}
-          material={piece.material}
-          w={dims.w}
-          d={dims.d}
-          h={dims.h}
-        />
-      )}
+      ) : null}
       {selected && (
         <mesh position={[0, dims.h / 2, 0]}>
           <boxGeometry args={[dims.w + 0.08, dims.h + 0.08, dims.d + 0.08]} />

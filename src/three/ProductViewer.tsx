@@ -1,9 +1,7 @@
 "use client";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, ContactShadows, Environment } from "@react-three/drei";
-import { useEffect, useRef } from "react";
-import { FurnitureMesh } from "./FurnitureMesh";
-import type { Category, Material } from "@/lib/types";
+import type { Material } from "@/lib/types";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import type { Product } from "@/lib/types";
 
@@ -16,7 +14,6 @@ import { CursorNavigation } from "./CursorNavigationBinding";
 
 interface ProductViewerProps {
   stockQuantity?: number | null;
-  category: Category;
   color: string;
   model?: Product["model"];
   material: Material;
@@ -26,17 +23,8 @@ interface ProductViewerProps {
   onRootReady?: (root: Group | null) => void;
 }
 
-function ViewerReady({ onReady }: { onReady?: () => void }) {
-  useEffect(() => {
-    onReady?.();
-  }, [onReady]);
-
-  return null;
-}
-
 export function ProductViewer({
   stockQuantity,
-  category,
   color,
   material,
   dimensions,
@@ -46,7 +34,6 @@ export function ProductViewer({
   onRootReady,
 }: ProductViewerProps) {
   const performance = useCanvasPerformance();
-  const proceduralAppearance = useRef({ color, material });
   return (
     <div className="relative h-full w-full">
       <p
@@ -55,7 +42,7 @@ export function ProductViewer({
       >
         {stockLabel({ stockQuantity })}
       </p>
-      <Canvas
+      {model ? <Canvas
         shadows={performance.shadows}
         dpr={performance.dpr}
         camera={{ position: [3, 2, 13.5], fov: 35 }}
@@ -67,7 +54,6 @@ export function ProductViewer({
         <ambientLight intensity={0.55} />
         <directionalLight castShadow intensity={1.1} position={[5, 8, 5]} />
         <ProductAppearance color={color} material={material} onRootReady={onRootReady}>
-        {model ? (
           <GLBFurnitureMesh
             modelId={model.id}
             basePath={`/api/models/files/${model.id}/`}
@@ -80,19 +66,6 @@ export function ProductViewer({
             onReady={onReady}
             onError={onError}
           />
-        ) : (
-          <>
-            <FurnitureMesh
-              category={category}
-              color={proceduralAppearance.current.color}
-              material={proceduralAppearance.current.material}
-              w={dimensions.w}
-              d={dimensions.d}
-              h={dimensions.h}
-            />
-            <ViewerReady onReady={onReady} />
-          </>
-        )}
         </ProductAppearance>
         {performance.contactShadows && (
           <ContactShadows
@@ -115,7 +88,9 @@ export function ProductViewer({
           makeDefault
         />
         <CursorNavigation />
-      </Canvas>
+      </Canvas> : <p className="flex h-full items-center justify-center px-6 text-center text-sm" role="status">
+        Энэ барааны 3D загвар хараахан бэлэн болоогүй.
+      </p>}
     </div>
   );
 }
