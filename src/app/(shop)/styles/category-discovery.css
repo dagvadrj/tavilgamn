@@ -1,0 +1,104 @@
+/* Image-led category discovery stays available at every screen size. */
+
+.shop-shell .market-category-tiles {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 128px;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px 4px 12px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.shop-shell .market-category-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  scroll-snap-align: start;
+}
+
+.shop-shell .market-category-image {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.15;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--market-bg);
+}
+
+.shop-shell .market-category-image img {
+  object-fit: cover;
+  transition: transform .2s ease;
+}
+
+.shop-shell .market-category-tile:hover img {
+  transform: scale(1.05);
+}
+
+.shop-shell .market-carousel-controls button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.shop-shell .market-carousel-controls {
+  bottom: 3px;
+}
+
+.shop-shell .marketplace-product-card .product-price {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 639px) {
+  .shop-shell .market-home {
+    padding-top: 16px;
+  }
+  .shop-shell .market-home-content {
+    gap: 16px;
+  }
+  .shop-shell .market-category-tiles {
+    grid-auto-columns: 104px;
+    gap: 12px;
+  }
+  .shop-shell .market-hero-slide {
+    grid-template-columns: 1fr;
+    padding: 24px 20px 52px;
+    gap: 20px;
+  }
+  .shop-shell .market-hero-copy :is(h1,h2) {
+    font-size: 28px;
+    line-height: 1.35;
+  }
+  .shop-shell .market-hero-photo {
+    min-height: 200px;
+  }
+  .shop-shell .market-hero-product span {
+    font-size: 12px;
+  }
+  .shop-shell .market-hero-product strong {
+    font-size: 16px;
+  }
+  .shop-shell .market-hero-product {
+    padding: 10px 12px;
+  }
+  .shop-shell .market-flash-track {
+    grid-auto-columns: 72%;
+    scroll-snap-type: x proximity;
+  }
+  .shop-shell .market-flash-track > * {
+    scroll-snap-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-shell *, .shop-shell *::before, .shop-shell *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

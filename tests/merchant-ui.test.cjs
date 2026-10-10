@@ -54,6 +54,12 @@ function harness(role = "merchant") {
     "@/store/catalog": {
       useCatalogStore: { getState: () => ({ refresh() {} }) },
     },
+    "@/features/dashboard/useDashboardPreferences": {
+      useDashboardPreferences: () => ({
+        preferences: { density: "comfortable", textSize: "standard", overview: "all" },
+        updatePreferences: () => true,
+      }),
+    },
   };
   // This action harness invokes components directly rather than mounting React.
   // Persistent fields use the same indexed state inputs; durable restore/races
@@ -315,6 +321,31 @@ test("editing merchant product preserves all variants and stock version", async 
   assert.deepEqual(body.images, ["/extra.jpg"]);
   assert.equal(body.expectedStockQuantity, 3);
   assert.deepEqual(body.dimensions, product.dimensions);
+});
+
+test("merchant settings remain available during a store API failure", () => {
+  const h = harness();
+  const { MerchantDashboard } = loadSource("src/components/MerchantDashboard.tsx", h.mocks);
+  const workspace = MerchantDashboard();
+  h.reset([null, false, "Store unavailable", 0, "settings"]);
+  const tree = workspace.type(workspace.props);
+  assert.ok(find(tree, (node) => typeof node.type === "function" && node.type.name === "DashboardSettings"));
+  assert.equal(find(tree, (node) => node.props.role === "alert"), undefined);
+});
+
+test("store-less merchant deep links show a setup action instead of an empty workspace", () => {
+  const h = harness();
+  const { MerchantDashboard } = loadSource("src/components/MerchantDashboard.tsx", h.mocks);
+  const workspace = MerchantDashboard();
+  for (const tab of ["products", "orders", "quotes", "kitchens"]) {
+    h.reset([null, true, null, 0, tab]);
+    const tree = workspace.type(workspace.props);
+    const setup = find(tree, (node) => typeof node.type === "function" && node.type.name === "MerchantOverview");
+    assert.ok(setup, tab);
+    assert.equal(setup.props.store, null);
+    assert.equal(typeof setup.props.onStore, "function");
+    assert.equal(find(tree, (node) => typeof node.type === "function" && node.type.name === "MerchantAnalytics"), undefined);
+  }
 });
 
 function notificationQuery(result, calls) {

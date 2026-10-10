@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, Menu, MessageSquareQuote, Package } from "lucide-react";
+import { Menu, MessageSquareQuote, Package, Settings } from "lucide-react";
 import { MerchantNotifications } from "./MerchantNotifications";
 
 export function MerchantHeader({
@@ -11,6 +11,7 @@ export function MerchantHeader({
   onProducts,
   onKitchens,
   onQuotes,
+  onSettings,
   activeLabel,
   hasStore,
   sidebarOpen,
@@ -22,6 +23,7 @@ export function MerchantHeader({
   onProducts: () => void;
   onKitchens: (designId?: string) => void;
   onQuotes: () => void;
+  onSettings?: () => void;
   activeLabel: string;
   hasStore: boolean;
   sidebarOpen: boolean;
@@ -35,11 +37,15 @@ export function MerchantHeader({
         <button
           type="button"
           className="dashboard-menu-toggle"
-          aria-label="Дэлгүүрийн цэс нээх"
+          aria-label={
+            sidebarOpen ? "Дэлгүүрийн цэс хаах" : "Дэлгүүрийн цэс нээх"
+          }
           aria-controls="merchant-dashboard-navigation"
           aria-expanded={sidebarOpen}
           onClick={onToggleSidebar}
-        ><Menu size={21} /></button>
+        >
+          <Menu size={21} />
+        </button>
         <div className="merchant-topbar-title dashboard-header-title">
           <strong>{activeLabel}</strong>
           <span>{storeName}</span>
@@ -70,15 +76,29 @@ export function MerchantHeader({
           <MessageSquareQuote size={19} strokeWidth={1.7} />
         </button>
 
-        <Link href="/account" className="merchant-header-profile">
+        {onSettings && (
+          <button
+            type="button"
+            className="merchant-header-icon"
+            aria-label="Самбарын тохиргоо"
+            title="Самбарын тохиргоо"
+            onClick={onSettings}
+          >
+            <Settings size={19} />
+          </button>
+        )}
+
+        <Link
+          href="/account"
+          className="merchant-header-profile"
+          aria-label={`${userName} — миний бүртгэл`}
+        >
           <span className="merchant-header-avatar">{initial}</span>
 
           <span className="merchant-header-user">
             <strong>{userName}</strong>
             <small>Худалдаа эрхлэгч</small>
           </span>
-
-          <ChevronDown size={15} />
         </Link>
       </div>
     </header>

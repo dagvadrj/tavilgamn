@@ -4,7 +4,8 @@ export type MerchantLocationTab =
   | "orders"
   | "kitchens"
   | "quotes"
-  | "store";
+  | "store"
+  | "settings";
 
 const MERCHANT_TABS = new Set<MerchantLocationTab>([
   "overview",
@@ -13,9 +14,9 @@ const MERCHANT_TABS = new Set<MerchantLocationTab>([
   "kitchens",
   "quotes",
   "store",
+  "settings",
 ]);
-const UUID_PATTERN =
-  /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+const UUID_PATTERN = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
 
 export function readMerchantLocation(search: string): {
   tab: MerchantLocationTab;
@@ -24,15 +25,16 @@ export function readMerchantLocation(search: string): {
   const params = new URLSearchParams(search);
 
   const requestedTab = params.get("tab") as MerchantLocationTab | null;
-  const tab = requestedTab && MERCHANT_TABS.has(requestedTab)
-    ? requestedTab
-    : "overview";
+  const tab =
+    requestedTab && MERCHANT_TABS.has(requestedTab) ? requestedTab : "overview";
   const requestedDesign = params.get("design");
 
   return {
     tab,
     designId:
-      tab === "kitchens" && requestedDesign && UUID_PATTERN.test(requestedDesign)
+      tab === "kitchens" &&
+      requestedDesign &&
+      UUID_PATTERN.test(requestedDesign)
         ? requestedDesign
         : null,
   };

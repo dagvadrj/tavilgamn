@@ -14,6 +14,7 @@ import {
   CookingPot,
   ArrowUpRight,
   CircleHelp,
+  UserRound,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 
@@ -26,8 +27,8 @@ export const ADMIN_TABS = [
   },
   {
     id: "merchants",
-    label: "Merchant дэлгүүрүүд",
-    short: "Merchant",
+    label: "Дэлгүүрүүд",
+    short: "Дэлгүүр",
     icon: Store,
   },
   {
@@ -66,6 +67,12 @@ export const ADMIN_TABS = [
     short: "Гал тогоо",
     icon: CookingPot,
   },
+  {
+    id: "settings",
+    label: "Самбарын тохиргоо",
+    short: "Тохиргоо",
+    icon: Settings,
+  },
 ] as const;
 
 export type AdminTab = (typeof ADMIN_TABS)[number]["id"];
@@ -84,47 +91,94 @@ export function AdminSidebar({
   onClose: () => void;
 }) {
   const groups = [
-    { label: "УДИРДЛАГА", tabs: ADMIN_TABS.filter(item => ["dashboard", "merchants", "furniture", "orders"].includes(item.id)) },
-    { label: "ХЭРЭГЛЭГЧ БА КОНТЕНТ", tabs: ADMIN_TABS.filter(item => ["users", "messages", "models", "kitchens"].includes(item.id)) },
+    {
+      label: "УДИРДЛАГА",
+      tabs: ADMIN_TABS.filter((item) =>
+        ["dashboard", "merchants", "furniture", "orders"].includes(item.id),
+      ),
+    },
+    {
+      label: "ХЭРЭГЛЭГЧ БА КОНТЕНТ",
+      tabs: ADMIN_TABS.filter((item) =>
+        ["users", "messages", "models", "kitchens"].includes(item.id),
+      ),
+    },
   ];
   return (
-    <DashboardSidebar id="admin-navigation" label="Админы хажуугийн цэс" open={open} onClose={onClose}>
-      <Link href="/" className="dashboard-brand" aria-label="tavilga.mn — дэлгүүр рүү очих">
+    <DashboardSidebar
+      id="admin-navigation"
+      label="Админы хажуугийн цэс"
+      open={open}
+      onClose={onClose}
+    >
+      <Link
+        href="/"
+        className="dashboard-brand"
+        aria-label="tavilga.mn — дэлгүүр рүү очих"
+      >
         <span className="dashboard-brand-icon">
           <Armchair size={22} strokeWidth={1.7} />
         </span>
-        <span className="dashboard-brand-copy"><strong>tavilga.mn</strong><small>{userName} · Админ</small></span>
+        <span className="dashboard-brand-copy">
+          <strong>tavilga.mn</strong>
+          <small>{userName} · Админ</small>
+        </span>
       </Link>
       <nav aria-label="Админ цэс">
-        {groups.map(group => <div className="dashboard-nav-group" key={group.label}>
-          <p className="dashboard-nav-label">{group.label}</p>
-          {group.tabs.map((item) => {
-          const Icon = item.icon;
+        {groups.map((group) => (
+          <div className="dashboard-nav-group" key={group.label}>
+            <p className="dashboard-nav-label">{group.label}</p>
+            {group.tabs.map((item) => {
+              const Icon = item.icon;
 
-          return (
-            <button
-              key={item.id}
-              type="button"
-              title={item.label}
-              aria-current={active === item.id ? "page" : undefined}
-              className="dashboard-nav-button"
-              onClick={() => onChange(item.id)}
-            >
-              <span className="dashboard-nav-icon">
-                <Icon size={20} strokeWidth={1.7} />
-              </span>
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  title={item.label}
+                  aria-current={active === item.id ? "page" : undefined}
+                  className="dashboard-nav-button"
+                  onClick={() => onChange(item.id)}
+                >
+                  <span className="dashboard-nav-icon">
+                    <Icon size={20} strokeWidth={1.7} />
+                  </span>
 
-              <span>{item.label}</span>
-            </button>
-          );
-          })}
-        </div>)}
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </nav>
       <div className="dashboard-sidebar-bottom">
-        <div className="dashboard-sidebar-note"><strong>Marketplace удирдлага</strong><p>Дэлгүүр, бараа болон захиалгын мэдээллээ нэг дор хянаарай.</p></div>
-        <Link href="/account" className="dashboard-sidebar-link"><Settings size={18} />Миний бүртгэл</Link>
-        <Link href="/about#contact" className="dashboard-sidebar-link"><CircleHelp size={18} />Тусламж, холбоо барих</Link>
-        <Link href="/" className="dashboard-sidebar-link"><ArrowUpRight size={18} />Дэлгүүр рүү очих</Link>
+        <div className="dashboard-sidebar-note">
+          <strong>Marketplace удирдлага</strong>
+          <p>Дэлгүүр, бараа болон захиалгын мэдээллээ нэг дор хянаарай.</p>
+        </div>
+        <button
+          type="button"
+          className="dashboard-nav-button"
+          aria-current={active === "settings" ? "page" : undefined}
+          onClick={() => onChange("settings")}
+        >
+          <span className="dashboard-nav-icon">
+            <Settings size={18} />
+          </span>
+          Самбарын тохиргоо
+        </button>
+        <Link href="/account" className="dashboard-sidebar-link">
+          <UserRound size={18} />
+          Миний бүртгэл
+        </Link>
+        <Link href="/about#contact" className="dashboard-sidebar-link">
+          <CircleHelp size={18} />
+          Тусламж, холбоо барих
+        </Link>
+        <Link href="/" className="dashboard-sidebar-link">
+          <ArrowUpRight size={18} />
+          Дэлгүүр рүү очих
+        </Link>
       </div>
     </DashboardSidebar>
   );

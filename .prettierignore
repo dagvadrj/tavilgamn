@@ -1,0 +1,9 @@
+node_modules/
+.next*/
+model-work/
+.tools/
+patches/
+public/decoders/
+src/lib/supabase/database.types.ts
+# CSS uses the existing AST-preserving formatter: npm run styles:format.
+**/*.css
