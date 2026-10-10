@@ -277,9 +277,20 @@ export interface PlacementIssue {
   severity: "error" | "warning";
 }
 export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
-  const issues: PlacementIssue[] = [],
-    walls = roomWalls(kitchen.room);
+  const issues: PlacementIssue[] = [], walls = roomWalls(kitchen.room);
+  const obstacles = (kitchen.room.items ?? []).filter(item => ["column", "door"].includes(item.kind)).map(item => {
+    const position = { x: item.x, z: item.z, y: 0, rotation: 0 };
+    if (item.kind === "door") {
+      if (item.wall === "back") position.z += item.width / 2;
+      if (item.wall === "front") position.z -= item.width / 2;
+      if (item.wall === "left") position.x += item.width / 2;
+      if (item.wall === "right") position.x -= item.width / 2;
+    }
+    return { id: item.id, kind: item.kind, width: item.width, depth: item.kind === "door" ? item.width : item.depth, height: kitchen.room.height, position };
+  });
   for (const [index, cabinet] of kitchen.cabinets.entries()) {
+    for (const obstacle of obstacles) if (cabinetsOverlap(cabinet, obstacle))
+      issues.push({ code: "overlap", ids: [cabinet.id, obstacle.id], message: obstacle.kind === "door" ? "Шүүгээ хаалганы нээгдэх зайг хааж байна." : "Шүүгээ баганатай давхцаж байна.", severity: "error" });
     const invalidAppliance = applianceIssue(cabinet);
     if (invalidAppliance)
       issues.push({
@@ -344,21 +355,10 @@ export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
         });
   }
   for (const [index, extra] of (kitchen.extras ?? []).entries()) {
-    if (
-      cabinetCorners(extra).some(
-        (p) =>
-          p.x < -EPS ||
-          p.z < -EPS ||
-          p.x > kitchen.room.width + EPS ||
-          p.z > kitchen.room.depth + EPS,
-      )
-    )
-      issues.push({
-        code: "outside",
-        ids: [extra.id],
-        message: "Нэмэлт тавилга өрөөний хилээс гарсан байна.",
-        severity: "error",
-      });
+    for (const obstacle of obstacles) if (cabinetsOverlap(extra, obstacle))
+      issues.push({ code: "overlap", ids: [extra.id, obstacle.id], message: obstacle.kind === "door" ? "Тавилга хаалганы нээгдэх зайг хааж байна." : "Тавилга баганатай давхцаж байна.", severity: "error" });
+    if (cabinetCorners(extra).some(p => p.x < -EPS || p.z < -EPS || p.x > kitchen.room.width + EPS || p.z > kitchen.room.depth + EPS))
+      issues.push({code:"outside",ids:[extra.id],message:"Нэмэлт тавилга өрөөний хилээс гарсан байна.",severity:"error"});
     if (extra.height > kitchen.room.height || extra.position.y !== 0)
       issues.push({
         code: "ceiling",

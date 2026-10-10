@@ -262,8 +262,12 @@ function Scene(props: ModularSceneProps) {
     <>
       <CameraFit focus={focus} />
       <color attach="background" args={["#eaece8"]} />
-      <ambientLight intensity={1.2} />
-      <directionalLight castShadow position={[2, 7, 4]} intensity={2.3} />
+      <ambientLight intensity={0.65} />
+      <hemisphereLight args={["#f7f9ff", "#b9a991", 0.75]} />
+      <directionalLight castShadow position={[2, 7, 4]} intensity={2.1}
+        shadow-mapSize-width={2048} shadow-mapSize-height={2048}
+        shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={8} shadow-camera-bottom={-8}
+        shadow-normalBias={0.025} shadow-bias={-0.0001}/>
       <OrbitControls
         makeDefault
         enabled={!dragActive}
@@ -285,6 +289,7 @@ function Scene(props: ModularSceneProps) {
       {roomWalls(kitchen.room).map((wall) => (
         <KitchenRoomWall key={wall.id} wall={wall} height={roomHeight} />
       ))}
+      {(kitchen.room.items ?? []).filter(item => item.kind === "column").map(item => <mesh key={item.id} position={[item.x / 1000, roomHeight / 2, item.z / 1000]} castShadow receiveShadow><boxGeometry args={[item.width / 1000, roomHeight, item.depth / 1000]}/><meshStandardMaterial color="#dedfd9"/></mesh>)}
       <group
         ref={props.exportRoot}
         name="Kitchen"

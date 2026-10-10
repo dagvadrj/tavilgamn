@@ -7,6 +7,8 @@ import {
 } from "./kitchenCabinets";
 import { arrangeKitchen, createUnifiedKitchen } from "./kitchenAssembly";
 import { withOpening } from "./kitchenComponents";
+import type { RoomSetupDimensions } from "./roomSetup";
+import { placementIssues } from "./kitchenPlacement";
 
 export type OvenPreference = "under-worktop" | "high-cabinet";
 export type HoodPreference = "integrated" | "wall" | "none";
@@ -30,8 +32,12 @@ export const DEFAULT_KITCHEN_SUGGESTION: KitchenSuggestionPreferences = {
 /** Build a real editable design from the short suggestion questionnaire. */
 export function createSuggestedKitchen(
   preferences: KitchenSuggestionPreferences,
+  roomDimensions?: RoomSetupDimensions,
 ): ModularKitchen {
   const kitchen = createUnifiedKitchen();
+  if (roomDimensions) {
+    kitchen.room = { width: Math.round(roomDimensions.width * 1000), depth: Math.round(roomDimensions.depth * 1000), height: Math.round(roomDimensions.height * 1000) };
+  }
   const baseOven = kitchen.cabinets.find(
     (cabinet) => cabinet.type === "base" && cabinet.opening === "oven",
   );
@@ -83,9 +89,22 @@ export function createSuggestedKitchen(
   }
 
   // The wizard must not produce an out-of-room straight run with tall appliances.
-  if (preferences.layout === "straight") {
+  if (preferences.layout === "straight" && !roomDimensions) {
     const span = kitchen.cabinets.filter(c => c.type !== "wall").reduce((sum, c) => sum + c.width, 0);
     kitchen.room.width = Math.max(kitchen.room.width, span + 400);
   }
-  return arrangeKitchen(kitchen, preferences.layout as KitchenLayout);
+  let arranged = arrangeKitchen(kitchen, preferences.layout as KitchenLayout);
+  if (roomDimensions) {
+    // Reduce storage before sacrificing a chosen appliance or changing the room.
+    for (let attempt = 0; attempt < kitchen.cabinets.length; attempt++) {
+      const errors = placementIssues(arranged).filter(issue => issue.severity === "error");
+      if (!errors.length) break;
+      const affected = new Set(errors.flatMap(issue => issue.ids));
+      const removable = arranged.cabinets.filter(c => !["sink", "oven", "hob", "hood", "refrigerator"].includes(c.opening ?? ""));
+      const candidate = removable.find(c => affected.has(c.id)) ?? removable.at(-1);
+      if (!candidate) break;
+      arranged = arrangeKitchen({ ...arranged, cabinets: arranged.cabinets.filter(c => c.id !== candidate.id) }, preferences.layout);
+    }
+  }
+  return arranged;
 }
