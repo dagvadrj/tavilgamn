@@ -9,14 +9,15 @@ const { parseKitchen } = loadSource("src/lib/kitchenAssembly.ts");
 const { findCabinetSpace, placementIssues } = loadSource("src/lib/kitchenPlacement.ts");
 const { KitchenStandardLibrary } = loadSource("src/features/kitchen-planner/components/KitchenStandardLibrary.tsx");
 
-test("built-in kitchen choices expose all previous cabinet and appliance types plus direct hob and sink choices", () => {
+test("built-in kitchen gallery starts with cabinet choices and guides the user to choose a size", () => {
   assert.deepEqual(KITCHEN_STANDARD_CHOICES.map(choice => choice.id), ["base", "wall", "tall", "hob", "sink", "oven-base", "oven-tall", "hood-integrated", "hood-wall", "fridge-top", "fridge-side"]);
   const html = renderToStaticMarkup(React.createElement(KitchenStandardLibrary, {
     type: "base", width: 600, disabled: false, atLimit: false, onType() {}, onWidth() {}, onAdd() {},
   }));
-  for (const choice of KITCHEN_STANDARD_CHOICES) assert.ok(html.includes(choice.label));
+  for (const choice of KITCHEN_STANDARD_CHOICES.slice(0, 3)) assert.ok(html.includes(choice.label));
   assert.doesNotMatch(html, /<details/);
-  assert.match(html, /Доод шүүгээ нэмэх/);
+  assert.doesNotMatch(html, /class="kp-primary"/);
+  assert.match(html, /Хэмжээ сонгох/);
 });
 
 test("every offered width produces a valid cabinet that places and reloads with its appliance intact", () => {
@@ -45,6 +46,6 @@ test("busy and full kitchens prevent adding more standard items", () => {
   const props = { type: "hob", width: 600, onType() {}, onWidth() {}, onAdd() {}, disabled: true, atLimit: true };
   const html = renderToStaticMarkup(React.createElement(KitchenStandardLibrary, props));
   assert.match(html, /<fieldset[^>]*disabled/);
-  assert.match(html, /<button[^>]*class="kp-primary"[^>]*disabled/);
+  assert.match(html, /<button[^>]*disabled/);
   assert.doesNotMatch(html, /value="300"|value="400"|value="450"|value="500"/);
 });

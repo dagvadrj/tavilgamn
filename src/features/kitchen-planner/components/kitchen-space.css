@@ -1,0 +1,519 @@
+.kspace {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: #293c32;
+  font-family: inherit;
+}
+
+.kspace-header {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-height: 58px;
+  padding: 0 24px;
+  border-bottom: 1px solid #e2e6e1;
+}
+
+.kspace-header strong {
+  font-size: 21px;
+}
+
+.kspace-header nav {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.kspace-header nav span {
+  color: #246847;
+  padding: 18px 0;
+  border-bottom: 3px solid #246847;
+}
+
+.kspace-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  border-bottom: 1px solid #e2e6e1;
+}
+
+.kspace-tools {
+  display: flex;
+  gap: 8px;
+}
+
+.kspace-tools button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 96px;
+  padding: 12px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.kspace-tools button[aria-pressed="true"] {
+  border-color: #246847;
+  color: #246847;
+  background: #edf4ee;
+}
+
+.kspace-tools button:hover {
+  background: #f2f5ef;
+}
+
+.kspace-toolbar .kp-field {
+  width: 160px;
+}
+
+.kspace-toolbar .kp-field small {
+  display: none;
+}
+
+.kspace-continue {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 20px;
+  background: #246847;
+  color: #fff;
+  border-radius: 5px;
+  font-weight: 600;
+}
+
+.kspace-workspace {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.kspace-panel {
+  width: 300px;
+  flex-shrink: 0;
+  padding: 22px;
+  border-right: 1px solid #e2e6e1;
+  overflow-y: auto;
+  background: #fafbf8;
+}
+
+.kspace-panel-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.kspace-panel h2 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.kspace-panel p {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+
+.kspace-panel label {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.kspace-panel select, .kspace-panel input {
+  width: 100%;
+  padding: 9px;
+  border: 1px solid #cbd5cc;
+  border-radius: 4px;
+  background: white;
+}
+
+.kspace-shapes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.kspace-shapes button {
+  padding: 10px;
+  background: white;
+  border: 1px solid #d8ded6;
+  font-size: 12px;
+}
+
+.kspace-shapes button[aria-pressed="true"] {
+  border-color: #246847;
+}
+
+.kspace-add, .kspace-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #d8ded6;
+  background: white;
+  font-size: 13px;
+  text-align: left;
+}
+
+.kspace-result[aria-pressed="true"] {
+  border-color: #246847;
+  background: #edf4ee;
+}
+
+.kspace-panel fieldset {
+  border-top: 1px solid #d8ded6;
+  padding-top: 12px;
+  margin-top: 18px;
+}
+
+.kspace-delete {
+  color: #a23535;
+  padding: 10px 0;
+}
+
+.kspace-error {
+  color: #a23535;
+}
+
+.kspace-canvas {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.kspace-plan {
+  position: relative;
+  max-width: none;
+  flex-shrink: 0;
+}
+
+.kspace-plan .km-plan {
+  width: 100%;
+  height: auto;
+  margin: 0;
+  background: white;
+}
+
+.kspace-plan .km-room-outline {
+  fill: #ead7b6;
+  stroke: #d5dadf;
+  stroke-width: 14;
+}
+
+.kspace-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.kspace-overlay g {
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.kspace-overlay g.is-selected {
+  filter: drop-shadow(0 0 25px #246847);
+}
+
+.kspace-overlay g:focus-visible {
+  outline: 2px solid #246847;
+}
+
+.kspace-zoom {
+  position: absolute;
+  right: 20px;
+  bottom: 24px;
+  display: grid;
+  background: white;
+  border: 1px solid #e2e6e1;
+}
+
+.kspace-zoom button {
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border-bottom: 1px solid #e2e6e1;
+  font-size: 11px;
+}
+
+.kspace-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 14px;
+  border-top: 1px solid #e2e6e1;
+  font-size: 13px;
+}
+
+.kspace-footer span, .kspace-footer button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kspace-footer span {
+  color: #246847;
+}
+
+.kspace-header {
+  box-shadow: 0 2px 14px #293c3205;
+}
+
+.kspace-header strong {
+  letter-spacing: -0.04em;
+  color: #246847;
+}
+
+.kspace-header nav button {
+  transition: color 0.15s;
+}
+
+.kspace-header nav button:hover {
+  color: #246847;
+}
+
+.kspace-toolbar {
+  background: #fff;
+  box-shadow: 0 4px 14px #293c3204;
+  z-index: 5;
+}
+
+.kspace-tools button {
+  border-radius: 12px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.kspace-tools button svg {
+  padding: 7px;
+  box-sizing: content-box;
+  background: #f5f7f2;
+  border-radius: 10px;
+}
+
+.kspace-tools button[aria-pressed="true"] svg {
+  background: #dcebdc;
+}
+
+.kspace-continue {
+  border-radius: 10px;
+  box-shadow: 0 4px 12px #24684720;
+}
+
+.kspace-panel {
+  background: #fff;
+  padding: 24px;
+}
+
+.kspace-room-summary {
+  padding: 18px;
+  border: 1px solid #e1e8dc;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #f0f5e9, #f8faf5);
+  margin: 18px 0 22px;
+}
+
+.kspace-room-summary > span {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: #7c8c73;
+}
+
+.kspace-room-summary strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 35px;
+  font-weight: 600;
+  letter-spacing: -0.05em;
+}
+
+.kspace-room-summary strong small {
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.kspace-room-summary p {
+  margin: 4px 0 0;
+  color: #687b60;
+  font-size: 12px;
+}
+
+.kspace-shapes button {
+  border-radius: 12px;
+  transition: border-color 0.15s;
+}
+
+.kspace-add {
+  border-radius: 10px;
+  color: #246847;
+  font-weight: 600;
+  background: #f5f8f0;
+}
+
+.kspace-add:hover {
+  background: #eaf2e3;
+}
+
+.kspace-result {
+  border-radius: 8px;
+  border-color: #e5e9e0;
+}
+
+.kspace-panel select, .kspace-panel input {
+  border-radius: 8px;
+  min-height: 42px;
+}
+
+.kspace-panel .kp-field small {
+  color: #8a9784;
+  font-size: 11px;
+}
+
+.kspace-panel fieldset {
+  background: #fafbf7;
+  padding: 16px;
+  border: 1px solid #e5e9e0;
+  border-radius: 12px;
+}
+
+.kspace-panel legend {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 7px;
+}
+
+.kspace-error {
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff1eb;
+  border: 1px solid #f1d4c6;
+}
+
+.kspace-canvas {
+  background-color: #f7f8f4;
+  background-image: radial-gradient(#dce2d6 0.8px, transparent 0.8px);
+  background-size: 20px 20px;
+}
+
+.kspace-plan {
+  filter: drop-shadow(0 12px 25px #293c3214);
+}
+
+.kspace-plan .km-plan {
+  border-radius: 0;
+  background: transparent;
+}
+
+.kspace-zoom {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px #293c320d;
+}
+
+.kspace-zoom button:hover {
+  background: #f0f5e9;
+}
+
+.kspace-footer {
+  background: #fff;
+}
+
+.kspace-footer span {
+  padding: 8px 15px;
+  background: #edf4e7;
+  border-radius: 9px;
+  font-weight: 600;
+}
+
+.kspace-footer small {
+  color: #809175;
+}
+
+.kspace button:focus-visible, .kspace input:focus-visible, .kspace select:focus-visible {
+  outline: 3px solid #76a687;
+  outline-offset: 3px;
+}
+
+.kspace button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kspace * {
+    transition: none;
+  }
+}
+
+@media (max-width: 1050px) {
+  .kspace-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .kspace-tools {
+    flex: 1;
+    overflow-x: auto;
+  }
+  .kspace-tools button {
+    min-width: 82px;
+  }
+  .kspace-header nav {
+    gap: 12px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .kspace-header {
+    gap: 12px;
+    padding: 0 12px;
+  }
+  .kspace-header nav button {
+    display: none;
+  }
+  .kspace-header strong {
+    font-size: 16px;
+  }
+  .kspace-toolbar {
+    padding: 8px;
+  }
+  .kspace-tools {
+    flex-basis: 100%;
+  }
+  .kspace-panel {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: min(300px, 85vw);
+    z-index: 4;
+    box-shadow: 10px 0 30px #293c3220;
+  }
+  .kspace-footer small {
+    display: none;
+  }
+}

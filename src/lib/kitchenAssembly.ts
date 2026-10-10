@@ -23,6 +23,7 @@ import {
 } from "./kitchenPlacement";
 import { fitBacksplashes, parseBacksplashSettings } from "./kitchenBacksplash";
 import { parseKitchenExtras } from "./kitchenExtras";
+import { parseKitchenSpace } from "./kitchenSpace";
 
 export type SavedKitchen = {
   id: string;
@@ -642,31 +643,11 @@ export function parseKitchen(value: unknown): ModularKitchen {
     raw.room,
   );
   const extras = parseKitchenExtras(raw.extras, ids, raw.room);
-  const next: ModularKitchen = {
-    version: 1,
-    room: {
-      width: raw.room.width,
-      depth: raw.room.depth,
-      height: raw.room.height,
-    },
-    cabinets,
-    wallClearance: raw.wallClearance,
-    countertop: {
-      thickness: raw.countertop.thickness,
-      frontOverhang: raw.countertop.frontOverhang,
-      material: raw.countertop.material,
-      ...(raw.countertop.finish ? { finish: raw.countertop.finish } : {}),
-      ...(raw.countertop.materialId
-        ? { materialId: raw.countertop.materialId }
-        : {}),
-      ...(raw.countertop.color ? { color: raw.countertop.color } : {}),
-    },
-    backsplash: raw.backsplash === true,
-    ...(raw.layout ? { layout: raw.layout } : {}),
-    ...(extras ? { extras } : {}),
-    ...(backsplashSettings ? { backsplashSettings } : {}),
-  };
-  const issue = placementIssues(next).find((i) => i.severity === "error");
-  if (issue) throw new Error(issue.message);
+  const next: ModularKitchen = { version: 1, room: { width: raw.room.width, depth: raw.room.depth, height: raw.room.height, ...parseKitchenSpace(raw.room) }, cabinets, wallClearance: raw.wallClearance,
+    countertop: { thickness: raw.countertop.thickness, frontOverhang: raw.countertop.frontOverhang, material: raw.countertop.material,
+      ...(raw.countertop.finish ? { finish: raw.countertop.finish } : {}), ...(raw.countertop.materialId ? { materialId: raw.countertop.materialId } : {}),
+      ...(raw.countertop.color ? { color: raw.countertop.color } : {}) }, backsplash: raw.backsplash === true,
+    ...(raw.layout ? { layout: raw.layout } : {}), ...(extras ? { extras } : {}), ...(backsplashSettings ? { backsplashSettings } : {}) };
+  const issue = placementIssues(next).find(i => i.severity === "error"); if (issue) throw new Error(issue.message);
   return next;
 }
