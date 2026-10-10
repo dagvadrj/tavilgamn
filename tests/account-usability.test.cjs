@@ -10,7 +10,7 @@ function accountPage(deleteDesign = () => {}) {
     initialized: true, role: "customer", initialize: async () => {},
   };
   return loadSource("src/app/(shop)/account/page.tsx", {
-    react: { ...React, useEffect: () => {} },
+    react: { ...React, useEffect: () => {}, useState: initial => [initial, () => {}], useRef: initial => ({ current: initial }) },
     "next/navigation": { useRouter: () => ({ replace() {} }) },
     "@/components/OrderHistory": { OrderHistory: () => null },
     "@/components/SavedKitchenList": { SavedKitchenList: () => null },

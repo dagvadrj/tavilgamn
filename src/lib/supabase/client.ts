@@ -14,3 +14,15 @@ export const supabase = createClient<Database>(
   supabaseUrl ?? "http://127.0.0.1:54321",
   publishableKey ?? "public-anon-key",
 );
+
+export async function isSocialProviderEnabled(provider: "google" | "apple") {
+  if (!supabaseUrl || !publishableKey) return false;
+  const response = await fetch(`${supabaseUrl}/auth/v1/settings`, {
+    headers: { apikey: publishableKey },
+    cache: "no-store",
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!response.ok) throw new Error("Failed to fetch authentication settings");
+  const settings = await response.json();
+  return settings.external?.[provider] === true;
+}

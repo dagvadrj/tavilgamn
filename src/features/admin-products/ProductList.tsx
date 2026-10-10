@@ -8,6 +8,7 @@ import {
   RefreshCw,
   Plus,
   Pencil,
+  Info,
   Box,
   ChevronLeft,
   ChevronRight,
@@ -20,6 +21,7 @@ import { formatPrice } from "@/lib/format";
 import { CatalogStatus } from "@/components/CatalogStatus";
 import { stockLabel } from "@/lib/inventory";
 import { blank, ProductEditor } from "@/features/admin-products/ProductEditor";
+import { ProductDetails } from "@/features/admin-products/ProductDetails";
 
 export function ProductList({
   owner,
@@ -39,6 +41,7 @@ export function ProductList({
   const [page, setPage] = useState(1);
   const [storeId, setStoreId] = useState("");
   const [stores, setStores] = useState<Store[]>([]);
+  const [detailsId, setDetailsId] = useState<string | null>(null);
   const [editing, setEditing] = useDraftState<{
     product: Product;
     create: boolean;
@@ -128,6 +131,16 @@ export function ProductList({
   const currentPage = Math.min(page, pages);
   const items = filtered.slice((currentPage - 1) * 20, currentPage * 20);
 
+  if (detailsId)
+    return (
+      <ProductDetails
+        key={detailsId}
+        productId={detailsId}
+        owner={owner}
+        scope="admin"
+        close={() => setDetailsId(null)}
+      />
+    );
   if (editing)
     return (
       <ProductEditor
@@ -338,17 +351,27 @@ export function ProductList({
                           </span>
                         </td>
                         <td className="admin-row-action">
-                          <button
-                            type="button"
-                            className="admin-edit-button"
-                            aria-label={product.name + " засах"}
-                            onClick={() =>
-                              setEditing({ product, create: false })
-                            }
-                          >
-                            <Pencil size={13} />
-                            Засах
-                          </button>
+                          <div className="product-list-actions">
+                            <button
+                              type="button"
+                              className="admin-edit-button"
+                              aria-label={product.name + " засах"}
+                              onClick={() =>
+                                setEditing({ product, create: false })
+                              }
+                            >
+                              <Pencil size={13} />
+                              Засах
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-edit-button"
+                              aria-label={product.name + " дэлгэрэнгүй"}
+                              onClick={() => setDetailsId(product.id)}
+                            >
+                              <Info size={13} /> Дэлгэрэнгүй
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

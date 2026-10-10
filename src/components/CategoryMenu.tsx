@@ -9,7 +9,7 @@ import { ROOM_CATALOG_GROUPS } from "@/lib/catalogNavigation";
 import { STORE_TYPES } from "@/lib/storeTypes";
 import "./category-menu.css";
 
-const roomIcons = [Armchair, BedDouble, UtensilsCrossed, BriefcaseBusiness];
+const roomIcons = [Armchair, BedDouble, UtensilsCrossed, BriefcaseBusiness, LayoutGrid];
 const storeIcons = [Factory, Hammer, Store];
 type MenuTab = "furniture" | "rooms";
 

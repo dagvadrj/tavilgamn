@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="mn" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tavilga.mn — Admin & Merchant Dashboard Redesign Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root,
+    html.dark {
+      --background: #090a0c;
+      --sidebar: #0d0f12;
+      --card: #111317;
+      --secondary: #191c22;
+      --border: #262930;
+      --foreground: #f2f3f5;
+      --muted-foreground: #9ca0ab;
+      --primary: #a395ff;
+      --primary-foreground: #090a0c;
+      color-scheme: dark;
+    }
+
+    html.light {
+      --background: #f5f6f8;
+      --sidebar: #ffffff;
+      --card: #ffffff;
+      --secondary: #eef0f4;
+      --border: #e2e5ec;
+      --foreground: #14161a;
+      --muted-foreground: #646a77;
+      --primary: #5b46e5;
+      --primary-foreground: #ffffff;
+      color-scheme: light;
+    }
+
+    body {
+      font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+    input[type="range"] { accent-color: var(--primary); }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased selection:bg-[var(--primary)] selection:text-[var(--primary-foreground)]">
+
+  <!-- TOP PREVIEW CONTROLLER BAR -->
+  <div class="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--sidebar)] px-4 py-2.5">
+    <div class="mx-auto flex max-w-[1600px] flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5">
+        <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+        <span class="text-xs font-semibold tracking-wide uppercase text-[var(--muted-foreground)]">
+          Шинэ Дизайн Preview · tavilga.mn
+        </span>
+      </div>
+
+      <!-- View Switcher -->
+      <div class="flex flex-wrap items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--background)] p-1" role="tablist" aria-label="Preview горим сонгох">
+        <button
+          type="button"
+          onclick="switchRoleView('admin-merchants')"
+          id="btn-view-admin-merchants"
+          class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-all bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm"
+        >
+          1. Admin · Merchant удирдлага
+        </button>
+        <button
+          type="button"
+          onclick="switchRoleView('admin-overview')"
+          id="btn-view-admin-overview"
+          class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-all text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+        >
+          2. Admin · Ерөнхий тойм (GMV)
+        </button>
+        <button
+          type="button"
+          onclick="switchRoleView('merchant-dashboard')"
+          id="btn-view-merchant-dashboard"
+          class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-all text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+        >
+          3. Merchant · Дэлгүүрийн самбар
+        </button>
+      </div>
+
+      <!-- Density & Theme Controls -->
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          onclick="toggleTheme()"
+          id="theme-toggle-btn"
+          class="rounded-lg border border-[var(--border)] bg-[var(--card)] px-2.5 py-1 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--secondary)] transition"
+        >
+          ☀ Light / ☾ Dark
+        </button>
+        <div class="flex items-center rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5 text-xs">
+          <button
+            type="button"
+            id="density-comfortable"
+            onclick="setDensity('comfortable')"
+            class="rounded-md px-2.5 py-1 text-xs font-medium bg-[var(--card)] text-[var(--foreground)] shadow-sm"
+          >
+            Comfortable
+          </button>
+          <button
+            type="button"
+            id="density-compact"
+            onclick="setDensity('compact')"
+            class="rounded-md px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)]"
+          >
+            Compact
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN SHELL -->
+  <div class="mx-auto grid min-h-[calc(100dvh-53px)] max-w-[1600px] grid-cols-1 lg:grid-cols-[248px_minmax(0,1fr)]">
+
+    <!-- SIDEBAR -->
+    <aside class="hidden lg:flex lg:flex-col lg:justify-between border-r border-[var(--border)] bg-[var(--sidebar)] p-4">
+      <div class="space-y-6">
+        <!-- Brand Card -->
+        <div class="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3">
+          <div class="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] text-[var(--primary-foreground)] font-bold text-sm">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/>
+              <path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/>
+              <path d="M5 18v2"/><path d="M19 18v2"/>
+            </svg>
+            <span class="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[var(--card)] bg-emerald-500"></span>
+          </div>
+          <div class="min-w-0">
+            <p id="sidebar-brand-title" class="truncate text-sm font-bold text-[var(--foreground)]">tavilga.mn</p>
+            <p id="sidebar-brand-sub" class="truncate text-xs text-[var(--muted-foreground)]">Админ · Удирдлага</p>
+          </div>
+        </div>
+
+        <!-- Dynamic Navigation Groups -->
+        <nav id="sidebar-nav" class="space-y-5" aria-label="Үндсэн цэс">
+          <!-- Populated by JS -->
+        </nav>
+      </div>
+
+      <!-- Bottom Quick Status Card -->
+      <div class="space-y-3 pt-4 border-t border-[var(--border)]">
+        <div class="rounded-xl border border-[var(--border)] bg-[var(--card)] p-3.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-[var(--foreground)]">3D Pipeline төлөв</span>
+            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-500">
+              Хэвийн
+            </span>
+          </div>
+          <p class="mt-1.5 text-xs text-[var(--muted-foreground)] leading-relaxed">
+            Draco + Meshopt шахалт идэвхтэй. Хүлээгдэж буй 4 загвар байна.
+          </p>
+        </div>
+
+        <div class="flex items-center justify-between px-2 py-1 text-xs text-[var(--muted-foreground)]">
+          <span>Дэлгүүр рүү очих</span>
+          <span>↗</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- WORKSPACE AREA -->
+    <div class="flex min-w-0 flex-col bg-[var(--background)]">
+
+      <!-- WORKSPACE HEADER -->
+      <header class="sticky top-[53px] z-30 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border)] bg-[var(--background)]/90 backdrop-blur px-6 py-3.5">
+        <div class="flex items-center gap-3 min-w-0">
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="header-eyebrow" class="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">MARKETPLACE УДИРДЛАГА</span>
+              <span class="text-xs text-[var(--muted-foreground)]">·</span>
+              <span class="inline-flex items-center gap-1 text-xs text-emerald-500 font-medium">
+                ● Live синк
+              </span>
+            </div>
+            <h1 id="header-title" class="text-xl font-bold tracking-tight text-[var(--foreground)]">Merchant дэлгүүрүүд</h1>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Period Pill -->
+          <div class="flex items-center rounded-xl border border-[var(--border)] bg-[var(--card)] p-1 text-xs">
+            <button type="button" onclick="setPeriod('7d')" id="period-7d" class="rounded-lg px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">7 хоног</button>
+            <button type="button" onclick="setPeriod('30d')" id="period-30d" class="rounded-lg px-2.5 py-1 text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)]">30 хоног</button>
+            <button type="button" onclick="setPeriod('90d')" id="period-90d" class="rounded-lg px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]">Улирал</button>
+          </div>
+
+          <!-- Refresh Button -->
+          <button
+            type="button"
+            onclick="triggerRefresh()"
+            class="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-2 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--secondary)] transition"
+          >
+            <svg id="refresh-icon" class="h-4 w-4 text-[var(--muted-foreground)] transition-transform duration-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+              <path d="M16 16h5v5"/>
+            </svg>
+            <span>Шинэчлэх</span>
+          </button>
+
+          <!-- User Pill -->
+          <div class="flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 py-1.5">
+            <span id="user-avatar" class="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] text-xs font-bold">А</span>
+            <div class="hidden sm:block text-left">
+              <p id="user-name" class="text-xs font-semibold leading-none text-[var(--foreground)]">Б. Тэмүүлэн</p>
+              <p id="user-role" class="mt-1 text-xs leading-none text-[var(--muted-foreground)]">Платформ Админ</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT CONTAINER -->
+      <main id="main-pad" class="flex-1 space-y-6 p-6">
+
+        <!-- ===============================================================
+             VIEW 1: ADMIN MERCHANTS MANAGEMENT (AdminMerchants.tsx Redesign)
+             =============================================================== -->
+        <section id="view-admin-merchants" class="space-y-6">
+
+          <!-- Top 4 KPI Cards + Top Performer Spotlight -->
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <!-- Stat 1 -->
+            <article class="kpi-card rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                <span class="font-medium">Нийт Merchant</span>
+                <span class="rounded-lg bg-[var(--secondary)] p-2 text-[var(--foreground)]">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/></svg>
+                </span>
+              </div>
+              <div class="mt-4">
+                <strong id="kpi-total-merchants" class="text-2xl font-bold tracking-tight tabular-nums">6 дэлгүүр</strong>
+                <div class="mt-1.5 flex items-center gap-2 text-xs">
+                  <span class="inline-flex items-center rounded-md bg-emerald-500/15 px-1.5 py-0.5 font-semibold text-emerald-500">5 идэвхтэй</span>
+                  <span class="text-[var(--muted-foreground)]">· 3 Featured</span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Stat 2 -->
+            <article class="kpi-card rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                <span class="font-medium">Нийт борлуулалт (GMV)</span>
+                <span class="rounded-lg bg-[var(--secondary)] p-2 text-[var(--foreground)]">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                </span>
+              </div>
+              <div class="mt-4">
+                <strong id="kpi-total-gmv" class="text-2xl font-bold tracking-tight tabular-nums">184,650,000 ₮</strong>
+                <div class="mt-1.5 flex items-center gap-2 text-xs">
+                  <span class="text-emerald-500 font-semibold">+18.4%</span>
+                  <span class="text-[var(--muted-foreground)]">өмнөх 30 хоногоос</span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Stat 3 (Featured Platform Revenue) -->
+            <article class="kpi-card rounded-2xl border-2 border-[var(--primary)] bg-[var(--card)] p-5 flex flex-col justify-between relative overflow-hidden">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-semibold text-[var(--foreground)]">Платформ орлого (Fee)</span>
+                <span class="rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] px-2 py-0.5 text-xs font-bold">
+                  Дундаж 4.1%
+                </span>
+              </div>
+              <div class="mt-4">
+                <strong id="kpi-platform-rev" class="text-2xl font-bold tracking-tight tabular-nums">7,642,500 ₮</strong>
+                <div class="mt-1.5 flex items-center gap-2 text-xs">
+                  <span class="text-[var(--muted-foreground)]">Цэвэр шилжүүлэг:</span>
+                  <span class="font-semibold text-[var(--foreground)] tabular-nums">177.0M ₮</span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Stat 4 -->
+            <article class="kpi-card rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                <span class="font-medium">3D Загвар хүсэлт</span>
+                <span class="rounded-lg bg-amber-500/15 p-2 text-amber-500">
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                </span>
+              </div>
+              <div class="mt-4">
+                <strong class="text-2xl font-bold tracking-tight tabular-nums">14 хүсэлт</strong>
+                <div class="mt-1.5 flex items-center gap-2 text-xs">
+                  <span class="inline-flex items-center rounded-md bg-amber-500/15 px-1.5 py-0.5 font-semibold text-amber-500">4 шийдвэрлэх</span>
+                  <span class="text-[var(--muted-foreground)]">· 10 бэлэн</span>
+                </div>
+              </div>
+            </article>
+
+            <!-- Stat 5: Top Performer Card -->
+            <article class="kpi-card rounded-2xl border border-[var(--border)] bg-[var(--secondary)] p-5 flex flex-col justify-between">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-semibold uppercase tracking-wider text-amber-500">★ Тэргүүлэгч Дэлгүүр</span>
+                <span class="rounded-md bg-[var(--card)] px-2 py-0.5 text-xs font-semibold tabular-nums">#1 Rank</span>
+              </div>
+              <div class="mt-3">
+                <strong class="block truncate text-base font-bold text-[var(--foreground)]">Nordic Living Ulaanbaatar</strong>
+                <div class="mt-1 flex items-baseline justify-between">
+                  <span class="text-lg font-bold tabular-nums text-[var(--foreground)]">68,400,000 ₮</span>
+                  <span class="text-xs text-[var(--muted-foreground)]">42 захиалга</span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <!-- Filter & Search Command Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-3.5">
+            <!-- Status Filter Tabs -->
+            <div class="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Дэлгүүр шүүх">
+              <button type="button" onclick="filterMerchants('all')" id="filter-all" class="rounded-xl px-3 py-1.5 text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]">
+                Бүгд (6)
+              </button>
+              <button type="button" onclick="filterMerchants('active')" id="filter-active" class="rounded-xl px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                Идэвхтэй (5)
+              </button>
+              <button type="button" onclick="filterMerchants('featured')" id="filter-featured" class="rounded-xl px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                ★ Featured (3)
+              </button>
+              <button type="button" onclick="filterMerchants('requests')" id="filter-requests" class="rounded-xl px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                3D Хүсэлттэй (4)
+              </button>
+            </div>
+
+            <!-- Search + Unsaved Draft Indicator -->
+            <div class="flex flex-wrap items-center gap-3">
+              <span id="unsaved-counter" class="hidden items-center gap-1.5 rounded-xl bg-amber-500/15 px-3 py-1.5 text-xs font-semibold text-amber-500">
+                ● Ноорог өөрчлөлт хадгалагдаагүй байна
+              </span>
+
+              <label class="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-1.5 min-w-[250px]">
+                <svg class="h-4 w-4 text-[var(--muted-foreground)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input
+                  id="merchant-search-input"
+                  type="search"
+                  oninput="renderMerchantRows()"
+                  placeholder="Дэлгүүр, дүүрэг, төрлөөр хайх..."
+                  class="w-full bg-transparent text-xs text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none"
+                />
+              </label>
+            </div>
+          </div>
+
+          <!-- Interactive Merchant Table + Inspector Split -->
+          <div class="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <!-- Table Card -->
+            <div class="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)]">
+              <div class="overflow-x-auto custom-scroll">
+                <table class="w-full text-left border-collapse min-w-[860px]">
+                  <thead>
+                    <tr class="border-b border-[var(--border)] bg-[var(--secondary)]/50 text-xs font-semibold text-[var(--muted-foreground)]">
+                      <th class="py-3.5 pl-5 pr-3">Дэлгүүр & Байршил</th>
+                      <th class="px-3 py-3.5">Борлуулалт & Шимтгэл</th>
+                      <th class="px-3 py-3.5">Бараа / 3D</th>
+                      <th class="px-3 py-3.5">Commission (%)</th>
+                      <th class="px-3 py-3.5">Featured эрэмбэ</th>
+                      <th class="px-3 py-3.5">Төлөв</th>
+                      <th class="py-3.5 pl-3 pr-5 text-right">Үйлдэл</th>
+                    </tr>
+                  </thead>
+                  <tbody id="merchant-table-body" class="divide-y divide-[var(--border)] text-xs">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right Inspector Drawer / Selected Store Quick Panel -->
+            <aside id="merchant-inspector" class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 flex flex-col justify-between space-y-5">
+              <!-- Populated by JS -->
+            </aside>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 2: ADMIN OVERVIEW (AdminAnalytics.tsx Redesign)
+             =============================================================== -->
+        <section id="view-admin-overview" class="hidden space-y-6">
+          <!-- KPI Row -->
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+              <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                <span>Нийт GMV (Сүүлийн 30 хоног)</span>
+                <span class="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-500">+22.4%</span>
+              </div>
+              <strong class="mt-3 block text-2xl font-bold tabular-nums">184,650,000 ₮</strong>
+              <p class="mt-1 text-xs text-[var(--muted-foreground)]">Merchant-уудын төлөгдсөн 128 захиалга</p>
+            </article>
+
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+              <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                <span>Платформын цэвэр орлого</span>
+                <span class="rounded-md bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-500">+19.1%</span>
+              </div>
+              <strong class="mt-3 block text-2xl font-bold tabular-nums">7,642,500 ₮</strong>
+              <p class="mt-1 text-xs text-[var(--muted-foreground)]">Дундаж шимтгэл 4.14% (3.0%–5.0%)</p>
+            </article>
+
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+              <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                <span>Merchant-д шилжих цэвэр дүн</span>
+                <span class="text-xs font-semibold text-[var(--muted-foreground)]">95.86% хувь</span>
+              </div>
+              <strong class="mt-3 block text-2xl font-bold tabular-nums">177,007,500 ₮</strong>
+              <p class="mt-1 text-xs text-[var(--muted-foreground)]">Автомат тооцоолол хийгдсэн</p>
+            </article>
+
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+              <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                <span>Нээлттэй 3D & Quote хүсэлт</span>
+                <span class="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-500">Анхаарах</span>
+              </div>
+              <strong class="mt-3 block text-2xl font-bold tabular-nums">4 загвар · 9 үнийн санал</strong>
+              <p class="mt-1 text-xs text-[var(--muted-foreground)]">GLB хөрвүүлэлтийн дундаж хугацаа 3.2 цаг</p>
+            </article>
+          </div>
+
+          <!-- Charts Row: Revenue Trend + Revenue Split & Top Stores -->
+          <div class="grid grid-cols-1 gap-5 xl:grid-cols-[1.5fr_1fr]">
+            <!-- Revenue Bar Chart -->
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 space-y-5">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-4">
+                <div>
+                  <h2 class="text-base font-bold text-[var(--foreground)]">Дэлгүүрүүдийн борлуулалт ба шимтгэл</h2>
+                  <p class="text-xs text-[var(--muted-foreground)]">Төлөгдсөн захиалгын GMV болон платформын суутгал харьцуулалт</p>
+                </div>
+                <div class="flex items-center gap-4 text-xs">
+                  <span class="flex items-center gap-1.5"><i class="inline-block h-2.5 w-2.5 rounded-sm bg-[var(--primary)]"></i> Дэлгүүрийн GMV</span>
+                  <span class="flex items-center gap-1.5"><i class="inline-block h-2.5 w-2.5 rounded-sm bg-emerald-500"></i> Платформ Fee</span>
+                </div>
+              </div>
+
+              <div id="admin-revenue-bars" class="space-y-4">
+                <!-- Populated by JS -->
+              </div>
+            </article>
+
+            <!-- Revenue Split & Pipeline Health -->
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 flex flex-col justify-between space-y-5">
+              <div>
+                <h2 class="text-base font-bold text-[var(--foreground)]">Орлогын хуваарилалт & Pipeline</h2>
+                <p class="text-xs text-[var(--muted-foreground)]">Сүүлийн 30 хоногийн нийт мөнгөн урсгал</p>
+
+                <!-- Split Bar -->
+                <div class="mt-5 flex h-7 w-full overflow-hidden rounded-xl bg-[var(--secondary)] p-1 gap-1">
+                  <div class="h-full rounded-lg bg-[var(--primary)] transition-all" style="width: 95.8%" title="Merchant Net: 95.8%"></div>
+                  <div class="h-full rounded-lg bg-emerald-500 transition-all" style="width: 4.2%" title="Platform Fee: 4.2%"></div>
+                </div>
+
+                <dl class="mt-4 grid grid-cols-2 gap-3">
+                  <div class="rounded-xl border border-[var(--border)] bg-[var(--background)] p-3.5">
+                    <dt class="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+                      <span class="h-2.5 w-2.5 rounded-sm bg-[var(--primary)]"></span>
+                      Дэлгүүрийн цэвэр дүн
+                    </dt>
+                    <dd class="mt-1.5 text-base font-bold tabular-nums">177,007,500 ₮</dd>
+                  </div>
+                  <div class="rounded-xl border border-[var(--border)] bg-[var(--background)] p-3.5">
+                    <dt class="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+                      <span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span>
+                      Платформын шимтгэл
+                    </dt>
+                    <dd class="mt-1.5 text-base font-bold tabular-nums">7,642,500 ₮</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <!-- 3D Model Queue Mini List -->
+              <div class="border-t border-[var(--border)] pt-4">
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Сүүлийн 3D Загвар Хүсэлтүүд</h3>
+                  <span class="text-xs font-semibold text-[var(--foreground)]">Бүгдийг харах →</span>
+                </div>
+                <div class="space-y-2 text-xs">
+                  <div class="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--background)] px-3.5 py-2.5">
+                    <div>
+                      <strong class="font-semibold text-[var(--foreground)]">Oslo L-Shape Буйдан (.glb)</strong>
+                      <p class="text-xs text-[var(--muted-foreground)]">Nordic Living · 18.4 MB</p>
+                    </div>
+                    <span class="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-500">Хөрвүүлж буй</span>
+                  </div>
+                  <div class="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--background)] px-3.5 py-2.5">
+                    <div>
+                      <strong class="font-semibold text-[var(--foreground)]">Walnut Хоолны Ширээ 220см</strong>
+                      <p class="text-xs text-[var(--muted-foreground)]">Модерн Интерьер · 9.1 MB</p>
+                    </div>
+                    <span class="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-500">AR Бэлэн</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ===============================================================
+             VIEW 3: MERCHANT DASHBOARD (MerchantDashboard.tsx Redesign)
+             =============================================================== -->
+        <section id="view-merchant-dashboard" class="hidden space-y-6">
+
+          <!-- Store Banner + Quick Actions -->
+          <div class="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+            <div class="flex items-center gap-4">
+              <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--primary)] text-[var(--primary-foreground)] text-lg font-bold">
+                N
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h2 class="text-lg font-bold text-[var(--foreground)]">Nordic Living Ulaanbaatar</h2>
+                  <span class="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-500">★ Featured #1</span>
+                  <span class="rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-500">Шимтгэл 3.5%</span>
+                </div>
+                <p class="mt-1 text-xs text-[var(--muted-foreground)]">Улаанбаатар · Хан-Уул дүүрэг · Бэлэн тавилга & Гал тогооны студи</p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2.5">
+              <button type="button" onclick="showToast('Шинэ бараа нэмэх цонх нээгдлээ')" class="rounded-xl bg-[var(--primary)] px-4 py-2.5 text-xs font-semibold text-[var(--primary-foreground)] shadow-sm hover:opacity-90 transition">
+                + Бүтээгдэхүүн нэмэх
+              </button>
+              <button type="button" onclick="showToast('Гал тогооны үнийн хүсэлтүүд рүү шилжлээ')" class="rounded-xl border border-[var(--border)] bg-[var(--background)] px-3.5 py-2.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--secondary)] transition">
+                Үнийн хүсэлтүүд (5 шинэ)
+              </button>
+            </div>
+          </div>
+
+          <!-- Unified Financial & Inventory KPI Grid -->
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <article class="rounded-2xl border-2 border-[var(--primary)] bg-[var(--card)] p-5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-semibold text-[var(--foreground)]">Цэвэр орлого (30 хоног)</span>
+                <span class="rounded-md bg-emerald-500/15 px-2 py-0.5 font-semibold text-emerald-500">+24.2%</span>
+              </div>
+              <strong class="mt-3 block text-2xl font-bold tabular-nums">66,006,000 ₮</strong>
+              <div class="mt-2 flex items-center justify-between border-t border-[var(--border)] pt-2 text-xs text-[var(--muted-foreground)]">
+                <span>Нийт GMV: 68.4M ₮</span>
+                <span>Fee (3.5%): 2.39M ₮</span>
+              </div>
+            </article>
+
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+              <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                <span class="font-medium">Төлөгдсөн захиалга</span>
+                <span class="rounded-md bg-[var(--secondary)] px-2 py-0.5 font-semibold text-[var(--foreground)]">42 захиалга</span>
+              </div>
+              <strong class="mt-3 block text-2xl font-bold tabular-nums">11 идэвхтэй</strong>
+              <div class="mt-2 flex items-center justify-between border-t border-[var(--border)] pt-2 text-xs text-[var(--muted-foreground)]">
+                <span class="text-amber-500 font-medium">3 хүлээгдэж буй</span>
+                <span>5 бэлтгэж · 3 хүргэлтэд</span>
+              </div>
+            </article>
+
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+              <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                <span class="font-medium">Агуулахын нөөцийн үнэлгээ</span>
+                <span class="rounded-md bg-[var(--secondary)] px-2 py-0.5 font-semibold text-[var(--foreground)]">48 загвар</span>
+              </div>
+              <strong class="mt-3 block text-2xl font-bold tabular-nums">214,800,000 ₮</strong>
+              <div class="mt-2 flex items-center justify-between border-t border-[var(--border)] pt-2 text-xs text-[var(--muted-foreground)]">
+                <span>Нийт 312 ширхэг бэлэн</span>
+                <span class="text-emerald-500 font-medium">38 AR/3D загвартай</span>
+              </div>
+            </article>
+
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
+              <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+                <span class="font-medium">Нөөцийн анхааруулга</span>
+                <span class="rounded-md bg-amber-500/15 px-2 py-0.5 font-semibold text-amber-500">Яаралтай</span>
+              </div>
+              <strong class="mt-3 block text-2xl font-bold tabular-nums text-amber-500">4 бараа багассан</strong>
+              <div class="mt-2 flex items-center justify-between border-t border-[var(--border)] pt-2 text-xs text-[var(--muted-foreground)]">
+                <span>≤ 5 ширхэг үлдэгдэлтэй</span>
+                <button type="button" onclick="showToast('Бага нөөцтэй барааны жагсаалт шүүгдлээ')" class="font-semibold text-[var(--foreground)] underline">Шинэчлэх →</button>
+              </div>
+            </article>
+          </div>
+
+          <!-- Order Fulfillment Pipeline + Category Donut + Inventory Table -->
+          <div class="grid grid-cols-1 gap-5 xl:grid-cols-[1.45fr_1fr]">
+            <!-- Left: Stock Health & Top Products -->
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
+              <header class="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
+                <div>
+                  <h3 class="text-sm font-bold text-[var(--foreground)]">Бүтээгдэхүүн ба Нөөцийн хяналт</h3>
+                  <p class="text-xs text-[var(--muted-foreground)]">Борлуулалт болон үлдэгдэл нөөцийн шууд мэдээлэл</p>
+                </div>
+                <span class="text-xs font-semibold text-[var(--muted-foreground)]">Топ 5 бараа</span>
+              </header>
+
+              <div class="divide-y divide-[var(--border)] text-xs">
+                <div class="flex items-center justify-between gap-4 px-5 py-3.5">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--secondary)] font-bold">01</span>
+                    <div class="min-w-0">
+                      <strong class="block truncate font-semibold text-[var(--foreground)]">Oslo Модон Буйдан (3 хүний)</strong>
+                      <span class="text-xs text-[var(--muted-foreground)]">Буйдан · 3D AR бэлэн</span>
+                    </div>
+                  </div>
+                  <div class="text-right tabular-nums">
+                    <strong class="block font-bold">3,450,000 ₮</strong>
+                    <span class="text-xs text-emerald-500">18 ш бэлэн</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-4 px-5 py-3.5">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--secondary)] font-bold">02</span>
+                    <div class="min-w-0">
+                      <strong class="block truncate font-semibold text-[var(--foreground)]">Stockholm Царсан Хоолны Ширээ</strong>
+                      <span class="text-xs text-[var(--muted-foreground)]">Ширээ · 3D AR бэлэн</span>
+                    </div>
+                  </div>
+                  <div class="text-right tabular-nums">
+                    <strong class="block font-bold">1,890,000 ₮</strong>
+                    <span class="text-xs text-amber-500 font-semibold">3 ш үлдсэн (Бага)</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-4 px-5 py-3.5">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--secondary)] font-bold">03</span>
+                    <div class="min-w-0">
+                      <strong class="block truncate font-semibold text-[var(--foreground)]">Bergen Bouclé Түшлэгтэй Сандал</strong>
+                      <span class="text-xs text-[var(--muted-foreground)]">Сандал · 3D AR бэлэн</span>
+                    </div>
+                  </div>
+                  <div class="text-right tabular-nums">
+                    <strong class="block font-bold">680,000 ₮</strong>
+                    <span class="text-xs text-emerald-500">42 ш бэлэн</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-4 px-5 py-3.5">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--secondary)] font-bold">04</span>
+                    <div class="min-w-0">
+                      <strong class="block truncate font-semibold text-[var(--foreground)]">Malmö Minimal Ор (King 180×200)</strong>
+                      <span class="text-xs text-[var(--muted-foreground)]">Ор · 3D хөрвүүлж буй</span>
+                    </div>
+                  </div>
+                  <div class="text-right tabular-nums">
+                    <strong class="block font-bold">2,750,000 ₮</strong>
+                    <span class="text-xs text-emerald-500">9 ш бэлэн</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- Right: Category Structure + Kitchen Quotes -->
+            <article class="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 flex flex-col justify-between space-y-5">
+              <div>
+                <h3 class="text-sm font-bold text-[var(--foreground)]">Ангиллын бүтэц & Гал тогооны санал</h3>
+                <p class="text-xs text-[var(--muted-foreground)]">Нийт 48 бүтээгдэхүүний ангиллын эзлэх хувь</p>
+
+                <div class="mt-5 flex items-center gap-6">
+                  <div
+                    class="grid h-32 w-32 shrink-0 place-items-center rounded-full"
+                    style="background: conic-gradient(#8b78ff 0% 38%, #10b981 38% 65%, #f59e0b 65% 85%, #64748b 85% 100%);"
+                  >
+                    <div class="grid h-20 w-20 place-content-center rounded-full bg-[var(--card)] text-center">
+                      <strong class="text-lg font-bold tabular-nums">48</strong>
+                      <span class="text-xs text-[var(--muted-foreground)]">Бараа</span>
+                    </div>
+                  </div>
+
+                  <div class="flex-1 space-y-2.5 text-xs">
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2 text-[var(--muted-foreground)]"><i class="h-2.5 w-2.5 rounded-full bg-[#8b78ff]"></i> Буйдан & Кресло</span>
+                      <strong class="tabular-nums">38% (18)</strong>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2 text-[var(--muted-foreground)]"><i class="h-2.5 w-2.5 rounded-full bg-emerald-500"></i> Ширээ & Сандал</span>
+                      <strong class="tabular-nums">27% (13)</strong>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2 text-[var(--muted-foreground)]"><i class="h-2.5 w-2.5 rounded-full bg-amber-500"></i> Гал тогооны модуль</span>
+                      <strong class="tabular-nums">20% (10)</strong>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="flex items-center gap-2 text-[var(--muted-foreground)]"><i class="h-2.5 w-2.5 rounded-full bg-slate-500"></i> Унтлагын өрөө</span>
+                      <strong class="tabular-nums">15% (7)</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4">
+                <div class="flex items-center justify-between">
+                  <strong class="text-xs font-bold text-[var(--foreground)]">Шинэ Гал Тогооны Үнийн Хүсэлт</strong>
+                  <span class="rounded-full bg-[var(--primary)] px-2 py-0.5 text-xs font-bold text-[var(--primary-foreground)]">2 шинэ</span>
+                </div>
+                <p class="mt-1.5 text-xs text-[var(--muted-foreground)]">
+                  Хэрэглэгч 3D Kitchen Planner-аас 4.2м L-хэлбэрийн гал тогооны BOM илгээсэн байна.
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div
+    id="toast"
+    role="status"
+    aria-live="polite"
+    class="fixed bottom-5 right-5 z-50 hidden items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 text-xs font-semibold text-[var(--foreground)] shadow-xl"
+  >
+    <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+    <span id="toast-text">Амжилттай хадгалагдлаа</span>
+  </div>
+
+  <script>
+    const MERCHANTS = [
+      {
+        id: "m1",
+        name: "Nordic Living Ulaanbaatar",
+        city: "Улаанбаатар",
+        district: "Хан-Уул",
+        storeType: "Бэлэн тавилга & Гал тогоо",
+        active: true,
+        commission: 3.5,
+        isFeatured: true,
+        featuredRank: 1,
+        productCount: 48,
+        modelRequestCount: 2,
+        paidOrderCount: 42,
+        grossRevenue: 68400000,
+        dirty: false,
+      },
+      {
+        id: "m2",
+        name: "Модерн Интерьер ХХК",
+        city: "Улаанбаатар",
+        district: "Сүхбаатар",
+        storeType: "Захиалгат гал тогоо",
+        active: true,
+        commission: 4.0,
+        isFeatured: true,
+        featuredRank: 2,
+        productCount: 34,
+        modelRequestCount: 5,
+        paidOrderCount: 31,
+        grossRevenue: 52100000,
+        dirty: false,
+      },
+      {
+        id: "m3",
+        name: "Алтан Мод Мебель",
+        city: "Улаанбаатар",
+        district: "Баянгол",
+        storeType: "Унтлагын болон зочны тавилга",
+        active: true,
+        commission: 4.5,
+        isFeatured: true,
+        featuredRank: 3,
+        productCount: 62,
+        modelRequestCount: 3,
+        paidOrderCount: 27,
+        grossRevenue: 34900000,
+        dirty: false,
+      },
+      {
+        id: "m4",
+        name: "Хангай Вүүдс Студи",
+        city: "Дархан",
+        district: "Дархан сум",
+        storeType: "Цэвэр модон тавилга",
+        active: true,
+        commission: 4.2,
+        isFeatured: false,
+        featuredRank: null,
+        productCount: 19,
+        modelRequestCount: 4,
+        paidOrderCount: 16,
+        grossRevenue: 19850000,
+        dirty: false,
+      },
+      {
+        id: "m5",
+        name: "Гэрэлт Орчин Дизайн",
+        city: "Улаанбаатар",
+        district: "Чингэлтэй",
+        storeType: "Оффис болон гэрэлтүүлэг",
+        active: true,
+        commission: 5.0,
+        isFeatured: false,
+        featuredRank: null,
+        productCount: 25,
+        modelRequestCount: 0,
+        paidOrderCount: 12,
+        grossRevenue: 9400000,
+        dirty: false,
+      },
+      {
+        id: "m6",
+        name: "Эрдэнэт Тавилга Трейд",
+        city: "Эрдэнэт",
+        district: "Баян-Өндөр",
+        storeType: "Гэр ахуйн тавилга",
+        active: false,
+        commission: 4.0,
+        isFeatured: false,
+        featuredRank: null,
+        productCount: 8,
+        modelRequestCount: 0,
+        paidOrderCount: 0,
+        grossRevenue: 0,
+        dirty: false,
+      },
+    ];
+
+    let currentView = "admin-merchants";
+    let currentFilter = "all";
+    let selectedMerchantId = "m1";
+
+    function toggleTheme() {
+      const root = document.documentElement;
+      if (root.classList.contains("light")) {
+        root.classList.remove("light");
+        root.classList.add("dark");
+        showToast("Dark горим идэвхжлээ");
+      } else {
+        root.classList.remove("dark");
+        root.classList.add("light");
+        showToast("Light горим идэвхжлээ");
+      }
+    }
+
+    function formatMNT(amount) {
+      return Math.round(amount).toLocaleString("mn-MN") + " ₮";
+    }
+
+    function renderSidebar() {
+      const nav = document.getElementById("sidebar-nav");
+      const brandTitle = document.getElementById("sidebar-brand-title");
+      const brandSub = document.getElementById("sidebar-brand-sub");
+      const userName = document.getElementById("user-name");
+      const userRole = document.getElementById("user-role");
+      const userAvatar = document.getElementById("user-avatar");
+
+      if (currentView === "merchant-dashboard") {
+        brandTitle.textContent = "Nordic Living UB";
+        brandSub.textContent = "Худалдаа эрхлэгч";
+        userName.textContent = "Г. Анударь";
+        userRole.textContent = "Дэлгүүрийн эзэн";
+        userAvatar.textContent = "N";
+        nav.innerHTML = `
+          <div>
+            <p class="px-2.5 pb-2 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">ДЭЛГҮҮР</p>
+            <div class="space-y-1">
+              <button type="button" class="flex w-full items-center justify-between rounded-xl bg-[var(--secondary)] px-3 py-2.5 text-xs font-semibold text-[var(--foreground)]">
+                <span>Ерөнхий тойм</span>
+                <span class="h-1.5 w-1.5 rounded-full bg-[var(--primary)]"></span>
+              </button>
+              <button type="button" onclick="showToast('Бүтээгдэхүүн цэс (48 бараа)')" class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                <span>Бүтээгдэхүүн</span>
+                <span class="rounded-md bg-[var(--card)] px-1.5 py-0.5 text-xs tabular-nums">48</span>
+              </button>
+              <button type="button" onclick="showToast('Захиалгууд цэс (11 идэвхтэй)')" class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                <span>Захиалгууд</span>
+                <span class="rounded-md bg-amber-500/15 text-amber-500 px-1.5 py-0.5 text-xs font-semibold tabular-nums">3 шинэ</span>
+              </button>
+            </div>
+          </div>
+          <div>
+            <p class="px-2.5 pb-2 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">ГАЛ ТОГОО MARKETPLACE</p>
+            <div class="space-y-1">
+              <button type="button" onclick="showToast('Гал тогооны загварууд')" class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                <span>Гал тогооны загвар</span>
+                <span class="text-xs tabular-nums">6</span>
+              </button>
+              <button type="button" onclick="showToast('Үнийн хүсэлтүүд')" class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                <span>Үнийн хүсэлтүүд</span>
+                <span class="rounded-md bg-emerald-500/15 text-emerald-500 px-1.5 py-0.5 text-xs font-semibold">5</span>
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        brandTitle.textContent = "tavilga.mn";
+        brandSub.textContent = "Админ · Удирдлага";
+        userName.textContent = "Б. Тэмүүлэн";
+        userRole.textContent = "Платформ Админ";
+        userAvatar.textContent = "А";
+        const isOverview = currentView === "admin-overview";
+        nav.innerHTML = `
+          <div>
+            <p class="px-2.5 pb-2 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">УДИРДЛАГА</p>
+            <div class="space-y-1">
+              <button type="button" onclick="switchRoleView('admin-overview')" class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-xs ${isOverview ? "bg-[var(--secondary)] font-semibold text-[var(--foreground)]" : "text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]"}">
+                <span>Ерөнхий тойм (GMV)</span>
+                ${isOverview ? '<span class="h-1.5 w-1.5 rounded-full bg-[var(--primary)]"></span>' : ""}
+              </button>
+              <button type="button" onclick="switchRoleView('admin-merchants')" class="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-xs ${!isOverview ? "bg-[var(--secondary)] font-semibold text-[var(--foreground)]" : "text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]"}">
+                <span>Merchant дэлгүүрүүд</span>
+                <span class="rounded-md bg-[var(--card)] px-1.5 py-0.5 text-xs font-semibold tabular-nums">${MERCHANTS.length}</span>
+              </button>
+              <button type="button" onclick="showToast('Бүтээгдэхүүний нэгдсэн каталог')" class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                <span>Бүтээгдэхүүн</span>
+                <span class="text-xs tabular-nums">196</span>
+              </button>
+              <button type="button" onclick="showToast('Платформын бүх захиалгууд')" class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                <span>Захиалгууд</span>
+                <span class="text-xs tabular-nums">128</span>
+              </button>
+            </div>
+          </div>
+          <div>
+            <p class="px-2.5 pb-2 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">КОНТЕНТ & 3D</p>
+            <div class="space-y-1">
+              <button type="button" onclick="showToast('3D загвар болон GLB хөрвүүлэлт')" class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                <span>3D загварууд</span>
+                <span class="rounded-md bg-amber-500/15 text-amber-500 px-1.5 py-0.5 text-xs font-semibold">4 хүсэлт</span>
+              </button>
+              <button type="button" onclick="showToast('Гал тогооны стандарт модулиуд')" class="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]">
+                <span>Гал тогооны загвар</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function switchRoleView(view) {
+      currentView = view;
+      const views = ["admin-merchants", "admin-overview", "merchant-dashboard"];
+      views.forEach((v) => {
+        const el = document.getElementById("view-" + v);
+        const btn = document.getElementById("btn-view-" + v);
+        if (v === view) {
+          el.classList.remove("hidden");
+          btn.className = "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm";
+        } else {
+          el.classList.add("hidden");
+          btn.className = "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all text-[var(--muted-foreground)] hover:text-[var(--foreground)]";
+        }
+      });
+
+      const eyebrow = document.getElementById("header-eyebrow");
+      const title = document.getElementById("header-title");
+      if (view === "admin-merchants") {
+        eyebrow.textContent = "MARKETPLACE · ДЭЛГҮҮРҮҮДИЙН УДИРДЛАГА";
+        title.textContent = "Merchant дэлгүүрүүд";
+      } else if (view === "admin-overview") {
+        eyebrow.textContent = "ПЛАТФОРМ АНАЛИТИК · СҮҮЛИЙН 30 ХОНОГ";
+        title.textContent = "Ерөнхий тойм & GMV хуваарилалт";
+      } else {
+        eyebrow.textContent = "ХУДАЛДАА ЭРХЛЭГЧИЙН САМБАР";
+        title.textContent = "Санхүү ба Агуулахын нэгдсэн тойм";
+      }
+
+      renderSidebar();
+    }
+
+    function filterMerchants(filter) {
+      currentFilter = filter;
+      ["all", "active", "featured", "requests"].forEach((f) => {
+        const btn = document.getElementById("filter-" + f);
+        if (f === filter) {
+          btn.className = "rounded-xl px-3 py-1.5 text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]";
+        } else {
+          btn.className = "rounded-xl px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]";
+        }
+      });
+      renderMerchantRows();
+    }
+
+    function renderMerchantRows() {
+      const query = (document.getElementById("merchant-search-input")?.value || "").trim().toLowerCase();
+      const tbody = document.getElementById("merchant-table-body");
+      const maxGmv = Math.max(1, ...MERCHANTS.map((m) => m.grossRevenue));
+
+      const filtered = MERCHANTS.filter((m) => {
+        if (currentFilter === "active" && !m.active) return false;
+        if (currentFilter === "featured" && !m.isFeatured) return false;
+        if (currentFilter === "requests" && m.modelRequestCount === 0) return false;
+        if (query) {
+          const hay = `${m.name} ${m.city} ${m.district} ${m.storeType}`.toLowerCase();
+          if (!hay.includes(query)) return false;
+        }
+        return true;
+      });
+
+      let totalGmv = 0;
+      let totalPlatform = 0;
+      let anyDirty = false;
+
+      MERCHANTS.forEach((m) => {
+        totalGmv += m.grossRevenue;
+        totalPlatform += (m.grossRevenue * m.commission) / 100;
+        if (m.dirty) anyDirty = true;
+      });
+
+      document.getElementById("kpi-total-merchants").textContent = `${MERCHANTS.length} дэлгүүр`;
+      document.getElementById("kpi-total-gmv").textContent = formatMNT(totalGmv);
+      document.getElementById("kpi-platform-rev").textContent = formatMNT(totalPlatform);
+
+      const unsavedEl = document.getElementById("unsaved-counter");
+      if (anyDirty) {
+        unsavedEl.classList.remove("hidden");
+        unsavedEl.classList.add("inline-flex");
+      } else {
+        unsavedEl.classList.add("hidden");
+        unsavedEl.classList.remove("inline-flex");
+      }
+
+      tbody.innerHTML = filtered
+        .map((m) => {
+          const fee = (m.grossRevenue * m.commission) / 100;
+          const sharePct = Math.round((m.grossRevenue / maxGmv) * 100);
+          const isSelected = m.id === selectedMerchantId;
+
+          return `
+            <tr
+              onclick="selectMerchant('${m.id}')"
+              class="cursor-pointer transition-colors ${isSelected ? "bg-[var(--secondary)]/80" : "hover:bg-[var(--secondary)]/40"}"
+            >
+              <td class="py-3.5 pl-5 pr-3">
+                <div class="flex items-center gap-3">
+                  <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--secondary)] font-bold text-xs text-[var(--foreground)] border border-[var(--border)]">
+                    ${m.name.slice(0, 1)}
+                  </span>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <strong class="truncate font-semibold text-[var(--foreground)]">${m.name}</strong>
+                      ${m.dirty ? '<span class="rounded bg-amber-500/20 px-1.5 py-0.5 text-xs font-semibold text-amber-500">Ноорог</span>' : ""}
+                    </div>
+                    <p class="text-xs text-[var(--muted-foreground)]">${m.city} · ${m.district}</p>
+                  </div>
+                </div>
+              </td>
+
+              <td class="px-3 py-3.5 tabular-nums">
+                <strong class="block font-semibold text-[var(--foreground)]">${formatMNT(m.grossRevenue)}</strong>
+                <span class="text-xs text-[var(--muted-foreground)]">Fee: ${formatMNT(fee)} (${m.paidOrderCount} зах)</span>
+                <div class="mt-1.5 h-1.5 w-28 overflow-hidden rounded-full bg-[var(--background)]">
+                  <div class="h-full rounded-full bg-[var(--primary)]" style="width: ${sharePct}%"></div>
+                </div>
+              </td>
+
+              <td class="px-3 py-3.5 tabular-nums">
+                <span class="font-semibold text-[var(--foreground)]">${m.productCount} бараа</span>
+                ${
+                  m.modelRequestCount > 0
+                    ? `<span class="mt-1 block w-fit rounded-md bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-500">${m.modelRequestCount} 3D хүсэлт</span>`
+                    : `<span class="mt-1 block text-xs text-[var(--muted-foreground)]">3D хүсэлтгүй</span>`
+                }
+              </td>
+
+              <td class="px-3 py-3.5" onclick="event.stopPropagation()">
+                <div class="inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--background)] p-1">
+                  <button
+                    type="button"
+                    onclick="adjustCommission('${m.id}', -0.1)"
+                    class="flex h-6 w-6 items-center justify-center rounded-lg hover:bg-[var(--secondary)] font-bold text-xs"
+                    aria-label="Commission бууруулах"
+                  >−</button>
+                  <span class="w-12 text-center font-bold tabular-nums text-xs">${m.commission.toFixed(1)}%</span>
+                  <button
+                    type="button"
+                    onclick="adjustCommission('${m.id}', 0.1)"
+                    class="flex h-6 w-6 items-center justify-center rounded-lg hover:bg-[var(--secondary)] font-bold text-xs"
+                    aria-label="Commission нэмэх"
+                  >+</button>
+                </div>
+              </td>
+
+              <td class="px-3 py-3.5" onclick="event.stopPropagation()">
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onclick="toggleFeatured('${m.id}')"
+                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold border transition ${
+                      m.isFeatured
+                        ? "border-amber-500/40 bg-amber-500/15 text-amber-500"
+                        : "border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)]"
+                    }"
+                  >
+                    ★ ${m.isFeatured ? "Featured" : "Энгийн"}
+                  </button>
+                  ${
+                    m.isFeatured
+                      ? `<input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value="${m.featuredRank || 1}"
+                          onchange="updateRank('${m.id}', this.value)"
+                          aria-label="Featured эрэмбэ"
+                          class="w-12 rounded-lg border border-[var(--border)] bg-[var(--background)] px-2 py-1 text-center text-xs font-bold tabular-nums"
+                        />`
+                      : ""
+                  }
+                </div>
+              </td>
+
+              <td class="px-3 py-3.5" onclick="event.stopPropagation()">
+                <button
+                  type="button"
+                  onclick="toggleActive('${m.id}')"
+                  class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                    m.active
+                      ? "bg-emerald-500/15 text-emerald-500"
+                      : "bg-[var(--secondary)] text-[var(--muted-foreground)]"
+                  }"
+                >
+                  <span class="h-1.5 w-1.5 rounded-full ${m.active ? "bg-emerald-500" : "bg-current"}"></span>
+                  ${m.active ? "Идэвхтэй" : "Идэвхгүй"}
+                </button>
+              </td>
+
+              <td class="py-3.5 pl-3 pr-5 text-right" onclick="event.stopPropagation()">
+                <button
+                  type="button"
+                  onclick="saveMerchant('${m.id}')"
+                  class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
+                    m.dirty
+                      ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm"
+                      : "border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                  }"
+                >
+                  Хадгалах
+                </button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      renderInspector();
+      renderAdminOverviewBars();
+    }
+
+    function renderInspector() {
+      const m = MERCHANTS.find((item) => item.id === selectedMerchantId) || MERCHANTS[0];
+      const fee = (m.grossRevenue * m.commission) / 100;
+      const net = m.grossRevenue - fee;
+      const inspector = document.getElementById("merchant-inspector");
+
+      inspector.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex items-start justify-between gap-3 border-b border-[var(--border)] pb-4">
+            <div class="flex items-center gap-3">
+              <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--primary)] text-[var(--primary-foreground)] text-base font-bold">
+                ${m.name.slice(0, 1)}
+              </div>
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">Дэлгэрэнгүй Хяналт</span>
+                <h3 class="text-sm font-bold text-[var(--foreground)]">${m.name}</h3>
+                <p class="text-xs text-[var(--muted-foreground)]">${m.storeType}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 space-y-2.5 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-[var(--muted-foreground)]">Нийт борлуулалт (GMV)</span>
+              <strong class="font-bold tabular-nums">${formatMNT(m.grossRevenue)}</strong>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-[var(--muted-foreground)]">Платформ шимтгэл (${m.commission.toFixed(1)}%)</span>
+              <strong class="font-bold text-emerald-500 tabular-nums">+${formatMNT(fee)}</strong>
+            </div>
+            <div class="flex items-center justify-between border-t border-[var(--border)] pt-2">
+              <span class="font-semibold text-[var(--foreground)]">Дэлгүүрт очих цэвэр дүн</span>
+              <strong class="text-sm font-bold tabular-nums">${formatMNT(net)}</strong>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <label for="inspector-slider" class="font-semibold text-[var(--foreground)]">Commission тохируулах (3.0% – 5.0%)</label>
+              <span class="rounded-md bg-[var(--secondary)] px-2 py-0.5 font-bold tabular-nums">${m.commission.toFixed(1)}%</span>
+            </div>
+            <input
+              id="inspector-slider"
+              type="range"
+              min="3"
+              max="5"
+              step="0.1"
+              value="${m.commission}"
+              oninput="setCommissionDirect('${m.id}', this.value)"
+              class="w-full cursor-pointer"
+            />
+            <div class="flex justify-between text-xs text-[var(--muted-foreground)]">
+              <span>3.0% (VIP)</span>
+              <span>4.0% (Стандарт)</span>
+              <span>5.0% (Дээд)</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-center text-xs">
+            <div class="rounded-xl border border-[var(--border)] bg-[var(--background)] p-2.5">
+              <span class="block text-[var(--muted-foreground)]">Бараа</span>
+              <strong class="mt-1 block text-sm font-bold tabular-nums">${m.productCount}</strong>
+            </div>
+            <div class="rounded-xl border border-[var(--border)] bg-[var(--background)] p-2.5">
+              <span class="block text-[var(--muted-foreground)]">Захиалга</span>
+              <strong class="mt-1 block text-sm font-bold tabular-nums">${m.paidOrderCount}</strong>
+            </div>
+            <div class="rounded-xl border border-[var(--border)] bg-[var(--background)] p-2.5">
+              <span class="block text-[var(--muted-foreground)]">3D хүсэлт</span>
+              <strong class="mt-1 block text-sm font-bold tabular-nums">${m.modelRequestCount}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-[var(--border)] flex items-center gap-2">
+          <button
+            type="button"
+            onclick="saveMerchant('${m.id}')"
+            class="flex-1 rounded-xl bg-[var(--primary)] py-2.5 text-xs font-semibold text-[var(--primary-foreground)] shadow-sm hover:opacity-90 transition"
+          >
+            Өөрчлөлтийг хадгалах
+          </button>
+          <button
+            type="button"
+            onclick="switchRoleView('merchant-dashboard')"
+            class="rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-xs font-semibold text-[var(--foreground)] hover:bg-[var(--secondary)] transition"
+            title="Дэлгүүрийн самбар харах"
+          >
+            Самбар ↗
+          </button>
+        </div>
+      `;
+    }
+
+    function renderAdminOverviewBars() {
+      const container = document.getElementById("admin-revenue-bars");
+      if (!container) return;
+      const activeStores = MERCHANTS.filter((m) => m.grossRevenue > 0);
+      const maxRev = Math.max(1, ...activeStores.map((m) => m.grossRevenue));
+
+      container.innerHTML = activeStores
+        .map((m) => {
+          const pct = Math.round((m.grossRevenue / maxRev) * 100);
+          const fee = (m.grossRevenue * m.commission) / 100;
+          return `
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <strong class="font-semibold text-[var(--foreground)]">${m.name}</strong>
+                  <span class="text-xs text-[var(--muted-foreground)]">(${m.commission.toFixed(1)}% шимтгэл)</span>
+                </div>
+                <div class="tabular-nums">
+                  <strong class="font-bold text-[var(--foreground)]">${formatMNT(m.grossRevenue)}</strong>
+                  <span class="ml-2 text-xs text-emerald-500">Fee: ${formatMNT(fee)}</span>
+                </div>
+              </div>
+              <div class="h-2.5 w-full overflow-hidden rounded-full bg-[var(--secondary)]">
+                <div class="h-full rounded-full bg-[var(--primary)] transition-all duration-300" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function selectMerchant(id) {
+      selectedMerchantId = id;
+      renderMerchantRows();
+    }
+
+    function adjustCommission(id, delta) {
+      const m = MERCHANTS.find((item) => item.id === id);
+      if (!m) return;
+      const next = Math.min(5, Math.max(3, Math.round((m.commission + delta) * 10) / 10));
+      m.commission = next;
+      m.dirty = true;
+      selectedMerchantId = id;
+      renderMerchantRows();
+    }
+
+    function setCommissionDirect(id, value) {
+      const m = MERCHANTS.find((item) => item.id === id);
+      if (!m) return;
+      m.commission = Math.min(5, Math.max(3, Number(value)));
+      m.dirty = true;
+      renderMerchantRows();
+    }
+
+    function toggleFeatured(id) {
+      const m = MERCHANTS.find((item) => item.id === id);
+      if (!m) return;
+      m.isFeatured = !m.isFeatured;
+      if (m.isFeatured && !m.featuredRank) m.featuredRank = 1;
+      m.dirty = true;
+      selectedMerchantId = id;
+      renderMerchantRows();
+    }
+
+    function updateRank(id, val) {
+      const m = MERCHANTS.find((item) => item.id === id);
+      if (!m) return;
+      m.featuredRank = Math.max(1, Number(val) || 1);
+      m.dirty = true;
+      renderMerchantRows();
+    }
+
+    function toggleActive(id) {
+      const m = MERCHANTS.find((item) => item.id === id);
+      if (!m) return;
+      m.active = !m.active;
+      m.dirty = true;
+      selectedMerchantId = id;
+      renderMerchantRows();
+    }
+
+    function saveMerchant(id) {
+      const m = MERCHANTS.find((item) => item.id === id);
+      if (!m) return;
+      m.dirty = false;
+      renderMerchantRows();
+      showToast(`"${m.name}" дэлгүүрийн тохиргоо (${m.commission.toFixed(1)}%) хадгалагдлаа`);
+    }
+
+    function setDensity(mode) {
+      const mainPad = document.getElementById("main-pad");
+      const btnComf = document.getElementById("density-comfortable");
+      const btnComp = document.getElementById("density-compact");
+      if (mode === "compact") {
+        mainPad.classList.remove("p-6", "space-y-6");
+        mainPad.classList.add("p-4", "space-y-4");
+        btnComp.className = "rounded-md px-2.5 py-1 text-xs font-medium bg-[var(--card)] text-[var(--foreground)] shadow-sm";
+        btnComf.className = "rounded-md px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)]";
+      } else {
+        mainPad.classList.remove("p-4", "space-y-4");
+        mainPad.classList.add("p-6", "space-y-6");
+        btnComf.className = "rounded-md px-2.5 py-1 text-xs font-medium bg-[var(--card)] text-[var(--foreground)] shadow-sm";
+        btnComp.className = "rounded-md px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)]";
+      }
+    }
+
+    function setPeriod(p) {
+      ["7d", "30d", "90d"].forEach((id) => {
+        const el = document.getElementById("period-" + id);
+        if (id === p) {
+          el.className = "rounded-lg px-2.5 py-1 text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)]";
+        } else {
+          el.className = "rounded-lg px-2.5 py-1 text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]";
+        }
+      });
+      showToast(`Хугацааны шүүлтүүр шинэчлэгдлээ`);
+    }
+
+    function triggerRefresh() {
+      const icon = document.getElementById("refresh-icon");
+      icon.style.transform = "rotate(360deg)";
+      setTimeout(() => {
+        icon.style.transform = "rotate(0deg)";
+      }, 500);
+      showToast("Сүүлийн үеийн өгөгдөл шинэчлэгдлээ");
+    }
+
+    let toastTimer = null;
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      const text = document.getElementById("toast-text");
+      text.textContent = message;
+      toast.classList.remove("hidden");
+      toast.classList.add("flex");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add("hidden");
+        toast.classList.remove("flex");
+      }, 2600);
+    }
+
+    // Initialize
+    renderSidebar();
+    renderMerchantRows();
+  </script>
+</body>
+</html>

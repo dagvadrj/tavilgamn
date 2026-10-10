@@ -12,6 +12,7 @@ import {
   MessageSquareQuote,
   Settings,
   CircleHelp,
+  UserRound,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 import type { MerchantLocationTab } from "@/lib/merchantNavigation";
@@ -30,6 +31,7 @@ export const MERCHANT_TABS: {
   { id: "quotes", label: "Үнийн хүсэлтүүд", icon: MessageSquareQuote },
   { id: "store", label: "Дэлгүүрийн мэдээлэл", icon: Store },
   { id: "settings", label: "Самбарын тохиргоо", icon: Settings },
+  { id: "profile", label: "Миний бүртгэл", icon: UserRound },
 ];
 
 export function MerchantSidebar({
@@ -115,8 +117,8 @@ export function MerchantSidebar({
           <strong>Таны дэлгүүр, нэг дор</strong>
           <p>Бараа, захиалга болон загваруудаа эндээс удирдаарай.</p>
         </div>
-        {MERCHANT_TABS.filter(
-          (item) => item.id === "store" || item.id === "settings",
+        {MERCHANT_TABS.filter((item) =>
+          ["store", "settings", "profile"].includes(item.id),
         ).map(renderItem)}
         <Link href="/about#contact" className="dashboard-sidebar-link">
           <CircleHelp size={18} />

@@ -149,6 +149,7 @@ export type Database = {
           review_count: number
           scale: number
           source_glb_path: string | null
+          specifications: Json
           standard_glb_path: string | null
           store_ids: Json
           thumbnail_path: string | null
@@ -201,6 +202,7 @@ export type Database = {
           review_count?: number
           scale?: number
           source_glb_path?: string | null
+          specifications?: Json
           standard_glb_path?: string | null
           store_ids?: Json
           thumbnail_path?: string | null
@@ -253,6 +255,7 @@ export type Database = {
           review_count?: number
           scale?: number
           source_glb_path?: string | null
+          specifications?: Json
           standard_glb_path?: string | null
           store_ids?: Json
           thumbnail_path?: string | null
@@ -1653,6 +1656,7 @@ export type Database = {
           review_count: number
           scale: number
           source_glb_path: string | null
+          specifications: Json
           standard_glb_path: string | null
           store_ids: Json
           thumbnail_path: string | null
@@ -1714,6 +1718,7 @@ export type Database = {
           review_count: number
           scale: number
           source_glb_path: string | null
+          specifications: Json
           standard_glb_path: string | null
           store_ids: Json
           thumbnail_path: string | null
@@ -1878,6 +1883,7 @@ export type Database = {
           review_count: number
           scale: number
           source_glb_path: string | null
+          specifications: Json
           standard_glb_path: string | null
           store_ids: Json
           thumbnail_path: string | null
@@ -1943,6 +1949,7 @@ export type Database = {
           review_count: number
           scale: number
           source_glb_path: string | null
+          specifications: Json
           standard_glb_path: string | null
           store_ids: Json
           thumbnail_path: string | null
@@ -2015,6 +2022,10 @@ export type Database = {
         Returns: undefined
       }
       save_furniture_product_pre_phase5: {
+        Args: { p_create: boolean; p_data: Json; p_expected_stock?: number }
+        Returns: undefined
+      }
+      save_furniture_product_pre_specifications: {
         Args: { p_create: boolean; p_data: Json; p_expected_stock?: number }
         Returns: undefined
       }
@@ -2145,6 +2156,10 @@ export type Database = {
           p_status: string
         }
         Returns: undefined
+      }
+      valid_furniture_specifications: {
+        Args: { value: Json }
+        Returns: boolean
       }
     }
     Enums: {
@@ -2278,4 +2293,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-

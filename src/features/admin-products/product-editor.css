@@ -1,0 +1,121 @@
+.product-editor-section {
+  margin-top: 24px;
+  padding: 20px;
+  border: 1px solid var(--dashboard-border, #d9dce3);
+  border-radius: 16px;
+}
+
+.product-editor-section h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.product-editor-section > p {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--dashboard-muted, #727780);
+}
+
+.product-dimension-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.product-dimension-help {
+  position: relative;
+  display: inline-flex;
+}
+
+.product-dimension-help > button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.product-dimension-help > button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.product-dimension-tip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: -40px;
+  z-index: 30;
+  display: grid;
+  gap: 8px;
+  width: min(250px, 70vw);
+  padding: 14px;
+  border: 1px solid #4b5563;
+  border-radius: 12px;
+  background: #17191e;
+  color: #f9fafb;
+  box-shadow: 0 8px 30px #0003;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.product-dimension-tip > span {
+  color: #cbd5e1;
+}
+
+.product-dimensions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.product-specification-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.product-specification-fields label {
+  min-width: 0;
+  font-size: 13px;
+}
+
+.product-save-progress {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #2563eb1a;
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .admin-shell .admin-editor :is(input, select, textarea) {
+    font-size: 16px;
+  }
+  .product-dimension-help > button {
+    width: 44px;
+    height: 44px;
+    border: 0;
+  }
+  .product-dimension-help > button::before {
+    content: "";
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .product-editor-section {
+    padding: 16px;
+  }
+  .product-dimensions, .product-specification-fields {
+    grid-template-columns: 1fr;
+  }
+}

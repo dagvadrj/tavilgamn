@@ -23,6 +23,7 @@ import path from "node:path";
 
 import { fileURLToPath } from "node:url";
 import { previewReference } from "./preview-reference.mjs";
+import { cleanupAbandonedSources } from "./cleanup-abandoned-sources.mjs";
 
 const MAX_SOURCE_SIZE = 200 * 1024 * 1024;
 
@@ -564,9 +565,17 @@ async function main() {
   console.log(`[worker] poll interval: ${POLL_INTERVAL} ms`);
 
   let backoff = POLL_INTERVAL;
+  let lastSourceSweep = 0;
 
   while (true) {
     try {
+      if (!VERIFY_MODEL_ID && Date.now() - lastSourceSweep >= 60_000) {
+        lastSourceSweep = Date.now();
+        try {
+          const cleanup = await cleanupAbandonedSources(db, r2, R2_BUCKET_NAME, { apply: true });
+          if (cleanup.deleted || cleanup.failed) console.log("[worker] abandoned sources", cleanup);
+        } catch (error) { console.error("[worker] source sweep failed", error); }
+      }
       const job = await claimJob();
 
       if (job) {

@@ -235,6 +235,101 @@
   flex-shrink: 0;
 }
 
+.dashboard-shell :is(.merchant-header-profile, .admin-profile) {
+  border: 0;
+  background: transparent;
+  color: var(--dashboard-ink);
+  text-align: left;
+  font-family: inherit;
+}
+
+.dashboard-profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  margin-bottom: 28px;
+}
+
+.dashboard-profile-avatar {
+  display: grid;
+  flex-shrink: 0;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 18px;
+  background: var(--dashboard-elevated);
+  color: var(--dashboard-ink);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.dashboard-profile-identity h2 {
+  overflow-wrap: anywhere;
+}
+
+.dashboard-profile-identity p {
+  margin-top: 6px;
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-profile-form {
+  display: grid;
+  gap: 22px;
+  font-size: var(--dashboard-body-size);
+}
+
+.dashboard-profile-form label {
+  display: grid;
+  gap: 10px;
+  color: var(--dashboard-ink);
+}
+
+.dashboard-profile-form input {
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 10px;
+  background: var(--dashboard-elevated);
+  color: var(--dashboard-ink);
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.dashboard-profile-form input:focus-visible {
+  outline: 2px solid var(--dashboard-muted);
+  outline-offset: 2px;
+}
+
+.dashboard-profile-form .dashboard-secondary-action {
+  justify-self: start;
+  margin-top: 0;
+}
+
+.dashboard-profile-email {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-profile-email strong {
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+
+.dashboard-profile-email small {
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-profile button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .dashboard-settings-details {
   display: grid;
   gap: 20px;
@@ -299,6 +394,7 @@
     display: none;
   }
   .dashboard-shell .merchant-content .input,
+  .dashboard-profile-form input,
   .dashboard-setting-select select {
     font-size: 16px;
   }

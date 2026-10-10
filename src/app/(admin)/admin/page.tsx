@@ -22,8 +22,11 @@ import "./admin.css";
 import "./admin-dark.css";
 import { ModelsTab } from "@/features/admin-models/ModelsTab";
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
+import { DashboardAccount } from "@/features/dashboard/DashboardAccount";
+import { loginPathForDestination } from "@/lib/authRedirect";
 import { useDashboardPreferences } from "@/features/dashboard/useDashboardPreferences";
 import "@/features/dashboard/dashboard-usability.css";
+import "@/features/dashboard/dashboard-reference.css";
 
 const TABS = ADMIN_TABS;
 
@@ -66,7 +69,12 @@ export default function AdminPage() {
   }, [initializeAuth]);
   useEffect(() => {
     if (!initialized) return;
-    if (!user) router.replace("/login?next=/admin");
+    if (!user)
+      router.replace(
+        loginPathForDestination(
+          window.location.pathname + window.location.search,
+        ),
+      );
     else if (role !== "admin") router.replace("/");
   }, [initialized, user, role, router]);
 
@@ -117,6 +125,7 @@ export default function AdminPage() {
           onProducts={() => selectTab("furniture")}
           onMessages={() => selectTab("messages")}
           onSettings={() => selectTab("settings")}
+          onProfile={() => selectTab("profile")}
           menuOpen={menuOpen}
           onToggleMenu={() => setMenuOpen((open) => !open)}
         />
@@ -179,8 +188,10 @@ export default function AdminPage() {
               role="admin"
               preferences={preferences}
               onChange={updatePreferences}
+              onProfile={() => selectTab("profile")}
             />
           )}
+          {tab === "profile" && <DashboardAccount key={user.id} role="admin" />}
         </main>
 
         <footer className="admin-footer">

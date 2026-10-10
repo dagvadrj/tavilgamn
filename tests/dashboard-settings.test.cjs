@@ -56,6 +56,7 @@ test("preference updates persist across remounts, merge current values, and rema
 test("dashboard settings route each control to its real preference or store action", () => {
   const changes = [];
   let storeOpens = 0;
+  let profileOpens = 0;
   const { DashboardSettings } = loadSource("src/features/dashboard/DashboardSettings.tsx", {
     react: { ...React, useState: (initial) => [initial, () => {}] },
     "@/store/auth": { useAuth: (selector) => selector({ user: { name: "Тест", email: "test@example.com" } }) },
@@ -70,6 +71,7 @@ test("dashboard settings route each control to its real preference or store acti
     role: "merchant", preferences: preferencesModule.DEFAULT_DASHBOARD_PREFERENCES,
     onChange: (patch) => { changes.push(patch); return true; },
     onStore: () => storeOpens++,
+    onProfile: () => profileOpens++,
   });
   const inputs = findAll(tree, (node) => node.type === "input");
   inputs.find((node) => node.props.value === "compact").props.onChange();
@@ -78,8 +80,10 @@ test("dashboard settings route each control to its real preference or store acti
   const buttons = findAll(tree, (node) => node.type === "button");
   buttons[0].props.onClick();
   buttons[1].props.onClick();
+  buttons[2].props.onClick();
   assert.deepEqual(changes, [{ density: "compact" }, { textSize: "large" }, { overview: "inventory" }, preferencesModule.DEFAULT_DASHBOARD_PREFERENCES]);
   assert.equal(storeOpens, 1);
+  assert.equal(profileOpens, 1);
   const admin = DashboardSettings({ role: "admin", preferences: preferencesModule.DEFAULT_DASHBOARD_PREFERENCES, onChange: () => true });
   assert.equal(findAll(admin, (node) => node.type === "select").length, 0);
 });

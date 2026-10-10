@@ -17,6 +17,13 @@ import { useAuth } from "@/store/auth";
 import { useCatalogStore } from "@/store/catalog";
 import { authFetch } from "@/lib/authFetch";
 import { useKitchenCatalog } from "@/features/kitchen-planner/hooks/useKitchenCatalog";
+import { DimensionHelp } from "./DimensionHelp";
+import { specificationFields } from "@/lib/productSpecifications";
+import {
+  saveProductWithModel,
+  type ProductSaveCheckpoint,
+} from "./saveProductWithModel";
+import "./product-editor.css";
 import { MAX_STOCK_QUANTITY } from "@/lib/inventory";
 
 export const GlbUploadPreview = dynamic(
@@ -33,6 +40,7 @@ export const blank = (): Product => ({
   description: "",
   image: "",
   images: [],
+  specifications: {},
   basePrice: 0,
   rating: 0,
   reviewCount: 0,
@@ -103,6 +111,15 @@ export function ProductEditor({
   );
   const [glbMessage, setGlbMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const saving = useRef(false);
+  const [checkpoint, setCheckpoint] =
+    useDraftState<ProductSaveCheckpoint | null>(
+      draftScope,
+      "saveCheckpoint",
+      create
+        ? null
+        : { id: product.id, stockQuantity: product.stockQuantity ?? null },
+    );
   type FieldErrors = {
     name?: string;
     basePrice?: string;
@@ -125,6 +142,7 @@ export function ProductEditor({
   const [storesRefresh, setStoresRefresh] = useState(0);
   const draftStatus = useDraftStatus(draftScope);
   const editorRef = useRef<HTMLFormElement>(null);
+  const glbInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     editorRef.current?.focus({ preventScroll: true });
   }, []);
@@ -156,17 +174,7 @@ export function ProductEditor({
       className="admin-editor space-y-6"
       onSubmit={async (event) => {
         event.preventDefault();
-        if (busy || draftStatus.loading) return;
-        if (glbFile) {
-          setFieldErrors((current) => ({
-            ...current,
-            glb: draft.model
-              ? "GLB файл сонгосон байна. Хадгалахаас өмнө “GLB солих” товчийг дарна уу."
-              : "GLB файл сонгосон байна. Хадгалахаас өмнө “GLB нэмэх” товчийг дарна уу.",
-          }));
-
-          return;
-        }
+        if (saving.current || busy || draftStatus.loading) return;
         const nextErrors: FieldErrors = {};
 
         if (!draft.name.trim()) {
@@ -215,10 +223,23 @@ export function ProductEditor({
           nextErrors.materials = "Дор хаяж нэг материал шаардлагатай.";
         }
 
-        if (glbFile) {
-          nextErrors.glb = draft.model
-            ? "GLB файл сонгосон байна. Эхлээд “GLB солих” товчийг дарна уу."
-            : "GLB файл сонгосон байна. Эхлээд “GLB нэмэх” товчийг дарна уу.";
+        if (
+          glbFile &&
+          (!glbPreview ||
+            glbPreview.file !== glbFile ||
+            !glbPreview.frontConfirmed)
+        ) {
+          nextErrors.glb =
+            "3D урьдчилсан харагдац дээр хэмжээ, босоо байрлал болон нүүрэн талыг шалгаж батална уу.";
+        }
+        if (
+          create &&
+          glbFile &&
+          draft.category === "kitchen-cabinet" &&
+          !cabinetModuleId
+        ) {
+          nextErrors.glb =
+            "Гал тогооны шүүгээний 3D загварт ижил хэмжээтэй модулийг сонгоно уу.";
         }
 
         setFieldErrors(nextErrors);
@@ -227,6 +248,7 @@ export function ProductEditor({
           return;
         }
 
+        saving.current = true;
         setBusy(true);
         setError(null);
 
@@ -288,33 +310,28 @@ export function ProductEditor({
           setDraft((current) => ({ ...current, image, images }));
           setImageFile(null);
           setGalleryFiles([]);
-          const response = await authFetch(
-            "/api/admin/products",
-            {
-              method: create ? "POST" : "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                ...draft,
-                image,
-                images,
-                expectedStockQuantity: product.stockQuantity ?? null,
-              }),
+          await saveProductWithModel({
+            product: { ...draft, image, images },
+            checkpoint,
+            file: glbFile,
+            preview: glbPreview,
+            moduleId: cabinetModuleId,
+            request: (url, init) => authFetch(url, init, owner),
+            assertOwner: () => {
+              if (
+                useAuth.getState().user?.id !== owner ||
+                useAuth.getState().role !== "admin"
+              )
+                throw new Error("Админ нэвтрэлт өөрчлөгдсөн байна.");
             },
-            owner,
-          );
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.error ?? "Хадгалж чадсангүй.");
-          }
-
-          if (
-            useAuth.getState().user?.id !== owner ||
-            useAuth.getState().role !== "admin"
-          ) {
-            return;
-          }
+            onSaved: (value) => {
+              setCheckpoint(value);
+              setDraft((current) => ({ ...current, id: value.id }));
+            },
+            onProgress: setGlbMessage,
+          });
+          setGlbFile(null);
+          setGlbPreview(null);
 
           await useCatalogStore.getState().refresh(true);
           void clearDashboardDraft(draftScope);
@@ -322,7 +339,9 @@ export function ProductEditor({
         } catch (error) {
           setError(error instanceof Error ? error.message : "Алдаа гарлаа.");
         } finally {
+          saving.current = false;
           setBusy(false);
+          setGlbMessage(null);
         }
       }}
     >
@@ -370,9 +389,11 @@ export function ProductEditor({
             <select
               className="input mt-1"
               value={draft.category}
-              onChange={(event) =>
-                field("category", event.target.value as Product["category"])
-              }
+              onChange={(event) => {
+                field("category", event.target.value as Product["category"]);
+                setGlbPreview(null);
+                setCabinetModuleId("");
+              }}
             >
               {CATEGORIES.map((category) => (
                 <option key={category.id} value={category.id}>
@@ -528,270 +549,201 @@ export function ProductEditor({
             </div>
           </div>
         )}
-        {!create && (
-          <div className="space-y-2">
-            <label className="block text-sm">
-              3D загварын эх GLB файл (200 MB хүртэл)
-              <input
-                className="input mt-1"
-                type="file"
-                accept=".glb,model/gltf-binary"
-                onChange={(event) => {
-                  const file = event.target.files?.[0] ?? null;
 
-                  setGlbFile(file);
-                  setGlbMessage(null);
-
-                  setFieldErrors((current) => ({
-                    ...current,
-                    glb: file
-                      ? draft.model
-                        ? "Шинэ GLB файл сонгосон байна. Эхлээд “GLB солих” товчийг дарна уу."
-                        : "GLB файл сонгосон байна. Эхлээд “GLB нэмэх” товчийг дарна уу."
-                      : undefined,
-                  }));
-                }}
-              />
-            </label>
-            {fieldErrors.glb && (
-              <p role="alert" className="text-xs text-red-600">
-                {fieldErrors.glb}
-              </p>
-            )}
-
-            <p className="text-xs text-ink/60">
-              Одоогийн файл: {draft.model?.file ?? "GLB нэмээгүй"}
-            </p>
-            <p className="text-xs text-ink/60">
-              Original GLB файл оруул. Web-д зориулсан хувилбар автоматаар
-              боловсруулагдана.
-            </p>
-            <GlbUploadPreview
-              allowFrontProjection={draft.category === "kitchen-cabinet"}
-              file={glbFile}
-              expected={{
-                widthMm: draft.dimensions.w * 1000,
-                heightMm: draft.dimensions.h * 1000,
-                depthMm: draft.dimensions.d * 1000,
-              }}
-              onChange={setGlbPreview}
-            />
-            {draft.category === "kitchen-cabinet" && (
-              <label className="label">
-                Upload module (холбоогүй model-д шаардлагатай)
-                <select
-                  className="input"
-                  value={cabinetModuleId}
-                  onChange={(event) => setCabinetModuleId(event.target.value)}
-                >
-                  <option value="">Одоо холбогдсон module</option>
-                  {moduleCatalog
-                    .filter(
-                      (module) =>
-                        Math.abs(module.widthMm - draft.dimensions.w * 1000) <=
-                          5 &&
-                        Math.abs(module.heightMm - draft.dimensions.h * 1000) <=
-                          5 &&
-                        Math.abs(module.depthMm - draft.dimensions.d * 1000) <=
-                          5,
-                    )
-                    .map((module) => (
-                      <option value={module.id} key={module.id}>
-                        {module.code}
-                      </option>
-                    ))}
-                </select>
+        <section
+          className="product-editor-section"
+          aria-labelledby="product-specifications-editor-heading"
+        >
+          <h3 id="product-specifications-editor-heading">
+            Бүтээгдэхүүний үзүүлэлт
+          </h3>
+          <p>
+            Ангилалд тохирох үзүүлэлтүүд. Мэдэхгүй мэдээллээ хоосон үлдээнэ.
+            Өнгө, материал болон хэмжээсийг үндсэн талбаруудаас авна.
+          </p>
+          <div className="product-specification-fields">
+            {specificationFields(draft.category).map((spec) => (
+              <label key={spec.key}>
+                {spec.label}
+                <input
+                  className="input mt-1"
+                  maxLength={300}
+                  placeholder={spec.placeholder}
+                  value={draft.specifications?.[spec.key] ?? ""}
+                  onChange={(event) =>
+                    field("specifications", {
+                      ...draft.specifications,
+                      [spec.key]: event.target.value,
+                    })
+                  }
+                />
               </label>
-            )}
+            ))}
+          </div>
+        </section>
+
+        <section
+          className="product-editor-section space-y-2"
+          aria-labelledby="product-model-heading"
+        >
+          <h3 id="product-model-heading">3D загвар</h3>
+          <p>
+            GLB файлаа энд сонгоно. Бүтээгдэхүүн болон 3D загвар “Хадгалах” үед
+            хамт бүртгэгдэнэ. 3D файл заавал оруулах шаардлагагүй.
+          </p>
+          <label className="block text-sm">
+            3D загварын эх GLB файл (200 MB хүртэл)
+            <input
+              ref={glbInputRef}
+              className="input mt-1"
+              type="file"
+              accept=".glb,model/gltf-binary"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+
+                setGlbFile(file);
+                setGlbPreview(null);
+                setGlbMessage(null);
+
+                setFieldErrors((current) => ({
+                  ...current,
+                  glb: undefined,
+                }));
+              }}
+            />
+          </label>
+          {fieldErrors.glb && (
+            <p role="alert" className="text-xs text-red-600">
+              {fieldErrors.glb}
+            </p>
+          )}
+
+          <p className="text-xs text-ink/60">
+            Одоогийн файл: {draft.model?.file ?? "GLB нэмээгүй"}
+          </p>
+          <p className="text-xs text-ink/60">
+            Original GLB файл оруул. Web-д зориулсан хувилбар автоматаар
+            боловсруулагдана.
+          </p>
+          <GlbUploadPreview
+            key={draft.category}
+            allowFrontProjection={draft.category === "kitchen-cabinet"}
+            file={glbFile}
+            expected={{
+              widthMm: draft.dimensions.w * 1000,
+              heightMm: draft.dimensions.h * 1000,
+              depthMm: draft.dimensions.d * 1000,
+            }}
+            onChange={setGlbPreview}
+          />
+          {draft.category === "kitchen-cabinet" && (
+            <label className="label">
+              Гал тогооны модуль
+              <select
+                className="input"
+                value={cabinetModuleId}
+                onChange={(event) => setCabinetModuleId(event.target.value)}
+              >
+                <option value="">
+                  {create ? "Ижил хэмжээтэй модуль сонгох" : "Одоогийн модуль"}
+                </option>
+                {moduleCatalog
+                  .filter(
+                    (module) =>
+                      Math.abs(module.widthMm - draft.dimensions.w * 1000) <=
+                        5 &&
+                      Math.abs(module.heightMm - draft.dimensions.h * 1000) <=
+                        5 &&
+                      Math.abs(module.depthMm - draft.dimensions.d * 1000) <= 5,
+                  )
+                  .map((module) => (
+                    <option value={module.id} key={module.id}>
+                      {module.code}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          )}
+          {glbFile && (
             <button
               type="button"
               className="btn-ghost"
-              disabled={
-                busy || !glbFile || !glbPreview || glbPreview.file !== glbFile
-              }
-              onClick={async () => {
-                if (
-                  busy ||
-                  !glbFile ||
-                  !glbPreview ||
-                  glbPreview.file !== glbFile
-                )
-                  return;
-
-                setBusy(true);
-                setError(null);
-                setGlbMessage(null);
-
-                try {
-                  // --------------------------------
-                  // 1. Local validation
-                  // --------------------------------
-
-                  if (
-                    !glbFile.name.toLowerCase().endsWith(".glb") ||
-                    glbFile.size < 12 ||
-                    glbFile.size > 200 * 1024 * 1024
-                  ) {
-                    throw new Error("200 MB-аас ихгүй GLB файл сонгоно уу.");
-                  }
-
-                  if (
-                    useAuth.getState().user?.id !== owner ||
-                    useAuth.getState().role !== "admin"
-                  ) {
-                    throw new Error("Админ нэвтрэлт өөрчлөгдсөн байна.");
-                  }
-
-                  // --------------------------------
-                  // 2. Presigned R2 upload URL авах
-                  // --------------------------------
-
-                  setGlbMessage("Upload бэлдэж байна…");
-
-                  const prepareResponse = await authFetch(
-                    "/api/admin/models/upload-url",
-                    {
-                      method: "POST",
-
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-
-                      body: JSON.stringify({
-                        productId: draft.id,
-                        fileName: glbFile.name,
-                        size: glbFile.size,
-                        moduleId: cabinetModuleId,
-                      }),
-                    },
-                    owner,
-                  );
-
-                  const prepareData = await prepareResponse
-                    .json()
-                    .catch(() => null);
-
-                  if (
-                    !prepareResponse.ok ||
-                    typeof prepareData?.uploadUrl !== "string" ||
-                    typeof prepareData?.sourcePath !== "string" ||
-                    typeof prepareData?.modelId !== "string"
-                  ) {
-                    throw new Error(
-                      prepareData?.error ?? "R2 upload URL үүсгэж чадсангүй.",
-                    );
-                  }
-
-                  // Upload эхлэхийн өмнө auth дахин шалгана.
-                  if (
-                    useAuth.getState().user?.id !== owner ||
-                    useAuth.getState().role !== "admin"
-                  ) {
-                    throw new Error("Админ нэвтрэлт өөрчлөгдсөн байна.");
-                  }
-
-                  // --------------------------------
-                  // 3. Browser -> Cloudflare R2
-                  // --------------------------------
-
-                  setGlbMessage("GLB файлыг Cloudflare R2 руу хуулж байна…");
-
-                  const r2Response = await fetch(prepareData.uploadUrl, {
-                    method: "PUT",
-
-                    headers: {
-                      "Content-Type": "model/gltf-binary",
-                    },
-
-                    body: glbFile,
-                  });
-
-                  if (!r2Response.ok) {
-                    throw new Error(
-                      `R2 upload амжилтгүй боллоо (${r2Response.status}).`,
-                    );
-                  }
-
-                  // --------------------------------
-                  // 4. R2 upload дууссаныг API-д хэлнэ
-                  // --------------------------------
-
-                  setGlbMessage(
-                    "Upload дууслаа. Боловсруулалтын дараалалд оруулж байна…",
-                  );
-
-                  const completeResponse = await authFetch(
-                    "/api/admin/models/upload-complete",
-                    {
-                      method: "POST",
-
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-
-                      body: JSON.stringify({
-                        modelId: prepareData.modelId,
-                        sourcePath: prepareData.sourcePath,
-                        frontConfirmed: glbPreview.frontConfirmed,
-                        frontProjectionMm: glbPreview.report.frontProjectionMm,
-                      }),
-                    },
-                    owner,
-                  );
-
-                  const completeData = await completeResponse
-                    .json()
-                    .catch(() => null);
-
-                  if (!completeResponse.ok) {
-                    throw new Error(
-                      completeData?.error ??
-                        "3D model processing эхлүүлж чадсангүй.",
-                    );
-                  }
-
-                  // --------------------------------
-                  // 5. UI reset
-                  // --------------------------------
-
-                  setGlbFile(null);
-                  setFieldErrors((current) => ({
-                    ...current,
-                    glb: undefined,
-                  }));
-
-                  await useCatalogStore.getState().refresh(true);
-
-                  setGlbMessage("GLB амжилттай upload хийгдлээ.");
-                } catch (error) {
-                  console.error("[AdminProducts GLB upload]", error);
-
-                  setGlbMessage(null);
-
-                  const message =
-                    error instanceof Error
-                      ? error.message
-                      : "GLB upload хийхэд алдаа гарлаа.";
-
-                  setFieldErrors((current) => ({
-                    ...current,
-                    glb: message,
-                  }));
-                } finally {
-                  setBusy(false);
-                }
+              onClick={() => {
+                setGlbFile(null);
+                setGlbPreview(null);
+                if (glbInputRef.current) glbInputRef.current.value = "";
+                setFieldErrors((current) => ({ ...current, glb: undefined }));
               }}
             >
-              {draft.model ? "GLB солих" : "GLB нэмэх"}
+              Сонгосон 3D файлыг хасах
             </button>
-
-            {glbMessage && (
-              <p role="status" className="text-sm text-green-700">
-                {glbMessage}
-              </p>
-            )}
+          )}
+        </section>
+        <section
+          className="product-editor-section"
+          aria-labelledby="product-dimensions-heading"
+        >
+          <h3 id="product-dimensions-heading">Хэмжээс</h3>
+          <p>Бүх хэмжээсийг метрээр оруулна.</p>
+          <div className="product-dimensions">
+            {(
+              [
+                [
+                  "w",
+                  "Өргөн",
+                  "Урд талаас харахад зүүнээс баруун хүртэлх хэмжээ. 3D загварын X тэнхлэг.",
+                ],
+                [
+                  "d",
+                  "Гүн / урт",
+                  "Урд ирмэгээс арын ирмэг хүртэлх хэмжээ. 3D загварын Z тэнхлэг.",
+                ],
+                [
+                  "h",
+                  "Өндөр",
+                  "Шалнаас тавилгын хамгийн дээд цэг хүртэлх хэмжээ. 3D загварын Y тэнхлэг.",
+                ],
+              ] as const
+            ).map(([key, label, help]) => (
+              <div key={key}>
+                <div className="product-dimension-label">
+                  <label htmlFor={"product-dimension-" + key}>
+                    {label} (м)
+                  </label>
+                  <DimensionHelp label={label}>{help}</DimensionHelp>
+                </div>
+                <input
+                  id={"product-dimension-" + key}
+                  className="input"
+                  required
+                  type="number"
+                  min="0.001"
+                  max="100"
+                  step="any"
+                  value={draft.dimensions[key]}
+                  aria-invalid={!!fieldErrors[key]}
+                  onChange={(event) => {
+                    field("dimensions", {
+                      ...draft.dimensions,
+                      [key]: event.target.valueAsNumber,
+                    });
+                    setGlbPreview(null);
+                    setFieldErrors((current) => ({
+                      ...current,
+                      [key]: undefined,
+                    }));
+                  }}
+                />
+                {fieldErrors[key] && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {fieldErrors[key]}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
-        )}
+        </section>
+
         <label className="block text-sm">
           Тайлбар
           <textarea
@@ -802,43 +754,6 @@ export function ProductEditor({
             onChange={(event) => field("description", event.target.value)}
           />
         </label>
-
-        <div className="grid grid-cols-3 gap-3">
-          {(
-            [
-              ["w", "Өргөн"],
-              ["d", "Гүн"],
-              ["h", "Өндөр"],
-            ] as const
-          ).map(([key, name]) => (
-            <label key={key} className="text-sm">
-              {name} (м)
-              <input
-                className="input mt-1"
-                required
-                type="number"
-                min="0.001"
-                max="100"
-                step="any"
-                value={draft.dimensions[key]}
-                onChange={(event) => {
-                  field("dimensions", {
-                    ...draft.dimensions,
-                    [key]: event.target.valueAsNumber,
-                  });
-
-                  setFieldErrors((current) => ({
-                    ...current,
-                    [key]: undefined,
-                  }));
-                }}
-              />
-              {fieldErrors[key] && (
-                <p className="mt-1 text-xs text-red-600">{fieldErrors[key]}</p>
-              )}
-            </label>
-          ))}
-        </div>
 
         <div className="flex flex-wrap gap-4">
           {(
@@ -1082,15 +997,31 @@ export function ProductEditor({
         </p>
       )}
 
+      {glbMessage && (
+        <p role="status" className="product-save-progress">
+          {glbMessage}
+        </p>
+      )}
+      {create && checkpoint && (
+        <p role="status" className="text-sm">
+          Бүтээгдэхүүн бүртгэгдсэн. Үлдсэн өөрчлөлт, 3D файлыг дахин хадгалахад
+          энэ бүтээгдэхүүн шинэчлэгдэнэ.
+        </p>
+      )}
+
       <div className="admin-editor-actions">
         <button
           type="submit"
           className="btn-primary"
-          disabled={busy || !!glbFile}
+          disabled={busy || draftStatus.loading}
         >
           <Save size={16} />
 
-          {glbFile ? "Эхлээд GLB upload хийнэ үү" : "Хадгалах"}
+          {busy
+            ? "Хадгалж байна…"
+            : glbFile
+              ? "Бүтээгдэхүүн, 3D загварыг хадгалах"
+              : "Хадгалах"}
         </button>
         <button
           type="button"

@@ -54,6 +54,7 @@ test("full admin sidebar preserves every operation and marks only the selected d
       "models",
       "kitchens",
       "settings",
+      "profile",
     ],
   );
   const html = desktopMarkup(
@@ -71,7 +72,7 @@ test("full admin sidebar preserves every operation and marks only the selected d
   for (const tab of ADMIN_TABS)
     assert.ok(html.includes(tab.label), `Missing ${tab.label}`);
   assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
-  assert.match(html, /href="\/account"/);
+  assert.doesNotMatch(html, /href="\/account"/);
   assert.match(html, /aria-label=/);
 });
 
@@ -81,7 +82,7 @@ test("merchant sidebar keeps all operations and settings and disables private st
   );
   assert.deepEqual(
     MERCHANT_TABS.map((tab) => tab.id),
-    ["overview", "products", "orders", "kitchens", "quotes", "store", "settings"],
+    ["overview", "products", "orders", "kitchens", "quotes", "store", "settings", "profile"],
   );
   const props = {
     active: "overview",
@@ -114,7 +115,7 @@ test("redesign retains private workspace guards and merchant ownership checks", 
     admin,
     /if\s*\(!initialized\s*\|\|\s*!user\s*\|\|\s*role !== "admin"\)/,
   );
-  assert.match(admin, /router\.replace\("\/login\?next=\/admin"\)/);
+  assert.match(admin, /router\.replace\(\s*loginPathForDestination\(/);
   assert.match(merchant, /if\s*\(role !== "merchant"\)/);
   assert.match(
     merchant,
@@ -148,6 +149,7 @@ test("merchant header actions are real callbacks, linked to the mobile dialog, a
     onProducts: () => calls.push("products"),
     onQuotes: () => calls.push("quotes"),
     onKitchens() {},
+    onProfile: () => calls.push("profile"),
     onToggleSidebar: () => calls.push("menu"),
   });
   const buttons = elements(tree, (node) => node.type === "button");
@@ -173,6 +175,7 @@ test("admin header navigation has working callbacks and exposes matching dialog 
     menuOpen: true,
     onProducts: () => calls.push("products"),
     onSettings: () => calls.push("settings"),
+    onProfile: () => calls.push("profile"),
     onMessages: () => calls.push("messages"),
     onToggleMenu: () => calls.push("menu"),
   });

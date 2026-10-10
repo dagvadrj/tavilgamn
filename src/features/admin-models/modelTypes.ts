@@ -1,16 +1,8 @@
 "use client";
 
-export const CATEGORY_OPTIONS = [
-  { id: "sofa", name: "Буйдан" },
-  { id: "bed", name: "Ор" },
-  { id: "dining-table", name: "Хоолны ширээ" },
-  { id: "wardrobe", name: "Хувцасны шкаф" },
-  { id: "office", name: "Оффисын тавилга" },
-  { id: "tv-stand", name: "Телевизийн тавиур" },
-  { id: "bookshelf", name: "Номын тавиур" },
-  { id: "kitchen-cabinet", name: "Гал тогооны шүүгээ" },
-  { id: "oven", name: "Плитка" },
-];
+import { CATEGORIES } from "@/lib/catalogCategories";
+
+export const CATEGORY_OPTIONS = CATEGORIES;
 
 export const MATERIAL_OPTIONS = [
   { id: "wood", name: "Бөх царс мод" },
