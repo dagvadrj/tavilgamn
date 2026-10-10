@@ -5,6 +5,7 @@ import { createCabinet, createModularKitchen, validateCabinet, type KitchenLayou
 import { cabinetAxes, cabinetCorners, cabinetsOverlap, fitCountertops, placementIssues, resolveElevations } from "./kitchenPlacement";
 import { fitBacksplashes, parseBacksplashSettings } from "./kitchenBacksplash";
 import { parseKitchenExtras } from "./kitchenExtras";
+import { parseKitchenSpace } from "./kitchenSpace";
 
 export type SavedKitchen = { id: string; name: string; design: ModularKitchen; revision?: number; thumbnailUrl: string | null; sourceMarketplaceDesignId?: string | null; sourceMarketplaceVersionId?: string | null; createdAt: string; updatedAt: string };
 export type KitchenSnapshot = { id: string; name: string; design: ModularKitchen };
@@ -202,7 +203,7 @@ export function parseKitchen(value: unknown): ModularKitchen {
   if (raw.countertop.color !== undefined && !/^#[0-9a-f]{6}$/i.test(raw.countertop.color)) throw new Error("Тавцангийн өнгө буруу байна.");
   const backsplashSettings = parseBacksplashSettings(raw.backsplashSettings, raw.room);
   const extras = parseKitchenExtras(raw.extras, ids, raw.room);
-  const next: ModularKitchen = { version: 1, room: { width: raw.room.width, depth: raw.room.depth, height: raw.room.height }, cabinets, wallClearance: raw.wallClearance,
+  const next: ModularKitchen = { version: 1, room: { width: raw.room.width, depth: raw.room.depth, height: raw.room.height, ...parseKitchenSpace(raw.room) }, cabinets, wallClearance: raw.wallClearance,
     countertop: { thickness: raw.countertop.thickness, frontOverhang: raw.countertop.frontOverhang, material: raw.countertop.material,
       ...(raw.countertop.finish ? { finish: raw.countertop.finish } : {}), ...(raw.countertop.materialId ? { materialId: raw.countertop.materialId } : {}),
       ...(raw.countertop.color ? { color: raw.countertop.color } : {}) }, backsplash: raw.backsplash === true,

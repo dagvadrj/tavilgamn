@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { KitchenSuggestionWizard } from "@/components/KitchenSuggestionWizard";
 import { Armchair, ArrowLeft, ArrowRight, Bath, BedDouble, Check, ChefHat, House, Monitor, PencilRuler, Ruler, Shapes } from "lucide-react";
 import type { RoomType } from "@/lib/types";
 import { ROOM_TYPES } from "@/lib/roomGeometry";
@@ -29,6 +30,7 @@ export function RoomPlannerStart({ onStart, draft, onResume }: {
   const [depth, setDepth] = useState("400");
   const [height, setHeight] = useState("270");
   const [error, setError] = useState("");
+  const [kitchenSetup, setKitchenSetup] = useState(false);
   const title = useRef<HTMLHeadingElement>(null);
   useEffect(() => { title.current?.focus(); }, [step]);
 
@@ -45,6 +47,7 @@ export function RoomPlannerStart({ onStart, draft, onResume }: {
     setWidth(String(next.width * 100)); setDepth(String(next.depth * 100));
     setHeight("270"); setError(""); setStep(2);
   }
+  if (kitchenSetup) return <KitchenSuggestionWizard roomDimensions={dimensions} onBack={() => setKitchenSetup(false)}/>;
   return <section className="room-start" aria-label="Өрөөний төлөвлөгчийг эхлүүлэх">
     <header className="room-start-header">
       <Link href="/" className="room-start-brand"><House size={22}/> tavilga.mn</Link>
@@ -67,7 +70,14 @@ export function RoomPlannerStart({ onStart, draft, onResume }: {
         {draft && <div className="room-start-draft"><div><strong>Өмнөх ажлаа үргэлжлүүлэх үү?</strong><p>{draft.name} · {draft.roomName ?? "Өрөө"} · {roomSetupNumber(draft.width * draft.depth)} м²</p></div><button type="button" onClick={onResume}>Үргэлжлүүлэх <ArrowRight size={17}/></button></div>}
       </> : <>
         <div className="room-start-heading"><p>{room.label}</p><h1 ref={title} tabIndex={-1}>Өрөөний хэмжээгээ сонгоорой</h1><span>Жишээ хэмжээнээс сонгох эсвэл бодит хэмжээгээ өөрөө оруулж болно.</span></div>
-        <form noValidate className="room-size-form" onSubmit={event => { event.preventDefault(); const issue = validateRoomSetup(dimensions); setError(issue ?? ""); if (!issue) onStart(roomType, dimensions); }}>
+        <form noValidate className="room-size-form" onSubmit={event => {
+          event.preventDefault();
+          const kitchenSizeIssue = roomType === "kitchen" && [dimensions.width, dimensions.depth].some(value => value < 2 || value > 8)
+            ? "Гарнитурын төлөвлөгчид өргөн, урт тус бүр 200–800 см байна." : null;
+          const issue = validateRoomSetup(dimensions) ?? kitchenSizeIssue;
+          setError(issue ?? "");
+          if (!issue) { if (roomType === "kitchen") setKitchenSetup(true); else onStart(roomType, dimensions); }
+        }}>
           <div className="room-size-layout">
             <div>
               <div className="room-size-grid" role="group" aria-label="Өрөөний жишээ хэмжээ">
@@ -93,7 +103,7 @@ export function RoomPlannerStart({ onStart, draft, onResume }: {
             </aside>
           </div>
           {error && <p className="room-size-error" role="alert">{error}</p>}
-          <footer className="room-start-footer"><button type="button" className="room-start-back" onClick={() => { setError(""); setStep(1); }}><ArrowLeft size={17}/> Өрөөний төрөл солих</button><button type="submit" className="room-start-submit">3D өрөөгөө нээх <ArrowRight size={19}/></button></footer>
+          <footer className="room-start-footer"><button type="button" className="room-start-back" onClick={() => { setError(""); setStep(1); }}><ArrowLeft size={17}/> Өрөөний төрөл солих</button><button type="submit" className="room-start-submit">{roomType === "kitchen" ? "Гарнитур сонгох" : "3D өрөөгөө нээх"} <ArrowRight size={19}/></button></footer>
         </form>
       </>}
     </div>

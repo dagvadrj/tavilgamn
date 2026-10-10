@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
   CookingPot,
-  Refrigerator,
-  Rows3,
-  Wind,
 } from "lucide-react";
 import { useAuth } from "@/store/auth";
+import type { RoomSetupDimensions } from "@/lib/roomSetup";
+import "./kitchen-planner.css";
+import { placementIssues } from "@/lib/kitchenPlacement";
+import { parseKitchen } from "@/lib/kitchenAssembly";
 import {
   createSuggestedKitchen,
   DEFAULT_KITCHEN_SUGGESTION,
@@ -155,27 +156,62 @@ function choiceFor(key: PreferenceKey, value: string) {
 }
 
 function SuggestionDiagram({ kind }: { kind: string }) {
+  const layout = kind.startsWith("layout-");
+  const tall = kind === "oven-high" || kind.startsWith("fridge-");
+  const cabinet = (x: number, y: number, w: number, h: number) => <g key={`${x}-${y}`}><rect x={x} y={y} width={w} height={h} fill="#fafaf7" stroke="#a0a8a0" strokeWidth="2"/><rect x={x + 5} y={y + 5} width={w - 10} height={h - 10} fill="none" stroke="#d6d9d1"/><path d={`M${x + w - 10} ${y + h / 2 - 6}v12`} stroke="#707970" strokeWidth="3"/></g>;
   return (
-    <span className={`ks-diagram ks-${kind}`} aria-hidden="true">
-      <i />
-      <i />
-      <i />
-    </span>
+    <svg className="ks-choice-illustration" viewBox="0 0 320 230" aria-hidden="true">
+      <rect width="320" height="230" fill="#eef0eb"/>
+      {layout ? <g fill="#fff" stroke="#394b40" strokeWidth="3">
+        {kind === "layout-i" && <rect x="55" y="75" width="210" height="45"/>}
+        {kind === "layout-l" && <path d="M65 55h190v45H110v80H65Z"/>}
+        {kind === "layout-u" && <path d="M55 55h210v125h-45v-80H100v80H55Z"/>}
+        {kind === "layout-double" && <><rect x="60" y="50" width="45" height="135"/><rect x="215" y="50" width="45" height="135"/></>}
+        <rect x="137" y="142" width="45" height="40" fill="none" stroke="#b5beb6" strokeDasharray="3 4" strokeWidth="1"/>
+      </g> : kind === "none" ? <g stroke="#839487" strokeWidth="3"><circle cx="160" cy="108" r="40" fill="none"/><path d="m132 136 56-56"/></g> : <>
+        <path d="M0 193h320v37H0Z" fill="#d9c4a2"/>
+        {cabinet(35, 126, 75, 67)}{cabinet(110, 126, 75, 67)}{cabinet(185, 126, 95, 67)}
+        <rect x="30" y="119" width="255" height="8" fill="#bca17b"/>
+        <rect x="125" y="115" width="49" height="5" rx="2" fill="#27332e"/>
+        {!tall && kind !== "hood-wall" && <>{cabinet(35, 30, 75, 62)}{cabinet(110, 30, 75, 62)}{cabinet(185, 30, 95, 62)}</>}
+        {kind.startsWith("oven-") && <>
+          {tall && cabinet(185, 20, 85, 173)}
+          <rect x={tall ? 194 : 120} y={tall ? 79 : 134} width="65" height="48" rx="3" fill="#343b38"/>
+          <rect x={tall ? 201 : 127} y={tall ? 91 : 146} width="51" height="28" fill="#67746e"/>
+          <path d={tall ? "M202 87h49" : "M128 142h49"} stroke="#d9ddda" strokeWidth="3"/>
+        </>}
+        {kind === "hood-integrated" && <rect x="114" y="93" width="67" height="9" fill="#737c76"/>}
+        {kind === "hood-wall" && <g fill="#919b95"><rect x="138" y="28" width="25" height="49"/><path d="m138 77-33 28h91l-33-28Z"/></g>}
+        {kind.startsWith("fridge-") && <>
+          {cabinet(185, 20, 85, 173)}
+          <rect x="189" y="24" width="77" height="165" fill={kind === "fridge-free" ? "#78817d" : "#fafaf7"} stroke="#a0a8a0"/>
+          <path d="M190 139h75M255 75v23M255 151v20" stroke={kind === "fridge-free" ? "#ccd1cd" : "#9ca69f"} strokeWidth="3"/>
+        </>}
+      </>}
+    </svg>
   );
 }
 
-export function KitchenSuggestionWizard() {
+export function KitchenSuggestionWizard({ roomDimensions, onBack }: { roomDimensions?: RoomSetupDimensions; onBack?: () => void } = {}) {
   const router = useRouter();
   const user = useAuth((state) => state.user);
   const [step, setStep] = useState(0);
+  const [error, setError] = useState("");
+  const title = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { title.current?.focus(); }, [step]);
   const [preferences, setPreferences] = useState<KitchenSuggestionPreferences>(
     DEFAULT_KITCHEN_SUGGESTION,
   );
   const summary = step === QUESTIONS.length;
   const question = QUESTIONS[step];
+  const design = useMemo(() => createSuggestedKitchen(preferences, roomDimensions), [preferences, roomDimensions]);
+  const needsAdjustment = placementIssues(design).some(issue => issue.severity === "error");
 
   function continueToPlanner() {
-    const design = createSuggestedKitchen(preferences);
+    try { parseKitchen(design); } catch {
+      setError("Энэ өрөөнд сонголтууд багтахгүй байна. Өөр байрлал сонгох эсвэл өрөөний хэмжээгээ өөрчлөөрэй.");
+      return;
+    }
     const draftId=crypto.randomUUID();
     const draftKey = `tavilga-kitchen-draft-${user?.id ?? "guest"}-${draftId}`;
     try {
@@ -184,9 +220,10 @@ export function KitchenSuggestionWizard() {
         JSON.stringify({ id: "", name: "Миний гал тогоо", design }),
       );
     } catch {
-      // The editor still opens with its safe default if storage is unavailable.
+      setError("Сонголтыг хадгалж чадсангүй. Хөтчийн хадгалах эрхийг шалгаад дахин оролдоорой.");
+      return;
     }
-    router.replace(`/kitchen?editor=1&draft=${draftId}`);
+    router.replace(`/kitchen?editor=1&space=1&draft=${draftId}`);
   }
 
   return (
@@ -194,9 +231,9 @@ export function KitchenSuggestionWizard() {
       <header className="ks-header">
         <button
           type="button"
-          onClick={() => (step > 0 ? setStep(step - 1) : router.push("/"))}
+          onClick={() => (step > 0 ? setStep(step - 1) : onBack ? onBack() : router.push("/"))}
         >
-          <ArrowLeft size={19} /> {step > 0 ? "Буцах" : "Дэлгүүр"}
+          <ArrowLeft size={19} /> {step > 0 ? "Буцах" : onBack ? "Өрөөний хэмжээ" : "Дэлгүүр"}
         </button>
         <strong>
           <CookingPot size={21} /> tavilga.mn kitchen
@@ -206,8 +243,8 @@ export function KitchenSuggestionWizard() {
 
       {!summary ? (
         <section className="ks-question" key={question.key}>
-          <p className="ks-eyebrow">KITCHEN SUGGESTION · {question.eyebrow}</p>
-          <h1>{question.title}</h1>
+          <p className="ks-eyebrow">ГАРНИТУРАА СОНГОЁ · {question.eyebrow}</p>
+          <h1 ref={title} tabIndex={-1}>{question.title}</h1>
           <p className="ks-intro">{question.description}</p>
           <div
             className={`ks-choices ${question.choices.length >= 3 ? "has-three" : ""}`}
@@ -250,25 +287,16 @@ export function KitchenSuggestionWizard() {
       ) : (
         <section className="ks-summary">
           <p className="ks-eyebrow">БАРАГ БОЛЛОО</p>
-          <h1>Таны гал тогооны санал</h1>
+          <h1 ref={title} tabIndex={-1}>Таны гарнитурын сонголт</h1>
           <p className="ks-intro">
             Сонголтоо шалгаад, хүсвэл аль нэгийг нь буцаж өөрчилнө үү.
           </p>
           <div className="ks-summary-grid">
             {(Object.keys(LABELS) as PreferenceKey[]).map((key, index) => {
               const choice = choiceFor(key, preferences[key]);
-              const Icon =
-                key === "oven"
-                  ? CookingPot
-                  : key === "hood"
-                    ? Wind
-                    : key === "refrigerator"
-                      ? Refrigerator
-                      : Rows3;
               return (
                 <article key={key}>
                   <div className="ks-summary-visual">
-                    <Icon size={32} />
                     <SuggestionDiagram kind={choice?.diagram ?? "none"} />
                   </div>
                   <p>{LABELS[key]}</p>
@@ -280,9 +308,12 @@ export function KitchenSuggestionWizard() {
               );
             })}
           </div>
+          {roomDimensions && <p className="ks-intro">Өрөө: {roomDimensions.width} × {roomDimensions.depth} м · {roomDimensions.width * roomDimensions.depth} м²</p>}
+          {needsAdjustment && <p className="ks-intro" role="status">Энэ сонголтын зарим шүүгээ өрөөнд багтахгүй байна. Байрлалаа өөрчилж сонгох эсвэл 3D загвар дээр илүүдэл шүүгээг хасаарай.</p>}
           <button type="button" className="ks-next" onClick={continueToPlanner}>
-            Planner-аа нээх <ArrowRight size={18} />
+            3D загвараа нээх <ArrowRight size={18} />
           </button>
+          {error && <p role="alert" className="ks-intro">{error}</p>}
         </section>
       )}
     </main>

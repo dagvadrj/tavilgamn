@@ -381,6 +381,8 @@ export function RoomPlanner() {
         createNew("80", `${ROOM_TYPES[type].label} загвар`, type, dimensions);
         setRoomStartOpen(false); setShowStartHint(false);
         setCatalogOpen(false); setPropertiesOpen(false); setSummaryOpen(false);
+        setKitchenOnly(type === "kitchen");
+        setLeftOpen(type === "kitchen");
       }}/>;
   }
 
@@ -922,9 +924,9 @@ export function RoomPlanner() {
         <div className="studio-catalog-scroll flex-1 overflow-y-auto p-3">
           {kitchenOnly && <div className="room-kitchen-intro">
             <span className="room-kitchen-intro-icon"><ChefHat size={24} aria-hidden="true" /></span>
-            <h2>Гал тогооны гарнитур</h2>
-            <p>Хадгалсан гарнитураа сонгоод өрөөндөө бодит хэмжээгээр байрлуулаарай.</p>
-            <Link className="room-kitchen-create" href="/kitchen?new=1"><Plus size={18} aria-hidden="true" /><span><strong>Шинэ гарнитур төлөвлөх</strong><small>Хэмжээ, шүүгээ, өнгөө сонгох</small></span><ArrowRight size={18} aria-hidden="true" /></Link>
+            <h2>Гарнитураа сонгоорой</h2>
+            <p>Доорх хадгалсан загвараас сонгоод «Өрөөнд байрлуулах» дарна уу. Шинээр хийх бол эхлээд шүүгээ, хэмжээ, өнгөө сонгоорой.</p>
+            <Link className="room-kitchen-create" href="/kitchen?new=1"><Plus size={18} aria-hidden="true" /><span><strong>Шинээр гарнитур хийх</strong><small>Шүүгээ, хэмжээ, өнгөө сонгоод хадгалах</small></span><ArrowRight size={18} aria-hidden="true" /></Link>
           </div>}
           <details className="planner-kitchen-library" key={kitchenOnly ? "kitchen" : "catalog"} open={kitchenOnly || undefined}>
             <summary>{kitchenOnly ? "Миний хадгалсан гарнитурууд" : "Өөрийн загвар · гарнитур"}</summary>

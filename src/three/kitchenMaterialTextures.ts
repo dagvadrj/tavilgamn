@@ -17,6 +17,7 @@ function configureTexture(texture: THREE.Texture, kind: KitchenTextureKind) {
   texture.colorSpace = kind === "baseColor" ? THREE.SRGBColorSpace : THREE.NoColorSpace;
   texture.flipY = false;
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = 4;
   texture.needsUpdate = true;
   return texture;
 }
