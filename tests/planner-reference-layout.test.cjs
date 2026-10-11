@@ -29,7 +29,10 @@ test("both planners retain lazy 3D scenes and only open room inspectors reserve 
     assert.match(text, /ssr: false/);
   }
   const room = source("src/components/RoomPlanner.tsx");
-  assert.match(source("src/components/ModularKitchenPlanner.tsx"), /<PlannerRail/);
+  const kitchen = source("src/components/ModularKitchenPlanner.tsx");
+  assert.match(kitchen, /className=\{`kitchen-flow-catalog/);
+  assert.match(kitchen, /<KitchenPlanWorkspace/);
+  assert.doesNotMatch(kitchen, /<PlannerRail/);
   assert.match(room, /active=\{inspector === "catalog" && leftOpen\}/);
   assert.match(room, /active=\{inspector === "environment" && rightOpen\}/);
   assert.match(room, /aria-label="Тавилгын ангилал"/);
@@ -45,7 +48,7 @@ test("kitchen opens without a wizard and keeps layout selection available in the
   assert.match(kitchen, /<span>Гарнитурын байрлал<\/span>/);
   assert.match(kitchen, /KITCHEN_LAYOUT_OPTIONS\.map/);
   assert.match(kitchen, /inspector === "selection" \|\| componentOverview/);
-  assert.match(kitchen, /inspectorTab === "selection" && !selected \? "materials"/);
+  assert.match(kitchen, /inspectorTab === "selection" && !selected \? "catalog"/);
 });
 
 test("reference grid reserves a bounded canvas row and mobile inspectors collapse independently", () => {

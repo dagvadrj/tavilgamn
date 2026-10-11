@@ -35,3 +35,24 @@ test('Street View arrows click once or drop once, without moving the camera duri
   button.props.onPointerDown(event);button.props.onPointerMove({...event,clientX:200,clientY:200});button.props.onPointerUp({...event,clientX:200,clientY:200});
   assert.equal(jumps.length,4);
 });
+
+test('dragged kitchen tour points convert the floor hit back to room-local coordinates', () => {
+  const {TourArrow}=loadSource('src/three/RoomTourNavigation.tsx', {
+    react:{useRef:v=>({current:v}),useState:v=>[v,()=>{}]},'react-dom':{createPortal:node=>node},
+  });
+  const camera=new THREE.PerspectiveCamera(60,1,.03,100);
+  camera.position.set(2,1.6,3.5);camera.lookAt(2,0,1.5);camera.updateMatrixWorld();
+  const jumps=[];
+  const tree=nodes(TourArrow({camera,canvas:{ownerDocument:{body:{}},getBoundingClientRect:()=>({left:0,top:0,width:400,height:400})},originX:2,originZ:1.5,point:{x:1,z:1},onJump:p=>{jumps.push(p);return true;}}));
+  const button=tree.find(n=>n.type==='button');
+  const element={style:{},setPointerCapture(){},hasPointerCapture:()=>true,releasePointerCapture(){}};
+  const event={button:0,pointerId:1,clientX:100,clientY:300,currentTarget:element,preventDefault(){},stopPropagation(){}};
+  const before=camera.position.toArray();
+  button.props.onPointerDown(event);
+  button.props.onPointerMove({...event,clientX:200,clientY:200});
+  assert.equal(jumps.length,0);
+  assert.deepEqual(camera.position.toArray(),before);
+  button.props.onPointerUp({...event,clientX:200,clientY:200});
+  assert.equal(jumps.length,1);
+  assert.ok(Math.abs(jumps[0].x)<1e-6 && Math.abs(jumps[0].z)<1e-6);
+});

@@ -1,0 +1,739 @@
+.kroom-setup {
+  position: relative;
+  display: grid;
+  grid-template-columns: 248px 340px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  color: #1a1b22;
+  background: #f1f0ed;
+}
+
+.kroom-setup button {
+  cursor: pointer;
+}
+
+.kroom-setup button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+.kroom-setup button:focus-visible, .kroom-setup input:focus-visible, .kroom-draft g[role="button"]:focus-visible {
+  outline: 2px solid #0051d5;
+  outline-offset: 3px;
+}
+
+.kroom-catalog {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: white;
+  border-right: 1px solid #e5e5e5;
+}
+
+.kroom-catalog header {
+  padding: 22px 18px 14px;
+}
+
+.kroom-catalog small {
+  font-size: 11px;
+  letter-spacing: .12em;
+  color: #424844;
+}
+
+.kroom-catalog h2 {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.kroom-catalog nav {
+  padding: 10px;
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  flex: 1;
+  overflow: auto;
+}
+
+.kroom-catalog nav button {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 49px;
+  text-align: left;
+  padding: 12px;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 13px;
+}
+
+.kroom-catalog nav button:hover {
+  background: #f4f2fd;
+  color: #0051d5;
+}
+
+.kroom-catalog footer {
+  display: grid;
+  gap: 9px;
+  padding: 20px 16px;
+  background: #f4f2fd;
+  font-size: 11px;
+}
+
+.kroom-catalog footer span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.kroom-catalog footer b {
+  color: #0051d5;
+}
+
+.kroom-config {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: white;
+  border-right: 1px solid #dededb;
+  box-shadow: 3px 0 8px #00000005;
+  z-index: 2;
+}
+
+.kroom-config-body {
+  padding: 22px 20px;
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.kroom-intro > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kroom-intro small {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .13em;
+}
+
+.kroom-intro > div > span {
+  font-size: 10px;
+  color: #0051d5;
+  border-radius: 20px;
+  background: #eeecff;
+  padding: 4px 9px;
+}
+
+.kroom-intro h1 {
+  margin: 10px 0;
+  font-size: 25px;
+  font-weight: 650;
+  letter-spacing: -.03em;
+}
+
+.kroom-intro p {
+  font-size: 12px;
+  line-height: 1.75;
+  color: #424844;
+}
+
+.kroom-config h2 {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  line-height: 1.6;
+}
+
+.kroom-shapes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  padding: 5px;
+  border-radius: 12px;
+  background: #f4f2fd;
+}
+
+.kroom-shapes button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 4px;
+  font-size: 11px;
+  border-radius: 8px;
+}
+
+.kroom-shapes button[aria-pressed="true"] {
+  color: #0051d5;
+  background: white;
+  box-shadow: 0 1px 5px #00000008;
+}
+
+.kroom-sizes {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #f1f1f1;
+}
+
+.kroom-section-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kroom-section-head > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  color: #2267a0;
+  white-space: nowrap;
+  line-height: 1.7;
+}
+
+.kroom-dimension {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px;
+  margin-bottom: 9px;
+  background: #f4f2fd;
+  border-radius: 8px;
+}
+
+.kroom-dimension > i {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  background: #e8e7f1;
+  font: 600 11px monospace;
+  flex-shrink: 0;
+}
+
+.kroom-dimension:first-of-type > i {
+  background: #20372c;
+  color: white;
+}
+
+.kroom-setup .kroom-dimension .kp-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.kroom-setup .kroom-dimension .kp-field > span:first-child {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.kroom-setup .kp-field small {
+  display: none;
+}
+
+.kroom-setup .kroom-dimension .kp-number {
+  display: flex;
+  align-items: center;
+  border: 0;
+  padding: 0;
+  gap: 5px;
+  background: transparent;
+  width: auto;
+}
+
+.kroom-setup .kroom-dimension input {
+  width: 68px;
+  background: white;
+  text-align: right;
+  padding: 7px 5px;
+  border: 0;
+  border-radius: 5px;
+  font: 600 11px monospace;
+}
+
+.kroom-setup .kroom-dimension .kp-number > span {
+  padding: 0;
+  background: transparent;
+  font-size: 9px;
+}
+
+.kroom-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: 8px;
+  background: #f1f6eb;
+}
+
+.kroom-area strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #355531;
+  font-size: 12px;
+}
+
+.kroom-area > span {
+  font-size: 9px;
+  color: #424844;
+}
+
+.kroom-openings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.kroom-openings button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 6px;
+  border-radius: 8px;
+  background: #f4f2fd;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.kroom-openings svg {
+  color: #0051d5;
+  flex-shrink: 0;
+}
+
+.kroom-help {
+  margin: 9px 0 0;
+  font-size: 10px;
+  color: #727974;
+  line-height: 1.5;
+}
+
+.kroom-utilities {
+  display: grid;
+  gap: 9px;
+}
+
+.kroom-utilities button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  border-radius: 9px;
+  padding: 9px 10px;
+  background: #f4f2fd;
+  text-align: left;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+.kroom-utilities button[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 1px #0051d5;
+}
+
+.kroom-utilities i {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: white;
+}
+
+.kroom-utilities .is-water {
+  background: #0051d5;
+}
+
+.kroom-utilities .is-power {
+  background: #bd7b00;
+}
+
+.kroom-utilities .is-vent {
+  background: #727974;
+}
+
+.kroom-utilities b {
+  margin-left: auto;
+  color: #2267a0;
+  font-size: 9px;
+  min-width: 56px;
+  text-align: right;
+}
+
+.kroom-add-utility > svg {
+  margin-left: auto;
+}
+
+.kroom-structure {
+  font-size: 11px;
+  color: #727974;
+}
+
+.kroom-structure button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 0;
+}
+
+.kroom-item-editor {
+  padding: 12px;
+  border: 1px solid #dbe1ff;
+  border-radius: 10px;
+}
+
+.kroom-item-editor legend {
+  padding: 0 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kroom-item-editor label {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+  font-size: 11px;
+}
+
+.kroom-item-editor select {
+  padding: 8px;
+  border: 1px solid #e3e1ec;
+  border-radius: 5px;
+  background: white;
+}
+
+.kroom-delete {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #ba1a1a;
+  font-size: 11px;
+  margin-top: 12px;
+}
+
+.kroom-error {
+  font-size: 12px;
+  padding: 12px;
+  line-height: 1.5;
+  border-radius: 8px;
+  background: #ffdad6;
+  color: #93000a;
+}
+
+.kroom-next {
+  padding: 16px 20px;
+  background: white;
+}
+
+.kroom-next button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  border-radius: 10px;
+  background: #0051d5;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 15px;
+  box-shadow: 0 3px 6px #0051d519;
+}
+
+.kroom-next small {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 10px;
+  font-size: 9px;
+  color: #424844;
+}
+
+.kroom-next small span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #355531;
+}
+
+.kroom-workspace {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  padding: 20px 24px 90px;
+  background-image: linear-gradient(#e1e6df 1px,transparent 1px),linear-gradient(90deg,#e1e6df 1px,transparent 1px);
+  background-size: 40px 40px;
+}
+
+.kroom-view-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-end;
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 2px 7px #00000014;
+  margin-bottom: 24px;
+}
+
+.kroom-view-controls button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 5px;
+  padding: 7px 8px;
+  font-size: 11px;
+}
+
+.kroom-view-controls button[aria-pressed="true"] {
+  background: #0051d5;
+  color: white;
+}
+
+.kroom-view-controls b {
+  font-size: 10px;
+  min-width: 36px;
+  text-align: center;
+}
+
+.kroom-control-divider {
+  height: 20px;
+  width: 1px;
+  background: #e3e1ec;
+  margin: 0 5px;
+}
+
+.kroom-wall-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 auto 9px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #0a2218;
+  color: white;
+  box-shadow: 0 9px 20px #00000015;
+  min-height: 52px;
+  max-width: 100%;
+  font-size: 10px;
+}
+
+.kroom-wall-toolbar[hidden] {
+  visibility: hidden;
+  display: flex !important;
+  pointer-events: none;
+}
+
+.kroom-wall-toolbar > svg {
+  flex-shrink: 0;
+}
+
+.kroom-wall-toolbar > strong {
+  max-width: 120px;
+}
+
+.kroom-wall-toolbar > span {
+  max-width: 76px;
+  padding-right: 10px;
+  border-right: 1px solid #ffffff30;
+}
+
+.kroom-wall-toolbar button, .kroom-wall-color {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 5px;
+  background: #20372c;
+  font-size: 10px;
+}
+
+.kroom-wall-color {
+  position: relative;
+  cursor: pointer;
+}
+
+.kroom-wall-color input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.kroom-plan-card {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 10px 20px #00000012;
+}
+
+.kroom-plan-sheet {
+  flex-shrink: 0;
+  max-width: none;
+}
+
+.kroom-draft {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.kroom-draft g[role="button"] {
+  cursor: pointer;
+}
+
+.kroom-draft .is-selected {
+  filter: drop-shadow(0 0 20px #0051d560);
+}
+
+.kroom-compass {
+  position: absolute;
+  bottom: 16px;
+  left: 24px;
+  padding: 10px;
+  width: 118px;
+  border: 1px solid #e1e6df;
+  border-radius: 12px;
+  background: white;
+  font-size: 9px;
+  box-shadow: 0 2px 5px #0000000a;
+}
+
+.kroom-compass span {
+  float: right;
+  color: #0051d5;
+}
+
+.kroom-compass svg {
+  display: block;
+  width: 100%;
+  height: 50px;
+  border-radius: 8px;
+  background: #f4f2fd;
+  margin: 8px 0;
+}
+
+.kroom-compass p {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.kroom-shortcuts {
+  position: absolute;
+  right: 24px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: white;
+  font-size: 9px;
+  color: #424844;
+}
+
+.kroom-shortcuts kbd {
+  padding: 3px 5px;
+  border-radius: 3px;
+  background: #f4f2fd;
+}
+
+@media (max-width: 1200px) {
+  .kroom-setup {
+    grid-template-columns: 200px 310px minmax(0,1fr);
+  }
+  .kroom-workspace {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .kroom-wall-toolbar {
+    gap: 7px;
+    padding: 8px;
+  }
+  .kroom-wall-toolbar > svg, .kroom-wall-toolbar > span {
+    display: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .kroom-setup {
+    grid-template-columns: 300px minmax(0,1fr);
+  }
+  .kroom-catalog {
+    display: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .kroom-setup {
+    overflow: auto;
+    display: flex;
+    flex-direction: column-reverse;
+  }
+  .kroom-workspace {
+    flex: none;
+    height: 460px;
+    padding: 12px 12px 60px;
+  }
+  .kroom-config {
+    flex: none;
+  }
+  .kroom-config-body {
+    overflow: visible;
+  }
+  .kroom-view-controls {
+    margin-bottom: 12px;
+    align-self: center;
+  }
+  .kroom-view-controls button {
+    font-size: 10px;
+    padding: 6px;
+  }
+  .kroom-view-controls button svg {
+    display: none;
+  }
+  .kroom-wall-toolbar {
+    min-height: 42px;
+  }
+  .kroom-compass {
+    display: none;
+  }
+  .kroom-shortcuts {
+    bottom: 12px;
+    right: 12px;
+  }
+  .kroom-next {
+    position: sticky;
+    bottom: 0;
+    box-shadow: 0 -3px 14px #0000000a;
+    z-index: 3;
+  }
+}

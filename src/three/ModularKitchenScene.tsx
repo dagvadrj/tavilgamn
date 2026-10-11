@@ -1,6 +1,13 @@
 "use client";
 
-import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  Component,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Canvas,
   useFrame,
@@ -17,11 +24,13 @@ import {
   type Group,
   type Mesh,
   type MeshStandardMaterial,
+  type PerspectiveCamera,
 } from "three";
 import {
   roomWalls,
   type CabinetPose,
   type KitchenWall,
+  type KitchenRoom,
   type ModularCabinet,
   type ModularKitchen,
 } from "@/lib/kitchenCabinets";
@@ -37,9 +46,14 @@ import { DEFAULT_FLOOR_MATERIAL } from "@/lib/roomDesign";
 import { useRoomMaterial } from "./roomMaterials";
 import { KitchenExtraMesh } from "./KitchenExtraMesh";
 import { CameraNavigation } from "./CameraNavigation";
+import { KitchenInteriorView } from "./KitchenInteriorView";
+import { kitchenWallPanels } from "@/lib/kitchenWallPanels";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { CursorNavigation } from "./CursorNavigationBinding";
-import { SCENE_NAVIGATION_START, isSceneNavigationGesture } from "./sceneNavigation";
+import {
+  SCENE_NAVIGATION_START,
+  isSceneNavigationGesture,
+} from "./sceneNavigation";
 
 export interface ModularSceneProps {
   exportRoot?: (root: Group | null) => void;
@@ -48,6 +62,7 @@ export interface ModularSceneProps {
   kitchen: ModularKitchen;
   selectedId: string | null;
   mode: "move" | "orbit";
+  interior?: boolean;
   cameraRequest?: CameraRequest;
   onSelect: (id: string) => void;
   onDeselect?: () => void;
@@ -61,6 +76,10 @@ export interface ModularSceneProps {
 function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
   const { camera, size } = useThree();
   useEffect(() => {
+    const perspective = camera as PerspectiveCamera;
+    perspective.fov = 45;
+    perspective.near = 0.1;
+    perspective.zoom = 1;
     const target = new Vector3(
       focus.centerX / 1000,
       focus.h / 2,
@@ -79,39 +98,99 @@ function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
 }
 function KitchenRoomWall({
   wall,
-  height,
+  room,
 }: {
   wall: KitchenWall;
-  height: number;
+  room: KitchenRoom;
 }) {
-  const mesh = useRef<Mesh<BufferGeometry, MeshStandardMaterial>>(null);
+  const group = useRef<Group>(null);
   const x = (wall.start.x + wall.end.x) / 2000;
   const z = (wall.start.z + wall.end.z) / 2000;
-  const length =
-    Math.hypot(wall.end.x - wall.start.x, wall.end.z - wall.start.z) / 1000;
+  const { solids, openings } = kitchenWallPanels(wall, room);
   useFrame(({ camera }) => {
-    if (!mesh.current) return;
+    if (!group.current) return;
     const outside =
       (camera.position.x - x) * wall.inward.x +
         (camera.position.z - z) * wall.inward.z <
       -0.06;
-    mesh.current.material.opacity = outside ? 0.065 : 1;
-    mesh.current.material.depthWrite = !outside;
-    mesh.current.castShadow = !outside;
+    group.current.traverse((object) => {
+      if (object.type !== "Mesh") return;
+      const mesh = object as Mesh<BufferGeometry, MeshStandardMaterial>;
+      mesh.material.opacity =
+        (outside ? 0.065 : 1) * (mesh.userData.surfaceOpacity ?? 1);
+      mesh.material.depthWrite = !outside && !mesh.userData.surfaceOpacity;
+      mesh.castShadow = !outside && !mesh.userData.surfaceOpacity;
+    });
   });
   return (
     <group
-      position={[
-        x - wall.inward.x * 0.06,
-        height / 2,
-        z - wall.inward.z * 0.06,
-      ]}
+      ref={group}
+      position={[x - wall.inward.x * 0.06, 0, z - wall.inward.z * 0.06]}
       rotation={[0, Math.atan2(wall.inward.x, wall.inward.z), 0]}
     >
-      <mesh ref={mesh} raycast={() => {}} receiveShadow castShadow>
-        <boxGeometry args={[length, height, 0.12]} />
-        <meshStandardMaterial color="#efe6d6" roughness={0.92} transparent />
-      </mesh>
+      {solids.map((panel, index) => (
+        <mesh
+          key={index}
+          position={[panel.x, panel.y, 0]}
+          raycast={() => {}}
+          receiveShadow
+          castShadow
+        >
+          <boxGeometry args={[panel.width, panel.height, 0.12]} />
+          <meshStandardMaterial
+            color={
+              room.wallColors?.[
+                wall.id as keyof NonNullable<KitchenRoom["wallColors"]>
+              ] ?? "#efe6d6"
+            }
+            roughness={0.92}
+            transparent
+          />
+        </mesh>
+      ))}
+      {openings.map((opening) => (
+        <group key={opening.id}>
+          {opening.kind === "window" && (
+            <mesh
+              position={[opening.x, (opening.bottom + opening.top) / 2, 0]}
+              raycast={() => {}}
+              userData={{ surfaceOpacity: 0.25 }}
+            >
+              <boxGeometry
+                args={[opening.width, opening.top - opening.bottom, 0.015]}
+              />
+              <meshStandardMaterial
+                color="#b8dcee"
+                transparent
+                opacity={0.25}
+                roughness={0.1}
+              />
+            </mesh>
+          )}
+          {[-1, 1].map((side) => (
+            <mesh
+              key={side}
+              position={[
+                opening.x + (side * opening.width) / 2,
+                (opening.bottom + opening.top) / 2,
+                0,
+              ]}
+              raycast={() => {}}
+            >
+              <boxGeometry args={[0.035, opening.top - opening.bottom, 0.15]} />
+              <meshStandardMaterial color="#ffffff" transparent />
+            </mesh>
+          ))}
+          {[opening.bottom, opening.top]
+            .filter((y) => y > 0)
+            .map((y) => (
+              <mesh key={y} position={[opening.x, y, 0]} raycast={() => {}}>
+                <boxGeometry args={[opening.width, 0.035, 0.15]} />
+                <meshStandardMaterial color="#ffffff" transparent />
+              </mesh>
+            ))}
+        </group>
+      ))}
     </group>
   );
 }
@@ -126,7 +205,14 @@ function Scene(props: ModularSceneProps) {
     [kitchen, props.variantModels],
   );
   // Stable while dragging; layout selection remounts this view to frame the new layout.
-  const focus = useRef(kitchenEnvelope(kitchen)).current;
+  const focus = useRef({
+    ...kitchenEnvelope(kitchen),
+    w: kitchen.room.width / 1000,
+    d: kitchen.room.depth / 1000,
+    h: kitchen.room.height / 1000,
+    centerX: kitchen.room.width / 2,
+    centerZ: kitchen.room.depth / 2,
+  }).current;
   const { camera, gl, invalidate, scene } = useThree();
   const callbacks = useRef(props);
   callbacks.current = props;
@@ -182,9 +268,12 @@ function Scene(props: ModularSceneProps) {
   useEffect(() => {
     if (!registerCapture) return;
     const capture = async () => {
-      let pending=false;
-      scene.traverse(object=>{if(object.userData.deliveryPending&&!object.userData.exportExclude)pending=true;});
-      if(pending)return null; // Never persist a preview/placeholder as a completed thumbnail.
+      let pending = false;
+      scene.traverse((object) => {
+        if (object.userData.deliveryPending && !object.userData.exportExclude)
+          pending = true;
+      });
+      if (pending) return null; // Never persist a preview/placeholder as a completed thumbnail.
       const hidden: { visible: boolean; object: { visible: boolean } }[] = [];
       scene.traverse((object) => {
         if (object.userData.exportExclude && object.visible) {
@@ -211,8 +300,12 @@ function Scene(props: ModularSceneProps) {
     event: ThreeEvent<PointerEvent>,
     cabinet: Pick<ModularCabinet, "id" | "position">,
   ) {
-    if (event.button !== 0 || drag.current) return;
-    if (event.pointerType === "touch" && isSceneNavigationGesture(gl.domElement)) return;
+    if (props.interior || event.button !== 0 || drag.current) return;
+    if (
+      event.pointerType === "touch" &&
+      isSceneNavigationGesture(gl.domElement)
+    )
+      return;
     event.stopPropagation();
     props.onSelect(cabinet.id);
     if (mode !== "move") return;
@@ -260,36 +353,74 @@ function Scene(props: ModularSceneProps) {
   );
   return (
     <>
-      <CameraFit focus={focus} />
+      {!props.interior && <CameraFit focus={focus} />}
       <color attach="background" args={["#eaece8"]} />
       <ambientLight intensity={0.65} />
       <hemisphereLight args={["#f7f9ff", "#b9a991", 0.75]} />
-      <directionalLight castShadow position={[2, 7, 4]} intensity={2.1}
-        shadow-mapSize-width={2048} shadow-mapSize-height={2048}
-        shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={8} shadow-camera-bottom={-8}
-        shadow-normalBias={0.025} shadow-bias={-0.0001}/>
-      <OrbitControls
-        makeDefault
-        enabled={!dragActive}
-        enablePan
-        screenSpacePanning
-        zoomToCursor
-        target={[focus.centerX / 1000, focus.h / 2, focus.centerZ / 1000]}
-        minDistance={1}
-        maxDistance={Math.max(18, Math.hypot(width, depth, roomHeight) * 4)}
-        maxPolarAngle={Math.PI / 2.05}
+      <directionalLight
+        castShadow
+        position={[2, 7, 4]}
+        intensity={2.1}
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-left={-8}
+        shadow-camera-right={8}
+        shadow-camera-top={8}
+        shadow-camera-bottom={-8}
+        shadow-normalBias={0.025}
+        shadow-bias={-0.0001}
       />
-      <CameraNavigation request={props.cameraRequest}
-        bounds={{ width, depth, height: roomHeight, centerX: width / 2, centerZ: depth / 2 }}/>
-      <CursorNavigation />
+      {!props.interior && (
+        <OrbitControls
+          makeDefault
+          enabled={!dragActive}
+          enablePan
+          screenSpacePanning
+          zoomToCursor
+          target={[focus.centerX / 1000, focus.h / 2, focus.centerZ / 1000]}
+          minDistance={1}
+          maxDistance={Math.max(18, Math.hypot(width, depth, roomHeight) * 4)}
+          maxPolarAngle={Math.PI / 2.05}
+        />
+      )}
+      {!props.interior && (
+        <CameraNavigation
+          request={props.cameraRequest}
+          bounds={{
+            width,
+            depth,
+            height: roomHeight,
+            centerX: width / 2,
+            centerZ: depth / 2,
+          }}
+        />
+      )}
+      {!props.interior && <CursorNavigation />}
+      {props.interior && (
+        <KitchenInteriorView kitchen={kitchen} request={props.cameraRequest} />
+      )}
       <mesh position={[width / 2, -0.04, depth / 2]} receiveShadow>
         <boxGeometry args={[width, 0.08, depth]} />
         <meshStandardMaterial {...floorMaterial} />
       </mesh>
       {roomWalls(kitchen.room).map((wall) => (
-        <KitchenRoomWall key={wall.id} wall={wall} height={roomHeight} />
+        <KitchenRoomWall key={wall.id} wall={wall} room={kitchen.room} />
       ))}
-      {(kitchen.room.items ?? []).filter(item => item.kind === "column").map(item => <mesh key={item.id} position={[item.x / 1000, roomHeight / 2, item.z / 1000]} castShadow receiveShadow><boxGeometry args={[item.width / 1000, roomHeight, item.depth / 1000]}/><meshStandardMaterial color="#dedfd9"/></mesh>)}
+      {(kitchen.room.items ?? [])
+        .filter((item) => item.kind === "column")
+        .map((item) => (
+          <mesh
+            key={item.id}
+            position={[item.x / 1000, roomHeight / 2, item.z / 1000]}
+            castShadow
+            receiveShadow
+          >
+            <boxGeometry
+              args={[item.width / 1000, roomHeight, item.depth / 1000]}
+            />
+            <meshStandardMaterial color="#dedfd9" />
+          </mesh>
+        ))}
       <group
         ref={props.exportRoot}
         name="Kitchen"
@@ -348,7 +479,9 @@ function Scene(props: ModularSceneProps) {
               props.variantModels?.[cabinet.variantId]?.glbFile ? (
                 <GLBFurnitureMesh
                   modelId={cabinet.variantId}
-                  preservePhysicalSize={props.variantModels[cabinet.variantId].physicalSize}
+                  preservePhysicalSize={
+                    props.variantModels[cabinet.variantId].physicalSize
+                  }
                   basePath={`/api/models/files/${cabinet.variantId}`}
                   glbFile={props.variantModels[cabinet.variantId].glbFile!}
                   previewGlbFile={
@@ -397,11 +530,20 @@ function Scene(props: ModularSceneProps) {
             </group>
           );
         })}
-        {(kitchen.extras ?? []).map(extra => <group key={extra.id} name={`Extra-${extra.id}`}
-          position={[extra.position.x/1000,0,extra.position.z/1000]} rotation={[0,extra.position.rotation,0]}
-          onPointerDown={event=>start(event,extra)}>
-          <KitchenExtraMesh extra={extra} selected={selectedId===extra.id}/>
-        </group>)}
+        {(kitchen.extras ?? []).map((extra) => (
+          <group
+            key={extra.id}
+            name={`Extra-${extra.id}`}
+            position={[extra.position.x / 1000, 0, extra.position.z / 1000]}
+            rotation={[0, extra.position.rotation, 0]}
+            onPointerDown={(event) => start(event, extra)}
+          >
+            <KitchenExtraMesh
+              extra={extra}
+              selected={selectedId === extra.id}
+            />
+          </group>
+        ))}
         <KitchenTops
           kitchen={generatedPartsKitchen}
           materialDefinitions={props.materialDefinitions}

@@ -1345,12 +1345,10 @@
   .ks-summary-grid {
     grid-template-columns: 1fr;
   }
-
   .ks-header {
     gap: 8px;
     padding: 0 12px;
   }
-
   .ks-header strong {
     font-size: 12px;
   }

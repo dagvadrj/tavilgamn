@@ -181,13 +181,11 @@
     padding: 6px 10px;
     gap: 2px;
   }
-
   .kitchen-selection-dock {
     bottom: 100px;
     flex-wrap: wrap;
     width: max-content;
   }
-
   .kitchen-selection-dock > div {
     flex-basis: 100%;
   }
@@ -543,12 +541,10 @@
   .planner-reference.kitchen-reference.kitchen-refined .kp-layout {
     grid-template-columns: minmax(0, 1fr);
   }
-
   .planner-reference.kitchen-reference.kitchen-refined .kp-settings {
     grid-column: auto;
     width: min(360px, calc(100vw - 24px));
   }
-
   .kitchen-reference.kitchen-refined .kitchen-editor-stages button {
     font-size: 11px;
     padding: 6px 9px;

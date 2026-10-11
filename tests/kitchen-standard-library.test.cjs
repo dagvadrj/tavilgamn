@@ -9,12 +9,14 @@ const { parseKitchen } = loadSource("src/lib/kitchenAssembly.ts");
 const { findCabinetSpace, placementIssues } = loadSource("src/lib/kitchenPlacement.ts");
 const { KitchenStandardLibrary } = loadSource("src/features/kitchen-planner/components/KitchenStandardLibrary.tsx");
 
-test("built-in kitchen gallery starts with cabinet choices and guides the user to choose a size", () => {
+test("built-in kitchen gallery starts with base modules and guides the user to choose a size", () => {
   assert.deepEqual(KITCHEN_STANDARD_CHOICES.map(choice => choice.id), ["base", "wall", "tall", "hob", "sink", "oven-base", "oven-tall", "hood-integrated", "hood-wall", "fridge-top", "fridge-side"]);
   const html = renderToStaticMarkup(React.createElement(KitchenStandardLibrary, {
     type: "base", width: 600, disabled: false, atLimit: false, onType() {}, onWidth() {}, onAdd() {},
   }));
-  for (const choice of KITCHEN_STANDARD_CHOICES.slice(0, 3)) assert.ok(html.includes(choice.label));
+  for (const choice of KITCHEN_STANDARD_CHOICES.filter(choice => ["base", "sink", "hob", "oven-base"].includes(choice.id))) assert.ok(html.includes(choice.label));
+  assert.doesNotMatch(html, /<span>Дээд шүүгээ<\/span>|<span>Өндөр шүүгээ<\/span>/);
+  assert.match(html, /kitchen-product-size/);
   assert.doesNotMatch(html, /<details/);
   assert.doesNotMatch(html, /class="kp-primary"/);
   assert.match(html, /Хэмжээ сонгох/);

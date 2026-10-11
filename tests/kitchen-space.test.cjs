@@ -15,6 +15,26 @@ test('room elements survive kitchen saving and open-front rooms omit the front w
   assert.ok(!roomWalls(kitchen.room).some(wall => wall.id === 'front'));
 });
 
+test('engineering points and wall colors survive kitchen JSON, resizing and cloning', () => {
+  const kitchen = createUnifiedKitchen();
+  kitchen.room.wallColors = { back: '#123abc', right: '#efe6d6' };
+  kitchen.room.items = ['water', 'power', 'vent'].map((kind, index) => ({
+    ...spaceItemCandidates(kitchen.room, kind, 'right', `point-${kind}`)[0],
+    z: 500 + index * 700,
+  }));
+  const saved = parseKitchen(JSON.parse(JSON.stringify(kitchen)));
+  assert.deepEqual(saved.room, kitchen.room);
+  const resized = resizeKitchenRoom(saved.room, { width: 5000, depth: 4000 });
+  assert.equal(resized.items.every(item => item.x === 5000), true);
+  assert.deepEqual(resized.wallColors, kitchen.room.wallColors);
+  const copied = cloneKitchen(saved);
+  copied.room.wallColors.back = '#000000';
+  assert.equal(saved.room.wallColors.back, '#123abc');
+  assert.throws(() => parseKitchenSpace({ ...saved.room, wallColors: { back: 'url(secret)' } }));
+  assert.throws(() => parseKitchenSpace({ ...saved.room, wallColors: { ceiling: '#123abc' } }));
+  assert.throws(() => parseKitchenSpace({ ...saved.room, items: [saved.room.items[1], { ...saved.room.items[1], id: 'duplicate-power' }] }), /холболтын цэг/);
+});
+
 test('openings and columns must fit their room and wall', () => {
   const room = { width: 4000, depth: 4000, height: 2700 };
   const door = { id: 'door', kind: 'door', x: 2000, z: 0, width: 900, depth: 100, wall: 'back' };

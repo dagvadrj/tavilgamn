@@ -485,7 +485,7 @@ export function arrangeKitchen(kitchen: ModularKitchen, layout: KitchenLayout) {
   return resolveElevations(next);
 }
 /** Strict parsing for saved or submitted JSON. No arbitrary fields reach the renderer. */
-export function parseKitchen(value: unknown): ModularKitchen {
+export function parseKitchen(value: unknown, options: { allowEmpty?: boolean } = {}): ModularKitchen {
   if (!value || typeof value !== "object")
     throw new Error("Гарнитурын өгөгдөл буруу байна.");
   const raw = value as ModularKitchen;
@@ -494,7 +494,7 @@ export function parseKitchen(value: unknown): ModularKitchen {
     !raw.room ||
     !raw.countertop ||
     !Array.isArray(raw.cabinets) ||
-    !raw.cabinets.length ||
+    (!options.allowEmpty && !raw.cabinets.length) ||
     raw.cabinets.length > 80
   )
     throw new Error("1–80 шүүгээтэй загвар байна.");

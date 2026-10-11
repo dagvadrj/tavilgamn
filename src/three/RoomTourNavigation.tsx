@@ -1,8 +1,8 @@
 "use client";
 import { useMemo, useRef, useState, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import { TourOverlay } from "./TourOverlay";
 import { ArrowUp } from "lucide-react";
 import * as THREE from "three";
 import type {
@@ -16,10 +16,14 @@ export function RoomTourNavigation({
   room,
   pose,
   onJump,
+  originX = 0,
+  originZ = 0,
 }: {
   room: RoomShape & { pieces: PlacedFurniture[] };
   pose: RoomInteriorCamera;
   onJump: (point: TourPoint) => boolean;
+  originX?: number;
+  originZ?: number;
 }) {
   const { camera, gl } = useThree();
   const targets = useMemo(() => tourStepTargets(room, pose), [room, pose]);
@@ -34,33 +38,21 @@ export function RoomTourNavigation({
   return (
     <>
       {targets.map((point) => (
-        <Html
+        <TourOverlay
           key={`${point.x}:${point.z}`}
-          position={[point.x, 0.04, point.z]}
-          transform
-          rotation={[
-            -Math.PI / 2,
-            0,
-            -Math.atan2(point.x - pose.x, -(point.z - pose.z)),
-          ]}
-          distanceFactor={4}
-          zIndexRange={[12, 11]}
+          position={[point.x + originX, 0.04, point.z + originZ]}
         >
           <TourArrow
             point={point}
             onJump={onJump}
             camera={camera}
             canvas={gl.domElement}
+            originX={originX}
+            originZ={originZ}
           />
-        </Html>
+        </TourOverlay>
       ))}
-      <Html
-        fullscreen
-        calculatePosition={(_, __, size) => [size.width / 2, size.height / 2]}
-        onOcclude={() => {}}
-        zIndexRange={[10, 10]}
-        style={{ pointerEvents: "none" }}
-      >
+      <TourOverlay>
         <div
           className="absolute bottom-32 left-1/2 -translate-x-1/2 text-center"
           style={{ pointerEvents: "auto" }}
@@ -71,12 +63,14 @@ export function RoomTourNavigation({
             onJump={onJump}
             camera={camera}
             canvas={gl.domElement}
+            originX={originX}
+            originZ={originZ}
           />
           <span className="mt-1 block rounded bg-white/80 px-2 py-1 text-xs">
             {next ? "Дарж шилжих · Чирж цэг сонгох" : "Чирж цэг сонгох"}
           </span>
         </div>
-      </Html>
+      </TourOverlay>
     </>
   );
 }
@@ -88,12 +82,16 @@ export function TourArrow({
   camera,
   canvas,
   compact = false,
+  originX = 0,
+  originZ = 0,
 }: {
   point?: TourPoint;
   onJump: (point: TourPoint) => boolean;
   camera: THREE.Camera;
   canvas: HTMLCanvasElement;
   compact?: boolean;
+  originX?: number;
+  originZ?: number;
 }) {
   const drag = useRef<{
     id: number;
@@ -117,7 +115,7 @@ export function TourArrow({
       new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
       new THREE.Vector3(),
     );
-    return hit ? { x: hit.x, z: hit.z } : null;
+    return hit ? { x: hit.x - originX, z: hit.z - originZ } : null;
   };
   const finish = (
     event: PointerEvent<HTMLButtonElement>,

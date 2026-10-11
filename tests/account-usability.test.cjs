@@ -16,8 +16,9 @@ function accountPage(deleteDesign = () => {}) {
     "@/components/SavedKitchenList": { SavedKitchenList: () => null },
     "@/store/auth": { useAuth: selector => selector(state) },
     "@/store/wishlist": { useWishlist: selector => selector({ items: [] }) },
-    "@/store/designs": { useDesigns: selector => selector({
+    "@/store/designs": { useDesigns: (selector = value => value) => selector({
       designs: [{ id: "saved-room", name: "Зочны өрөө", pieces: [], updatedAt: 0 }], deleteDesign,
+      furniture: [], rememberFurniture() {}, removeFurniture() {},
     }) },
     "@/store/catalog": { useCatalog: () => ({ ready: true, loading: false }), getProduct: () => undefined },
   }).default;

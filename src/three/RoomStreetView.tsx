@@ -24,6 +24,8 @@ export function RoomStreetView({
   onSave,
   room,
   onLookingChange,
+  originX = 0,
+  originZ = 0,
 }: {
   pose: RoomInteriorCamera;
   roomId: string;
@@ -32,6 +34,8 @@ export function RoomStreetView({
   onSave?: (pose: RoomInteriorCamera) => void;
   room: RoomShape & { pieces: PlacedFurniture[] };
   onLookingChange?: (looking: boolean) => void;
+  originX?: number;
+  originZ?: number;
 }) {
   const { camera, gl, invalidate, size } = useThree();
   const current = useRef(pose),
@@ -45,7 +49,7 @@ export function RoomStreetView({
   save.current = onSave;
   const apply = () => {
     const p = current.current;
-    camera.position.set(p.x, p.eyeHeight, p.z);
+    camera.position.set(p.x + originX, p.eyeHeight, p.z + originZ);
     camera.up.set(0, 1, 0);
     camera.rotation.set(p.pitch, p.yaw, 0, "YXZ");
     camera.updateMatrixWorld();
@@ -55,7 +59,7 @@ export function RoomStreetView({
     current.current = pose;
     apply();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [camera, roomId, pose.x, pose.z, pose.eyeHeight, pose.yaw, pose.pitch]);
+  }, [camera, roomId, pose.x, pose.z, pose.eyeHeight, pose.yaw, pose.pitch, originX, originZ]);
   useLayoutEffect(() => {
     const perspective = camera as THREE.PerspectiveCamera;
     current.current = { ...current.current, fov: clampTourFov(pose.fov) };
@@ -201,9 +205,9 @@ export function RoomStreetView({
       looking.current?.(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [camera, gl, locked, roomId, aspect, invalidate]);
+  }, [camera, gl, locked, roomId, aspect, invalidate, originX, originZ]);
   return locked ? null : (
-    <RoomTourNavigation room={room} pose={pose} onJump={jump} />
+    <RoomTourNavigation room={room} pose={pose} onJump={jump} originX={originX} originZ={originZ} />
   );
 }
 
