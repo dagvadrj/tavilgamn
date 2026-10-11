@@ -1682,6 +1682,9 @@ export function ModularKitchenPlanner({
             {workspaceView === "2d" && (
               <KitchenPlanWorkspace
                 kitchen={kitchen}
+                onRoomChange={(room) => {
+                  if (!busy) commit({ ...design, room });
+                }}
                 selectedId={selectedId}
                 disabled={busy}
                 onSelect={selectCabinet}
@@ -1792,8 +1795,8 @@ export function ModularKitchenPlanner({
               {workspaceView === "interior"
                 ? "Чирж эргэн харах · Сум дээр дарж шилжих, чирж цэг сонгох"
                 : mode === "move"
-                  ? "Шүүгээг чирж зөөнө · Хоёр хуруу: zoom, шилжүүлэх · Esc: буцаах"
-                  : "Чирж эргүүлэх · Дугуй: заасан цэг рүү zoom · Хоёр хуруу: zoom, шилжүүлэх"}
+                  ? "Шүүгээг чирж зөөнө · Хоосон зайд зүүн/дунд товч: камер эргүүлэх · Shift + чирэх: шилжүүлэх"
+                  : "Зүүн/дунд товч: камер эргүүлэх · Shift + чирэх: шилжүүлэх · Дугуй: ойртуулах"}
             </p>
             <div className="kitchen-project-caption">
               <strong>

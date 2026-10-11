@@ -12,9 +12,10 @@ export interface NavigationControls {
 type MouseControls = { domElement?: HTMLElement; mouseButtons: Partial<Record<"LEFT" | "MIDDLE" | "RIGHT", MOUSE>> };
 
 /** Blender-style desktop input, leaving the controls' touch mapping unchanged. */
-export function bindBlenderMouse(controls: MouseControls, element: HTMLElement, plan = false) {
+export function bindBlenderMouse(controls: MouseControls, element: HTMLElement, plan = false, leftDrag = false) {
   const previous = { ...controls.mouseButtons };
-  controls.mouseButtons.LEFT = undefined; // Left click/drag belongs to object selection and movement.
+  // Editors opting in must disable controls synchronously while moving an object.
+  controls.mouseButtons.LEFT = leftDrag ? (plan ? MOUSE.PAN : MOUSE.ROTATE) : undefined;
   controls.mouseButtons.MIDDLE = plan ? MOUSE.PAN : MOUSE.ROTATE;
   controls.mouseButtons.RIGHT = MOUSE.PAN;
   const prepare = (event: PointerEvent) => {

@@ -3,6 +3,7 @@
  * The old run-based Kitchen type remains supported by the existing configurator.
  */
 import { applianceIssue } from "./plitka";
+import { roomOutline, wallSamples, type RoomOutlinePoint } from "./kitchenRoomOutline";
 import type { KitchenExtra } from "./kitchenExtras";
 import type { CabinetComponent } from "./kitchenComponents";
 import type { Finish, FrontStyle } from "./kitchen";
@@ -48,8 +49,8 @@ export interface ModularCabinet {
   components?: CabinetComponent[];
 }
 export interface KitchenSpaceItem { id: string; kind: "door" | "window" | "column" | "water" | "power" | "vent"; x: number; z: number; width: number; depth: number; wall: "back" | "front" | "left" | "right" }
-export interface KitchenRoom { width: number; depth: number; height: number; openFront?: boolean; items?: KitchenSpaceItem[]; wallColors?: Partial<Record<KitchenSpaceItem["wall"], string>> }
-export interface KitchenWall { id: string; start: Point2; end: Point2; inward: Point2 }
+export interface KitchenRoom { width: number; depth: number; height: number; outline?: RoomOutlinePoint[]; openFront?: boolean; items?: KitchenSpaceItem[]; wallColors?: Partial<Record<KitchenSpaceItem["wall"], string>> }
+export interface KitchenWall { id: string; sourceWall?: KitchenSpaceItem["wall"]; start: Point2; end: Point2; inward: Point2 }
 export interface CountertopSettings { thickness: number; frontOverhang: number; material: "laminate" | "granite" | "wood"; finish?: Finish; materialId?: string; color?: string }
 export interface Countertop extends CountertopSettings {
   id: string; cabinetIds: string[]; width: number; depth: number; position: CabinetPose;
@@ -127,6 +128,22 @@ export function createModularKitchen(): ModularKitchen {
     wallClearance: DEFAULT_WALL_CLEARANCE, countertop: { thickness: DEFAULT_COUNTERTOP_THICKNESS, frontOverhang: 20, material: "wood" } };
 }
 export function roomWalls(room: KitchenRoom): KitchenWall[] {
+  if (room.outline) {
+    // Merge straight subdivisions so a cabinet/opening can span an inserted point.
+    const points=roomOutline(room).map(p=>({...p}));
+    for (let i=points.length-1;i>=0 && points.length>3;i--) {
+      const a=points[(i+points.length-1)%points.length],b=points[i],c=points[(i+1)%points.length];
+      if(!a.curve && !b.curve && a.wall===b.wall && Math.abs((b.x-a.x)*(c.z-b.z)-(b.z-a.z)*(c.x-b.x))<0.001) points.splice(i,1);
+    }
+    return points.flatMap((start,i)=>{
+      if(room.openFront && start.wall==="front") return [];
+      const samples=wallSamples(start,points[(i+1)%points.length]);
+      return samples.slice(0,-1).flatMap((p,j)=>{
+        const end=samples[j+1],dx=end.x-p.x,dz=end.z-p.z,length=Math.hypot(dx,dz);
+        return length<0.001 ? [] : [{id:`${start.wall}-${i}-${j}`,sourceWall:start.wall,start:p,end,inward:{x:-dz/length,z:dx/length}}];
+      });
+    });
+  }
   const walls: KitchenWall[] = [
     { id: "back", start: { x: 0, z: 0 }, end: { x: room.width, z: 0 }, inward: { x: 0, z: 1 } },
     { id: "right", start: { x: room.width, z: 0 }, end: { x: room.width, z: room.depth }, inward: { x: -1, z: 0 } },

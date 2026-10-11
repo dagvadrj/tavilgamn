@@ -1,7 +1,11 @@
 "use client";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { Minus, Plus, Scan, RotateCw, Copy, Trash2 } from "lucide-react";
-import type { CabinetPose, ModularKitchen } from "@/lib/kitchenCabinets";
+import type {
+  CabinetPose,
+  KitchenRoom,
+  ModularKitchen,
+} from "@/lib/kitchenCabinets";
 import { Plan } from "./PlannerPanels";
 
 export function KitchenPlanWorkspace({
@@ -16,6 +20,7 @@ export function KitchenPlanWorkspace({
   onRotate,
   onDuplicate,
   onDelete,
+  onRoomChange,
 }: {
   kitchen: ModularKitchen;
   selectedId: string | null;
@@ -28,6 +33,7 @@ export function KitchenPlanWorkspace({
   onRotate: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onRoomChange?: (room: KitchenRoom) => void;
 }) {
   const [zoom, setZoom] = useState(1);
   const drag = useRef<{
@@ -156,7 +162,13 @@ export function KitchenPlanWorkspace({
           onPointerCancel={() => finish(true)}
           onLostPointerCapture={() => finish(true)}
         >
-          <Plan kitchen={kitchen} selectedId={selectedId} onSelect={onSelect} />
+          <Plan
+            kitchen={kitchen}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            onRoomChange={onRoomChange}
+            disabled={disabled}
+          />
         </div>
       </div>
       {selectedId && (
@@ -218,7 +230,9 @@ export function KitchenPlanWorkspace({
         </small>
       </aside>
       <footer>
-        <span>Чирж зөөнө · Хана, шүүгээнд тааруулна</span>
+        <span>
+          + цэг нэмнэ · Нумтай бариулаар ханыг муруйлгана · Esc буцаана
+        </span>
         <span>Бүх хэмжээ мм · {Math.round(zoom * 100)}%</span>
       </footer>
     </section>

@@ -6,7 +6,13 @@ import {
   cabinetCorners,
   placementIssues,
 } from "@/lib/kitchenPlacement";
-import { cabinetLabel, type ModularKitchen } from "@/lib/kitchenCabinets";
+import {
+  cabinetLabel,
+  type KitchenRoom,
+  type ModularKitchen,
+} from "@/lib/kitchenCabinets";
+import { roomOutline, roomOutlinePath } from "@/lib/kitchenRoomOutline";
+import { KitchenRoomOutlineEditor } from "./KitchenRoomOutlineEditor";
 
 export function DimensionInput({
   label,
@@ -63,6 +69,8 @@ export function Plan({
   readOnly = false,
   unit = "мм",
   showSpaceItems = true,
+  onRoomChange,
+  disabled = false,
 }: {
   kitchen: ModularKitchen;
   selectedId: string | null;
@@ -70,6 +78,8 @@ export function Plan({
   readOnly?: boolean;
   unit?: "мм" | "см";
   showSpaceItems?: boolean;
+  onRoomChange?: (room: KitchenRoom) => void;
+  disabled?: boolean;
 }) {
   const unitScale = unit === "см" ? 10 : 1;
   const floorPattern = useId().replace(/:/g, "");
@@ -103,11 +113,8 @@ export function Plan({
           />
         </pattern>
       </defs>
-      <rect
-        x={0}
-        y={0}
-        width={kitchen.room.width}
-        height={kitchen.room.depth}
+      <path
+        d={roomOutlinePath(roomOutline(kitchen.room))}
         className="km-room-outline"
         style={{ fill: `var(--kitchen-plan-floor, url(#${floorPattern}))` }}
       />
@@ -330,6 +337,13 @@ export function Plan({
           </text>
         </g>
       ))}
+      {!readOnly && onRoomChange && (
+        <KitchenRoomOutlineEditor
+          room={kitchen.room}
+          disabled={disabled}
+          onChange={onRoomChange}
+        />
+      )}
     </svg>
   );
 }

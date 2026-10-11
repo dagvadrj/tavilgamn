@@ -1,6 +1,7 @@
 import type { CabinetPose, KitchenRoom, ModularKitchen } from "./kitchenCabinets";
 import type { Category, Material, Product } from "./types";
 import { cabinetCorners, cabinetsOverlap } from "./kitchenPlacement";
+import { roomContainsFootprint } from "./kitchenRoomOutline";
 
 export const EXTRA_CATEGORIES: readonly Category[] = ["dining-table", "office", "bookshelf", "tv-stand", "sofa"];
 export type KitchenExtra = {
@@ -42,7 +43,7 @@ export function findExtraSpace(kitchen: ModularKitchen, extra: KitchenExtra): Ki
   const obstacles=[...kitchen.cabinets,...(kitchen.extras??[])];
   for(const position of positions) {
     const candidate={...extra,position:{...extra.position,...position}};
-    if(cabinetCorners(candidate).some(p=>p.x<0||p.z<0||p.x>kitchen.room.width||p.z>kitchen.room.depth)||obstacles.some(item=>cabinetsOverlap(candidate,item)))continue;
+    if(!roomContainsFootprint(kitchen.room,cabinetCorners(candidate))||obstacles.some(item=>cabinetsOverlap(candidate,item)))continue;
     return candidate;
   }
   return null;

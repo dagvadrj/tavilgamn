@@ -65,13 +65,13 @@ class Surface {
   emit(type,event){for(const x of [...(this.handlers.get(type)||[])].sort((a,b)=>Number(b.capture)-Number(a.capture)))x.fn(event);}
   releasePointerCapture(){}
 }
-function mouseFixture(plan=false){
+function mouseFixture(plan=false,leftDrag=false){
   const camera=new PerspectiveCamera(40,4/3,.1,300);camera.position.set(5,4,6);
   const element=new Surface();element.ownerDocument=new Surface();
   const controls=new (plan?MapControls:OrbitControls)(camera,element);
   controls.enableRotate=!plan;controls.update();
   const touches={...controls.touches},previous={...controls.mouseButtons};
-  const cleanup=bindBlenderMouse(controls,element,plan);
+  const cleanup=bindBlenderMouse(controls,element,plan,leftDrag);
   const event=(button,x,y,modifiers={})=>({button,pointerId:1,pointerType:'mouse',clientX:x,clientY:y,pageX:x,pageY:y,
     shiftKey:false,ctrlKey:false,metaKey:false,preventDefault(){},...modifiers});
   const drag=(button,modifiers={})=>{
@@ -91,6 +91,32 @@ test('Blender Shift + middle drag pans rather than rotating',()=>{
   f.drag(1,{shiftKey:true});assert.ok(f.controls.target.length()>.1);
   assert.ok(f.camera.position.clone().sub(f.controls.target).distanceTo(before)<1e-8);
   f.cleanup();f.controls.dispose();
+});
+
+test('kitchen left and middle drag both orbit while Shift-left pans',()=>{
+  for(const button of [0,1]) {
+    const f=mouseFixture(false,true),p=f.camera.position.clone();
+    f.drag(button);assert.ok(f.camera.position.distanceTo(p)>.1);
+    assert.ok(f.controls.target.length()<1e-8);
+    f.cleanup();assert.deepEqual(f.controls.mouseButtons,f.previous);f.controls.dispose();
+  }
+  const f=mouseFixture(false,true),offset=f.camera.position.clone().sub(f.controls.target);
+  f.drag(0,{shiftKey:true});assert.ok(f.controls.target.length()>.1);
+  assert.ok(f.camera.position.clone().sub(f.controls.target).distanceTo(offset)<1e-8);
+  f.cleanup();f.controls.dispose();
+});
+
+test('left camera gestures respect object drag locks and resume after release',()=>{
+  for(const capture of [true,false]) {
+  const f=mouseFixture(false,true),p=f.camera.position.clone();
+  const lock=()=>{f.controls.enabled=false;};
+  f.element.addEventListener('pointerdown',lock,capture);
+  f.drag(0);assert.ok(f.camera.position.distanceTo(p)<1e-8);
+  f.element.removeEventListener('pointerdown',lock);
+  f.controls.enabled=true;f.drag(0);
+  assert.ok(f.camera.position.distanceTo(p)>.1);
+  f.cleanup();f.controls.dispose();
+  }
 });
 test('Blender Ctrl + middle drag zooms and rolling the wheel still zooms',()=>{
   const f=mouseFixture(),distance=f.controls.getDistance();f.drag(1,{ctrlKey:true});

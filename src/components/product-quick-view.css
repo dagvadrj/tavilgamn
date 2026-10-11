@@ -1,0 +1,342 @@
+.product-quick-view {
+  width: min(880px, calc(100vw - 40px));
+  max-width: none;
+  max-height: calc(100dvh - 40px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: #fff;
+  color: #0f172a;
+  font-family: var(--font-sans), sans-serif;
+  box-shadow: 0 25px 70px #0f172a40;
+}
+
+.product-quick-view::backdrop {
+  background: #0f172a99;
+  backdrop-filter: blur(6px);
+}
+
+.product-quick-layout {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.product-quick-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.product-quick-close:hover {
+  background: #e2e8f0;
+}
+
+.product-quick-photo {
+  position: relative;
+  min-height: 440px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.product-quick-canvas {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.product-quick-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 100%;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.product-quick-modes {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffffeb;
+  box-shadow: 0 4px 14px #0f172a0d;
+}
+
+.product-quick-modes button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.product-quick-modes button[aria-pressed="true"] {
+  background: #0f172a;
+  color: #fff;
+}
+
+.product-quick-viewer-status {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #ffffffeb;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+  pointer-events: none;
+}
+
+.product-quick-viewer-status svg {
+  flex-shrink: 0;
+}
+
+.product-quick-viewer-status.is-error {
+  color: #b45309;
+}
+
+.product-quick-photo img {
+  object-fit: cover;
+}
+
+.product-quick-photo > span {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  gap: 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.product-quick-content {
+  min-width: 0;
+  padding: 42px 32px 28px;
+}
+
+.product-quick-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 14px;
+  padding-right: 12px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.product-quick-meta > span:first-child {
+  color: #b7753b;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.product-quick-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #334155;
+}
+
+.product-quick-rating svg {
+  color: #f59e0b;
+}
+
+.product-quick-content h2 {
+  margin: 12px 0 8px;
+  font-size: 24px;
+  font-weight: 750;
+  line-height: 1.3;
+  letter-spacing: -.025em;
+  overflow-wrap: anywhere;
+}
+
+.product-quick-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+
+.product-quick-price strong {
+  font-size: 26px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.product-quick-price del {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.product-quick-description {
+  margin-top: 18px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #64748b;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.product-quick-specs {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.product-quick-specs > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.product-quick-selection i {
+  width: 12px;
+  height: 12px;
+  border: 1px solid #0f172a20;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.product-quick-specs .is-available {
+  color: #047857;
+}
+
+.product-quick-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.product-quick-actions > :is(button, a) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 700;
+  transition: background .2s ease, border-color .2s ease;
+}
+
+.product-quick-actions svg {
+  flex-shrink: 0;
+}
+
+.product-quick-cart {
+  background: #0f172a;
+  color: #fff;
+}
+
+.product-quick-cart:hover:not(:disabled) {
+  background: #334155;
+}
+
+.product-quick-cart:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.product-quick-actions .product-quick-3d {
+  border-color: #dce4ef;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.product-quick-actions .product-quick-3d:hover {
+  background: #eef2ff;
+  border-color: #a5b4fc;
+  color: #4f46e5;
+}
+
+.product-quick-actions .product-quick-details {
+  min-height: 36px;
+  padding: 6px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.product-quick-details:hover {
+  color: #0f172a;
+}
+
+.product-quick-message {
+  margin-top: 10px;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.product-quick-view :is(button, a):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+@media (max-width: 639px) {
+  .product-quick-view {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+    border-radius: 20px;
+  }
+  .product-quick-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .product-quick-photo {
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+  }
+  .product-quick-content {
+    padding: 24px;
+  }
+  .product-quick-content h2 {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-quick-actions > :is(button, a) {
+    transition: none;
+  }
+}

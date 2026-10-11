@@ -1,4 +1,5 @@
 import { applianceIssue } from "./plitka";
+import { roomContainsFootprint } from "./kitchenRoomOutline";
 import {
   roomWalls,
   type CabinetPose,
@@ -300,13 +301,7 @@ export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
         severity: "error",
       });
     if (
-      cabinetCorners(cabinet).some(
-        (p) =>
-          p.x < -EPS ||
-          p.z < -EPS ||
-          p.x > kitchen.room.width + EPS ||
-          p.z > kitchen.room.depth + EPS,
-      )
+      !roomContainsFootprint(kitchen.room, cabinetCorners(cabinet))
     )
       issues.push({
         code: "outside",
@@ -357,7 +352,7 @@ export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
   for (const [index, extra] of (kitchen.extras ?? []).entries()) {
     for (const obstacle of obstacles) if (cabinetsOverlap(extra, obstacle))
       issues.push({ code: "overlap", ids: [extra.id, obstacle.id], message: obstacle.kind === "door" ? "Тавилга хаалганы нээгдэх зайг хааж байна." : "Тавилга баганатай давхцаж байна.", severity: "error" });
-    if (cabinetCorners(extra).some(p => p.x < -EPS || p.z < -EPS || p.x > kitchen.room.width + EPS || p.z > kitchen.room.depth + EPS))
+    if (!roomContainsFootprint(kitchen.room, cabinetCorners(extra)))
       issues.push({code:"outside",ids:[extra.id],message:"Нэмэлт тавилга өрөөний хилээс гарсан байна.",severity:"error"});
     if (extra.height > kitchen.room.height || extra.position.y !== 0)
       issues.push({
