@@ -15,7 +15,7 @@ import {
 import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
 
-type Analytics = {
+export type MerchantAnalyticsData = {
   periodStart: string;
   asOf: string;
 
@@ -49,8 +49,10 @@ function count(value: string) {
   return BigInt(value).toLocaleString("mn-MN");
 }
 
-export function MerchantAnalytics({ owner }: { owner: string }) {
-  const [analytics, setAnalytics] = useState<Analytics | null>(null);
+export function useMerchantAnalytics(owner: string, enabled = true) {
+  const [analytics, setAnalytics] = useState<MerchantAnalyticsData | null>(
+    null,
+  );
 
   const [loading, setLoading] = useState(true);
 
@@ -59,6 +61,11 @@ export function MerchantAnalytics({ owner }: { owner: string }) {
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      setAnalytics(null);
+      return;
+    }
     const controller = new AbortController();
 
     let active = true;
@@ -110,8 +117,18 @@ export function MerchantAnalytics({ owner }: { owner: string }) {
       active = false;
       controller.abort();
     };
-  }, [owner, refresh]);
+  }, [owner, refresh, enabled]);
 
+  return {
+    analytics,
+    loading,
+    error,
+    refresh: () => setRefresh((value) => value + 1),
+  };
+}
+
+export function MerchantAnalytics({ owner }: { owner: string }) {
+  const { analytics, loading, error, refresh } = useMerchantAnalytics(owner);
   if (loading) {
     return (
       <div className="merchant-state" role="status">
@@ -127,11 +144,7 @@ export function MerchantAnalytics({ owner }: { owner: string }) {
           {error}
         </p>
 
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={() => setRefresh((value) => value + 1)}
-        >
+        <button type="button" className="btn-ghost" onClick={refresh}>
           <RefreshCw size={16} />
           Дахин оролдох
         </button>
@@ -156,11 +169,7 @@ export function MerchantAnalytics({ owner }: { owner: string }) {
           <p>Борлуулалт болон платформын шимтгэлийн мэдээлэл.</p>
         </div>
 
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={() => setRefresh((value) => value + 1)}
-        >
+        <button type="button" className="btn-ghost" onClick={refresh}>
           <RefreshCw size={15} />
           Шинэчлэх
         </button>

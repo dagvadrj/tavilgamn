@@ -68,6 +68,7 @@ export function MerchantShell({
           onKitchens={onOpenKitchen}
           onQuotes={() => changeTab("quotes")}
           onSettings={() => changeTab("settings")}
+          onProfile={() => changeTab("profile")}
           activeLabel={activeLabel}
           hasStore={hasStore}
           sidebarOpen={sidebarOpen}

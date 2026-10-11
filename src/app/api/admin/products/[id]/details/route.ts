@@ -1,0 +1,9 @@
+import { NextRequest } from "next/server";
+import { productDetailsResponse } from "@/lib/productDetailsServer";
+export const dynamic = "force-dynamic";
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  return productDetailsResponse(request, params, "admin");
+}

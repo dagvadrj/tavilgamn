@@ -7,6 +7,7 @@ import {
   Archive,
   Package,
   Pencil,
+  Info,
   Plus,
   RefreshCw,
   Search,
@@ -21,8 +22,17 @@ import {
   merchantRequest,
 } from "@/features/merchant/merchantApi";
 import { MerchantProductEditor } from "@/features/merchant/MerchantProductEditor";
+import { ProductDetails } from "@/features/admin-products/ProductDetails";
 
-export function MerchantProducts({ owner }: { owner: string }) {
+export function MerchantProducts({
+  owner,
+  initialCreate = false,
+  onCreateOpened,
+}: {
+  owner: string;
+  initialCreate?: boolean;
+  onCreateOpened?: () => void;
+}) {
   const [products, setProducts] = useState<MerchantProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +45,13 @@ export function MerchantProducts({ owner }: { owner: string }) {
   const [saved, setSaved] = useState(false);
   const [includeArchived, setIncludeArchived] = useState(false);
   const [archiveBusy, setArchiveBusy] = useState<string | null>(null);
+  const [detailsId, setDetailsId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!initialCreate) return;
+    setSaved(false);
+    setEditing({ product: blankProduct(), create: true });
+    onCreateOpened?.();
+  }, [initialCreate, onCreateOpened, setEditing]);
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
@@ -68,6 +85,16 @@ export function MerchantProducts({ owner }: { owner: string }) {
       controller.abort();
     };
   }, [owner, refresh, includeArchived]);
+  if (detailsId)
+    return (
+      <ProductDetails
+        key={detailsId}
+        productId={detailsId}
+        owner={owner}
+        scope="merchant"
+        close={() => setDetailsId(null)}
+      />
+    );
   if (editing)
     return (
       <MerchantProductEditor
@@ -189,6 +216,14 @@ export function MerchantProducts({ owner }: { owner: string }) {
               >
                 <Pencil size={15} />
                 Засах
+              </button>
+              <button
+                type="button"
+                className="btn-ghost"
+                aria-label={`${product.name} дэлгэрэнгүй`}
+                onClick={() => setDetailsId(product.id)}
+              >
+                <Info size={15} /> Дэлгэрэнгүй
               </button>
               <button
                 type="button"

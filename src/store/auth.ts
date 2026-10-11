@@ -5,6 +5,7 @@ import type { User as SupabaseUser } from "@supabase/supabase-js";
 import type { User } from "@/lib/types";
 import {
   isSupabaseConfigured,
+  isSocialProviderEnabled,
   supabase,
 } from "@/lib/supabase/client";
 import { setCartOwner } from "@/store/cart";
@@ -27,16 +28,15 @@ interface AuthState {
   role: AuthRole | null;
   initialized: boolean;
   initialize: () => Promise<void>;
-  signIn: (
-    email: string,
-    password?: string,
-  ) => Promise<AuthResult>;
+  signIn: (email: string, password?: string) => Promise<AuthResult>;
   signUp: (
     name: string,
     email: string,
     password: string,
   ) => Promise<AuthResult>;
   signOut: () => Promise<void>;
+  signInWithProvider: (provider: "google" | "apple") => Promise<AuthResult>;
+  updateName: (name: string) => Promise<AuthResult>;
 }
 
 let authListenerStarted = false;
@@ -47,6 +47,7 @@ const toAppUser = (user: SupabaseUser): User => ({
   email: user.email ?? "",
   name:
     String(user.user_metadata?.name ?? "").trim() ||
+    String(user.user_metadata?.full_name ?? "").trim() ||
     user.email?.split("@")[0] ||
     "Хэрэглэгч",
   joinedAt: Date.parse(user.created_at),
@@ -93,7 +94,8 @@ export const useAuth = create<AuthState>((set, get) => ({
   initialized: false,
 
   initialize: () => {
-    if (get().initialized && (authListenerStarted || !isSupabaseConfigured)) return Promise.resolve();
+    if (get().initialized && (authListenerStarted || !isSupabaseConfigured))
+      return Promise.resolve();
     if (initialization) return initialization;
     initialization = (async () => {
       if (!isSupabaseConfigured) {
@@ -128,11 +130,10 @@ export const useAuth = create<AuthState>((set, get) => ({
       };
     }
 
-    const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
       return { error: authErrorMessage(error, "signIn") };
@@ -177,14 +178,62 @@ export const useAuth = create<AuthState>((set, get) => ({
     };
   },
 
-signOut: async () => {
-  await supabase.auth.signOut();
-  setLocalDataOwner(null);
+  signInWithProvider: async (provider) => {
+    try {
+      if (!(await isSocialProviderEnabled(provider)))
+        return {
+          error: `${provider === "google" ? "Google" : "Apple"} нэвтрэлт одоогоор идэвхгүй байна. Имэйлээр нэвтрэх боломжтой.`,
+        };
+      const next = rememberAuthDestination(window.location.search);
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+          skipBrowserRedirect: true,
+        },
+      });
+      if (error) return { error: authErrorMessage(error, "signIn") };
+      if (!data.url)
+        return { error: "Нэвтрэх холбоос үүссэнгүй. Дахин оролдоно уу." };
+      window.location.assign(data.url);
+      return { error: null };
+    } catch (error) {
+      return { error: authErrorMessage(error, "signIn") };
+    }
+  },
 
-  set({
-    user: null,
-    role: null,
-    initialized: true,
-  });
-},
+  updateName: async (name) => {
+    const trimmed = name.trim();
+    if (trimmed.length < 2 || trimmed.length > 100)
+      return { error: "Нэрээ 2–100 тэмдэгтээр оруулна уу." };
+    const owner = get().user?.id;
+    if (!owner) return { error: "Дахин нэвтэрнэ үү." };
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: { name: trimmed },
+      });
+      if (error || !data.user)
+        return { error: "Нэрийг хадгалж чадсангүй. Дахин оролдоно уу." };
+      if (get().user?.id !== owner || data.user.id !== owner)
+        return { error: "Бүртгэл өөрчлөгдсөн байна. Дахин нэвтэрнэ үү." };
+      set({ user: toAppUser(data.user) });
+      return { error: null };
+    } catch {
+      return {
+        error: "Нэрийг хадгалж чадсангүй. Холболтоо шалгаад дахин оролдоно уу.",
+      };
+    }
+  },
+
+  signOut: async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    setLocalDataOwner(null);
+
+    set({
+      user: null,
+      role: null,
+      initialized: true,
+    });
+  },
 }));

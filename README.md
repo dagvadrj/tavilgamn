@@ -17,6 +17,8 @@ before starting. `NEXT_PUBLIC_SUPABASE_ANON_KEY` is also accepted for older
 Supabase projects. Keep `SUPABASE_SECRET_KEY` server-only.
 For orders and payments, apply the versioned SQL migrations in `supabase/migrations/`
 and follow [checkout and payment setup](docs/checkout-setup.md).
+For Google/Apple sign-in and separate merchant/admin account pages, follow
+[authentication setup](docs/auth-setup.md).
 
 ## Stack
 

@@ -9,9 +9,6 @@ import {
   CircleDollarSign,
   Package,
   RefreshCw,
-  ShoppingBag,
-  Star,
-  Store,
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
@@ -140,18 +137,15 @@ function AnalyticsPanel({ owner }: { owner: string }) {
   }, [owner, refresh]);
 
   return (
-    <div>
-      <div className="admin-page-heading">
+    <section className="reference-overview">
+      <div className="reference-heading">
         <div>
-          <span className="admin-eyebrow">MARKETPLACE · СҮҮЛИЙН 30 ХОНОГ</span>
-
+          <span className="reference-eyebrow">
+            MARKETPLACE · СҮҮЛИЙН 30 ХОНОГ
+          </span>
           <h1>Ерөнхий тойм</h1>
-
-          <p>
-            Борлуулалт, дэлгүүрүүдийн үзүүлэлт болон платформын орлого.
-          </p>
+          <p>Нийт GMV, шимтгэл болон дэлгүүрүүдийн гүйцэтгэл.</p>
         </div>
-
         <button
           type="button"
           className="btn-ghost"
@@ -162,11 +156,9 @@ function AnalyticsPanel({ owner }: { owner: string }) {
           Шинэчлэх
         </button>
       </div>
-
       {loading ? (
         <div className="admin-loading" role="status">
           <RefreshCw size={22} />
-
           <p>Marketplace аналитик ачаалж байна…</p>
         </div>
       ) : error ? (
@@ -175,183 +167,165 @@ function AnalyticsPanel({ owner }: { owner: string }) {
         </p>
       ) : result ? (
         <>
-          <div className="admin-date-range">
-            <CalendarDays size={15} />
-
-            <span>
-              {dateLabel(result.periodStart)}
-              {" — "}
-              {dateLabel(result.asOf)}
-            </span>
-
-            <span>· Сүүлийн 30 хоног</span>
+          <div className="reference-date-range">
+            <CalendarDays size={14} />
+            {dateLabel(result.periodStart)} — {dateLabel(result.asOf)}
           </div>
-
-          <div className="admin-metrics">
+          <div className="reference-kpis">
             <Metric
               icon={TrendingUp}
-              label="GMV"
+              label="Нийт GMV (30 хоног)"
               value={money(result.gmv)}
-              detail="Merchant-уудын нийт төлөгдсөн борлуулалт"
+              detail={count(result.paidOrders) + " төлөгдсөн захиалга"}
             />
-
             <Metric
               icon={BadgeDollarSign}
-              label="Платформын орлого"
+              label="Платформын цэвэр орлого"
               value={money(result.platformRevenue)}
               detail="Төлөгдсөн захиалгын шимтгэл"
+              featured
             />
-
             <Metric
-              icon={ShoppingBag}
-              label="Төлөгдсөн захиалга"
-              value={count(result.paidOrders)}
-              detail="Сүүлийн 30 хоног"
+              icon={CircleDollarSign}
+              label="Merchant-д очих цэвэр дүн"
+              value={money(result.merchantNet)}
+              detail={
+                count(result.activeMerchants) +
+                " идэвхтэй дэлгүүр · " +
+                count(result.featuredMerchants) +
+                " Featured"
+              }
             />
-
             <Metric
-              icon={Store}
-              label="Идэвхтэй merchant"
-              value={`${count(result.activeMerchants)} / ${count(
-                result.totalMerchants,
-              )}`}
-              detail={`${count(result.featuredMerchants)} онцлох дэлгүүр`}
+              icon={Box}
+              label="Нээлттэй 3D хүсэлт"
+              value={count(result.openModelRequests) + " хүсэлт"}
+              detail="Шийдвэрлэх шаардлагатай загварууд"
             />
           </div>
-
-          <div className="admin-marketplace-secondary">
-            <article>
-              <div>
-                <CircleDollarSign size={18} />
-
-                <span>Merchant-д очих цэвэр дүн</span>
-              </div>
-
-              <strong>{money(result.merchantNet)}</strong>
-            </article>
-
-            <article>
-              <div>
-                <Box size={18} />
-
-                <span>Нээлттэй 3D хүсэлт</span>
-              </div>
-
-              <strong>{count(result.openModelRequests)}</strong>
-            </article>
-
-            <article>
-              <div>
-                <Star size={18} />
-
-                <span>Онцлох дэлгүүр</span>
-              </div>
-
-              <strong>{count(result.featuredMerchants)}</strong>
-            </article>
-          </div>
-
-          <section className="admin-top-merchants">
-            <div className="admin-panel-heading">
-              <div>
-                <h2>Борлуулалтаар тэргүүлэгч дэлгүүрүүд</h2>
-
-                <p>Сүүлийн 30 хоногийн төлөгдсөн борлуулалтаар.</p>
-              </div>
-
-              <Store size={21} />
-            </div>
-
-            {!result.topMerchants.length ? (
-              <div className="admin-empty">
-                <Store size={28} />
-
-                <strong>Merchant мэдээлэл алга</strong>
-              </div>
-            ) : (
-              <div className="admin-top-merchant-list">
-                {result.topMerchants.map((merchant, index) => (
-                  <article key={merchant.id}>
-                    <span className="admin-top-rank">{index + 1}</span>
-
-                    <div className="admin-top-merchant-name">
-                      <strong>{merchant.name}</strong>
-
-                      <small>
-                        Шимтгэл {(merchant.commissionBps / 100).toFixed(1)}%
-                      </small>
-                    </div>
-
-                    <div>
-                      <small>Борлуулалт</small>
-
-                      <strong>{money(merchant.grossRevenue)}</strong>
-                    </div>
-
-                    <div>
-                      <small>Платформын шимтгэл</small>
-
-                      <strong>{money(merchant.platformRevenue)}</strong>
-                    </div>
-
-                    <div>
-                      <small>Захиалга</small>
-
-                      <strong>{count(merchant.orders)}</strong>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
           <RevenuePanels result={result} />
         </>
       ) : null}
-
-      <section className="mt-8">
-        <div className="admin-panel-heading rounded-t-2xl border border-[#e3e7dc] bg-white">
+      <section className="reference-orders">
+        <div className="admin-panel-heading">
           <div>
             <h2>Захиалгын мэдээлэл</h2>
-
             <p>Marketplace-ийн бүх захиалга.</p>
           </div>
-
           <Package size={21} />
         </div>
-
         <OrderHistory admin />
       </section>
-    </div>
+    </section>
   );
 }
 
 function ratio(value: string, total: string) {
   const denominator = BigInt(total);
   if (denominator <= 0n) return 0;
-  return Math.max(0, Math.min(100, Number(BigInt(value) * 10000n / denominator) / 100));
+  return Math.max(
+    0,
+    Math.min(100, Number((BigInt(value) * 10000n) / denominator) / 100),
+  );
 }
 
 function RevenuePanels({ result }: { result: Analytics }) {
   const merchants = result.topMerchants.slice(0, 5);
-  const maxRevenue = merchants.reduce((max, merchant) => BigInt(merchant.grossRevenue) > BigInt(max) ? merchant.grossRevenue : max, "0");
-  const total = (BigInt(result.platformRevenue) + BigInt(result.merchantNet)).toString();
-  return <div className="admin-analysis-panels">
-    <section className="dashboard-panel" aria-labelledby="admin-revenue-heading">
-      <h2 id="admin-revenue-heading">Дэлгүүрүүдийн борлуулалт</h2>
-      <p>Сүүлийн 30 хоног · Төлөгдсөн захиалгаар</p>
-      {merchants.length ? <ul className="admin-revenue-bars">{merchants.map(merchant => <li key={merchant.id}>
-        <div className="admin-revenue-bar-label"><span>{merchant.name}</span><strong>{money(merchant.grossRevenue)}</strong></div>
-        <div className="admin-revenue-bar-track" aria-hidden="true"><span style={{ width: `${ratio(merchant.grossRevenue, maxRevenue)}%` }} /></div>
-      </li>)}</ul> : <p className="py-8">Төлөгдсөн борлуулалтын мэдээлэл одоогоор алга.</p>}
-    </section>
-    <section className="dashboard-panel" aria-labelledby="admin-split-heading">
-      <h2 id="admin-split-heading">Борлуулалтын хуваарилалт</h2>
-      <p>Шимтгэл болон дэлгүүрт очих цэвэр дүн</p>
-      <div className="admin-revenue-split" aria-hidden="true"><span style={{ width: `${ratio(result.platformRevenue, total)}%` }} /><span style={{ width: `${ratio(result.merchantNet, total)}%` }} /></div>
-      <dl className="admin-revenue-legend"><div><dt><i aria-hidden="true" />Платформын орлого</dt><dd>{money(result.platformRevenue)}</dd></div><div><dt><i aria-hidden="true" />Дэлгүүрүүдийн цэвэр дүн</dt><dd>{money(result.merchantNet)}</dd></div></dl>
-      {BigInt(total) === 0n && <p className="mt-5">Төлөгдсөн борлуулалт хараахан бүртгэгдээгүй.</p>}
-    </section>
-  </div>;
+  const maxRevenue = merchants.reduce(
+    (max, merchant) =>
+      BigInt(merchant.grossRevenue) > BigInt(max) ? merchant.grossRevenue : max,
+    "0",
+  );
+  const total = (
+    BigInt(result.platformRevenue) + BigInt(result.merchantNet)
+  ).toString();
+  return (
+    <div className="reference-analysis-grid">
+      <section
+        className="reference-panel"
+        aria-labelledby="admin-revenue-heading"
+      >
+        <header>
+          <div>
+            <h2 id="admin-revenue-heading">Дэлгүүрүүдийн борлуулалт</h2>
+            <p>Төлөгдсөн захиалгаар · Сүүлийн 30 хоног</p>
+          </div>
+          <TrendingUp size={18} />
+        </header>
+        {merchants.length ? (
+          <ul className="reference-revenue-bars">
+            {merchants.map((merchant, index) => (
+              <li key={merchant.id}>
+                <div>
+                  <span>
+                    <i>{index + 1}</i>
+                    {merchant.name}
+                  </span>
+                  <strong>{money(merchant.grossRevenue)}</strong>
+                </div>
+                <div className="reference-bar-track" aria-hidden="true">
+                  <span
+                    style={{
+                      width: ratio(merchant.grossRevenue, maxRevenue) + "%",
+                    }}
+                  />
+                </div>
+                <small>
+                  Fee {money(merchant.platformRevenue)} ·{" "}
+                  {(merchant.commissionBps / 100).toFixed(1)}% ·{" "}
+                  {count(merchant.orders)} захиалга
+                </small>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="reference-empty">
+            Төлөгдсөн борлуулалтын мэдээлэл одоогоор алга.
+          </div>
+        )}
+      </section>
+      <section
+        className="reference-panel reference-split-panel"
+        aria-labelledby="admin-split-heading"
+      >
+        <header>
+          <div>
+            <h2 id="admin-split-heading">Борлуулалтын хуваарилалт</h2>
+            <p>GMV → Merchant net + Platform fee</p>
+          </div>
+        </header>
+        <div className="reference-split-labels">
+          <span>Merchant {ratio(result.merchantNet, total).toFixed(1)}%</span>
+          <span>Fee {ratio(result.platformRevenue, total).toFixed(1)}%</span>
+        </div>
+        <div className="reference-revenue-split" aria-hidden="true">
+          <span style={{ width: ratio(result.merchantNet, total) + "%" }} />
+          <span style={{ width: ratio(result.platformRevenue, total) + "%" }} />
+        </div>
+        <dl className="reference-revenue-legend">
+          <div>
+            <dt>Merchant цэвэр дүн</dt>
+            <dd>{money(result.merchantNet)}</dd>
+          </div>
+          <div>
+            <dt>Платформын орлого</dt>
+            <dd>{money(result.platformRevenue)}</dd>
+          </div>
+        </dl>
+        {BigInt(total) === 0n && (
+          <p>Төлөгдсөн борлуулалт хараахан бүртгэгдээгүй.</p>
+        )}
+        <div className="reference-pipeline">
+          <div>
+            <Box size={17} />
+            <strong>3D загварын хүсэлт</strong>
+            <span>{count(result.openModelRequests)} нээлттэй</span>
+          </div>
+          <p>Загваруудыг “3D загварууд” хэсгээс хянана уу.</p>
+        </div>
+      </section>
+    </div>
+  );
 }
 
 function Metric({
@@ -359,23 +333,22 @@ function Metric({
   label,
   value,
   detail,
+  featured = false,
 }: {
   icon: LucideIcon;
   label: string;
   value: string;
   detail: string;
+  featured?: boolean;
 }) {
   return (
-    <div className="admin-metric">
-      <div className="admin-metric-top">
+    <article className={`reference-kpi ${featured ? "is-featured" : ""}`}>
+      <div className="reference-kpi-label">
         <span>{label}</span>
-
-        <Icon size={21} strokeWidth={1.6} />
+        <Icon size={18} />
       </div>
-
       <strong>{value}</strong>
-
-      <p>{detail}</p>
-    </div>
+      <small>{detail}</small>
+    </article>
   );
 }

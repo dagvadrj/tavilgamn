@@ -26,7 +26,7 @@ const SCENES: Record<string, { image?: string; points: { category: Category; x: 
 
 export function buildRoomLooks(catalog: Product[]): RoomLook[] {
   const available = catalog.filter(hasAvailableStock).filter(hasProductPhoto);
-  return ROOM_CATALOG_GROUPS.map(room => {
+  return ROOM_CATALOG_GROUPS.filter(room => SCENES[room.id]).map(room => {
     const scene = SCENES[room.id];
     const matching = available.filter(product => room.categories.includes(product.category));
     const hotspots = scene.points.flatMap(point => {

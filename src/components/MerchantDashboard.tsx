@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { RefreshCw, Store as StoreIcon } from "lucide-react";
-import { MerchantAnalytics } from "@/components/MerchantAnalytics";
 import { useAuth } from "@/store/auth";
 import type { Store } from "@/lib/types";
 import {
@@ -22,8 +21,14 @@ import { MerchantOverview } from "@/features/merchant/MerchantOverview";
 import { StoreProfile } from "@/features/merchant/StoreProfile";
 import { MerchantProducts } from "@/features/merchant/MerchantProducts";
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
+import { DashboardAccount } from "@/features/dashboard/DashboardAccount";
+import {
+  accountPathForRole,
+  loginPathForDestination,
+} from "@/lib/authRedirect";
 import { useDashboardPreferences } from "@/features/dashboard/useDashboardPreferences";
 import "@/features/dashboard/dashboard-usability.css";
+import "@/features/dashboard/dashboard-reference.css";
 
 export function MerchantDashboard() {
   const router = useRouter();
@@ -35,7 +40,12 @@ export function MerchantDashboard() {
     void initialize();
   }, [initialize]);
   useEffect(() => {
-    if (initialized && !user) router.replace("/login?next=/merchant");
+    if (initialized && !user)
+      router.replace(
+        loginPathForDestination(
+          window.location.pathname + window.location.search,
+        ),
+      );
   }, [initialized, user, router]);
   if (!initialized || !user)
     return (
@@ -54,7 +64,7 @@ export function MerchantDashboard() {
         <StoreIcon size={32} />
         <h1>Худалдаа эрхлэгчийн хэсэг</h1>
         <p>Дэлгүүр нээхийн тулд админаар merchant эрхээ идэвхжүүлнэ үү.</p>
-        <Link href="/account" className="btn-ghost">
+        <Link href={accountPathForRole(role)} className="btn-ghost">
           Миний бүртгэл
         </Link>
       </main>
@@ -80,6 +90,7 @@ function MerchantWorkspace({
     "tab",
     "overview",
   );
+  const [createProduct, setCreateProduct] = useState(false);
   const [focusedKitchenId, setFocusedKitchenId] = useState<string | null>(null);
   const { preferences, updatePreferences } = useDashboardPreferences(
     owner,
@@ -185,7 +196,10 @@ function MerchantWorkspace({
           preferences={preferences}
           onChange={updatePreferences}
           onStore={() => changeTab("store")}
+          onProfile={() => changeTab("profile")}
         />
+      ) : tab === "profile" ? (
+        <DashboardAccount role="merchant" onStore={() => changeTab("store")} />
       ) : !loaded ? (
         error ? (
           <div className="merchant-load-state">
@@ -209,20 +223,21 @@ function MerchantWorkspace({
         )
       ) : (
         <>
-          {tab === "overview" &&
-            store &&
-            preferences.overview !== "inventory" && (
-              <MerchantAnalytics owner={owner} />
-            )}
-          {tab === "overview" &&
-            (!store || preferences.overview !== "sales") && (
-              <MerchantOverview
-                owner={owner}
-                store={store}
-                onProducts={() => changeTab("products")}
-                onStore={() => changeTab("store")}
-              />
-            )}
+          {tab === "overview" && (
+            <MerchantOverview
+              owner={owner}
+              store={store}
+              mode={preferences.overview}
+              onProducts={() => changeTab("products")}
+              onStore={() => changeTab("store")}
+              onAddProduct={() => {
+                setCreateProduct(true);
+                changeTab("products");
+              }}
+              onQuotes={() => changeTab("quotes")}
+              onOrders={() => changeTab("orders")}
+            />
+          )}
 
           {tab === "store" && (
             <StoreProfile
@@ -235,7 +250,13 @@ function MerchantWorkspace({
             />
           )}
 
-          {tab === "products" && store && <MerchantProducts owner={owner} />}
+          {tab === "products" && store && (
+            <MerchantProducts
+              owner={owner}
+              initialCreate={createProduct}
+              onCreateOpened={() => setCreateProduct(false)}
+            />
+          )}
 
           {!store &&
             ["products", "orders", "quotes", "kitchens"].includes(tab) && (

@@ -73,6 +73,7 @@ export const ADMIN_TABS = [
     short: "Тохиргоо",
     icon: Settings,
   },
+  { id: "profile", label: "Миний бүртгэл", short: "Бүртгэл", icon: UserRound },
 ] as const;
 
 export type AdminTab = (typeof ADMIN_TABS)[number]["id"];
@@ -167,10 +168,15 @@ export function AdminSidebar({
           </span>
           Самбарын тохиргоо
         </button>
-        <Link href="/account" className="dashboard-sidebar-link">
+        <button
+          type="button"
+          onClick={() => onChange("profile")}
+          className={`dashboard-nav-button ${active === "profile" ? "active" : ""}`}
+          aria-current={active === "profile" ? "page" : undefined}
+        >
           <UserRound size={18} />
           Миний бүртгэл
-        </Link>
+        </button>
         <Link href="/about#contact" className="dashboard-sidebar-link">
           <CircleHelp size={18} />
           Тусламж, холбоо барих

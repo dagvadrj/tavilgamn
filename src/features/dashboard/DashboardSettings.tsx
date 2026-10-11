@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   ArrowUpRight,
   RotateCcw,
@@ -20,11 +19,13 @@ export function DashboardSettings({
   preferences,
   onChange,
   onStore,
+  onProfile,
 }: {
   role: "admin" | "merchant";
   preferences: DashboardPreferences;
   onChange: (patch: Partial<DashboardPreferences>) => boolean;
   onStore?: () => void;
+  onProfile: () => void;
 }) {
   const user = useAuth((state) => state.user);
   const [feedback, setFeedback] = useState<"saved" | "error" | null>(null);
@@ -164,9 +165,13 @@ export function DashboardSettings({
                 <dd>{role === "admin" ? "Админ" : "Худалдаа эрхлэгч"}</dd>
               </div>
             </dl>
-            <Link className="dashboard-secondary-action" href="/account">
+            <button
+              type="button"
+              className="dashboard-secondary-action"
+              onClick={onProfile}
+            >
               Бүртгэлээ нээх <ArrowUpRight size={16} />
-            </Link>
+            </button>
           </section>
           {onStore && (
             <section className="dashboard-panel dashboard-settings-panel">

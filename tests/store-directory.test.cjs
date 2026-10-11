@@ -102,7 +102,7 @@ test("room catalog links initialize matching filters while category links take p
     "./CatalogProducts": { CatalogProducts: props => { captured = props; return React.createElement("div"); } },
   });
   const living = renderToStaticMarkup(React.createElement(CatalogView, { initialRoom: "living", initialQuery: "мод", initialSort: "price-asc" }));
-  assert.deepEqual(captured.categories, ["sofa", "tv-stand", "bookshelf"]);
+  assert.deepEqual(captured.categories, ["sofa", "armchair", "coffee-table", "side-table", "tv-stand", "bookshelf"]);
   assert.equal(captured.query, "мод");
   assert.equal(captured.initialSort, "price-asc");
   assert.match(living, /Зочны өрөө/);

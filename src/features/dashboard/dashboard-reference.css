@@ -1,0 +1,1254 @@
+/* Dashboard layout based on the supplied admin/merchant reference. */
+
+.dashboard-layout .dashboard-shell {
+  --dashboard-bg: #090a0c;
+  --dashboard-surface: #111317;
+  --dashboard-elevated: #191c22;
+  --dashboard-border: #262930;
+  --dashboard-ink: #f2f3f5;
+  --dashboard-muted: #9ca0ab;
+  grid-template-columns: 248px minmax(0, 1fr);
+  max-width: 1600px;
+  margin-inline: auto;
+}
+
+.dashboard-layout .dashboard-sidebar {
+  padding: 16px;
+  background: #0d0f12;
+  border-right: 1px solid var(--dashboard-border);
+}
+
+.dashboard-layout .dashboard-brand {
+  padding: 12px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 12px;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-layout .dashboard-brand-icon {
+  position: relative;
+  color: #090a0c;
+  background: var(--dashboard-accent);
+  border-radius: 10px;
+}
+
+.dashboard-layout .dashboard-brand-icon::after {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--dashboard-surface);
+  border-radius: 50%;
+  background: #10b981;
+  content: "";
+}
+
+.dashboard-layout .dashboard-nav-button.is-active {
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-layout .dashboard-workspace {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--dashboard-bg);
+}
+
+.dashboard-layout .dashboard-topbar {
+  min-height: 82px;
+  padding: 14px 24px;
+  border-radius: 0;
+  background: #090a0cf5;
+}
+
+.dashboard-layout .dashboard-header-title strong {
+  font-size: 23px;
+  letter-spacing: -0.6px;
+}
+
+.dashboard-layout .dashboard-header-title small,
+.dashboard-layout .merchant-topbar-title > span {
+  margin: 0 0 4px;
+  color: var(--dashboard-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.dashboard-layout .dashboard-content {
+  padding: 24px;
+}
+
+.dashboard-layout :is(.admin-profile, .merchant-header-profile) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 12px;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-layout :is(.admin-avatar, .merchant-header-avatar) {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: #090a0c;
+  background: var(--dashboard-accent);
+}
+
+.dashboard-layout :is(.admin-profile-copy, .merchant-header-user) {
+  display: grid;
+  gap: 2px;
+}
+
+.dashboard-layout :is(.admin-profile-copy strong, .merchant-header-user strong) {
+  font-size: 12px;
+  color: var(--dashboard-ink);
+}
+
+.dashboard-layout :is(.admin-profile-copy small, .merchant-header-user small) {
+  font-size: 10px;
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .reference-period {
+  padding: 9px 13px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--dashboard-accent);
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-shell .reference-overview {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+  color: var(--dashboard-ink);
+  font-size: var(--dashboard-body-size);
+}
+
+.dashboard-shell .reference-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashboard-shell .reference-heading h1,
+.dashboard-shell .reference-heading .reference-eyebrow {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.dashboard-shell .reference-heading p {
+  margin: 0;
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-heading .btn-ghost {
+  flex-shrink: 0;
+  border: 1px solid var(--dashboard-border);
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .reference-eyebrow {
+  color: var(--dashboard-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.9px;
+}
+
+.dashboard-shell .reference-date-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: -12px;
+  font-size: var(--dashboard-small-size);
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .reference-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dashboard-shell .reference-kpis-five {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dashboard-shell .reference-kpis-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-shell .reference-kpi {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .reference-kpi.is-featured {
+  border: 2px solid var(--dashboard-accent);
+  padding: 19px;
+}
+
+.dashboard-shell .reference-kpi-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-kpi-label svg {
+  flex-shrink: 0;
+  box-sizing: content-box;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--dashboard-elevated);
+  color: var(--dashboard-ink);
+}
+
+.dashboard-shell .reference-kpi.is-featured .reference-kpi-label {
+  color: var(--dashboard-ink);
+}
+
+.dashboard-shell .reference-kpi > strong {
+  font-size: clamp(18px, 1.65vw, 26px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.6px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-shell .reference-kpi > small {
+  margin-top: -8px;
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+  line-height: 1.6;
+}
+
+.dashboard-shell .reference-spotlight {
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-shell .reference-spotlight > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--dashboard-warning);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.dashboard-shell .reference-spotlight > strong {
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+.dashboard-shell .reference-spotlight > div {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-shell .reference-command {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .reference-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dashboard-shell .reference-filters button {
+  min-height: 36px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-filters button[aria-pressed="true"] {
+  background: var(--dashboard-accent);
+  color: #090a0c;
+  font-weight: 700;
+}
+
+.dashboard-shell .reference-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 250px;
+  max-width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 10px;
+  color: var(--dashboard-muted);
+  background: var(--dashboard-bg);
+}
+
+.dashboard-shell .reference-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-merchant-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  align-items: start;
+  gap: 20px;
+}
+
+.dashboard-shell .reference-table-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .reference-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-color: var(--dashboard-border) transparent;
+}
+
+.dashboard-shell .reference-merchant-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-merchant-table th {
+  padding: 14px 12px;
+  color: var(--dashboard-muted);
+  font-weight: 600;
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-shell .reference-merchant-table td {
+  padding: 14px 12px;
+  border-top: 1px solid var(--dashboard-border);
+  vertical-align: middle;
+}
+
+.dashboard-shell .reference-merchant-table tr.is-selected {
+  background: #a395ff0b;
+}
+
+.dashboard-shell .reference-merchant-table td:first-child {
+  border-left: 3px solid transparent;
+}
+
+.dashboard-shell .reference-merchant-table .is-selected td:first-child {
+  border-left-color: var(--dashboard-accent);
+}
+
+.dashboard-shell .reference-merchant-table :is(th, td):first-child {
+  padding-left: 18px;
+}
+
+.dashboard-shell .reference-merchant-table :is(th, td):last-child {
+  padding-right: 18px;
+}
+
+.dashboard-shell .reference-merchant-table td > strong,
+.dashboard-shell .reference-store-select strong {
+  display: block;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dashboard-shell .reference-merchant-table small {
+  display: block;
+  margin-top: 5px;
+  color: var(--dashboard-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.dashboard-shell .reference-store-select {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  color: inherit;
+  text-align: left;
+}
+
+.dashboard-shell .reference-store-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--dashboard-accent);
+  color: #090a0c;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.dashboard-shell .reference-commission-number {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dashboard-shell .reference-commission-number input,
+.dashboard-shell .reference-featured-control > input {
+  width: 56px;
+  min-height: 36px;
+  padding: 6px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 8px;
+  background: var(--dashboard-bg);
+  text-align: center;
+}
+
+.dashboard-shell .reference-featured-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-shell .reference-featured-control label,
+.dashboard-shell .reference-active-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 7px 8px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 8px;
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+  white-space: nowrap;
+}
+
+.dashboard-shell .reference-featured-control .is-featured {
+  border-color: #f59e0b55;
+  background: #f59e0b15;
+  color: #fbbf24;
+}
+
+.dashboard-shell .reference-active-control {
+  border: 0;
+  border-radius: 20px;
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-shell .reference-active-control.is-active {
+  color: #34d399;
+  background: #10b98115;
+}
+
+.dashboard-shell :is(.reference-featured-control, .reference-active-control) input[type="checkbox"] {
+  accent-color: var(--dashboard-accent);
+  width: 14px;
+  height: 14px;
+}
+
+.dashboard-shell .reference-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 10px;
+  color: var(--dashboard-muted);
+  background: var(--dashboard-bg);
+  font-weight: 600;
+  font-size: var(--dashboard-small-size);
+  white-space: nowrap;
+}
+
+.dashboard-shell .reference-save.is-dirty {
+  color: #090a0c;
+  border-color: var(--dashboard-accent);
+  background: var(--dashboard-accent);
+}
+
+.dashboard-shell .reference-inspector {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  background: var(--dashboard-surface);
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-inspector header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--dashboard-border);
+}
+
+.dashboard-shell .reference-inspector h2 {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-shell .reference-inspector p {
+  margin-top: 5px;
+  color: var(--dashboard-muted);
+  line-height: 1.6;
+}
+
+.dashboard-shell .reference-inspector-finance {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 12px;
+  background: var(--dashboard-bg);
+}
+
+.dashboard-shell .reference-inspector-finance > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dashboard-shell .reference-inspector-finance dt {
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .reference-inspector-finance dd {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-shell .reference-inspector-finance > div:last-child {
+  padding-top: 12px;
+  border-top: 1px solid var(--dashboard-border);
+}
+
+.dashboard-shell .reference-commission-slider label,
+.dashboard-shell .reference-commission-slider > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dashboard-shell .reference-commission-slider input {
+  width: 100%;
+  margin-block: 16px 10px;
+  accent-color: var(--dashboard-accent);
+}
+
+.dashboard-shell .reference-commission-slider > div {
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .reference-mini-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.dashboard-shell .reference-mini-stats > div {
+  display: grid;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 12px;
+  background: var(--dashboard-bg);
+  text-align: center;
+}
+
+.dashboard-shell .reference-mini-stats span {
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-mini-stats strong {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-shell .reference-inspector-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dashboard-shell .reference-inspector footer {
+  display: grid;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--dashboard-border);
+}
+
+.dashboard-shell .reference-inspector footer .reference-save {
+  width: 100%;
+  min-height: 44px;
+}
+
+.dashboard-shell .reference-draft {
+  color: var(--dashboard-warning);
+  font-size: 11px;
+}
+
+.dashboard-shell .reference-error {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--dashboard-danger);
+}
+
+.dashboard-shell .reference-error button {
+  text-decoration: underline;
+}
+
+.dashboard-shell .reference-analysis-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.dashboard-shell .reference-panel {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .reference-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.dashboard-shell .reference-panel h2 {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dashboard-shell .reference-panel p {
+  margin-top: 5px;
+  font-size: var(--dashboard-small-size);
+  line-height: 1.6;
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .reference-revenue-bars {
+  display: grid;
+  gap: 24px;
+}
+
+.dashboard-shell .reference-revenue-bars li > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-revenue-bars li > div:first-child span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dashboard-shell .reference-revenue-bars i {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 25px;
+  height: 25px;
+  border-radius: 7px;
+  background: var(--dashboard-elevated);
+  color: var(--dashboard-accent);
+  font-style: normal;
+}
+
+.dashboard-shell .reference-revenue-bars strong {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-shell .reference-bar-track {
+  height: 9px;
+  margin: 10px 0 7px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-shell .reference-bar-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8b78ff, #b6aaff);
+}
+
+.dashboard-shell .reference-revenue-bars small {
+  color: var(--dashboard-muted);
+  font-size: 11px;
+}
+
+.dashboard-shell .reference-split-labels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--dashboard-small-size);
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .reference-revenue-split {
+  display: flex;
+  height: 14px;
+  margin-block: 12px 20px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-shell .reference-revenue-split span:first-child {
+  background: var(--dashboard-accent);
+}
+
+.dashboard-shell .reference-revenue-split span:last-child {
+  background: #10b981;
+}
+
+.dashboard-shell .reference-revenue-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard-shell .reference-revenue-legend > div {
+  padding: 14px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 12px;
+  background: var(--dashboard-bg);
+}
+
+.dashboard-shell .reference-revenue-legend dt {
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-revenue-legend dd {
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-shell .reference-pipeline {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--dashboard-border);
+}
+
+.dashboard-shell .reference-pipeline > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-shell .reference-pipeline span {
+  margin-left: auto;
+  color: var(--dashboard-warning);
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-orders {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+}
+
+.dashboard-shell .reference-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 180px;
+  padding: 24px;
+  color: var(--dashboard-muted);
+  text-align: center;
+}
+
+.dashboard-shell .reference-store-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .reference-store-banner > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.dashboard-shell .reference-store-banner .reference-store-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  font-size: 20px;
+}
+
+.dashboard-shell .reference-store-banner h2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.dashboard-shell .reference-store-banner p {
+  margin-top: 6px;
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-success-badge {
+  padding: 4px 9px;
+  border-radius: 20px;
+  color: #34d399;
+  background: #10b98115;
+  font-size: 11px;
+}
+
+.dashboard-shell .reference-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dashboard-shell .reference-kpi-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--dashboard-border);
+  color: var(--dashboard-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.dashboard-shell .reference-kpi-footer button {
+  color: var(--dashboard-ink);
+  text-decoration: underline;
+}
+
+.dashboard-shell .reference-stock-warning > strong {
+  color: #fbbf24;
+}
+
+.dashboard-shell .reference-stock-warning .reference-kpi-label svg {
+  color: #fbbf24;
+  background: #f59e0b15;
+}
+
+.dashboard-shell .reference-inventory-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.dashboard-shell .reference-inventory-panel > header {
+  margin: 0;
+  padding: 20px;
+  border-bottom: 1px solid var(--dashboard-border);
+}
+
+.dashboard-shell .reference-inventory-panel :is(header button, footer a, footer button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  font-size: var(--dashboard-small-size);
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .reference-inventory-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--dashboard-border);
+}
+
+.dashboard-shell .reference-inventory-list img {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-shell .reference-product-number {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-shell .reference-inventory-list li > div:first-of-type {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-shell .reference-inventory-list strong {
+  display: block;
+  font-size: var(--dashboard-small-size);
+  font-weight: 600;
+}
+
+.dashboard-shell .reference-inventory-list li > div:first-of-type strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-shell .reference-inventory-list small {
+  display: block;
+  margin-top: 5px;
+  color: var(--dashboard-muted);
+  font-size: 11px;
+}
+
+.dashboard-shell .reference-inventory-list li > div:last-child {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.dashboard-shell .reference-inventory-list .is-stocked {
+  color: #34d399;
+}
+
+.dashboard-shell .reference-inventory-list .is-low-stock {
+  color: #fbbf24;
+}
+
+.dashboard-shell .reference-inventory-panel footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+}
+
+.dashboard-shell .reference-category-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-shell .reference-category-body {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.dashboard-shell .reference-donut {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+}
+
+.dashboard-shell .reference-donut > div {
+  display: grid;
+  place-content: center;
+  gap: 2px;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--dashboard-surface);
+  text-align: center;
+}
+
+.dashboard-shell .reference-donut strong {
+  font-size: 22px;
+}
+
+.dashboard-shell .reference-donut small {
+  color: var(--dashboard-muted);
+  font-size: 11px;
+}
+
+.dashboard-shell .reference-category-legend {
+  display: grid;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-category-legend li,
+.dashboard-shell .reference-category-legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-shell .reference-category-legend li {
+  justify-content: space-between;
+}
+
+.dashboard-shell .reference-category-legend span {
+  min-width: 0;
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .reference-category-legend i {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.dashboard-shell .reference-category-legend strong {
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.dashboard-shell .reference-quote-link {
+  display: block;
+  width: 100%;
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 12px;
+  color: var(--dashboard-ink);
+  background: var(--dashboard-bg);
+  text-align: left;
+}
+
+.dashboard-shell .reference-quote-link > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dashboard-shell .reference-quote-link strong {
+  font-size: var(--dashboard-small-size);
+}
+
+.dashboard-shell .reference-quote-link > span {
+  display: block;
+  margin-top: 8px;
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+  line-height: 1.6;
+}
+
+.dashboard-shell .reference-fulfillment .reference-mini-stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-shell[data-density="compact"] :is(.reference-kpi, .reference-panel, .reference-inspector, .reference-store-banner) {
+  padding: 14px;
+}
+
+.dashboard-shell[data-density="compact"] .reference-inventory-panel {
+  padding: 0;
+}
+
+.dashboard-shell[data-density="compact"] :is(.reference-merchant-table td, .reference-inventory-list li) {
+  padding-block: 10px;
+}
+
+.dashboard-shell[data-text-size="large"] :is(.reference-kpi-footer, .reference-inventory-list small, .reference-merchant-table small, .reference-revenue-bars small, .reference-category-legend strong) {
+  font-size: var(--dashboard-small-size);
+}
+
+@media (max-width: 1279px) {
+  .dashboard-shell .reference-kpis-five {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .dashboard-shell .reference-merchant-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-shell .reference-category-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dashboard-shell .reference-donut {
+    align-self: center;
+  }
+}
+
+@media (max-width: 1023px) {
+  .dashboard-layout .dashboard-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-shell .reference-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dashboard-shell .reference-analysis-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-shell .reference-category-body {
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 639px) {
+  .dashboard-layout .dashboard-topbar {
+    padding: 12px;
+    gap: 8px;
+    min-height: 76px;
+  }
+  .dashboard-layout .dashboard-header-title strong {
+    font-size: 16px;
+    letter-spacing: -0.3px;
+  }
+  .dashboard-layout .dashboard-header-title small,
+  .dashboard-layout .merchant-topbar-title > span {
+    font-size: 9px;
+    letter-spacing: 0.4px;
+  }
+  .dashboard-layout .dashboard-content {
+    padding: 20px 12px 28px;
+  }
+  .dashboard-layout :is(.admin-profile-copy, .merchant-header-user) {
+    display: none;
+  }
+  .dashboard-layout :is(.admin-profile, .merchant-header-profile) {
+    padding: 5px;
+  }
+  .dashboard-shell .reference-period {
+    display: none;
+  }
+  .dashboard-shell .reference-overview {
+    gap: 20px;
+  }
+  .dashboard-shell .reference-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-shell .reference-kpi > strong {
+    font-size: 25px;
+  }
+  .dashboard-shell .reference-search {
+    width: 100%;
+    min-width: 0;
+  }
+  .dashboard-shell .reference-search input {
+    font-size: 16px;
+  }
+  .dashboard-shell .reference-heading {
+    align-items: flex-start;
+  }
+  .dashboard-shell .reference-heading p {
+    line-height: 1.6;
+  }
+  .dashboard-shell .reference-store-banner h2 {
+    font-size: 16px;
+  }
+  .dashboard-shell .reference-banner-actions {
+    width: 100%;
+  }
+  .dashboard-shell .reference-revenue-bars li > div:first-child {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dashboard-shell .reference-category-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dashboard-shell .reference-inventory-list li {
+    flex-wrap: wrap;
+    padding-inline: 16px;
+  }
+  .dashboard-shell .reference-inventory-list li > div:last-child {
+    width: 100%;
+    padding-left: 52px;
+    text-align: left;
+  }
+  .dashboard-shell .reference-fulfillment .reference-mini-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.dashboard-shell .reference-featured-badge {
+  padding: 4px 9px;
+  border-radius: 20px;
+  color: #fbbf24;
+  background: #f59e0b15;
+  font-size: 11px;
+}
+
+.dashboard-shell .reference-merchant-table td:nth-child(2) small,
+.dashboard-shell .reference-merchant-table td:nth-child(3) small {
+  white-space: nowrap;
+}

@@ -78,6 +78,7 @@ test("product ownership, gallery ledger, archive and metadata changes are atomic
   await db.exec(readFileSync("supabase/migrations/20260919130629_merchant_product_3d_request_save.sql", "utf8"));
   await db.exec("revoke all on function save_merchant_product_v2(uuid,jsonb,boolean,boolean,integer) from public,anon,authenticated; grant execute on function save_merchant_product_v2(uuid,jsonb,boolean,boolean,integer) to service_role;");
   await db.exec(readFileSync("supabase/migrations/20261002131913_marketplace_product_commerce.sql", "utf8"));
+  await db.exec(readFileSync("supabase/migrations/20261010114233_product_specifications_categories.sql", "utf8"));
   await db.exec("create trigger reserve_order_stock before insert on public.orders for each row execute function reserve_order_stock()");
   const alice = randomUUID(), bob = randomUUID(), customer = randomUUID();
   await db.query("insert into profiles values($1,'merchant'),($2,'merchant'),($3,'customer')", [alice,bob,customer]);
@@ -86,10 +87,11 @@ test("product ownership, gallery ledger, archive and metadata changes are atomic
   const call = (sql,args=[]) => db.query(sql,args);
   const save = (actor,data,create=true,expected=null) => call("select save_merchant_product_v2($1,$2,$3,false,$4)", [actor,JSON.stringify(data),create,expected]);
   const archive = (actor,id,state) => call("select set_merchant_product_archived($1,$2,$3)",[actor,id,state]);
-  await save(alice,product("alice",{ compareAtPrice: 200, promotionLabel: "Хямдрал", deliveryTerms: "UB 3 хоног" }));
+  await save(alice,product("alice",{ compareAtPrice: 200, promotionLabel: "Хямдрал", deliveryTerms: "UB 3 хоног", specifications: { assembly: "Боолттой" } }));
   await save(bob,product("bob"));
   let row = (await call("select * from furniture_models where product_id='alice'")).rows[0];
   assert.deepEqual(row.store_ids,["alice"]); assert.equal(Number(row.compare_at_price),200);
+  assert.deepEqual(row.specifications, { assembly: "Боолттой" });
   // Changing sale/reference below the previous base price is a single transaction.
   await save(alice,product("alice",{ basePrice: 50, compareAtPrice: 75 }),false,5);
   row = (await call("select * from furniture_models where product_id='alice'")).rows[0];

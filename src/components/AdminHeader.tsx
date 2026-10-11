@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Menu, MessageSquare, Package, Settings } from "lucide-react";
 
 export function AdminHeader({
@@ -9,6 +8,7 @@ export function AdminHeader({
   onProducts,
   onMessages,
   onSettings,
+  onProfile,
   menuOpen,
   onToggleMenu,
 }: {
@@ -17,6 +17,7 @@ export function AdminHeader({
   onProducts: () => void;
   onMessages: () => void;
   onSettings: () => void;
+  onProfile: () => void;
   menuOpen: boolean;
   onToggleMenu: () => void;
 }) {
@@ -36,12 +37,15 @@ export function AdminHeader({
           <Menu size={20} />
         </button>
         <div>
+          <small>АДМИН · УДИРДЛАГЫН САМБАР</small>
           <strong>{activeLabel}</strong>
-          <small>Админ · Удирдлагын самбар</small>
         </div>
       </div>
 
       <div className="admin-topbar-actions dashboard-header-actions">
+        {activeLabel === "Ерөнхий тойм" && (
+          <span className="reference-period">30 хоног</span>
+        )}
         <button
           type="button"
           className="admin-header-search"
@@ -73,8 +77,9 @@ export function AdminHeader({
           <MessageSquare size={19} strokeWidth={1.7} />
         </button>
 
-        <Link
-          href="/account"
+        <button
+          type="button"
+          onClick={onProfile}
           className="admin-profile"
           aria-label={`${userName} — миний бүртгэл`}
         >
@@ -84,7 +89,7 @@ export function AdminHeader({
             <strong>{userName}</strong>
             <small>Админ</small>
           </span>
-        </Link>
+        </button>
       </div>
     </header>
   );

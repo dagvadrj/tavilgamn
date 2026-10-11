@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   LogOut,
@@ -35,6 +35,9 @@ export default function AccountPage() {
   const initialized = useAuth((state) => state.initialized);
   const initializeAuth = useAuth((state) => state.initialize);
   const signOut = useAuth((s) => s.signOut);
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState<string | null>(null);
+  const signOutPending = useRef(false);
   const wishlist = useWishlist((s) => s.items);
   const designs = useDesigns((s) => s.designs);
   const deleteDesign = useDesigns((s) => s.deleteDesign);
@@ -68,7 +71,11 @@ export default function AccountPage() {
             <p className="account-identity-name">{user.name}</p>
             <p className="account-muted break-all text-xs">{user.email}</p>
             <span className="account-role">
-              {role === "admin" ? "Админ" : role === "merchant" ? "Худалдаа эрхлэгч" : "Хэрэглэгч"}
+              {role === "admin"
+                ? "Админ"
+                : role === "merchant"
+                  ? "Худалдаа эрхлэгч"
+                  : "Хэрэглэгч"}
             </span>
           </div>
         </div>
@@ -107,36 +114,48 @@ export default function AccountPage() {
             { href: "/wishlist", label: "Хүслийн жагсаалт", icon: Heart },
             { href: "#profile", label: "Профайл", icon: User },
           ].map((n) => (
-            <a
-              key={n.href}
-              href={n.href}
-              className="account-nav-link"
-            >
+            <a key={n.href} href={n.href} className="account-nav-link">
               <n.icon className="h-4 w-4" />
               {n.label}
             </a>
           ))}
         </nav>
         <button
+          type="button"
+          disabled={signingOut}
           onClick={async () => {
-            await signOut();
-            router.replace("/login");
-            router.refresh();
+            if (signOutPending.current) return;
+            signOutPending.current = true;
+            setSigningOut(true);
+            setSignOutError(null);
+            try {
+              await signOut();
+              window.location.replace("/login");
+            } catch {
+              setSignOutError("Бүртгэлээс гарч чадсангүй. Дахин оролдоно уу.");
+            } finally {
+              signOutPending.current = false;
+              setSigningOut(false);
+            }
           }}
           className="account-signout"
         >
-          <LogOut className="h-4 w-4" /> Гарах
+          <LogOut className="h-4 w-4" /> {signingOut ? "Гарч байна…" : "Гарах"}
         </button>
+        {signOutError && (
+          <p role="alert" className="text-sm text-red-600">
+            {signOutError}
+          </p>
+        )}
       </aside>
 
       <div className="account-content">
-        <section
-          id="profile"
-          className="account-profile account-card"
-        >
+        <section id="profile" className="account-profile account-card">
           <p className="account-eyebrow">Миний бүртгэл</p>
           <h1>Профайл</h1>
-          <p className="account-muted mt-2 text-sm">Таны мэдээлэл, хадгалсан загварууд болон захиалга нэг дор.</p>
+          <p className="account-muted mt-2 text-sm">
+            Таны мэдээлэл, хадгалсан загварууд болон захиалга нэг дор.
+          </p>
           <dl className="account-profile-details">
             <div>
               <dt>Нэр</dt>
@@ -144,9 +163,7 @@ export default function AccountPage() {
             </div>
             <div>
               <dt>Имэйл</dt>
-              <dd className="mt-1 break-all font-medium">
-                {user.email}
-              </dd>
+              <dd className="mt-1 break-all font-medium">{user.email}</dd>
             </div>
           </dl>
         </section>
@@ -160,11 +177,10 @@ export default function AccountPage() {
           )}
           <div className="account-section-heading">
             <div>
-              <p className="account-eyebrow">
-                Хадгалсан өрөөний загвар
-              </p>
+              <p className="account-eyebrow">Хадгалсан өрөөний загвар</p>
               <h2>
-                Таны загварууд <span className="account-count">{designs.length}</span>
+                Таны загварууд{" "}
+                <span className="account-count">{designs.length}</span>
               </h2>
             </div>
             <Link
@@ -197,10 +213,7 @@ export default function AccountPage() {
                   );
                 }, 0);
                 return (
-                  <div
-                    key={d.id}
-                    className="account-card account-room-card"
-                  >
+                  <div key={d.id} className="account-card account-room-card">
                     <div>
                       <p className="font-medium">{d.name}</p>
                       <p className="account-muted mt-1 text-xs">
@@ -256,22 +269,19 @@ export default function AccountPage() {
               <h2>Миний гал тогооны гарнитур</h2>
             </div>
             <Link href="/kitchen" className="account-button">
-              <Plus size={16} aria-hidden="true" />Шинэ гарнитур
+              <Plus size={16} aria-hidden="true" />
+              Шинэ гарнитур
             </Link>
           </div>
           <SavedKitchenList variant="account" />
         </section>
         <section id="kitchen-quotes" className="scroll-mt-24">
-          <p className="account-eyebrow">
-            Marketplace
-          </p>
+          <p className="account-eyebrow">Marketplace</p>
           <h2 className="mb-5">Гал тогооны үнийн хүсэлт</h2>
           <KitchenQuoteHistory />
         </section>
         <section id="orders">
-          <p className="account-eyebrow">
-            Захиалгын түүх
-          </p>
+          <p className="account-eyebrow">Захиалгын түүх</p>
           <h2>Захиалга</h2>
           <OrderHistory />
         </section>
@@ -287,7 +297,10 @@ export default function AccountPage() {
           <div className="account-section-heading">
             <div>
               <p className="account-eyebrow">Хүслийн жагсаалт</p>
-              <h2>Хадгалсан тавилга <span className="account-count">{wishlist.length}</span></h2>
+              <h2>
+                Хадгалсан тавилга{" "}
+                <span className="account-count">{wishlist.length}</span>
+              </h2>
             </div>
             <Link href="/wishlist" className="account-button">
               Бүгдийг үзэх <ArrowUpRight size={16} aria-hidden="true" />
@@ -297,7 +310,9 @@ export default function AccountPage() {
             <div className="account-empty">
               <Heart size={28} aria-hidden="true" />
               <p>Таалагдсан тавилгынхаа зүрх дээр дарж энд хадгалаарай.</p>
-              <Link href="/catalog" className="account-button">Тавилга үзэх</Link>
+              <Link href="/catalog" className="account-button">
+                Тавилга үзэх
+              </Link>
             </div>
           )}
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -320,7 +335,9 @@ export default function AccountPage() {
                     />
                   </div>
                   <p className="mt-2 truncate text-sm">{product.name}</p>
-                  <p className="mt-1 text-sm font-semibold">{formatPrice(product.basePrice)}</p>
+                  <p className="mt-1 text-sm font-semibold">
+                    {formatPrice(product.basePrice)}
+                  </p>
                 </Link>
               );
             })}

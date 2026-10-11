@@ -149,6 +149,7 @@ test("merchant isolation, atomic permissions and immutable order fulfillment", a
     const migration = readFileSync("supabase/migrations/20261001092640_architecture_store_directory.sql", "utf8");
     await db.exec(migration);
     assert.equal((await call("select count(*)::int as count from merchant_stores where owner_id is null")).count, 13);
+    await db.exec(readFileSync("supabase/migrations/20261010114233_product_specifications_categories.sql", "utf8"));
     const { CATEGORIES } = require("./helpers/load-source.cjs").loadSource("src/lib/catalogCategories.ts");
     for (const category of CATEGORIES) {
       assert.equal((await call("select is_furniture_category($1) as valid", [category.id])).valid, true);

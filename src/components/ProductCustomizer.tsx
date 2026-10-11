@@ -18,6 +18,7 @@ import {
   Camera,
 } from "lucide-react";
 import type { Product } from "@/lib/types";
+import { productSpecificationRows } from "@/lib/productSpecifications";
 import { priceFor, CATEGORY_LABEL } from "@/lib/products";
 import { formatPrice, cn } from "@/lib/format";
 import { useCart } from "@/store/cart";
@@ -229,7 +230,11 @@ export function ProductCustomizer({
                   type="button"
                   aria-pressed={viewerActive}
                   disabled={!product.model}
-                  title={!product.model ? "3D загвар хараахан бэлэн болоогүй" : undefined}
+                  title={
+                    !product.model
+                      ? "3D загвар хараахан бэлэн болоогүй"
+                      : undefined
+                  }
                   onClick={() => setViewerActive(true)}
                 >
                   <Box size={14} aria-hidden="true" />
@@ -269,7 +274,9 @@ export function ProductCustomizer({
                   <p className="text-sm font-medium">
                     {viewerActive
                       ? "3D загварыг ачаалж байна…"
-                      : product.model ? "Өнгө, хэмжээ, загвараа 3D-ээр хараарай" : "Барааны зураг"}
+                      : product.model
+                        ? "Өнгө, хэмжээ, загвараа 3D-ээр хараарай"
+                        : "Барааны зураг"}
                   </p>
                   {viewerActive && (
                     <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/30">
@@ -320,8 +327,8 @@ export function ProductCustomizer({
                 {!product.model
                   ? "Энэ барааны 3D загвар хараахан бэлэн болоогүй."
                   : viewerActive
-                  ? "Өнгө, материал 3D-д шууд шинэчлэгдэнэ"
-                  : "Өнгө эсвэл материал сонгоод 3D-д үзээрэй"}
+                    ? "Өнгө, материал 3D-д шууд шинэчлэгдэнэ"
+                    : "Өнгө эсвэл материал сонгоод 3D-д үзээрэй"}
               </small>
             </p>
             <button
@@ -534,6 +541,43 @@ export function ProductCustomizer({
             </dl>
             <ProductScaleHUD product={product} />
           </div>
+
+          <section
+            className="border-b border-[#111111]/10 py-5"
+            aria-labelledby="product-specifications-heading"
+          >
+            <h2
+              id="product-specifications-heading"
+              className="mb-3 text-lg font-semibold"
+            >
+              Бүтээгдэхүүний үзүүлэлт
+            </h2>
+            <table className="w-full table-fixed text-left text-sm">
+              <thead>
+                <tr className="border-b border-[#111111]/10">
+                  <th scope="col" className="w-2/5 py-3 pr-3">
+                    Үзүүлэлт
+                  </th>
+                  <th scope="col" className="py-3">
+                    Мэдээлэл
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {productSpecificationRows(product).map((row) => (
+                  <tr key={row.label} className="border-b border-[#111111]/10">
+                    <th
+                      scope="row"
+                      className="py-3 pr-3 font-normal text-[#68686F]"
+                    >
+                      {row.label}
+                    </th>
+                    <td className="break-words py-3">{row.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
 
           <fieldset className="pt-6">
             <legend className="mb-3 flex w-full items-center justify-between gap-3 pr-1 text-sm font-medium">

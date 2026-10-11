@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { Menu, MessageSquareQuote, Package, Settings } from "lucide-react";
 import { MerchantNotifications } from "./MerchantNotifications";
 
@@ -12,6 +11,7 @@ export function MerchantHeader({
   onKitchens,
   onQuotes,
   onSettings,
+  onProfile,
   activeLabel,
   hasStore,
   sidebarOpen,
@@ -24,6 +24,7 @@ export function MerchantHeader({
   onKitchens: (designId?: string) => void;
   onQuotes: () => void;
   onSettings?: () => void;
+  onProfile: () => void;
   activeLabel: string;
   hasStore: boolean;
   sidebarOpen: boolean;
@@ -47,8 +48,8 @@ export function MerchantHeader({
           <Menu size={21} />
         </button>
         <div className="merchant-topbar-title dashboard-header-title">
+          <span>MERCHANT · {storeName}</span>
           <strong>{activeLabel}</strong>
-          <span>{storeName}</span>
         </div>
       </div>
 
@@ -88,8 +89,9 @@ export function MerchantHeader({
           </button>
         )}
 
-        <Link
-          href="/account"
+        <button
+          type="button"
+          onClick={onProfile}
           className="merchant-header-profile"
           aria-label={`${userName} — миний бүртгэл`}
         >
@@ -99,7 +101,7 @@ export function MerchantHeader({
             <strong>{userName}</strong>
             <small>Худалдаа эрхлэгч</small>
           </span>
-        </Link>
+        </button>
       </div>
     </header>
   );

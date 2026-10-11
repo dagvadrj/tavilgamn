@@ -23,6 +23,7 @@ export interface Product {
   name: string;
   category: Category;
   description: string;
+  specifications?: Record<string, string>;
   basePrice: number;
   /** Merchant-entered reference price; never synthesized from a percentage. */
   compareAtPrice?: number | null;
@@ -90,7 +91,8 @@ export interface PlacedFurniture {
 
 export type RoomSize = "40" | "80" | "120";
 
-export type RoomType = "living" | "bedroom" | "kitchen" | "bathroom" | "office" | "other";
+export type RoomType =
+  "living" | "bedroom" | "kitchen" | "bathroom" | "office" | "other";
 export type RoomWall = "north" | "east" | "south" | "west";
 export interface RoomOpening {
   id: string;
@@ -176,7 +178,10 @@ export interface RoomShape {
   columns?: RoomColumn[];
   openings?: RoomOpening[];
 }
-export interface RoomPosition { x: number; z: number }
+export interface RoomPosition {
+  x: number;
+  z: number;
+}
 export interface RoomConnection {
   id: string;
   roomA: string;
@@ -249,6 +254,9 @@ export interface User {
 
 export interface Store {
   id: string;
+  /** Platform-managed spotlight; merchants cannot edit these fields. */
+  isFeatured?: boolean;
+  featuredRank?: number | null;
   name: string;
   storeType: StoreType;
   city: string;
