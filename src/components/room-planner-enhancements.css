@@ -1,0 +1,92 @@
+.room-plan-workspace {
+  position: absolute;
+  inset: 48px 70px 95px;
+  z-index: 8;
+  overflow: auto;
+  background: #f5f7f8;
+  border-radius: 16px;
+  padding: 12px 24px;
+}
+
+.room-plan-workspace .room-wall-plan {
+  height: 100%;
+}
+
+.room-plan-workspace .room-measured-plan svg {
+  width: 100%;
+  max-height: calc(100vh - 300px);
+  min-height: 320px;
+}
+
+.room-plan-piece-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.room-plan-piece-actions button {
+  padding: 9px 12px;
+  border: 1px solid #dce3e9;
+  border-radius: 20px;
+  background: white;
+  font-size: 12px;
+}
+
+.room-furniture-suggestions {
+  position: absolute;
+  right: 76px;
+  bottom: 110px;
+  width: min(260px, calc(100% - 100px));
+  z-index: 20;
+  background: white;
+  border: 1px solid #dce3e9;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 8px 32px #152e4212;
+  font-size: 12px;
+}
+
+.room-furniture-suggestions > button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf0f3;
+}
+
+.room-furniture-suggestions span {
+  white-space: nowrap;
+  color: #0876c2;
+}
+
+.room-surface-popover {
+  position: fixed;
+  z-index: 90;
+  width: min(340px, calc(100vw - 24px));
+  max-height: min(560px, calc(100vh - 100px));
+  overflow: auto;
+  border: 1px solid #dce3e9;
+  border-radius: 16px;
+  padding: 16px;
+  background: white;
+  box-shadow: 0 12px 40px #152e4226;
+}
+
+.room-surface-popover header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 700px) {
+  .room-plan-workspace {
+    inset: 65px 55px 105px 8px;
+    padding: 8px;
+  }
+}

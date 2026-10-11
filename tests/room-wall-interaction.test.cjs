@@ -7,7 +7,7 @@ const rectangle = () => ({ width: 5, depth: 4, height: 2.7, wallFeatures: [], co
 
 // Exercise the real component's event callbacks and hook state without a DOM
 // renderer. SVG coordinates and animation frames are the only platform stubs.
-function componentHarness(initial = rectangle(), accept = () => null) {
+function componentHarness(initial = rectangle(), accept = () => null, extra = {}) {
   let room = structuredClone(initial), tree, plan, cursor = 0, frameId = 0;
   const slots = [], cleanups = [], frames = new Map(), captures = new Set(), changes = [];
   const previous = Object.fromEntries(["DOMPoint", "requestAnimationFrame", "cancelAnimationFrame"].map(key => [key, global[key]]));
@@ -55,7 +55,7 @@ function componentHarness(initial = rectangle(), accept = () => null) {
   const nodes = node => !node || typeof node !== "object" ? [] : [node, ...React.Children.toArray(node.props?.children).flatMap(nodes)];
   const render = () => {
     cursor = 0;
-    tree = RoomWallPlan({ room, onChange: (next, contentShift) => {
+    tree = RoomWallPlan({ room, ...extra, onChange: (next, contentShift) => {
       const error = accept(next, contentShift);
       changes.push({ room: structuredClone(next), contentShift, error });
       if (!error) room = next;
@@ -275,4 +275,23 @@ test("actual wall callbacks persist with room contents and multiple gestures for
     if (previousStorage === undefined) delete global.localStorage; else global.localStorage = previousStorage;
     if (previousWindow === undefined) delete global.window; else global.window = previousWindow;
   }
+});
+
+
+test("2D furniture drags keep their initial coordinates and recover after invalid destinations", () => {
+  const moves=[];const piece={instanceId:'own',productId:'own',x:0,z:0,rotation:0,color:'#bbb',material:'wood',details:{name:'Desk',dimensions:{w:1,d:.6,h:.8}}};
+  const extra={pieces:[piece],onSelectPiece(){},onMovePiece:(id,x,z)=>{if(x>1)return 'blocked';moves.push({id,x,z});extra.pieces=[{...piece,x,z}];return null;}};
+  const h=componentHarness(rectangle(),()=>null,extra);
+  const nodes=t=>!t||typeof t!=='object'?[]:[t,...React.Children.toArray(t.props?.children).flatMap(nodes)];
+  try {
+    const target=nodes(h.editing.overlay).find(n=>n.type==='rect'&&n.props.role==='button');
+    target.props.onPointerDown({pointerId:1,button:0,clientX:100,clientY:200,stopPropagation(){},preventDefault(){}});
+    h.move(150,200);assert.deepEqual(moves.at(-1),{id:'own',x:.5,z:0});
+    h.move(300,200);assert.equal(moves.length,1);
+    h.move(170,200);assert.deepEqual(moves.at(-1),{id:'own',x:.7,z:0});
+    h.cancel();h.move(190,200);assert.equal(moves.length,2);
+    const nextTarget=nodes(h.editing.overlay).find(n=>n.type==='rect'&&n.props.role==='button');
+    nextTarget.props.onPointerDown({pointerId:1,button:0,clientX:170,clientY:200,stopPropagation(){},preventDefault(){}});
+    h.end(180,200);assert.deepEqual(moves.at(-1),{id:'own',x:.8,z:0});
+  } finally {h.cleanup();}
 });

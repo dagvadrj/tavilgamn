@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { RoomType, RoomWall } from "@/lib/types";
 import { ROOM_TYPES, ROOM_WALLS } from "@/lib/roomGeometry";
 import type { AddRoomOptions } from "@/lib/addRoomOptions";
+import { RoomFurnishingPicker } from "./RoomFurnishingPicker";
 
 export function RoomAddDialog({
   type,
@@ -128,6 +129,10 @@ export function RoomAddDialog({
             {options.window && wallSelect("windowWall")}
           </label>
         </div>
+        <RoomFurnishingPicker
+          value={options}
+          onChange={(patch) => setOptions({ ...options, ...patch })}
+        />
         <p className="mb-4 text-sm text-gray-600">
           Камерын цэг автоматаар нэмэгдэнэ. Өрөөнүүдийг хананд нь нийлүүлэхэд
           хаалгатай холбоос эсвэл хаалгагүй нээлттэй гарц үүснэ. Цонхыг гадна

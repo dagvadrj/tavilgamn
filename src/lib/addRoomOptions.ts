@@ -5,8 +5,9 @@ import {
   wallLength,
 } from "./roomOpenings";
 import { validateRoomSetup } from "./roomSetup";
+import type { FurnishingOptions } from "./roomFurnishing";
 
-export interface AddRoomOptions {
+export interface AddRoomOptions extends FurnishingOptions {
   name: string;
   width: number;
   depth: number;

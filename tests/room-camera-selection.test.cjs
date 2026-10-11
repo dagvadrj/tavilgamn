@@ -53,7 +53,8 @@ test('room/layout edits retain a user camera pose and explicit reset still fits 
 });
 function nodes(tree){return !tree||typeof tree!=='object'?[]:[tree,...React.Children.toArray(tree.props?.children).flatMap(nodes)];}
 test('real planner map and scene selection keep one canvas key, current view and reset generation',()=>{
- const oldStorage=global.localStorage,oldWindow=global.window,saved=new Map();global.localStorage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v),removeItem:k=>saved.delete(k)};
+ const oldDocument=global.document,oldStorage=global.localStorage,oldWindow=global.window,saved=new Map();global.localStorage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,v),removeItem:k=>saved.delete(k)};
+ global.document={addEventListener(){},removeEventListener(){}};
  global.window={localStorage:global.localStorage,location:{search:''},addEventListener(){},removeEventListener(){},setTimeout,clearTimeout};
  try{
   const {useDesigns:store}=loadSource('src/store/designs.ts');store.getState().createNew('40','Plan','living',{width:4,depth:4,height:2.7});const a=store.getState().current.activeRoomId;store.getState().addRoom('bedroom');const b=store.getState().current.activeRoomId;
@@ -87,8 +88,6 @@ test('real planner map and scene selection keep one canvas key, current view and
   // Interior mode persists through room visits and camera placement returns to plan editing.
   find(tree,'room-controls').props.onView('interior');tree=render();
   let tour=find(tree,'room-canvas');assert.equal(tour.props.interior,true);assert.equal(tour.props.view,'perspective');assert.equal(tour.props.selected,null);
-  find(tree,'tour-controls').props.onWalk('forward');tree=render();assert.equal(find(tree,'room-canvas').props.walkDirection,'forward');
-  find(tree,'tour-controls').props.onWalk(null);tree=render();assert.equal(find(tree,'room-canvas').props.walkDirection,null);
   find(tree,'tour-controls').props.onFov(48);tree=render();assert.equal(store.getState().current.interiorCamera.fov,48);
   tour.props.onVisitRoom(a);tree=render();tour=find(tree,'room-canvas');assert.equal(tour.props.design.activeRoomId,a);assert.equal(tour.props.interior,true);
   tour.props.onCameraSave({x:-.7,z:.4,eyeHeight:1.6,yaw:.5,pitch:.1});tree=render();assert.equal(store.getState().current.interiorCamera.yaw,.5);
@@ -100,5 +99,5 @@ test('real planner map and scene selection keep one canvas key, current view and
   find(tree,'room-map').props.onAdd('office');tree=render();assert.equal(store.getState().current.rooms.length,roomCount);
   find(tree,'add-room-dialog').props.onAdd('office',{name:'New office',width:3.5,depth:3,height:2.7,door:false,window:true,doorWall:'south',windowWall:'north'});
   tree=render();assert.equal(find(tree,'add-room-dialog'),undefined);assert.equal(store.getState().current.rooms.length,roomCount+1);assert.equal(store.getState().current.openings[0].kind,'window');
- }finally{global.localStorage=oldStorage;global.window=oldWindow;}
+ }finally{global.document=oldDocument;global.localStorage=oldStorage;global.window=oldWindow;}
 });

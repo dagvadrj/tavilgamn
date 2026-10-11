@@ -4,7 +4,6 @@ import { getRoomGeometry } from "./roomGeometry";
 export const DEFAULT_TOUR_FOV = 60;
 export const MIN_TOUR_FOV = 35;
 export const MAX_TOUR_FOV = 75;
-export type WalkDirection = "forward" | "backward" | "left" | "right";
 
 export function clampTourFov(fov = DEFAULT_TOUR_FOV) {
   return Number.isFinite(fov)
@@ -107,39 +106,4 @@ export function lookAround(
     yaw: pose.yaw - dx * 0.004,
     pitch: Math.max(-1.35, Math.min(1.35, pose.pitch - dy * 0.004)),
   };
-}
-
-/** Sweep in short steps and slide along obstructions, avoiding jumps through thin walls. */
-export function walkCamera(
-  pose: RoomInteriorCamera,
-  forward: number,
-  right: number,
-  seconds: number,
-  canStand: (x: number, z: number) => boolean,
-): RoomInteriorCamera {
-  if (!Number.isFinite(seconds) || seconds <= 0 || (!forward && !right))
-    return pose;
-  const magnitude = Math.hypot(forward, right);
-  const distance = Math.min(0.1, seconds) * 1.2;
-  const dx =
-    ((-Math.sin(pose.yaw) * forward + Math.cos(pose.yaw) * right) / magnitude) *
-    distance;
-  const dz =
-    ((-Math.cos(pose.yaw) * forward - Math.sin(pose.yaw) * right) / magnitude) *
-    distance;
-  const steps = Math.max(1, Math.ceil(distance / 0.04));
-  let x = pose.x,
-    z = pose.z;
-  for (let i = 0; i < steps; i++) {
-    const nx = x + dx / steps,
-      nz = z + dz / steps;
-    if (canStand(nx, nz)) {
-      x = nx;
-      z = nz;
-    } else {
-      if (canStand(nx, z)) x = nx;
-      if (canStand(x, nz)) z = nz;
-    }
-  }
-  return { ...pose, x, z };
 }

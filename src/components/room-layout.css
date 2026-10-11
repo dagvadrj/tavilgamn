@@ -47,6 +47,58 @@
   touch-action: none;
 }
 
+.room-map-viewport {
+  position: relative;
+  overflow: hidden;
+}
+
+.room-map-zoom {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  z-index: 3;
+  display: grid;
+  background: white;
+  border-radius: 20px;
+  padding: 4px;
+  box-shadow: 0 2px 10px #152e421a;
+}
+
+.room-map-zoom button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+
+.room-map-actions {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: 142px;
+  justify-content: center;
+  transform: translate(-50%, -110%);
+  pointer-events: none;
+}
+
+.room-map-actions button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 9px #152e4229;
+  pointer-events: auto;
+}
+
+.room-map-actions button:disabled {
+  opacity: .4;
+}
+
 .room-layout-map g[role="button"] {
   cursor: grab;
 }

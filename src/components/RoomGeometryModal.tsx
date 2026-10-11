@@ -6,7 +6,19 @@ import type { RoomShape, PlacedFurniture } from "@/lib/types";
 import type { Point } from "@/lib/roomGeometry";
 import { RoomGeometryEditor } from "./RoomGeometryEditor";
 
-export function RoomGeometryModal({ room, onApply, onClose, beginEdit, endEdit }: {
+export function RoomGeometryModal({
+  room,
+  onApply,
+  onClose,
+  beginEdit,
+  endEdit,
+  onMovePiece,
+  onSelectPiece,
+  selectedPiece,
+}: {
+  onMovePiece?: (id: string, x: number, z: number) => string | null;
+  onSelectPiece?: (id: string) => void;
+  selectedPiece?: string | null;
   room: RoomShape & { pieces?: PlacedFurniture[] };
   onApply: (shape: RoomShape, contentShift?: Point) => string | null;
   onClose: () => void;
@@ -31,17 +43,47 @@ export function RoomGeometryModal({ room, onApply, onClose, beginEdit, endEdit }
     };
   }, [beginEdit, endEdit]);
 
-  return <dialog ref={dialogRef} className="room-geometry-modal" aria-labelledby="room-geometry-title"
-    onCancel={event => { event.preventDefault(); onClose(); }}
-    onKeyDown={event => event.stopPropagation()}>
-    <header className="room-geometry-modal-header">
-      <div className="geometry-modal-heading"><span className="geometry-modal-icon"><Ruler size={21}/></span>
-        <div><h2 id="room-geometry-title" tabIndex={-1} autoFocus>Өрөөний хэмжээ, хэлбэр</h2>
-          <p>Бодит хэмжээгээр өрөөгөө төлөвлөх</p></div></div>
-      <button type="button" aria-label="Хэмжээ, хэлбэрийн цонхыг хаах" onClick={onClose}><X size={20} /></button>
-    </header>
-    <div className="room-geometry-modal-body">
-      <RoomGeometryEditor room={room} onApply={onApply} onDone={onClose} />
-    </div>
-  </dialog>;
+  return (
+    <dialog
+      ref={dialogRef}
+      className="room-geometry-modal"
+      aria-labelledby="room-geometry-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
+      <header className="room-geometry-modal-header">
+        <div className="geometry-modal-heading">
+          <span className="geometry-modal-icon">
+            <Ruler size={21} />
+          </span>
+          <div>
+            <h2 id="room-geometry-title" tabIndex={-1} autoFocus>
+              Өрөөний хэмжээ, хэлбэр
+            </h2>
+            <p>Бодит хэмжээгээр өрөөгөө төлөвлөх</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          aria-label="Хэмжээ, хэлбэрийн цонхыг хаах"
+          onClick={onClose}
+        >
+          <X size={20} />
+        </button>
+      </header>
+      <div className="room-geometry-modal-body">
+        <RoomGeometryEditor
+          onMovePiece={onMovePiece}
+          onSelectPiece={onSelectPiece}
+          selectedPiece={selectedPiece}
+          room={room}
+          onApply={onApply}
+          onDone={onClose}
+        />
+      </div>
+    </dialog>
+  );
 }

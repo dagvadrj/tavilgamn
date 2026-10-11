@@ -1,15 +1,19 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { useThree, useFrame } from "@react-three/fiber";
+import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import type { RoomInteriorCamera } from "@/lib/types";
+import type {
+  RoomInteriorCamera,
+  RoomShape,
+  PlacedFurniture,
+} from "@/lib/types";
+import { RoomTourNavigation } from "./RoomTourNavigation";
+import { tourRouteClear, type TourPoint } from "./roomCameraPlacement";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import {
   lookAround,
-  walkCamera,
   clampTourFov,
   tourVerticalFov,
-  type WalkDirection,
 } from "@/lib/roomInteriorCamera";
 
 export function RoomStreetView({
@@ -18,25 +22,23 @@ export function RoomStreetView({
   locked,
   request,
   onSave,
-  canWalk,
-  walkDirection,
+  room,
+  onLookingChange,
 }: {
   pose: RoomInteriorCamera;
   roomId: string;
   locked: boolean;
   request?: CameraRequest;
   onSave?: (pose: RoomInteriorCamera) => void;
-  canWalk?: (x: number, z: number) => boolean;
-  walkDirection?: WalkDirection | null;
+  room: RoomShape & { pieces: PlacedFurniture[] };
+  onLookingChange?: (looking: boolean) => void;
 }) {
   const { camera, gl, invalidate, size } = useThree();
   const current = useRef(pose),
     save = useRef(onSave),
     handled = useRef(request?.id);
-  const keys = useRef(new Set<WalkDirection>()),
-    previousWalk = useRef(walkDirection);
-  const movement = useRef({ canWalk, walkDirection });
-  movement.current = { canWalk, walkDirection };
+  const looking = useRef(onLookingChange);
+  looking.current = onLookingChange;
   const aspect = size
     ? size.width / Math.max(1, size.height)
     : (camera as THREE.PerspectiveCamera).aspect;
@@ -75,30 +77,13 @@ export function RoomStreetView({
     invalidate();
     save.current?.(current.current);
   };
-  useFrame((_, delta) => {
-    if (locked || !movement.current.canWalk) return;
-    const active = new Set(keys.current);
-    if (movement.current.walkDirection)
-      active.add(movement.current.walkDirection);
-    if (!active.size) return;
-    const forward =
-      Number(active.has("forward")) - Number(active.has("backward"));
-    const right = Number(active.has("right")) - Number(active.has("left"));
-    current.current = walkCamera(
-      current.current,
-      forward,
-      right,
-      delta,
-      movement.current.canWalk,
-    );
+  const jump = (point: TourPoint) => {
+    if (locked || !tourRouteClear(room, current.current, point)) return false;
+    current.current = { ...current.current, ...point };
     apply();
-  });
-  useEffect(() => {
-    if (previousWalk.current && !walkDirection && !locked)
-      save.current?.(current.current);
-    previousWalk.current = walkDirection;
-    if (walkDirection && !locked) invalidate();
-  }, [walkDirection, locked, invalidate]);
+    save.current?.(current.current);
+    return true;
+  };
   useEffect(() => {
     if (!request || request.id === handled.current) return;
     handled.current = request.id;
@@ -126,8 +111,6 @@ export function RoomStreetView({
   useEffect(() => {
     const canvas = gl.domElement;
     const keyboard = canvas.ownerDocument ?? canvas;
-    const pressed = keys.current;
-    pressed.clear();
     let drag: { id: number; x: number; y: number } | null = null;
     const before = canvas.style.touchAction;
     canvas.style.touchAction = "none";
@@ -135,6 +118,7 @@ export function RoomStreetView({
       event.stopImmediatePropagation();
       if (locked || event.button !== 0) return;
       drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      looking.current?.(true);
       canvas.focus();
       canvas.setPointerCapture(event.pointerId);
     };
@@ -154,6 +138,7 @@ export function RoomStreetView({
       event.stopImmediatePropagation();
       if (!drag || drag.id !== event.pointerId) return;
       drag = null;
+      looking.current?.(false);
       if (canvas.hasPointerCapture(event.pointerId))
         canvas.releasePointerCapture(event.pointerId);
       save.current?.(current.current);
@@ -164,10 +149,6 @@ export function RoomStreetView({
       if (locked) return;
       setFov(clampTourFov(current.current.fov) + Math.sign(event.deltaY) * 3);
     };
-    const direction = (key: string): WalkDirection | undefined =>
-      (({ w: "forward", s: "backward", a: "left", d: "right" }) as const)[
-        key.toLowerCase().replace(/^key/, "") as "w" | "s" | "a" | "d"
-      ];
     const key = (event: KeyboardEvent) => {
       if (
         event.ctrlKey ||
@@ -178,14 +159,6 @@ export function RoomStreetView({
         )
       )
         return;
-      const walking = direction(event.code || event.key);
-      if (!locked && walking) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        pressed.add(walking);
-        invalidate();
-        return;
-      }
       if (
         locked ||
         !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)
@@ -201,16 +174,10 @@ export function RoomStreetView({
       apply();
       save.current?.(current.current);
     };
-    const keyUp = (event: KeyboardEvent) => {
-      const walking = direction(event.code || event.key);
-      if (!walking || !pressed.delete(walking)) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      if (!pressed.size) save.current?.(current.current);
-    };
     const blur = () => {
-      if (pressed.size) save.current?.(current.current);
-      pressed.clear();
+      if (drag) save.current?.(current.current);
+      drag = null;
+      looking.current?.(false);
     };
     const tabIndex = canvas.tabIndex;
     canvas.tabIndex = 0;
@@ -220,7 +187,6 @@ export function RoomStreetView({
     canvas.addEventListener("pointercancel", up, true);
     canvas.addEventListener("wheel", wheel, { capture: true, passive: false });
     keyboard.addEventListener("keydown", key, true);
-    keyboard.addEventListener("keyup", keyUp, true);
     canvas.ownerDocument?.defaultView?.addEventListener("blur", blur);
     return () => {
       canvas.style.touchAction = before;
@@ -231,13 +197,14 @@ export function RoomStreetView({
       canvas.removeEventListener("pointercancel", up, true);
       canvas.removeEventListener("wheel", wheel, true);
       keyboard.removeEventListener("keydown", key, true);
-      keyboard.removeEventListener("keyup", keyUp, true);
       canvas.ownerDocument?.defaultView?.removeEventListener("blur", blur);
-      pressed.clear();
+      looking.current?.(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [camera, gl, locked, roomId, aspect, invalidate]);
-  return null;
+  return locked ? null : (
+    <RoomTourNavigation room={room} pose={pose} onJump={jump} />
+  );
 }
 
 export function CameraPointPlacement({

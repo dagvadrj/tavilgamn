@@ -48,9 +48,9 @@ import {
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
-import { roomTourCamera, tourPointValid } from "./roomCameraPlacement";
-import type { WalkDirection } from "@/lib/roomInteriorCamera";
+import { roomTourCamera } from "./roomCameraPlacement";
 import { RoomStreetView, CameraPointPlacement } from "./RoomStreetView";
+import { RoomPreviewCapture } from "./RoomPreviewCapture";
 import { RoomCameraRig } from "./RoomCameraRig";
 import { CameraNavigation } from "./CameraNavigation";
 import type { CameraRequest } from "@/lib/plannerCamera";
@@ -70,6 +70,15 @@ const ROOM_CAMERA = {
 };
 
 interface RoomCanvasProps {
+  paused?: boolean;
+  onPreview?: (id: string, image: string) => void;
+  onPreviewReady?: (capture: (() => void) | null) => void;
+  onSurfaceDoubleClick?: (
+    surface: "wall" | "floor" | "ceiling",
+    wall: RoomWall | undefined,
+    x: number,
+    y: number,
+  ) => void;
   onSelectRoom?: (id: string) => void;
   selectedWall?: RoomWall | null;
   onSelectWall?: (wall: RoomWall) => void;
@@ -96,7 +105,6 @@ interface RoomCanvasProps {
   cameraPlacement?: boolean;
   onCameraPlace?: (x: number, z: number) => void;
   onCameraSave?: (pose: RoomInteriorCamera) => void;
-  walkDirection?: WalkDirection | null;
   onVisitRoom?: (id: string) => void;
   onEditStart?: () => void;
   onEditEnd?: () => void;
@@ -111,6 +119,10 @@ interface RoomCanvasProps {
 }
 
 export function RoomCanvas({
+  paused = false,
+  onPreview,
+  onPreviewReady,
+  onSurfaceDoubleClick,
   design,
   onSelectRoom,
   selected,
@@ -128,7 +140,6 @@ export function RoomCanvas({
   cameraPlacement = false,
   onCameraPlace,
   onCameraSave,
-  walkDirection,
   onVisitRoom,
   onEditStart,
   onEditEnd,
@@ -145,6 +156,7 @@ export function RoomCanvas({
   const placement = useMemo(() => roomPlacementContext(design), [design]);
   const performance = useCanvasPerformance();
   const [isDraggingPiece, setIsDraggingPiece] = useState(false);
+  const [isLooking, setIsLooking] = useState(false);
   const [kitchenMaterials, setKitchenMaterials] = useState<
     Record<string, KitchenMaterialDefinition>
   >({});
@@ -214,7 +226,7 @@ export function RoomCanvas({
     <Canvas
       shadows={performance.shadows}
       dpr={performance.dpr}
-      frameloop="demand"
+      frameloop={paused ? "never" : "demand"}
       gl={{
         antialias: true,
         alpha: false,
@@ -234,8 +246,18 @@ export function RoomCanvas({
         onSelectOpening?.(null);
       }}
     >
-      <CameraMotionPreview interactionActive={isDraggingPiece}>
+      <CameraMotionPreview interactionActive={isDraggingPiece || isLooking}>
         <CanvasDiagnostics scene="room" />
+        <RoomPreviewCapture
+          designId={design.id}
+          revision={design.updatedAt}
+          bounds={bounds}
+          height={roomHeight}
+          rooms={rooms}
+          origin={origin}
+          onCapture={onPreview}
+          onReady={onPreviewReady}
+        />
         {!interior && (
           <RoomCameraRig
             view={view}
@@ -259,8 +281,8 @@ export function RoomCanvas({
             locked={locked}
             request={cameraRequest}
             onSave={onCameraSave}
-            walkDirection={walkDirection}
-            canWalk={(x, z) => tourPointValid(design, x, z)}
+            room={design}
+            onLookingChange={setIsLooking}
           />
         )}
         {cameraPlacement && onCameraPlace && (
@@ -360,6 +382,9 @@ export function RoomCanvas({
                   position={[p.x - origin.x, 0, p.z - origin.z]}
                 >
                   <RoomStructure
+                    onSurfaceDoubleClick={
+                      active ? onSurfaceDoubleClick : undefined
+                    }
                     design={roomDesign}
                     view={view}
                     sharedCuts={shared.cuts}
@@ -444,6 +469,7 @@ export function RoomCanvas({
         ) : (
           <>
             <RoomStructure
+              onSurfaceDoubleClick={onSurfaceDoubleClick}
               interior={interior}
               design={design}
               onSelect={onSelect}
@@ -751,7 +777,7 @@ function DraggablePiece({
     };
   }, [dragging, onDragChange, onEditEnd, gl]);
 
-  if (!fileModel && !piece.kitchen) return null;
+  if (!fileModel && !piece.kitchen && !piece.details) return null;
 
   const dims = piece.kitchen
     ? dimsFor(piece)
@@ -762,9 +788,7 @@ function DraggablePiece({
           h: dbModel.dimensionsH,
         }
       : {
-          w: product!.dimensions.w,
-          d: product!.dimensions.d,
-          h: product!.dimensions.h,
+          ...dimsFor(piece),
         };
 
   const planeY = 0;
@@ -872,6 +896,14 @@ function DraggablePiece({
           selected={selected}
           deferUntilVisible
         />
+      ) : piece.details ? (
+        <mesh position={[0, dims.h / 2, 0]} castShadow receiveShadow>
+          <boxGeometry args={[dims.w, dims.h, dims.d]} />
+          <meshStandardMaterial
+            color={piece.color.startsWith("#") ? piece.color : "#b6a48e"}
+            roughness={0.8}
+          />
+        </mesh>
       ) : null}
       {selected && (
         <mesh position={[0, dims.h / 2, 0]}>

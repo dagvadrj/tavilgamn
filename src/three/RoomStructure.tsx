@@ -40,6 +40,12 @@ const noRaycast = () => {};
 const WALL_IDS: RoomWall[] = ["north", "east", "south", "west"];
 
 export interface RoomStructureProps {
+  onSurfaceDoubleClick?: (
+    surface: "wall" | "floor" | "ceiling",
+    wall: RoomWall | undefined,
+    x: number,
+    y: number,
+  ) => void;
   design: RoomDesign;
   sharedCuts?: SharedWallCut[];
   sharedBoundaries?: SharedWallCut[];
@@ -193,7 +199,15 @@ function RoomWallMesh({
           openEnd,
         },
       ),
-    [segment.length, height, cutKey, startExtension, endExtension, openStart, openEnd],
+    [
+      segment.length,
+      height,
+      cutKey,
+      startExtension,
+      endExtension,
+      openStart,
+      openEnd,
+    ],
   );
   useEffect(() => () => wallGeometry.dispose(), [wallGeometry]);
   const baseboardPieces = useMemo(() => {
@@ -227,13 +241,24 @@ function RoomWallMesh({
       (camera.position.x - worldCentre.x) * segment.nx +
         (camera.position.z - worldCentre.z) * segment.nz <
       -0.06;
-    const obscuresRoom = props.readOnly && props.wallFocus && wallBlocksFocus(
-      camera.position,
-      { x: props.wallFocus[0], z: props.wallFocus[1] },
-      { x: worldCentre.x, z: worldCentre.z, nx: segment.nx, nz: segment.nz,
-        length: segment.length, start: startExtension, end: endExtension },
-    );
-    const faded = !props.interior && (view === "plan" || outside || obscuresRoom);
+    const obscuresRoom =
+      props.readOnly &&
+      props.wallFocus &&
+      wallBlocksFocus(
+        camera.position,
+        { x: props.wallFocus[0], z: props.wallFocus[1] },
+        {
+          x: worldCentre.x,
+          z: worldCentre.z,
+          nx: segment.nx,
+          nz: segment.nz,
+          length: segment.length,
+          start: startExtension,
+          end: endExtension,
+        },
+      );
+    const faded =
+      !props.interior && (view === "plan" || outside || obscuresRoom);
     const animation = animateToward(
       mesh.material.opacity,
       faded ? 0.065 : 1,
@@ -282,8 +307,20 @@ function RoomWallMesh({
         geometry={wallGeometry}
         position={[0, height / 2, -WALL_THICKNESS / 2]}
         receiveShadow
-        userData={{ openingWall: base && !props.readOnly ? id : null }}
+        userData={{
+          openingWall: base && !props.readOnly ? id : null,
+          previewWall: { nx: segment.nx, nz: segment.nz },
+        }}
         onClick={click}
+        onDoubleClick={(event) => {
+          event.stopPropagation();
+          props.onSurfaceDoubleClick?.(
+            "wall",
+            id,
+            event.clientX,
+            event.clientY,
+          );
+        }}
         raycast={function (
           this: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>,
           raycaster,
@@ -388,6 +425,7 @@ function RoomSurfaces({
   view,
   onSelect,
   onSelectOpening,
+  onSurfaceDoubleClick,
 }: RoomStructureProps) {
   const gl = useThree((state) => state.gl);
   const roomGeometry = getRoomGeometry(design);
@@ -460,6 +498,15 @@ function RoomSurfaces({
         rotation={[Math.PI / 2, 0, 0]}
         geometry={geometries.floor}
         receiveShadow
+        onDoubleClick={(event) => {
+          event.stopPropagation();
+          onSurfaceDoubleClick?.(
+            "floor",
+            undefined,
+            event.clientX,
+            event.clientY,
+          );
+        }}
         onPointerDown={(event) => {
           if (event.button !== 0) return;
           if (
@@ -479,7 +526,20 @@ function RoomSurfaces({
           envMapIntensity={0.65}
         />
       </mesh>
-      <TrayCeiling design={design} view={view} />
+      <group
+        userData={{ previewRoof: true }}
+        onDoubleClick={(event) => {
+          event.stopPropagation();
+          onSurfaceDoubleClick?.(
+            "ceiling",
+            undefined,
+            event.clientX,
+            event.clientY,
+          );
+        }}
+      >
+        <TrayCeiling design={design} view={view} />
+      </group>
       {/* An invisible roof still casts a physical shadow: sun enters through openings. */}
       <mesh
         position={[0, height, 0]}
@@ -496,12 +556,21 @@ function RoomSurfaces({
       </mesh>
       <mesh
         ref={ceiling}
+        userData={{ previewRoof: true }}
         visible={false}
         position={[0, height, 0]}
         rotation={[Math.PI / 2, 0, 0]}
         geometry={geometries.roof}
         receiveShadow
-        raycast={noRaycast}
+        onDoubleClick={(event) => {
+          event.stopPropagation();
+          onSurfaceDoubleClick?.(
+            "ceiling",
+            undefined,
+            event.clientX,
+            event.clientY,
+          );
+        }}
       >
         <meshStandardMaterial {...ceilingProps} side={THREE.DoubleSide} />
       </mesh>
@@ -620,8 +689,18 @@ export function RoomStructure(props: RoomStructureProps) {
               {...props}
               segment={segment}
               wallEnds={{
-                ...wallMiterEnds(design, segment, geometry.segments, props.sharedBoundaries),
-                ...wallOpenEnds(design, segment, geometry.segments, props.sharedBoundaries),
+                ...wallMiterEnds(
+                  design,
+                  segment,
+                  geometry.segments,
+                  props.sharedBoundaries,
+                ),
+                ...wallOpenEnds(
+                  design,
+                  segment,
+                  geometry.segments,
+                  props.sharedBoundaries,
+                ),
               }}
             />
           );

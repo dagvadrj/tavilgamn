@@ -43,7 +43,7 @@ export const dimsFor = (piece: PlacedFurniture) => {
   const p = getProduct(piece.productId);
   return p
     ? { w: p.dimensions.w, d: p.dimensions.d, h: p.dimensions.h }
-    : { w: 1, d: 1, h: 1 };
+    : (piece.details?.dimensions ?? { w: 1, d: 1, h: 1 });
 };
 
 export const rectFor = (piece: PlacedFurniture): Rect => {

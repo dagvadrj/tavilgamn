@@ -27,6 +27,7 @@ import { getProduct, useCatalog } from "@/store/catalog";
 import { CatalogStatus } from "@/components/CatalogStatus";
 import { formatPrice } from "@/lib/format";
 import "./account.css";
+import { FurnitureLibrary } from "@/components/FurnitureLibrary";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -112,6 +113,7 @@ export default function AccountPage() {
             },
             { href: "#orders", label: "Захиалга", icon: Package },
             { href: "/wishlist", label: "Хүслийн жагсаалт", icon: Heart },
+            { href: "#furniture", label: "Миний тавилга", icon: LayoutGrid },
             { href: "#profile", label: "Профайл", icon: User },
           ].map((n) => (
             <a key={n.href} href={n.href} className="account-nav-link">
@@ -167,6 +169,7 @@ export default function AccountPage() {
             </div>
           </dl>
         </section>
+        <FurnitureLibrary />
         <section id="designs">
           {(catalog.loading || !catalog.ready) && (
             <CatalogStatus

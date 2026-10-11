@@ -74,6 +74,13 @@ export interface WishlistItem {
 }
 
 export interface PlacedFurniture {
+  /** Retained user furniture information, also used when no catalog model exists. */
+  details?: {
+    name: string;
+    dimensions: { w: number; d: number; h: number };
+    image?: string;
+    category?: Category;
+  };
   /** Immutable kitchen snapshot in authored mm; rendered once at scale 1. */
   kitchen?: KitchenSnapshot;
   instanceId: string;
@@ -90,6 +97,15 @@ export interface PlacedFurniture {
 }
 
 export type RoomSize = "40" | "80" | "120";
+export interface SavedFurniture {
+  id: string;
+  piece: PlacedFurniture;
+  name: string;
+  dimensions: { w: number; d: number; h: number };
+  image?: string;
+  quantity: number;
+  addedAt: number;
+}
 
 export type RoomType =
   "living" | "bedroom" | "kitchen" | "bathroom" | "office" | "other";
@@ -181,7 +197,14 @@ export interface RoomShape {
   interiorCamera?: RoomInteriorCamera;
   connectionKind?: "door" | "open";
 }
-export interface RoomInteriorCamera { x: number; z: number; eyeHeight: number; yaw: number; pitch: number; fov?: number }
+export interface RoomInteriorCamera {
+  x: number;
+  z: number;
+  eyeHeight: number;
+  yaw: number;
+  pitch: number;
+  fov?: number;
+}
 export interface RoomPosition {
   x: number;
   z: number;
@@ -212,6 +235,7 @@ export interface DesignRoom extends RoomShape, RoomSurfaces {
 }
 
 export interface RoomDesign extends RoomShape, RoomSurfaces {
+  previewImage?: string;
   id: string;
   name: string;
   size: RoomSize;
