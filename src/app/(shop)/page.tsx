@@ -14,8 +14,12 @@ import {
   Zap,
 } from "lucide-react";
 import { CATEGORIES } from "@/lib/products";
-import { readCachedStoreDirectory as readStoreDirectory, readCachedProducts as readProducts } from "@/lib/publicCatalog";
+import {
+  readCachedStoreDirectory as readStoreDirectory,
+  readCachedProducts as readProducts,
+} from "@/lib/publicCatalog";
 import { ProductCard } from "@/components/ProductCard";
+import { CategoryIcon } from "@/components/CategoryIcon";
 import { hasAvailableStock } from "@/lib/inventory";
 import { FeaturedMerchants } from "@/components/FeaturedMerchants";
 import { hasProductOffer } from "@/lib/catalogPresentation";
@@ -111,12 +115,15 @@ export default async function HomePage({
               <LayoutGrid size={16} aria-hidden="true" />
               Бүх ангилал
             </h2>
-            {CATEGORIES.map((category) => (
-              <Link key={category.id} href={`/catalog/${category.id}`}>
-                <span>{category.name}</span>
-                <ChevronRight size={14} aria-hidden="true" />
-              </Link>
-            ))}
+            <div className="market-category-scroll">
+              {CATEGORIES.map((category) => (
+                <Link key={category.id} href={`/catalog/${category.id}`}>
+                  <CategoryIcon category={category.id} size={17} />
+                  <span>{category.name}</span>
+                  <ChevronRight size={14} aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
             <Link className="market-category-all" href="/catalog">
               Бүх бараа үзэх
               <ArrowRight size={14} aria-hidden="true" />
@@ -149,7 +156,7 @@ export default async function HomePage({
                       src={product?.image ?? category.image}
                       alt={product?.name ?? category.name}
                       fill
-                      sizes="(max-width: 639px) 90vw, (max-width: 999px) 45vw, 320px"
+                      sizes="(max-width: 639px) 90vw, (max-width: 999px) 45vw, 400px"
                       className="object-cover"
                     />
                     {product && (
@@ -209,7 +216,7 @@ export default async function HomePage({
           </div>
           <nav
             className="market-category-tiles"
-            aria-label="Зурагтай ангиллууд"
+            aria-label="Тавилгын ангиллууд"
           >
             {CATEGORIES.map((category) => (
               <Link
@@ -217,13 +224,8 @@ export default async function HomePage({
                 href={`/catalog/${category.id}`}
                 className="market-category-tile"
               >
-                <span className="market-category-image">
-                  <Image
-                    src={category.image}
-                    alt=""
-                    fill
-                    sizes="(max-width: 639px) 104px, 128px"
-                  />
+                <span className="market-category-icon">
+                  <CategoryIcon category={category.id} size={32} />
                 </span>
                 <span>{category.name}</span>
               </Link>

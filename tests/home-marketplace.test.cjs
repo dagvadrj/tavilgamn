@@ -267,3 +267,49 @@ test("studio theme, responsive and reduced-motion contracts stay scoped to the s
   ])
     assert.ok(!readFileSync(path, "utf8").includes('"use client"'));
 });
+
+test("card color selection updates the shown price, detail link and exact cart variant together", () => {
+  let stateIndex = 0;
+  const values = ["", false, undefined, "oak"];
+  let added;
+  const { ProductCard } = loadSource("src/components/ProductCard.tsx", {
+    react: {
+      ...React,
+      useEffect() {},
+      useState(initial) {
+        const index = stateIndex++;
+        if (!(index in values)) values[index] = initial;
+        return [values[index], next => { values[index] = next; }];
+      },
+    },
+    "@/store/cart": { useCart: selector => selector({ add: item => { added = item; return 1; } }) },
+    "@/store/wishlist": { useWishlist: selector => selector({ has: () => false, toggle() {} }) },
+  });
+  const product = {
+    ...chair,
+    colors: [...chair.colors, { id: "walnut", name: "Хушга", hex: "#654321", priceDelta: 70000 }],
+    model: { id: "model", file: "/chair.glb", scale: 1 },
+  };
+  const nodes = root => {
+    const result = [];
+    const visit = node => {
+      if (!node || typeof node !== "object") return;
+      result.push(node);
+      React.Children.forEach(node.props?.children, visit);
+    };
+    visit(root);
+    return result;
+  };
+  const render = () => { stateIndex = 0; return nodes(ProductCard({ product })); };
+  let tree = render();
+  tree.find(node => node.props?.["aria-label"] === "Хушга").props.onClick();
+  tree = render();
+  assert.equal(tree.find(node => node.props?.["aria-label"] === "Хушга").props["aria-pressed"], true);
+  assert.ok(tree.some(node => node.type === "strong" && node.props.children === "1,573,000₮"));
+  assert.ok(tree.some(node => node.props?.href === "/product/chair?color=walnut&view=3d"));
+  tree.find(node => node.props?.className === "product-add-cart").props.onClick();
+  assert.equal(added.color, "walnut");
+  assert.equal(added.material, "wood");
+  assert.equal(added.unitPrice, 1573000);
+  assert.equal(added.stockQuantity, 3);
+});
