@@ -23,11 +23,13 @@ import {
   ROOM_SKIRTING_DEPTH,
   ROOM_SKIRTING_HEIGHT,
   wallMiterEnds,
+  wallOpenEnds,
+  wallBlocksFocus,
 } from "@/lib/roomRendering";
 import { sunDirection, exteriorWindowBearing } from "@/lib/roomSunlight";
 import { solarLighting } from "@/lib/roomLighting";
 import { openingWorldTransform } from "@/lib/roomOpenings";
-import { createWallGeometry, type WallCut } from "./wallCsg";
+import { createWallGeometry, type WallCut, type WallEnds } from "./wallCsg";
 import { useRoomMaterial } from "./roomMaterials";
 import { OpeningMesh } from "./OpeningMesh";
 import { animateToward } from "./demandAnimation";
@@ -41,9 +43,12 @@ export interface RoomStructureProps {
   design: RoomDesign;
   sharedCuts?: SharedWallCut[];
   sharedBoundaries?: SharedWallCut[];
-  wallEnds?: { start: number; end: number };
+  wallEnds?: WallEnds;
   connectionOpenings?: RoomOpening[];
   readOnly?: boolean;
+  interior?: boolean;
+  /** Selected room centre in scene coordinates, used to cut away obstructing neighbours. */
+  wallFocus?: [number, number];
   view: "plan" | "perspective";
   onSelect: (id: string | null) => void;
   selectedWall?: RoomWall | null;
@@ -149,6 +154,8 @@ function RoomWallMesh({
     });
   const startExtension = props.wallEnds?.start ?? 0,
     endExtension = props.wallEnds?.end ?? 0;
+  const openStart = props.wallEnds?.openStart ?? false,
+    openEnd = props.wallEnds?.openEnd ?? false;
   const connectionCuts = sharedCutsForSegment(
     design,
     segment,
@@ -179,9 +186,14 @@ function RoomWallMesh({
         height,
         WALL_THICKNESS,
         JSON.parse(cutKey) as WallCut[],
-        { start: startExtension, end: endExtension },
+        {
+          start: startExtension,
+          end: endExtension,
+          openStart,
+          openEnd,
+        },
       ),
-    [segment.length, height, cutKey, startExtension, endExtension],
+    [segment.length, height, cutKey, startExtension, endExtension, openStart, openEnd],
   );
   useEffect(() => () => wallGeometry.dispose(), [wallGeometry]);
   const baseboardPieces = useMemo(() => {
@@ -215,7 +227,13 @@ function RoomWallMesh({
       (camera.position.x - worldCentre.x) * segment.nx +
         (camera.position.z - worldCentre.z) * segment.nz <
       -0.06;
-    const faded = view === "plan" || outside;
+    const obscuresRoom = props.readOnly && props.wallFocus && wallBlocksFocus(
+      camera.position,
+      { x: props.wallFocus[0], z: props.wallFocus[1] },
+      { x: worldCentre.x, z: worldCentre.z, nx: segment.nx, nz: segment.nz,
+        length: segment.length, start: startExtension, end: endExtension },
+    );
+    const faded = !props.interior && (view === "plan" || outside || obscuresRoom);
     const animation = animateToward(
       mesh.material.opacity,
       faded ? 0.065 : 1,
@@ -224,7 +242,14 @@ function RoomWallMesh({
     );
     mesh.material.opacity = animation.value;
     if (animation.moving) invalidate();
-    mesh.material.depthWrite = !faded;
+    // Opaque walls belong in the opaque pass. Switch depth writes with the
+    // animated opacity so a returning wall cannot occlude furniture mid-fade.
+    const transparent = animation.value < 1;
+    if (mesh.material.transparent !== transparent) {
+      mesh.material.transparent = transparent;
+      mesh.material.needsUpdate = true;
+    }
+    mesh.material.depthWrite = !transparent;
     mesh.castShadow = true;
   });
 
@@ -271,7 +296,6 @@ function RoomWallMesh({
       >
         <meshStandardMaterial
           {...materialProps}
-          transparent
           emissive={selectedWall === id ? "#1677b8" : "#000000"}
           emissiveIntensity={selectedWall === id ? 0.09 : 0}
         />
@@ -595,12 +619,10 @@ export function RoomStructure(props: RoomStructureProps) {
               key={index}
               {...props}
               segment={segment}
-              wallEnds={wallMiterEnds(
-                design,
-                segment,
-                geometry.segments,
-                props.sharedBoundaries,
-              )}
+              wallEnds={{
+                ...wallMiterEnds(design, segment, geometry.segments, props.sharedBoundaries),
+                ...wallOpenEnds(design, segment, geometry.segments, props.sharedBoundaries),
+              }}
             />
           );
         })}

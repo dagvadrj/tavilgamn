@@ -67,6 +67,8 @@ test('real planner map and scene selection keep one canvas key, current view and
    '@/features/room-planner/components/PlannerPanels':{Drawer:'drawer',CompareModal:'compare',NumberControl:'number',PlannerSkeleton:'skeleton'},
    '@/features/room-planner/components/RoomPlannerControls':{RoomPlannerControls:'room-controls'},
    './RoomPlacementMap':{RoomPlacementMap:'room-map'},
+   './RoomAddDialog':{RoomAddDialog:'add-room-dialog'},
+   './RoomTourControls':{RoomTourControls:'tour-controls'},
   });
   const render=()=>h.render(()=>RoomPlanner()),find=(t,type)=>nodes(t).find(n=>n.type===type);
   find(render(),'room-start').props.onResume();let tree=render();find(tree,'room-controls').props.onView('top');tree=render();const canvas=find(tree,'room-canvas');assert.equal(canvas.props.view,'plan');
@@ -82,5 +84,21 @@ test('real planner map and scene selection keep one canvas key, current view and
   moving.props.onEditEnd();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,b);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.design.pieces[0].x,0);assert.equal(moving.key,canvas.key);assert.equal(moving.props.resetKey,reset);assert.equal(moving.props.view,'plan');
   store.getState().undo();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,a);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.design.pieces[0].x,0);
   store.getState().redo();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,b);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.resetKey,reset);
+  // Interior mode persists through room visits and camera placement returns to plan editing.
+  find(tree,'room-controls').props.onView('interior');tree=render();
+  let tour=find(tree,'room-canvas');assert.equal(tour.props.interior,true);assert.equal(tour.props.view,'perspective');assert.equal(tour.props.selected,null);
+  find(tree,'tour-controls').props.onWalk('forward');tree=render();assert.equal(find(tree,'room-canvas').props.walkDirection,'forward');
+  find(tree,'tour-controls').props.onWalk(null);tree=render();assert.equal(find(tree,'room-canvas').props.walkDirection,null);
+  find(tree,'tour-controls').props.onFov(48);tree=render();assert.equal(store.getState().current.interiorCamera.fov,48);
+  tour.props.onVisitRoom(a);tree=render();tour=find(tree,'room-canvas');assert.equal(tour.props.design.activeRoomId,a);assert.equal(tour.props.interior,true);
+  tour.props.onCameraSave({x:-.7,z:.4,eyeHeight:1.6,yaw:.5,pitch:.1});tree=render();assert.equal(store.getState().current.interiorCamera.yaw,.5);
+  find(tree,'room-controls').props.onCameraPlace();tree=render();tour=find(tree,'room-canvas');assert.equal(tour.props.cameraPlacement,true);assert.equal(tour.props.interior,false);assert.equal(tour.props.view,'plan');
+  tour.props.onCameraPlace(100,100);tree=render();assert.equal(find(tree,'room-canvas').props.cameraPlacement,true);
+  find(tree,'room-canvas').props.onCameraPlace(-.8,.7);tree=render();assert.equal(find(tree,'room-canvas').props.cameraPlacement,false);assert.equal(store.getState().current.interiorCamera.x,-.8);
+  // Adding from the map opens the setup dialog before creating any room.
+  const roomCount=store.getState().current.rooms.length;
+  find(tree,'room-map').props.onAdd('office');tree=render();assert.equal(store.getState().current.rooms.length,roomCount);
+  find(tree,'add-room-dialog').props.onAdd('office',{name:'New office',width:3.5,depth:3,height:2.7,door:false,window:true,doorWall:'south',windowWall:'north'});
+  tree=render();assert.equal(find(tree,'add-room-dialog'),undefined);assert.equal(store.getState().current.rooms.length,roomCount+1);assert.equal(store.getState().current.openings[0].kind,'window');
  }finally{global.localStorage=oldStorage;global.window=oldWindow;}
 });

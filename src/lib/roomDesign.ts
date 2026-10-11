@@ -3,6 +3,7 @@ import { ROOM_TYPES } from "./roomGeometry";
 import { positionedRooms, validConnections } from "./roomLayout";
 import { normalizeRoomCeiling } from "./roomCeiling";
 import { normalizeSunBearing } from "./roomSunlight";
+import { interiorCamera } from "./roomInteriorCamera";
 import { lightingTime } from "./roomLighting";
 
 export const DEFAULT_FLOOR_MATERIAL = "parquet-oak";
@@ -29,13 +30,16 @@ function cloneSurfaces(room: RoomSurfaces & { wallColor?: string; id?: string; w
 }
 
 export function cloneRoom(room: DesignRoom): DesignRoom {
-  return { ...room, height: room.height ?? 2.7,
+  const cloned = { ...room, height: room.height ?? 2.7,
     ...cloneSurfaces(room),
+    interiorCamera: interiorCamera(room),
     pieces: room.pieces.map(piece => ({ ...piece, ...(piece.kitchen ? { kitchen: JSON.parse(JSON.stringify(piece.kitchen)) } : {}) })),
     wallFeatures: (room.wallFeatures ?? []).map(feature => ({ ...feature })),
     columns: (room.columns ?? []).map(column => ({ ...column })),
     openings: (room.openings ?? []).map(opening => ({ ...opening })),
   };
+  if (cloned.connectionKind === undefined) delete cloned.connectionKind;
+  return cloned;
 }
 
 /** Migrate old single-room saves while keeping the active-room cache in sync. */
@@ -45,6 +49,8 @@ export function syncDesignRooms(design: RoomDesign): RoomDesign {
   const active = cloneRoom({ id: activeRoomId, name: design.roomName ?? ROOM_TYPES[type].label, type,
     width: design.width, depth: design.depth, height: design.height,
     position: design.rooms?.find(room => room.id === activeRoomId)?.position,
+    interiorCamera: design.interiorCamera ?? design.rooms?.find(room => room.id === activeRoomId)?.interiorCamera,
+    connectionKind: design.connectionKind ?? design.rooms?.find(room => room.id === activeRoomId)?.connectionKind,
     wallColor: design.wallColor, floorColor: design.floorColor, pieces: design.pieces,
     wallFeatures: design.wallFeatures, columns: design.columns,
     openings: design.openings, floorMaterial: design.floorMaterial, wallMaterials: design.wallMaterials,
@@ -59,21 +65,27 @@ export function syncDesignRooms(design: RoomDesign): RoomDesign {
     if (active.lighting!.sunElevation !== undefined) lighting.sunElevation = active.lighting!.sunElevation;
     return { ...room, lighting };
   });
-  return { ...design, connections: validConnections(rooms, design.connections ?? []), activeRoomId, roomName: active.name, roomType: type, height: active.height,
+  const next = { ...design, connections: validConnections(rooms, design.connections ?? []), activeRoomId, roomName: active.name, roomType: type, height: active.height,
+    interiorCamera: active.interiorCamera, connectionKind: active.connectionKind,
     wallFeatures: active.wallFeatures, columns: active.columns, openings: active.openings,
     ...cloneSurfaces(active), pieces: active.pieces, rooms };
+  if (next.connectionKind === undefined) delete next.connectionKind;
+  return next;
 }
 
 export function activateDesignRoom(design: RoomDesign, id: string): RoomDesign {
   const synced = syncDesignRooms(design);
   const room = synced.rooms!.find(item => item.id === id);
   if (!room) return synced;
-  return { ...synced, activeRoomId: room.id, roomName: room.name, roomType: room.type,
+  const next = { ...synced, activeRoomId: room.id, roomName: room.name, roomType: room.type,
     width: room.width, depth: room.depth, height: room.height,
     wallColor: room.wallColor, floorColor: room.floorColor, pieces: room.pieces,
+    interiorCamera: room.interiorCamera, connectionKind: room.connectionKind,
     wallFeatures: room.wallFeatures, columns: room.columns,
     openings: room.openings, ...cloneSurfaces(room),
   };
+  if (next.connectionKind === undefined) delete next.connectionKind;
+  return next;
 }
 
 export function newDesignRoom(type: RoomType, existing: DesignRoom[]): DesignRoom {

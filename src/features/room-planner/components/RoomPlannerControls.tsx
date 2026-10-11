@@ -4,12 +4,12 @@ import { useEffect, useRef } from "react";
 import type { RoomLighting, RoomCeiling } from "@/lib/types";
 import { DEFAULT_ROOM_LIGHTING } from "@/lib/roomDesign";
 import { RoomLightingTimeControls } from "./RoomLightingTimeControls";
-import { Lightbulb, PanelsTopLeft, X, Box, ChevronDown, Eye, Focus, Grid2X2, HelpCircle, Lock, Magnet, Maximize, Minus, MoreHorizontal, Paintbrush, PencilRuler, Plus, RotateCcw, RotateCw, Ruler, Unlock } from "lucide-react";
+import { Lightbulb, PanelsTopLeft, X, Box, ChevronDown, Camera, Eye, Focus, Grid2X2, HelpCircle, Lock, Magnet, Maximize, Minus, MoreHorizontal, Paintbrush, PencilRuler, Plus, RotateCcw, RotateCw, Ruler, Unlock } from "lucide-react";
 
-export type RoomView = "dollhouse" | "top" | "front";
+export type RoomView = "dollhouse" | "top" | "front" | "interior";
 
 export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
-  onHelp, onWindows, dimensions, onDimensions, grid, onGrid, snap, onSnap, locked, onLock,
+  onHelp, onWindows, onCameraPlace, cameraPlacement, dimensions, onDimensions, grid, onGrid, snap, onSnap, locked, onLock,
   expanded, onExpand, onRotate, lighting, ceiling, windowBearing, onLightingChange, onLightingSettings, beginLightingEdit, endLightingEdit,
 }: {
   windowBearing?: number; ceiling?: RoomCeiling; lighting?: RoomLighting; onLightingChange?: (patch: Partial<RoomLighting>) => void; onLightingSettings?: () => void;
@@ -17,6 +17,7 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
   view: RoomView; onView: (view: RoomView) => void;
   onZoom: (action: "zoom-in" | "zoom-out" | "fit") => void;
   onWindows?: () => void;
+  onCameraPlace?: () => void; cameraPlacement?: boolean;
   onRoom: () => void; onMaterials: () => void; onHelp: () => void;
   dimensions: boolean; onDimensions: () => void;
   grid: boolean; onGrid: () => void; snap: boolean; onSnap: () => void;
@@ -66,6 +67,7 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
         <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>Өрөөний харагдац</span></button>
         <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>Дээрээс</span></button>
         <button type="button" aria-pressed={view === "front"} onClick={() => onView("front")}><Eye size={20}/><span>Урдаас</span></button>
+        <button type="button" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span>Дотроос харах</span></button>
       </div>
       <div className="room-dock-edit">
         <button type="button" onClick={onMaterials}><Paintbrush size={20}/><span>Өнгө</span></button>
@@ -75,6 +77,7 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
         <details className="room-dock-more">
           <summary aria-label="Нэмэлт удирдлага"><MoreHorizontal size={22}/><ChevronDown size={12}/></summary>
           <div className="room-dock-popover">
+            <button type="button" aria-pressed={cameraPlacement} onClick={onCameraPlace}><Camera size={17}/> Камер байрлуулах</button>
             <p>Харах өнцгийг эргүүлэх</p>
             <div className="room-dock-rotate">
               <button type="button" disabled={locked || view === "top"} onClick={() => onRotate("rotate-left")}><RotateCcw size={17}/> Зүүн</button>

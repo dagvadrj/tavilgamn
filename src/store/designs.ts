@@ -7,6 +7,7 @@ import { connectionContact, defaultConnection, positionedRooms, roomContacts, ro
 import { layoutFurnitureIssue } from "@/three/roomPlacement";
 import { movedFurnitureId, reassignFurnitureRooms } from "@/three/furnitureRoomOwnership";
 import { ROOM_TYPES } from "@/lib/roomGeometry";
+import { configureAddedRoom, type AddRoomOptions } from "@/lib/addRoomOptions";
 import { validateRoomSetup, type RoomSetupDimensions } from "@/lib/roomSetup";
 
 export const ROOM_DIMENSIONS: Record<RoomSize, { w: number; d: number }> = {
@@ -27,7 +28,7 @@ interface DesignState {
   undo: () => void;
   redo: () => void;
   createNew: (size: RoomSize, name?: string, roomType?: RoomType, dimensions?: RoomSetupDimensions) => void;
-  addRoom: (type: RoomType) => void;
+  addRoom: (type: RoomType, options?: AddRoomOptions) => void;
   selectRoom: (id: string) => void;
   moveRoom: (id: string, position: RoomPosition, snap?: boolean) => string | null;
   updateConnection: (id: string, patch: Partial<RoomConnection>) => string | null;
@@ -36,7 +37,7 @@ interface DesignState {
   deleteDesign: (id: string) => void;
   duplicateDesign: (id: string) => void;
   updatePieces: (pieces: PlacedFurniture[]) => void;
-  updateRoom: (patch: Partial<Pick<RoomDesign, "wallColor" | "floorColor" | "name" | "width" | "depth" | "size" | "height" | "wallFeatures" | "columns" | "roomName" | "roomType" | "openings" | "floorMaterial" | "wallMaterials" | "ceilingMaterial" | "ceiling" | "lighting" | "pieces">>) => void;
+  updateRoom: (patch: Partial<Pick<RoomDesign, "interiorCamera" | "wallColor" | "floorColor" | "name" | "width" | "depth" | "size" | "height" | "wallFeatures" | "columns" | "roomName" | "roomType" | "openings" | "floorMaterial" | "wallMaterials" | "ceilingMaterial" | "ceiling" | "lighting" | "pieces">>) => void;
 }
 const createDesignId = () => `d_${crypto.randomUUID()}`;
 
@@ -97,12 +98,13 @@ export const useDesigns = create<DesignState>()(
         set({ current: cloneDesign(future[0]), past: [...past, cloneDesign(current)].slice(-60), future: future.slice(1) });
       },
       createNew: (size, name, roomType, dimensions) => set({ current: blankDesign(size, name, roomType, dimensions), past: [], future: [], transaction: null }),
-      addRoom: (type) => {
+      addRoom: (type, options) => {
         get().endEdit();
         const current = get().current;
         if (!current) return;
         const synced = cloneDesign(current);
-        const room = positionedRooms([...synced.rooms!, newDesignRoom(type, synced.rooms!)]).at(-1)!;
+        const blank = newDesignRoom(type, synced.rooms!);
+        const room = positionedRooms([...synced.rooms!, options ? configureAddedRoom(blank, options) : blank]).at(-1)!;
         const next = activateDesignRoom({ ...synced, rooms: [...synced.rooms!, room] }, room.id);
         set({ current: { ...next, updatedAt: Date.now() }, past: [...get().past, cloneDesign(current)].slice(-60), future: [] });
       },

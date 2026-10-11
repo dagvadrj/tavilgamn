@@ -19,6 +19,7 @@ import type {
   RoomShape,
   RoomWall,
   RoomOpening,
+  RoomInteriorCamera,
 } from "@/lib/types";
 import {
   connectionGeometry,
@@ -47,10 +48,14 @@ import {
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
+import { roomTourCamera, tourPointValid } from "./roomCameraPlacement";
+import type { WalkDirection } from "@/lib/roomInteriorCamera";
+import { RoomStreetView, CameraPointPlacement } from "./RoomStreetView";
 import { RoomCameraRig } from "./RoomCameraRig";
 import { CameraNavigation } from "./CameraNavigation";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { CursorNavigation } from "./CursorNavigationBinding";
+import { Camera } from "lucide-react";
 import {
   SCENE_NAVIGATION_START,
   isSceneNavigationGesture,
@@ -87,6 +92,12 @@ interface RoomCanvasProps {
   measurements?: Measurement[];
   resetKey?: number;
   cameraRequest?: CameraRequest;
+  interior?: boolean;
+  cameraPlacement?: boolean;
+  onCameraPlace?: (x: number, z: number) => void;
+  onCameraSave?: (pose: RoomInteriorCamera) => void;
+  walkDirection?: WalkDirection | null;
+  onVisitRoom?: (id: string) => void;
   onEditStart?: () => void;
   onEditEnd?: () => void;
   /** Optional custom GLB interior to render instead of procedural room */
@@ -113,6 +124,12 @@ export function RoomCanvas({
   measurements = [],
   resetKey = 0,
   cameraRequest,
+  interior = false,
+  cameraPlacement = false,
+  onCameraPlace,
+  onCameraSave,
+  walkDirection,
+  onVisitRoom,
   onEditStart,
   onEditEnd,
   customInterior,
@@ -131,9 +148,18 @@ export function RoomCanvas({
   const [kitchenMaterials, setKitchenMaterials] = useState<
     Record<string, KitchenMaterialDefinition>
   >({});
-  const rooms = design.rooms ?? [];
+  const rooms = useMemo(() => design.rooms ?? [], [design.rooms]);
+  const tourPoints = useMemo(
+    () => new Map(rooms.map((room) => [room.id, roomTourCamera(room)])),
+    [rooms],
+  );
   const activeRoom = rooms.find((room) => room.id === design.activeRoomId);
   const origin = activeRoom ? roomPosition(activeRoom) : { x: 0, z: 0 };
+  const activeBounds = getRoomGeometry(design).bounds;
+  const wallFocus: [number, number] = [
+    (activeBounds.minX + activeBounds.maxX) / 2,
+    (activeBounds.minZ + activeBounds.maxZ) / 2,
+  ];
   const solar = solarLighting(design.lighting);
   const hasKitchen = (
     rooms.length ? rooms.flatMap((room) => room.pieces) : design.pieces
@@ -210,17 +236,36 @@ export function RoomCanvas({
     >
       <CameraMotionPreview interactionActive={isDraggingPiece}>
         <CanvasDiagnostics scene="room" />
-        <RoomCameraRig
-          view={view}
-          width={spanX}
-          depth={spanZ}
-          height={roomHeight}
-          centerX={centerX}
-          centerZ={centerZ}
-          resetKey={resetKey}
-          originX={origin.x}
-          originZ={origin.z}
-        />
+        {!interior && (
+          <RoomCameraRig
+            view={view}
+            width={spanX}
+            depth={spanZ}
+            height={roomHeight}
+            centerX={centerX}
+            centerZ={centerZ}
+            resetKey={resetKey}
+            originX={origin.x}
+            originZ={origin.z}
+          />
+        )}
+        {interior && (
+          <RoomStreetView
+            roomId={design.activeRoomId ?? design.id}
+            pose={
+              tourPoints.get(design.activeRoomId ?? "") ??
+              roomTourCamera(design)
+            }
+            locked={locked}
+            request={cameraRequest}
+            onSave={onCameraSave}
+            walkDirection={walkDirection}
+            canWalk={(x, z) => tourPointValid(design, x, z)}
+          />
+        )}
+        {cameraPlacement && onCameraPlace && (
+          <CameraPointPlacement onPlace={onCameraPlace} />
+        )}
         <color
           attach="background"
           args={[solar.night ? "#252c38" : "#F1F0ED"]}
@@ -320,7 +365,9 @@ export function RoomCanvas({
                     sharedCuts={shared.cuts}
                     sharedBoundaries={shared.boundaries}
                     connectionOpenings={shared.openings}
-                    readOnly={!active}
+                    interior={interior}
+                    readOnly={!active || interior}
+                    wallFocus={wallFocus}
                     onSelect={active ? onSelect : () => onSelectRoom?.(room.id)}
                     selectedWall={active ? selectedWall : null}
                     onSelectWall={active ? onSelectWall : undefined}
@@ -358,13 +405,38 @@ export function RoomCanvas({
                         kitchenMaterials={kitchenMaterials}
                       />
                     ))}
-                  <RoomCaption
-                    name={room.name}
-                    area={getRoomGeometry(room).area}
-                    span={Math.max(room.width, room.depth)}
-                    active={active}
-                    onSelect={() => onSelectRoom?.(room.id)}
-                  />
+                  {(cameraPlacement || (interior && !active)) && (
+                    <Html
+                      center
+                      occlude={interior}
+                      position={[
+                        tourPoints.get(room.id)!.x,
+                        0.25,
+                        tourPoints.get(room.id)!.z,
+                      ]}
+                      zIndexRange={[13, 0]}
+                    >
+                      <button
+                        type="button"
+                        className="rounded-full border-2 border-white bg-[#293C32] px-3 py-2 text-white shadow-lg"
+                        aria-label={`${room.name}: дотроос харах`}
+                        title={`${room.name}: дотроос харах`}
+                        onClick={() => onVisitRoom?.(room.id)}
+                      >
+                        <Camera size={18} />
+                      </button>
+                    </Html>
+                  )}
+                  {!interior && !cameraPlacement && (
+                    <RoomCaption
+                      name={room.name}
+                      area={getRoomGeometry(room).area}
+                      span={Math.max(room.width, room.depth)}
+                      active={active}
+                      onSelect={() => onSelectRoom?.(room.id)}
+                      onVisit={() => onVisitRoom?.(room.id)}
+                    />
+                  )}
                 </group>
               );
             })}
@@ -372,6 +444,7 @@ export function RoomCanvas({
         ) : (
           <>
             <RoomStructure
+              interior={interior}
               design={design}
               onSelect={onSelect}
               view={view}
@@ -439,7 +512,7 @@ export function RoomCanvas({
             onDragChange={setIsDraggingPiece}
             snapEnabled={snapEnabled}
             gridEnabled={gridEnabled}
-            measureMode={showDimensions}
+            measureMode={showDimensions || interior || cameraPlacement}
             onEditStart={onEditStart}
             onEditEnd={onEditEnd}
             kitchenMaterials={kitchenMaterials}
@@ -456,7 +529,7 @@ export function RoomCanvas({
             color="#766c5d"
           />
         )}
-        {view === "perspective" && (
+        {!interior && view === "perspective" && (
           <OrbitControls
             makeDefault
             enabled={!locked && !isDraggingPiece}
@@ -488,18 +561,25 @@ export function RoomCanvas({
             maxDistance={Math.max(40, Math.max(design.width, design.depth) * 8)}
           />
         )}
-        <CameraNavigation
-          request={cameraRequest}
-          plan={view === "plan"}
-          bounds={{
-            width: spanX,
-            depth: spanZ,
-            height: roomHeight,
-            centerX,
-            centerZ,
-          }}
-        />
-        <CursorNavigation enabled={!locked} plan={view === "plan"} />
+        {!interior && (
+          <CameraNavigation
+            request={cameraRequest}
+            plan={view === "plan"}
+            bounds={{
+              width: spanX,
+              depth: spanZ,
+              height: roomHeight,
+              centerX,
+              centerZ,
+            }}
+          />
+        )}
+        {!interior && (
+          <CursorNavigation
+            enabled={!locked && !interior && !cameraPlacement}
+            plan={view === "plan"}
+          />
+        )}
       </CameraMotionPreview>
     </Canvas>
   );
@@ -510,12 +590,14 @@ function RoomCaption({
   span,
   active,
   onSelect,
+  onVisit,
 }: {
   name: string;
   area: number;
   span: number;
   active: boolean;
   onSelect: () => void;
+  onVisit?: () => void;
 }) {
   const anchor = useRef<THREE.Group>(null),
     button = useRef<HTMLButtonElement>(null);
@@ -536,16 +618,29 @@ function RoomCaption({
   return (
     <group ref={anchor} position={[0, 0.35, 0]}>
       <Html center zIndexRange={[12, 0]}>
-        <button
-          ref={button}
-          type="button"
-          className="room-world-label"
-          aria-pressed={active}
-          onClick={onSelect}
-        >
-          <strong>{name}</strong>
-          <small>{area.toFixed(1)} м²</small>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            ref={button}
+            type="button"
+            className="room-world-label"
+            aria-pressed={active}
+            onClick={onSelect}
+          >
+            <strong>{name}</strong>
+            <small>{area.toFixed(1)} м²</small>
+          </button>
+          {onVisit && (
+            <button
+              type="button"
+              className="rounded-full border-2 border-white bg-[#293C32] p-2 text-white shadow-lg"
+              aria-label={`${name}: дотроос харах`}
+              title={`${name}: дотроос харах`}
+              onClick={onVisit}
+            >
+              <Camera size={18} />
+            </button>
+          )}
+        </div>
       </Html>
     </group>
   );
@@ -607,12 +702,14 @@ function DraggablePiece({
   );
   const product = getProduct(piece.productId);
   const dbModel = piece.modelId ? getDbModel(piece.modelId) : undefined;
-  const fileModel = dbModel ? {
-    id: dbModel.fileModelId ?? dbModel.id,
-    file: dbModel.glbFile,
-    previewFile: dbModel.previewGlbFile,
-    physicalSize: dbModel.physicalSize,
-  } : product?.model;
+  const fileModel = dbModel
+    ? {
+        id: dbModel.fileModelId ?? dbModel.id,
+        file: dbModel.glbFile,
+        previewFile: dbModel.previewGlbFile,
+        physicalSize: dbModel.physicalSize,
+      }
+    : product?.model;
   const [dragging, setDragging] = useState(false);
   const [invalid, setInvalid] = useState(false);
 

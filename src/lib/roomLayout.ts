@@ -86,7 +86,7 @@ export function validConnections(rooms: DesignRoom[], connections: RoomConnectio
 }
 export function defaultConnection(contact: RoomContact, rooms: DesignRoom[]): RoomConnection {
   const height=Math.min(...rooms.filter(r=>r.id===contact.roomA || r.id===contact.roomB).map(r=>r.height??2.7));
-  return { id: `connection_${crypto.randomUUID()}`, roomA: contact.roomA, roomB: contact.roomB, wallA:contact.wallA,wallB:contact.wallB,kind:contact.length>=1.02?"door":"open",doorWidth:Math.max(.3,Math.min(.9,contact.length-.12)),doorHeight:Math.min(2.1,height-.06),position:.5,hinge:"left",swing:"inward" };
+  return { id: `connection_${crypto.randomUUID()}`, roomA: contact.roomA, roomB: contact.roomB, wallA:contact.wallA,wallB:contact.wallB,kind:contact.length>=1.02?(rooms.find(r=>r.id===contact.roomA)?.connectionKind ?? rooms.find(r=>r.id===contact.roomB)?.connectionKind ?? "door"):"open",doorWidth:Math.max(.3,Math.min(.9,contact.length-.12)),doorHeight:Math.min(2.1,height-.06),position:.5,hinge:"left",swing:"inward" };
 }
 /** Snap only to a real opposing wall; corners alone do not create connections. */
 export function snapRoomPosition(room: DesignRoom, rooms: DesignRoom[], requested: RoomPosition, threshold=.3) {
@@ -127,7 +127,7 @@ export function connectionGeometry(room: DesignRoom, rooms: DesignRoom[], connec
     // One shared wall belongs to the taller room; the other copy disappears.
     const owner=(room.height??2.7)>(other.height??2.7) || ((room.height??2.7)===(other.height??2.7) && room.id===c.roomA);
     const full={wallId:wall,from,to,height:(room.height??2.7)+.05,sillHeight:0};
-    suppressed.push(full);
+    suppressed.push({...full,height:Math.min(room.height??2.7,other.height??2.7)});
     if (!owner || c.kind==="open") { cuts.push(full); continue; }
     const usable=Math.max(0,contact.length-c.doorWidth-.12);
     const world={x:contact.a.x+(contact.b.x-contact.a.x)*(.06+c.doorWidth/2+usable*c.position)/contact.length,z:contact.a.z+(contact.b.z-contact.a.z)*(.06+c.doorWidth/2+usable*c.position)/contact.length};

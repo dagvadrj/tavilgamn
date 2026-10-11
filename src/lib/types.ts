@@ -177,7 +177,11 @@ export interface RoomShape {
   wallFeatures?: WallFeature[];
   columns?: RoomColumn[];
   openings?: RoomOpening[];
+  /** Saved, room-local viewpoint for the interior tour. */
+  interiorCamera?: RoomInteriorCamera;
+  connectionKind?: "door" | "open";
 }
+export interface RoomInteriorCamera { x: number; z: number; eyeHeight: number; yaw: number; pitch: number; fov?: number }
 export interface RoomPosition {
   x: number;
   z: number;

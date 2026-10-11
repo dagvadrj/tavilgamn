@@ -97,6 +97,10 @@ import {
   layoutFurnitureIssue,
   layoutClearanceIssue,
 } from "@/three/roomPlacement";
+import { RoomAddDialog } from "./RoomAddDialog";
+import { RoomTourControls } from "./RoomTourControls";
+import { interiorCamera, type WalkDirection } from "@/lib/roomInteriorCamera";
+import { tourPointValid } from "@/three/roomCameraPlacement";
 import { syncDesignRooms } from "@/lib/roomDesign";
 import {
   isPlacementValid,
@@ -274,7 +278,14 @@ export function RoomPlanner() {
   );
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [cameraRequest, setCameraRequest] = useState<CameraRequest>();
+  const [cameraPlacement, setCameraPlacement] = useState(false);
+  const [walkDirection, setWalkDirection] = useState<WalkDirection | null>(
+    null,
+  );
+  const [addRoomType, setAddRoomType] = useState<RoomType | null>(null);
   function navigateView(action: CameraAction) {
+    if (action === "fit" || action === "top" || action === "front")
+      setCameraPlacement(false);
     if (action === "top") {
       setView("plan");
       setRoomView("top");
@@ -284,11 +295,17 @@ export function RoomPlanner() {
       setRoomView("front");
     }
     if (action === "fit") setRoomView(view === "plan" ? "top" : "dollhouse");
-    if (action === "rotate-left" || action === "rotate-right")
+    if (
+      roomView !== "interior" &&
+      (action === "rotate-left" || action === "rotate-right")
+    )
       setRoomView("dollhouse");
     setCameraRequest((previous) => ({ id: (previous?.id ?? 0) + 1, action }));
   }
   const shortcuts = useRef<Record<string, () => void>>({});
+  useEffect(() => {
+    setWalkDirection(null);
+  }, [current?.activeRoomId, roomView, locked]);
   const addToCart = useCart((s) => s.add);
 
   useEffect(() => {
@@ -340,6 +357,8 @@ export function RoomPlanner() {
     setRoomView("dollhouse");
     setView("perspective");
     setCameraRequest(undefined);
+    setCameraPlacement(false);
+    setAddRoomType(null);
   }, [current?.id, setView, setResetKey]);
   useEffect(() => {
     if (
@@ -492,16 +511,24 @@ export function RoomPlanner() {
   );
   if (roomStartOpen || !current || !placement) {
     shortcuts.current = {};
-    return <RoomPlannerStart draft={current} onResume={() => setRoomStartOpen(false)}
-      onStart={(type, dimensions) => {
-        // Keep the previous draft available before starting a different room.
-        if (useDesigns.getState().current) saveCurrent();
-        createNew("80", `${ROOM_TYPES[type].label} загвар`, type, dimensions);
-        setRoomStartOpen(false); setShowStartHint(false);
-        setCatalogOpen(false); setPropertiesOpen(false); setSummaryOpen(false);
-        setKitchenOnly(type === "kitchen");
-        setLeftOpen(type === "kitchen");
-      }}/>;
+    return (
+      <RoomPlannerStart
+        draft={current}
+        onResume={() => setRoomStartOpen(false)}
+        onStart={(type, dimensions) => {
+          // Keep the previous draft available before starting a different room.
+          if (useDesigns.getState().current) saveCurrent();
+          createNew("80", `${ROOM_TYPES[type].label} загвар`, type, dimensions);
+          setRoomStartOpen(false);
+          setShowStartHint(false);
+          setCatalogOpen(false);
+          setPropertiesOpen(false);
+          setSummaryOpen(false);
+          setKitchenOnly(type === "kitchen");
+          setLeftOpen(type === "kitchen");
+        }}
+      />
+    );
   }
 
   const addPiece = (productId: string) => {
@@ -822,6 +849,8 @@ export function RoomPlanner() {
     arrowleft: () => nudge(-0.1, 0),
     arrowright: () => nudge(0.1, 0),
     escape: () => {
+      setCameraPlacement(false);
+      if (roomView === "interior") navigateView("fit");
       setSelected(null);
       setSelectedWall(null);
       setSelectedOpening(null);
@@ -1161,14 +1190,36 @@ export function RoomPlanner() {
           </div>
         )}
         <div className="studio-catalog-scroll flex-1 overflow-y-auto p-3">
-          {kitchenOnly && <div className="room-kitchen-intro">
-            <span className="room-kitchen-intro-icon"><ChefHat size={24} aria-hidden="true" /></span>
-            <h2>Гарнитураа сонгоорой</h2>
-            <p>Доорх хадгалсан загвараас сонгоод «Өрөөнд байрлуулах» дарна уу. Шинээр хийх бол эхлээд шүүгээ, хэмжээ, өнгөө сонгоорой.</p>
-            <Link className="room-kitchen-create" href="/kitchen?new=1"><Plus size={18} aria-hidden="true" /><span><strong>Шинээр гарнитур хийх</strong><small>Шүүгээ, хэмжээ, өнгөө сонгоод хадгалах</small></span><ArrowRight size={18} aria-hidden="true" /></Link>
-          </div>}
-          <details className="planner-kitchen-library" key={kitchenOnly ? "kitchen" : "catalog"} open={kitchenOnly || undefined}>
-            <summary>{kitchenOnly ? "Миний хадгалсан гарнитурууд" : "Өөрийн загвар · гарнитур"}</summary>
+          {kitchenOnly && (
+            <div className="room-kitchen-intro">
+              <span className="room-kitchen-intro-icon">
+                <ChefHat size={24} aria-hidden="true" />
+              </span>
+              <h2>Гарнитураа сонгоорой</h2>
+              <p>
+                Доорх хадгалсан загвараас сонгоод «Өрөөнд байрлуулах» дарна уу.
+                Шинээр хийх бол эхлээд шүүгээ, хэмжээ, өнгөө сонгоорой.
+              </p>
+              <Link className="room-kitchen-create" href="/kitchen?new=1">
+                <Plus size={18} aria-hidden="true" />
+                <span>
+                  <strong>Шинээр гарнитур хийх</strong>
+                  <small>Шүүгээ, хэмжээ, өнгөө сонгоод хадгалах</small>
+                </span>
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+            </div>
+          )}
+          <details
+            className="planner-kitchen-library"
+            key={kitchenOnly ? "kitchen" : "catalog"}
+            open={kitchenOnly || undefined}
+          >
+            <summary>
+              {kitchenOnly
+                ? "Миний хадгалсан гарнитурууд"
+                : "Өөрийн загвар · гарнитур"}
+            </summary>
             <SavedKitchenList
               onPlace={(saved: SavedKitchen) => {
                 const fit = assessKitchenRoomFit(
@@ -1350,7 +1401,7 @@ export function RoomPlanner() {
               setPlacementTemplate(null);
             }}
             onAdd={(type) => {
-              addRoom(type);
+              setAddRoomType(type);
               setRoomMapOpen(true);
               setShowStartHint(false);
               setLeftOpen(false);
@@ -1367,12 +1418,32 @@ export function RoomPlanner() {
           view={roomView}
           onView={(next) => {
             setLocked(false);
+            setCameraPlacement(false);
+            setSelected(null);
+            setSelectedWall(null);
+            setSelectedOpening(null);
+            setPlacementTemplate(null);
             setRoomView(next);
+            setShowStartHint(false);
             setView(next === "top" ? "plan" : "perspective");
+            if (next !== "interior")
+              setCameraRequest((previous) => ({
+                id: (previous?.id ?? 0) + 1,
+                action:
+                  next === "top" ? "top" : next === "front" ? "front" : "fit",
+              }));
+          }}
+          cameraPlacement={cameraPlacement}
+          onCameraPlace={() => {
+            setCameraPlacement(!cameraPlacement);
+            setRoomView("top");
+            setView("plan");
+            setLocked(false);
+            setSelected(null);
+            setPlacementTemplate(null);
             setCameraRequest((previous) => ({
               id: (previous?.id ?? 0) + 1,
-              action:
-                next === "top" ? "top" : next === "front" ? "front" : "fit",
+              action: "top",
             }));
           }}
           onZoom={navigateView}
@@ -1386,6 +1457,8 @@ export function RoomPlanner() {
           beginLightingEdit={beginEdit}
           endLightingEdit={endEdit}
           onWindows={() => {
+            if (roomView === "interior") navigateView("fit");
+            setCameraPlacement(false);
             endEdit();
             setRoomDetailsTab("room");
             setSelected(null);
@@ -1635,17 +1708,66 @@ export function RoomPlanner() {
             </div>
           )}
         <div className="room-camera-guide" role="status">
-          {placementTemplate
-            ? "Хаалга, цонх байрлуулах ханандаа дарна уу · Esc цуцлах"
-            : selected
-              ? "Тавилгыг чирж байрлуулна · Эргүүлэх товч: 90° · Сумтай товч: 10 см"
-              : "Тавилга: дарж сонгох, чирж байрлуулах · Харах өнцөг: дунд товчоор чирэх · Ойртуулах: + / −"}
+          {cameraPlacement
+            ? "Камер байрлуулах шалан дээр дарна уу · Esc цуцлах"
+            : roomView === "interior"
+              ? "W/A/S/D — өрөө дотор алхах · Чирэх — эргэн харах · Дугуй — харах өнцөг"
+              : placementTemplate
+                ? "Хаалга, цонх байрлуулах ханандаа дарна уу · Esc цуцлах"
+                : selected
+                  ? "Тавилгыг чирж байрлуулна · Эргүүлэх товч: 90° · Сумтай товч: 10 см"
+                  : "Тавилга: дарж сонгох, чирж байрлуулах · Харах өнцөг: дунд товчоор чирэх · Ойртуулах: + / −"}
         </div>
 
+        {roomView === "interior" && (
+          <RoomTourControls
+            design={current}
+            locked={locked}
+            onSelectRoom={selectRoom}
+            onExit={() => navigateView("fit")}
+            onFov={(fov) =>
+              updateRoom({
+                interiorCamera: { ...interiorCamera(current), fov },
+              })
+            }
+            onWalk={setWalkDirection}
+            beginEdit={beginEdit}
+            endEdit={endEdit}
+          />
+        )}
         <div className="planner-canvas h-full w-full pt-10 xl:pt-0">
           <RoomCanvas
             key={current.id}
             design={current}
+            interior={roomView === "interior"}
+            cameraPlacement={cameraPlacement}
+            walkDirection={walkDirection}
+            onCameraPlace={(x, z) => {
+              if (!tourPointValid(current, x, z)) {
+                setNotice(
+                  "Камерыг өрөөний дотор, хана болон тавилгаас зайтай байрлуулна уу.",
+                );
+                return;
+              }
+              updateRoom({
+                interiorCamera: { ...interiorCamera(current), x, z },
+              });
+              setCameraPlacement(false);
+              setNotice(
+                "Камерын байрлал хадгалагдлаа. Дотроос харах товчийг дарна уу.",
+              );
+            }}
+            onCameraSave={(pose) => updateRoom({ interiorCamera: pose })}
+            onVisitRoom={(id) => {
+              selectRoom(id);
+              setRoomView("interior");
+              setView("perspective");
+              setCameraPlacement(false);
+              setLocked(false);
+              setSelected(null);
+              setPlacementTemplate(null);
+              setShowStartHint(false);
+            }}
             onSelectRoom={(id) => {
               selectRoom(id);
               setSelected(null);
@@ -2071,7 +2193,7 @@ export function RoomPlanner() {
                       type="button"
                       className="btn-ghost"
                       onClick={() => {
-                        addRoom(newRoomType);
+                        setAddRoomType(newRoomType);
                         setLeftOpen(false);
                         setRightOpen(false);
                         setRoomMapOpen(true);
@@ -2618,6 +2740,19 @@ export function RoomPlanner() {
         </div>
       </Drawer>
 
+      {addRoomType && (
+        <RoomAddDialog
+          type={addRoomType}
+          onClose={() => setAddRoomType(null)}
+          onAdd={(type, options) => {
+            addRoom(type, options);
+            setAddRoomType(null);
+            setRoomMapOpen(true);
+            setCameraPlacement(false);
+            setShowStartHint(false);
+          }}
+        />
+      )}
       {showRoomGeometry && (
         <RoomGeometryModal
           key={`${current.id}:${current.activeRoomId}`}
