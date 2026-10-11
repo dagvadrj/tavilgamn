@@ -106,3 +106,4 @@ Lazy loading-ийн тайлбар: [Next.js documentation](https://nextjs.org/d
 - Cache-ийн dimension isolation болон eviction-ийг шалгах тест нэмсэн; өмнөх leg/skirting/preview-priority тестүүд passed.
 
 Prettier-ийг dev dependency болгож, `.prettierrc.json`, `.prettierignore` нэмэв. `npm run format:code` нь source TS/TSX-ийг форматлана; generated database schema-г алгасана. CSS-д өмнөх `npm run styles:format`-ийг ашиглана.
+hello guys
