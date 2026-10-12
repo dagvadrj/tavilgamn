@@ -18,10 +18,30 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await requireAdmin(request);
     if (auth.error) return auth.error;
+    const designId = request.nextUrl.searchParams.get("design");
+    if (
+      designId &&
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        designId,
+      )
+    )
+      return NextResponse.json(
+        { error: "Загварын дугаар буруу байна." },
+        { status: 400, headers: kitchenPrivateHeaders },
+      );
     const config = configuredKitchenRender();
+    const designs = await readAdminKitchenDesigns(
+      undefined,
+      designId ?? undefined,
+    );
+    if (designId && designs.length === 0)
+      return NextResponse.json(
+        { error: "Загвар олдсонгүй." },
+        { status: 404, headers: kitchenPrivateHeaders },
+      );
     return NextResponse.json(
       {
-        designs: await readAdminKitchenDesigns(),
+        designs,
         renderConfig: { ...config, ready: kitchenRenderConfigured(config) },
       },
       { headers: kitchenPrivateHeaders },

@@ -356,14 +356,19 @@ export async function readMerchantKitchenDesignById(
   };
 }
 
-export async function readAdminKitchenDesigns(db = getSupabaseAdmin()) {
-  const { data: designRows, error: designError } = await db
+export async function readAdminKitchenDesigns(
+  db = getSupabaseAdmin(),
+  designId?: string,
+) {
+  let query = db
     .from("kitchen_designs")
     .select(
       "id,store_id,slug,publication_status,published_version_id,source_garniture_id,updated_at",
     )
     .order("updated_at", { ascending: false })
     .limit(1000);
+  if (designId) query = query.eq("id", designId);
+  const { data: designRows, error: designError } = await query;
   if (designError) throw designError;
   const designs = (designRows ?? []) as DesignRow[];
   const ids = designs.map((item) => item.id);

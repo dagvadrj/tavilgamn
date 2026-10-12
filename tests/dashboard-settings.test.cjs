@@ -91,6 +91,7 @@ test("dashboard settings route each control to its real preference or store acti
   assert.equal(profileOpens, 1);
   const admin = DashboardSettings({ role: "admin", preferences: preferencesModule.DEFAULT_DASHBOARD_PREFERENCES, onChange: () => true });
   assert.equal(findAll(admin, (node) => node.type === "select").length, 0);
+  assert.deepEqual(findAll(admin, node => node.type === "input" && node.props.name === "dashboard-theme").map(node => node.props.value), ["light", "dark"]);
 });
 
 test("merchant settings deep links survive navigation without retaining a kitchen target", () => {
