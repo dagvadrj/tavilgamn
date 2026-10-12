@@ -1565,6 +1565,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      remove_kitchen_design_media: {
+        Args: {
+          p_actor: string
+          p_design: string
+          p_version: string
+          p_media: string
+        }
+        Returns: Json
+      }
       add_kitchen_design_media: {
         Args: {
           p_actor: string
@@ -1825,6 +1834,8 @@ export type Database = {
         Returns: Json
       }
       read_featured_merchants: { Args: { p_limit?: number }; Returns: Json }
+      assert_kitchen_render_actor: { Args: { p_actor: string; p_job: string }; Returns: undefined }
+      read_kitchen_design_render_usage: { Args: { p_actor: string; p_design: string }; Returns: Json }
       read_kitchen_render_usage: { Args: { p_actor: string }; Returns: Json }
       read_merchant_kitchen_quotes: {
         Args: { p_actor: string; p_focus?: string; p_page?: number }

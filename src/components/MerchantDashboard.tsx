@@ -15,6 +15,7 @@ import { MerchantOrders } from "@/components/MerchantOrders";
 import { MerchantShell } from "@/components/MerchantShell";
 import type { MerchantTab } from "@/components/MerchantSidebar";
 import { MerchantKitchenDesigns } from "@/components/MerchantKitchenDesigns";
+import { MerchantKitchenDesignDetail } from "@/components/MerchantKitchenDesignDetail";
 import { MerchantKitchenQuotes } from "@/components/MerchantKitchenQuotes";
 import { merchantRequest } from "@/features/merchant/merchantApi";
 import { MerchantOverview } from "@/features/merchant/MerchantOverview";
@@ -30,7 +31,11 @@ import { useDashboardPreferences } from "@/features/dashboard/useDashboardPrefer
 import "@/features/dashboard/dashboard-usability.css";
 import "@/features/dashboard/dashboard-reference.css";
 
-export function MerchantDashboard() {
+export function MerchantDashboard({
+  kitchenDesignId,
+}: {
+  kitchenDesignId?: string;
+} = {}) {
   const router = useRouter();
   const user = useAuth((state) => state.user);
   const role = useAuth((state) => state.role);
@@ -70,17 +75,25 @@ export function MerchantDashboard() {
       </main>
     );
   return (
-    <MerchantWorkspace key={user.id} owner={user.id} userName={user.name} />
+    <MerchantWorkspace
+      key={user.id}
+      owner={user.id}
+      userName={user.name}
+      kitchenDesignId={kitchenDesignId}
+    />
   );
 }
 
 function MerchantWorkspace({
   owner,
   userName,
+  kitchenDesignId,
 }: {
   owner: string;
   userName: string;
+  kitchenDesignId?: string;
 }) {
+  const router = useRouter();
   const [store, setStore] = useState<Store | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +104,6 @@ function MerchantWorkspace({
     "overview",
   );
   const [createProduct, setCreateProduct] = useState(false);
-  const [focusedKitchenId, setFocusedKitchenId] = useState<string | null>(null);
   const { preferences, updatePreferences } = useDashboardPreferences(
     owner,
     "merchant",
@@ -101,13 +113,14 @@ function MerchantWorkspace({
     const syncLocation = () => {
       const location = readMerchantLocation(window.location.search);
       setTab(location.tab);
-      setFocusedKitchenId(location.designId);
+      if (location.designId)
+        router.replace(`/merchant/kitchens/${location.designId}`);
     };
 
     if (window.location.search) syncLocation();
     window.addEventListener("popstate", syncLocation);
     return () => window.removeEventListener("popstate", syncLocation);
-  }, [setTab]);
+  }, [setTab, router]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -143,8 +156,10 @@ function MerchantWorkspace({
 
   const changeTab = (next: MerchantTab) => {
     setTab(next);
-    setFocusedKitchenId(null);
-
+    if (kitchenDesignId) {
+      router.push(merchantLocationPath("/merchant", "", "", next));
+      return;
+    }
     window.history.pushState(
       window.history.state,
       "",
@@ -163,25 +178,13 @@ function MerchantWorkspace({
   };
 
   const openKitchen = (designId?: string) => {
-    setTab("kitchens");
-    setFocusedKitchenId(designId ?? null);
-
-    window.history.pushState(
-      window.history.state,
-      "",
-      merchantLocationPath(
-        window.location.pathname,
-        window.location.search,
-        window.location.hash,
-        "kitchens",
-        designId,
-      ),
-    );
+    if (designId) router.push(`/merchant/kitchens/${designId}`);
+    else changeTab("kitchens");
   };
 
   return (
     <MerchantShell
-      active={tab}
+      active={kitchenDesignId ? "kitchens" : tab}
       onChange={changeTab}
       userName={userName}
       storeName={store?.name ?? "Миний дэлгүүр"}
@@ -190,7 +193,7 @@ function MerchantWorkspace({
       hasStore={Boolean(store)}
       preferences={preferences}
     >
-      {tab === "settings" ? (
+      {tab === "settings" && !kitchenDesignId ? (
         <DashboardSettings
           role="merchant"
           preferences={preferences}
@@ -198,7 +201,7 @@ function MerchantWorkspace({
           onStore={() => changeTab("store")}
           onProfile={() => changeTab("profile")}
         />
-      ) : tab === "profile" ? (
+      ) : tab === "profile" && !kitchenDesignId ? (
         <DashboardAccount role="merchant" onStore={() => changeTab("store")} />
       ) : !loaded ? (
         error ? (
@@ -220,6 +223,21 @@ function MerchantWorkspace({
           <div className="merchant-load-state" role="status">
             Дэлгүүрийг ачаалж байна…
           </div>
+        )
+      ) : kitchenDesignId ? (
+        store ? (
+          <MerchantKitchenDesignDetail
+            key={kitchenDesignId}
+            owner={owner}
+            designId={kitchenDesignId}
+          />
+        ) : (
+          <MerchantOverview
+            owner={owner}
+            store={null}
+            onProducts={() => changeTab("products")}
+            onStore={() => changeTab("store")}
+          />
         )
       ) : (
         <>
@@ -272,10 +290,7 @@ function MerchantWorkspace({
           {tab === "quotes" && store && <MerchantKitchenQuotes owner={owner} />}
 
           {tab === "kitchens" && store && (
-            <MerchantKitchenDesigns
-              owner={owner}
-              focusedDesignId={focusedKitchenId}
-            />
+            <MerchantKitchenDesigns owner={owner} />
           )}
         </>
       )}

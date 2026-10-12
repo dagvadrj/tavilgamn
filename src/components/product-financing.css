@@ -1,0 +1,439 @@
+.shop-shell .pdp-financing {
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid #e4e4e7;
+  scroll-margin-top: 180px;
+}
+
+.shop-shell .pdp-financing-options {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #deded8;
+}
+
+.shop-shell .pdp-financing-options-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #71717a;
+}
+
+.shop-shell .pdp-financing-options-heading a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  color: #2563eb;
+}
+
+.shop-shell .pdp-provider-icons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.shop-shell .pdp-provider-icons button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 2px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 10px;
+  color: #52525b;
+}
+
+.shop-shell .pdp-provider-icons button:hover {
+  border-color: #d4d4d8;
+  background: #ffffff80;
+}
+
+.shop-shell .finance-monogram {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.shop-shell .finance-rose {
+  background: #fce5ed;
+  color: #be123c;
+}
+
+.shop-shell .finance-blue {
+  background: #e0efff;
+  color: #2563eb;
+}
+
+.shop-shell .finance-green {
+  background: #dcf3e7;
+  color: #047857;
+}
+
+.shop-shell .finance-violet {
+  background: #ebe5fc;
+  color: #6d28d9;
+}
+
+.shop-shell .pdp-provider-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(420px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  padding: 24px;
+  overflow-y: auto;
+  border: 1px solid #e4e4e7;
+  border-radius: 16px;
+  background: white;
+  color: #18181b;
+  box-shadow: 0 24px 80px #00000026;
+}
+
+.shop-shell .pdp-provider-dialog::backdrop {
+  background: #11182766;
+  backdrop-filter: blur(3px);
+}
+
+.shop-shell .pdp-provider-dialog header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shop-shell .pdp-provider-dialog header h2 {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.shop-shell .pdp-provider-dialog header p {
+  margin-top: 4px;
+  color: #71717a;
+  font-size: 10px;
+}
+
+.shop-shell .pdp-provider-dialog header button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  margin-left: auto;
+  border-radius: 8px;
+  background: #f4f4f5;
+}
+
+.shop-shell .pdp-provider-amount {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 22px 0 14px;
+  padding: 14px;
+  border-radius: 8px;
+  background: #f4f7fc;
+  font-size: 12px;
+}
+
+.shop-shell .pdp-provider-dialog dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f2;
+  font-size: 12px;
+}
+
+.shop-shell .pdp-provider-dialog dt {
+  color: #71717a;
+}
+
+.shop-shell .pdp-provider-dialog dd {
+  text-align: right;
+  font-weight: 500;
+}
+
+.shop-shell .pdp-provider-note, .shop-shell .pdp-provider-disclosure {
+  margin-top: 16px;
+  color: #71717a;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.shop-shell .pdp-provider-disclosure {
+  font-size: 10px;
+}
+
+.shop-shell .pdp-provider-continue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  margin-top: 20px;
+  border-radius: 8px;
+  background: #18181b;
+  color: white;
+  font-size: 12px;
+}
+
+.shop-shell .finance-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.shop-shell .finance-heading h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.shop-shell .finance-heading > span {
+  color: #71717a;
+  font-size: 11px;
+}
+
+.shop-shell .finance-calculator {
+  padding: 18px 20px 0;
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  background: white;
+}
+
+.shop-shell .finance-compact-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.shop-shell .finance-mode {
+  display: flex;
+  padding: 3px;
+  border-radius: 8px;
+  background: #f4f4f5;
+}
+
+.shop-shell .finance-mode button {
+  min-height: 40px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.shop-shell .finance-mode button[aria-pressed="true"] {
+  background: white;
+  color: #2563eb;
+  box-shadow: 0 1px 4px #0000000a;
+}
+
+.shop-shell .finance-base-price {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 11px;
+  color: #71717a;
+}
+
+.shop-shell .finance-base-price strong {
+  color: #27272a;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-shell .finance-compact-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, .55fr);
+  align-items: center;
+  gap: 24px;
+  padding: 18px 0;
+}
+
+.shop-shell .finance-compact-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #3f3f46;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.shop-shell .finance-compact-hint svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.shop-shell .finance-compact-hint small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #71717a;
+}
+
+.shop-shell .finance-compact-inputs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.shop-shell .finance-compact-inputs label {
+  color: #71717a;
+  font-size: 11px;
+}
+
+.shop-shell .finance-compact-inputs :is(input, select) {
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  color: #27272a;
+  background: white;
+  font-size: 13px;
+}
+
+.shop-shell .finance-result {
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: #f4f7fc;
+}
+
+.shop-shell .finance-result-label {
+  display: block;
+  color: #52525b;
+  font-size: 11px;
+}
+
+.shop-shell .finance-result-price {
+  display: block;
+  margin-top: 4px;
+  color: #18181b;
+  font-size: 26px;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-shell .finance-result-price small {
+  color: #71717a;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.shop-shell .finance-result-total {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  color: #71717a;
+  font-size: 11px;
+}
+
+.shop-shell .finance-result-total strong {
+  color: #3f3f46;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-shell .finance-note {
+  margin-top: 10px;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #71717a;
+}
+
+.shop-shell .finance-schedule {
+  border-top: 1px solid #e4e4e7;
+  scroll-margin-top: 180px;
+}
+
+.shop-shell .finance-schedule > summary {
+  padding: 14px 0;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #52525b;
+}
+
+.shop-shell .finance-schedule > summary span {
+  margin-left: 10px;
+  color: #71717a;
+  font-size: 10px;
+}
+
+.shop-shell .finance-schedule > .finance-note:last-child {
+  margin-bottom: 14px;
+}
+
+.shop-shell .finance-table-scroll {
+  max-height: 280px;
+  overflow: auto;
+  margin-top: 10px;
+}
+
+.shop-shell .finance-table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: right;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-shell .finance-table-scroll th, .shop-shell .finance-table-scroll td {
+  padding: 9px 10px;
+  border-bottom: 1px solid #f0f0f2;
+}
+
+.shop-shell .finance-table-scroll th:first-child {
+  text-align: left;
+}
+
+.shop-shell .finance-table-scroll thead {
+  position: sticky;
+  top: 0;
+  background: #f4f4f5;
+  color: #52525b;
+}
+
+.shop-shell .finance-table-scroll tbody td:last-child {
+  color: #2563eb;
+}
+
+.shop-shell .pdp-financing :is(button, a, input, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+@media (max-width: 1023px) {
+  .shop-shell .finance-compact-inputs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .shop-shell .finance-compact-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px 0;
+  }
+  .shop-shell .finance-calculator {
+    padding: 14px 14px 0;
+  }
+  .shop-shell .finance-mode {
+    width: 100%;
+  }
+  .shop-shell .finance-mode button {
+    flex: 1;
+  }
+}

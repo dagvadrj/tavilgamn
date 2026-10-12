@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readKitchenReview } from "@/lib/kitchenMarketplace";
-import { kitchenMarketplaceError, kitchenPrivateHeaders } from "@/lib/kitchenMarketplaceHttp";
+import {
+  kitchenMarketplaceError,
+  kitchenPrivateHeaders,
+} from "@/lib/kitchenMarketplaceHttp";
 import { readAdminKitchenDesigns } from "@/lib/kitchenMarketplaceServer";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
+import {
+  configuredKitchenRender,
+  kitchenRenderConfigured,
+} from "@/lib/kitchenRenderConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +18,19 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await requireAdmin(request);
     if (auth.error) return auth.error;
-    return NextResponse.json({ designs: await readAdminKitchenDesigns() }, { headers: kitchenPrivateHeaders });
+    const config = configuredKitchenRender();
+    return NextResponse.json(
+      {
+        designs: await readAdminKitchenDesigns(),
+        renderConfig: { ...config, ready: kitchenRenderConfigured(config) },
+      },
+      { headers: kitchenPrivateHeaders },
+    );
   } catch (error) {
-    return kitchenMarketplaceError(error, "Гал тогооны загваруудыг ачаалж чадсангүй.");
+    return kitchenMarketplaceError(
+      error,
+      "Гал тогооны загваруудыг ачаалж чадсангүй.",
+    );
   }
 }
 
@@ -32,6 +49,9 @@ export async function PATCH(request: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true }, { headers: kitchenPrivateHeaders });
   } catch (error) {
-    return kitchenMarketplaceError(error, "Хяналтын шийдвэрийг хадгалж чадсангүй.");
+    return kitchenMarketplaceError(
+      error,
+      "Хяналтын шийдвэрийг хадгалж чадсангүй.",
+    );
   }
 }

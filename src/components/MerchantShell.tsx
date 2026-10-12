@@ -8,6 +8,8 @@ import {
 } from "./MerchantSidebar";
 import { MerchantHeader } from "./MerchantHeader";
 import type { DashboardPreferences } from "@/features/dashboard/preferences";
+import "@/features/dashboard/merchant-theme.css";
+import "@/features/dashboard/merchant-inputs.css";
 
 export function MerchantShell({
   active,
@@ -46,6 +48,7 @@ export function MerchantShell({
   return (
     <div
       className="merchant-app-shell dashboard-shell"
+      data-theme={preferences?.theme ?? "dark"}
       data-density={preferences?.density ?? "comfortable"}
       data-text-size={preferences?.textSize ?? "standard"}
     >

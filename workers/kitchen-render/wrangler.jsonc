@@ -1,0 +1,16 @@
+{
+  "name": "tavilgamn-kitchen-render",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "ai": { "binding": "AI" },
+  "ratelimits": [
+    {
+      "name": "TEXT_LIMITER",
+      "namespace_id": "1847021",
+      "simple": { "limit": 5, "period": 60 },
+    },
+  ],
+  "vars": { "RENDER_ENABLED": "true" },
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+}

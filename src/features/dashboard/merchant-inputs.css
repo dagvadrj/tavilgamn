@@ -1,0 +1,231 @@
+/* Shared merchant controls, including fields without the legacy .input class. */
+
+.merchant-app-shell.dashboard-shell .merchant-content {
+  --merchant-input-bg: var(--dashboard-surface);
+  --merchant-input-height: 44px;
+  --merchant-input-size: max(14px, var(--dashboard-body-size, 14px));
+  --merchant-input-radius: 10px;
+}
+
+.merchant-app-shell[data-theme="dark"] .merchant-content {
+  --merchant-input-bg: var(--dashboard-elevated);
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content :is(input, select, textarea) {
+  color-scheme: inherit;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content :is(input:not([type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="color"], [type="hidden"], [type="button"], [type="submit"], [type="reset"]), select, textarea):not(.km-token-control input, .merchant-search input, .mk-render-layout *) {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--merchant-input-height);
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: var(--merchant-input-radius);
+  background-color: var(--merchant-input-bg);
+  color: var(--dashboard-ink);
+  font-family: inherit;
+  font-size: var(--merchant-input-size);
+  font-weight: 400;
+  line-height: 1.5;
+  box-shadow: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content :is(input:not([type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="color"], [type="hidden"], [type="button"], [type="submit"], [type="reset"]), select):not(.km-token-control input, .merchant-search input, .mk-render-layout *) {
+  height: var(--merchant-input-height);
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content select:not(.mk-render-layout *) {
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content textarea:not(.mk-render-layout *) {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content :is(input, textarea):not(.mk-render-layout *)::placeholder {
+  color: var(--dashboard-muted);
+  opacity: 1;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content :is(input, select, textarea):not(.km-token-control input, .merchant-search input, .mk-render-layout *, [type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="hidden"]):hover:not(:disabled, [readonly]) {
+  border-color: color-mix(in srgb, var(--dashboard-muted) 55%, var(--dashboard-border));
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content :is(input, select, textarea):not(.km-token-control input, .merchant-search input, .mk-render-layout *, [type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="hidden"]):focus {
+  border-color: var(--dashboard-accent);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dashboard-accent) 18%, transparent);
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content :is(input, select, textarea):not(.mk-render-layout *, [type="file"], [type="hidden"]):disabled {
+  color: var(--dashboard-muted);
+  cursor: not-allowed;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content :is(input, select, textarea):not(.km-token-control input, .merchant-search input, .mk-render-layout *, [type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="hidden"]):disabled,
+.merchant-app-shell.dashboard-shell .merchant-content :is(input, textarea)[readonly]:not(.mk-render-layout *) {
+  background-color: color-mix(in srgb, var(--dashboard-elevated), var(--dashboard-bg) 55%);
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content :is(input, select, textarea)[aria-invalid="true"]:not(.km-token-control input, .merchant-search input, .mk-render-layout *) {
+  border-color: var(--dashboard-danger);
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content :is(input, select, textarea)[aria-invalid="true"]:focus:not(.km-token-control input, .merchant-search input, .mk-render-layout *) {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dashboard-danger) 18%, transparent);
+}
+
+.merchant-app-shell.dashboard-shell .km-token-control {
+  min-width: 0;
+  min-height: var(--merchant-input-height);
+  padding: 7px 10px;
+  border-radius: var(--merchant-input-radius);
+  background: var(--merchant-input-bg);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.merchant-app-shell.dashboard-shell .km-token-control:focus-within {
+  border-color: var(--dashboard-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dashboard-accent) 18%, transparent);
+}
+
+.merchant-app-shell.dashboard-shell .km-token-control input {
+  min-height: 28px;
+  font-size: var(--merchant-input-size);
+  outline: none;
+  box-shadow: none;
+}
+
+.merchant-app-shell.dashboard-shell .km-token-control[aria-disabled="true"] {
+  background: var(--dashboard-elevated);
+  cursor: not-allowed;
+}
+
+.merchant-app-shell.dashboard-shell .km-token-control:has(input[aria-invalid="true"]) {
+  border-color: var(--dashboard-danger);
+}
+
+.merchant-app-shell.dashboard-shell .km-token-control:has(input[aria-invalid="true"]):focus-within {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dashboard-danger) 18%, transparent);
+}
+
+.merchant-app-shell.dashboard-shell .merchant-search {
+  gap: 8px;
+  min-height: var(--merchant-input-height);
+  padding: 4px 4px 4px 14px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: var(--merchant-input-radius);
+  background: var(--merchant-input-bg);
+}
+
+.merchant-app-shell.dashboard-shell .merchant-search:focus-within {
+  border-color: var(--dashboard-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dashboard-accent) 18%, transparent);
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content .merchant-search input {
+  min-width: 0;
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  padding: 7px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dashboard-ink);
+  font: inherit;
+  font-size: var(--merchant-input-size);
+  outline: none;
+  box-shadow: none;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content .merchant-search input:focus {
+  border: 0;
+  outline: none;
+  box-shadow: none;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content input:is([type="checkbox"], [type="radio"]):not(.mk-render-layout *) {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--dashboard-accent);
+  cursor: pointer;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content input:is([type="checkbox"], [type="radio"]):disabled:not(.mk-render-layout *) {
+  cursor: not-allowed;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content input:is([type="checkbox"], [type="radio"], [type="range"]):focus-visible:not(.mk-render-layout *) {
+  outline: 2px solid var(--dashboard-accent);
+  outline-offset: 3px;
+}
+
+.merchant-app-shell.dashboard-shell :is(.merchant-checks label, .dashboard-setting-options label) {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content input[type="color"] {
+  width: 100%;
+  min-width: 0;
+  height: var(--merchant-input-height);
+  padding: 8px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: var(--merchant-input-radius);
+  background: var(--merchant-input-bg);
+  cursor: pointer;
+}
+
+.merchant-app-shell.dashboard-shell input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.merchant-app-shell.dashboard-shell input[type="color"]::-webkit-color-swatch,
+.merchant-app-shell.dashboard-shell input[type="color"]::-moz-color-swatch {
+  border: 0;
+  border-radius: 5px;
+}
+
+.merchant-app-shell.dashboard-shell .merchant-content input[type="range"]:not(.mk-render-layout *) {
+  min-height: 24px;
+  accent-color: var(--dashboard-accent);
+}
+
+.merchant-app-shell.dashboard-shell .merchant-upload-button {
+  min-height: var(--merchant-input-height);
+  max-width: 100%;
+  border-radius: var(--merchant-input-radius);
+  overflow-wrap: anywhere;
+}
+
+.merchant-app-shell.dashboard-shell :is(.merchant-form-grid label, .merchant-field, .km-field > label, .km-field-heading > label, .dashboard-profile-form > label) {
+  color: var(--dashboard-ink);
+  font-size: max(13px, var(--dashboard-small-size, 13px));
+  line-height: 1.5;
+}
+
+@media (max-width: 639px) {
+  .merchant-app-shell.dashboard-shell .merchant-content {
+    --merchant-input-height: 48px;
+    --merchant-input-size: max(16px, var(--dashboard-body-size, 16px));
+  }
+}
+
+.merchant-app-shell.dashboard-shell[data-text-size="large"] .merchant-content {
+  --merchant-input-height: 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .merchant-app-shell.dashboard-shell :is(input, select, textarea, .km-token-control) {
+    transition: none;
+  }
+}

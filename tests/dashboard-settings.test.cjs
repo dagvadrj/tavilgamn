@@ -11,8 +11,10 @@ test("dashboard preferences tolerate stale or corrupt browser storage", () => {
     assert.deepEqual(parseDashboardPreferences(raw), DEFAULT_DASHBOARD_PREFERENCES);
   }
   assert.deepEqual(parseDashboardPreferences('{"density":"compact","textSize":"large","overview":"inventory"}'), {
-    density: "compact", textSize: "large", overview: "inventory",
+    theme: "dark", density: "compact", textSize: "large", overview: "inventory",
   });
+  assert.equal(parseDashboardPreferences('{"theme":"light"}').theme, "light");
+  assert.equal(parseDashboardPreferences('{"theme":"invalid"}').theme, "dark");
 });
 
 test("preference updates persist across remounts, merge current values, and remain isolated by account and role", () => {
@@ -39,12 +41,14 @@ test("preference updates persist across remounts, merge current values, and rema
     // An older mounted consumer must merge against the latest stored settings.
     assert.equal(first.updatePreferences({ textSize: "large" }), true);
     assert.deepEqual(useDashboardPreferences("owner-a", "merchant").preferences, {
-      density: "compact", textSize: "large", overview: "all",
+      theme: "dark", density: "compact", textSize: "large", overview: "all",
     });
     for (const [owner, role] of [["owner-b", "merchant"], ["owner-a", "admin"]]) {
       assert.deepEqual(useDashboardPreferences(owner, role).preferences, preferencesModule.DEFAULT_DASHBOARD_PREFERENCES);
     }
     assert.equal(events.length, 2);
+    assert.equal(first.updatePreferences({theme:"light"}),true);
+    assert.equal(useDashboardPreferences("owner-a","merchant").preferences.theme,"light");
     global.window.localStorage.setItem = () => { throw new Error("Quota exceeded"); };
     assert.equal(first.updatePreferences({ overview: "sales" }), false);
     assert.equal(useDashboardPreferences("owner-a", "merchant").preferences.overview, "all");
@@ -74,6 +78,7 @@ test("dashboard settings route each control to its real preference or store acti
     onProfile: () => profileOpens++,
   });
   const inputs = findAll(tree, (node) => node.type === "input");
+  inputs.find(node=>node.props.value==="light").props.onChange();
   inputs.find((node) => node.props.value === "compact").props.onChange();
   inputs.find((node) => node.props.value === "large").props.onChange();
   findAll(tree, (node) => node.type === "select")[0].props.onChange({ target: { value: "inventory" } });
@@ -81,7 +86,7 @@ test("dashboard settings route each control to its real preference or store acti
   buttons[0].props.onClick();
   buttons[1].props.onClick();
   buttons[2].props.onClick();
-  assert.deepEqual(changes, [{ density: "compact" }, { textSize: "large" }, { overview: "inventory" }, preferencesModule.DEFAULT_DASHBOARD_PREFERENCES]);
+  assert.deepEqual(changes, [{theme:"light"}, { density: "compact" }, { textSize: "large" }, { overview: "inventory" }, preferencesModule.DEFAULT_DASHBOARD_PREFERENCES]);
   assert.equal(storeOpens, 1);
   assert.equal(profileOpens, 1);
   const admin = DashboardSettings({ role: "admin", preferences: preferencesModule.DEFAULT_DASHBOARD_PREFERENCES, onChange: () => true });

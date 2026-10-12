@@ -1,3 +1,62 @@
+.shop-shell .kitchen-directory-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 600px;
+  min-height: 46px;
+  padding: 7px 10px 7px 15px;
+  margin: 22px 0 12px;
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  background: var(--ui-surface);
+  color: var(--ui-muted);
+}
+
+.shop-shell .kitchen-directory-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ui-ink);
+  font-size: 12px;
+}
+
+.shop-shell .kitchen-directory-search button {
+  padding: 7px 12px;
+  border-radius: 7px;
+  background: var(--ui-accent);
+  color: white;
+  font-size: 11px;
+}
+
+.shop-shell .kitchen-directory-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 20px;
+}
+
+.shop-shell .kitchen-directory-tags a {
+  padding: 6px 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  color: var(--ui-muted);
+  font-size: 11px;
+}
+
+.shop-shell .kitchen-directory-tags a[aria-current="page"] {
+  border-color: var(--ui-accent);
+  color: var(--ui-accent);
+  background: var(--ui-selected);
+}
+
+.shop-shell .kitchen-directory-results {
+  margin-bottom: 18px;
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+
 .shop-shell .product-search {
   position: relative;
   flex: 0 1 280px;

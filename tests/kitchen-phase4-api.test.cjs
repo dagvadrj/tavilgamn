@@ -38,6 +38,8 @@ test('Phase 4 listing validation supports price ranges/materials and seven canon
 test('AI merchant API requires consent, uses verified actor and reports quota as 429',async()=>{
   const calls=[];
   const route=loadSource('src/app/api/merchant/kitchen-designs/[id]/renders/route.ts',{
+    '@/lib/kitchenRenderConfig':{CLOUDFLARE_RENDER_MODEL:'@cf/black-forest-labs/flux-2-klein-4b',kitchenRenderConfigured:()=>true},
+    '@/lib/cloudinaryImageUpload':{cloudinaryImageUploadConfigured:()=>true},
     '@/lib/supabase/requireMerchant':{requireMerchant:async()=>({userId:actor})},
     '@/lib/supabase/admin':{getSupabaseAdmin:()=>({rpc:async(name,args)=>{calls.push([name,args]);return {data:null,error:{code:'P0019'}};}})},
   });
@@ -47,6 +49,7 @@ test('AI merchant API requires consent, uses verified actor and reports quota as
   assert.equal(calls.length,0);
   assert.equal((await route.POST(request({...body,consent:true}),{params:Promise.resolve({id})})).status,429);
   assert.equal(calls[0][1].p_actor,actor); assert.equal(calls[0][1].p_consent,true);
+  assert.equal(calls[0][1].p_source_media,body.sourceMediaId);
 });
 
 test('AI admin API cannot call a provider without explicit cost approval',async()=>{

@@ -41,7 +41,8 @@ test("kitchen marketplace exposes complete listing details without a duplicate d
   assert.match(merchant, /installationIncluded/);
   assert.match(admin, /Marketplace дэлгэрэнгүй/);
   assert.match(listing, /href=\{`\/kitchens\/\$\{design\.slug\}`\}/);
-  assert.match(detail, /AI бодит дүрслэл/);
+  assert.match(detail, /KitchenDesignGallery/);
+  assert.match(fs.readFileSync("src/lib/kitchenDesignMedia.ts", "utf8"), /AI бодит дүрслэл/);
   assert.match(detail, /Үнэд багтсан/);
   assert.match(detail, /Үйлдвэртэй холбогдох/);
   assert.match(detail, /UseKitchenDesignButton/);
@@ -195,7 +196,7 @@ test("merchant edits only an open draft and creates a guarded version after publ
     "utf8",
   );
   const component = fs.readFileSync(
-    "src/components/MerchantKitchenDesigns.tsx",
+    "src/components/MerchantKitchenDesignDetail.tsx",
     "utf8",
   );
   const migration = fs.readFileSync(
@@ -205,7 +206,7 @@ test("merchant edits only an open draft and creates a guarded version after publ
   assert.match(route, /export async function PUT/);
   assert.match(route, /save_kitchen_marketplace_version/);
   assert.match(component, /Мэдээлэл засах/);
-  assert.match(component, /Шинэ version/);
+  assert.match(component, /Шинэ хувилбар/);
   assert.match(component, /publishedVersionId !== design\.versionId/);
   assert.match(component, /Admin-аас нийтлэхийг хүлээж байна/);
   assert.match(

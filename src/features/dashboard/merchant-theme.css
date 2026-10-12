@@ -1,0 +1,125 @@
+/* Merchant shell fills the viewport; content keeps a readable width inside it. */
+
+.dashboard-layout .merchant-app-shell.dashboard-shell {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  --dashboard-accent: #2563eb;
+  --dashboard-on-accent: #fff;
+}
+
+.dashboard-layout .merchant-app-shell[data-theme="light"] {
+  --dashboard-bg: #f8fafc;
+  --dashboard-surface: #fff;
+  --dashboard-elevated: #f1f5f9;
+  --dashboard-border: #e2e8f0;
+  --dashboard-ink: #0f172a;
+  --dashboard-muted: #64748b;
+  --dashboard-success: #15803d;
+  --dashboard-danger: #dc2626;
+  --dashboard-warning: #a16207;
+  color-scheme: light;
+}
+
+.dashboard-layout .merchant-app-shell[data-theme="dark"] {
+  --dashboard-bg: #090e18;
+  --dashboard-surface: #111827;
+  --dashboard-elevated: #1e293b;
+  --dashboard-border: #293548;
+  --dashboard-ink: #f8fafc;
+  --dashboard-muted: #a6b3c7;
+  --dashboard-accent: #60a5fa;
+  --dashboard-on-accent: #081426;
+  color-scheme: dark;
+}
+
+.dashboard-layout .merchant-app-shell .dashboard-sidebar,
+.dashboard-layout .merchant-app-shell .dashboard-topbar {
+  background: var(--dashboard-surface);
+}
+
+.merchant-app-shell .dashboard-drawer {
+  --dashboard-bg: inherit;
+  --dashboard-surface: inherit;
+  --dashboard-elevated: inherit;
+  --dashboard-border: inherit;
+  --dashboard-ink: inherit;
+  --dashboard-muted: inherit;
+  --dashboard-accent: inherit;
+  color-scheme: inherit;
+}
+
+.dashboard-layout .merchant-app-shell .dashboard-topbar {
+  padding-inline: clamp(16px, 2vw, 32px);
+}
+
+.dashboard-layout .merchant-app-shell .dashboard-content {
+  max-width: 1680px;
+  padding: clamp(20px, 2vw, 32px);
+}
+
+.merchant-app-shell.dashboard-shell .dashboard-brand-icon,
+.merchant-app-shell.dashboard-shell .merchant-header-avatar,
+.merchant-app-shell.dashboard-shell .merchant-notification-count,
+.merchant-app-shell.dashboard-shell .reference-store-avatar,
+.merchant-app-shell.dashboard-shell .reference-save.is-dirty,
+.merchant-app-shell.dashboard-shell .reference-filters button[aria-pressed="true"],
+.merchant-app-shell .merchant-content .btn-primary {
+  color: var(--dashboard-on-accent);
+}
+
+.merchant-app-shell .dashboard-setting-options label:has(input:checked) {
+  background: color-mix(in srgb, var(--dashboard-accent) 5%, var(--dashboard-surface));
+}
+
+.merchant-app-shell.dashboard-shell :is(.reference-featured-control .is-featured, .reference-stock-warning > strong, .reference-stock-warning .reference-kpi-label svg, .reference-inventory-list .is-low-stock, .reference-featured-badge) {
+  color: var(--dashboard-warning);
+}
+
+.merchant-app-shell.dashboard-shell :is(.reference-active-control.is-active, .reference-success-badge, .reference-inventory-list .is-stocked) {
+  color: var(--dashboard-success);
+}
+
+.merchant-app-shell.dashboard-shell .reference-bar-track span {
+  background: linear-gradient(90deg, var(--dashboard-accent), color-mix(in srgb, var(--dashboard-accent), #fff 35%));
+}
+
+.merchant-app-shell .merchant-content .btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dashboard-accent), var(--dashboard-ink) 12%);
+}
+
+.merchant-app-shell .merchant-content .btn-ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dashboard-elevated), var(--dashboard-ink) 6%);
+}
+
+.merchant-app-shell .dashboard-nav-button[aria-current="page"] {
+  color: var(--dashboard-accent);
+  background: color-mix(in srgb, var(--dashboard-accent) 12%, var(--dashboard-surface));
+}
+
+/* The AI workspace retains its existing palette in both merchant themes. */
+
+.merchant-app-shell .mk-render-layout {
+  --dashboard-bg: #090a0c;
+  --dashboard-surface: #101113;
+  --dashboard-elevated: #191b1e;
+  --dashboard-border: #27292d;
+  --dashboard-ink: #f2f3f5;
+  --dashboard-muted: #a3a6ae;
+  --dashboard-accent: #a395ff;
+  --dashboard-on-accent: #090a0c;
+  --dashboard-success: #72c98a;
+  --dashboard-danger: #ff8a86;
+  --dashboard-warning: #e8bf74;
+  color: var(--dashboard-ink);
+  color-scheme: dark;
+}
+
+@media (max-width: 639px) {
+  .dashboard-layout .merchant-app-shell .dashboard-topbar {
+    padding-inline: 12px;
+  }
+  .dashboard-layout .merchant-app-shell .dashboard-content {
+    padding: 20px 12px 28px;
+  }
+}

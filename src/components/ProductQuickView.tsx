@@ -158,33 +158,6 @@ export function ProductQuickView({
               Зураг нэмэгдээгүй
             </span>
           )}
-          {product.model && (
-            <div
-              className="product-quick-modes"
-              role="group"
-              aria-label="Бараа харах горим"
-            >
-              <button
-                type="button"
-                aria-pressed={viewerActive}
-                onClick={() => {
-                  if (!viewerActive) {
-                    setViewerStatus("loading");
-                    setShowModel(true);
-                  }
-                }}
-              >
-                <Box size={15} aria-hidden="true" /> 3D
-              </button>
-              <button
-                type="button"
-                aria-pressed={!viewerActive}
-                onClick={() => setShowModel(false)}
-              >
-                <ImageIcon size={15} aria-hidden="true" /> Фото
-              </button>
-            </div>
-          )}
           {viewerActive && (
             <p
               className={`product-quick-viewer-status${viewerStatus === "error" ? " is-error" : ""}`}

@@ -5,6 +5,8 @@ import {
   ArrowUpRight,
   RotateCcw,
   Settings,
+  Sun,
+  Moon,
   Store,
   UserRound,
 } from "lucide-react";
@@ -57,6 +59,44 @@ export function DashboardSettings({
             Өөрчлөлт шууд хэрэгжинэ. Энэ төхөөрөмжийн хөтөч дээр таны бүртгэлээр
             хадгалагдана.
           </p>
+          {role === "merchant" && (
+            <fieldset className="dashboard-setting-group">
+              <legend>Самбарын өнгө</legend>
+              <div className="dashboard-setting-options">
+                {(
+                  [
+                    [
+                      "light",
+                      "Light",
+                      "Цагаан дэвсгэр, хар бичиг, цэнхэр товч",
+                      Sun,
+                    ],
+                    [
+                      "dark",
+                      "Dark",
+                      "Бараан дэвсгэр, цагаан бичиг, цэнхэр товч",
+                      Moon,
+                    ],
+                  ] as const
+                ).map(([value, label, description, Icon]) => (
+                  <label key={value}>
+                    <input
+                      type="radio"
+                      name="dashboard-theme"
+                      value={value}
+                      checked={preferences.theme === value}
+                      onChange={() => change({ theme: value })}
+                    />
+                    <Icon size={19} aria-hidden="true" />
+                    <span>
+                      <strong>{label}</strong>
+                      <small>{description}</small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          )}
           <fieldset className="dashboard-setting-group">
             <legend>Мэдээллийн зай</legend>
             <div className="dashboard-setting-options">

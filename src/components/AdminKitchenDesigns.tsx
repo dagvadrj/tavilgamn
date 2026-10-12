@@ -14,26 +14,36 @@ import {
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
 import type { KitchenDesignSummary } from "@/lib/kitchenMarketplace";
-import { kitchenLifecycle, kitchenLifecycleLabel, kitchenPriceLabel } from "@/lib/kitchenMarketplace";
+import {
+  kitchenLifecycle,
+  kitchenLifecycleLabel,
+  kitchenPriceLabel,
+} from "@/lib/kitchenMarketplace";
 import { AdminKitchenMaterials } from "./AdminKitchenMaterials";
 import { AdminKitchenModules } from "./AdminKitchenModules";
 import { KitchenReviewTimeline } from "./KitchenReviewTimeline";
 
 type ReviewAction =
-  | "approved"
-  | "changes_requested"
-  | "rejected"
-  | "unpublished";
+  "approved" | "changes_requested" | "rejected" | "unpublished";
 type AdminAction = ReviewAction | "published" | "suspended";
 
 export function AdminKitchenDesigns({ owner }: { owner: string }) {
   const [designs, setDesigns] = useState<KitchenDesignSummary[]>([]);
   const [filter, setFilter] = useState("all");
   const draftScope = `admin:${owner}:kitchen-review-notes`;
-  const [note, setNote] = useDraftState<Record<string, string>>(draftScope, "note", {});
+  const [note, setNote] = useDraftState<Record<string, string>>(
+    draftScope,
+    "note",
+    {},
+  );
   const draftStatus = useDraftStatus(draftScope);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [renderConfig, setRenderConfig] = useState<{
+    provider: "openai" | "cloudflare";
+    model: string;
+    ready: boolean;
+  } | null>(null);
   const load = useCallback(async () => {
     setError(null);
     try {
@@ -46,6 +56,7 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
       if (!response.ok || !data)
         throw new Error(data?.error ?? "Мэдээллийг ачаалж чадсангүй.");
       setDesigns(data.designs);
+      setRenderConfig(data.renderConfig ?? null);
     } catch (reason) {
       setError(
         reason instanceof Error
@@ -64,7 +75,9 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
         (item) =>
           filter === "all" ||
           kitchenLifecycle(item) === filter ||
-          (item.publicationStatus === "published" && item.publishedVersionId !== item.versionId && item.reviewStatus === filter),
+          (item.publicationStatus === "published" &&
+            item.publishedVersionId !== item.versionId &&
+            item.reviewStatus === filter),
       ),
     [designs, filter],
   );
@@ -105,13 +118,29 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
   }
 
   async function generateRender(jobId: string) {
-    if (!window.confirm("Энэ хүсэлтийг зөвшөөрч төлбөртэй AI зураг үүсгэх үү? Provider-ийн төлбөр бодогдоно.")) return;
+    if (busy || !renderConfig?.ready) return;
+    const cloudflare = renderConfig.provider === "cloudflare";
+    if (
+      !window.confirm(
+        cloudflare
+          ? "Cloudflare FLUX.2 klein 4B-аар зураг үүсгэх үү? Өдрийн үнэгүй квотоос ашиглана."
+          : "Энэ хүсэлтийг зөвшөөрч төлбөртэй AI зураг үүсгэх үү? Provider-ийн төлбөр бодогдоно.",
+      )
+    )
+      return;
     setBusy(`render:${jobId}`);
     setError(null);
     try {
       const response = await authFetch(
         `/api/admin/kitchen-render-jobs/${jobId}/generate`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ approveCost: true }) },
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approveCost: true,
+            provider: renderConfig.provider,
+          }),
+        },
         owner,
       );
       const data = await response.json().catch(() => null);
@@ -132,16 +161,26 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
   async function cancelRender(jobId: string) {
     const reason = window.prompt("AI render хүсэлтийг цуцлах шалтгаан:");
     if (!reason?.trim()) return;
-    setBusy(`render:${jobId}`); setError(null);
+    setBusy(`render:${jobId}`);
+    setError(null);
     try {
-      const response = await authFetch(`/api/kitchen-render-jobs/${jobId}/cancel`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: reason }),
-      }, owner);
+      const response = await authFetch(
+        `/api/kitchen-render-jobs/${jobId}/cancel`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note: reason }),
+        },
+        owner,
+      );
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Цуцалж чадсангүй.");
       await load();
-    } catch (error) { setError(error instanceof Error ? error.message : "Цуцалж чадсангүй."); }
-    finally { setBusy(null); }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Цуцалж чадсангүй.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (
@@ -178,7 +217,11 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
             onClick={() => setFilter(value)}
             className={filter === value ? "btn-primary" : "btn-ghost"}
           >
-            {value === "all" ? "Бүгд" : kitchenLifecycleLabel[value as keyof typeof kitchenLifecycleLabel]}
+            {value === "all"
+              ? "Бүгд"
+              : kitchenLifecycleLabel[
+                  value as keyof typeof kitchenLifecycleLabel
+                ]}
           </button>
         ))}
       </div>
@@ -220,7 +263,15 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                 <div className="text-right text-xs">
                   <div>{kitchenLifecycleLabel[kitchenLifecycle(design)]}</div>
                   <div className="text-black/45">
-                    v{design.versionNo}: {kitchenLifecycleLabel[kitchenLifecycle({ publicationStatus: "draft", reviewStatus: design.reviewStatus })]}
+                    v{design.versionNo}:{" "}
+                    {
+                      kitchenLifecycleLabel[
+                        kitchenLifecycle({
+                          publicationStatus: "draft",
+                          reviewStatus: design.reviewStatus,
+                        })
+                      ]
+                    }
                   </div>
                 </div>
               </div>
@@ -230,7 +281,7 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
               {design.media.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   {design.media
-                    .filter((item) => !item.isPrimary)
+                    .filter((item) => item.url !== design.thumbnailUrl)
                     .map((item) => (
                       <div
                         key={item.id}
@@ -323,13 +374,24 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                 </div>
               </details>
               <KitchenReviewTimeline design={design} />
-              <p className="text-xs text-black/55">{kitchenPriceLabel(design)} · Материал: {design.materials.join(", ") || "Оруулаагүй"}</p>
+              <p className="text-xs text-black/55">
+                {kitchenPriceLabel(design)} · Материал:{" "}
+                {design.materials.join(", ") || "Оруулаагүй"}
+              </p>
               {design.renderJobs.length > 0 && (
                 <div className="space-y-2 rounded-xl border border-violet-200 bg-violet-50 p-3">
                   <h3 className="flex items-center gap-2 text-sm font-medium text-violet-950">
                     <Sparkles size={15} />
                     AI render хүсэлт
                   </h3>
+                  {renderConfig?.provider === "cloudflare" && (
+                    <p className="text-xs text-violet-800">
+                      FLUX.2 klein 4B · Cloudflare
+                      {renderConfig.ready
+                        ? " · Өдрийн үнэгүй квот ашиглана"
+                        : " · Workers Free plan баталгаажуулалт шаардлагатай"}
+                    </p>
+                  )}
                   {design.renderJobs.map((job) => (
                     <div
                       key={job.id}
@@ -347,66 +409,117 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
                       </div>
                       {job.status === "queued" && (
                         <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          disabled={!!busy}
-                          onClick={() => void generateRender(job.id)}
-                        >
-                          {busy === `render:${job.id}` ? (
-                            <LoaderCircle className="animate-spin" size={15} />
-                          ) : (
-                            <Sparkles size={15} />
-                          )}
-                          Зөвшөөрч AI зураг үүсгэх
-                        </button>
-                        <button type="button" className="btn-ghost" disabled={!!busy} onClick={() => void cancelRender(job.id)}>Цуцлах</button>
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={!!busy || !renderConfig?.ready}
+                            onClick={() => void generateRender(job.id)}
+                          >
+                            {busy === `render:${job.id}` ? (
+                              <LoaderCircle
+                                className="animate-spin"
+                                size={15}
+                              />
+                            ) : (
+                              <Sparkles size={15} />
+                            )}
+                            {renderConfig?.provider === "cloudflare"
+                              ? "Cloudflare-аар зураг үүсгэх"
+                              : "Зөвшөөрч AI зураг үүсгэх"}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-ghost"
+                            disabled={!!busy}
+                            onClick={() => void cancelRender(job.id)}
+                          >
+                            Цуцлах
+                          </button>
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
               )}
-              {(design.reviewStatus === "submitted" || ["published", "suspended"].includes(design.publicationStatus)) && (
-                <textarea disabled={draftStatus.loading} className="input min-h-20 w-full" aria-label={`${design.title} хяналтын тайлбар`}
-                  placeholder="Засвар хүсэх, түдгэлзүүлэх үед шалтгаан заавал бичнэ" maxLength={5000}
-                  value={note[design.id] ?? ""} onChange={event => setNote(current => ({ ...current, [design.id]: event.target.value }))} />
+              {(design.reviewStatus === "submitted" ||
+                ["published", "suspended"].includes(
+                  design.publicationStatus,
+                )) && (
+                <textarea
+                  disabled={draftStatus.loading}
+                  className="input min-h-20 w-full"
+                  aria-label={`${design.title} хяналтын тайлбар`}
+                  placeholder="Засвар хүсэх, түдгэлзүүлэх үед шалтгаан заавал бичнэ"
+                  maxLength={5000}
+                  value={note[design.id] ?? ""}
+                  onChange={(event) =>
+                    setNote((current) => ({
+                      ...current,
+                      [design.id]: event.target.value,
+                    }))
+                  }
+                />
               )}
-              {design.reviewStatus === "submitted" && !["archived", "suspended"].includes(design.publicationStatus) && (
-                <>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      className="btn-primary"
-                      disabled={!!busy}
-                      onClick={() => void review(design, "approved")}
-                    >
-                      <Check size={15} />
-                      Зөвшөөрөх
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-ghost"
-                      disabled={!!busy}
-                      onClick={() => void review(design, "changes_requested")}
-                    >
-                      <RotateCcw size={15} />
-                      Засвар хүсэх
-                    </button>
-                  </div>
-                </>
-              )}
-              {design.reviewStatus === "approved" && design.publicationStatus !== "archived" &&
-                (design.publicationStatus !== "published" || design.publishedVersionId !== design.versionId) && (
-                <button type="button" className="btn-primary" disabled={!!busy} onClick={() => void review(design, "published")}>
-                  <Check size={15} />{design.publicationStatus === "suspended" ? "Түдгэлзүүлэлтийг цуцалж нийтлэх" : "Marketplace-д нийтлэх"}
-                </button>
-              )}
-              {design.publicationStatus === "suspended" && design.publishedVersionId && design.publishedVersionId !== design.versionId && (
-                <button type="button" className="btn-ghost" disabled={!!busy} onClick={() => void review({ ...design, versionId: design.publishedVersionId! }, "published")}>
-                  Батлагдсан өмнөх хувилбарыг буцааж нийтлэх
-                </button>
-              )}
+              {design.reviewStatus === "submitted" &&
+                !["archived", "suspended"].includes(
+                  design.publicationStatus,
+                ) && (
+                  <>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={!!busy}
+                        onClick={() => void review(design, "approved")}
+                      >
+                        <Check size={15} />
+                        Зөвшөөрөх
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={!!busy}
+                        onClick={() => void review(design, "changes_requested")}
+                      >
+                        <RotateCcw size={15} />
+                        Засвар хүсэх
+                      </button>
+                    </div>
+                  </>
+                )}
+              {design.reviewStatus === "approved" &&
+                design.publicationStatus !== "archived" &&
+                (design.publicationStatus !== "published" ||
+                  design.publishedVersionId !== design.versionId) && (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={!!busy}
+                    onClick={() => void review(design, "published")}
+                  >
+                    <Check size={15} />
+                    {design.publicationStatus === "suspended"
+                      ? "Түдгэлзүүлэлтийг цуцалж нийтлэх"
+                      : "Marketplace-д нийтлэх"}
+                  </button>
+                )}
+              {design.publicationStatus === "suspended" &&
+                design.publishedVersionId &&
+                design.publishedVersionId !== design.versionId && (
+                  <button
+                    type="button"
+                    className="btn-ghost"
+                    disabled={!!busy}
+                    onClick={() =>
+                      void review(
+                        { ...design, versionId: design.publishedVersionId! },
+                        "published",
+                      )
+                    }
+                  >
+                    Батлагдсан өмнөх хувилбарыг буцааж нийтлэх
+                  </button>
+                )}
               {design.publicationStatus === "published" && (
                 <button
                   type="button"
