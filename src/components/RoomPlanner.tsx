@@ -21,6 +21,7 @@ import {
 } from "@/features/room-planner/components/PlannerPanels";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RoomPlannerStart } from "@/features/room-planner/components/RoomPlannerStart";
+import { PlannerTour } from "@/features/planner/components/PlannerTour";
 import {
   RoomPlannerControls,
   type RoomView,
@@ -163,6 +164,7 @@ export function RoomPlanner() {
 }
 
 function RoomPlannerEditor() {
+  const [tourRequest, setTourRequest] = useState(0);
   useEffect(() => {
     const preserveRoom = () => {
       const state = useDesigns.getState();
@@ -1157,6 +1159,7 @@ function RoomPlannerEditor() {
         expanded && "planner-expanded",
       )}
     >
+      <PlannerTour kind="room" request={tourRequest} />
       <header className="studio-header room-studio-header">
         <Link href="/" className="studio-brand" aria-label="Tavilga.mn нүүр">
           <House size={19} />
@@ -1199,6 +1202,7 @@ function RoomPlannerEditor() {
             type="button"
             title="Хадгалах (Ctrl+S)"
             aria-label="Загвар хадгалах"
+            data-planner-tour="room-save"
             onClick={save}
           >
             <Save size={18} />
@@ -1447,11 +1451,12 @@ function RoomPlannerEditor() {
       </Drawer>
 
       {/* CENTER: canvas */}
-      <div className="planner-stage relative h-full">
+      <div className="planner-stage relative h-full" data-planner-tour="room-stage">
         <div className="room-stage-actions">
           <button
             type="button"
             className="room-add-button"
+            data-planner-tour="room-catalog"
             aria-expanded={leftOpen && !kitchenOnly}
             onClick={() => {
               setKitchenOnly(false);
@@ -1503,8 +1508,8 @@ function RoomPlannerEditor() {
             type="button"
             className="room-help-button"
             aria-label="Ашиглах заавар"
-            aria-pressed={showStartHint}
-            onClick={() => setShowStartHint((value) => !value)}
+            aria-haspopup="dialog"
+            onClick={() => { setShowStartHint(false); setTourRequest(value => value + 1); }}
           >
             <HelpCircle size={20} />
           </button>
@@ -1653,7 +1658,7 @@ function RoomPlannerEditor() {
             setEnvironmentTab("surfaces");
             setRightOpen(true);
           }}
-          onHelp={() => setShowStartHint((value) => !value)}
+          onHelp={() => { setShowStartHint(false); setTourRequest(value => value + 1); }}
           dimensions={showDimensions}
           onDimensions={() => setShowDimensions((value) => !value)}
           grid={gridEnabled}

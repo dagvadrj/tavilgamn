@@ -49,7 +49,7 @@ export function StoresContent({
         <Link
           href="/stores"
           aria-current={!selected ? "page" : undefined}
-          className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm ${!selected ? "border-[#293C32] bg-[#293C32] text-white" : "border-[#293C32]/15 bg-white"}`}
+          className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm ${!selected ? "border-ui-line bg-ui-ink text-white" : "border-ui-line bg-white"}`}
         >
           Бүх дэлгүүр · {directory.length}
         </Link>
@@ -60,7 +60,7 @@ export function StoresContent({
               key={type.id}
               href={`/stores?type=${type.id}`}
               aria-current={selected === type.id ? "page" : undefined}
-              className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm ${selected === type.id ? "border-[#293C32] bg-[#293C32] text-white" : "border-[#293C32]/15 bg-white hover:bg-[#F2F4EF]"}`}
+              className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm ${selected === type.id ? "border-ui-line bg-ui-ink text-white" : "border-ui-line bg-white hover:bg-ui-bg"}`}
             >
               <Icon size={16} aria-hidden="true" />
               {type.label}
@@ -75,7 +75,7 @@ export function StoresContent({
         })}
       </nav>
       {stores.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#293C32]/20 bg-white px-6 py-16 text-center">
+        <div className="rounded-2xl border border-dashed border-ui-line bg-white px-6 py-16 text-center">
           <Hammer
             size={32}
             aria-hidden="true"
@@ -84,7 +84,7 @@ export function StoresContent({
           <h2 className="text-xl font-medium">
             Энэ төрөлд дэлгүүр хараахан нэмэгдээгүй байна
           </h2>
-          <p className="mt-3 text-sm text-[#6C726B]">
+          <p className="mt-3 text-sm text-ui-muted">
             Шинэ дэлгүүр бүртгэгдмэгц энд харагдана.
           </p>
           <Link

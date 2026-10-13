@@ -96,7 +96,7 @@ export function ProductQuickView({
   return createPortal(
     <dialog
       ref={dialog}
-      className="product-quick-view"
+      className="site-ui product-quick-view"
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();

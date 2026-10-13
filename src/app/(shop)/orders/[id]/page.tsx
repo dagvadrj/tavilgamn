@@ -208,7 +208,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
       <div className="shop-container py-12">
         <Link
           href="/account#orders"
-          className="inline-flex min-h-11 items-center gap-2 text-sm text-[#6C726B]"
+          className="inline-flex min-h-11 items-center gap-2 text-sm text-ui-muted"
         >
           <ArrowLeft size={16} />
           Миний захиалгууд
@@ -238,22 +238,22 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
     <main className="shop-container max-w-[1180px] py-7 sm:py-10">
       <Link
         href="/account#orders"
-        className="inline-flex min-h-11 items-center gap-2 text-sm text-[#6C726B] transition hover:text-[#293C32]"
+        className="inline-flex min-h-11 items-center gap-2 text-sm text-ui-muted transition hover:text-ui-ink"
       >
         <ArrowLeft size={16} />
         Миний захиалгууд
       </Link>
 
-      <section className="mt-3 overflow-hidden rounded-[22px] border border-[#293C32]/10 bg-white shadow-[0_18px_55px_rgba(41,60,50,.05)]">
-        <div className="flex flex-wrap items-start justify-between gap-5 bg-[#F3F1EB] px-5 py-6 sm:px-7">
+      <section className="mt-3 overflow-hidden rounded-[22px] border border-ui-line bg-white shadow-[0_18px_55px_rgba(41,60,50,.05)]">
+        <div className="flex flex-wrap items-start justify-between gap-5 bg-ui-bg px-5 py-6 sm:px-7">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[.1em] text-[#737D6C]">
+            <p className="text-xs font-medium uppercase tracking-[.1em] text-ui-muted">
               Захиалгын дэлгэрэнгүй
             </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[#293C32] sm:text-3xl">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ui-ink sm:text-3xl">
               Захиалга #{order.id.slice(0, 8).toUpperCase()}
             </h1>
-            <p className="mt-2 break-all font-mono text-[11px] text-[#6C726B]">
+            <p className="mt-2 break-all font-mono text-[11px] text-ui-muted">
               {order.id}
             </p>
           </div>
@@ -266,7 +266,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
             >
               {ORDER_STATUS_LABEL[order.status]}
             </span>
-            <p className="mt-2 flex items-center gap-1.5 text-xs text-[#6C726B] sm:justify-end">
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-ui-muted sm:justify-end">
               <Clock3 size={13} />
               {formatDateTime(order.created_at)}
             </p>
@@ -274,7 +274,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
         </div>
 
         {order.status === "cancelled" ? (
-          <div className="flex gap-3 border-t border-[#293C32]/10 bg-[#FDF6F6] px-5 py-4 text-sm text-[#8A4B4B] sm:px-7">
+          <div className="flex gap-3 border-t border-ui-line bg-[#FDF6F6] px-5 py-4 text-sm text-[#8A4B4B] sm:px-7">
             <XCircle className="mt-0.5 shrink-0" size={18} />
             <p>
               Энэ захиалга цуцлагдсан. Төлбөрийн буцаалтын төлөвийг доорх хүсэлтийн мэдээллээс харна уу.
@@ -282,7 +282,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
           </div>
         ) : (
           <ol
-            className="grid grid-cols-5 border-t border-[#293C32]/10 px-3 py-5 sm:px-7"
+            className="grid grid-cols-5 border-t border-ui-line px-3 py-5 sm:px-7"
             aria-label="Захиалгын явц"
           >
             {ORDER_FLOW.map((step, index) => {
@@ -296,7 +296,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                     <span
                       className={cn(
                         "absolute right-1/2 top-3 h-0.5 w-full",
-                        index <= activeStep ? "bg-[#42634F]" : "bg-[#DDE1D8]",
+                        index <= activeStep ? "bg-ui-accent" : "bg-ui-line",
                       )}
                     />
                   )}
@@ -304,8 +304,8 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                     className={cn(
                       "relative z-10 grid h-6 w-6 place-items-center rounded-full border-2 bg-white",
                       complete
-                        ? "border-[#42634F] text-[#42634F]"
-                        : "border-[#C9CFC5] text-[#A0A79D]",
+                        ? "border-ui-accent text-ui-accent"
+                        : "border-ui-line text-ui-muted",
                     )}
                   >
                     {complete ? (
@@ -318,8 +318,8 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                     className={cn(
                       "mt-2 max-w-24 text-[9px] leading-4 sm:text-[11px]",
                       complete
-                        ? "font-medium text-[#293C32]"
-                        : "text-[#8A9188]",
+                        ? "font-medium text-ui-ink"
+                        : "text-ui-muted",
                     )}
                   >
                     {step.label}
@@ -353,17 +353,17 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
       )}
 
       <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,.65fr)]">
-        <section className="overflow-hidden rounded-2xl border border-[#293C32]/10 bg-white">
-          <div className="flex items-center justify-between gap-3 border-b border-[#293C32]/10 px-5 py-4 sm:px-6">
+        <section className="overflow-hidden rounded-2xl border border-ui-line bg-white">
+          <div className="flex items-center justify-between gap-3 border-b border-ui-line px-5 py-4 sm:px-6">
             <h2 className="flex items-center gap-2 font-semibold">
-              <Package size={18} className="text-[#AD6547]" />
+              <Package size={18} className="text-ui-accent" />
               Захиалсан бараа
             </h2>
-            <span className="text-xs text-[#6C726B]">
+            <span className="text-xs text-ui-muted">
               {quantity} ширхэг · {order.items.length} нэр төрөл
             </span>
           </div>
-          <ul className="divide-y divide-[#293C32]/10">
+          <ul className="divide-y divide-ui-line">
             {order.items.map((item) => (
               <li
                 key={JSON.stringify([
@@ -373,7 +373,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                 ])}
                 className="flex gap-4 p-5 sm:p-6"
               >
-                <div className="relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-[#EFEDE6] text-[#73806F] sm:h-24 sm:w-24">
+                <div className="relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-ui-bg text-ui-muted sm:h-24 sm:w-24">
                   {item.image ? (
                     <Image
                       src={item.image}
@@ -388,35 +388,35 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap justify-between gap-x-4 gap-y-1">
-                    <h3 className="font-medium text-[#293C32]">{item.name}</h3>
+                    <h3 className="font-medium text-ui-ink">{item.name}</h3>
                     <strong className="shrink-0 tabular-nums">
                       {formatPrice(item.lineTotal)}
                     </strong>
                   </div>
-                  <p className="mt-1 text-xs text-[#6C726B]">
+                  <p className="mt-1 text-xs text-ui-muted">
                     {item.colorName} · {item.materialName}
                   </p>
-                  <p className="mt-3 text-sm text-[#6C726B]">
+                  <p className="mt-3 text-sm text-ui-muted">
                     {formatPrice(item.unitPrice)} × {item.qty} ширхэг
                   </p>
                 </div>
               </li>
             ))}
           </ul>
-          <dl className="space-y-3 border-t border-[#293C32]/10 bg-[#FAF9F6] px-5 py-5 text-sm sm:px-6">
+          <dl className="space-y-3 border-t border-ui-line bg-ui-bg px-5 py-5 text-sm sm:px-6">
             <div className="flex justify-between gap-4">
-              <dt className="text-[#6C726B]">Барааны дүн</dt>
+              <dt className="text-ui-muted">Барааны дүн</dt>
               <dd className="tabular-nums">{formatPrice(order.subtotal)}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-[#6C726B]">Хүргэлт</dt>
+              <dt className="text-ui-muted">Хүргэлт</dt>
               <dd className="tabular-nums">
                 {order.shipping === 0 ? "Үнэгүй" : formatPrice(order.shipping)}
               </dd>
             </div>
-            <div className="flex justify-between gap-4 border-t border-[#293C32]/10 pt-4 text-lg font-semibold">
+            <div className="flex justify-between gap-4 border-t border-ui-line pt-4 text-lg font-semibold">
               <dt>Нийт төлөх дүн</dt>
-              <dd className="tabular-nums text-[#AD6547]">
+              <dd className="tabular-nums text-ui-accent">
                 {formatPrice(order.total)}
               </dd>
             </div>
@@ -424,43 +424,43 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
         </section>
 
         <div className="space-y-6">
-          <section className="rounded-2xl border border-[#293C32]/10 bg-white p-5 sm:p-6">
+          <section className="rounded-2xl border border-ui-line bg-white p-5 sm:p-6">
             <h2 className="flex items-center gap-2 font-semibold">
-              <MapPin size={18} className="text-[#AD6547]" />
+              <MapPin size={18} className="text-ui-accent" />
               Хүргэлтийн мэдээлэл
             </h2>
             <dl className="mt-5 space-y-4 text-sm">
               <div className="flex gap-3">
                 <UserRound
                   size={16}
-                  className="mt-0.5 shrink-0 text-[#73806F]"
+                  className="mt-0.5 shrink-0 text-ui-muted"
                 />
                 <div>
-                  <dt className="text-xs text-[#6C726B]">Хүлээн авагч</dt>
+                  <dt className="text-xs text-ui-muted">Хүлээн авагч</dt>
                   <dd className="mt-1 font-medium">{order.delivery.name}</dd>
                 </div>
               </div>
               <div className="flex gap-3">
-                <Phone size={16} className="mt-0.5 shrink-0 text-[#73806F]" />
+                <Phone size={16} className="mt-0.5 shrink-0 text-ui-muted" />
                 <div>
-                  <dt className="text-xs text-[#6C726B]">Утас</dt>
+                  <dt className="text-xs text-ui-muted">Утас</dt>
                   <dd className="mt-1 font-medium">{order.delivery.phone}</dd>
                 </div>
               </div>
               <div className="flex gap-3">
-                <Truck size={16} className="mt-0.5 shrink-0 text-[#73806F]" />
+                <Truck size={16} className="mt-0.5 shrink-0 text-ui-muted" />
                 <div>
-                  <dt className="text-xs text-[#6C726B]">Хаяг</dt>
+                  <dt className="text-xs text-ui-muted">Хаяг</dt>
                   <dd className="mt-1 leading-6">{order.delivery.address}</dd>
                 </div>
               </div>
             </dl>
           </section>
 
-          <section className="rounded-2xl border border-[#293C32]/10 bg-white p-5 sm:p-6">
+          <section className="rounded-2xl border border-ui-line bg-white p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <h2 className="flex items-center gap-2 font-semibold">
-                <CreditCard size={18} className="text-[#AD6547]" />
+                <CreditCard size={18} className="text-ui-accent" />
                 Төлбөр
               </h2>
               {payment && (
@@ -508,11 +508,11 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
               <>
                 {!payment && (
                   <>
-                    <p className="mt-4 text-sm leading-6 text-[#6C726B]">
+                    <p className="mt-4 text-sm leading-6 text-ui-muted">
                       Төлбөрийн аргаа сонгоод нэхэмжлэхээ авна уу.
                     </p>
                     {methodsLoading ? (
-                      <p className="mt-4 flex items-center gap-2 text-sm text-[#6C726B]">
+                      <p className="mt-4 flex items-center gap-2 text-sm text-ui-muted">
                         <RefreshCw className="animate-spin" size={15} />
                         Сонголтууд ачаалж байна…
                       </p>
@@ -528,8 +528,8 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                             className={cn(
                               "flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-4 text-sm",
                               method === option.id
-                                ? "border-[#42634F] bg-[#42634F]/5"
-                                : "border-[#293C32]/15",
+                                ? "border-ui-accent bg-ui-selected"
+                                : "border-ui-line",
                               !option.available &&
                                 "cursor-not-allowed opacity-45",
                             )}
@@ -569,7 +569,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
 
                 {payment && (
                   <p className="mt-4 text-sm">
-                    <span className="text-[#6C726B]">Сонгосон арга:</span>{" "}
+                    <span className="text-ui-muted">Сонгосон арга:</span>{" "}
                     <strong>{PAYMENT_METHOD_LABEL[payment.method]}</strong>
                   </p>
                 )}
@@ -601,9 +601,9 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                       width={240}
                       height={240}
                       alt="Төлбөр төлөх QPay QR код"
-                      className="mx-auto rounded-xl border border-[#293C32]/10 bg-white p-2"
+                      className="mx-auto rounded-xl border border-ui-line bg-white p-2"
                     />
-                    <p className="mt-2 text-xs text-[#6C726B]">
+                    <p className="mt-2 text-xs text-ui-muted">
                       Банкны апп-аар QR кодыг уншуулна уу.
                     </p>
                   </div>
@@ -620,15 +620,15 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                   </a>
                 )}
                 {payment?.instructions?.bank && (
-                  <div className="mt-5 space-y-3 rounded-xl bg-[#F8F7F3] p-4 text-sm">
+                  <div className="mt-5 space-y-3 rounded-xl bg-ui-bg p-4 text-sm">
                     <div>
-                      <p className="text-xs text-[#6C726B]">Банк</p>
+                      <p className="text-xs text-ui-muted">Банк</p>
                       <p className="mt-1 font-medium">
                         {payment.instructions.bank.name}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#6C726B]">Данс / IBAN</p>
+                      <p className="text-xs text-ui-muted">Данс / IBAN</p>
                       <div className="mt-1 flex items-center justify-between gap-3">
                         <strong className="break-all">
                           {payment.instructions.bank.account}
@@ -642,7 +642,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                               payment.instructions!.bank!.account,
                             )
                           }
-                          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[#293C32]/15"
+                          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-ui-line"
                         >
                           {copied === "account" ? (
                             <Check size={15} />
@@ -653,15 +653,15 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs text-[#6C726B]">Хүлээн авагч</p>
+                      <p className="text-xs text-ui-muted">Хүлээн авагч</p>
                       <p className="mt-1 font-medium">
                         {payment.instructions.bank.holder}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-[#6C726B]">Гүйлгээний утга</p>
+                      <p className="text-xs text-ui-muted">Гүйлгээний утга</p>
                       <div className="mt-1 flex items-center justify-between gap-3">
-                        <strong className="break-all text-[#AD6547]">
+                        <strong className="break-all text-ui-accent">
                           {payment.instructions.bank.reference}
                         </strong>
                         <button
@@ -673,7 +673,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                               payment.instructions!.bank!.reference,
                             )
                           }
-                          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[#293C32]/15"
+                          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-ui-line"
                         >
                           {copied === "reference" ? (
                             <Check size={15} />
@@ -683,13 +683,13 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                         </button>
                       </div>
                     </div>
-                    <div className="flex justify-between gap-4 border-t border-[#293C32]/10 pt-3">
+                    <div className="flex justify-between gap-4 border-t border-ui-line pt-3">
                       <span>Шилжүүлэх дүн</span>
                       <strong className="tabular-nums">
                         {formatPrice(order.total)}
                       </strong>
                     </div>
-                    <p className="text-xs leading-5 text-[#6C726B]">
+                    <p className="text-xs leading-5 text-ui-muted">
                       Шилжүүлэг дансанд орсныг дэлгүүр шалгасны дараа төлөв
                       шинэчлэгдэнэ.
                     </p>

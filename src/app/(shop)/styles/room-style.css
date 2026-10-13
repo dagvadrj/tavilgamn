@@ -1,0 +1,123 @@
+/* The storefront uses the room planner's quiet surfaces, compact cards and rounded controls. */
+
+.site-ui.shop-shell .store-header {
+  background: var(--site-surface);
+  border-color: var(--site-line);
+}
+
+.site-ui.shop-shell .header-main {
+  min-height: 76px;
+}
+
+.site-ui.shop-shell .brand {
+  font-size: 23px;
+  font-weight: 750;
+  letter-spacing: -.8px;
+}
+
+.site-ui.shop-shell :is(.store-search, .header-actions .cart-action) {
+  border-radius: 999px;
+}
+
+.site-ui.shop-shell .store-search {
+  border-color: var(--site-line);
+  background: var(--site-bg);
+}
+
+.site-ui.shop-shell .header-actions .cart-action {
+  border: 1px solid var(--site-line);
+  background: var(--site-surface);
+  color: var(--site-ink);
+}
+
+.site-ui.shop-shell .header-actions .cart-action:hover {
+  background: var(--site-selected);
+  color: var(--site-primary);
+}
+
+.site-ui.shop-shell .studio-navigation a {
+  font-weight: 600;
+}
+
+.site-ui.shop-shell :is(.btn-primary, .btn-secondary, .market-cta, .product-add-cart) {
+  border-color: var(--site-primary);
+  border-radius: 999px;
+  background: var(--site-primary);
+  color: #fff;
+}
+
+.site-ui.shop-shell :is(.btn-primary, .btn-secondary, .market-cta, .product-add-cart):hover:not(:disabled) {
+  border-color: var(--site-primary-hover);
+  background: var(--site-primary-hover);
+}
+
+.site-ui.shop-shell :is(.market-panel, .market-carousel, .market-category-list, .market-promo, .marketplace-product-card, .catalog-sidebar, .cart-item, .cart-summary, .shop-empty, .product-purchase, .account-sidebar, .account-order, .kd-order-details) {
+  border-color: var(--site-line);
+  border-radius: var(--site-radius);
+  box-shadow: var(--site-shadow);
+}
+
+.site-ui.shop-shell :is(.market-section-heading h2, .catalog-heading h1, .directory-heading h1, .section-title h1, .account-section-heading h1, .account-section-heading h2, .kd-summary h1) {
+  color: var(--site-ink);
+  font-weight: 650;
+  letter-spacing: -.035em;
+}
+
+.site-ui.shop-shell :is(.catalog-heading h1, .directory-heading h1, .section-title h1) {
+  font-size: clamp(26px, 3vw, 36px);
+}
+
+.site-ui.shop-shell :is(.account-avatar, .account-portal-link, .checkout-steps .current) {
+  background: var(--site-selected);
+  color: var(--site-primary);
+}
+
+.site-ui.shop-shell :is(.directory-filters, .catalog-quick-filters) > :is(a, button) {
+  border-color: var(--site-line);
+  border-radius: 999px;
+}
+
+.site-ui.shop-shell :is(.directory-filters, .catalog-quick-filters) > :is([aria-current="page"], [aria-pressed="true"]) {
+  border-color: var(--site-accent);
+  background: var(--site-selected);
+  color: var(--site-primary);
+}
+
+.site-ui.shop-shell :is(.directory-page, .checkout-shell) {
+  padding-top: 36px;
+  padding-bottom: 64px;
+}
+
+.site-ui.shop-shell .account-layout {
+  padding-top: 36px;
+}
+
+.site-ui.shop-shell .about-hero {
+  padding: clamp(32px, 5vw, 64px);
+}
+
+.site-ui.shop-shell .about-hero h1 {
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.18;
+  font-weight: 650;
+  letter-spacing: -.035em;
+}
+
+.site-ui.shop-shell .about-section {
+  margin-top: 40px;
+}
+
+.site-ui.shop-shell .about-contact {
+  padding: clamp(24px, 4vw, 40px);
+  background: var(--site-selected);
+}
+
+@media (max-width: 639px) {
+  .site-ui.shop-shell :is(.directory-page, .checkout-shell) {
+    padding-top: 24px;
+    padding-bottom: 40px;
+  }
+  .site-ui.shop-shell .about-section {
+    margin-top: 28px;
+  }
+}

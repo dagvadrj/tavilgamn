@@ -1,5 +1,6 @@
 "use client";
 import { BrandLoader } from "@/components/BrandLoader";
+import { PlannerTour } from "@/features/planner/components/PlannerTour";
 
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
 import "@/features/kitchen-planner/components/kitchen-editor.css";
@@ -85,6 +86,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   Grid2X2,
+  HelpCircle,
   Layers3,
   LayoutPanelTop,
   Orbit,
@@ -195,6 +197,7 @@ export function ModularKitchenPlanner({
   const [searchRequest, setSearchRequest] = useState(0);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
+  const [tourRequest, setTourRequest] = useState(0);
   const [workspaceView, setWorkspaceView] = useState<"2d" | "3d" | "interior">(
     "3d",
   );
@@ -929,6 +932,7 @@ export function ModularKitchenPlanner({
       }
       data-view={workspaceView}
     >
+      <PlannerTour kind="kitchen" enabled={active && ready && !startOpen && !spaceOpen && !reviewOpen} request={tourRequest} />
       {ready && startOpen && (
         <KitchenStartDialog
           kitchen={design}
@@ -960,7 +964,8 @@ export function ModularKitchenPlanner({
         loginHref={`/login?next=${encodeURIComponent(new URLSearchParams(queryString).has("design") ? `/kitchen?${queryString}` : `/kitchen?importGuest=1${draftToken ? `&draft=${encodeURIComponent(draftToken)}` : ""}`)}`}
         name={name} onName={setName} subtotal={bom.knownSubtotal} annotations={annotations}
         utilities={<>
-          <details className="km-layout-menu kp-top-menu">
+          <button type="button" aria-label="Ашиглах заавар" title="Ашиглах заавар" aria-haspopup="dialog" onClick={() => { setSpaceOpen(false); setReviewOpen(false); setStartOpen(false); setCatalogOpen(false); setSettingsOpen(false); setTourRequest(value => value + 1); }}><HelpCircle size={18} /></button>
+          <details className="km-layout-menu kp-top-menu" data-planner-tour="kitchen-layout">
             <summary>
               <LayoutPanelTop size={18} />
               <span>Байрлал</span>
@@ -1159,10 +1164,11 @@ export function ModularKitchenPlanner({
           </details>
         </aside>
         <div className="kp-workspace">
-          <section className="kp-preview" aria-label="Модуль шүүгээ байрлуулах">
+          <section className="kp-preview" aria-label="Модуль шүүгээ байрлуулах" data-planner-tour="kitchen-stage">
             <div className="kp-preview-bar">
               <div
                 className="kitchen-view-tabs"
+                data-planner-tour="kitchen-view"
                 role="group"
                 aria-label="Харагдах байдал"
               >

@@ -241,7 +241,7 @@ test("studio theme, responsive and reduced-motion contracts stay scoped to the s
     .readStylesheet("src/app/(shop)/storefront.css")
     .toString();
   const tokens = readFileSync("src/app/(shop)/shop-tokens.css", "utf8");
-  for (const token of ["#fafafa", "#111111", "#2563eb"])
+  for (const token of ["var(--site-bg)", "var(--site-ink)", "var(--site-accent)"])
     assert.ok(tokens.includes(token));
   assert.match(tokens, /\.shop-shell\s*\{/);
   assert.match(css, /color-scheme: light/);
@@ -258,8 +258,14 @@ test("studio theme, responsive and reduced-motion contracts stay scoped to the s
   assert.match(carousel, /5000/);
   assert.match(carousel, /aria-pressed/);
   const layout = readFileSync("src/app/(shop)/layout.tsx", "utf8");
-  assert.match(layout, /Manrope/);
-  assert.match(layout, /"cyrillic"/);
+  assert.match(layout, /site-ui shop-shell/);
+  const sharedTheme = readFileSync("src/app/site-ui.css", "utf8");
+  assert.match(sharedTheme, /--font-market-body:\s*var\(--font-sans\)/);
+  const scopedRules = require("postcss").parse(sharedTheme);
+  scopedRules.walkRules(rule => require("postcss-selector-parser")().astSync(rule.selector).each(selector => {
+    assert.equal(selector.nodes[0]?.type, "class", `Unscoped shared UI rule: ${rule.selector}`);
+    assert.equal(selector.nodes[0]?.value, "site-ui", `Unscoped shared UI rule: ${rule.selector}`);
+  }));
   for (const path of [
     "src/app/(shop)/page.tsx",
     "src/components/Header.tsx",

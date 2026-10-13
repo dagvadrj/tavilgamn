@@ -28,18 +28,18 @@ export function StoreContent({ store, products }: PageData["store"]) {
   const location = store.district !== "-" ? store.district : store.city;
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
+    <div className="ui-page">
       <title>{`${store.name} — tavilga.mn`}</title>
       <Link
         href="/stores"
-        className="mb-8 inline-flex items-center gap-2 text-sm text-[#737D6C] hover:text-[#293C32]"
+        className="mb-8 inline-flex items-center gap-2 text-sm text-ui-muted hover:text-ui-ink"
       >
         <ArrowLeft className="h-4 w-4" /> Бүх дэлгүүрүүд
       </Link>
 
-      <div className="mb-10 flex flex-col gap-6 border-b border-[#293C32]/12 pb-10 md:flex-row md:items-start md:justify-between">
+      <div className="mb-10 flex flex-col gap-6 border-b border-ui-line pb-10 md:flex-row md:items-start md:justify-between">
         <div className="flex items-start gap-4">
-          <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full border-2 border-[#293C32]/70 text-lg font-mono font-medium text-[#293C32]">
+          <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full border-2 border-ui-line text-lg font-mono font-medium text-ui-ink">
             {store.image ? (
               <Image
                 src={store.image}
@@ -54,31 +54,31 @@ export function StoreContent({ store, products }: PageData["store"]) {
             )}
           </div>
           <div>
-            <h1 className="text-4xl text-[#293C32]">{store.name}</h1>
+            <h1 className="ui-title">{store.name}</h1>
             <Link
               href={`/stores?type=${store.storeType}`}
-              className="mt-2 inline-block text-xs font-medium text-[#42634F] underline underline-offset-4"
+              className="mt-2 inline-block text-xs font-medium text-ui-accent underline underline-offset-4"
             >
               {STORE_TYPES.find((type) => type.id === store.storeType)?.label}
             </Link>
-            <p className="mt-2 flex items-center gap-1.5 text-sm text-[#6C726B]">
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-ui-muted">
               <MapPin className="h-4 w-4 shrink-0" />
               {store.address !== "-" ? store.address : location}
             </p>
             {store.phone !== "-" && (
-              <p className="mt-1 flex items-center gap-1.5 font-mono text-sm text-[#6C726B]">
+              <p className="mt-1 flex items-center gap-1.5 font-mono text-sm text-ui-muted">
                 <Phone className="h-4 w-4 shrink-0" />
                 {store.phone}
               </p>
             )}
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-[#6C726B]">
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-ui-muted">
               {store.description}
             </p>
             <div className="mt-4 flex flex-wrap gap-1.5">
               {store.categories.map((c) => (
                 <span
                   key={c}
-                  className="rounded-sm bg-[#42634F]/10 px-2.5 py-1 font-mono text-xs text-[#42634F]"
+                  className="rounded-full bg-ui-selected px-3 py-1 text-xs text-ui-accent"
                 >
                   {CATEGORY_LABEL[c]}
                 </span>
@@ -88,18 +88,18 @@ export function StoreContent({ store, products }: PageData["store"]) {
         </div>
       </div>
 
-      <p className="font-mono text-xs uppercase tracking-wide text-[#737D6C] mb-6">
+      <p className="ui-eyebrow mb-6">
         {products.length > 0
           ? `${products.length} бүтээгдэхүүн`
           : "Бүтээгдэхүүн"}
       </p>
 
       {products.length === 0 ? (
-        <div className="grid place-items-center rounded-lg border border-dashed border-[#293C32]/20 bg-[#FFFFFF] p-16 text-center">
-          <p className="text-2xl text-[#293C32]">
+        <div className="grid place-items-center rounded-lg border border-dashed border-ui-line bg-ui-surface p-16 text-center">
+          <p className="text-2xl text-ui-ink">
             Одоогоор бүтээгдэхүүн байршуулаагүй байна.
           </p>
-          <p className="mt-2 text-sm text-[#737D6C]">
+          <p className="mt-2 text-sm text-ui-muted">
             Энэ дэлгүүр удахгүй бараагаа нэмэх болно.
           </p>
         </div>
