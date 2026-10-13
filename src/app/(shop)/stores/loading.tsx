@@ -1,3 +1,5 @@
-export default function StoresLoading() {
-  return <div className="shop-container py-16 text-sm text-[#6C726B]" role="status">Дэлгүүрүүдийг ачаалж байна…</div>;
+import { PageSkeleton } from "@/components/PageSkeleton";
+
+export default function Loading() {
+  return <PageSkeleton variant="catalog" />;
 }

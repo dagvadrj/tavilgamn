@@ -1,4 +1,5 @@
 "use client";
+import { BrandLoader } from "@/components/BrandLoader";
 
 import dynamic from "next/dynamic";
 import { KitchenSpaceEditor } from "@/features/kitchen-planner/components/KitchenSpaceEditor";
@@ -171,6 +172,7 @@ const Scene = dynamic(
     ssr: false,
     loading: () => (
       <p className="kp-viewer-message" role="status">
+        <BrandLoader />
         3D загварыг бэлдэж байна…
       </p>
     ),

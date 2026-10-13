@@ -3,7 +3,6 @@ import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { Minus, Plus, Scan, RotateCw, Copy, Trash2 } from "lucide-react";
 import type {
   CabinetPose,
-  KitchenRoom,
   ModularKitchen,
 } from "@/lib/kitchenCabinets";
 import { Plan } from "./PlannerPanels";
@@ -33,7 +32,7 @@ export function KitchenPlanWorkspace({
   onRotate: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
-  onRoomChange?: (room: KitchenRoom) => void;
+  onRoomChange?: (room: ModularKitchen["room"]) => void;
 }) {
   const [zoom, setZoom] = useState(1);
   const drag = useRef<{

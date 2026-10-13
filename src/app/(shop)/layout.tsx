@@ -6,6 +6,8 @@ import "./storefront.css";
 import "./shop-the-look.css";
 import "./product-experience.css";
 import "./directory-search.css";
+import "./exhibition.css";
+import "./home-showcase.css";
 
 const bodyFont = Manrope({ subsets: ["latin", "cyrillic"], variable: "--font-market-body", display: "swap" });
 

@@ -72,3 +72,12 @@ test("auth and persisted design updates stay independent of eager 3D imports", (
     "the geometry processor still uses the actual renderer",
   );
 });
+
+test("immediate page shells do not bundle server data readers or credentials", () => {
+  for (const page of ["Home", "Stores", "Store", "Product", "Kitchens", "Kitchen"]) {
+    const entry = `src/components/pages/${page}PageClient.tsx`;
+    const packages = eagerPackages(entry);
+    assert.ok(!packages.has("server-only"), `${entry} imports a server-only dependency`);
+    assert.ok(!packages.has("@aws-sdk/client-s3"), `${entry} imports a storage server client`);
+  }
+});

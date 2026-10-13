@@ -32,11 +32,11 @@ test("store product counts propagate database failures instead of fabricating ze
 test("store cards show actual furniture counts rather than category counts, including a genuine empty catalog", async () => {
   const store = { id: "store-1", name: "Тавилгын дэлгүүр", storeType: "retail", city: "Улаанбаатар", district: "-", description: "Тавилга", image: null,
     categories: ["sofa", "bed", "wardrobe"] };
-  const Page = loadSource("src/app/(shop)/stores/page.tsx", {
+  const Page = loadSource("src/components/pages/StoresPageClient.tsx", {
     "@/lib/storeDirectory": { readStoreDirectory: async () => [store, { ...store, id: "empty" }], readStoreProductCounts: async () => new Map([["store-1", 12]]) },
     "next/link": { default: ({ children, ...props }) => React.createElement("a", props, children) },
-  }).default;
-  const html = renderToStaticMarkup(await Page({ searchParams: Promise.resolve({}) }));
+  }).StoresContent;
+  const html = renderToStaticMarkup(Page({ directory: [store, { ...store, id: "empty" }], productCounts: { "store-1": 12 } }));
   assert.ok(html.includes("12 тавилга") && html.includes("0 тавилга"));
   assert.ok(html.includes("Нийт тавилга") && html.includes("directory-card-unified"));
   assert.ok(!html.includes("3 ангилал"));

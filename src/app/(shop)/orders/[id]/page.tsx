@@ -1,5 +1,7 @@
 "use client";
 
+import { PageSkeleton } from "@/components/PageSkeleton";
+
 import Image from "next/image";
 import Link from "next/link";
 import { use, useCallback, useEffect, useState } from "react";
@@ -176,14 +178,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
   }
 
   if (!initialized) {
-    return (
-      <div className="grid min-h-[50vh] place-items-center text-sm text-[#6C726B]">
-        <span className="flex items-center gap-2">
-          <RefreshCw className="animate-spin" size={16} />
-          Ачаалж байна…
-        </span>
-      </div>
-    );
+    return <PageSkeleton variant="detail" />;
   }
 
   if (!userId) {
@@ -205,19 +200,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
   }
 
   if (loading && !current) {
-    return (
-      <div className="shop-container py-12">
-        <div
-          className="grid min-h-64 place-items-center rounded-2xl border border-[#293C32]/10 bg-white text-sm text-[#6C726B]"
-          role="status"
-        >
-          <span className="flex items-center gap-2">
-            <RefreshCw className="animate-spin" size={16} />
-            Захиалгын мэдээлэл ачаалж байна…
-          </span>
-        </div>
-      </div>
-    );
+    return <PageSkeleton variant="detail" label="Захиалгын мэдээлэл ачаалж байна…" />;
   }
 
   if (!current) {

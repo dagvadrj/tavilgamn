@@ -1,4 +1,6 @@
 "use client";
+
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
@@ -76,7 +78,7 @@ export default function CheckoutPage() {
     } finally { submitting.current = false; setBusy(false); }
   }
 
-  if (!initialized) return <p className="p-12 text-center">Ачаалж байна…</p>;
+  if (!initialized) return <PageSkeleton variant="form" />;
   if (!user) return <div className="mx-auto max-w-lg p-12 text-center"><h1 className="text-3xl">Захиалга өгөхийн тулд нэвтэрнэ үү</h1><p className="my-4">Сагсны бараануудыг таны бүртгэлд нэмээд захиалгыг үргэлжлүүлнэ.</p><Link className="btn-primary" href="/login?next=/checkout" onClick={requestGuestCartTransfer}>Нэвтрээд үргэлжлүүлэх</Link></div>;
   if (created) return <div className="p-12 text-center"><p>Захиалга бүртгэгдлээ.</p><Link className="underline" href={`/orders/${created}`}>Төлбөрийн сонголт руу очих</Link></div>;
   if (!items.length) return <div className="p-12 text-center"><p>Сагс хоосон байна.</p><Link className="underline" href="/catalog">Каталог үзэх</Link></div>;

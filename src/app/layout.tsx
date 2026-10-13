@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import "./ui-theme.css";
+import "./page-loading.css";
+import "./brand-loader.css";
 import { PerformanceDiagnosticsLoader } from "@/components/PerformanceDiagnosticsLoader";
 import { AuthBootstrap } from "@/components/AuthBootstrap";
 

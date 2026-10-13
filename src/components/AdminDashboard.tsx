@@ -1,5 +1,7 @@
 "use client";
 
+import { PageSkeleton } from "@/components/PageSkeleton";
+
 import { useDraftState } from "@/hooks/useDashboardDraft";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { AdminMessages } from "@/components/AdminMessages";
@@ -8,7 +10,7 @@ import { AdminMerchants } from "@/components/AdminMerchants";
 import { AdminShell } from "@/components/AdminShell";
 import { AdminAnalytics } from "@/components/AdminAnalytics";
 import { AdminKitchenDesigns } from "@/components/AdminKitchenDesigns";
-import { Package, ShieldCheck } from "lucide-react";
+import { Package } from "lucide-react";
 import { OrderHistory } from "@/components/OrderHistory";
 import { AdminUsers } from "@/components/AdminUsers";
 import { AdminProducts } from "@/components/AdminProducts";
@@ -99,10 +101,7 @@ export function AdminDashboard({
 
   if (!initialized || !user || role !== "admin")
     return (
-      <main id="main-content" className="admin-gate" role="status">
-        <ShieldCheck size={32} strokeWidth={1.4} />
-        <p>Удирдлагын эрхийг шалгаж байна…</p>
-      </main>
+      <main id="main-content"><PageSkeleton variant="dashboard" label="Удирдлагын эрхийг шалгаж байна…" /></main>
     );
   const currentTab = kitchenDesignId ? "kitchens" : tab;
   return (
