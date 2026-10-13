@@ -242,8 +242,8 @@ export function KitchenSpaceEditor({
             </div>
             <h1>Өрөөг хэмжих</h1>
             <p>
-              Ханын үндсэн хэмжээс болон инженерийн холболтын цэгүүдийг заана
-              уу.
+              + дээр цэг нэмнэ. Нумтай бариулыг чирж муруй хана үүсгэнэ. Esc
+              буцаана.
             </p>
           </header>
           <section>
@@ -649,6 +649,7 @@ export function KitchenSpaceEditor({
           >
             <KitchenRoomDraft
               room={room}
+              onRoomChange={updateRoom}
               wall={wall}
               selectedItem={selected}
               disabled={disabled}

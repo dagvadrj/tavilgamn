@@ -104,7 +104,7 @@
   pointer-events: none;
 }
 
-.shop-shell .product-card.product-card-premium .product-media-actions a {
+.shop-shell .product-card.product-card-premium .product-media-actions :is(a, button) {
   pointer-events: auto;
   position: static;
   display: inline-flex;
@@ -452,7 +452,7 @@
     bottom: 8px;
     flex-wrap: wrap;
   }
-  .shop-shell .product-card.product-card-premium .product-media-actions a {
+  .shop-shell .product-card.product-card-premium .product-media-actions :is(a, button) {
     font-size: 9px;
     padding: 5px 8px;
   }

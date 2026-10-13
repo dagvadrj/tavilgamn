@@ -1,4 +1,5 @@
 import type { KitchenRoom, KitchenWall } from "./kitchenCabinets";
+import { onRoomSegment } from "./kitchenRoomOutline";
 
 export function kitchenWallPanels(wall: KitchenWall, room: KitchenRoom) {
   const height = room.height / 1000;
@@ -8,7 +9,12 @@ export function kitchenWallPanels(wall: KitchenWall, room: KitchenRoom) {
     Math.hypot(wall.end.x - wall.start.x, wall.end.z - wall.start.z) / 1000;
   const angle = Math.atan2(wall.inward.x, wall.inward.z);
   const openings = (room.items ?? [])
-    .filter((i) => i.wall === wall.id && ["door", "window"].includes(i.kind))
+    .filter(
+      (i) =>
+        i.wall === (wall.sourceWall ?? wall.id) &&
+        ["door", "window"].includes(i.kind) &&
+        (!room.outline || onRoomSegment(i, wall.start, wall.end)),
+    )
     .map((i) => ({
       id: i.id,
       kind: i.kind,

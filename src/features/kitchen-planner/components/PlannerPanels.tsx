@@ -132,11 +132,8 @@ export function Plan({
           />
         </pattern>
       </defs>
-      <rect
-        x={0}
-        y={0}
-        width={kitchen.room.width}
-        height={kitchen.room.depth}
+      <path
+        d={roomOutlinePath(roomOutline(kitchen.room))}
         className="km-room-outline"
         style={{ fill: `var(--kitchen-plan-floor, url(#${floorPattern}))` }}
       />

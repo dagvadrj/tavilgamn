@@ -1,0 +1,85 @@
+.kroom-outline-editor {
+  touch-action: none;
+  user-select: none;
+}
+
+.km-plan:has(.kroom-outline-editor) {
+  overflow: visible;
+}
+
+.kroom-outline-editor [role="button"] {
+  cursor: grab;
+  outline: none;
+}
+
+.kroom-outline-editor [data-room-midpoint] {
+  cursor: copy;
+}
+
+.kroom-outline-hit {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 20;
+  vector-effect: non-scaling-stroke;
+}
+
+.kroom-outline-point, .kroom-outline-midpoint {
+  fill: #ffffff;
+  stroke: #0051d5;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.kroom-outline-editor [role="button"]:focus-visible .kroom-outline-point, .kroom-outline-editor [role="button"]:hover .kroom-outline-point, .kroom-outline-editor [role="button"]:focus-visible .kroom-outline-midpoint, .kroom-outline-editor [role="button"]:hover .kroom-outline-midpoint {
+  fill: #bfdbfe;
+  stroke-width: 4;
+}
+
+.kroom-outline-plus {
+  stroke: #0051d5;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.kroom-outline-curve {
+  fill: #ede9fe;
+  stroke: #7c3aed;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.kroom-outline-editor [data-room-curve]:hover .kroom-outline-curve, .kroom-outline-editor [data-room-curve]:focus-visible .kroom-outline-curve {
+  fill: #c4b5fd;
+  stroke-width: 4;
+}
+
+.kroom-outline-curve-guide {
+  stroke: #7c3aed;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.kroom-outline-preview {
+  fill: #0051d511;
+  stroke: #0051d5;
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.kroom-outline-length, .kroom-outline-error {
+  fill: #0051d5;
+  stroke: #ffffff;
+  stroke-width: 18;
+  paint-order: stroke fill;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.kroom-outline-error {
+  fill: #b91c1c;
+}

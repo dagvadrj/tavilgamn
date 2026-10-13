@@ -96,12 +96,13 @@ export type KitchenDesignSummary = {
   roomDepthMm: number;
   maxHeightMm: number;
   thumbnailUrl: string | null;
-  media: Array<{ id: string; kind: "thumbnail" | "render" | "ai_render" | "photo" | "plan"; source: "system" | "merchant" | "ai"; url: string; altText: string; isPrimary: boolean }>;
+  media: Array<{ id: string; kind: "thumbnail" | "render" | "ai_render" | "photo" | "plan"; source: "system" | "merchant" | "ai"; url: string; altText: string; isPrimary: boolean; createdAt?: string }>;
   renderJobs: KitchenRenderJobSummary[];
   versions: KitchenVersionHistoryItem[];
   reviews: KitchenReviewHistoryItem[];
   audit: KitchenAuditEvent[];
   updatedAt: string;
+  listingSuggestions?: import("./kitchenListingSuggestions").KitchenListingSuggestions | null;
 };
 
 export class KitchenMarketplaceInputError extends Error {}

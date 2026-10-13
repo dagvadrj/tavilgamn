@@ -2,6 +2,14 @@
 import { useId, type KeyboardEvent } from "react";
 import { Droplets, Wind, Zap } from "lucide-react";
 import type { KitchenRoom, KitchenSpaceItem } from "@/lib/kitchenCabinets";
+import {
+  roomArea,
+  roomOutline,
+  roomBoundary,
+  roomOutlinePath,
+  wallPath,
+} from "@/lib/kitchenRoomOutline";
+import { KitchenRoomOutlineEditor } from "./KitchenRoomOutlineEditor";
 
 export const ROOM_WALL_NAMES = {
   back: "Арын хана",
@@ -26,6 +34,7 @@ export function KitchenRoomDraft({
   onWall,
   onItem,
   onClear,
+  onRoomChange,
 }: {
   room: KitchenRoom;
   wall: RoomWallId | null;
@@ -34,6 +43,7 @@ export function KitchenRoomDraft({
   onWall: (wall: RoomWallId) => void;
   onItem: (id: string) => void;
   onClear: () => void;
+  onRoomChange?: (room: KitchenRoom) => void;
 }) {
   const pattern = useId().replace(/:/g, "");
   const { width: w, depth: d } = room;
@@ -42,12 +52,22 @@ export function KitchenRoomDraft({
     path: string;
     start: [number, number];
     end: [number, number];
-  }[] = [
-    { id: "back", path: `M0 0H${w}`, start: [0, 0], end: [w, 0] },
-    { id: "right", path: `M${w} 0V${d}`, start: [w, 0], end: [w, d] },
-    { id: "front", path: `M0 ${d}H${w}`, start: [0, d], end: [w, d] },
-    { id: "left", path: `M0 0V${d}`, start: [0, 0], end: [0, d] },
-  ];
+  }[] = room.outline
+    ? roomOutline(room).map((p, i, points) => ({
+        id: p.wall,
+        path: wallPath(p, points[(i + 1) % points.length]),
+        start: [p.x, p.z] as [number, number],
+        end: [
+          points[(i + 1) % points.length].x,
+          points[(i + 1) % points.length].z,
+        ] as [number, number],
+      }))
+    : [
+        { id: "back", path: `M0 0H${w}`, start: [0, 0], end: [w, 0] },
+        { id: "right", path: `M${w} 0V${d}`, start: [w, 0], end: [w, d] },
+        { id: "front", path: `M0 ${d}H${w}`, start: [0, d], end: [w, d] },
+        { id: "left", path: `M0 0V${d}`, start: [0, 0], end: [0, d] },
+      ];
   const action =
     (callback: () => void) => (event: KeyboardEvent<SVGGElement>) => {
       if (event.key === "Enter" || event.key === " ") {
@@ -103,8 +123,8 @@ export function KitchenRoomDraft({
           <path d="M100 0H0V100" fill="none" stroke="#e8e5f1" strokeWidth={2} />
         </pattern>
       </defs>
-      <rect width={w} height={d} fill="#faf8ff" />
-      <rect width={w} height={d} fill={`url(#${pattern})`} />
+      <path d={roomOutlinePath(roomOutline(room))} fill="#faf8ff" />
+      <path d={roomOutlinePath(roomOutline(room))} fill={`url(#${pattern})`} />
       <g fill="none" stroke="#79817c" strokeWidth={7}>
         <path
           d={`M0 -50V-380M${w} -50V-380M-40 -330H${w + 40}M-40 -360l80 60M${w - 40} -360l80 60`}
@@ -125,9 +145,9 @@ export function KitchenRoomDraft({
       {badge(w + 330, d / 2, d, wall === "right", true)}
       {walls
         .filter((item) => !room.openFront || item.id !== "front")
-        .map((item) => (
+        .map((item, index) => (
           <g
-            key={item.id}
+            key={`${item.id}-${index}`}
             role="button"
             aria-label={`${ROOM_WALL_NAMES[item.id]} сонгох`}
             aria-pressed={wall === item.id}
@@ -151,7 +171,8 @@ export function KitchenRoomDraft({
               strokeWidth={95}
               className={wall === item.id ? "is-selected" : ""}
             />
-            {wall === item.id &&
+            {!onRoomChange &&
+              wall === item.id &&
               [item.start, item.end].map(([x, y], index) => (
                 <circle
                   key={index}
@@ -182,7 +203,7 @@ export function KitchenRoomDraft({
         fontSize={85}
         fill="#0051d5"
       >
-        {((w * d) / 1000000).toFixed(2)} м²
+        {(roomArea(roomBoundary(room)) / 1000000).toFixed(2)} м²
       </text>
       {(room.items ?? []).map((item) => {
         const rotation =
@@ -320,6 +341,13 @@ export function KitchenRoomDraft({
           </g>
         );
       })}
+      {onRoomChange && (
+        <KitchenRoomOutlineEditor
+          room={room}
+          disabled={disabled}
+          onChange={onRoomChange}
+        />
+      )}
     </svg>
   );
 }

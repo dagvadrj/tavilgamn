@@ -31,6 +31,11 @@ export function safeAuthDestination(value: string | null): string | null {
   if (!value) return null;
   if (["/account", "/checkout", "/admin", "/merchant"].includes(value))
     return value;
+  const kitchenDetail =
+    /^\/merchant\/kitchens\/([a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})$/i.exec(
+      value,
+    );
+  if (kitchenDetail) return `/merchant/kitchens/${kitchenDetail[1]}`;
   const match = /^(\/merchant|\/admin)\?([^#]+)$/.exec(value);
   if (!match) return null;
   const path = match[1] as keyof typeof tabs;

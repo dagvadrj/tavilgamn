@@ -1,13 +1,15 @@
-import type { KitchenRoom, KitchenSpaceItem } from "./kitchenCabinets";
+import { roomWalls, type KitchenRoom, type KitchenSpaceItem } from "./kitchenCabinets";
+import { onRoomSegment, roomContainsFootprint, validateRoomOutline } from "./kitchenRoomOutline";
 
-export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFront" | "items" | "wallColors"> {
+export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFront" | "items" | "wallColors" | "outline"> {
+  const outline = validateRoomOutline(room);
   if (room.openFront !== undefined && typeof room.openFront !== "boolean") throw new Error("Өрөөний хэлбэр буруу байна.");
   let wallColors: KitchenRoom["wallColors"];
   if (room.wallColors !== undefined) {
     if (!room.wallColors || typeof room.wallColors !== "object" || Array.isArray(room.wallColors) || Object.entries(room.wallColors).some(([wall, color]) => !["back", "front", "left", "right"].includes(wall) || typeof color !== "string" || !/^#[0-9a-f]{6}$/i.test(color))) throw new Error("Ханын өнгө буруу байна.");
     wallColors = { ...room.wallColors };
   }
-  const appearance = { ...(room.openFront === undefined ? {} : { openFront: room.openFront }), ...(wallColors ? { wallColors } : {}) };
+  const appearance = { ...(outline ? {outline} : {}), ...(room.openFront === undefined ? {} : { openFront: room.openFront }), ...(wallColors ? { wallColors } : {}) };
   if (room.items === undefined) return appearance;
   if (!Array.isArray(room.items) || room.items.length > 100) throw new Error("Өрөөний элементүүд буруу байна.");
   const ids = new Set<string>();
@@ -20,9 +22,18 @@ export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFro
     if (["door", "window"].includes(item.kind)) {
       const horizontal = ["back", "front"].includes(item.wall);
       const centre = horizontal ? item.x : item.z, extent = horizontal ? room.width : room.depth;
-      if (centre < item.width / 2 || centre + item.width / 2 > extent || (item.wall === "back" && item.z !== 0) || (item.wall === "front" && item.z !== room.depth) || (item.wall === "left" && item.x !== 0) || (item.wall === "right" && item.x !== room.width) || (room.openFront && item.wall === "front")) throw new Error("Хаалга, цонх ханын хэмжээнд багтахгүй байна.");
+      if (outline) {
+        const fits=roomWalls(room).some(w=>{
+          if(w.sourceWall!==item.wall || !onRoomSegment(item,w.start,w.end)) return false;
+          // Existing openings keep their orientation and measured size.
+          if(horizontal ? Math.abs(w.start.z-w.end.z)>0.001 : Math.abs(w.start.x-w.end.x)>0.001) return false;
+          return Math.hypot(item.x-w.start.x,item.z-w.start.z)>=item.width/2 && Math.hypot(item.x-w.end.x,item.z-w.end.z)>=item.width/2;
+        });
+        if(!fits) throw new Error("Хаалга, цонх шинэ ханын хэсэгт багтахгүй байна. Байрлалыг нь эхлээд өөрчилнө үү.");
+      } else if (centre < item.width / 2 || centre + item.width / 2 > extent || (item.wall === "back" && item.z !== 0) || (item.wall === "front" && item.z !== room.depth) || (item.wall === "left" && item.x !== 0) || (item.wall === "right" && item.x !== room.width) || (room.openFront && item.wall === "front")) throw new Error("Хаалга, цонх ханын хэмжээнд багтахгүй байна.");
     }
     ids.add(item.id);
+    if(outline && item.kind==="column" && !roomContainsFootprint(room,[{x:item.x-item.width/2,z:item.z-item.depth/2},{x:item.x+item.width/2,z:item.z-item.depth/2},{x:item.x+item.width/2,z:item.z+item.depth/2},{x:item.x-item.width/2,z:item.z+item.depth/2}])) throw new Error("Багана өрөөний хүрээнээс гарсан байна.");
     return { id: item.id, kind: item.kind, x: item.x, z: item.z, width: item.width, depth: item.depth, wall: item.wall };
   });
   for (const [index, item] of items.entries()) {
@@ -45,11 +56,16 @@ export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFro
 /** Keep wall attachments and relative positions when resizing the room. */
 export function resizeKitchenRoom(room: KitchenRoom, patch: Partial<Pick<KitchenRoom, "width" | "depth" | "height">>): KitchenRoom {
   const next = { ...room, ...patch };
+  if(room.outline) next.outline=room.outline.map(p=>({...p,x:p.x*next.width/room.width,z:p.z*next.depth/room.depth,...(p.curve?{curve:{x:p.curve.x*next.width/room.width,z:p.curve.z*next.depth/room.depth}}:{})}));
   const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
   next.items = room.items?.map(item => {
     let x = Math.round(item.x * next.width / room.width), z = Math.round(item.z * next.depth / room.depth);
     if (["door", "window"].includes(item.kind)) {
-      if (item.wall === "back" || item.wall === "front") { x = clamp(x, item.width / 2, next.width - item.width / 2); z = item.wall === "back" ? 0 : next.depth; }
+      if (room.outline) {
+        const wall = roomWalls(next).find(w => w.sourceWall === item.wall && onRoomSegment({x,z},w.start,w.end));
+        if (wall && (item.wall === "back" || item.wall === "front")) x=clamp(x,Math.min(wall.start.x,wall.end.x)+item.width/2,Math.max(wall.start.x,wall.end.x)-item.width/2);
+        else if (wall) z=clamp(z,Math.min(wall.start.z,wall.end.z)+item.width/2,Math.max(wall.start.z,wall.end.z)-item.width/2);
+      } else if (item.wall === "back" || item.wall === "front") { x = clamp(x, item.width / 2, next.width - item.width / 2); z = item.wall === "back" ? 0 : next.depth; }
       else { z = clamp(z, item.width / 2, next.depth - item.width / 2); x = item.wall === "left" ? 0 : next.width; }
     } else if (item.kind === "column") {
       x = clamp(x, item.width / 2, next.width - item.width / 2); z = clamp(z, item.depth / 2, next.depth - item.depth / 2);

@@ -19,6 +19,7 @@ export function KitchenPlanWorkspace({
   onRotate,
   onDuplicate,
   onDelete,
+  onRoomChange,
 }: {
   measurements?: boolean;
   onMeasurementsChange?: (value: boolean) => void;
@@ -33,6 +34,7 @@ export function KitchenPlanWorkspace({
   onRotate: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  onRoomChange?: (room: KitchenRoom) => void;
 }) {
   const [zoom, setZoom] = useState(1);
   const [moving, setMoving] = useState(true);

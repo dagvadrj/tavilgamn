@@ -18,6 +18,7 @@ import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import {
   Plane,
+  Shape,
   Vector3,
   type BufferGeometry,
   type Group,
@@ -136,7 +137,9 @@ function KitchenRoomWall({
           <meshStandardMaterial
             color={
               room.wallColors?.[
-                wall.id as keyof NonNullable<KitchenRoom["wallColors"]>
+                (wall.sourceWall ?? wall.id) as keyof NonNullable<
+                  KitchenRoom["wallColors"]
+                >
               ] ?? "#efe6d6"
             }
             roughness={0.92}
@@ -205,7 +208,7 @@ function Scene(props: ModularSceneProps) {
     centerX: kitchen.room.width / 2,
     centerZ: kitchen.room.depth / 2,
   }).current;
-  const { camera, gl, invalidate, scene } = useThree();
+  const { camera, gl, invalidate, scene, controls } = useThree();
   const callbacks = useRef(props);
   callbacks.current = props;
   const [dragActive, setDragActive] = useState(false);
@@ -226,6 +229,7 @@ function Scene(props: ModularSceneProps) {
     const current = drag.current;
     if (!current) return;
     drag.current = null;
+    if (controls && "enabled" in controls) controls.enabled = true;
     setDragActive(false);
     try {
       current.target.releasePointerCapture(current.pointerId);
@@ -293,6 +297,8 @@ function Scene(props: ModularSceneProps) {
     cabinet: Pick<ModularCabinet, "id" | "position">,
   ) {
     if (props.interior || event.button !== 0 || drag.current) return;
+    // Shift + left drag pans even when the pointer starts over furniture.
+    if (event.pointerType !== "touch" && event.shiftKey) return;
     if (
       event.pointerType === "touch" &&
       isSceneNavigationGesture(gl.domElement)
@@ -304,6 +310,8 @@ function Scene(props: ModularSceneProps) {
     const plane = new Plane(new Vector3(0, 1, 0), -event.point.y),
       point = new Vector3();
     if (!event.ray.intersectPlane(plane, point)) return;
+    // Block native camera movement before the next pointer sample/React render.
+    if (controls && "enabled" in controls) controls.enabled = false;
     const target = event.target as unknown as CaptureTarget;
     target.setPointerCapture(event.pointerId);
     drag.current = {
@@ -336,6 +344,23 @@ function Scene(props: ModularSceneProps) {
   }
   const width = kitchen.room.width / 1000,
     depth = kitchen.room.depth / 1000;
+  const floorShape = useMemo(() => {
+    const shape = new Shape();
+    roomOutline(kitchen.room).forEach((p, i, points) => {
+      if (i === 0) shape.moveTo(p.x / 1000, -p.z / 1000);
+      const q = points[(i + 1) % points.length];
+      if (p.curve)
+        shape.quadraticCurveTo(
+          p.curve.x / 1000,
+          -p.curve.z / 1000,
+          q.x / 1000,
+          -q.z / 1000,
+        );
+      else shape.lineTo(q.x / 1000, -q.z / 1000);
+    });
+    shape.closePath();
+    return shape;
+  }, [kitchen.room]);
   const roomHeight = kitchen.room.height / 1000;
   const cameraTarget = props.cameraRequest?.targetId
     ? kitchen.cabinets.find((cabinet) => cabinet.id === props.cameraRequest?.targetId)
@@ -380,6 +405,7 @@ function Scene(props: ModularSceneProps) {
       )}
       {!props.interior && (
         <CameraNavigation
+          leftDrag
           request={props.cameraRequest}
           bounds={cameraTarget ? {
             width: cameraTarget.width / 1000,
@@ -401,10 +427,26 @@ function Scene(props: ModularSceneProps) {
       {props.interior && (
         <KitchenInteriorView kitchen={kitchen} request={props.cameraRequest} />
       )}
-      <mesh position={[width / 2, -0.04, depth / 2]} receiveShadow>
-        <boxGeometry args={[width, 0.08, depth]} />
-        <meshStandardMaterial {...floorMaterial} />
-      </mesh>
+      {kitchen.room.outline ? (
+        <mesh
+          position={[0, -0.08, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          receiveShadow
+        >
+          <extrudeGeometry
+            args={[
+              floorShape,
+              { depth: 0.08, bevelEnabled: false, curveSegments: 64 },
+            ]}
+          />
+          <meshStandardMaterial {...floorMaterial} />
+        </mesh>
+      ) : (
+        <mesh position={[width / 2, -0.04, depth / 2]} receiveShadow>
+          <boxGeometry args={[width, 0.08, depth]} />
+          <meshStandardMaterial {...floorMaterial} />
+        </mesh>
+      )}
       {roomWalls(kitchen.room).map((wall) => (
         <KitchenRoomWall key={wall.id} wall={wall} room={kitchen.room} />
       ))}

@@ -137,6 +137,7 @@ export function MerchantProducts({
         <Search size={18} />
         <input
           className="input"
+          type="search"
           aria-label="Өөрийн бараа хайх"
           placeholder="Барааны нэрээр хайх…"
           value={query}

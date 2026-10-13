@@ -4,8 +4,8 @@ import { useThree } from "@react-three/fiber";
 import type { PerspectiveCamera } from "three";
 import { bindBlenderMouse, navigateCamera, type CameraBounds, type CameraRequest, type NavigationControls } from "@/lib/plannerCamera";
 
-export function CameraNavigation({ request, bounds, plan = false }: {
-  request?: CameraRequest; bounds: CameraBounds; plan?: boolean;
+export function CameraNavigation({ request, bounds, plan = false, leftDrag = false }: {
+  request?: CameraRequest; bounds: CameraBounds; plan?: boolean; leftDrag?: boolean;
 }) {
   const { camera, controls, gl, size, invalidate } = useThree();
   const handled = useRef<number | undefined>(undefined);
@@ -13,8 +13,8 @@ export function CameraNavigation({ request, bounds, plan = false }: {
   useEffect(() => {
     if (!controls || !("mouseButtons" in controls)) return;
     const orbit = controls as Parameters<typeof bindBlenderMouse>[0];
-    return bindBlenderMouse(orbit, orbit.domElement ?? gl.domElement, plan);
-  }, [controls, gl, plan]);
+    return bindBlenderMouse(orbit, orbit.domElement ?? gl.domElement, plan, leftDrag);
+  }, [controls, gl, plan, leftDrag]);
   useEffect(() => {
     if (!request || handled.current === request.id || !controls || !("target" in controls)) return;
     // Apply after the view's camera rig/control swap has settled. Cancel stale work.

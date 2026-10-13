@@ -6,6 +6,7 @@ const core = [
 const production = process.argv.includes("--production");
 
 const featureGroups = {
+  cloudflare_render: ["CLOUDFLARE_RENDER_URL", "CLOUDFLARE_RENDER_TOKEN"],
   bank_transfer: ["BANK_NAME", "BANK_ACCOUNT", "BANK_ACCOUNT_HOLDER"],
   cloudinary: [
     "CLOUDINARY_CLOUD_NAME",
@@ -56,6 +57,7 @@ for (const name of [
   "APP_URL",
   "QPAY_BASE_URL",
   "SOCIALPAY_BASE_URL",
+  "CLOUDFLARE_RENDER_URL",
 ]) {
   if (!value(name)) continue;
   try {
@@ -70,6 +72,20 @@ for (const name of [
   } catch {
     errors.push(`${name} must be a valid absolute URL`);
   }
+}
+
+if (
+  value("KITCHEN_RENDER_PROVIDER") &&
+  !["openai", "cloudflare"].includes(value("KITCHEN_RENDER_PROVIDER"))
+)
+  errors.push("KITCHEN_RENDER_PROVIDER must be openai or cloudflare");
+if (value("KITCHEN_RENDER_PROVIDER") === "cloudflare") {
+  for (const name of featureGroups.cloudflare_render)
+    if (!value(name)) errors.push(`${name} is required for Cloudflare renders`);
+  if (value("CLOUDFLARE_RENDER_FREE_CONFIRMED") !== "true")
+    warnings.push(
+      "Cloudflare render is disabled until Workers Free plan is confirmed",
+    );
 }
 
 for (const warning of warnings) console.warn(`Warning: ${warning}`);

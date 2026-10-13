@@ -14,6 +14,7 @@ import { CursorNavigation } from "./CursorNavigationBinding";
 
 interface ProductViewerProps {
   stockQuantity?: number | null;
+  showStockBadge?: boolean;
   color: string;
   model?: Product["model"];
   material: Material;
@@ -25,6 +26,7 @@ interface ProductViewerProps {
 
 export function ProductViewer({
   stockQuantity,
+  showStockBadge = true,
   color,
   material,
   dimensions,
@@ -36,12 +38,12 @@ export function ProductViewer({
   const performance = useCanvasPerformance();
   return (
     <div className="relative h-full w-full">
-      <p
+      {showStockBadge && <p
         className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-white/95 px-3 py-2 text-xs text-[#293C32] shadow-sm"
         role="status"
       >
         {stockLabel({ stockQuantity })}
-      </p>
+      </p>}
       {model ? <Canvas
         shadows={performance.shadows}
         dpr={performance.dpr}

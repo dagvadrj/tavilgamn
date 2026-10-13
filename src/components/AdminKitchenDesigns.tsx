@@ -1,10 +1,39 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { KitchenDesignGallery } from "./KitchenDesignGallery";
+import {
+  KITCHEN_LAYOUT_LABELS,
+  KITCHEN_STYLE_LABELS,
+} from "@/lib/kitchenListingSuggestions";
+import {
+  isKitchenAiMedia,
+  kitchenGalleryMedia,
+} from "@/lib/kitchenDesignMedia";
+import "./kitchen-design-detail.css";
+import "./merchant-kitchen-detail.css";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useId,
+} from "react";
 import { useDraftState, useDraftStatus } from "@/hooks/useDashboardDraft";
 import { DashboardDraftNotice } from "./DashboardDraftNotice";
 import {
+  ArrowLeft,
+  ArrowUpRight,
+  Box,
+  CalendarDays,
+  ChevronRight,
+  Clock3,
+  ImageOff,
+  MapPin,
+  Ruler,
+  Search,
   Check,
   EyeOff,
   LoaderCircle,
@@ -14,59 +43,125 @@ import {
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
 import type { KitchenDesignSummary } from "@/lib/kitchenMarketplace";
-import { kitchenLifecycle, kitchenLifecycleLabel, kitchenPriceLabel } from "@/lib/kitchenMarketplace";
+import {
+  kitchenLifecycle,
+  kitchenLifecycleLabel,
+  kitchenPriceLabel,
+} from "@/lib/kitchenMarketplace";
 import { AdminKitchenMaterials } from "./AdminKitchenMaterials";
 import { AdminKitchenModules } from "./AdminKitchenModules";
 import { KitchenReviewTimeline } from "./KitchenReviewTimeline";
 
 type ReviewAction =
-  | "approved"
-  | "changes_requested"
-  | "rejected"
-  | "unpublished";
+  "approved" | "changes_requested" | "rejected" | "unpublished";
 type AdminAction = ReviewAction | "published" | "suspended";
 
-export function AdminKitchenDesigns({ owner }: { owner: string }) {
+export function AdminKitchenDesigns({
+  owner,
+  designId,
+}: {
+  owner: string;
+  designId?: string;
+}) {
+  const [section, setSection] = useState<"designs" | "modules" | "materials">(
+    "designs",
+  );
+  const [panel, setPanel] = useState<"information" | "render" | "history">(
+    "information",
+  );
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [activeMediaId, setActiveMediaId] = useState<string | null>(null);
+  const requestSequence = useRef(0);
+  const newestAiMedia = useRef<string | null>(null);
+  const tabId = useId();
   const [designs, setDesigns] = useState<KitchenDesignSummary[]>([]);
   const [filter, setFilter] = useState("all");
   const draftScope = `admin:${owner}:kitchen-review-notes`;
-  const [note, setNote] = useDraftState<Record<string, string>>(draftScope, "note", {});
+  const [note, setNote] = useDraftState<Record<string, string>>(
+    draftScope,
+    "note",
+    {},
+  );
   const draftStatus = useDraftStatus(draftScope);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const response = await authFetch(
-        "/api/admin/kitchen-designs",
-        undefined,
-        owner,
-      );
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !data)
-        throw new Error(data?.error ?? "Мэдээллийг ачаалж чадсангүй.");
-      setDesigns(data.designs);
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Мэдээллийг ачаалж чадсангүй.",
-      );
-    }
-  }, [owner]);
+  const [renderConfig, setRenderConfig] = useState<{
+    provider: "openai" | "cloudflare";
+    model: string;
+    ready: boolean;
+  } | null>(null);
+  const load = useCallback(
+    async (silent = false) => {
+      const sequence = ++requestSequence.current;
+      if (!silent) setError(null);
+      try {
+        const response = await authFetch(
+          `/api/admin/kitchen-designs${designId ? `?design=${encodeURIComponent(designId)}` : ""}`,
+          undefined,
+          owner,
+        );
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !data)
+          throw new Error(data?.error ?? "Мэдээллийг ачаалж чадсангүй.");
+        if (sequence !== requestSequence.current) return;
+        if (designId) {
+          const latestAi = kitchenGalleryMedia(
+            data.designs[0]?.media ?? [],
+          ).find(isKitchenAiMedia);
+          if (latestAi && latestAi.id !== newestAiMedia.current)
+            setActiveMediaId(latestAi.id);
+          newestAiMedia.current = latestAi?.id ?? null;
+        }
+        setDesigns(data.designs);
+        setRenderConfig(data.renderConfig ?? null);
+      } catch (reason) {
+        if (sequence !== requestSequence.current) return;
+        if (!silent)
+          setError(
+            reason instanceof Error
+              ? reason.message
+              : "Мэдээллийг ачаалж чадсангүй.",
+          );
+      } finally {
+        if (sequence === requestSequence.current) setLoading(false);
+      }
+    },
+    [owner, designId],
+  );
   useEffect(() => {
     void load();
+    const sequence = requestSequence;
+    return () => {
+      sequence.current++;
+    };
   }, [load]);
+  const activeRender = designs.some((design) =>
+    design.renderJobs.some(
+      (job) => job.status === "queued" || job.status === "processing",
+    ),
+  );
+  useEffect(() => {
+    if (!activeRender || busy) return;
+    const timer = window.setInterval(() => void load(true), 8000);
+    return () => window.clearInterval(timer);
+  }, [activeRender, busy, load]);
 
   const visible = useMemo(
     () =>
       designs.filter(
         (item) =>
-          filter === "all" ||
-          kitchenLifecycle(item) === filter ||
-          (item.publicationStatus === "published" && item.publishedVersionId !== item.versionId && item.reviewStatus === filter),
+          (filter === "all" ||
+            kitchenLifecycle(item) === filter ||
+            (item.publicationStatus === "published" &&
+              item.publishedVersionId !== item.versionId &&
+              item.reviewStatus === filter)) &&
+          [item.title, item.storeName, ...item.tags]
+            .join(" ")
+            .toLocaleLowerCase()
+            .includes(search.trim().toLocaleLowerCase()),
       ),
-    [designs, filter],
+    [designs, filter, search],
   );
 
   async function review(design: KitchenDesignSummary, action: AdminAction) {
@@ -105,20 +200,41 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
   }
 
   async function generateRender(jobId: string) {
-    if (!window.confirm("Энэ хүсэлтийг зөвшөөрч төлбөртэй AI зураг үүсгэх үү? Provider-ийн төлбөр бодогдоно.")) return;
+    if (busy || !renderConfig?.ready) return;
+    const cloudflare = renderConfig.provider === "cloudflare";
+    if (
+      !window.confirm(
+        cloudflare
+          ? "Cloudflare FLUX.2 klein 4B-аар зураг үүсгэх үү? Өдрийн үнэгүй квотоос ашиглана."
+          : "Энэ хүсэлтийг зөвшөөрч төлбөртэй AI зураг үүсгэх үү? Provider-ийн төлбөр бодогдоно.",
+      )
+    )
+      return;
     setBusy(`render:${jobId}`);
     setError(null);
     try {
       const response = await authFetch(
         `/api/admin/kitchen-render-jobs/${jobId}/generate`,
-        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ approveCost: true }) },
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approveCost: true,
+            provider: renderConfig.provider,
+          }),
+        },
         owner,
       );
       const data = await response.json().catch(() => null);
       if (!response.ok)
         throw new Error(data?.error ?? "AI render үүсгэж чадсангүй.");
       await load();
+      setActiveMediaId(data.mediaId ?? null);
+      document
+        .querySelector(".mk-media")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (reason) {
+      await load(true);
       setError(
         reason instanceof Error
           ? reason.message
@@ -130,303 +246,741 @@ export function AdminKitchenDesigns({ owner }: { owner: string }) {
   }
 
   async function cancelRender(jobId: string) {
+    if (busy) return;
     const reason = window.prompt("AI render хүсэлтийг цуцлах шалтгаан:");
     if (!reason?.trim()) return;
-    setBusy(`render:${jobId}`); setError(null);
+    setBusy(`render:${jobId}`);
+    setError(null);
     try {
-      const response = await authFetch(`/api/kitchen-render-jobs/${jobId}/cancel`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note: reason }),
-      }, owner);
+      const response = await authFetch(
+        `/api/kitchen-render-jobs/${jobId}/cancel`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note: reason }),
+        },
+        owner,
+      );
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Цуцалж чадсангүй.");
       await load();
-    } catch (error) { setError(error instanceof Error ? error.message : "Цуцалж чадсангүй."); }
-    finally { setBusy(null); }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Цуцалж чадсангүй.");
+    } finally {
+      setBusy(null);
+    }
   }
 
+  const filters = [
+    "all",
+    "draft",
+    "submitted",
+    "changes_requested",
+    "approved",
+    "published",
+    "suspended",
+    "archived",
+  ] as const;
+  const panels = [
+    { id: "information", label: "Мэдээлэл", icon: Box },
+    { id: "render", label: "AI render", icon: Sparkles },
+    { id: "history", label: "Түүх", icon: Clock3 },
+  ] as const;
+  const design = designs[0];
+  const renderLabels = {
+    queued: "Хүлээгдэж байна",
+    processing: "Зураг үүсгэж байна",
+    completed: "Зураг бэлэн",
+    failed: "Амжилтгүй",
+    cancelled: "Цуцалсан",
+  };
+  const formatDate = (value: string) =>
+    new Intl.DateTimeFormat("mn-MN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(value));
   return (
-    <section className="space-y-5">
-      <DashboardDraftNotice scope={draftScope} disabled={Boolean(busy)} />
-      <div className="admin-page-heading">
-        <div>
-          <span className="admin-eyebrow">MARKETPLACE</span>
-          <h1>Гал тогооны загварууд</h1>
-          <p>
-            Merchant-ийн snapshot, зураг, үнэ болон нийтлэх хүсэлтийг нэг дор
-            хянана.
-          </p>
-        </div>
-        <button type="button" className="btn-ghost" onClick={() => void load()}>
-          <RefreshCw size={16} />
-          Шинэчлэх
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {[
-          "all",
-          "draft",
-          "submitted",
-          "changes_requested",
-          "approved",
-          "published",
-          "suspended",
-          "archived",
-        ].map((value) => (
+    <section
+      className={designId ? "mk-detail admin-kitchen-detail" : "mk-detail"}
+    >
+      {designId ? (
+        <nav className="mk-breadcrumb" aria-label="Буцах зам">
+          <Link href="/admin?tab=kitchens">
+            <ArrowLeft size={14} />
+            Гал тогооны загварууд
+          </Link>
+          <ChevronRight size={12} />
+          <span>Дэлгэрэнгүй</span>
+        </nav>
+      ) : (
+        <div className="admin-page-heading">
+          <div>
+            <span className="admin-eyebrow">MARKETPLACE</span>
+            <h1>Гал тогооны загварууд</h1>
+            <p>
+              Загвараа сонгож зураг, мэдээлэл болон нийтлэх хүсэлтийг хянаарай.
+            </p>
+          </div>
           <button
-            key={value}
             type="button"
-            onClick={() => setFilter(value)}
-            className={filter === value ? "btn-primary" : "btn-ghost"}
+            className="btn-ghost"
+            disabled={loading || !!busy}
+            onClick={() => void load()}
           >
-            {value === "all" ? "Бүгд" : kitchenLifecycleLabel[value as keyof typeof kitchenLifecycleLabel]}
+            <RefreshCw size={16} />
+            Шинэчлэх
           </button>
-        ))}
-      </div>
+        </div>
+      )}
       {error && (
         <p className="admin-error" role="alert">
           {error}
+          <button
+            type="button"
+            className="btn-ghost"
+            disabled={!!busy}
+            onClick={() => void load()}
+          >
+            <RefreshCw size={14} />
+            Дахин ачаалах
+          </button>
         </p>
       )}
-      <AdminKitchenModules owner={owner} />
-      <AdminKitchenMaterials owner={owner} />
-      <div className="grid gap-4 xl:grid-cols-2">
-        {visible.map((design) => (
-          <article
-            key={design.id}
-            className="overflow-hidden rounded-2xl border border-black/10 bg-white"
-          >
-            <div className="relative h-56 bg-[#f1efe9]">
-              {design.thumbnailUrl ? (
-                <Image
-                  src={design.thumbnailUrl}
-                  alt={design.title}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-black/40">
-                  Thumbnail байхгүй
-                </div>
-              )}
-            </div>
-            <div className="space-y-4 p-5">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="font-semibold">{design.title}</h2>
-                  <p className="text-sm text-black/55">
-                    {design.storeName} · v{design.versionNo}
-                  </p>
-                </div>
-                <div className="text-right text-xs">
-                  <div>{kitchenLifecycleLabel[kitchenLifecycle(design)]}</div>
-                  <div className="text-black/45">
-                    v{design.versionNo}: {kitchenLifecycleLabel[kitchenLifecycle({ publicationStatus: "draft", reviewStatus: design.reviewStatus })]}
-                  </div>
-                </div>
+      {!designId && (
+        <>
+          <nav className="admin-kitchen-nav" aria-label="Гал тогооны удирдлага">
+            {(
+              [
+                { id: "designs", label: "Загварууд" },
+                { id: "modules", label: "Модулиуд" },
+                { id: "materials", label: "Материалууд" },
+              ] as const
+            ).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={section === item.id ? "btn-primary" : "btn-ghost"}
+                aria-pressed={section === item.id}
+                onClick={() => setSection(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+          {section === "modules" && <AdminKitchenModules owner={owner} />}
+          {section === "materials" && <AdminKitchenMaterials owner={owner} />}
+          {section === "designs" && (
+            <>
+              <div className="admin-kitchen-toolbar">
+                <label className="admin-search">
+                  <Search size={17} />
+                  <input
+                    type="search"
+                    aria-label="Загвар, дэлгүүр, tag-аар хайх"
+                    placeholder="Загвар, дэлгүүр, tag-аар хайх…"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </label>
+                <span>{visible.length} загвар</span>
               </div>
-              <p className="text-sm text-black/65">
-                {design.description || design.shortDescription || "Тайлбаргүй"}
-              </p>
-              {design.media.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {design.media
-                    .filter((item) => !item.isPrimary)
-                    .map((item) => (
-                      <div
+              <div
+                className="admin-kitchen-filters"
+                aria-label="Загварын төлөвөөр шүүх"
+              >
+                {filters.map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={filter === value}
+                    className={filter === value ? "btn-primary" : "btn-ghost"}
+                    onClick={() => setFilter(value)}
+                  >
+                    {value === "all" ? "Бүгд" : kitchenLifecycleLabel[value]}
+                  </button>
+                ))}
+              </div>
+              <div className="admin-kitchen-list" aria-busy={loading}>
+                {loading ? (
+                  <p className="admin-kitchen-list-empty" role="status">
+                    <LoaderCircle size={20} className="animate-spin mx-auto" />
+                    Загваруудыг ачаалж байна…
+                  </p>
+                ) : (
+                  visible.map((item) => {
+                    const preview =
+                      kitchenGalleryMedia(item.media)[0]?.url ??
+                      item.thumbnailUrl;
+                    return (
+                      <Link
                         key={item.id}
-                        className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-black/5"
+                        href={`/admin/kitchens/${item.id}`}
+                        className="admin-kitchen-row"
                       >
-                        <Image
-                          src={item.url}
-                          alt={item.altText || design.title}
-                          fill
-                          className="object-cover"
-                        />
-                        <span className="absolute bottom-1 left-1 rounded bg-black/65 px-1.5 py-0.5 text-[9px] text-white">
-                          {item.source === "ai" ? "AI render" : item.kind}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              )}
-              <dl className="grid grid-cols-2 gap-2 rounded-xl bg-black/[0.03] p-3 text-xs">
-                <div>
-                  <dt className="text-black/45">Өрөө</dt>
-                  <dd>
-                    {design.roomWidthMm}×{design.roomDepthMm}×
-                    {design.maxHeightMm} мм
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-black/45">Шүүгээ</dt>
-                  <dd>{design.cabinetCount}</dd>
-                </div>
-                <div>
-                  <dt className="text-black/45">Үнэ</dt>
-                  <dd>
-                    {design.priceFrom == null
-                      ? "Үнийн санал"
-                      : `${design.priceFrom.toLocaleString()} ₮-с`}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-black/45">Хугацаа</dt>
-                  <dd>
-                    {design.leadTimeDays
-                      ? `${design.leadTimeDays} хоног`
-                      : "Тодорхойгүй"}
-                  </dd>
-                </div>
-              </dl>
-              <details className="rounded-xl border border-black/10 p-3 text-sm">
-                <summary className="cursor-pointer font-medium">
-                  Marketplace дэлгэрэнгүй
-                </summary>
-                <div className="mt-3 grid gap-3 text-black/65 sm:grid-cols-2">
-                  <p>
-                    <span className="block text-xs text-black/40">
-                      Стиль / зохион байгуулалт
-                    </span>
-                    {design.style} · {design.layout}
-                  </p>
-                  <p>
-                    <span className="block text-xs text-black/40">
-                      Баталгаа / угсралт
-                    </span>
-                    {design.warrantyMonths
-                      ? `${design.warrantyMonths} сар`
-                      : "Оруулаагүй"}{" "}
-                    · {design.installationIncluded ? "багтсан" : "багтаагүй"}
-                  </p>
-                  <p>
-                    <span className="block text-xs text-black/40">
-                      Үйлчилгээний бүс
-                    </span>
-                    {design.serviceAreas.join(", ") || "Оруулаагүй"}
-                  </p>
-                  <p>
-                    <span className="block text-xs text-black/40">Tag</span>
-                    {design.tags.join(", ") || "Оруулаагүй"}
-                  </p>
-                  <p>
-                    <span className="block text-xs text-black/40">
-                      Үнэд багтсан
-                    </span>
-                    {design.inclusions.join(", ") || "Оруулаагүй"}
-                  </p>
-                  <p>
-                    <span className="block text-xs text-black/40">
-                      Үнэд багтаагүй
-                    </span>
-                    {design.exclusions.join(", ") || "Оруулаагүй"}
-                  </p>
-                </div>
-              </details>
-              <KitchenReviewTimeline design={design} />
-              <p className="text-xs text-black/55">{kitchenPriceLabel(design)} · Материал: {design.materials.join(", ") || "Оруулаагүй"}</p>
-              {design.renderJobs.length > 0 && (
-                <div className="space-y-2 rounded-xl border border-violet-200 bg-violet-50 p-3">
-                  <h3 className="flex items-center gap-2 text-sm font-medium text-violet-950">
-                    <Sparkles size={15} />
-                    AI render хүсэлт
-                  </h3>
-                  {design.renderJobs.map((job) => (
-                    <div
-                      key={job.id}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white p-3 text-xs"
-                    >
-                      <div>
-                        <strong>{job.status}</strong>
-                        <span className="ml-2 text-black/45">{job.model}</span>
-                        <p className="mt-1 line-clamp-2 max-w-xl text-black/55">
-                          {job.prompt}
-                        </p>
-                        {job.error && (
-                          <p className="mt-1 text-red-700">{job.error}</p>
-                        )}
-                      </div>
-                      {job.status === "queued" && (
-                        <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          className="btn-primary"
-                          disabled={!!busy}
-                          onClick={() => void generateRender(job.id)}
-                        >
-                          {busy === `render:${job.id}` ? (
-                            <LoaderCircle className="animate-spin" size={15} />
+                        <span className="admin-kitchen-row-image">
+                          {preview ? (
+                            <Image
+                              src={preview}
+                              alt={item.title}
+                              fill
+                              sizes="88px"
+                            />
                           ) : (
-                            <Sparkles size={15} />
+                            <ImageOff size={22} />
                           )}
-                          Зөвшөөрч AI зураг үүсгэх
-                        </button>
-                        <button type="button" className="btn-ghost" disabled={!!busy} onClick={() => void cancelRender(job.id)}>Цуцлах</button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        </span>
+                        <span className="admin-kitchen-row-copy">
+                          <strong>{item.title}</strong>
+                          <small>
+                            {item.storeName} · v{item.versionNo} ·{" "}
+                            {item.cabinetCount} модуль
+                          </small>
+                          <small>
+                            {item.roomWidthMm} × {item.roomDepthMm} мм
+                          </small>
+                        </span>
+                        <span className="admin-kitchen-row-price">
+                          <strong>{kitchenPriceLabel(item)}</strong>
+                          <span
+                            className={`mk-status is-${kitchenLifecycle(item)}`}
+                          >
+                            {kitchenLifecycleLabel[kitchenLifecycle(item)]}
+                          </span>
+                        </span>
+                        <ChevronRight size={17} />
+                      </Link>
+                    );
+                  })
+                )}
+                {!loading && !visible.length && (
+                  <p className="admin-kitchen-list-empty">
+                    {search
+                      ? "Хайлттай тохирох загвар олдсонгүй."
+                      : "Энэ төлөвт загвар байхгүй."}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+        </>
+      )}
+      {designId &&
+        (loading ? (
+          <div className="mk-loading" role="status">
+            <LoaderCircle size={22} className="animate-spin" />
+            Загварын мэдээллийг ачаалж байна…
+          </div>
+        ) : !design ? (
+          <p className="admin-kitchen-list-empty">Загвар олдсонгүй.</p>
+        ) : (
+          <>
+            <header className="mk-heading">
+              <div>
+                <span className="mk-eyebrow">ГАЛ ТОГООНЫ ЗАГВАР · ХЯНАЛТ</span>
+                <h1>{design.title}</h1>
+              </div>
+              <span className={`mk-status is-${kitchenLifecycle(design)}`}>
+                v{design.versionNo} ·{" "}
+                {kitchenLifecycleLabel[kitchenLifecycle(design)]}
+              </span>
+            </header>
+            <div className="mk-hero">
+              <div className="mk-media">
+                <KitchenDesignGallery
+                  media={design.media}
+                  title={design.title}
+                  activeMediaId={activeMediaId}
+                />
+                <p className="mk-muted">Зургийг сонгож, томруулж хараарай.</p>
+              </div>
+              <aside className="mk-summary">
+                <div className="mk-summary-tags">
+                  <span>
+                    {KITCHEN_STYLE_LABELS[design.style] ?? design.style}
+                  </span>
+                  <span>
+                    {KITCHEN_LAYOUT_LABELS[design.layout] ?? design.layout}
+                  </span>
                 </div>
-              )}
-              {(design.reviewStatus === "submitted" || ["published", "suspended"].includes(design.publicationStatus)) && (
-                <textarea disabled={draftStatus.loading} className="input min-h-20 w-full" aria-label={`${design.title} хяналтын тайлбар`}
-                  placeholder="Засвар хүсэх, түдгэлзүүлэх үед шалтгаан заавал бичнэ" maxLength={5000}
-                  value={note[design.id] ?? ""} onChange={event => setNote(current => ({ ...current, [design.id]: event.target.value }))} />
-              )}
-              {design.reviewStatus === "submitted" && !["archived", "suspended"].includes(design.publicationStatus) && (
-                <>
-                  <div className="flex flex-wrap gap-2">
+                <div className="mk-price">
+                  <span>{design.storeName}</span>
+                  <strong>{kitchenPriceLabel(design)}</strong>
+                  <small>
+                    Merchant-ийн илгээсэн v{design.versionNo} хувилбар
+                  </small>
+                </div>
+                <dl className="mk-facts">
+                  <div>
+                    <dt>
+                      <Ruler size={14} />
+                      Өрөөний хэмжээ
+                    </dt>
+                    <dd>
+                      {design.roomWidthMm} × {design.roomDepthMm} мм
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <Box size={14} />
+                      Бүрдэл
+                    </dt>
+                    <dd>{design.cabinetCount} модуль</dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <CalendarDays size={14} />
+                      Үйлдвэрлэх хугацаа
+                    </dt>
+                    <dd>
+                      {design.leadTimeDays
+                        ? `${design.leadTimeDays} хоног`
+                        : "Тохиролцоно"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>
+                      <MapPin size={14} />
+                      Үйлчилгээний бүс
+                    </dt>
+                    <dd>{design.serviceAreas.join(", ") || "Оруулаагүй"}</dd>
+                  </div>
+                </dl>
+                {design.shortDescription && (
+                  <p className="mk-short-description">
+                    {design.shortDescription}
+                  </p>
+                )}
+                <div className="mk-main-actions" aria-busy={!!busy}>
+                  <DashboardDraftNotice scope={draftScope} disabled={!!busy} />
+                  {(design.reviewStatus === "submitted" ||
+                    ["published", "suspended"].includes(
+                      design.publicationStatus,
+                    )) && (
+                    <label className="admin-review-label">
+                      Хяналтын тайлбар
+                      <textarea
+                        disabled={!!busy || draftStatus.loading}
+                        className="input min-h-20 w-full"
+                        aria-label={`${design.title} хяналтын тайлбар`}
+                        placeholder="Засвар хүсэх, түдгэлзүүлэх үед шалтгаан заавал бичнэ"
+                        maxLength={5000}
+                        value={note[design.id] ?? ""}
+                        onChange={(event) =>
+                          setNote((current) => ({
+                            ...current,
+                            [design.id]: event.target.value,
+                          }))
+                        }
+                      />
+                      <small>
+                        Засвар хүсэх, түдгэлзүүлэх үед шалтгаан бичнэ.
+                      </small>
+                    </label>
+                  )}
+                  {design.reviewStatus === "submitted" &&
+                    !["archived", "suspended"].includes(
+                      design.publicationStatus,
+                    ) && (
+                      <>
+                        <div className="admin-review-buttons">
+                          <button
+                            type="button"
+                            className="btn-primary"
+                            disabled={!!busy || draftStatus.loading}
+                            onClick={() => void review(design, "approved")}
+                          >
+                            <Check size={15} />
+                            Зөвшөөрөх
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-ghost"
+                            disabled={
+                              !!busy ||
+                              draftStatus.loading ||
+                              !note[design.id]?.trim()
+                            }
+                            onClick={() =>
+                              void review(design, "changes_requested")
+                            }
+                          >
+                            <RotateCcw size={15} />
+                            Засвар хүсэх
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  {design.reviewStatus === "approved" &&
+                    design.publicationStatus !== "archived" &&
+                    (design.publicationStatus !== "published" ||
+                      design.publishedVersionId !== design.versionId) && (
+                      <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={!!busy || draftStatus.loading}
+                        onClick={() => void review(design, "published")}
+                      >
+                        <Check size={15} />
+                        {design.publicationStatus === "suspended"
+                          ? "Түдгэлзүүлэлтийг цуцалж нийтлэх"
+                          : "Marketplace-д нийтлэх"}
+                      </button>
+                    )}
+                  {design.publicationStatus === "suspended" &&
+                    design.publishedVersionId &&
+                    design.publishedVersionId !== design.versionId && (
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        disabled={!!busy || draftStatus.loading}
+                        onClick={() =>
+                          void review(
+                            {
+                              ...design,
+                              versionId: design.publishedVersionId!,
+                            },
+                            "published",
+                          )
+                        }
+                      >
+                        Батлагдсан өмнөх хувилбарыг буцааж нийтлэх
+                      </button>
+                    )}
+                  {design.publicationStatus === "published" && (
                     <button
                       type="button"
-                      className="btn-primary"
-                      disabled={!!busy}
-                      onClick={() => void review(design, "approved")}
+                      className="btn-ghost"
+                      disabled={
+                        !!busy ||
+                        draftStatus.loading ||
+                        !note[design.id]?.trim()
+                      }
+                      onClick={() => void review(design, "suspended")}
                     >
-                      <Check size={15} />
-                      Зөвшөөрөх
+                      <EyeOff size={15} />
+                      Түдгэлзүүлэх
                     </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className="mk-ai-link"
+                    onClick={() => {
+                      setPanel("render");
+                      requestAnimationFrame(() =>
+                        document
+                          .getElementById(`${tabId}-panel`)
+                          ?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                          }),
+                      );
+                    }}
+                  >
+                    <Sparkles size={14} />
+                    AI render харах
+                    <ArrowUpRight size={13} />
+                  </button>
+                </div>
+                <p className="mk-publication-note">
+                  Мэдээлэл болон зургуудыг шалгасны дараа хяналтын шийдвэр
+                  гаргаарай.
+                </p>
+              </aside>
+            </div>
+            <div
+              className="mk-tabs"
+              role="tablist"
+              aria-label="Загварын дэлгэрэнгүй"
+            >
+              {panels.map((item, index) => (
+                <button
+                  id={`${tabId}-${item.id}`}
+                  key={item.id}
+                  role="tab"
+                  type="button"
+                  aria-selected={panel === item.id}
+                  aria-controls={`${tabId}-panel`}
+                  tabIndex={panel === item.id ? 0 : -1}
+                  onClick={() => setPanel(item.id)}
+                  onKeyDown={(event) => {
+                    const offset =
+                      event.key === "ArrowRight"
+                        ? 1
+                        : event.key === "ArrowLeft"
+                          ? -1
+                          : 0;
+                    if (!offset && event.key !== "Home" && event.key !== "End")
+                      return;
+                    event.preventDefault();
+                    const next =
+                      panels[
+                        event.key === "Home"
+                          ? 0
+                          : event.key === "End"
+                            ? panels.length - 1
+                            : (index + offset + panels.length) % panels.length
+                      ];
+                    setPanel(next.id);
+                    document.getElementById(`${tabId}-${next.id}`)?.focus();
+                  }}
+                >
+                  <item.icon size={14} />
+                  {item.label}
+                  {item.id === "render" && activeRender && (
+                    <span className="mk-tab-dot" />
+                  )}
+                </button>
+              ))}
+            </div>
+            <div
+              id={`${tabId}-panel`}
+              className="mk-panel"
+              role="tabpanel"
+              aria-labelledby={`${tabId}-${panel}`}
+              tabIndex={0}
+            >
+              {panel === "information" && (
+                <div className="mk-information">
+                  <section className="mk-card">
+                    <h2>Загварын тухай</h2>
+                    <p className="mk-description">
+                      {design.description || "Дэлгэрэнгүй тайлбар оруулаагүй."}
+                    </p>
+                    <dl className="mk-specs">
+                      {[
+                        [
+                          "Материал",
+                          design.materials.join(", ") || "Оруулаагүй",
+                        ],
+                        [
+                          "Хэв маяг",
+                          KITCHEN_STYLE_LABELS[design.style] ?? design.style,
+                        ],
+                        [
+                          "Төлөвлөлт",
+                          KITCHEN_LAYOUT_LABELS[design.layout] ?? design.layout,
+                        ],
+                        [
+                          "Өрөөний хэмжээ",
+                          `${design.roomWidthMm} × ${design.roomDepthMm} × ${design.maxHeightMm} мм`,
+                        ],
+                        [
+                          "Угсралт",
+                          design.installationIncluded
+                            ? "Үнэд багтсан"
+                            : "Үнэд багтаагүй",
+                        ],
+                      ].map(([label, value]) => (
+                        <div key={label}>
+                          <dt>{label}</dt>
+                          <dd>{value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    {design.tags.length > 0 && (
+                      <div className="mk-tags">
+                        {design.tags.map((tag) => (
+                          <span key={tag}>#{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                  <section className="mk-card">
+                    <h2>Үнэ ба бүрдэл</h2>
+                    <div className="mk-included">
+                      <h3>
+                        <Check size={13} />
+                        Үнэд багтсан
+                      </h3>
+                      {design.inclusions.length ? (
+                        <ul>
+                          {design.inclusions.map((value) => (
+                            <li key={value}>{value}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>Оруулаагүй</p>
+                      )}
+                    </div>
+                    <div className="mk-included is-excluded">
+                      <h3>Үнэд багтаагүй</h3>
+                      {design.exclusions.length ? (
+                        <ul>
+                          {design.exclusions.map((value) => (
+                            <li key={value}>{value}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>Оруулаагүй</p>
+                      )}
+                    </div>
+                  </section>
+                </div>
+              )}
+              {panel === "render" && (
+                <div className="mk-render-layout">
+                  <section className="mk-card">
+                    <h2>
+                      <Sparkles size={16} />
+                      AI бодит render
+                    </h2>
+                    <p className="mk-muted">
+                      Merchant загвар бүрт 3 render үүсгэх боломжтой. Бэлэн
+                      зургууд gallery-д шууд харагдана.
+                    </p>
+                    <p className="mk-muted">
+                      {renderConfig?.provider === "cloudflare"
+                        ? "FLUX.2 klein 4B · Cloudflare · Өдрийн үнэгүй квот"
+                        : (renderConfig?.model ?? "AI тохиргоо ачаалж байна")}
+                    </p>
+                    <p className="mk-muted">
+                      {
+                        design.renderJobs.filter(
+                          (job) => job.status === "completed",
+                        ).length
+                      }{" "}
+                      бэлэн зураг ·{" "}
+                      {
+                        design.renderJobs.filter((job) =>
+                          ["queued", "processing"].includes(job.status),
+                        ).length
+                      }{" "}
+                      үүсгэж байна
+                    </p>
                     <button
                       type="button"
                       className="btn-ghost"
                       disabled={!!busy}
-                      onClick={() => void review(design, "changes_requested")}
+                      onClick={() => void load()}
                     >
-                      <RotateCcw size={15} />
-                      Засвар хүсэх
+                      <RefreshCw size={14} />
+                      Төлөв шинэчлэх
                     </button>
-                  </div>
-                </>
+                    {!renderConfig?.ready && (
+                      <p className="mk-render-error">
+                        Зураг үүсгэх тохиргоо одоогоор бэлэн биш байна.
+                      </p>
+                    )}
+                  </section>
+                  <section className="mk-card">
+                    <h2>Render-ийн түүх</h2>
+                    {!design.renderJobs.length ? (
+                      <p className="mk-muted">Зураг хараахан үүсгээгүй.</p>
+                    ) : (
+                      <ol className="mk-render-jobs">
+                        {design.renderJobs.map((job) => (
+                          <li key={job.id}>
+                            <span className={`mk-job-status is-${job.status}`}>
+                              {(job.status === "queued" ||
+                                job.status === "processing") && (
+                                <LoaderCircle
+                                  size={13}
+                                  className="animate-spin"
+                                />
+                              )}
+                              {renderLabels[job.status]}
+                            </span>
+                            <small>{formatDate(job.createdAt)}</small>
+                            {job.inputImageUrl && (
+                              <span className="mk-render-source-img">
+                                <Image
+                                  src={job.inputImageUrl}
+                                  alt="Render-ийн эх зураг"
+                                  fill
+                                  sizes="88px"
+                                />
+                              </span>
+                            )}
+                            <p className="mk-muted">{job.model}</p>
+                            <p className="mk-description">{job.prompt}</p>
+                            {job.error && (
+                              <p className="mk-render-error">{job.error}</p>
+                            )}
+                            {job.status === "completed" &&
+                              job.outputMediaId && (
+                                <button
+                                  className="btn-ghost"
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveMediaId(job.outputMediaId);
+                                    document
+                                      .querySelector(".mk-media")
+                                      ?.scrollIntoView({
+                                        behavior: "smooth",
+                                        block: "start",
+                                      });
+                                  }}
+                                >
+                                  Бэлэн зураг харах
+                                  <ArrowUpRight size={13} />
+                                </button>
+                              )}
+                            {job.status === "queued" && (
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  className="btn-primary"
+                                  disabled={!!busy || !renderConfig?.ready}
+                                  onClick={() => void generateRender(job.id)}
+                                >
+                                  {busy === `render:${job.id}` ? (
+                                    <LoaderCircle
+                                      size={14}
+                                      className="animate-spin"
+                                    />
+                                  ) : (
+                                    <Sparkles size={14} />
+                                  )}
+                                  {busy === `render:${job.id}`
+                                    ? "Зураг үүсгэж байна…"
+                                    : "Зураг үүсгэх"}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn-ghost"
+                                  disabled={!!busy}
+                                  onClick={() => void cancelRender(job.id)}
+                                >
+                                  Цуцлах
+                                </button>
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </section>
+                </div>
               )}
-              {design.reviewStatus === "approved" && design.publicationStatus !== "archived" &&
-                (design.publicationStatus !== "published" || design.publishedVersionId !== design.versionId) && (
-                <button type="button" className="btn-primary" disabled={!!busy} onClick={() => void review(design, "published")}>
-                  <Check size={15} />{design.publicationStatus === "suspended" ? "Түдгэлзүүлэлтийг цуцалж нийтлэх" : "Marketplace-д нийтлэх"}
-                </button>
-              )}
-              {design.publicationStatus === "suspended" && design.publishedVersionId && design.publishedVersionId !== design.versionId && (
-                <button type="button" className="btn-ghost" disabled={!!busy} onClick={() => void review({ ...design, versionId: design.publishedVersionId! }, "published")}>
-                  Батлагдсан өмнөх хувилбарыг буцааж нийтлэх
-                </button>
-              )}
-              {design.publicationStatus === "published" && (
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  disabled={!!busy}
-                  onClick={() => void review(design, "suspended")}
-                >
-                  <EyeOff size={15} />
-                  Түдгэлзүүлэх
-                </button>
+              {panel === "history" && (
+                <div className="mk-history-layout">
+                  <section className="mk-card">
+                    <h2>Хувилбар ба хяналтын түүх</h2>
+                    <KitchenReviewTimeline design={design} defaultOpen />
+                  </section>
+                  <section className="mk-card">
+                    <h2>Үйлдлийн бүртгэл</h2>
+                    {design.audit.length ? (
+                      <ol className="mk-audit">
+                        {design.audit.map((event) => (
+                          <li key={event.id}>
+                            <span>{event.action}</span>
+                            <time dateTime={event.createdAt}>
+                              {formatDate(event.createdAt)}
+                            </time>
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <p className="mk-muted">Үйлдэл бүртгэгдээгүй.</p>
+                    )}
+                  </section>
+                </div>
               )}
             </div>
-          </article>
+          </>
         ))}
-        {visible.length === 0 && (
-          <p className="rounded-2xl border border-dashed border-black/15 p-8 text-sm text-black/55">
-            Энэ төлөвт загвар байхгүй.
-          </p>
-        )}
-      </div>
     </section>
   );
 }

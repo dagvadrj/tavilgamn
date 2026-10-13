@@ -134,7 +134,9 @@ test("PDP initial color selection feeds the same actual variant price into the f
     defaultColor: "cream", colors: [{ id: "cream", name: "Cream", hex: "#eeeeee" }, { id: "oak", name: "Oak", hex: "#c9aa80", priceDelta: 40000 }],
     materials: [{ id: "fabric", name: "Даавуу", priceDelta: 0 }], dimensions: { w: 2.2, d: .9, h: .8 }, stockQuantity: 3, inStock: true, rating: 0, reviewCount: 0 };
   const html = renderToStaticMarkup(React.createElement(ProductCustomizer, { product, initialColor: "oak" }));
-  assert.ok(html.includes("310,000₮ × 4"));
+  const { formatPrice } = loadSource("src/lib/format.ts");
+  assert.ok(html.includes(formatPrice(310000)), "selected variant price is divided into four payments");
+  assert.ok(html.includes(formatPrice(1240000)), "the full variant total is retained");
   assert.ok(html.includes("Хэмжээ шалгах") && html.includes("Бараа харах горим"));
   assert.ok(html.includes("AR ашиглахад барааны 3D модел шаардлагатай"));
   const requested3D = renderToStaticMarkup(React.createElement(ProductCustomizer, { product, initialView3D: true }));

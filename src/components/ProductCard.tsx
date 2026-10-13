@@ -25,6 +25,7 @@ import { useWishlist } from "@/store/wishlist";
 import { CATEGORY_LABEL } from "@/lib/products";
 import { hasAvailableStock, stockLabel } from "@/lib/inventory";
 import { productOffer } from "@/lib/catalogPresentation";
+import { ProductQuickView } from "./ProductQuickView";
 
 export function ProductCard({
   product,
@@ -44,6 +45,7 @@ export function ProductCard({
   const [mounted, setMounted] = useState(false);
   const [checkedAt, setCheckedAt] = useState(offerCheckedAt);
   const [colorId, setColorId] = useState(product.defaultColor);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
   useEffect(() => {
     setMounted(true);
     setCheckedAt(Date.now());
@@ -177,14 +179,16 @@ export function ProductCard({
         </button>
         <div className="product-media-actions">
           {product.model && (
-            <Link
-              href={viewHref}
+            <button
+              type="button"
+              onClick={() => setQuickViewOpen(true)}
+              aria-haspopup="dialog"
               className="product-3d"
-              aria-label={`${product.name} — 3D үзэх`}
+              aria-label={`${product.name} — 3D үзэх, шуурхай харах цонх нээх`}
             >
               <Box size={14} aria-hidden="true" />
-              3D үзэх
-            </Link>
+              3D / AR харах
+            </button>
           )}
           <Link
             href={detailHref}
@@ -324,15 +328,17 @@ export function ProductCard({
             </span>
           </button>
           {product.model && (
-            <Link
-              href={viewHref}
+            <button
+              type="button"
+              onClick={() => setQuickViewOpen(true)}
+              aria-haspopup="dialog"
               className="product-view-model"
-              aria-label={`${product.name} — 3D загвар харах`}
-              title="3D загвар харах"
+              aria-label={`${product.name} — 3D загварын шуурхай харах цонх нээх`}
+              title="Шуурхай харах"
             >
               <Box size={18} aria-hidden="true" />
               <span>3D</span>
-            </Link>
+            </button>
           )}
         </div>
         <span
@@ -343,6 +349,19 @@ export function ProductCard({
           {cartMessage}
         </span>
       </div>
+      {quickViewOpen && (
+        <ProductQuickView
+          product={product}
+          price={displayPrice}
+          compareAtPrice={offer.compareAtPrice}
+          selection={selection}
+          viewHref={viewHref}
+          detailHref={detailHref}
+          cartMessage={cartMessage}
+          onAddToCart={addToCart}
+          onClose={() => setQuickViewOpen(false)}
+        />
+      )}
     </article>
   );
 }

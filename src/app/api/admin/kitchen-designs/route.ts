@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readKitchenReview } from "@/lib/kitchenMarketplace";
-import { kitchenMarketplaceError, kitchenPrivateHeaders } from "@/lib/kitchenMarketplaceHttp";
+import {
+  kitchenMarketplaceError,
+  kitchenPrivateHeaders,
+} from "@/lib/kitchenMarketplaceHttp";
 import { readAdminKitchenDesigns } from "@/lib/kitchenMarketplaceServer";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
+import {
+  configuredKitchenRender,
+  kitchenRenderConfigured,
+} from "@/lib/kitchenRenderConfig";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +18,39 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await requireAdmin(request);
     if (auth.error) return auth.error;
-    return NextResponse.json({ designs: await readAdminKitchenDesigns() }, { headers: kitchenPrivateHeaders });
+    const designId = request.nextUrl.searchParams.get("design");
+    if (
+      designId &&
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        designId,
+      )
+    )
+      return NextResponse.json(
+        { error: "Загварын дугаар буруу байна." },
+        { status: 400, headers: kitchenPrivateHeaders },
+      );
+    const config = configuredKitchenRender();
+    const designs = await readAdminKitchenDesigns(
+      undefined,
+      designId ?? undefined,
+    );
+    if (designId && designs.length === 0)
+      return NextResponse.json(
+        { error: "Загвар олдсонгүй." },
+        { status: 404, headers: kitchenPrivateHeaders },
+      );
+    return NextResponse.json(
+      {
+        designs,
+        renderConfig: { ...config, ready: kitchenRenderConfigured(config) },
+      },
+      { headers: kitchenPrivateHeaders },
+    );
   } catch (error) {
-    return kitchenMarketplaceError(error, "Гал тогооны загваруудыг ачаалж чадсангүй.");
+    return kitchenMarketplaceError(
+      error,
+      "Гал тогооны загваруудыг ачаалж чадсангүй.",
+    );
   }
 }
 
@@ -32,6 +69,9 @@ export async function PATCH(request: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ ok: true }, { headers: kitchenPrivateHeaders });
   } catch (error) {
-    return kitchenMarketplaceError(error, "Хяналтын шийдвэрийг хадгалж чадсангүй.");
+    return kitchenMarketplaceError(
+      error,
+      "Хяналтын шийдвэрийг хадгалж чадсангүй.",
+    );
   }
 }

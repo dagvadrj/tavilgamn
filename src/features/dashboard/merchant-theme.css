@@ -1,0 +1,125 @@
+/* Dashboard shell fills the viewport; content keeps a readable width inside it. */
+
+.dashboard-layout .dashboard-themed-shell.dashboard-shell {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  --dashboard-accent: #2563eb;
+  --dashboard-on-accent: #fff;
+}
+
+.dashboard-layout .dashboard-themed-shell[data-theme="light"] {
+  --dashboard-bg: #f8fafc;
+  --dashboard-surface: #fff;
+  --dashboard-elevated: #f1f5f9;
+  --dashboard-border: #e2e8f0;
+  --dashboard-ink: #0f172a;
+  --dashboard-muted: #64748b;
+  --dashboard-success: #15803d;
+  --dashboard-danger: #dc2626;
+  --dashboard-warning: #a16207;
+  color-scheme: light;
+}
+
+.dashboard-layout .dashboard-themed-shell[data-theme="dark"] {
+  --dashboard-bg: #090e18;
+  --dashboard-surface: #111827;
+  --dashboard-elevated: #1e293b;
+  --dashboard-border: #293548;
+  --dashboard-ink: #f8fafc;
+  --dashboard-muted: #a6b3c7;
+  --dashboard-accent: #60a5fa;
+  --dashboard-on-accent: #081426;
+  color-scheme: dark;
+}
+
+.dashboard-layout .dashboard-themed-shell .dashboard-sidebar,
+.dashboard-layout .dashboard-themed-shell .dashboard-topbar {
+  background: var(--dashboard-surface);
+}
+
+.dashboard-themed-shell .dashboard-drawer {
+  --dashboard-bg: inherit;
+  --dashboard-surface: inherit;
+  --dashboard-elevated: inherit;
+  --dashboard-border: inherit;
+  --dashboard-ink: inherit;
+  --dashboard-muted: inherit;
+  --dashboard-accent: inherit;
+  color-scheme: inherit;
+}
+
+.dashboard-layout .dashboard-themed-shell .dashboard-topbar {
+  padding-inline: clamp(16px, 2vw, 32px);
+}
+
+.dashboard-layout .dashboard-themed-shell .dashboard-content {
+  max-width: 1680px;
+  padding: clamp(20px, 2vw, 32px);
+}
+
+.dashboard-themed-shell.dashboard-shell .dashboard-brand-icon,
+.dashboard-themed-shell.dashboard-shell .merchant-header-avatar,
+.dashboard-themed-shell.dashboard-shell .merchant-notification-count,
+.dashboard-themed-shell.dashboard-shell .reference-store-avatar,
+.dashboard-themed-shell.dashboard-shell .reference-save.is-dirty,
+.dashboard-themed-shell.dashboard-shell .reference-filters button[aria-pressed="true"],
+.dashboard-themed-shell .dashboard-content .btn-primary {
+  color: var(--dashboard-on-accent);
+}
+
+.dashboard-themed-shell .dashboard-setting-options label:has(input:checked) {
+  background: color-mix(in srgb, var(--dashboard-accent) 5%, var(--dashboard-surface));
+}
+
+.dashboard-themed-shell.dashboard-shell :is(.reference-featured-control .is-featured, .reference-stock-warning > strong, .reference-stock-warning .reference-kpi-label svg, .reference-inventory-list .is-low-stock, .reference-featured-badge) {
+  color: var(--dashboard-warning);
+}
+
+.dashboard-themed-shell.dashboard-shell :is(.reference-active-control.is-active, .reference-success-badge, .reference-inventory-list .is-stocked) {
+  color: var(--dashboard-success);
+}
+
+.dashboard-themed-shell.dashboard-shell .reference-bar-track span {
+  background: linear-gradient(90deg, var(--dashboard-accent), color-mix(in srgb, var(--dashboard-accent), #fff 35%));
+}
+
+.dashboard-themed-shell .dashboard-content .btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dashboard-accent), var(--dashboard-ink) 12%);
+}
+
+.dashboard-themed-shell .dashboard-content .btn-ghost:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dashboard-elevated), var(--dashboard-ink) 6%);
+}
+
+.dashboard-themed-shell .dashboard-nav-button[aria-current="page"] {
+  color: var(--dashboard-accent);
+  background: color-mix(in srgb, var(--dashboard-accent) 12%, var(--dashboard-surface));
+}
+
+/* The AI workspace retains its existing palette in both dashboard themes. */
+
+.dashboard-themed-shell .mk-render-layout {
+  --dashboard-bg: #090a0c;
+  --dashboard-surface: #101113;
+  --dashboard-elevated: #191b1e;
+  --dashboard-border: #27292d;
+  --dashboard-ink: #f2f3f5;
+  --dashboard-muted: #a3a6ae;
+  --dashboard-accent: #a395ff;
+  --dashboard-on-accent: #090a0c;
+  --dashboard-success: #72c98a;
+  --dashboard-danger: #ff8a86;
+  --dashboard-warning: #e8bf74;
+  color: var(--dashboard-ink);
+  color-scheme: dark;
+}
+
+@media (max-width: 639px) {
+  .dashboard-layout .dashboard-themed-shell .dashboard-topbar {
+    padding-inline: 12px;
+  }
+  .dashboard-layout .dashboard-themed-shell .dashboard-content {
+    padding: 20px 12px 28px;
+  }
+}
