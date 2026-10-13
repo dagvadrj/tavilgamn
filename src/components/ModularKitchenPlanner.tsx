@@ -35,6 +35,7 @@ import { buildKitchenBom } from "@/lib/kitchenBom";
 import "@/features/kitchen-planner/components/kitchen-flow.css";
 import "@/features/kitchen-planner/components/kitchen-stitch.css";
 import { KitchenCategoryRail } from "@/features/kitchen-planner/components/KitchenCategoryRail";
+import "@/features/planner/components/planner-tools.css";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { VersionHistory } from "@/features/kitchen-planner/components/VersionHistory";
 import { useCatalog } from "@/store/catalog";
@@ -48,6 +49,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  ArrowLeft,
   ChevronDown,
   ChevronRight,
   ClipboardCheck,
@@ -1043,6 +1045,9 @@ export function ModularKitchenPlanner({
         />
       )}
       <header className="kp-planner-topbar">
+        <Link href="/kitchen?setup=1" className="kp-planner-brand" aria-label="Гал тогоо сонгох хэсэг рүү буцах">
+          <ArrowLeft size={18} /> <span>Сонголт руу буцах</span>
+        </Link>
         <Link
           href="/"
           className="kp-planner-brand"
@@ -1576,22 +1581,8 @@ export function ModularKitchenPlanner({
                 className="km-view-tools"
                 hidden={workspaceView === "2d" || workspaceView === "interior"}
                 role="group"
-                aria-label="3D үйлдэл"
+                aria-label="Харагдацын хэрэгслүүд"
               >
-                <button
-                  type="button"
-                  disabled={busy}
-                  aria-pressed={mode === "move"}
-                  aria-label="Шүүгээ зөөх"
-                  hidden={!selected}
-                  onClick={() => {
-                    setMode("move");
-                    setOpen(false);
-                  }}
-                >
-                  <Move size={17} />
-                  <span>Шүүгээ зөөх</span>
-                </button>
                 <button
                   type="button"
                   disabled={busy}
@@ -1601,16 +1592,6 @@ export function ModularKitchenPlanner({
                 >
                   <Orbit size={17} />
                   <span>Эргүүлж харах</span>
-                </button>
-                <button
-                  type="button"
-                  disabled={busy || !selected}
-                  aria-label="Бүрэлдэхүүн хэсгүүд"
-                  hidden={!selected}
-                  onClick={() => setComponentOverview(true)}
-                >
-                  <Layers3 size={17} />
-                  <span>Эд анги</span>
                 </button>
                 <button
                   type="button"
@@ -1753,16 +1734,20 @@ export function ModularKitchenPlanner({
                 <button
                   type="button"
                   disabled={busy}
+                  aria-pressed={mode === "move"}
                   onClick={() => {
                     setMode("move");
+                    setOpen(false);
                     setSettingsOpen(false);
                   }}
                 >
                   <Move size={17} /> Зөөх
                 </button>
+                <button type="button" disabled={busy} aria-pressed={componentOverview} onClick={() => { setComponentOverview(true); setSettingsOpen(true); }}><Layers3 size={17}/> Эд анги</button>
                 <button
                   type="button"
                   disabled={busy}
+                  title="Хувилах"
                   aria-label="Сонгосон шүүгээг хувилах"
                   onClick={duplicateCabinet}
                 >
@@ -1771,6 +1756,7 @@ export function ModularKitchenPlanner({
                 <button
                   type="button"
                   disabled={busy}
+                  title="Устгах"
                   aria-label="Сонгосон шүүгээг устгах"
                   onClick={() => {
                     if (
@@ -2900,6 +2886,15 @@ export function ModularKitchenPlanner({
           aria-labelledby="kp-review-title"
         >
           <header className="kp-review-head">
+            <nav className="kp-review-navigation" aria-label="Дуусгах хэсгээс буцах">
+              <button type="button" onClick={() => setReviewOpen(false)}>
+                <ArrowLeft size={18} /> 3D рүү буцах
+              </button>
+              <button type="button" onClick={() => { setReviewOpen(false); setSpaceOpen(true); }}>
+                Өрөөгөө тохируулах
+              </button>
+              <Link href="/kitchen?setup=1">Сонголт руу буцах</Link>
+            </nav>
             <div>
               <p>ТӨЛӨВЛӨГӨӨГ ШАЛГАХ</p>
               <h2 id="kp-review-title">{name}</h2>
