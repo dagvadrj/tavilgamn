@@ -8,6 +8,8 @@ import {
   Copy,
   Trash2,
   MousePointer2,
+  Move,
+  Ruler,
 } from "lucide-react";
 import type {
   CabinetPose,
