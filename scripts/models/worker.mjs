@@ -24,6 +24,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { previewReference } from "./preview-reference.mjs";
 import { cleanupAbandonedSources } from "./cleanup-abandoned-sources.mjs";
+import { verifyAssemblySockets } from "./assembly-sockets.mjs";
 
 const MAX_SOURCE_SIZE = 200 * 1024 * 1024;
 
@@ -419,13 +420,17 @@ async function processJob(model) {
     const previewFile = path.join(compressed, "preview.glb");
     const deliveryInfo = await stat(deliveryFile);
     const previewInfo = await stat(previewFile);
+    if (["kitchen-part", "kitchen-assembly"].includes(model.glb_validation?.assetRole)) {
+      await verifyAssemblySockets(sourceFile, [deliveryFile, previewFile]);
+    }
     if (model.glb_validation) {
       const geometryReport = JSON.parse(await readFile(path.join(buildDirectory, "geometry", modelId, "geometry-report.json"), "utf8"));
       const actual = geometryReport.dimensionsM;
       const projectionM = Number(model.glb_validation.frontProjectionMm ?? 0) / 1000;
       if (!Number.isFinite(projectionM) || projectionM < 0 || projectionM > 0.1 || !actual || ["w", "h", "d"].some(axis => !Number.isFinite(actual[axis]) || Math.abs(actual[axis] - Number(model[`dimensions_${axis}`]) - (axis === "d" ? projectionM : 0)) > 0.005)) throw new Error("Decoded GLB dimensions do not match approved catalog dimensions");
       const bounds = geometryReport.boundsM;
-      if (!bounds || ![...bounds.min, ...bounds.max].every(Number.isFinite) || Math.max(Math.abs((bounds.min[0]+bounds.max[0])/2), Math.abs(bounds.min[1]), Math.abs((bounds.min[2]+bounds.max[2])/2)) > 0.002) throw new Error("Decoded GLB origin is not bottom-center");
+      if (!bounds || ![...bounds.min, ...bounds.max].every(Number.isFinite)) throw new Error("Decoded GLB bounds are invalid");
+      if (model.glb_validation.assetRole !== "kitchen-part" && Math.max(Math.abs((bounds.min[0]+bounds.max[0])/2), Math.abs(bounds.min[1]), Math.abs((bounds.min[2]+bounds.max[2])/2)) > 0.002) throw new Error("Decoded GLB origin is not bottom-center");
     }
 
     if (!deliveryInfo.isFile() || deliveryInfo.size < 12) {

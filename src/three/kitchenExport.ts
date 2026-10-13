@@ -11,7 +11,9 @@ export function snapshotKitchen(root: Group) {
   root.updateWorldMatrix(true, true);
   const copy = root.clone(true), remove: Object3D[] = [];
   copy.traverse(node => {
-    if (node.userData.exportExclude || (!(node instanceof Mesh) && !(node instanceof Group))) remove.push(node);
+    // GLTFLoader uses plain Object3D nodes for authored connector sockets.
+    // Preserve them and their child parts; omit rendering helpers and cameras.
+    if (node.userData.exportExclude || node.type === "PerspectiveCamera" || node.type === "OrthographicCamera" || node.type.endsWith("Light") || node.type === "Line" || node.type === "LineSegments" || node.type === "Points") remove.push(node);
   });
   remove.forEach(node => node.removeFromParent());
   const materials = new Map<Material, Material>(), textures = new Map<Texture, Texture>();

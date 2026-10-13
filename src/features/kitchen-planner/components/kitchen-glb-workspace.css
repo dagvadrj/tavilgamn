@@ -1,0 +1,156 @@
+/* One left editing panel, with the remaining width reserved for the room. */
+
+.kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace {
+  --ui-accent: #0058a3;
+  --ui-accent-soft: #edf4fa;
+  color: #202124;
+  background: #fff;
+}
+
+.kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace .kp-layout[data-settings-open] {
+  grid-template-columns: 332px minmax(0, 1fr);
+}
+
+.kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace .kp-settings {
+  grid-column: 1;
+  grid-row: 1;
+  padding: 0;
+  border-right: 1px solid #e2e4e7;
+  border-left: 0;
+  background: #fff;
+  overflow: auto;
+}
+
+.kitchen-glb-workspace .kp-layout[data-settings-open="true"] > .kitchen-flow-catalog {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace .kitchen-flow-catalog {
+  background: #fff;
+  border-color: #e2e4e7;
+}
+
+.kitchen-glb-workspace .kitchen-left-inspector > .kp-settings-head {
+  padding: 18px;
+  border-bottom: 1px solid #e2e4e7;
+}
+
+.kitchen-glb-workspace .kitchen-left-inspector > .kp-panel,
+.kitchen-glb-workspace .kitchen-left-inspector > .planner-model-library,
+.kitchen-glb-workspace .kitchen-style-selection {
+  padding: 18px;
+  border: 0;
+  background: #fff;
+}
+
+.kitchen-style-selection > p {
+  margin-bottom: 18px;
+  color: #60666c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.kitchen-style-selection > button {
+  position: relative;
+  display: grid;
+  width: 100%;
+  gap: 5px;
+  padding: 15px 30px 15px 0;
+  border-bottom: 1px solid #e7e9eb;
+  text-align: left;
+  font-size: 13px;
+}
+
+.kitchen-style-selection > button small {
+  color: #6b7075;
+  font-size: 11px;
+}
+
+.kitchen-style-selection > button svg {
+  position: absolute;
+  right: 0;
+  top: 20px;
+}
+
+.kitchen-glb-workspace .kitchen-navigation-map {
+  position: absolute;
+  z-index: 5;
+  right: 88px;
+  top: 78px;
+  width: 168px;
+  overflow: hidden;
+  border: 1px solid #dde1e5;
+  border-radius: 8px;
+  background: #fffffff5;
+  box-shadow: 0 3px 14px #1623340a;
+}
+
+.kitchen-navigation-map > summary {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kitchen-glb-workspace .kitchen-navigation-map .km-plan {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  height: 135px;
+  border: 0;
+  background: #fafafa;
+}
+
+.kitchen-navigation-map > button {
+  width: 100%;
+  padding: 9px;
+  border-top: 1px solid #e7e9eb;
+  color: #0058a3;
+  font-size: 11px;
+}
+
+.kitchen-glb-workspace .kitchen-missing-models {
+  position: absolute;
+  z-index: 4;
+  left: 18px;
+  bottom: 76px;
+  max-width: min(320px, calc(100% - 80px));
+  padding: 10px 14px;
+  border: 1px solid #e7ddd0;
+  border-radius: 7px;
+  background: #fffcf5;
+  color: #615343;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.kitchen-missing-models button {
+  display: block;
+  margin-top: 5px;
+  color: #0058a3;
+  text-decoration: underline;
+}
+
+@media (max-width: 959px) {
+  .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace .kp-layout[data-settings-open] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace .kp-workspace {
+    grid-column: 1;
+  }
+  .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace .kp-settings {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 81;
+    width: min(360px, 92vw);
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+  .kitchen-glb-workspace .kitchen-navigation-map {
+    top: 68px;
+    right: 76px;
+    width: 132px;
+  }
+}

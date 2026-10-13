@@ -29,7 +29,7 @@ export function ViewportControls({ onAction, disabled = false, plan = false, ext
     <button type="button" key={action} aria-label={label} title={label}
       disabled={disabled || inactive} onClick={() => onAction(action)}>{icon}</button>
   );
-  return <aside className="viewport-controls" aria-label="Map удирдлага">
+  return <aside className="viewport-controls" aria-label="Харагдацын удирдлага">
     <div className="viewport-zoom" role="group" aria-label="Ойртуулах ба бүхэлд нь харах">
       {control("zoom-in", "Ойртуулах", <Plus size={19}/>)}
       {control("fit", "Бүхэлд нь харах", <Focus size={19}/>)}

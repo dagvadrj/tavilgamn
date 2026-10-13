@@ -74,6 +74,9 @@ export function RoomPlannerStart({
   onStart,
   draft,
   onResume,
+  designs = [],
+  onOpen,
+  onDelete,
 }: {
   onStart: (
     type: RoomType,
@@ -81,6 +84,7 @@ export function RoomPlannerStart({
     options?: AddRoomOptions,
   ) => void;
   draft?: {
+    id: string;
     name: string;
     roomName?: string;
     width: number;
@@ -88,7 +92,14 @@ export function RoomPlannerStart({
     previewImage?: string;
   } | null;
   onResume: () => void;
+  designs?: { id: string; name: string; width: number; depth: number }[];
+  onOpen?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }) {
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const deleteControl = (id: string, name: string) => onDelete && (deleteId === id
+    ? <div className="room-start-delete-confirm"><span>Энэ өрөөг устгах уу?</span><button type="button" onClick={() => { onDelete(id); setDeleteId(null); }}>Тийм, устгах</button><button type="button" onClick={() => setDeleteId(null)}>Болих</button></div>
+    : <button type="button" className="room-start-delete" aria-label={`${name} өрөөг устгах`} onClick={() => setDeleteId(id)}>Устгах</button>);
   const [step, setStep] = useState<1 | 2>(1);
   const [roomType, setRoomType] = useState<RoomType>("living");
   const [choice, setChoice] = useState<number | "custom">(
@@ -157,6 +168,7 @@ export function RoomPlannerStart({
         </ol>
         {step === 1 ? (
           <>
+            {onOpen && designs.filter(design => design.id !== draft?.id).length > 0 && <details className="room-start-saved"><summary>Бусад өрөөнүүд ({designs.filter(design => design.id !== draft?.id).length})</summary>{designs.filter(design => design.id !== draft?.id).map(design => <div key={design.id} className="room-start-saved-row"><button type="button" onClick={() => onOpen(design.id)}>{design.name} · {roomSetupNumber(design.width * design.depth)} м² <ArrowRight size={16}/></button>{deleteControl(design.id, design.name)}</div>)}</details>}
             <div className="room-start-heading">
               <p>ӨӨРИЙНХӨӨ ОРЧНЫГ БҮТЭЭЕ</p>
               <h1 ref={title} tabIndex={-1}>
@@ -233,6 +245,7 @@ export function RoomPlannerStart({
                   >
                     Үргэлжлүүлэх <ArrowRight size={17} />
                   </button>
+                  {deleteControl(draft.id, draft.name)}
                 </div>
               </article>
             )}

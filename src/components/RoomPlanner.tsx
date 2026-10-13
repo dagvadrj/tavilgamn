@@ -128,6 +128,7 @@ import "@/features/planner/components/planner-sidebar.css";
 import "@/features/planner/components/planner-geometry.css";
 import "@/features/room-planner/components/room-planner-simple.css";
 import "@/features/room-planner/components/room-panel-theme.css";
+import "@/features/planner/components/planner-tools.css";
 import { RoomProductCard } from "@/features/room-planner/components/RoomProductCard";
 import { type DbModelInfo, getDbModel } from "@/lib/modelRegistry";
 
@@ -153,6 +154,32 @@ const STATIC_PRESETS: CustomInterior[] = [
 ];
 
 export function RoomPlanner() {
+  const { initialized, initialize, user } = useAuth();
+  useEffect(() => {
+    void initialize();
+  }, [initialize]);
+  if (!initialized) return <div role="status" className="container-page py-10">Өмнөх өрөөг сэргээж байна…</div>;
+  return <RoomPlannerEditor key={user?.id ?? "guest"} />;
+}
+
+function RoomPlannerEditor() {
+  useEffect(() => {
+    const preserveRoom = () => {
+      const state = useDesigns.getState();
+      state.endEdit();
+      state.saveCurrent();
+    };
+    const preserveWhenHidden = () => {
+      if (document.visibilityState === "hidden") preserveRoom();
+    };
+    window.addEventListener("pagehide", preserveRoom);
+    document.addEventListener("visibilitychange", preserveWhenHidden);
+    return () => {
+      window.removeEventListener("pagehide", preserveRoom);
+      document.removeEventListener("visibilitychange", preserveWhenHidden);
+      preserveRoom();
+    };
+  }, []);
   const {
     current,
     furniture,
@@ -214,6 +241,10 @@ export function RoomPlanner() {
     setSurfacePopup(null);
   }, [current?.activeRoomId]);
   const [recommendationsOpen, setRecommendationsOpen] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("kitchen") && params.get("setup") !== "1") setRoomStartOpen(false);
+  }, []);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [roomMapOpen, setRoomMapOpen] = useState(false);
   const [roomView, setRoomView] = useState<RoomView>("dollhouse");
@@ -545,6 +576,9 @@ export function RoomPlanner() {
     return (
       <RoomPlannerStart
         draft={current}
+        designs={designs}
+        onDelete={deleteDesign}
+        onOpen={id => { loadDesign(id); setRoomStartOpen(false); }}
         onResume={() => setRoomStartOpen(false)}
         onStart={(type, dimensions, options) => {
           if (

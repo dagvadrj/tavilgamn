@@ -7,6 +7,7 @@
   "properties": {
     "id": {"type":"string","minLength":1},
     "variantId": {"type":"string","pattern":"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"},
+    "partSelections": {"type":"object","maxProperties":32,"propertyNames":{"pattern":"^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}$"},"additionalProperties":{"type":"string","pattern":"^$|^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}$"}},
     "type": {"enum":["base","wall","tall"]},
     "width": {"type":"integer","minimum":300,"maximum":1200},
     "height": {"type":"integer","minimum":200,"maximum":3500},

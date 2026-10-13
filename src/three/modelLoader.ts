@@ -14,7 +14,7 @@ export interface ModelLoadMetrics {
   resourceDurationMs: number | null;
   encodedBodySize: number | null;
 }
-export interface LoadedModel { scene: THREE.Group; bounds: THREE.Box3; metrics: ModelLoadMetrics }
+export interface LoadedModel { scene: THREE.Group; bounds: THREE.Box3; metrics: ModelLoadMetrics; animations?: THREE.AnimationClip[] }
 interface Entry { promise: Promise<LoadedModel>; refs: number; ready?: LoadedModel; used: number }
 interface Pool { loader: GLTFLoader; draco: DRACOLoader; ktx: KTX2Loader; entries: Map<string, Entry>; idle?: ReturnType<typeof setTimeout> }
 const pools = new WeakMap<THREE.WebGLRenderer, Pool>();
@@ -62,23 +62,25 @@ function trim(pool: Pool, renderer: THREE.WebGLRenderer) {
     }, 30000);
   }
 }
-export function acquireModel(renderer: THREE.WebGLRenderer, url: string) {
+export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options: { preserveHierarchy?: boolean } = {}) {
   let pool = pools.get(renderer);
   if (!pool) { pool = { ...createModelLoader(renderer), entries: new Map() }; pools.set(renderer, pool); }
   if (pool.idle) clearTimeout(pool.idle);
   const owner = pool;
-  let entry = owner.entries.get(url);
+  // Assembly sockets and individually replaceable nodes must keep their authored hierarchy.
+  const key = options.preserveHierarchy ? `hierarchy:${url}` : url;
+  let entry = owner.entries.get(key);
   const cacheHit = Boolean(entry?.ready);
   if (!entry) {
     const queuedAt = performance.now();
     entry = { refs: 0, used: Date.now(), promise: Promise.resolve(null as unknown as LoadedModel) };
     const pending = entry;
-    owner.entries.set(url, entry);
+    owner.entries.set(key, entry);
     entry.promise = schedule(async () => {
       const startedAt = performance.now();
       const gltf = await owner.loader.loadAsync(url);
       gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = true; object.receiveShadow = true; } });
-      if (!gltf.animations.length) instanceRepeatedModules(gltf.scene);
+      if (!gltf.animations.length && !options.preserveHierarchy) instanceRepeatedModules(gltf.scene);
       gltf.scene.updateMatrixWorld(true);
       let bounds = new THREE.Box3().setFromObject(gltf.scene);
       const authored = gltf.scene.userData.pipelineBounds;
@@ -95,6 +97,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string) {
       const result = {
         scene: gltf.scene,
         bounds,
+        animations: gltf.animations,
         metrics: {
           queuedAt,
           startedAt,
@@ -111,7 +114,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string) {
         throw new Error("Model has empty or invalid dimensions");
       }
       pending.ready = result; return result;
-    }).catch(error => { owner.entries.delete(url); throw error; }).finally(() => trim(owner, renderer));
+    }).catch(error => { owner.entries.delete(key); throw error; }).finally(() => trim(owner, renderer));
   }
   entry.refs++; entry.used = Date.now();
   const leased = entry; let released = false;
@@ -120,7 +123,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string) {
     released = true; leased.refs--; leased.used = Date.now(); trim(owner, renderer);
   } };
 }
-export function cloneModel(model: LoadedModel): LoadedModel { return { scene: clone(model.scene) as THREE.Group, bounds: model.bounds, metrics: model.metrics }; }
+export function cloneModel(model: LoadedModel): LoadedModel { return { scene: clone(model.scene) as THREE.Group, bounds: model.bounds, metrics: model.metrics, animations: model.animations }; }
 export function disposeModelClone(model: LoadedModel) {
   model.scene.traverse(object => { if (object instanceof THREE.InstancedMesh) object.dispose(); });
 }

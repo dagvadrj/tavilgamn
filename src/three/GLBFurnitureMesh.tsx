@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Edges, Html } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import {
   kitchenCabinetSurface,
@@ -38,6 +38,8 @@ export interface GLBFurnitureMeshProps {
   d: number;
   h: number;
   selected?: boolean;
+  /** Kitchen editors show load notices only for the selected product. */
+  showLoadStatus?: boolean;
   deferUntilVisible?: boolean;
   /** @deprecated Use frontMaterial and carcassMaterial for kitchen models. */
   materialOverride?: {
@@ -52,6 +54,9 @@ export interface GLBFurnitureMeshProps {
   carcassColor?: string;
   onReady?: () => void;
   onError?: () => void;
+  /** Sample an authored opening animation; imported furniture is never rebuilt. */
+  open?: boolean;
+  openAnimation?: string;
 }
 type Display = {
   key: string;
@@ -94,6 +99,7 @@ export function GLBFurnitureMesh({
   glbFile,
   previewGlbFile,
   selected = false,
+  showLoadStatus = true,
   deferUntilVisible = false,
   w,
   d,
@@ -109,6 +115,8 @@ export function GLBFurnitureMesh({
   environmentBoost = 1,
   bakedOcclusionIntensity,
   trackFloorBand = false,
+  open = false,
+  openAnimation,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
   const motionPreview = useCameraMotionPreview();
@@ -365,6 +373,20 @@ export function GLBFurnitureMesh({
 
   const ready =
     display?.key === highKey || display?.key === previewKey ? display : null;
+  useEffect(() => {
+    if (!ready) return;
+    const clip = ready.asset.animations?.find((animation) =>
+      openAnimation ? animation.name === openAnimation : /^(open|opening)$/i.test(animation.name),
+    );
+    if (!clip) return;
+    const mixer = new THREE.AnimationMixer(ready.asset.scene);
+    const action = mixer.clipAction(clip);
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = true;
+    action.play();
+    mixer.setTime(open ? clip.duration : 0);
+    return () => { mixer.stopAllAction(); mixer.uncacheRoot(ready.asset.scene); };
+  }, [ready, open, openAnimation]);
   const size = ready?.asset.bounds.getSize(new THREE.Vector3());
   const origin = ready?.asset.bounds.getCenter(new THREE.Vector3());
   const valid = size && origin && Math.min(size.x, size.y, size.z) > 1e-9;
@@ -387,17 +409,7 @@ export function GLBFurnitureMesh({
             dispose={null}
           />
         </group>
-      ) : (
-        <mesh position={[0, h / 2, 0]}>
-          <boxGeometry args={[w, h, d]} />
-          <meshStandardMaterial
-            color={error ? "#d5a995" : "#d4dcd0"}
-            transparent
-            opacity={0.45}
-          />
-          <Edges color="#6b7e68" />
-        </mesh>
-      )}
+      ) : null}
       {hasRetainedPreview && retainedPreview && (
         <group scale={previewPlacement!.scale}
           visible={showingMotionPreview} raycast={raycastVisibleVariant} userData={{ exportExclude: true }} dispose={null}>
@@ -406,19 +418,17 @@ export function GLBFurnitureMesh({
             dispose={null} />
         </group>
       )}
-      {enabled && (!ready || error) && (
+      {showLoadStatus && enabled && (!ready || error) && (
         <Html position={[0, h + 0.1, 0]} center zIndexRange={[8, 0]}>
           {error ? (
-            <button
-              type="button"
-              className="rounded bg-white px-2 py-1 text-xs whitespace-nowrap"
-              onClick={(event) => {
-                event.stopPropagation();
-                setRetry((value) => value + 1);
-              }}
-            >
-              3D дахин ачаалах
-            </button>
+            <div role="status" className="rounded border bg-white px-3 py-2 text-center text-xs shadow-sm whitespace-nowrap">
+              <span className="block">Загвар ачаалж чадсангүй.</span>
+              <button type="button" className="mt-1 text-blue-700 underline"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setRetry((value) => value + 1);
+                }}>Дахин оролдох</button>
+            </div>
           ) : (
             <span
               role="status"

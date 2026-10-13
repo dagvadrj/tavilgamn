@@ -1,0 +1,222 @@
+.kspace .kspace-toolbar {
+  gap: 16px;
+  padding: 10px 24px;
+  background: #f8faf9;
+}
+
+.kspace .kspace-tools {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kspace .kspace-tools button {
+  flex-direction: row;
+  min-height: 44px;
+  min-width: 0;
+  padding: 10px 14px;
+  gap: 8px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.kspace .kspace-tools svg {
+  width: 18px;
+  height: 18px;
+}
+
+.kspace .kspace-continue {
+  flex-shrink: 0;
+  min-height: 44px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.kspace-map-area {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.kspace-feedback {
+  padding: 10px 16px;
+  background: #fff7e9;
+  color: #765c26;
+  font-size: 13px;
+}
+
+.kspace-map-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e2e8e4;
+  background: #fff;
+}
+
+.kspace-map-toolbar > div {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #f0f4f1;
+}
+
+.kspace-map-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #55665c;
+}
+
+.kspace-map-toolbar button[aria-pressed="true"] {
+  background: #fff;
+  color: #20553e;
+  box-shadow: 0 1px 5px #253a2f14, inset 0 0 0 1px #c6dacc;
+  font-weight: 600;
+}
+
+.kitchen-plan-workspace:has(.kspace-map-toolbar) {
+  padding-top: 148px;
+}
+
+.kitchen-plan-workspace .kspace-map-toolbar {
+  position: absolute;
+  top: 80px;
+  left: 16px;
+  right: 16px;
+  z-index: 8;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  border: 1px solid #e2e8e4;
+  border-radius: 10px;
+}
+
+.kitchen-plan-workspace .kspace-map-toolbar > div,
+.kitchen-plan-workspace .kspace-map-toolbar > button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.kspace .kspace-canvas {
+  min-height: 0;
+}
+
+.kspace-selection {
+  padding: 14px;
+  margin-bottom: 16px;
+  border: 1px solid #c9ddcf;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.kspace .kspace-zoom {
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px #253a2f12;
+}
+
+.kspace-zoom > span {
+  padding: 6px;
+  font-size: 11px;
+  text-align: center;
+  color: #647269;
+}
+
+.kspace :focus-visible {
+  outline: 2px solid #246847;
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  .kspace .kspace-toolbar {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .kspace .kspace-tools {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .kspace .kspace-tools button {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .kspace .kspace-continue {
+    margin-left: 0;
+    align-self: flex-end;
+    padding: 8px 12px;
+  }
+
+  .kspace-map-toolbar {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .kspace-map-toolbar button {
+    min-height: 44px;
+    padding: 8px;
+  }
+
+  .kspace .kspace-workspace {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .kspace .kspace-panel {
+    position: static;
+    inset: auto;
+    box-shadow: none;
+    width: 100%;
+    max-height: 230px;
+    flex-shrink: 0;
+    padding: 14px;
+    border-bottom: 1px solid #e2e8e4;
+  }
+
+  .kspace .kspace-room-summary {
+    display: none;
+  }
+
+  .kspace-map-area {
+    min-height: 360px;
+    flex-shrink: 0;
+  }
+
+  .kspace .kspace-header {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 10px 12px;
+  }
+
+  .kspace .kspace-header nav {
+    display: none;
+  }
+
+  .kspace .kspace-header > button {
+    margin-left: auto;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .kspace .kspace-footer {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+  }
+}

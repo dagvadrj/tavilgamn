@@ -8,10 +8,12 @@ export type GlbInspection = {
   bottomCentered: boolean; compressed: boolean; warnings: string[];
   /** Explicitly confirmed front handle projection; module depth is carcass depth. */
   frontProjectionMm?: number;
+  nodeNames?: string[];
+  assetRole?: "furniture" | "kitchen-part" | "kitchen-assembly";
 };
 export class GlbStandardError extends Error {}
 type Accessor = { min?: number[]; max?: number[]; type: string; count: number; componentType: number; bufferView?: number; byteOffset?: number; sparse?: unknown };
-type Node = { mesh?: number; children?: number[]; matrix?: number[]; translation?: number[]; rotation?: number[]; scale?: number[] };
+type Node = { name?: string; mesh?: number; children?: number[]; matrix?: number[]; translation?: number[]; rotation?: number[]; scale?: number[] };
 type Gltf = {
   asset?: { version?: string }; scene?: number; scenes?: { nodes?: number[] }[]; nodes?: Node[];
   meshes?: { name?: string; primitives: { attributes: { POSITION: number }; indices?: number; mode?: number; targets?: unknown[]; extensions?: Record<string, unknown> }[] }[];
@@ -113,10 +115,11 @@ export function inspectGlb(bytes: ArrayBuffer): GlbInspection {
     const names = values.map(value => value.name ?? "");
     if (names.some(name => !/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/.test(name)) || new Set(names).size !== names.length) warnings.push(`${kind} нэрийг ASCII, unique, surface зориулалтаар нэрлэнэ.`);
   }
-  return { standard: GLB_STANDARD.version, bytes: bytes.byteLength, dimensions: { widthMm: size.x * 1000, heightMm: size.y * 1000, depthMm: size.z * 1000 }, min: bounds.min.toArray(), max: bounds.max.toArray(), meshes: placedMeshes, materials: gltf.materials?.length ?? 0, triangles, transformsApplied: applied, bottomCentered, compressed, warnings };
+  return { standard: GLB_STANDARD.version, bytes: bytes.byteLength, dimensions: { widthMm: size.x * 1000, heightMm: size.y * 1000, depthMm: size.z * 1000 }, min: bounds.min.toArray(), max: bounds.max.toArray(), meshes: placedMeshes, materials: gltf.materials?.length ?? 0, triangles, transformsApplied: applied, bottomCentered, compressed, warnings,
+    nodeNames: nodes.flatMap(node => node.name ? [node.name] : []) };
 }
 
-export function validateCabinetGlb(report: GlbInspection, expected: GlbDimensions) {
+export function validateCabinetGlb(report: GlbInspection, expected: GlbDimensions, assetRole: GlbInspection["assetRole"] = "furniture") {
   const errors: string[] = [];
   const projection = report.frontProjectionMm ?? 0;
   if (!Number.isFinite(projection) || projection < 0 || projection > 100) errors.push("Бариулын projection 0–100 мм байна.");
@@ -124,7 +127,8 @@ export function validateCabinetGlb(report: GlbInspection, expected: GlbDimension
     const required = expected[key] + (key === "depthMm" ? projection : 0);
     if (!Number.isFinite(required) || Math.abs(report.dimensions[key] - required) > GLB_STANDARD.dimensionToleranceMm) errors.push(`${key}: GLB ${Math.round(report.dimensions[key])} мм / module ${expected[key]} мм${key === "depthMm" && projection ? ` + бариул ${projection} мм` : ""}.`);
   }
-  if (!report.bottomCentered) errors.push("Origin доод төвд биш. Blender дээр origin/geometry-г засна уу.");
-  if (!report.transformsApplied) errors.push("Node transform applied биш. Rotation, scale, translation-ийг mesh vertex-д bake хийнэ үү.");
+  if (assetRole !== "kitchen-part" && !report.bottomCentered) errors.push("Origin доод төвд биш. Blender дээр origin/geometry-г засна уу.");
+  if (assetRole === "furniture" && !report.transformsApplied) errors.push("Node transform applied биш. Rotation, scale, translation-ийг mesh vertex-д bake хийнэ үү.");
+  if (assetRole !== "furniture" && report.nodeNames && new Set(report.nodeNames).size !== report.nodeNames.length) errors.push("Эд анги холбох GLB node нэрүүд давхардахгүй байна.");
   return errors;
 }

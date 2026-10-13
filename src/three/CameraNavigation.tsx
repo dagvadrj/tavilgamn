@@ -8,8 +8,8 @@ export function CameraNavigation({ request, bounds, plan = false, leftDrag = fal
   request?: CameraRequest; bounds: CameraBounds; plan?: boolean; leftDrag?: boolean;
 }) {
   const { camera, controls, gl, size, invalidate } = useThree();
-  const handled = useRef<number | undefined>(request?.id);
-  const { width, depth, height, centerX, centerZ } = bounds;
+  const handled = useRef<number | undefined>(undefined);
+  const { width, depth, height, centerX, centerY, centerZ } = bounds;
   useEffect(() => {
     if (!controls || !("mouseButtons" in controls)) return;
     const orbit = controls as Parameters<typeof bindBlenderMouse>[0];
@@ -20,11 +20,11 @@ export function CameraNavigation({ request, bounds, plan = false, leftDrag = fal
     // Apply after the view's camera rig/control swap has settled. Cancel stale work.
     const frame = requestAnimationFrame(() => {
       navigateCamera(camera as PerspectiveCamera, controls as unknown as NavigationControls,
-        request.action, { width, depth, height, centerX, centerZ }, size.width / Math.max(1, size.height), plan);
+        request.action, { width, depth, height, centerX, centerY, centerZ }, size.width / Math.max(1, size.height), plan);
       handled.current = request.id;
       invalidate();
     });
     return () => cancelAnimationFrame(frame);
-  }, [request, camera, controls, size.width, size.height, width, depth, height, centerX, centerZ, plan, invalidate]);
+  }, [request, camera, controls, size.width, size.height, width, depth, height, centerX, centerY, centerZ, plan, invalidate]);
   return null;
 }
