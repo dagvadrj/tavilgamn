@@ -3,6 +3,7 @@
 import {
   Component,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -35,6 +36,7 @@ import {
   type ModularKitchen,
 } from "@/lib/kitchenCabinets";
 import { placementIssues } from "@/lib/kitchenPlacement";
+import { roomOutline } from "@/lib/kitchenRoomOutline";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import type { KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
 import { KitchenCabinetGLB } from "./KitchenCabinetGLB";

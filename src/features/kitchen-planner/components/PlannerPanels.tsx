@@ -3,6 +3,7 @@ import { useId, useRef, type PointerEvent } from "react";
 import "./kitchen-plan.css";
 import { cabinetAxes, cabinetCorners, placementIssues } from "@/lib/kitchenPlacement";
 import { cabinetLabel, type ModularKitchen, type CabinetPose } from "@/lib/kitchenCabinets";
+import { roomOutline, roomOutlinePath } from "@/lib/kitchenRoomOutline";
 
 export function DimensionInput({
   label,

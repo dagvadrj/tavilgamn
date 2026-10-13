@@ -1,6 +1,14 @@
 "use client";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { Minus, Plus, Scan, RotateCw, Copy, Trash2 } from "lucide-react";
+import {
+  Minus,
+  Plus,
+  Scan,
+  RotateCw,
+  Copy,
+  Trash2,
+  MousePointer2,
+} from "lucide-react";
 import type {
   CabinetPose,
   KitchenRoom,

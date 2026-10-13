@@ -210,12 +210,15 @@
 
 .shop-shell .product-card.gallery-product-card .product-price {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-start;
   gap: 4px 8px;
   margin: 0 0 12px;
   padding: 0;
   border: 0;
+  text-align: left;
 }
 
 .shop-shell .product-card.gallery-product-card .product-price strong {

@@ -5,7 +5,7 @@ import { ModularKitchenPlanner } from "./ModularKitchenPlanner";
 import { KitchenSuggestionWizard } from "./KitchenSuggestionWizard";
 import { useAuth } from "@/store/auth";
 import { Suspense, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LayoutGrid, LoaderCircle } from "lucide-react";
 import "./kitchen-planner.css";
 
