@@ -76,8 +76,8 @@ export function HomeShowcase({
               src={room.image}
               alt={`${room.label} — тавилгуудыг хослуулан байрлуулсан жишиг өрөө`}
               fill
-              quality={90}
-              sizes="(max-width: 899px) 100vw, 55vw"
+              quality={95}
+              sizes="(max-width: 1099px) 100vw, 55vw"
             />
             <span className="home-showcase-scene-label">
               {room.label} · Тохижуулалтын санаа

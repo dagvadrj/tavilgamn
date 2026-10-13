@@ -24,6 +24,7 @@ import { CATEGORY_LABEL } from "@/lib/products";
 import { hasAvailableStock, stockLabel } from "@/lib/inventory";
 import { productOffer } from "@/lib/catalogPresentation";
 import { ProductQuickView } from "./ProductQuickView";
+import { cardImageSourceWidth } from "@/lib/cardImageResolution";
 
 export function ProductCard({
   product,
@@ -51,6 +52,33 @@ export function ProductCard({
   const [detailsPinned, setDetailsPinned] = useState(initialDetailsOpen);
   const [detailsHovered, setDetailsHovered] = useState(false);
   const detailsOpen = detailsPinned || detailsHovered;
+  const [loadedPhoto, setLoadedPhoto] = useState<{
+    element: HTMLImageElement;
+    naturalWidth: number;
+    naturalHeight: number;
+  } | null>(null);
+  const [sourceWidth, setSourceWidth] = useState(0);
+  useEffect(() => {
+    if (!loadedPhoto) return;
+    const container = loadedPhoto.element.closest(".gallery-photo-trigger");
+    if (!container) return;
+    const updateResolution = () => {
+      const bounds = container.getBoundingClientRect();
+      const nextWidth = cardImageSourceWidth({
+        width: bounds.width,
+        height: bounds.height,
+        naturalWidth: loadedPhoto.naturalWidth,
+        naturalHeight: loadedPhoto.naturalHeight,
+        fit: getComputedStyle(loadedPhoto.element).objectFit,
+      });
+      if (nextWidth > 0) setSourceWidth(nextWidth);
+    };
+    updateResolution();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(updateResolution);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [loadedPhoto, product.image]);
   useEffect(() => {
     setMounted(true);
     setCheckedAt(Date.now());
@@ -166,8 +194,15 @@ export function ProductCard({
                 src={product.image}
                 alt={product.name}
                 fill
-                sizes={sizes}
-                quality={90}
+                sizes={sourceWidth > 0 ? `${sourceWidth}px` : sizes}
+                quality={95}
+                onLoad={(event) =>
+                  setLoadedPhoto({
+                    element: event.currentTarget,
+                    naturalWidth: event.currentTarget.naturalWidth,
+                    naturalHeight: event.currentTarget.naturalHeight,
+                  })
+                }
                 className="product-primary-image"
               />
             </>

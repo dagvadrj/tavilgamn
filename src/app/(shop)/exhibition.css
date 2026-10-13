@@ -140,7 +140,6 @@
   inset: 0;
   background: linear-gradient(180deg, #ffffff00 20%, #ffffff66);
   opacity: 0;
-  backdrop-filter: blur(1px);
   pointer-events: none;
   transition: opacity 400ms ease;
   mask-image: linear-gradient(180deg, transparent 15%, #000 75%);

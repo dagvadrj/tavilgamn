@@ -147,8 +147,9 @@
 }
 
 .shop-shell .home-showcase-products .product-card.gallery-product-card .product-photo img {
-  object-fit: contain;
-  padding: 10px;
+  object-fit: cover;
+  object-position: zoom-out;
+  padding: 0;
 }
 
 .shop-shell .home-showcase-products .gallery-product-info {
