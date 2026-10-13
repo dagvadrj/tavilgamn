@@ -7,8 +7,8 @@ import { createModelLoader } from "@/three/modelLoader";
 import { GLB_STANDARD, inspectGlb, validateCabinetGlb, type GlbDimensions, type GlbInspection } from "@/lib/glbStandard";
 
 export type GlbPreviewResult = { file: File; report: GlbInspection; thumbnail: File; frontConfirmed: boolean };
-export default function GlbUploadPreview({ file, expected, onChange, allowFrontProjection = false }: {
-  file: File | null; expected: GlbDimensions; onChange: (value: GlbPreviewResult | null) => void; allowFrontProjection?: boolean;
+export default function GlbUploadPreview({ file, expected, onChange, allowFrontProjection = false, assetRole = "furniture" }: {
+  file: File | null; expected: GlbDimensions; onChange: (value: GlbPreviewResult | null) => void; allowFrontProjection?: boolean; assetRole?: GlbInspection["assetRole"];
 }) {
   const host = useRef<HTMLDivElement>(null);
   const callback = useRef(onChange); callback.current = onChange;
@@ -75,9 +75,9 @@ export default function GlbUploadPreview({ file, expected, onChange, allowFrontP
     return () => { cancelled = true; cleanup(); };
   }, [file]);
   const validResult = result?.file === file ? result : null;
-  useEffect(() => { setConfirmed(false); }, [expected.widthMm, expected.heightMm, expected.depthMm, frontProjectionMm, allowFrontProjection]);
+  useEffect(() => { setConfirmed(false); }, [expected.widthMm, expected.heightMm, expected.depthMm, frontProjectionMm, allowFrontProjection, assetRole]);
   const projection = allowFrontProjection ? frontProjectionMm : 0;
-  const issues = validResult ? validateCabinetGlb({ ...validResult.report, frontProjectionMm: projection }, expected) : [];
+  const issues = validResult ? validateCabinetGlb({ ...validResult.report, frontProjectionMm: projection }, expected, assetRole) : [];
   const valid = Boolean(validResult && !issues.length);
   useEffect(() => {
     callback.current(validResult && valid && confirmed ? { ...validResult, report: { ...validResult.report, frontProjectionMm: projection }, frontConfirmed: true } : null);
@@ -93,6 +93,8 @@ export default function GlbUploadPreview({ file, expected, onChange, allowFrontP
       {issues.map(issue => <p key={issue} className="text-xs text-red-700">{issue}</p>)}
       {validResult.report.warnings.map(warning => <p key={warning} className="text-xs text-black/60">{warning}</p>)}
       <p className="text-xs">Улаан X · ногоон Y (дээш) · цэнхэр +Z (нүүр). Grid = Y 0. Preview загварыг сунгахгүй.</p>
+      {assetRole === "kitchen-part" && <p className="text-xs">Origin = эд ангийн холболтын цэг. Хаалганы нугас, бариулын суурь цэгийг (0, 0, 0)-д байрлуулна.</p>}
+      {assetRole !== "furniture" && <p className="text-xs">Холбох node: {validResult.report.nodeNames?.join(", ") || "Нэртэй node байхгүй. Байрлалыг мм-ээр тохируулж болно."}</p>}
       {allowFrontProjection && <label className="block text-xs">+Z нүүрний бариулын илүү гарсан хэмжээ (мм)
         <input className="input ml-2 w-24" type="number" min={0} max={100} step={0.1} value={frontProjectionMm} onChange={event => setFrontProjectionMm(Number(event.target.value))} />
         <span className="block text-black/60">Зөвхөн бариулын projection. Их биеийн буруу гүнийг үүгээр далдлахгүй; нүүрэн тал ба их биеийн гүнийг батална.</span>

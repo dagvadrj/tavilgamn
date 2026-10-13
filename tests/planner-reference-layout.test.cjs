@@ -39,15 +39,16 @@ test("both planners retain lazy 3D scenes and only open room inspectors reserve 
   assert.match(source("src/features/room-planner/components/PlannerPanels.tsx"), /if \(!active\) return null/);
 });
 
-test("kitchen opens without a wizard and keeps layout selection available in the mobile inspector", () => {
+test("kitchen opens directly with optional setup and keeps product editing on the left", () => {
   const entry = source("src/components/KitchenPlanner.tsx");
-  assert.doesNotMatch(entry, /KitchenSuggestionWizard|openEditor/);
+  assert.match(entry, /params.get\("setup"\) === "1"/);
   assert.match(entry, /<ModularKitchenPlanner/);
   assert.match(entry, /queryString=\{query\}/);
   const kitchen = source("src/components/ModularKitchenPlanner.tsx");
-  assert.match(kitchen, /<span>Гарнитурын байрлал<\/span>/);
+  assert.match(kitchen, /<span>Байрлал<\/span>/);
   assert.match(kitchen, /KITCHEN_LAYOUT_OPTIONS\.map/);
-  assert.match(kitchen, /inspector === "selection" \|\| componentOverview/);
+  assert.match(kitchen, /KitchenSelectionPanel/);
+  assert.doesNotMatch(kitchen, /KitchenOptionsPanel|KitchenStandardLibrary/);
   assert.match(kitchen, /inspectorTab === "selection" && !selected \? "catalog"/);
 });
 

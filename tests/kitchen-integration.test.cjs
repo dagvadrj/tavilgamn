@@ -621,8 +621,8 @@ test("Supabase materials are normalized and classify cabinet GLB surfaces", () =
   const scene = fs.readFileSync("src/three/ModularKitchenScene.tsx", "utf8");
   assert.match(route, /normalizeKitchenMaterials\(materials\.data\)/);
   assert.match(planner, /materialDefinitions=\{materialDefinitions\}/);
-  assert.match(scene, /frontMaterial=\{frontMaterial\}/);
-  assert.match(scene, /carcassMaterial=\{carcassMaterial\}/);
+  assert.match(scene, /KitchenCabinetGLB/);
+  assert.doesNotMatch(scene, /frontMaterial=|carcassMaterial=/);
 });
 
 test("admin kitchen materials validate input and use the existing protected table", () => {
@@ -780,8 +780,8 @@ test("admin texture upload is protected and GLB materials receive cached texture
   assert.match(component, /\/api\/admin\/kitchen-material-textures/);
   assert.match(glb, /acquireKitchenMaterialTextures/);
   assert.match(glb, /material\.normalMap = textures\.normal/);
-  assert.match(scene, /frontMaterial=\{frontMaterial\}/);
-  assert.match(scene, /carcassMaterial=\{carcassMaterial\}/);
+  assert.match(scene, /KitchenCabinetGLB/);
+  assert.doesNotMatch(scene, /frontMaterial=|carcassMaterial=/);
 });
 
 test("texture upload merges the new Cloudinary URL into the existing material paths", async () => {
@@ -1045,7 +1045,7 @@ test("catalog default replaces procedural cabinet while preserving explicit matc
 // Build actual Three geometries from the shared renderer without a browser or WebGL.
 // Texture generation and React effects are irrelevant to physical bounds.
 const { KitchenAssemblyMesh } = loadSource(
-  "src/three/KitchenAssemblyMesh.tsx",
+  "tests/helpers/manufacturing-kitchen.tsx",
   {
     react: { ...React, useMemo: (fn) => fn(), useEffect: () => {} },
     "./kitchenTextures": { createKitchenTexture: () => null },

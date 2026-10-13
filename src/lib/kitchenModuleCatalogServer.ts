@@ -1,6 +1,7 @@
 import "server-only";
 import type { KitchenCatalogModule, KitchenCatalogVariant, KitchenModelCandidate } from "./kitchenModuleCatalog";
 import { getSupabaseAdmin } from "./supabase/admin";
+import { getKitchenGlbAssembly, kitchenPartKind } from "./kitchenGlbAssembly";
 
 type Db = ReturnType<typeof getSupabaseAdmin>;
 const file = (path: unknown) => typeof path === "string" ? path.split("/").pop() ?? null : null;
@@ -19,7 +20,8 @@ export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}
   const [{ data: moduleRows, error: moduleError }, { data: variantRows, error: variantError }] = await Promise.all([moduleQuery, variantQuery]);
   if (moduleError) throw moduleError;
   if (variantError) throw variantError;
-  const modelIds = [...new Set((variantRows ?? []).map((row) => row.furniture_model_id as string))];
+  const modelIds = [...new Set((variantRows ?? []).flatMap((row) => [row.furniture_model_id as string,
+    ...(getKitchenGlbAssembly(row.configuration)?.slots.flatMap(slot => slot.options.map(option => option.modelId)) ?? [])]))];
   const { data: modelRows, error: modelError } = modelIds.length
     ? await db.from("furniture_models").select("id,product_id,name,category,glb_path,preview_glb_path,source_glb_path,thumbnail_path,processing_status,archived_at,glb_validation").in("id", modelIds)
     : { data: [], error: null };
@@ -30,12 +32,20 @@ export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}
     const model = models.get(row.furniture_model_id as string);
     const kitchenGlbPath = model?.processing_status === "ready" ? model?.glb_path : null;
     if (!model || model.archived_at || model.category !== "kitchen-cabinet" || (!options.admin && !kitchenGlbPath)) continue;
+    const assembly = getKitchenGlbAssembly(row.configuration);
+    if (assembly) for (const slot of assembly.slots) for (const option of slot.options) {
+      const part = models.get(option.modelId);
+      const ready = part && !part.archived_at && part.processing_status === "ready";
+      option.glbFile = ready ? file(part.glb_path) : null;
+      option.glbUrl = ready ? assetUrl(option.modelId, part.glb_path) : null;
+      option.thumbnailUrl = part && !part.archived_at ? assetUrl(option.modelId, part.thumbnail_path) : null;
+    }
     const value: KitchenCatalogVariant = {
       physicalSize: Boolean(model.glb_validation),
       furnitureModelId: model.id as string, productId: model.product_id as string, modelName: model.name as string,
       variantCode: row.variant_code as string, opening: row.opening as KitchenCatalogVariant["opening"],
       doorCount: Number(row.door_count), drawerCount: Number(row.drawer_count),
-      configuration: row.configuration as Record<string, unknown>, isDefault: Boolean(row.is_default),
+      configuration: { ...(row.configuration as Record<string, unknown>), ...(assembly ? { assembly } : {}) }, isDefault: Boolean(row.is_default),
       sortOrder: Number(row.sort_order), active: Boolean(row.active), glbFile: file(kitchenGlbPath),
       glbUrl: assetUrl(model.id as string, kitchenGlbPath), thumbnailUrl: assetUrl(model.id as string, model.thumbnail_path),
       previewGlbFile: file(model.preview_glb_path), previewGlbUrl: assetUrl(model.id as string, model.preview_glb_path),
@@ -54,7 +64,7 @@ export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}
 
 export async function readKitchenModelCandidates(db: Db = getSupabaseAdmin()) {
   const [{ data: rows, error }, { data: links, error: linkError }, { data: moduleRows, error: moduleError }] = await Promise.all([
-    db.from("furniture_models").select("id,product_id,name,description,dimensions_w,dimensions_h,dimensions_d,glb_path,source_glb_path,processing_status,archived_at,cabinet_module_id")
+    db.from("furniture_models").select("id,product_id,name,description,dimensions_w,dimensions_h,dimensions_d,glb_path,thumbnail_path,source_glb_path,processing_status,archived_at,cabinet_module_id,specifications,glb_validation")
       .eq("category", "kitchen-cabinet").order("created_at", { ascending: false }).limit(500),
     db.from("kitchen_module_variants").select("furniture_model_id,module_id"),
     db.from("kitchen_modules").select("id,code"),
@@ -65,7 +75,11 @@ export async function readKitchenModelCandidates(db: Db = getSupabaseAdmin()) {
   const moduleCodes = new Map((moduleRows ?? []).map((row) => [row.id as string, row.code as string]));
   const linked = new Map((links ?? []).map((row) => [row.furniture_model_id as string, moduleCodes.get(row.module_id as string) ?? null]));
   return (rows ?? []).map((row): KitchenModelCandidate => ({ id: row.id as string, productId: row.product_id as string,
+    glbFile: !row.archived_at && row.processing_status === "ready" ? file(row.glb_path) : null,
+    thumbnailUrl: assetUrl(row.id, row.thumbnail_path),
     name: row.name as string,
+    partKind: kitchenPartKind(row.specifications),
+    nodeNames: row.glb_validation && typeof row.glb_validation === "object" && !Array.isArray(row.glb_validation) && Array.isArray(row.glb_validation.nodeNames) ? row.glb_validation.nodeNames.filter((name): name is string => typeof name === "string") : [],
     archivedAt: row.archived_at,
     moduleCode: (row.cabinet_module_id ? moduleCodes.get(row.cabinet_module_id) : null) ?? linked.get(row.id as string)
       ?? /^([A-Z0-9][A-Z0-9_-]{1,79}) kitchen module GLB$/.exec(String(row.description ?? ""))?.[1]

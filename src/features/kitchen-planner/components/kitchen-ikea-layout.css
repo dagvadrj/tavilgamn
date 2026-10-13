@@ -1,0 +1,564 @@
+/* Two full-width toolbar rows, followed by one left drawer and the room. */
+
+.kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout {
+  --ui-accent: #0058a3;
+  --ui-accent-soft: #edf4fa;
+  display: grid;
+  grid-template-rows: 52px 78px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  color: #222;
+  background: #fff;
+  & .kitchen-masthead {
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 0 20px;
+    border-bottom: 1px solid #e5e5e5;
+    background: #fff;
+    z-index: 40;
+  }
+  & .kitchen-workflow-tabs {
+    display: flex;
+    align-self: stretch;
+    gap: 22px;
+  }
+  & .kitchen-workflow-tabs button {
+    padding: 0 2px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: #222;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  & .kitchen-workflow-tabs button[aria-current="step"] {
+    color: #0058a3;
+    border-bottom-color: #0058a3;
+  }
+  & .kitchen-project-tools {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  & .kitchen-project-tools > button,
+  & .kitchen-project-tools > a,
+  & .kitchen-project-tools summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 32px;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 2px;
+    background: transparent;
+    color: #333;
+    box-shadow: none;
+    cursor: pointer;
+    list-style: none;
+  }
+  & summary::-webkit-details-marker {
+    display: none;
+  }
+  & .kitchen-project-tools summary > span,
+  & .kitchen-project-tools summary > svg:last-child:not(:first-child) {
+    display: none;
+  }
+  & .kitchen-project-tools button:hover,
+  & .kitchen-project-tools a:hover,
+  & .kitchen-project-tools summary:hover {
+    background: #f2f2f2;
+  }
+  & button:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+  & .kitchen-tool-divider {
+    width: 1px;
+    height: 23px;
+    margin: 0 7px;
+    background: #e5e5e5;
+  }
+  & .kitchen-project-menu {
+    position: relative;
+  }
+  & .kitchen-project-menu > label {
+    position: absolute;
+    top: 38px;
+    right: 0;
+    width: 250px;
+    padding: 16px;
+    border: 1px solid #ddd;
+    background: white;
+    font-size: 12px;
+    box-shadow: 0 4px 18px #0001;
+  }
+  & .kitchen-project-menu input {
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px;
+    border: 1px solid #ccc;
+    border-radius: 0;
+  }
+  & .kitchen-main-toolbar {
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ddd;
+    background: #fff;
+    z-index: 30;
+  }
+  & .kitchen-category-tools {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  & .kitchen-category-tools > button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 54px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    font-size: 9px;
+    font-weight: 400;
+    color: #444;
+    background: transparent;
+    white-space: nowrap;
+  }
+  & .kitchen-category-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+  }
+  & .kitchen-category-tools button[aria-pressed="true"] {
+    color: #0058a3;
+  }
+  & .kitchen-category-tools button[aria-pressed="true"] .kitchen-category-icon {
+    border-color: #0058a3;
+    background: #f0f6fa;
+  }
+  & .kitchen-category-tools > .kitchen-toolbar-separated {
+    margin-left: 8px;
+    padding-left: 22px;
+    border-left: 1px solid #e5e5e5;
+  }
+  & .kitchen-toolbar-checkout {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-left: 20px;
+  }
+  & .kitchen-toolbar-total {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #0058a3;
+    white-space: nowrap;
+  }
+  & .kitchen-toolbar-total > span {
+    font-size: 10px;
+  }
+  & .kitchen-toolbar-total > strong {
+    font-size: 13px;
+  }
+  & .kitchen-toolbar-continue {
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 0;
+    color: white;
+    background: #0058a3;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  & .kp-layout[data-settings-open] {
+    grid-row: 3;
+    display: grid;
+    grid-template-columns: 310px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  & .kp-layout[hidden] {
+    display: none;
+  }
+  & .kp-layout[data-left-open="false"] {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+  & .kp-workspace {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  & .kp-preview {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: #fafafa;
+  }
+  & .kp-settings,
+  & .kitchen-flow-catalog {
+    position: relative;
+    inset: auto;
+    grid-column: 1;
+    grid-row: 1;
+    display: block;
+    width: 310px;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    padding: 0;
+    overflow: auto;
+    border: 0;
+    border-right: 1px solid #ddd;
+    border-radius: 0;
+    background: #fff;
+    box-shadow: none;
+    transform: none;
+  }
+  & .kp-settings:not(.is-open) {
+    display: none;
+  }
+  & .kp-settings:has(.kitchen-selection-panel) {
+    overflow: visible;
+    z-index: 20;
+  }
+  & .kp-settings .ksp-controller {
+    position: relative;
+    z-index: 1;
+    width: 420px;
+    min-height: 112px;
+    border-right: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+    background: #fff;
+    box-shadow: 2px 2px 6px #00000006;
+  }
+  & .kp-settings .ksp-controller-heading {
+    height: 29px;
+    padding: 0 10px 0 14px;
+  }
+  & .kp-settings .ksp-controller-heading strong {
+    overflow: hidden;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  & .kp-settings .ksp-controller-heading .ksp-icon-button {
+    width: 25px;
+    height: 25px;
+  }
+  & .kitchen-flow-catalog:not(.is-open) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  & .kitchen-flow-catalog.is-open {
+    visibility: visible;
+    pointer-events: auto;
+  }
+  & .kp-layout[data-settings-open="true"] > .kitchen-flow-catalog {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  & .kitchen-flow-catalog > header {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e5e5e5;
+    background: white;
+  }
+  & .kitchen-flow-catalog > header small {
+    display: none;
+  }
+  & .kitchen-flow-catalog > header h2 {
+    font-size: 13px;
+  }
+  & .kitchen-flow-catalog > .kitchen-placed-list {
+    display: block;
+    margin: 16px 14px;
+  }
+  & .kitchen-flow-catalog .planner-inspector-intro {
+    display: none;
+  }
+  & .kitchen-flow-catalog .planner-model-library {
+    padding: 14px;
+  }
+  & .planner-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin: 0 0 14px;
+    padding: 8px 11px;
+    border: 1px solid #b8b8b8;
+    border-radius: 20px;
+    color: #444;
+    background: white;
+  }
+  & .planner-search input {
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-size: 11px;
+  }
+  & .planner-search:focus-within {
+    border-color: #0058a3;
+    outline: 1px solid #0058a3;
+  }
+  & .planner-filter-pills button {
+    padding: 6px 10px;
+    border-radius: 2px;
+    font-size: 10px;
+  }
+  & .planner-filter-pills button[aria-pressed="true"] {
+    color: #0058a3;
+    background: #edf4fa;
+    border-color: #0058a3;
+  }
+  & .planner-model-card {
+    border-radius: 0;
+  }
+  & .kp-settings .ksp-header {
+    min-height: 36px;
+    padding: 4px 8px 4px 12px;
+  }
+  & .kp-settings .ksp-header h2 {
+    font-size: 12px;
+  }
+  & .kp-settings .ksp-product {
+    padding: 0 14px 6px;
+  }
+  & .kp-settings .ksp-product h3 {
+    font-size: 11px;
+    font-weight: 400;
+  }
+  & .kp-settings .ksp-product-code {
+    display: none;
+  }
+  & .kp-settings .ksp-product > .ksp-image {
+    display: none;
+  }
+  & .kp-settings .ksp-actions {
+    padding: 0 10px 6px;
+    border-bottom: 0;
+  }
+  & .kp-settings .ksp-action {
+    min-height: 42px;
+    gap: 6px;
+    font-size: 8px;
+  }
+  & .kp-settings .ksp-action svg {
+    width: 18px;
+    height: 18px;
+  }
+  & .kp-settings .ksp-action-hint {
+    margin: 0;
+    padding: 6px 12px;
+    font-size: 9px;
+    background: #fafafa;
+  }
+  & .kp-settings .ksp-scroll {
+    padding: 14px 12px;
+  }
+  & .kp-settings .ksp-option {
+    border-radius: 0;
+  }
+  & .kp-preview-bar {
+    position: absolute;
+    top: auto;
+    right: auto;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    display: flex;
+    min-height: 0;
+    width: max-content;
+    max-width: calc(100% - 90px);
+    padding: 3px;
+    border: 1px solid #ddd;
+    border-radius: 0;
+    background: #fff;
+    box-shadow: 0 2px 8px #0001;
+    z-index: 10;
+  }
+  & .kitchen-view-tabs {
+    display: flex;
+    gap: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  & .kitchen-view-tabs button {
+    min-height: 30px;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 0;
+    font-size: 10px;
+    background: white;
+  }
+  & .kitchen-view-tabs button[aria-pressed="true"] {
+    color: #0058a3;
+    background: #eef5fa;
+  }
+  & .kp-preview-bar .km-view-tools {
+    display: none;
+  }
+  & .kp-preview-hint {
+    display: none;
+  }
+  & .km-feedback:not(.has-error) {
+    display: none;
+  }
+  & .kitchen-plan-context {
+    display: none;
+  }
+  & .kitchen-navigation-map {
+    top: 18px;
+  }
+  & .viewport-controls {
+    display: flex;
+    top: 18px;
+    right: 14px;
+    bottom: auto;
+  }
+  & .kp-canvas {
+    height: 100%;
+    min-height: 0;
+  }
+  & .kroom-setup {
+    grid-row: 3;
+    min-height: 0;
+    height: 100%;
+  }
+  & .kp-review-layer {
+    inset: 130px 0 0;
+    background: #f7f7f7;
+  }
+  & .kp-loading-strip {
+    position: absolute;
+    top: 130px;
+    left: 310px;
+    right: 0;
+    z-index: 15;
+  }
+  & .kitchen-catalog-backdrop,
+  & .planner-inspector-backdrop {
+    display: none;
+  }
+}
+
+@media (max-width: 959px) {
+  .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout {
+    & .kitchen-masthead {
+      padding: 0 10px;
+    }
+    & .kitchen-workflow-tabs {
+      gap: 12px;
+    }
+    & .kitchen-workflow-tabs button {
+      font-size: 9px;
+    }
+    & .kitchen-project-tools {
+      gap: 0;
+    }
+    & .kitchen-project-tools > button, & .kitchen-project-tools > a, & .kitchen-project-tools summary {
+      width: 25px;
+    }
+    & .kitchen-main-toolbar {
+      padding: 8px 10px;
+      gap: 12px;
+    }
+    & .kitchen-category-tools {
+      gap: 6px;
+      overflow-x: auto;
+      min-width: 0;
+      padding-bottom: 2px;
+    }
+    & .kitchen-toolbar-checkout {
+      padding-left: 0;
+      gap: 8px;
+    }
+  }
+}
+
+@media (max-width: 759px) {
+  .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout {
+    & .kp-layout[data-settings-open] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    & .kp-workspace {
+      grid-column: 1;
+    }
+    & .kp-settings, & .kitchen-flow-catalog {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 25;
+      width: min(310px, 82vw);
+      height: 100%;
+      box-shadow: 3px 0 12px #0001;
+    }
+    & .kp-loading-strip {
+      left: 0;
+    }
+    & .kp-settings .ksp-controller {
+      width: 100%;
+    }
+    & .kitchen-toolbar-total {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout {
+    & .kitchen-workflow-tabs {
+      gap: 8px;
+    }
+    & .kitchen-workflow-tabs button {
+      font-size: 8px;
+    }
+    & .kitchen-project-tools > .km-layout-menu,
+    & .kitchen-tool-divider,
+    & .kitchen-project-tools > button[aria-label="Дахин хийх"] {
+      display: none;
+    }
+    & .kitchen-toolbar-continue {
+      padding: 8px;
+      font-size: 9px;
+    }
+  }
+}

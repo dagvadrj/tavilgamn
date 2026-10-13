@@ -8,6 +8,7 @@ import { ModelOptionsError, parseModelColors, parseModelMaterials } from "@/lib/
 import { removeStoredModelFiles } from "@/lib/r2Models";
 import { CloudinaryModelError, uploadModelAsset } from "@/lib/cloudinaryModels";
 import { isCategory } from "@/lib/catalogCategories";
+import { KITCHEN_PART_KINDS } from "@/lib/kitchenGlbAssembly";
 const MAX_THUMBNAIL_SIZE = 10 * 1024 * 1024;
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -88,7 +89,10 @@ export async function POST(request: NextRequest) {
     const colors = parseModelColors(formData.get("colors"));
     const materials = parseModelMaterials(formData.get("materials"));
     const cabinetModuleId = String(formData.get("cabinetModuleId") ?? "");
-    if (category === "kitchen-cabinet") {
+    const partKind = String(formData.get("kitchenPartKind") ?? "");
+    const authoredNodes = formData.get("authoredNodes") === "true";
+    if (partKind && (category !== "kitchen-cabinet" || !(KITCHEN_PART_KINDS as readonly string[]).includes(partKind) || scale !== 1)) return apiErrorResponse({ error: "Kitchen эд ангийн төрөл болон метр хэмжээ, scale 1 шаардлагатай." }, { status: 400 });
+    if (category === "kitchen-cabinet" && !partKind) {
       if (!/^[0-9a-f-]{36}$/i.test(cabinetModuleId)) return apiErrorResponse({ error: "Kitchen module сонгоно уу." }, { status: 400 });
       const { data: module, error } = await supabase.from("kitchen_modules").select("id,width_mm,height_mm,depth_mm").eq("id", cabinetModuleId).eq("active", true).maybeSingle();
       if (error) throw error;
@@ -113,7 +117,8 @@ export async function POST(request: NextRequest) {
         default_color: colors[0].id,
         name,
         category,
-        cabinet_module_id: category === "kitchen-cabinet" ? cabinetModuleId : null,
+        cabinet_module_id: category === "kitchen-cabinet" && !partKind ? cabinetModuleId : null,
+        specifications: toJson(partKind ? { type: `kitchen-part:${partKind}`, assembly: "connector-origin" } : authoredNodes ? { assembly: "authored-nodes" } : {}),
         description,
         base_price: Math.round(basePrice),
         glb_path: null,

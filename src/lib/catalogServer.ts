@@ -3,6 +3,7 @@ import type { Product } from "./types";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { parseProduct } from "./catalogValidation";
 import type { Tables } from "./supabase/database.types";
+import { kitchenPartKind } from "./kitchenGlbAssembly";
 
 export const FURNITURE_ORDER_FIELDS =
   "id,product_id,name,category,description,base_price,image_url,thumbnail_path,glb_path,preview_glb_path,processing_status,scale,dimensions_w,dimensions_d,dimensions_h,colors,materials,default_color,in_stock,rating,review_count,badges,is_new,is_best_seller,store_ids";
@@ -135,7 +136,7 @@ export async function readProducts(
       if (error) throw error;
       if (!data?.length) return products;
       const rows = data as unknown as FurnitureRow[];
-      products.push(...rows.map(productFromRow));
+      products.push(...rows.filter(row => !kitchenPartKind(row.specifications)).map(productFromRow));
       if (rows.length < 500) return products;
       after = rows[rows.length - 1].id;
     }
@@ -192,7 +193,8 @@ export async function readProduct(
       .eq("product_id", id)
       .maybeSingle();
     if (error) throw error;
-    return data ? productFromRow(data as unknown as FurnitureRow) : undefined;
+    const row = data as unknown as FurnitureRow | null;
+    return row && !kitchenPartKind(row.specifications) ? productFromRow(row) : undefined;
   };
 
   try {

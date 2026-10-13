@@ -1,4 +1,5 @@
 import { cabinetFrontExtra, hasCooktop } from "./plitka";
+import { parseKitchenPartSelections } from "./kitchenGlbAssembly";
 import {
   getComponents,
   getComponentSize,
@@ -590,6 +591,7 @@ export function parseKitchen(value: unknown, options: { allowEmpty?: boolean } =
     return {
       id: c.id,
       ...(c.variantId ? { variantId: c.variantId } : {}),
+      ...(c.partSelections !== undefined ? { partSelections: parseKitchenPartSelections(c.partSelections) } : {}),
       type: c.type,
       width: c.width,
       height: c.height,

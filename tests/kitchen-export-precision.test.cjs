@@ -5,9 +5,9 @@ const THREE = require('three');
 const { loadSource } = require('./helpers/load-source.cjs');
 const { createUnifiedKitchen, arrangeKitchen } = loadSource('src/lib/kitchenAssembly.ts');
 const { createRefrigerator, createHood } = loadSource('src/lib/kitchenCabinets.ts');
-const { KitchenAssemblyMesh } = loadSource('src/three/KitchenAssemblyMesh.tsx', {
+const { KitchenAssemblyMesh } = loadSource('tests/helpers/manufacturing-kitchen.tsx', {
   react: { ...React, useMemo: fn => fn(), useEffect: () => {} },
-  './kitchenTextures': { createKitchenTexture: () => null },
+  '@/three/kitchenTextures': { createKitchenTexture: () => null },
 });
 function render(node, parent = new THREE.Group()) {
   for (const element of React.Children.toArray(node)) {

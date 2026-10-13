@@ -1,0 +1,66 @@
+"use client";
+
+import Link from "next/link";
+import { Armchair, Camera, ClipboardCheck, CookingPot, PanelTop, Refrigerator, Ruler, Save, Search, Undo2, Redo2, X } from "lucide-react";
+import type { ReactNode } from "react";
+
+export type KitchenToolbarTool = "cabinets" | "appliances" | "dining" | "items" | "search" | "photo" | "annotation";
+type Stage = "space" | "design" | "finish";
+
+const stages: [Stage, string][] = [
+  ["space", "Өрөөг тодорхойлох"],
+  ["design", "Өөрийнхөөрөө тохижуулах"],
+  ["finish", "Дуусгах"],
+];
+const tools = [
+  { id: "cabinets", label: "Шүүгээ", icon: PanelTop },
+  { id: "appliances", label: "Төхөөрөмж", icon: Refrigerator },
+  { id: "dining", label: "Хоолны тавилга", icon: Armchair },
+  { id: "items", label: "Гал тогооны эдлэл", icon: CookingPot },
+  { id: "search", label: "Хайх", icon: Search },
+  { id: "photo", label: "Зураг", icon: Camera },
+  { id: "annotation", label: "Хэмжээс", icon: Ruler },
+] as const;
+
+export function KitchenPlannerHeader({ stage, onStage, activeTool, onTool, busy, canUndo, canRedo,
+  onUndo, onRedo, onSave, loginHref, name, onName, subtotal, utilities, annotations }: {
+  stage: Stage; onStage: (stage: Stage) => void;
+  activeTool?: KitchenToolbarTool; onTool: (tool: KitchenToolbarTool) => void;
+  busy: boolean; canUndo: boolean; canRedo: boolean;
+  onUndo: () => void; onRedo: () => void; onSave?: () => void; loginHref: string;
+  name: string; onName: (value: string) => void; subtotal: number; utilities: ReactNode; annotations: boolean;
+}) {
+  return <>
+    <header className="kitchen-masthead">
+      <nav className="kitchen-workflow-tabs" aria-label="Гал тогоогоо төлөвлөх алхмууд">
+        {stages.map(([id, label]) => <button key={id} type="button" disabled={busy}
+          aria-current={stage === id ? "step" : undefined} onClick={() => onStage(id)}>{label}</button>)}
+      </nav>
+      <div className="kitchen-project-tools">
+        <details className="kitchen-project-menu">
+          <summary title="Төслийн нэр" aria-label="Төслийн нэр"><ClipboardCheck size={16} /></summary>
+          <label>Төслийн нэр<input value={name} maxLength={100} disabled={busy} onChange={e => onName(e.target.value)} /></label>
+        </details>
+        {utilities}
+        <span className="kitchen-tool-divider" />
+        <button type="button" title="Буцаах · Ctrl+Z" aria-label="Буцаах" disabled={busy || !canUndo} onClick={onUndo}><Undo2 size={16} /></button>
+        <button type="button" title="Дахин хийх · Ctrl+Shift+Z" aria-label="Дахин хийх" disabled={busy || !canRedo} onClick={onRedo}><Redo2 size={16} /></button>
+        {onSave ? <button type="button" aria-label="Хадгалах" title="Хадгалах" disabled={busy} onClick={onSave}><Save size={16} /></button>
+          : <Link href={loginHref} aria-label="Нэвтэрч хадгалах" title="Нэвтэрч хадгалах"><Save size={16} /></Link>}
+        <Link href="/planner" title="Planner-оос гарах" aria-label="Planner-оос гарах"><X size={17} /></Link>
+      </div>
+    </header>
+    <div className="kitchen-main-toolbar" role="toolbar" aria-label="Тавилгын үндсэн хэрэгслүүд">
+      <div className="kitchen-category-tools">
+        {tools.map(({ id, label, icon: Icon }) => <button key={id} type="button" disabled={busy}
+          className={id === "photo" ? "kitchen-toolbar-separated" : undefined}
+          aria-label={label} aria-pressed={id === "annotation" ? annotations : activeTool === id}
+          onClick={() => onTool(id)}><span className="kitchen-category-icon"><Icon size={20} strokeWidth={1.2} /></span><span>{label}</span></button>)}
+      </div>
+      <div className="kitchen-toolbar-checkout">
+        <button type="button" className="kitchen-toolbar-total" onClick={() => onStage("finish")}><span>Миний гал тогоо</span><strong>{subtotal.toLocaleString("mn-MN")} ₮</strong></button>
+        <button type="button" className="kitchen-toolbar-continue" disabled={busy} onClick={() => onStage("finish")}>Үргэлжлүүлэх</button>
+      </div>
+    </div>
+  </>;
+}

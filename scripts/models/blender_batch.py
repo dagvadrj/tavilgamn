@@ -1562,6 +1562,11 @@ def process_delivery(
     bpy.ops.object.select_all(action="DESELECT")
     for obj in objects:
         obj.select_set(True)
+    # Preserve authored connector sockets used by modular furniture parts.
+    for obj in bpy.context.scene.objects:
+        if obj.type == "EMPTY":
+            obj["kitchenAnchor"] = True
+            obj.select_set(True)
 
     bpy.context.scene["pipelineBounds"] = {
         "min": [minimum.x, minimum.z, -maximum.y],

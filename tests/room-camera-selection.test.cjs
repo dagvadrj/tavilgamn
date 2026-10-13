@@ -63,7 +63,7 @@ test('real planner map and scene selection keep one canvas key, current view and
    react:h.react,'next/dynamic':{default:()=> 'room-canvas'},'next/image':{default:'image'},'next/link':{default:'link'},
    '@/store/designs':{...loadSource('src/store/designs.ts'),useDesigns:Object.assign(()=>store.getState(),{getState:store.getState})},
    '@/store/catalog':{getProduct:()=>undefined,useCatalog:()=>({products:[],ready:true,loading:false})},
-   '@/store/kitchens':{useKitchens:()=>({items:[]})},'@/store/auth':{useAuth:select=>select({user:null})},'@/store/cart':{useCart:select=>select({add:()=>{}})},
+   '@/store/kitchens':{useKitchens:()=>({items:[]})},'@/store/auth':{useAuth:select=>{const state={user:null,initialized:true,initialize:async()=>{}};return select?select(state):state;}},'@/store/cart':{useCart:select=>select({add:()=>{}})},
    '@/features/room-planner/components/RoomPlannerStart':{RoomPlannerStart:'room-start'},
    '@/features/room-planner/components/PlannerPanels':{Drawer:'drawer',CompareModal:'compare',NumberControl:'number',PlannerSkeleton:'skeleton'},
    '@/features/room-planner/components/RoomPlannerControls':{RoomPlannerControls:'room-controls'},
@@ -71,7 +71,7 @@ test('real planner map and scene selection keep one canvas key, current view and
    './RoomAddDialog':{RoomAddDialog:'add-room-dialog'},
    './RoomTourControls':{RoomTourControls:'tour-controls'},
   });
-  const render=()=>h.render(()=>RoomPlanner()),find=(t,type)=>nodes(t).find(n=>n.type===type);
+  const render=()=>h.render(()=>{const shell=RoomPlanner();return typeof shell.type==='function'?shell.type(shell.props):shell;}),find=(t,type)=>nodes(t).find(n=>n.type===type);
   find(render(),'room-start').props.onResume();let tree=render();find(tree,'room-controls').props.onView('top');tree=render();const canvas=find(tree,'room-canvas');assert.equal(canvas.props.view,'plan');
   for(let i=0;i<8;i++){
    find(tree,'room-map').props.onSelect(i%2?a:b);tree=render();const next=find(tree,'room-canvas');assert.equal(next.key,canvas.key);assert.equal(next.props.resetKey,canvas.props.resetKey);assert.equal(next.props.view,'plan');assert.equal(next.props.design.activeRoomId,i%2?a:b);

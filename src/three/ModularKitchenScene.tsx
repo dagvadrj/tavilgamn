@@ -3,7 +3,6 @@
 import {
   Component,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -14,7 +13,7 @@ import {
   useThree,
   type ThreeEvent,
 } from "@react-three/fiber";
-import { Edges, Grid, OrbitControls } from "@react-three/drei";
+import { Edges, OrbitControls } from "@react-three/drei";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import {
@@ -35,12 +34,9 @@ import {
   type ModularKitchen,
 } from "@/lib/kitchenCabinets";
 import { placementIssues } from "@/lib/kitchenPlacement";
-import { CabinetBody, KitchenTops } from "./KitchenAssemblyMesh";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
-import { fitBacksplashes } from "@/lib/kitchenBacksplash";
 import type { KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
-import { kitchenForGeneratedParts } from "@/lib/kitchenGeneratedParts";
-import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
+import { KitchenCabinetGLB } from "./KitchenCabinetGLB";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { DEFAULT_FLOOR_MATERIAL } from "@/lib/roomDesign";
 import { useRoomMaterial } from "./roomMaterials";
@@ -200,10 +196,6 @@ type CaptureTarget = {
 };
 function Scene(props: ModularSceneProps) {
   const { capture: registerCapture, kitchen, selectedId, mode } = props;
-  const generatedPartsKitchen = useMemo(
-    () => kitchenForGeneratedParts(kitchen, props.variantModels),
-    [kitchen, props.variantModels],
-  );
   // Stable while dragging; layout selection remounts this view to frame the new layout.
   const focus = useRef({
     ...kitchenEnvelope(kitchen),
@@ -345,6 +337,9 @@ function Scene(props: ModularSceneProps) {
   const width = kitchen.room.width / 1000,
     depth = kitchen.room.depth / 1000;
   const roomHeight = kitchen.room.height / 1000;
+  const cameraTarget = props.cameraRequest?.targetId
+    ? kitchen.cabinets.find((cabinet) => cabinet.id === props.cameraRequest?.targetId)
+    : undefined;
   const floorMaterial = useRoomMaterial(
     DEFAULT_FLOOR_MATERIAL,
     width,
@@ -386,7 +381,14 @@ function Scene(props: ModularSceneProps) {
       {!props.interior && (
         <CameraNavigation
           request={props.cameraRequest}
-          bounds={{
+          bounds={cameraTarget ? {
+            width: cameraTarget.width / 1000,
+            depth: cameraTarget.depth / 1000,
+            height: cameraTarget.height / 1000,
+            centerX: cameraTarget.position.x / 1000,
+            centerZ: cameraTarget.position.z / 1000,
+            centerY: (cameraTarget.position.y + cameraTarget.height / 2) / 1000,
+          } : {
             width,
             depth,
             height: roomHeight,
@@ -441,17 +443,6 @@ function Scene(props: ModularSceneProps) {
         }}
       >
         {kitchen.cabinets.map((cabinet) => {
-          const legacyMaterialId =
-            cabinet.finish ??
-            (cabinet.material === "wood" ? "oak" : cabinet.material);
-          const frontMaterial =
-            props.materialDefinitions?.[
-              cabinet.frontMaterialId ?? legacyMaterialId
-            ];
-          const carcassMaterial =
-            props.materialDefinitions?.[
-              cabinet.carcassMaterialId ?? legacyMaterialId
-            ];
           return (
             <group
               key={cabinet.id}
@@ -475,33 +466,9 @@ function Scene(props: ModularSceneProps) {
                 if (drag.current?.pointerId === event.pointerId) finish(true);
               }}
             >
-              {cabinet.variantId &&
-              props.variantModels?.[cabinet.variantId]?.glbFile ? (
-                <GLBFurnitureMesh
-                  modelId={cabinet.variantId}
-                  preservePhysicalSize={
-                    props.variantModels[cabinet.variantId].physicalSize
-                  }
-                  basePath={`/api/models/files/${cabinet.variantId}`}
-                  glbFile={props.variantModels[cabinet.variantId].glbFile!}
-                  previewGlbFile={
-                    props.variantModels[cabinet.variantId].previewGlbFile ??
-                    undefined
-                  }
-                  w={cabinet.width / 1000}
-                  h={cabinet.height / 1000}
-                  d={cabinet.depth / 1000}
-                  frontMaterial={frontMaterial}
-                  frontColor={cabinet.color}
-                  carcassMaterial={carcassMaterial}
-                />
-              ) : (
-                <CabinetBody
-                  cabinet={cabinet}
-                  open={props.open}
-                  materialDefinitions={props.materialDefinitions}
-                />
-              )}
+              <KitchenCabinetGLB cabinet={cabinet} selected={selectedId === cabinet.id}
+                variant={cabinet.variantId ? props.variantModels?.[cabinet.variantId] : undefined}
+                open={Boolean(props.open && selectedId === cabinet.id)} />
               {(selectedId === cabinet.id || invalid.has(cabinet.id)) && (
                 <mesh
                   userData={{ exportExclude: true }}
@@ -521,7 +488,7 @@ function Scene(props: ModularSceneProps) {
                     depthWrite={false}
                   />
                   <Edges
-                    color={invalid.has(cabinet.id) ? "#d62828" : "#246847"}
+                    color={invalid.has(cabinet.id) ? "#d62828" : "#0078d4"}
                     linewidth={2}
                     raycast={() => {}}
                   />
@@ -544,16 +511,6 @@ function Scene(props: ModularSceneProps) {
             />
           </group>
         ))}
-        <KitchenTops
-          kitchen={generatedPartsKitchen}
-          materialDefinitions={props.materialDefinitions}
-          onBacksplashPointerDown={(event, id) => {
-            const panel = fitBacksplashes(generatedPartsKitchen).find(
-              (item) => item.id === id,
-            );
-            if (panel) start(event, panel);
-          }}
-        />
       </group>
     </>
   );

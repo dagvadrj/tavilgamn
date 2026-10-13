@@ -3,13 +3,13 @@
 import { useEffect, useRef } from "react";
 
 /** Mobile inspectors behave as dismissible dialogs; desktop inspectors stay persistent. */
-export function usePlannerPanel(open: boolean, onClose: () => void) {
+export function usePlannerPanel(open: boolean, onClose: () => void, maxWidth = 959) {
   const ref = useRef<HTMLElement>(null);
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const media = window.matchMedia("(max-width: 959px)");
+    const media = window.matchMedia(`(max-width: ${maxWidth}px)`);
     let release: (() => void) | undefined;
     const update = () => {
       release?.(); release = undefined;
@@ -40,6 +40,6 @@ export function usePlannerPanel(open: boolean, onClose: () => void) {
     };
     update(); media.addEventListener("change", update);
     return () => { media.removeEventListener("change", update); release?.(); };
-  }, [open]);
+  }, [open, maxWidth]);
   return ref;
 }

@@ -6,6 +6,8 @@ import { Plan } from "./PlannerPanels";
 import "./kitchen-space-usability.css";
 
 export function KitchenPlanWorkspace({
+  measurements: controlledMeasurements,
+  onMeasurementsChange,
   kitchen,
   selectedId,
   disabled,
@@ -18,6 +20,8 @@ export function KitchenPlanWorkspace({
   onDuplicate,
   onDelete,
 }: {
+  measurements?: boolean;
+  onMeasurementsChange?: (value: boolean) => void;
   kitchen: ModularKitchen;
   selectedId: string | null;
   disabled: boolean;
@@ -33,7 +37,13 @@ export function KitchenPlanWorkspace({
   const [zoom, setZoom] = useState(1);
   const [moving, setMoving] = useState(true);
   const [layer, setLayer] = useState<"all" | "base" | "wall">("all");
-  const [measurements, setMeasurements] = useState(true);
+  const [localMeasurements, setLocalMeasurements] = useState(true);
+  const measurements = controlledMeasurements ?? localMeasurements;
+  function toggleMeasurements() {
+    const next = !measurements;
+    setLocalMeasurements(next);
+    onMeasurementsChange?.(next);
+  }
   const drag = useRef<{
     id: string;
     pointer: number;
@@ -123,7 +133,7 @@ export function KitchenPlanWorkspace({
           <button type="button" aria-pressed={moving} disabled={disabled} onClick={() => setMoving(true)}><Move size={16}/> Зөөх</button>
         </div>
         <div role="group" aria-label="Шүүгээний давхарга">{([{ id: "base", label: "Доод" }, { id: "wall", label: "Дээд" }, { id: "all", label: "Бүгд" }] as const).map(option => <button type="button" key={option.id} aria-pressed={layer === option.id} onClick={() => { finish(true); setLayer(option.id); }}>{option.label}</button>)}</div>
-        <button type="button" aria-pressed={measurements} onClick={() => setMeasurements(value => !value)}><Ruler size={16}/> Хэмжээс</button>
+        <button type="button" aria-pressed={measurements} onClick={toggleMeasurements}><Ruler size={16}/> Хэмжээс</button>
       </div>
       <div className="kitchen-plan-scroll">
         <div

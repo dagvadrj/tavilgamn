@@ -2,9 +2,9 @@ import { MathUtils, MOUSE, PerspectiveCamera, Vector3 } from "three";
 
 export type CameraAction = "zoom-in" | "zoom-out" | "fit" | "top" | "front" |
   "rotate-left" | "rotate-right" | "pan-left" | "pan-right" | "pan-up" | "pan-down";
-export type CameraRequest = { id: number; action: CameraAction };
+export type CameraRequest = { id: number; action: CameraAction; targetId?: string };
 export interface CameraBounds {
-  width: number; depth: number; height: number; centerX: number; centerZ: number;
+  width: number; depth: number; height: number; centerX: number; centerZ: number; centerY?: number;
 }
 export interface NavigationControls {
   target: Vector3; update: () => void; minDistance?: number; maxDistance?: number;
@@ -57,7 +57,7 @@ export function navigateCamera(camera: PerspectiveCamera, controls: NavigationCo
     camera.position.copy(target).add(offset);
   } else {
     const top = plan || action === "top";
-    target.set(bounds.centerX, top ? 0 : bounds.height * .4, bounds.centerZ);
+    target.set(bounds.centerX, top ? 0 : bounds.centerY ?? bounds.height * .4, bounds.centerZ);
     camera.up.set(0, plan ? 0 : 1, plan ? -1 : 0);
     const halfFov = MathUtils.degToRad(camera.fov / 2);
     const horizontalFov = Math.atan(Math.tan(halfFov) * Math.max(.1, aspect));
