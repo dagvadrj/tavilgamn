@@ -308,13 +308,12 @@ export const useDesigns = create<DesignState>()(
           future: future.slice(1),
         });
       },
-      createNew: (size, name, roomType, dimensions) =>
-        set({
-          current: blankDesign(size, name, roomType, dimensions),
-          past: [],
-          future: [],
-          transaction: null,
-        }),
+      createNew: (size, name, roomType, dimensions) => {
+        const next = blankDesign(size, name, roomType, dimensions);
+        const { current, designs } = get();
+        const previous = current ? reassignFurnitureRooms(current) : null;
+        set({ current: next, designs: previous ? [...designs.filter(design => design.id !== previous.id), previous] : designs, past: [], future: [], transaction: null });
+      },
       addRoom: (type, options) => {
         get().endEdit();
         const current = get().current;

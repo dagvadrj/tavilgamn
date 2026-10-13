@@ -5,6 +5,7 @@ import type { Product } from "@/lib/types";
 import { EXTRA_CATEGORIES, type KitchenExtra } from "@/lib/kitchenExtras";
 import { DimensionInput } from "./PlannerPanels";
 export function ExtrasPanel({
+  initialTab = "dining",
   products,
   selected,
   room,
@@ -16,6 +17,7 @@ export function ExtrasPanel({
   onDelete,
   onDuplicate,
 }: {
+  initialTab?: "dining" | "extra";
   products: Product[];
   selected?: KitchenExtra;
   room: { width: number; depth: number };
@@ -27,7 +29,7 @@ export function ExtrasPanel({
   onDelete: () => void;
   onDuplicate: () => void;
 }) {
-  const [tab, setTab] = useState<"dining" | "extra">("dining"),
+  const [tab, setTab] = useState<"dining" | "extra">(initialTab),
     [query, setQuery] = useState("");
   const options = products.filter(
     (p) =>

@@ -140,7 +140,10 @@ function Front({
   const [x, y, z] = front.position.map(
     (value, i) => (value - offset[i]) / 1000,
   );
-  const handleY = y + front.height / 2000 - 0.045;
+  const handleInset = Math.min(0.045, front.height / 4000);
+  const handleY = cabinet.type === "wall" && front.kind === "door-front"
+    ? y - front.height / 2000 + handleInset
+    : y + front.height / 2000 - handleInset;
   return (
     <group
       name={`Component-${front.kind}-${cabinet.id}`}

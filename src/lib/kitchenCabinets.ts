@@ -24,6 +24,8 @@ export interface ModularCabinet {
   id: string;
   /** Optional furniture_models-backed kitchen variant; dimensions remain authored here in mm. */
   variantId?: string;
+  /** Chosen GLB option IDs, keyed by the catalog assembly slot ID. Empty means removed. */
+  partSelections?: Record<string, string>;
   type: CabinetType;
   width: CabinetWidth;
   height: number;

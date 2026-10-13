@@ -223,7 +223,7 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack }: { roomDimens
       setError("Сонголтыг хадгалж чадсангүй. Хөтчийн хадгалах эрхийг шалгаад дахин оролдоорой.");
       return;
     }
-    router.replace(`/kitchen?editor=1&space=1&draft=${draftId}`);
+    router.push(`/kitchen?editor=1&space=1&draft=${draftId}`);
   }
 
   return (
@@ -233,7 +233,7 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack }: { roomDimens
           type="button"
           onClick={() => (step > 0 ? setStep(step - 1) : onBack ? onBack() : router.push("/"))}
         >
-          <ArrowLeft size={19} /> {step > 0 ? "Буцах" : onBack ? "Өрөөний хэмжээ" : "Дэлгүүр"}
+          <ArrowLeft size={19} /> {step > 0 ? "Буцах" : onBack ? "Өрөөний сонголт" : "Дэлгүүр"}
         </button>
         <strong>
           <CookingPot size={21} /> tavilga.mn kitchen

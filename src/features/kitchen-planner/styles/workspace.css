@@ -663,6 +663,32 @@
   border-radius: 9px;
 }
 
+.kp-review-head {
+  flex-wrap: wrap;
+}
+
+.kp-review-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.kp-review-navigation button,
+.kp-review-navigation a {
+  width: auto;
+  min-height: 44px;
+  height: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #d7ddd8;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
 .kp-review-body {
   flex: 1;
   min-height: 0;

@@ -1,3 +1,4 @@
+import { KitchenAssemblyInputError, parseKitchenGlbAssembly, type KitchenPartKind } from "./kitchenGlbAssembly";
 export const KITCHEN_OPENINGS = ["doors", "drawers", "open", "sink", "hob", "oven", "hood", "refrigerator"] as const;
 export type KitchenOpening = (typeof KITCHEN_OPENINGS)[number];
 
@@ -35,6 +36,10 @@ export type KitchenCatalogModule = {
 };
 
 export type KitchenModelCandidate = {
+  glbFile?: string | null;
+  thumbnailUrl?: string | null;
+  partKind?: KitchenPartKind | null;
+  nodeNames?: string[];
   archivedAt?: string | null;
   id: string;
   productId: string;
@@ -56,6 +61,7 @@ export type SimilarKitchenVariant = {
 
 type CabinetMatch = {
   variantId?: string;
+  partSelections?: Record<string, string>;
   type: "base" | "wall" | "tall";
   width: number;
   height: number;
@@ -114,8 +120,8 @@ export function applyKitchenCatalogVariants<T extends { cabinets: CabinetMatch[]
     const preferred = preferredKitchenVariant(modules, cabinet);
     if (preferred?.furnitureModelId === cabinet.variantId) return cabinet;
     changed = true;
-    if (preferred) return { ...cabinet, variantId: preferred.furnitureModelId };
-    const { variantId: _variantId, ...withoutVariant } = cabinet;
+    const { variantId: _variantId, partSelections: _selections, ...withoutVariant } = cabinet;
+    if (preferred) return { ...withoutVariant, variantId: preferred.furnitureModelId };
     return withoutVariant;
   });
   return changed ? { ...kitchen, cabinets } : kitchen;
@@ -141,8 +147,13 @@ export function parseKitchenVariantInput(value: unknown) {
   if (![doorCount, drawerCount, sortOrder].every(Number.isSafeInteger) || doorCount < 0 || doorCount > 2 || drawerCount < 0 || drawerCount > 4 || sortOrder < 0 || sortOrder > 10000) {
     throw new KitchenModuleInputError("Хаалга, шургуулга эсвэл эрэмбийн утга буруу байна.");
   }
+  const configuration: Record<string, unknown> = designCode ? { designCode } : {};
+  if (raw.assembly !== undefined && raw.assembly !== null) {
+    try { configuration.assembly = parseKitchenGlbAssembly(raw.assembly); }
+    catch (error) { if (error instanceof KitchenAssemblyInputError) throw new KitchenModuleInputError(error.message); throw error; }
+  }
   return { modelId, moduleId, payload: { variantCode, opening, doorCount, drawerCount,
-    isDefault: raw.isDefault === true, sortOrder, configuration: designCode ? { designCode } : {} } };
+    isDefault: raw.isDefault === true, sortOrder, configuration } };
 }
 
 export function parseVariantState(value: unknown) {

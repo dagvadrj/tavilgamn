@@ -897,13 +897,9 @@ function DraggablePiece({
           deferUntilVisible
         />
       ) : piece.details ? (
-        <mesh position={[0, dims.h / 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[dims.w, dims.h, dims.d]} />
-          <meshStandardMaterial
-            color={piece.color.startsWith("#") ? piece.color : "#b6a48e"}
-            roughness={0.8}
-          />
-        </mesh>
+        <Html center position={[0, dims.h / 2, 0]} zIndexRange={[8, 0]}>
+          <span className="whitespace-nowrap rounded border bg-white px-3 py-2 text-xs">3D загвар холбогдоогүй</span>
+        </Html>
       ) : null}
       {selected && (
         <mesh position={[0, dims.h / 2, 0]}>

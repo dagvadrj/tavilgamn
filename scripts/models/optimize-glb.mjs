@@ -444,7 +444,7 @@ async function main() {
         };
 
         await transform("dedup");
-        await transform("prune");
+        await transform("prune", ["--keep-leaves", "true"]);
 
         if (variant === "preview" && !json.scenes?.[json.scene ?? 0]?.extras?.pipelineBounds) {
           // Legacy deliveries have no authored bounds. Capture their decoded
@@ -474,7 +474,7 @@ async function main() {
             "--lock-border",
             "true",
           ]);
-          await transform("prune");
+          await transform("prune", ["--keep-leaves", "true"]);
         }
 
         const texturesAlreadyKtx2 = (json.images ?? []).every(

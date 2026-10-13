@@ -1,0 +1,634 @@
+.kitchen-selection-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  color: #252525;
+  background: #fff;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.kitchen-selection-panel button,
+.kitchen-selection-panel input {
+  font: inherit;
+}
+
+.kitchen-selection-panel button {
+  cursor: pointer;
+}
+
+.kitchen-selection-panel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.kitchen-selection-panel button:focus-visible,
+.kitchen-selection-panel input:focus-visible {
+  outline: 2px solid #175ca5;
+  outline-offset: 3px;
+}
+
+.ksp-header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+  min-height: 54px;
+  padding: 8px 12px 8px 18px;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.ksp-controller {
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.ksp-controller-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  font-size: 11px;
+}
+
+.ksp-header h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  outline: none;
+}
+
+.ksp-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: #383838;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+}
+
+.ksp-icon-button:hover {
+  background: #f2f2f2;
+}
+
+.ksp-product {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 17px 17px 12px;
+}
+
+.ksp-product > div {
+  min-width: 0;
+}
+
+.ksp-product-code {
+  display: block;
+  overflow: hidden;
+  margin-bottom: 4px;
+  color: #777;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ksp-product h3 {
+  margin: 0 0 5px;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.ksp-product p {
+  margin: 0;
+  color: #737373;
+  font-size: 10px;
+}
+
+.ksp-product p span {
+  margin-left: 5px;
+  color: #929292;
+  font-size: 8px;
+}
+
+.ksp-image {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: #a3a3a3;
+  background: #f6f6f6;
+}
+
+.ksp-image img {
+  padding: 5px;
+  object-fit: contain;
+}
+
+.ksp-image--small {
+  width: 46px;
+  height: 46px;
+  border-radius: 3px;
+}
+
+.ksp-actions {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  flex-shrink: 0;
+  gap: 1px;
+  padding: 5px 9px 14px;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.ksp-action {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  min-height: 50px;
+  padding: 5px 0;
+  color: #404040;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+}
+
+.ksp-action span {
+  font-size: 8px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.ksp-action:hover,
+.ksp-action[aria-pressed="true"] {
+  color: #175ca5;
+  background: #edf3fa;
+}
+
+.ksp-action--danger:hover {
+  color: #b94239;
+  background: #fff0ec;
+}
+
+.ksp-action-hint {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 8px 17px;
+  color: #898989;
+  background: #fafafa;
+  font-size: 10px;
+}
+
+.ksp-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 16px 22px;
+  overscroll-behavior: contain;
+  scrollbar-color: #c9c9c9 transparent;
+  scrollbar-width: thin;
+}
+
+.ksp-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 19px 0 12px;
+}
+
+.ksp-section-heading h3,
+.ksp-dimensions h3 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.ksp-section-heading > span {
+  color: #888;
+  font-size: 10px;
+}
+
+.ksp-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ksp-part-row {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid #e4e4e4;
+  border-radius: 4px;
+}
+
+.ksp-option {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 62px;
+  padding: 8px;
+  color: inherit;
+  text-align: left;
+  background: #fff;
+  border: 0;
+}
+
+.ksp-option:hover {
+  background: #f8f8f8;
+}
+
+.ksp-option > svg {
+  flex-shrink: 0;
+  color: #888;
+}
+
+.ksp-option .ksp-image--small {
+  width: 40px;
+  height: 40px;
+}
+
+.ksp-option--whole {
+  margin-bottom: 5px;
+  border: 1px solid #dfdfdf;
+  border-radius: 4px;
+}
+
+.ksp-option-icon {
+  display: grid;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  color: #505b67;
+  background: #f0f3f7;
+  border-radius: 3px;
+  place-items: center;
+}
+
+.ksp-option-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ksp-option-info strong {
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.ksp-option-info > span,
+.ksp-option-info small {
+  overflow: hidden;
+  color: #777;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ksp-part-remove {
+  flex-shrink: 0;
+  width: 30px;
+  padding: 0;
+  color: #969696;
+  background: #fff;
+  border: 0;
+}
+
+.ksp-part-remove:hover {
+  color: #b94239;
+  background: #fff4f0;
+}
+
+.ksp-note {
+  margin: 10px 0 18px;
+  color: #7c7c7c;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.ksp-primary,
+.ksp-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  margin-top: 18px;
+  padding: 10px 12px;
+  color: #fff;
+  background: #175ca5;
+  border: 1px solid #175ca5;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ksp-primary:hover {
+  background: #104984;
+}
+
+.ksp-secondary {
+  color: #424242;
+  background: #fff;
+  border-color: #dadada;
+}
+
+.ksp-secondary:hover {
+  background: #f4f4f4;
+}
+
+.ksp-dimensions {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #eaeaea;
+}
+
+.ksp-dimensions dl {
+  display: flex;
+  justify-content: space-between;
+  margin: 13px 0 0;
+}
+
+.ksp-dimensions dt {
+  margin-bottom: 5px;
+  color: #888;
+  font-size: 10px;
+}
+
+.ksp-dimensions dd {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.ksp-choice-intro {
+  margin: 17px 0 15px;
+}
+
+.ksp-choice-intro p {
+  margin: 0 0 5px;
+  color: #414141;
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.ksp-choice-intro small {
+  color: #888;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.ksp-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 0 11px;
+  color: #777;
+  border: 1px solid #bfc3c8;
+  border-radius: 5px;
+}
+
+.ksp-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 0;
+  color: #333;
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.ksp-search input::placeholder {
+  color: #969696;
+  font-size: 10px;
+}
+
+.ksp-search:focus-within {
+  border-color: #175ca5;
+  box-shadow: 0 0 0 1px #175ca5;
+}
+
+.ksp-search button {
+  display: inline-flex;
+  padding: 2px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+}
+
+.ksp-result-count {
+  padding: 13px 0;
+  color: #8d8d8d;
+  font-size: 10px;
+}
+
+.ksp-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ksp-choice {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  width: 100%;
+  min-height: 158px;
+  padding: 15px 12px;
+  color: inherit;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e7e7e7;
+  border-radius: 3px;
+}
+
+.ksp-choice:hover {
+  border-color: #8da8c5;
+}
+
+.ksp-choice[aria-pressed="true"] {
+  background: #fafcff;
+  border-color: #175ca5;
+  box-shadow: inset 0 0 0 1px #175ca5;
+}
+
+.ksp-image--large {
+  width: 112px;
+  height: 126px;
+  background: #f6f6f6;
+}
+
+.ksp-choice-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 0 18px;
+}
+
+.ksp-choice-info strong {
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.ksp-choice-info > span {
+  color: #6d6d6d;
+  font-size: 10px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.ksp-choice-info small {
+  color: #888;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.ksp-choice-info .ksp-selected-label {
+  color: #175ca5;
+  font-weight: 600;
+}
+
+.ksp-check {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  color: #fff;
+  background: #175ca5;
+  border-radius: 50%;
+  place-items: center;
+}
+
+.ksp-none-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: #626262;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 3px;
+}
+
+.ksp-none-choice[aria-pressed="true"] {
+  border-color: #175ca5;
+}
+
+.ksp-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+  padding: 35px 10px;
+  color: #8d8d8d;
+  text-align: center;
+}
+
+.ksp-empty p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.ksp-empty button {
+  padding: 8px 10px;
+  color: #175ca5;
+  background: transparent;
+  border: 0;
+  text-decoration: underline;
+}
+
+.ksp-position-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px 12px;
+}
+
+.ksp-position-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  color: #717171;
+  font-size: 10px;
+}
+
+.ksp-input-unit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid #dedede;
+  border-radius: 4px;
+}
+
+.ksp-input-unit input {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 0;
+  color: #373737;
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.ksp-input-unit:focus-within {
+  border-color: #175ca5;
+}
+
+.ksp-input-unit > span {
+  flex-shrink: 0;
+  color: #909090;
+  font-size: 10px;
+}
+
+@media (max-width: 700px) {
+  .ksp-header {
+    min-height: 48px;
+  }
+  .ksp-product {
+    padding-top: 11px;
+  }
+  .ksp-action {
+    min-height: 46px;
+  }
+  .ksp-choice {
+    min-height: 140px;
+  }
+  .ksp-image--large {
+    width: 100px;
+    height: 112px;
+  }
+}

@@ -4,6 +4,8 @@ import { KitchenModuleInputError, parseKitchenModelDelete, parseKitchenVariantIn
 import { readKitchenModelCandidates, readKitchenModuleCatalog } from "@/lib/kitchenModuleCatalogServer";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
+import { getKitchenGlbAssembly, kitchenPartKind } from "@/lib/kitchenGlbAssembly";
+import { toJson } from "@/lib/supabase/json";
 
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "private, no-store" };
@@ -42,8 +44,33 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireAdmin(request); if (auth.error) return auth.error;
     const input = parseKitchenVariantInput(await request.json().catch(() => null));
-    const { error } = await getSupabaseAdmin().rpc("save_kitchen_module_variant", {
-      p_actor: auth.userId, p_model: input.modelId, p_module: input.moduleId, p_payload: input.payload,
+    const db = getSupabaseAdmin();
+    const assembly = getKitchenGlbAssembly(input.payload.configuration);
+    if (assembly?.slots.length) {
+      const ids = [...new Set(assembly.slots.flatMap(slot => slot.options.map(option => option.modelId)))];
+      if (ids.includes(input.modelId)) throw new KitchenModuleInputError("Үндсэн шүүгээг өөрийнх нь эд ангиар сонгохгүй.");
+      const { data: parts, error: partsError } = await db.from("furniture_models").select("id,glb_path,processing_status,archived_at,specifications,dimensions_w,dimensions_h,dimensions_d,glb_validation").in("id", [...ids, input.modelId]);
+      if (partsError) throw partsError;
+      for (const slot of assembly.slots) {
+        if (!slot.anchorNode) continue;
+        const parent = assembly.slots.find(parent => parent.id === slot.parentSlotId);
+        const parents = parent ? parent.options.map(option => option.modelId) : [input.modelId];
+        for (const parentId of parents) {
+          const report = parts?.find(part => part.id === parentId)?.glb_validation;
+          if (!report || typeof report !== "object" || Array.isArray(report) || !Array.isArray(report.nodeNames) || !report.nodeNames.includes(slot.anchorNode)) throw new KitchenModuleInputError(`${slot.label}: ${slot.anchorNode} холбох цэг parent GLB-д олдсонгүй. GLB-г нэртэй anchor-тай дахин оруулна уу эсвэл мм байрлал ашиглана уу.`);
+        }
+        if (slot.hideNodes.includes(slot.anchorNode)) throw new KitchenModuleInputError(`${slot.label}: бэхэлгээний цэгээ нуухгүй байна.`);
+      }
+      for (const slot of assembly.slots) for (const option of slot.options) {
+        const part = parts?.find(part => part.id === option.modelId);
+        if (!part || part.archived_at || part.processing_status !== "ready" || !part.glb_path) throw new KitchenModuleInputError(`${slot.label}: бэлэн, идэвхтэй GLB сонгоно уу.`);
+        const kind = kitchenPartKind(part.specifications);
+        if (kind && kind !== slot.kind) throw new KitchenModuleInputError(`${slot.label}: эд ангийн төрөл таарахгүй байна.`);
+        if (option.sizeMm && [Math.abs(option.sizeMm.width - Number(part.dimensions_w) * 1000), Math.abs(option.sizeMm.height - Number(part.dimensions_h) * 1000), Math.abs(option.sizeMm.depth - Number(part.dimensions_d) * 1000)].some(delta => delta > 5)) throw new KitchenModuleInputError(`${slot.label}: GLB-ийн бодит хэмжээ тохирохгүй байна.`);
+      }
+    }
+    const { error } = await db.rpc("save_kitchen_module_variant", {
+      p_actor: auth.userId, p_model: input.modelId, p_module: input.moduleId, p_payload: toJson(input.payload),
     });
     if (error) throw error;
     return NextResponse.json({ ok: true }, { status: 201, headers });

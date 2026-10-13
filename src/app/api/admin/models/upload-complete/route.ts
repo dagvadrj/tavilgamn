@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { toJson } from "@/lib/supabase/json";
 import { GLB_STANDARD, GlbStandardError, inspectGlb, validateCabinetGlb } from "@/lib/glbStandard";
+import { kitchenPartKind } from "@/lib/kitchenGlbAssembly";
 
 export const runtime = "nodejs";
 export const maxDuration = 180;
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     if (!/^[0-9a-f-]{36}$/i.test(modelId) || !sourcePath.startsWith(prefix) || !/^[0-9a-f-]{36}\.glb$/i.test(sourcePath.slice(prefix.length))) throw new GlbStandardError("Source GLB зам буруу байна.");
     const db = getSupabaseAdmin();
     const [{ data: model, error: modelError }, { data: intent, error: intentError }] = await Promise.all([
-      db.from("furniture_models").select("id,category,dimensions_w,dimensions_h,dimensions_d,archived_at,cabinet_module_id").eq("id", modelId).maybeSingle(),
+      db.from("furniture_models").select("id,category,dimensions_w,dimensions_h,dimensions_d,archived_at,cabinet_module_id,specifications").eq("id", modelId).maybeSingle(),
       db.from("model_assets").select("id,byte_size,state,version_id").eq("model_id", modelId).eq("storage_path", sourcePath).eq("role", "source").eq("created_by", auth.userId).maybeSingle(),
     ]);
     if (modelError) throw modelError; if (intentError) throw intentError;
@@ -40,9 +41,12 @@ export async function POST(request: NextRequest) {
     const projection = body.frontProjectionMm ?? 0;
     if (typeof projection !== "number" || !Number.isFinite(projection) || projection < 0 || projection > 100 || (projection > 0 && model.category !== "kitchen-cabinet")) throw new GlbStandardError("Бариулын projection буруу байна.");
     report.frontProjectionMm = projection;
-    const errors = validateCabinetGlb(report, { widthMm: Number(model.dimensions_w) * 1000, heightMm: Number(model.dimensions_h) * 1000, depthMm: Number(model.dimensions_d) * 1000 });
+    const partKind = kitchenPartKind(model.specifications);
+    const authoredNodes = model.specifications && typeof model.specifications === "object" && !Array.isArray(model.specifications) && model.specifications.assembly === "authored-nodes";
+    report.assetRole = partKind ? "kitchen-part" : authoredNodes ? "kitchen-assembly" : "furniture";
+    const errors = validateCabinetGlb(report, { widthMm: Number(model.dimensions_w) * 1000, heightMm: Number(model.dimensions_h) * 1000, depthMm: Number(model.dimensions_d) * 1000 }, report.assetRole);
     if (errors.length) throw new GlbStandardError(errors.join(" "));
-    if (model.category === "kitchen-cabinet" && !model.cabinet_module_id) throw new GlbStandardError("Kitchen model-ийн canonical module-ийг эхлээд сонгоно уу.");
+    if (model.category === "kitchen-cabinet" && !partKind && !model.cabinet_module_id) throw new GlbStandardError("Kitchen model-ийн canonical module-ийг эхлээд сонгоно уу.");
     const sha256 = createHash("sha256").update(bytes).digest("hex");
     const { data: jobId, error } = await db.rpc("queue_model_asset", {
       p_actor: auth.userId, p_model: modelId, p_path: sourcePath, p_sha256: sha256,

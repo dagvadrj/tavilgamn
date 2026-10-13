@@ -77,7 +77,7 @@ test("optional appliances can be omitted and the kitchen route starts directly i
     "src/components/ModularKitchenPlanner.tsx",
     "utf8",
   );
-  assert.doesNotMatch(route, /KitchenSuggestionWizard/);
+  assert.match(route, /params.get\("setup"\) === "1"/);
   assert.match(route, /<ModularKitchenPlanner/);
   assert.match(editor, /kp-shell/);
   assert.match(editor, /onDeselect/);

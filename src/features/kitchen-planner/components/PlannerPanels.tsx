@@ -1,18 +1,8 @@
 "use client";
-import { useId } from "react";
+import { useId, useRef, type PointerEvent } from "react";
 import "./kitchen-plan.css";
-import {
-  cabinetAxes,
-  cabinetCorners,
-  placementIssues,
-} from "@/lib/kitchenPlacement";
-import {
-  cabinetLabel,
-  type KitchenRoom,
-  type ModularKitchen,
-} from "@/lib/kitchenCabinets";
-import { roomOutline, roomOutlinePath } from "@/lib/kitchenRoomOutline";
-import { KitchenRoomOutlineEditor } from "./KitchenRoomOutlineEditor";
+import { cabinetAxes, cabinetCorners, placementIssues } from "@/lib/kitchenPlacement";
+import { cabinetLabel, type ModularKitchen, type CabinetPose } from "@/lib/kitchenCabinets";
 
 export function DimensionInput({
   label,
@@ -69,8 +59,11 @@ export function Plan({
   readOnly = false,
   unit = "мм",
   showSpaceItems = true,
-  onRoomChange,
-  disabled = false,
+  onStart,
+  onMove,
+  onEnd,
+  layer = "all",
+  showMeasurements = true,
 }: {
   kitchen: ModularKitchen;
   selectedId: string | null;
@@ -78,9 +71,27 @@ export function Plan({
   readOnly?: boolean;
   unit?: "мм" | "см";
   showSpaceItems?: boolean;
-  onRoomChange?: (room: KitchenRoom) => void;
-  disabled?: boolean;
+  onStart?: (id: string) => void;
+  onMove?: (id: string, pose: CabinetPose) => void;
+  onEnd?: (cancel?: boolean) => void;
+  layer?: "all" | "base" | "wall";
+  showMeasurements?: boolean;
 }) {
+  const drag = useRef<{ id: string; pointerId: number; x: number; z: number; pose: CabinetPose } | null>(null);
+  function point(event: PointerEvent<SVGElement>) {
+    const svg = event.currentTarget instanceof SVGSVGElement ? event.currentTarget : event.currentTarget.ownerSVGElement;
+    const matrix = svg?.getScreenCTM();
+    return matrix ? new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse()) : null;
+  }
+  const selected = [...kitchen.cabinets, ...(kitchen.extras ?? [])].find(item => item.id === selectedId);
+  const corners = selected ? cabinetCorners(selected) : [];
+  const minX = Math.min(...corners.map(p => p.x)), maxX = Math.max(...corners.map(p => p.x));
+  const minZ = Math.min(...corners.map(p => p.z)), maxZ = Math.max(...corners.map(p => p.z));
+  const dimension = (x1: number, z1: number, x2: number, z2: number, label: string) => Math.hypot(x2-x1, z2-z1) < 1 ? null : <g pointerEvents="none">
+    <line x1={x1} y1={z1} x2={x2} y2={z2} stroke="#246847" strokeWidth={8}/>
+    <text x={(x1+x2)/2} y={(z1+z2)/2-25} textAnchor="middle" fontSize={65} fill="#164b32" stroke="#fff" strokeWidth={18} paintOrder="stroke">{label}</text>
+  </g>;
+  const format = (value: number) => `${Math.round(value / unitScale * 10) / 10} ${unit}`;
   const unitScale = unit === "см" ? 10 : 1;
   const floorPattern = useId().replace(/:/g, "");
   const errors = new Set(
@@ -88,7 +99,7 @@ export function Plan({
       .filter((issue) => issue.severity === "error")
       .flatMap((issue) => issue.ids),
   );
-  const cabinets = [...kitchen.cabinets].sort(
+  const cabinets = kitchen.cabinets.filter(cabinet => layer === "all" || (layer === "wall" ? cabinet.type === "wall" : cabinet.type !== "wall")).sort(
     (a, b) => Number(a.type === "wall") - Number(b.type === "wall"),
   );
   return (
@@ -97,6 +108,14 @@ export function Plan({
       viewBox={`-200 -200 ${kitchen.room.width + 450} ${kitchen.room.depth + 400}`}
       role="group"
       aria-label="Модуль шүүгээний дээрээс харах зураг"
+      style={{ touchAction: onMove ? "none" : undefined }}
+      onPointerMove={event => {
+        const active = drag.current, p = point(event);
+        if (active && active.pointerId === event.pointerId && p) onMove?.(active.id, { ...active.pose, x: active.pose.x + p.x - active.x, z: active.pose.z + p.y - active.z });
+      }}
+      onPointerUp={event => { if (drag.current?.pointerId === event.pointerId) { drag.current = null; onEnd?.(); } }}
+      onPointerCancel={() => { if (drag.current) { drag.current = null; onEnd?.(true); } }}
+      onLostPointerCapture={() => { if (drag.current) { drag.current = null; onEnd?.(true); } }}
     >
       <defs>
         <pattern
@@ -224,16 +243,21 @@ export function Plan({
               aria-label={`${cabinetLabel(cabinet)}, ${cabinet.width / unitScale} ${unit}`}
               aria-pressed={readOnly ? undefined : selectedId === cabinet.id}
               onClick={readOnly ? undefined : () => onSelect(cabinet.id)}
-              onKeyDown={
-                readOnly
-                  ? undefined
-                  : (event) => {
-                      if (["Enter", " "].includes(event.key)) {
-                        event.preventDefault();
-                        onSelect(cabinet.id);
-                      }
-                    }
-              }
+              onPointerDown={readOnly || !onMove ? undefined : event => {
+                if (event.button !== 0) return;
+                const p = point(event);
+                if (!p) return;
+                event.preventDefault();
+                event.currentTarget.setPointerCapture(event.pointerId);
+                drag.current = { id: cabinet.id, pointerId: event.pointerId, x: p.x, z: p.y, pose: { ...cabinet.position } };
+                onSelect(cabinet.id); onStart?.(cabinet.id);
+              }}
+              onKeyDown={readOnly ? undefined : (event) => {
+                if (["Enter", " "].includes(event.key)) {
+                  event.preventDefault();
+                  onSelect(cabinet.id);
+                }
+              }}
             />
             {(cabinet.opening === "sink" || cabinet.opening === "hob") && (
               <g
@@ -295,55 +319,33 @@ export function Plan({
               pointerEvents="none"
               fontSize={80}
             >
-              {cabinet.width / unitScale}
+              {cabinet.width / unitScale} × {cabinet.depth / unitScale}
             </text>
           </g>
         );
       })}
-      {(kitchen.extras ?? []).map((extra) => (
-        <g
-          key={extra.id}
-          data-piece-id={extra.id}
-          className={`km-plan-cabinet ${selectedId === extra.id ? "is-selected" : ""}`}
-        >
-          <polygon
-            points={cabinetCorners(extra)
-              .map((p) => `${p.x},${p.z}`)
-              .join(" ")}
-            role={readOnly ? undefined : "button"}
-            tabIndex={readOnly ? undefined : 0}
-            aria-label={`${extra.name}, ${extra.width / unitScale} ${unit}`}
-            aria-pressed={readOnly ? undefined : selectedId === extra.id}
-            onClick={readOnly ? undefined : () => onSelect(extra.id)}
-            onKeyDown={
-              readOnly
-                ? undefined
-                : (e) => {
-                    if (["Enter", " "].includes(e.key)) {
-                      e.preventDefault();
-                      onSelect(extra.id);
-                    }
-                  }
-            }
-          />
-          <text
-            x={extra.position.x}
-            y={extra.position.z}
-            textAnchor="middle"
-            fontSize={70}
-            pointerEvents="none"
-          >
-            {extra.width / unitScale}
-          </text>
-        </g>
-      ))}
-      {!readOnly && onRoomChange && (
-        <KitchenRoomOutlineEditor
-          room={kitchen.room}
-          disabled={disabled}
-          onChange={onRoomChange}
-        />
-      )}
+      {(kitchen.extras ?? []).map(extra=><g key={extra.id} data-piece-id={extra.id} className={`km-plan-cabinet ${selectedId===extra.id ? "is-selected" : ""}`}>
+        <polygon points={cabinetCorners(extra).map(p=>`${p.x},${p.z}`).join(" ")} role={readOnly ? undefined : "button"} tabIndex={readOnly ? undefined : 0}
+          aria-label={`${extra.name}, ${extra.width / unitScale} ${unit}`} aria-pressed={readOnly ? undefined : selectedId===extra.id} onClick={readOnly ? undefined : ()=>onSelect(extra.id)}
+          onPointerDown={readOnly || !onMove ? undefined : event => {
+            if (event.button !== 0) return;
+            const p = point(event);
+            if (!p) return;
+            event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId);
+            drag.current = { id: extra.id, pointerId: event.pointerId, x: p.x, z: p.y, pose: { ...extra.position } };
+            onSelect(extra.id); onStart?.(extra.id);
+          }}
+          onKeyDown={readOnly ? undefined : e=>{if(["Enter"," "].includes(e.key)){e.preventDefault();onSelect(extra.id);}}}/>
+        <text x={extra.position.x} y={extra.position.z} textAnchor="middle" fontSize={70} pointerEvents="none">{extra.width / unitScale} × {extra.depth / unitScale}</text>
+      </g>)}
+      {showMeasurements && selected && (layer === "all" || cabinets.some(cabinet => cabinet.id === selectedId) || kitchen.extras?.some(extra => extra.id === selectedId)) && <g aria-label="Сонгосон тавилгын хэмжээс ба хананаас зай">
+        {dimension(minX, maxZ + 90, maxX, maxZ + 90, format(maxX-minX))}
+        {dimension(maxX + 90, minZ, maxX + 90, maxZ, format(maxZ-minZ))}
+        {dimension(0, (minZ+maxZ)/2, minX, (minZ+maxZ)/2, format(minX))}
+        {dimension(maxX, (minZ+maxZ)/2, kitchen.room.width, (minZ+maxZ)/2, format(kitchen.room.width-maxX))}
+        {dimension((minX+maxX)/2, 0, (minX+maxX)/2, minZ, format(minZ))}
+        {dimension((minX+maxX)/2, maxZ, (minX+maxX)/2, kitchen.room.depth, format(kitchen.room.depth-maxZ))}
+      </g>}
     </svg>
   );
 }

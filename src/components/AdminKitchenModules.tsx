@@ -17,6 +17,8 @@ import { authFetch } from "@/lib/authFetch";
 import dynamic from "next/dynamic";
 import type { GlbPreviewResult } from "./GlbUploadPreview";
 import { cabinetVariantCode } from "@/lib/cabinetCodes";
+import AdminKitchenAssemblyEditor, { PART_LABELS } from "./AdminKitchenAssemblyEditor";
+import { getKitchenGlbAssembly, type KitchenGlbAssembly, type KitchenPartKind } from "@/lib/kitchenGlbAssembly";
 const GlbUploadPreview = dynamic(() => import("./GlbUploadPreview"), { ssr: false });
 import {
   type KitchenCatalogModule,
@@ -192,10 +194,14 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   const [doorCount, setDoorCount] = useDraftState(draftScope, "doorCount", 1);
   const [drawerCount, setDrawerCount] = useDraftState(draftScope, "drawerCount", 0);
   const [isDefault, setIsDefault] = useDraftState(draftScope, "isDefault", false);
+  const [assembly, setAssembly] = useDraftState<KitchenGlbAssembly | null>(draftScope, "assembly", null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploadName, setUploadName] = useDraftState(uploadScope, "uploadName", "");
   const [uploadModuleId, setUploadModuleId] = useDraftState(uploadScope, "uploadModuleId", "");
+  const [uploadPartKind, setUploadPartKind] = useDraftState<KitchenPartKind | "">(uploadScope, "uploadPartKind", "");
+  const [authoredNodes, setAuthoredNodes] = useDraftState(uploadScope, "authoredNodes", false);
+  const [partSize, setPartSize] = useDraftState(uploadScope, "partSize", { widthMm: 300, heightMm: 740, depthMm: 18 });
   const [uploadGlb, setUploadGlb] = useDraftState<File | null>(uploadScope, "uploadGlb", null);
   const [preview, setPreview] = useState<GlbPreviewResult | null>(null);
   const [uploadThumbnail, setUploadThumbnail] = useDraftState<File | null>(uploadScope, "uploadThumbnail", null);
@@ -248,6 +254,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   );
   const selectedModule = modules.find((module) => module.id === moduleId);
   const uploadModule = modules.find((module) => module.id === uploadModuleId);
+  const uploadSize = uploadPartKind ? partSize : { widthMm: uploadModule?.widthMm ?? 0, heightMm: uploadModule?.heightMm ?? 0, depthMm: uploadModule?.depthMm ?? 0 };
   const availablePresets = useMemo(
     () => presetsFor(selectedModule),
     [selectedModule],
@@ -293,7 +300,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     if (uploading || uploadStatus.loading) return;
     setUploadError(null);
     setUploadSuccess(null);
-    if (!uploadModule || !uploadGlb || !uploadName.trim()) {
+    if ((!uploadPartKind && !uploadModule) || !uploadGlb || !uploadName.trim()) {
       setUploadError("Загварын нэр, module болон GLB файлыг бүрэн сонгоно уу.");
       return;
     }
@@ -324,14 +331,16 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       const form = new FormData();
       form.set("name", uploadName.trim());
       form.set("category", "kitchen-cabinet");
-      form.set("cabinetModuleId", uploadModule.id);
-      form.set("description", `${uploadModule.code} kitchen module GLB`);
+      form.set("cabinetModuleId", uploadPartKind ? "" : uploadModule!.id);
+      form.set("kitchenPartKind", uploadPartKind);
+      form.set("authoredNodes", String(authoredNodes));
+      form.set("description", uploadPartKind ? `${PART_LABELS[uploadPartKind]} GLB` : `${uploadModule!.code} kitchen module GLB`);
       form.set("basePrice", "0");
       form.set("stockQuantity", "0");
       form.set("scale", "1");
-      form.set("dimensionsW", String(uploadModule.widthMm / 1000));
-      form.set("dimensionsD", String(uploadModule.depthMm / 1000));
-      form.set("dimensionsH", String(uploadModule.heightMm / 1000));
+      form.set("dimensionsW", String(uploadSize.widthMm / 1000));
+      form.set("dimensionsD", String(uploadSize.depthMm / 1000));
+      form.set("dimensionsH", String(uploadSize.heightMm / 1000));
       form.set(
         "colors",
         JSON.stringify([
@@ -416,7 +425,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
 
       void clearDashboardDraft(uploadScope);
       const uploadedModelId = model.id as string;
-      const uploadedModuleId = uploadModule.id;
+      const uploadedModuleId = uploadPartKind ? "" : uploadModule!.id;
+      const wasPart = Boolean(uploadPartKind);
       setUploadName("");
       setUploadModuleId("");
       setUploadGlb(null);
@@ -427,8 +437,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         "GLB upload дууслаа. Web-д зориулсан Meshopt + KTX2 хувилбарыг боловсруулж байна.",
       );
       await load();
-      setModelId(uploadedModelId);
-      setModuleId(uploadedModuleId);
+      if (!wasPart) { setModelId(uploadedModelId); setModuleId(uploadedModuleId); setAssembly(null); }
     } catch (reason) {
       setUploadError(
         reason instanceof Error
@@ -460,6 +469,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             doorCount,
             drawerCount,
             isDefault,
+            assembly,
             sortOrder: 0,
           }),
         },
@@ -474,6 +484,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       setVariantCode("");
       setDesignCode("");
       setIsDefault(false);
+      setAssembly(null);
       await load();
     } catch (reason) {
       setError(
@@ -571,7 +582,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           <h2 className="mt-1 text-lg font-semibold">Гал тогооны GLB нэмэх</h2>
           <p className="text-sm text-black/55">
             Ангилал нь автоматаар “Гал тогооны шүүгээ” болно. Сонгосон
-            module-ийн хэмжээ GLB-ийн бодит хэмжээтэй таарах ёстой. Метр · +Y дээш · +Z нүүр · origin доод төв · applied transform.
+            module-ийн хэмжээ GLB-ийн бодит хэмжээтэй таарна. Солигдох эд анги бүрийн GLB-г нэг удаа оруулаад олон шүүгээнд холбоно. Метр · +Y дээш · +Z нүүр.
           </p>
         </div>
         <DashboardDraftNotice scope={uploadScope} disabled={uploading} files={[uploadGlb, uploadThumbnail]} />
@@ -592,6 +603,13 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             />
           </label>
           <label className="label">
+            GLB зориулалт
+            <select className="input mt-1 w-full" value={uploadPartKind} onChange={event => setUploadPartKind(event.target.value as KitchenPartKind | "")}>
+              <option value="">Бүтэн шүүгээ / үндсэн их бие</option>
+              {Object.entries(PART_LABELS).map(([kind, label]) => <option key={kind} value={kind}>{label} · солигдох эд анги</option>)}
+            </select>
+          </label>
+          {!uploadPartKind && <label className="label">
             Хэмжээний module
             <select
               className="input mt-1 w-full"
@@ -607,7 +625,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                 </option>
               ))}
             </select>
-          </label>
+          </label>}
+          {uploadPartKind ? <div className="grid grid-cols-3 gap-2 md:col-span-2 xl:col-span-4">{(["widthMm", "heightMm", "depthMm"] as const).map((key, i) => <label key={key} className="label">{["Өргөн", "Өндөр", "Гүн"][i]} · мм<input type="number" className="input mt-1 w-full" min={1} max={10000} step={0.1} required value={partSize[key]} onChange={event => setPartSize({ ...partSize, [key]: Number(event.target.value) })}/></label>)}</div> : <label className="flex items-center gap-2 text-xs md:col-span-2 xl:col-span-4"><input type="checkbox" checked={authoredNodes} onChange={event => setAuthoredNodes(event.target.checked)}/>Хаалга, бариул холбох нэртэй node / anchor агуулсан GLB</label>}
           <label className="label">
             GLB файл
             <input
@@ -642,15 +661,13 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           <div className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs text-black/55 md:col-span-2 xl:col-span-3">
             <strong className="text-black/70">Ангилал:</strong> Гал тогооны
             шүүгээ · <strong className="text-black/70">Хэмжээ:</strong>{" "}
-            {uploadModule
-              ? `${uploadModule.widthMm}×${uploadModule.heightMm}×${uploadModule.depthMm} мм`
-              : "Module сонгоно уу"}
+            {uploadPartKind ? PART_LABELS[uploadPartKind] : uploadModule ? `${uploadModule.widthMm}×${uploadModule.heightMm}×${uploadModule.depthMm} мм` : "Module сонгоно уу"}
           </div>
-          <GlbUploadPreview allowFrontProjection file={uploadGlb} expected={{ widthMm: uploadModule?.widthMm ?? 0, heightMm: uploadModule?.heightMm ?? 0, depthMm: uploadModule?.depthMm ?? 0 }} onChange={setPreview} />
+          <GlbUploadPreview allowFrontProjection={!uploadPartKind} assetRole={uploadPartKind ? "kitchen-part" : authoredNodes ? "kitchen-assembly" : "furniture"} file={uploadGlb} expected={uploadSize} onChange={setPreview} />
           <button
             className="btn-primary"
             disabled={
-              uploading || !uploadName.trim() || !uploadModule || !uploadGlb || !preview || preview.file !== uploadGlb
+              uploading || !uploadName.trim() || (!uploadPartKind && !uploadModule) || !uploadGlb || !preview || preview.file !== uploadGlb
             }
           >
             {uploading ? (
@@ -714,10 +731,10 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               className="input mt-1 w-full"
               required
               value={modelId}
-              onChange={(event) => setModelId(event.target.value)}
+              onChange={(event) => { setModelId(event.target.value); setAssembly(null); }}
             >
               <option value="">Сонгоно уу</option>
-              {models.map((model) => (
+              {models.filter(model => !model.partKind).map((model) => (
                 <option
                   key={model.id}
                   value={model.id}
@@ -804,6 +821,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               бүтээгдэхүүний хэмжээг шалгана уу.
             </p>
           )}
+          <AdminKitchenAssemblyEditor value={assembly} onChange={setAssembly} models={models} baseModel={selectedModel}/>
         </form>
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {models.map((model) => (
@@ -870,6 +888,14 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                           {variant.isDefault ? " · default" : ""}
                         </p>
                       </div>
+                      <button type="button" className="btn-ghost !min-h-8 !px-2" disabled={Boolean(busy)} onClick={() => {
+                        setModelId(variant.furnitureModelId); setModuleId(module.id);
+                        setOpening(variant.opening); setDoorCount(variant.doorCount); setDrawerCount(variant.drawerCount);
+                        setPresetId(VARIANT_PRESETS.find(preset => preset.opening === variant.opening && preset.doorCount === variant.doorCount && preset.drawerCount === variant.drawerCount)?.id ?? "door-1");
+                        setDesignCode(typeof variant.configuration.designCode === "string" ? variant.configuration.designCode : "");
+                        setIsDefault(variant.isDefault); setAssembly(getKitchenGlbAssembly(variant.configuration));
+                        document.querySelector('[aria-label="GLB эд ангийн тохиргоо"]')?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }}>Эд анги засах</button>
                       <button
                         type="button"
                         className="btn-ghost !min-h-8 !px-2"
