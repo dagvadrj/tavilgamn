@@ -8,6 +8,7 @@ import "./directory-search.css";
 import "./exhibition.css";
 import "./home-showcase.css";
 import "./styles/room-style.css";
+import "./styles/mobile-shop.css";
 
 
 

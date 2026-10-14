@@ -5,7 +5,7 @@ import Form from "next/form";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowUpRight, Box, Search } from "lucide-react";
+import { ArrowUpRight, Box, Search, X } from "lucide-react";
 import { useCatalogStore } from "@/store/catalog";
 import { searchProducts } from "@/lib/productSearch";
 import { CATEGORY_LABEL, priceFor } from "@/lib/products";
@@ -31,6 +31,7 @@ export function ProductSearch() {
     error: boolean;
   } | null>(null);
   const root = useRef<HTMLDivElement>(null);
+  const input = useRef<HTMLInputElement>(null);
   const id = useId();
   const pathname = usePathname();
   const router = useRouter();
@@ -50,6 +51,34 @@ export function ProductSearch() {
     : selectedKitchen
       ? `${id}-kitchen-${selectedKitchen.id}`
       : undefined;
+  useEffect(() => {
+    if (!visible) return;
+    // The visual viewport shrinks when a phone keyboard opens.
+    const viewport = window.visualViewport;
+    const resize = () => {
+      const bottom = root.current?.getBoundingClientRect().bottom ?? 0;
+      const available =
+        (viewport?.height ?? window.innerHeight) +
+        (viewport?.offsetTop ?? 0) -
+        bottom -
+        18;
+      root.current?.style.setProperty(
+        "--search-available-height",
+        `${Math.max(0, available)}px`,
+      );
+    };
+    resize();
+    viewport?.addEventListener("resize", resize);
+    viewport?.addEventListener("scroll", resize);
+    window.addEventListener("scroll", resize, { passive: true });
+    window.addEventListener("resize", resize);
+    return () => {
+      viewport?.removeEventListener("resize", resize);
+      viewport?.removeEventListener("scroll", resize);
+      window.removeEventListener("scroll", resize);
+      window.removeEventListener("resize", resize);
+    };
+  }, [visible]);
   useEffect(() => {
     if (!visible) return;
     const controller = new AbortController();
@@ -131,12 +160,15 @@ export function ProductSearch() {
         role="search"
         className="store-search"
         onSubmit={() => {
+          input.current?.blur();
           setOpen(false);
           setActive(-1);
         }}
       >
         <input
+          ref={input}
           type="search"
+          enterKeyHint="search"
           name="q"
           role="combobox"
           aria-label="Тавилга хайх"
@@ -198,6 +230,20 @@ export function ProductSearch() {
             }
           }}
         />
+        {query && (
+          <button
+            type="button"
+            className="search-clear"
+            aria-label="Хайх үгийг арилгах"
+            onClick={() => {
+              setQuery("");
+              setActive(-1);
+              input.current?.focus();
+            }}
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        )}
         <button type="submit" aria-label="Хайх">
           <Search size={18} aria-hidden="true" />
         </button>
@@ -248,7 +294,9 @@ export function ProductSearch() {
                   aria-selected={active === index}
                   tabIndex={-1}
                   className="search-result"
-                  onPointerMove={() => setActive(index)}
+                  onPointerMove={(event) => {
+                    if (event.pointerType === "mouse") setActive(index);
+                  }}
                   onClick={() => {
                     setOpen(false);
                     setActive(-1);
@@ -300,9 +348,10 @@ export function ProductSearch() {
                 aria-selected={active === (ready ? results.length : 0) + index}
                 tabIndex={-1}
                 className="search-result"
-                onPointerMove={() =>
-                  setActive((ready ? results.length : 0) + index)
-                }
+                onPointerMove={(event) => {
+                  if (event.pointerType === "mouse")
+                    setActive((ready ? results.length : 0) + index);
+                }}
                 onClick={() => {
                   setOpen(false);
                   setActive(-1);

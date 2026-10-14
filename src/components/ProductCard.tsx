@@ -51,7 +51,15 @@ export function ProductCard({
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [detailsPinned, setDetailsPinned] = useState(initialDetailsOpen);
   const [detailsHovered, setDetailsHovered] = useState(false);
-  const detailsOpen = detailsPinned || detailsHovered;
+  const [mobile, setMobile] = useState(false);
+  const detailsOpen = mobile || detailsPinned || detailsHovered;
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   const [loadedPhoto, setLoadedPhoto] = useState<{
     element: HTMLImageElement;
     naturalWidth: number;

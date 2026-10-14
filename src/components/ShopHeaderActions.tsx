@@ -32,6 +32,7 @@ export function ShopHeaderActions() {
       <Link
         href={mounted && user ? accountPathForRole(role) : "/login"}
         className="header-action account-action"
+        aria-label={mounted && user ? "Миний бүртгэл" : "Нэвтрэх"}
       >
         <UserRound size={21} aria-hidden="true" />
         <span>{mounted && user ? "Миний бүртгэл" : "Нэвтрэх"}</span>

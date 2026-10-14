@@ -1,0 +1,259 @@
+/* Storefront only: phone navigation, keyboard-aware search and readable cards. */
+
+.site-ui.shop-shell .catalog-filter-dialog {
+  width: min(480px, calc(100% - 24px));
+  max-width: none;
+  max-height: calc(100dvh - 24px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--site-line);
+  border-radius: 20px;
+  background: var(--site-surface);
+  color: var(--site-ink);
+  overflow: hidden;
+}
+
+.site-ui.shop-shell .catalog-filter-dialog::backdrop {
+  background: #26384880;
+}
+
+.site-ui.shop-shell .catalog-filter-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 26px);
+}
+
+.site-ui.shop-shell .catalog-filter-sheet > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--site-line);
+  font-weight: 600;
+}
+
+.site-ui.shop-shell .catalog-filter-sheet > header button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--site-bg);
+}
+
+.site-ui.shop-shell .catalog-filter-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+}
+
+.site-ui.shop-shell .catalog-filter-sheet > footer {
+  padding: 12px 16px max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--site-line);
+}
+
+.site-ui.shop-shell .catalog-filter-sheet > footer button {
+  width: 100%;
+}
+
+.site-ui.shop-shell .store-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.site-ui.shop-shell .store-search .search-clear {
+  flex: 0 0 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+}
+
+@media (max-width: 767px) {
+  .site-ui.shop-shell .store-header {
+    position: relative;
+    top: auto;
+  }
+  .site-ui.shop-shell .header-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    padding-block: 8px;
+  }
+  .site-ui.shop-shell .header-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .site-ui.shop-shell .header-actions :is(.account-action, .saved-action) {
+    display: none;
+  }
+  .site-ui.shop-shell .product-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    margin: 0;
+  }
+  .site-ui.shop-shell .studio-navigation {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    min-width: 0;
+    gap: 16px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  .site-ui.shop-shell .studio-navigation a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+  .site-ui.shop-shell :is(input, select, textarea) {
+    font-size: 16px;
+  }
+  .site-ui.shop-shell .store-search {
+    height: 48px;
+    max-width: none;
+  }
+  .site-ui.shop-shell .store-search button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .site-ui.shop-shell .store-search input::placeholder {
+    font-size: 14px;
+  }
+  .site-ui.shop-shell .search-popover {
+    top: calc(100% + 6px);
+    width: 100%;
+    max-height: var(--search-available-height, 50dvh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .site-ui.shop-shell .search-result-list {
+    max-height: none;
+    overflow: visible;
+  }
+  .site-ui.shop-shell .search-result {
+    gap: 10px;
+    padding: 8px;
+  }
+  .site-ui.shop-shell .search-result-copy strong {
+    white-space: normal;
+  }
+  .site-ui.shop-shell .mobile-bottom-nav > :is(a, button) {
+    min-height: 56px;
+    font-size: 11px;
+  }
+  .site-ui.shop-shell .category-dialog {
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    overscroll-behavior: contain;
+  }
+  .site-ui.shop-shell .category-menu-heading {
+    padding: max(10px, env(safe-area-inset-top)) 16px 10px;
+  }
+  .site-ui.shop-shell .category-menu-close {
+    width: 44px;
+    height: 44px;
+  }
+  .site-ui.shop-shell .category-menu-intro > a {
+    width: 100%;
+    min-height: 48px;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: var(--site-selected);
+    font-size: 14px;
+  }
+  .site-ui.shop-shell :is(.category-menu-tabs button, .category-group-links a) {
+    min-height: 44px;
+  }
+  .site-ui.shop-shell .category-group-toggle {
+    min-height: 56px;
+    padding-block: 12px;
+  }
+  .site-ui.shop-shell .category-menu-sidebar {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+  .site-ui.shop-shell .catalog-heading {
+    padding-bottom: 0;
+  }
+  .site-ui.shop-shell .catalog-quick-filters {
+    gap: 8px;
+  }
+  .site-ui.shop-shell .catalog-price-fields label {
+    max-width: none;
+    min-width: 0;
+  }
+  .site-ui.shop-shell .product-card.gallery-product-card:nth-child(n) {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    aspect-ratio: auto;
+    border: 1px solid var(--site-line);
+    border-radius: 16px;
+    background: var(--site-surface);
+  }
+  .site-ui.shop-shell .product-card.gallery-product-card .product-photo {
+    position: relative;
+    inset: auto;
+    height: auto;
+    flex-shrink: 0;
+    aspect-ratio: 4 / 3;
+  }
+  .site-ui.shop-shell :is(.product-details-toggle, .gallery-card-veil) {
+    display: none;
+  }
+  .site-ui.shop-shell .gallery-product-info {
+    position: static;
+    flex: 1;
+    max-height: none;
+    padding: 16px;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: var(--site-surface);
+    opacity: 1;
+    box-shadow: none;
+    backdrop-filter: none;
+    transform: none;
+    transition: none;
+  }
+  .site-ui.shop-shell .product-card.gallery-product-card h3 {
+    font-size: 18px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .site-ui.shop-shell .product-card.gallery-product-card .product-swatches {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .site-ui.shop-shell .product-card.gallery-product-card .product-swatches button {
+    width: 44px;
+    height: 44px;
+  }
+  .site-ui.shop-shell .gallery-dimensions {
+    white-space: normal;
+    font-size: 12px;
+  }
+  .site-ui.shop-shell .gallery-info-eyebrow {
+    font-size: 12px;
+  }
+  .site-ui.product-quick-view .product-quick-close {
+    position: sticky;
+    top: 10px;
+    margin: 10px 10px -54px auto;
+    width: 44px;
+    height: 44px;
+    grid-column: 1 / -1;
+  }
+  .site-ui.product-quick-view .product-quick-modes button,
+  .site-ui.product-quick-view .product-quick-details {
+    min-height: 44px;
+  }
+}
