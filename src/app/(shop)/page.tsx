@@ -1,4 +1,4 @@
-import { HomePageClient } from "@/components/pages/HomePageClient";
+import { InteriorHomePage } from "@/features/home-interior/InteriorHomePage";
 
 export const metadata = {
   title: "Тавилга — гэрт хэрэгтэй бүх сонголт",
@@ -11,6 +11,6 @@ export default async function HomePage({
 }: {
   searchParams?: Promise<{ limit?: string }>;
 }) {
-  const { limit } = await searchParams;
-  return <HomePageClient limit={limit} />;
+  await searchParams;
+  return <InteriorHomePage />;
 }

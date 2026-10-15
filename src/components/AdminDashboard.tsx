@@ -20,6 +20,7 @@ import "@/app/(admin)/admin/admin.css";
 import "@/app/(admin)/admin/admin-dark.css";
 import { ModelsTab } from "@/features/admin-models/ModelsTab";
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
+import { AdminHomepageSettings } from "@/features/home-interior/AdminHomepageSettings";
 import { DashboardAccount } from "@/features/dashboard/DashboardAccount";
 import { loginPathForDestination } from "@/lib/authRedirect";
 import { useDashboardPreferences } from "@/features/dashboard/useDashboardPreferences";
@@ -101,7 +102,12 @@ export function AdminDashboard({
 
   if (!initialized || !user || role !== "admin")
     return (
-      <main id="main-content"><PageSkeleton variant="dashboard" label="Удирдлагын эрхийг шалгаж байна…" /></main>
+      <main id="main-content">
+        <PageSkeleton
+          variant="dashboard"
+          label="Удирдлагын эрхийг шалгаж байна…"
+        />
+      </main>
     );
   const currentTab = kitchenDesignId ? "kitchens" : tab;
   return (
@@ -165,12 +171,15 @@ export function AdminDashboard({
         />
       )}
       {currentTab === "settings" && (
-        <DashboardSettings
-          role="admin"
-          preferences={preferences}
-          onChange={updatePreferences}
-          onProfile={() => selectTab("profile")}
-        />
+        <>
+          <DashboardSettings
+            role="admin"
+            preferences={preferences}
+            onChange={updatePreferences}
+            onProfile={() => selectTab("profile")}
+          />
+          <AdminHomepageSettings key={user.id} />
+        </>
       )}
       {currentTab === "profile" && (
         <DashboardAccount key={user.id} role="admin" />

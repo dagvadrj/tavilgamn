@@ -14,6 +14,8 @@ import {
 import { configuredPaymentLabels } from "@/lib/paymentPresentationServer";
 import { hasAvailableStock } from "@/lib/inventory";
 import type { PageData } from "@/lib/pageData";
+import { readHomepageSettings } from "@/lib/homepageSettingsServer";
+import { defaultHomepageSettings } from "@/lib/homepageSettings";
 
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "no-store" };
@@ -36,14 +38,16 @@ export async function GET(
   try {
     switch (page) {
       case "home": {
-        const [catalog, stores] = await Promise.all([
+        const [catalog, stores, scene] = await Promise.all([
           readCachedProducts(),
           readCachedStoreDirectory(),
+          readHomepageSettings().catch(() => defaultHomepageSettings()),
         ]);
         return json(page, {
           catalog,
           stores,
           paymentLabels: configuredPaymentLabels(),
+          homepageProductIds: scene.productIds,
         });
       }
       case "stores": {

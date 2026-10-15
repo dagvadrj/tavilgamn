@@ -2,7 +2,12 @@ import type { Product, Store } from "./types";
 import type { KitchenDesignSummary } from "./kitchenMarketplace";
 
 export type PageData = {
-  home: { catalog: Product[]; stores: Store[]; paymentLabels: string[] };
+  home: {
+    catalog: Product[];
+    stores: Store[];
+    paymentLabels: string[];
+    homepageProductIds?: string[];
+  };
   stores: { directory: Store[]; productCounts: Record<string, number> };
   store: { store: Store; products: Product[] };
   product: { product: Product; related: Product[] };
