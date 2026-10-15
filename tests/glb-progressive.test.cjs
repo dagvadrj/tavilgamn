@@ -19,6 +19,12 @@ function harness(patch = {}) {
       return [slot.value, value => { slot.value = typeof value === "function" ? value(slot.value) : value; dirty = true; }];
     },
     useRef(initial) { return (slots[cursor++] ??= { current: initial }); },
+    useMemo(fn, deps) {
+      const index = cursor++, previous = slots[index];
+      if (!previous || deps.some((value, i) => !Object.is(value, previous.deps[i])))
+        slots[index] = { deps, value: fn() };
+      return slots[index].value;
+    },
     useEffect(fn, deps) {
       const index = cursor++, previous = slots[index];
       if (!previous || deps.some((value, i) => !Object.is(value, previous.deps[i]))) {
@@ -79,6 +85,7 @@ function harness(patch = {}) {
     motion(value) { motion = value; dirty = true; },
     get tree() { return tree; },
     primitive: () => find(tree, "primitive"),
+    find: type => find(tree, type),
     draw() {
       const primitive = find(tree, "primitive");
       assert.ok(primitive, "a loaded model must be on screen");
@@ -113,6 +120,93 @@ test("preview draws before high starts, high swaps at identical size/origin and 
     assert.deepEqual(run.released, ["/models/preview.glb"]);
   } finally { run.unmount(); global.window = originalWindow; }
   assert.deepEqual(run.released, ["/models/preview.glb", "/models/high.glb"]);
+});
+
+test("new furniture reserves its measured volume, remains selectable and excludes the placeholder from exports", async () => {
+  const run = harness({ previewGlbFile: undefined, w: 2.4, h: .85, d: .95 });
+  try {
+    await run.flush();
+    const placeholder = run.find("mesh");
+    assert.deepEqual(placeholder.props.position, [0, .425, 0]);
+    const children = React.Children.toArray(placeholder.props.children);
+    assert.deepEqual(children.find(node => node.type === "boxGeometry").props.args, [2.4, .85, .95]);
+    assert.equal(placeholder.props.raycast, undefined, "normal raycasting lets the parent select/drag a loading piece");
+    assert.equal(placeholder.props.userData.exportExclude, true);
+    assert.equal(run.tree.props.userData.deliveryPending, true);
+    run.resolve(0); await run.flush();
+    assert.equal(run.find("mesh"), null, "the placeholder leaves when the prepared GLB is attached");
+    assert.ok(run.primitive());
+  } finally { run.unmount(); }
+});
+
+test("replacement keeps the last model at its original size until the current request is ready, ignoring stale completion", async () => {
+  const run = harness({ previewGlbFile: undefined });
+  try {
+    await run.flush(); run.resolve(0); await run.flush();
+    const original = run.primitive().props.object;
+    run.updateProps({ glbFile: "next.glb", w: 3 }); await run.flush();
+    assert.equal(run.primitive().props.object, original);
+    assert.equal(run.tree.props.children[0].props.scale[0], 2, "pending replacement must not stretch the retained model");
+    assert.equal(run.tree.props.userData.deliveryReady, false);
+    assert.equal(run.tree.props.userData.deliveryPending, true);
+    assert.deepEqual(run.released, []);
+    run.updateProps({ glbFile: "latest.glb", w: 4 }); await run.flush();
+    run.resolve(1); await run.flush();
+    assert.equal(run.primitive().props.object, original, "an outdated download cannot replace the visible model");
+    assert.deepEqual(run.released, ["/models/next.glb"]);
+    run.resolve(2); await run.flush();
+    assert.notEqual(run.primitive().props.object, original);
+    assert.equal(run.tree.props.children[0].props.scale[0], 4);
+    assert.equal(run.tree.props.userData.deliveryPending, false);
+    assert.deepEqual(run.released, ["/models/next.glb", "/models/high.glb"]);
+  } finally { run.unmount(); }
+  assert.deepEqual(run.released, ["/models/next.glb", "/models/high.glb", "/models/latest.glb"]);
+});
+
+test("failed replacements retain the visible model and retry without releasing it early", async () => {
+  const originalError = console.error; console.error = () => {};
+  const run = harness({ previewGlbFile: undefined });
+  try {
+    await run.flush(); run.resolve(0); await run.flush();
+    const original = run.primitive().props.object;
+    run.updateProps({ glbFile: "replacement.glb" }); await run.flush();
+    run.requests[1].reject(new Error("offline")); await run.flush();
+    assert.equal(run.primitive().props.object, original);
+    assert.equal(run.tree.props.userData.deliveryReady, false);
+    run.find("button").props.onClick({ stopPropagation() {} }); await run.flush();
+    assert.equal(run.requests[2].url, "/models/replacement.glb");
+    assert.equal(run.primitive().props.object, original);
+    run.resolve(2); await run.flush();
+    assert.notEqual(run.primitive().props.object, original);
+    assert.equal(run.tree.props.userData.deliveryPending, false);
+  } finally { run.unmount(); console.error = originalError; }
+});
+
+test("material-only updates stay pending until the new appearance is prepared", async () => {
+  const run = harness({ previewGlbFile: undefined });
+  try {
+    await run.flush(); run.resolve(0); await run.flush();
+    const original = run.primitive().props.object;
+    run.updateProps({ frontColor: "#223344" }); await run.flush();
+    assert.equal(run.primitive().props.object, original);
+    assert.equal(run.tree.props.userData.deliveryReady, false);
+    run.resolve(1); await run.flush();
+    assert.notEqual(run.primitive().props.object, original);
+    assert.equal(run.tree.props.userData.deliveryReady, true);
+  } finally { run.unmount(); }
+});
+
+test("a replacement without preview releases both old retained variants after the swap", async () => {
+  const previousWindow = global.window; global.window = { location: { origin: "https://shop.example" } };
+  const run = harness(); run.motion(false);
+  try {
+    await run.flush(); run.resolve(0); await run.flush(); run.draw(); await run.flush();
+    run.resolve(1); await run.flush();
+    run.updateProps({ glbFile: "replacement.glb", previewGlbFile: undefined }); await run.flush();
+    assert.deepEqual(run.released, []);
+    run.resolve(2); await run.flush();
+    assert.deepEqual(run.released.sort(), ["/models/high.glb", "/models/preview.glb"]);
+  } finally { run.unmount(); global.window = previousWindow; }
 });
 
 test("camera motion reuses retained preview and high without new leases, clones or metrics", async () => {
