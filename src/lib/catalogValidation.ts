@@ -1,5 +1,6 @@
 import { parseSpecifications } from "./productSpecifications";
 import type { Product } from "./types";
+import { normalizePlacementMetadata, normalizeRoomTypes } from "./placementMetadata";
 import { CATEGORY_LABEL } from "./catalogCategories";
 import { MAX_STOCK_QUANTITY } from "./inventory";
 import { parseModelColors, parseModelMaterials } from "./modelOptions";
@@ -211,6 +212,8 @@ export function parseProduct(value: unknown): Product {
 
   return {
     ...(specifications === undefined ? {} : { specifications }),
+    ...((value.placement ?? specifications?.plannerPlacement) ? { placement: normalizePlacementMetadata(value.placement ?? specifications?.plannerPlacement) } : {}),
+    ...((value.roomTypes ?? specifications?.plannerRoomTypes) ? { roomTypes: normalizeRoomTypes(value.roomTypes ?? specifications?.plannerRoomTypes) } : {}),
     id,
     name: text(value.name, 200),
     category: category as Product["category"],

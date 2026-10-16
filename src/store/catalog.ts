@@ -70,6 +70,8 @@ export const useCatalogStore = create<State>((set) => ({
               fileModelId: product.model!.id,
               name: product.name,
               category: product.category,
+              roomTypes: product.roomTypes,
+              placement: product.placement,
               description: product.description,
               basePrice: product.basePrice,
               glbFile: product.model!.file,

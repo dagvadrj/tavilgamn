@@ -78,6 +78,7 @@ function sourceEdges(room: RoomShape): Edge[] {
  * editable by a single wall drag; their existing numeric editors remain usable.
  */
 export function getRoomWallTargets(room: RoomShape): RoomWallTarget[] {
+  if (room.outline) return []; // Polygon edits belong to the isolated builder draft.
   const geometry = getRoomGeometry(room), sources = sourceEdges(room), targets: RoomWallTarget[] = [];
   const halfW = mm(room.width) / 2, halfD = mm(room.depth) / 2, counts = new Map<string, number>();
   geometry.segments.filter(segment => !segment.hole).forEach((segment, segmentIndex) => {
@@ -183,4 +184,35 @@ export function moveRoomWall(room: RoomShape, target: RoomWallTarget, deltaMetre
   }
   const error = validateRoomOpenings(next);
   return error ? { room, error } : { room: next, error: null, ...(contentShift ? { contentShift } : {}) };
+}
+
+/** Resize the selected visible segment by moving an adjoining perpendicular wall.
+ * Probe the existing wall editor so all opening, column and origin rules stay shared.
+ */
+export function resizeRoomSegment(room: RoomShape, segmentIndex: number, length: number) {
+  const unchanged = (error: string) => ({ room, error, contentShift: undefined as Point | undefined });
+  if (!Number.isFinite(length) || length < 0.05 || length > 20)
+    return unchanged("Ханын урт 5–2000 см байна.");
+  const segments = getRoomGeometry(room).segments.filter(s => !s.hole);
+  const segment = segments[segmentIndex];
+  if (!segment) return unchanged("Хэмжээсийг дахин сонгоно уу.");
+  if (Math.abs(segment.length - length) < 0.0005) return { room, error: null, contentShift: undefined };
+  const axis = Math.abs(segment.a.x - segment.b.x) > Math.abs(segment.a.z - segment.b.z) ? "x" : "z";
+  let reason = "Энэ хэсгийн хэмжээг ханын хэсэг эсвэл баганын тохиргоонд өөрчилнө үү.";
+  for (const target of getRoomWallTargets(room).filter(t => t.axis === axis)) {
+    for (const delta of [0.001, -0.001]) {
+      const probe = moveRoomWall(room, target, delta);
+      if (probe.error) continue;
+      const next = getRoomGeometry(probe.room).segments.filter(s => !s.hole);
+      if (next.length !== segments.length) continue;
+      const difference = next[segmentIndex].length - segment.length;
+      if (Math.abs(difference) < 0.0005) continue;
+      const result = moveRoomWall(room, target, (length - segment.length) * delta / difference);
+      if (result.error) { reason = result.error; continue; }
+      const actual = getRoomGeometry(result.room).segments.filter(s => !s.hole);
+      if (actual.length === segments.length && Math.abs(actual[segmentIndex].length - length) < 0.0006)
+        return result;
+    }
+  }
+  return unchanged(reason);
 }

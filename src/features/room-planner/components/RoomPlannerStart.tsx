@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { RoomBuilder } from "./RoomBuilder";
 import { KitchenSuggestionWizard } from "@/components/KitchenSuggestionWizard";
 import {
   Armchair,
@@ -18,8 +19,13 @@ import {
   Ruler,
   Shapes,
 } from "lucide-react";
+import { RoomMeasureUnit, useRoomMeasureUnit } from "./RoomMeasureUnit";
+import { OpeningQuickEditor } from "./OpeningQuickEditor";
+import { RoomPlanPreview } from "@/components/RoomPlanPreview";
+import { createOpening, validateRoomOpenings } from "@/lib/roomOpenings";
+import type { RoomOpening, WallFeature, RoomShape } from "@/lib/types";
 import type { RoomType } from "@/lib/types";
-import { ROOM_TYPES } from "@/lib/roomGeometry";
+import { ROOM_TYPES, getRoomGeometry } from "@/lib/roomGeometry";
 import {
   ROOM_SIZE_SUGGESTIONS,
   suggestedRoomIndex,
@@ -90,6 +96,8 @@ export function RoomPlannerStart({
     width: number;
     depth: number;
     previewImage?: string;
+    outline?: RoomShape["outline"];
+    wallFeatures?: WallFeature[];
   } | null;
   onResume: () => void;
   designs?: { id: string; name: string; width: number; depth: number }[];
@@ -100,7 +108,11 @@ export function RoomPlannerStart({
   const deleteControl = (id: string, name: string) => onDelete && (deleteId === id
     ? <div className="room-start-delete-confirm"><span>Энэ өрөөг устгах уу?</span><button type="button" onClick={() => { onDelete(id); setDeleteId(null); }}>Тийм, устгах</button><button type="button" onClick={() => setDeleteId(null)}>Болих</button></div>
     : <button type="button" className="room-start-delete" aria-label={`${name} өрөөг устгах`} onClick={() => setDeleteId(id)}>Устгах</button>);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [shape, setShape] = useState<"rectangle" | "l">("rectangle");
+  const [openings, setOpenings] = useState<RoomOpening[]>([]);
+  const unit = useRoomMeasureUnit(state => state.unit);
+  const factor = unit === "мм" ? 10 : 1;
   const [roomType, setRoomType] = useState<RoomType>("living");
   const [choice, setChoice] = useState<number | "custom">(
     suggestedRoomIndex("living"),
@@ -109,6 +121,7 @@ export function RoomPlannerStart({
   const [depth, setDepth] = useState("400");
   const [height, setHeight] = useState("270");
   const [error, setError] = useState("");
+  const [builderOpen, setBuilderOpen] = useState(false);
   const [kitchenSetup, setKitchenSetup] = useState(false);
   const [setup, setSetup] = useState({
     furnishing: "empty" as AddRoomOptions["furnishing"],
@@ -127,7 +140,24 @@ export function RoomPlannerStart({
       ? { width: Number(width) / 100, depth: Number(depth) / 100 }
       : presets[choice];
   const dimensions = { ...selectedSize, height: Number(height) / 100 };
+  const wallFeatures: WallFeature[] = shape === "l" ? [{ id: "setup-l", wall: "north", kind: "inset", offset: 0, length: dimensions.width * 0.35, depth: Math.min(3, dimensions.depth * 0.35) }] : [];
+  const previewRoom = { ...dimensions, wallFeatures, openings };
   const valid = !validateRoomSetup(dimensions);
+  const openingIssue = valid ? validateRoomOpenings(previewRoom) : null;
+  const changeOpening = (opening: RoomOpening) => {
+    const next = openings.map(o => o.id === opening.id ? opening : o);
+    const issue = validateRoomOpenings({ ...previewRoom, openings: next });
+    setError(issue ?? "");
+    if (!issue) setOpenings(next);
+  };
+  const addOpening = (kind: "door" | "window") => {
+    const opening = createOpening(kind === "door" ? "door-single" : "window-fixed", kind === "door" ? "south" : "east");
+    for (const position of [0.5, 0.25, 0.75, 0.15, 0.85]) {
+      const next = [...openings, { ...opening, position }];
+      if (!validateRoomOpenings({ ...previewRoom, openings: next })) { setOpenings(next); setError(""); return; }
+    }
+    setError("Энэ хананд зай хүрэхгүй байна. Одоо байгаа нээлхийн хана, байрлалыг өөрчилнө үү.");
+  };
   const room = ROOM_TYPES[roomType];
   function chooseType(type: RoomType) {
     const next = ROOM_TYPES[type];
@@ -138,7 +168,9 @@ export function RoomPlannerStart({
     setHeight("270");
     setError("");
     setStep(2);
+    if (type !== "kitchen") setBuilderOpen(true);
   }
+  if (builderOpen) return <RoomBuilder initial={dimensions} onCancel={() => setBuilderOpen(false)} onComplete={draft => { try { onStart(roomType, draft, { ...draft, name:room.label, door:false, window:false, doorWall:"south", windowWall:"north", furnishing:"empty" }); return null; } catch(reason) { return (reason as Error).message; } }} />;
   if (kitchenSetup)
     return (
       <KitchenSuggestionWizard
@@ -159,15 +191,11 @@ export function RoomPlannerStart({
       </header>
       <div className="room-start-body">
         <ol className="room-start-progress" aria-label="Эхлэх алхмууд">
-          <li aria-current={step === 1 ? "step" : undefined}>
-            <span>{step === 2 ? <Check size={15} /> : "1"}</span> Өрөөний төрөл
-          </li>
-          <li aria-current={step === 2 ? "step" : undefined}>
-            <span>2</span> Өрөөний хэмжээ
-          </li>
+          {(roomType === "kitchen" ? ["Гал тогоо", "Хэмжээ", "Төхөөрөмж", "2D план", "Өөрөө тохижуулах", "5 санал", "Дуусгах"] : ["Төрөл, хэлбэр", "Хэмжээ", "Хаалга, цонх", "Тавилга"]).map((label, index) => <li key={label} aria-current={step === index + 1 ? "step" : undefined}><span>{step > index + 1 ? <Check size={15} /> : index + 1}</span>{label}</li>)}
         </ol>
         {step === 1 ? (
           <>
+            <fieldset className="room-start-shapes"><legend>Өрөөний хэлбэр</legend><button type="button" aria-pressed={shape === "rectangle"} onClick={() => setShape("rectangle")}>▭ Тэгш өнцөгт</button><button type="button" aria-pressed={shape === "l"} onClick={() => setShape("l")}>⌞ L хэлбэр</button></fieldset>
             {onOpen && designs.filter(design => design.id !== draft?.id).length > 0 && <details className="room-start-saved"><summary>Бусад өрөөнүүд ({designs.filter(design => design.id !== draft?.id).length})</summary>{designs.filter(design => design.id !== draft?.id).map(design => <div key={design.id} className="room-start-saved-row"><button type="button" onClick={() => onOpen(design.id)}>{design.name} · {roomSetupNumber(design.width * design.depth)} м² <ArrowRight size={16}/></button>{deleteControl(design.id, design.name)}</div>)}</details>}
             <div className="room-start-heading">
               <p>ӨӨРИЙНХӨӨ ОРЧНЫГ БҮТЭЭЕ</p>
@@ -232,7 +260,7 @@ export function RoomPlannerStart({
                   <strong>Өмнөх ажлаа үргэлжлүүлэх</strong>
                   <p>
                     {draft.name} · {draft.roomName ?? "Өрөө"} ·{" "}
-                    {roomSetupNumber(draft.width * draft.depth)} м²
+                    {roomSetupNumber(getRoomGeometry(draft).area)} м²
                   </p>
                   <button
                     type="button"
@@ -255,11 +283,10 @@ export function RoomPlannerStart({
             <div className="room-start-heading">
               <p>{room.label}</p>
               <h1 ref={title} tabIndex={-1}>
-                Өрөөний хэмжээгээ сонгоорой
+                {step === 2 ? "Өрөөний хэмжээгээ сонгоорой" : step === 3 ? "Хаалга, цонхоо байрлуулаарай" : "Тавилгаа сонгоорой"}
               </h1>
               <span>
-                Жишээ хэмжээнээс сонгох эсвэл бодит хэмжээгээ өөрөө оруулж
-                болно.
+                {step === 2 ? "Жишээ хэмжээнээс сонгох эсвэл бодит хэмжээгээ өөрөө оруулж болно." : step === 3 ? "Хаалга, цонхны хэмжээ, байрлалыг тохируулаарай." : "Хоосон өрөөнөөс эхлэх эсвэл тавилга сонгоорой."}
               </span>
             </div>
             <form
@@ -276,11 +303,17 @@ export function RoomPlannerStart({
                     : null;
                 const issue = validateRoomSetup(dimensions) ?? kitchenSizeIssue;
                 setError(issue ?? "");
+                if (issue) return;
+                if (step === 2) { if (roomType === "kitchen") setKitchenSetup(true); else setStep(3); return; }
+                if (openingIssue) { setError(openingIssue); return; }
+                if (step === 3) { setStep(4); return; }
                 if (!issue) {
                   try {
                     onStart(roomType, dimensions, {
                       ...dimensions,
                       ...setup,
+                      openings,
+                      wallFeatures,
                       name: room.label,
                       doorWall: "south",
                       windowWall: "north",
@@ -297,6 +330,8 @@ export function RoomPlannerStart({
             >
               <div className="room-size-layout">
                 <div>
+                  <div hidden={step !== 2}>
+                  <RoomMeasureUnit />
                   <div
                     className="room-size-grid"
                     role="group"
@@ -357,48 +392,48 @@ export function RoomPlannerStart({
                   {choice === "custom" && (
                     <div className="room-size-fields">
                       <label>
-                        <span>Өргөн · см</span>
+                        <span>Өргөн · {unit}</span>
                         <input
                           type="number"
                           inputMode="decimal"
-                          min={100}
-                          max={2000}
+                          min={100 * factor}
+                          max={2000 * factor}
                           step={1}
-                          value={width}
+                          value={width === "" ? "" : Number(width) * factor}
                           onChange={(event) => {
-                            setWidth(event.target.value);
+                            setWidth(event.target.value === "" ? "" : String(Number(event.target.value) / factor));
                             setError("");
                           }}
                           placeholder="Жишээ: 400"
                         />
                       </label>
                       <label>
-                        <span>Урт · см</span>
+                        <span>Урт · {unit}</span>
                         <input
                           type="number"
                           inputMode="decimal"
-                          min={100}
-                          max={2000}
+                          min={100 * factor}
+                          max={2000 * factor}
                           step={1}
-                          value={depth}
+                          value={depth === "" ? "" : Number(depth) * factor}
                           onChange={(event) => {
-                            setDepth(event.target.value);
+                            setDepth(event.target.value === "" ? "" : String(Number(event.target.value) / factor));
                             setError("");
                           }}
                           placeholder="Жишээ: 300"
                         />
                       </label>
                       <label>
-                        <span>Таазны өндөр · см</span>
+                        <span>Таазны өндөр · {unit}</span>
                         <input
                           type="number"
                           inputMode="decimal"
-                          min={240}
-                          max={300}
+                          min={240 * factor}
+                          max={300 * factor}
                           step={1}
-                          value={height}
+                          value={height === "" ? "" : Number(height) * factor}
                           onChange={(event) => {
-                            setHeight(event.target.value);
+                            setHeight(event.target.value === "" ? "" : String(Number(event.target.value) / factor));
                             setError("");
                           }}
                         />
@@ -406,32 +441,20 @@ export function RoomPlannerStart({
                       <p>Өргөн, урт 100–2000 см · Таазны өндөр 240–300 см</p>
                     </div>
                   )}
-                  <div className="my-4 flex gap-5 text-sm">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={setup.door}
-                        onChange={(e) =>
-                          setSetup({ ...setup, door: e.target.checked })
-                        }
-                      />
-                      Хаалгатай
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={setup.window}
-                        onChange={(e) =>
-                          setSetup({ ...setup, window: e.target.checked })
-                        }
-                      />
-                      Цонхтой
-                    </label>
                   </div>
+                  {step === 3 && <section aria-label="Хаалга цонх байрлуулах">
+                    <p>Хана, хэмжээг сонгоод булангаас ирмэг хүртэлх зайг оруулна уу. Ханын эхлэл, төгсгөл нь планын A → B → C → D дарааллаар явна.</p>
+                    <div className="room-start-shapes"><button type="button" onClick={() => addOpening("door")}>+ Хаалга нэмэх</button><button type="button" onClick={() => addOpening("window")}>+ Цонх нэмэх</button></div>
+                    {!openings.length && <p>Хаалга, цонх нэмэх эсвэл хоосон хэвээр үргэлжлүүлж болно.</p>}
+                    {openings.map(opening => <OpeningQuickEditor key={opening.id} room={previewRoom} opening={opening} onChange={changeOpening} onRemove={() => setOpenings(openings.filter(o => o.id !== opening.id))} beginEdit={() => {}} endEdit={() => {}} />)}
+                    {openingIssue && <p role="alert">{openingIssue}</p>}
+                  </section>}
+                  <div hidden={step !== 4}>
                   <RoomFurnishingPicker
                     value={setup}
                     onChange={(patch) => setSetup({ ...setup, ...patch })}
                   />
+                  </div>
                   <p className="room-size-example-note">
                     Эдгээр нь төлөвлөж эхлэх жишээ хэмжээ. Дараа нь өрөөний
                     хэмжээ, хэлбэрийг өөрчилж болно.
@@ -443,14 +466,10 @@ export function RoomPlannerStart({
                 >
                   <span>Таны өрөө</span>
                   <h2>{room.label}</h2>
-                  <RoomSizePreview
-                    width={dimensions.width}
-                    depth={dimensions.depth}
-                    valid={valid}
-                  />
+                  {valid ? <RoomPlanPreview room={previewRoom} /> : <RoomSizePreview width={dimensions.width} depth={dimensions.depth} valid={false} />}
                   <strong>
                     {valid
-                      ? `${roomSetupNumber(dimensions.width * dimensions.depth)} м²`
+                      ? `${roomSetupNumber(getRoomGeometry(previewRoom).area)} м²`
                       : "Хэмжээгээ оруулна уу"}
                   </strong>
                   <p>
@@ -465,28 +484,19 @@ export function RoomPlannerStart({
                   {error}
                 </p>
               )}
-              {roomType === "kitchen" && (
-                <button
-                  type="button"
-                  className="room-start-back"
-                  onClick={() => setKitchenSetup(true)}
-                >
-                  Гарнитур тусад нь төлөвлөх
-                </button>
-              )}
               <footer className="room-start-footer">
                 <button
                   type="button"
                   className="room-start-back"
                   onClick={() => {
                     setError("");
-                    setStep(1);
+                    setStep((step - 1) as 1 | 2 | 3);
                   }}
                 >
-                  <ArrowLeft size={17} /> Өрөөний төрөл солих
+                  <ArrowLeft size={17} /> Буцах
                 </button>
                 <button type="submit" className="room-start-submit">
-                  3D өрөөгөө нээх <ArrowRight size={19} />
+                  {step === 4 ? "3D өрөөгөө нээх" : "Үргэлжлүүлэх"} <ArrowRight size={19} />
                 </button>
               </footer>
             </form>

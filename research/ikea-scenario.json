@@ -1,0 +1,65 @@
+{
+    "browser":  {
+                    "executable_path":  "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+                    "mode":  "launch"
+                },
+    "actions":  [
+                    {
+                        "step_id":  "settle",
+                        "duration_ms":  3000,
+                        "action":  "wait_for_timeout"
+                    },
+                    {
+                        "timeout_ms":  10000,
+                        "locator":  {
+                                        "role":  "button",
+                                        "name":  "Ok",
+                                        "kind":  "role"
+                                    },
+                        "step_id":  "cookies",
+                        "action":  "click"
+                    },
+                    {
+                        "timeout_ms":  10000,
+                        "locator":  {
+                                        "role":  "button",
+                                        "name":  "Next",
+                                        "kind":  "role"
+                                    },
+                        "step_id":  "shape-next",
+                        "action":  "click"
+                    },
+                    {
+                        "step_id":  "dimensions",
+                        "duration_ms":  2000,
+                        "action":  "wait_for_timeout"
+                    },
+                    {
+                        "timeout_ms":  10000,
+                        "locator":  {
+                                        "role":  "button",
+                                        "name":  "Next",
+                                        "kind":  "role"
+                                    },
+                        "step_id":  "dimension-next",
+                        "action":  "click"
+                    },
+                    {
+                        "step_id":  "step-three",
+                        "duration_ms":  2000,
+                        "action":  "wait_for_timeout"
+                    }
+                ],
+    "start_url":  {
+                      "url":  "https://www.ikea.com/us/en/home-design/room-builder"
+                  },
+    "capture":  {
+                    "at_end":  [
+                                   "url",
+                                   "accessibility"
+                               ],
+                    "after_each_step":  [
+                                            "accessibility"
+                                        ]
+                }
+}

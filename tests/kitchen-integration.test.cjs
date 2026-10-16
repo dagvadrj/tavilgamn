@@ -1290,8 +1290,8 @@ test("plan markup contains measured wall segments, current furniture and immedia
       React.createElement(RoomPlanPreview, { room, pieces: [piece] }),
     );
   const html = render(room);
-  assert.match(html, /5000 мм/);
-  assert.match(html, /4000 мм/);
+  assert.match(html, /500 см/);
+  assert.match(html, /400 см/);
   assert.match(html, /Х6/);
   assert.match(html, /room-plan-column/);
   assert.match(html, /room-plan-furniture/);

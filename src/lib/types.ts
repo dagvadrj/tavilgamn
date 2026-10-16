@@ -19,6 +19,8 @@ export interface MaterialOption {
 }
 
 export interface Product {
+  roomTypes?: RoomType[];
+  placement?: PlacementMetadata;
   id: string;
   name: string;
   category: Category;
@@ -74,6 +76,9 @@ export interface WishlistItem {
 }
 
 export interface PlacedFurniture {
+  elevation?: number;
+  placement?: PlacementMetadata;
+  attachment?: FurnitureAttachment;
   /** Retained user furniture information, also used when no catalog model exists. */
   details?: {
     name: string;
@@ -95,6 +100,17 @@ export interface PlacedFurniture {
   color: string;
   material: Material;
 }
+export interface PlacementMetadata {
+  surfaces: ("floor" | "wall" | "surface")[];
+  defaultElevation?: number;
+  gap?: number;
+  /** Explicit support surfaces authored in model-local metres. */
+  supportSurfaces?: { id: string; width: number; depth: number; elevation: number }[];
+}
+export type FurnitureAttachment =
+  | { kind: "floor"; x: number; z: number; yaw: number }
+  | { kind: "wall"; roomId: string; segmentId: string; along: number; elevation: number; offset: number }
+  | { kind: "surface"; parentInstanceId: string; surfaceId: string; localPosition: [number, number, number]; localQuaternion: [number, number, number, number] };
 
 export type RoomSize = "40" | "80" | "120";
 export interface SavedFurniture {
@@ -111,6 +127,8 @@ export type RoomType =
   "living" | "bedroom" | "kitchen" | "bathroom" | "office" | "other";
 export type RoomWall = "north" | "east" | "south" | "west";
 export interface RoomOpening {
+  /** Stable directed polygon edge. Absent only for legacy cardinal walls. */
+  segmentId?: string;
   id: string;
   kind: "door" | "window";
   templateId: string;
@@ -187,6 +205,8 @@ export interface RoomColumn {
   depth: number;
 }
 export interface RoomShape {
+  /** Canonical room-local polygon, ordered clockwise as viewed from above. */
+  outline?: RoomVertex[];
   width: number;
   depth: number;
   height?: number;
@@ -197,6 +217,7 @@ export interface RoomShape {
   interiorCamera?: RoomInteriorCamera;
   connectionKind?: "door" | "open";
 }
+export interface RoomVertex { id: string; segmentId: string; x: number; z: number }
 export interface RoomInteriorCamera {
   x: number;
   z: number;

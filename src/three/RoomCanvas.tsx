@@ -56,6 +56,7 @@ import { CameraNavigation } from "./CameraNavigation";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { CursorNavigation } from "./CursorNavigationBinding";
 import { Camera } from "lucide-react";
+import { furnitureWallId, resolveFurnitureAttachments, wallAttachedPiece } from "@/lib/furnitureAttachment";
 import {
   SCENE_NAVIGATION_START,
   isSceneNavigationGesture,
@@ -91,7 +92,7 @@ interface RoomCanvasProps {
   design: RoomDesign;
   selected: string | null;
   onSelect: (id: string | null) => void;
-  onMove: (id: string, x: number, z: number) => void;
+  onMove: (id: string, x: number, z: number, pose?: Partial<Pick<PlacedFurniture, "elevation" | "rotation" | "attachment">>) => void;
   view: "plan" | "perspective";
   snapEnabled: boolean;
   /** When true, orbit controls are disabled so dragging furniture doesn't move camera */
@@ -711,7 +712,7 @@ function DraggablePiece({
   roomDims: RoomShape;
   selected: boolean;
   onSelect: (id: string | null) => void;
-  onMove: (id: string, x: number, z: number) => void;
+  onMove: (id: string, x: number, z: number, pose?: Partial<Pick<PlacedFurniture, "elevation" | "rotation" | "attachment">>) => void;
   snapEnabled: boolean;
   gridEnabled: boolean;
   measureMode: boolean;
@@ -738,6 +739,8 @@ function DraggablePiece({
     : product?.model;
   const [dragging, setDragging] = useState(false);
   const [invalid, setInvalid] = useState(false);
+  const dragBefore = useRef<PlacedFurniture | null>(null);
+  const moveCallback = useRef(onMove); moveCallback.current = onMove;
 
   useCursor(
     hovered || dragging,
@@ -748,7 +751,10 @@ function DraggablePiece({
   useEffect(() => {
     if (!dragging) return;
 
-    const finishDrag = () => {
+    const finishDrag = (event?: Event) => {
+      const before = dragBefore.current;
+      dragBefore.current = null;
+      if (before && event && event.type !== "pointerup") moveCallback.current(before.instanceId,before.x,before.z,{ elevation:before.elevation,rotation:before.rotation,attachment:before.attachment });
       const capture = dragCapture.current;
       dragCapture.current = null;
       try {
@@ -791,14 +797,16 @@ function DraggablePiece({
           ...dimsFor(piece),
         };
 
-  const planeY = 0;
+  const planeY = piece.elevation ?? 0;
   const intersectFloor = (clientX: number, clientY: number) => {
     const rect = gl.domElement.getBoundingClientRect();
     const x = ((clientX - rect.left) / rect.width) * 2 - 1;
     const y = -((clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
-    const planeNormal = new THREE.Vector3(0, 1, 0);
-    const plane = new THREE.Plane(planeNormal, -planeY);
+    const attachment = piece.attachment;
+    const wall = attachment?.kind === "wall" ? getRoomGeometry(roomDims).segments.find(s => furnitureWallId(s) === attachment.segmentId) : undefined;
+    const planeNormal = wall ? new THREE.Vector3(wall.nx,0,wall.nz) : new THREE.Vector3(0, 1, 0);
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(planeNormal,new THREE.Vector3(piece.x,planeY,piece.z));
     const point = new THREE.Vector3();
     return raycaster.ray.intersectPlane(plane, point);
   };
@@ -806,7 +814,7 @@ function DraggablePiece({
   return (
     <group
       ref={groupRef}
-      position={[piece.x, 0, piece.z]}
+      position={[piece.x, piece.elevation ?? 0, piece.z]}
       rotation={[0, piece.rotation, 0]}
       onClick={(event) => event.stopPropagation()}
       onPointerOver={(event) => {
@@ -832,8 +840,9 @@ function DraggablePiece({
         const point = intersectFloor(event.clientX, event.clientY);
         if (!point) return;
         onEditStart?.();
+        dragBefore.current = structuredClone(piece);
 
-        dragOffset.current.set(piece.x - point.x, 0, piece.z - point.z);
+        dragOffset.current.set(piece.x - point.x, planeY - point.y, piece.z - point.z);
 
         onSelect(piece.instanceId);
         setDragging(true);
@@ -854,19 +863,41 @@ function DraggablePiece({
           x: p.x + dragOffset.current.x,
           z: p.z + dragOffset.current.z,
         };
-        if (gridEnabled)
+        const attachment = piece.attachment;
+        if (attachment?.kind === "wall") {
+          const wall = getRoomGeometry(roomDims).segments.find(s => furnitureWallId(s) === attachment.segmentId);
+          if (!wall) { setInvalid(true); return; }
+          const along = ((candidate.x-wall.a.x)*(wall.b.x-wall.a.x)+(candidate.z-wall.a.z)*(wall.b.z-wall.a.z))/wall.length;
+          try { candidate=wallAttachedPiece(piece,roomDims,attachment.roomId,attachment.segmentId,along,p.y+dragOffset.current.y); }
+          catch { setInvalid(true); return; }
+        } else if (attachment?.kind === "surface") {
+          const parent=allPieces.find(p=>p.instanceId===attachment.parentInstanceId);
+          if(!parent){setInvalid(true);return;}
+          const x=candidate.x-parent.x,z=candidate.z-parent.z,cos=Math.cos(parent.rotation),sin=Math.sin(parent.rotation);
+          candidate={...candidate,attachment:{...attachment,localPosition:[x*cos-z*sin,attachment.localPosition[1],x*sin+z*cos]}};
+          try{candidate=resolveFurnitureAttachments(allPieces.map(p=>p.instanceId===candidate.instanceId?candidate:p),roomDims,"id" in roomDims?String(roomDims.id):"",candidate.instanceId)[0];}
+          catch{setInvalid(true);return;}
+        }
+        if (gridEnabled && !attachment)
           candidate = {
             ...candidate,
             x: Math.round(candidate.x * 4) / 4,
             z: Math.round(candidate.z * 4) / 4,
           };
-        if (snapEnabled) candidate = snapToWall(candidate, roomDims);
-        const ok = isPlacementValid(candidate, allPieces, roomDims);
+        if (snapEnabled && !attachment) candidate = snapToWall(candidate, roomDims);
+        let ok = isPlacementValid(candidate, allPieces, roomDims);
+        if(ok && allPieces.some(p=>p.attachment?.kind==="surface"))try{
+          const owned=("pieces" in roomDims ? roomDims.pieces : allPieces) as PlacedFurniture[];
+          const resolved=resolveFurnitureAttachments(owned.map(p=>p.instanceId===candidate.instanceId?candidate:p),roomDims,"id" in roomDims?String(roomDims.id):"");
+          const combined=allPieces.map(p=>resolved.find(r=>r.instanceId===p.instanceId)??p);
+          ok=resolved.every(p=>isPlacementValid(p,combined,roomDims));
+        }catch{ok=false;}
         setInvalid(!ok);
-        if (ok) onMove(piece.instanceId, candidate.x, candidate.z);
+        if (ok) onMove(piece.instanceId, candidate.x, candidate.z, { elevation:candidate.elevation,rotation:candidate.rotation,attachment:candidate.attachment });
       }}
       onPointerUp={(event) => {
         if (!dragging) return;
+        dragBefore.current = null;
         setDragging(false);
         onDragChange(false);
         onEditEnd?.();

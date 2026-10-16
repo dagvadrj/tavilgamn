@@ -67,13 +67,15 @@ test('resizing preserves openings on an inset wall rather than moving them to th
   assert.equal(parseKitchenSpace(next).items.length,1);
 });
 
-test('main 2D plan exposes room points and midpoints, read-only previews do not',()=>{
+test('room drafting exposes points and midpoints separately from the furniture plan',()=>{
   const props={kitchen:createUnifiedKitchen(),selectedId:null,onSelect(){},onRoomChange(){}};
-  const html=renderToStaticMarkup(React.createElement(Plan,props));
+  const {KitchenRoomDraft}=loadSource('src/features/kitchen-planner/components/KitchenRoomDraft.tsx');
+  const html=renderToStaticMarkup(React.createElement(KitchenRoomDraft,{room:props.kitchen.room,wall:null,selectedItem:null,disabled:false,onWall(){},onItem(){},onClear(){},onRoomChange(){}}));
   assert.equal((html.match(/data-room-point=/g)||[]).length,4);
   assert.equal((html.match(/data-room-midpoint=/g)||[]).length,4);
   assert.equal((html.match(/data-room-curve=/g)||[]).length,4);
   assert.doesNotMatch(html,/data-resize-handle|km-plan-resize/);
+  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Plan,props)),/data-room-point/);
   assert.doesNotMatch(renderToStaticMarkup(React.createElement(Plan,{...props,readOnly:true})),/data-room-point/);
 });
 

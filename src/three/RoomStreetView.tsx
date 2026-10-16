@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type {
   RoomInteriorCamera,
@@ -42,6 +42,7 @@ export function RoomStreetView({
     save = useRef(onSave),
     handled = useRef(request?.id);
   const looking = useRef(onLookingChange);
+  const travel = useRef<{ from: TourPoint; to: TourPoint; elapsed: number; duration: number } | null>(null);
   looking.current = onLookingChange;
   const aspect = size
     ? size.width / Math.max(1, size.height)
@@ -56,6 +57,7 @@ export function RoomStreetView({
     invalidate();
   };
   useLayoutEffect(() => {
+    travel.current = null;
     current.current = pose;
     apply();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,11 +85,22 @@ export function RoomStreetView({
   };
   const jump = (point: TourPoint) => {
     if (locked || !tourRouteClear(room, current.current, point)) return false;
-    current.current = { ...current.current, ...point };
-    apply();
-    save.current?.(current.current);
+    if (typeof window === "undefined" || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      current.current = { ...current.current, ...point }; apply(); save.current?.(current.current);
+    } else {
+      travel.current = { from:{x:current.current.x,z:current.current.z},to:point,elapsed:0,duration:Math.min(1.5,Math.max(.3,Math.hypot(point.x-current.current.x,point.z-current.current.z)*.4)) };
+      invalidate();
+    }
     return true;
   };
+  useFrame((_, delta) => {
+    const active=travel.current;if(!active)return;
+    if(locked){travel.current=null;return;}
+    active.elapsed+=delta;const t=Math.min(1,active.elapsed/active.duration),eased=1-(1-t)**3;
+    current.current={...current.current,x:active.from.x+(active.to.x-active.from.x)*eased,z:active.from.z+(active.to.z-active.from.z)*eased};
+    apply();
+    if(t===1){travel.current=null;save.current?.(current.current);}
+  });
   useEffect(() => {
     if (!request || request.id === handled.current) return;
     handled.current = request.id;
@@ -121,6 +134,7 @@ export function RoomStreetView({
     const down = (event: PointerEvent) => {
       event.stopImmediatePropagation();
       if (locked || event.button !== 0) return;
+      travel.current = null;
       drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
       looking.current?.(true);
       canvas.focus();
@@ -151,6 +165,7 @@ export function RoomStreetView({
       event.preventDefault();
       event.stopImmediatePropagation();
       if (locked) return;
+      travel.current = null;
       setFov(clampTourFov(current.current.fov) + Math.sign(event.deltaY) * 3);
     };
     const key = (event: KeyboardEvent) => {
@@ -170,6 +185,7 @@ export function RoomStreetView({
         return;
       event.preventDefault();
       event.stopImmediatePropagation();
+      travel.current = null;
       current.current = lookAround(
         current.current,
         event.key === "ArrowLeft" ? -40 : event.key === "ArrowRight" ? 40 : 0,
@@ -179,6 +195,7 @@ export function RoomStreetView({
       save.current?.(current.current);
     };
     const blur = () => {
+      if(travel.current){travel.current=null;save.current?.(current.current);}
       if (drag) save.current?.(current.current);
       drag = null;
       looking.current?.(false);

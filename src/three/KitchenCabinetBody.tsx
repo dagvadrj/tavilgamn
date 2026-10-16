@@ -641,3 +641,11 @@ function Refrigerator({
     </group>
   );
 }
+
+/** Existing appliance solids, without generated cabinet panels or fronts. */
+export function KitchenApplianceBody({ cabinet, open = false }: { cabinet: ModularCabinet; open?: boolean }) {
+  if (cabinet.opening === "refrigerator") return <Refrigerator cabinet={cabinet} open={open} />;
+  if (cabinet.opening === "hood") return <Hood cabinet={cabinet} />;
+  if (cabinet.opening === "oven") return <Oven cabinet={cabinet} />;
+  return null;
+}

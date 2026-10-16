@@ -3,6 +3,7 @@
 import {
   Component,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -35,6 +36,7 @@ import {
   type ModularKitchen,
 } from "@/lib/kitchenCabinets";
 import { placementIssues } from "@/lib/kitchenPlacement";
+import { roomOutline } from "@/lib/kitchenRoomOutline";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import type { KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
 import { KitchenCabinetGLB } from "./KitchenCabinetGLB";
@@ -509,9 +511,10 @@ function Scene(props: ModularSceneProps) {
               }}
             >
               <KitchenCabinetGLB cabinet={cabinet} selected={selectedId === cabinet.id}
+                materialDefinitions={props.materialDefinitions}
                 variant={cabinet.variantId ? props.variantModels?.[cabinet.variantId] : undefined}
                 open={Boolean(props.open && selectedId === cabinet.id)} />
-              {(selectedId === cabinet.id || invalid.has(cabinet.id)) && (
+              {Boolean(props.variantModels?.[cabinet.variantId ?? ""]?.glbFile) && (selectedId === cabinet.id || invalid.has(cabinet.id)) && (
                 <mesh
                   userData={{ exportExclude: true }}
                   raycast={() => {}}

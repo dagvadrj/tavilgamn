@@ -33,7 +33,11 @@ function sharedCorner(room: RoomShape, point: Point, shared: SharedWallCut[]) {
 }
 /** Miter outside corners so thick walls form one closed outline without gaps. */
 export function wallMiterEnds(room: RoomShape, segment: RoomSegment, segments: RoomSegment[], shared: SharedWallCut[] = []) {
-  const turn = (a: RoomSegment, b: RoomSegment) => Math.sign((a.b.x - a.a.x) * (b.b.z - b.a.z) - (a.b.z - a.a.z) * (b.b.x - b.a.x));
+  const turn = (a: RoomSegment, b: RoomSegment) => {
+    const ax=a.b.x-a.a.x,az=a.b.z-a.a.z,bx=b.b.x-b.a.x,bz=b.b.z-b.a.z;
+    if(Math.abs(ax*bx+az*bz)<1e-10)return Math.sign(ax*bz-az*bx);
+    return Math.tan(Math.atan2(ax*bz-az*bx,ax*bx+az*bz)/2);
+  };
   const previous = segments.find(s => !s.hole && samePoint(s.b, segment.a));
   const next = segments.find(s => !s.hole && samePoint(s.a, segment.b));
   return {

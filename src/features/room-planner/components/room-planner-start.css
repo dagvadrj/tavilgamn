@@ -58,6 +58,7 @@
 
 .room-start-progress {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 28px;

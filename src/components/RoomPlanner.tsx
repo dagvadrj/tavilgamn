@@ -1,10 +1,16 @@
 "use client";
+import { findInitialFurniturePlacement, moveAttachedFurniture, resolveFurnitureAttachments } from "@/lib/furnitureAttachment";
+import { FurnitureAttachmentControls } from "@/features/room-planner/components/FurnitureAttachmentControls";
+import { createRoomBuilderDraft, resizeRoomBuilder } from "@/lib/roomBuilderDraft";
 import { furnishRoom, suggestedFurniture } from "@/lib/roomFurnishing";
 import "./room-planner-enhancements.css";
 import {
   RoomSurfacePopover,
   type SurfaceSelection,
 } from "./RoomSurfacePopover";
+import { RoomMeasureInput } from "@/features/room-planner/components/RoomMeasureInput";
+import { RoomMeasureUnit, useRoomMeasureUnit } from "@/features/room-planner/components/RoomMeasureUnit";
+import { OpeningQuickEditor } from "@/features/room-planner/components/OpeningQuickEditor";
 import { RoomWallPlan } from "./RoomWallPlan";
 import { configureAddedRoom } from "@/lib/addRoomOptions";
 import { newDesignRoom } from "@/lib/roomDesign";
@@ -25,7 +31,7 @@ import {
   RoomPlannerControls,
   type RoomView,
 } from "@/features/room-planner/components/RoomPlannerControls";
-import { matchesProductSearch } from "@/lib/productSearch";
+import { roomCatalogPolicy, type RoomCatalogScope } from "@/lib/roomCatalogPolicy";
 import { PlannerModelCard } from "@/features/planner/components/PlannerModelCard";
 import type { CameraAction, CameraRequest } from "@/lib/plannerCamera";
 import Image from "next/image";
@@ -65,7 +71,7 @@ import {
   HelpCircle,
   ChefHat,
 } from "lucide-react";
-import { CATEGORIES, priceFor } from "@/lib/products";
+import { priceFor } from "@/lib/products";
 import { getProduct, useCatalog } from "@/store/catalog";
 import { hasAvailableStock } from "@/lib/inventory";
 import { CatalogStatus } from "@/components/CatalogStatus";
@@ -214,6 +220,7 @@ function RoomPlannerEditor() {
     "room" | "selection" | "project"
   >("room");
   const [kitchenOnly, setKitchenOnly] = useState(false);
+  const [catalogScope, setCatalogScope] = useState<RoomCatalogScope>("room");
   const [catalogFormat, setCatalogFormat] = useState<"all" | "glb" | "photo">(
     "all",
   );
@@ -247,6 +254,8 @@ function RoomPlannerEditor() {
   }, []);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [roomMapOpen, setRoomMapOpen] = useState(false);
+  const measureUnit = useRoomMeasureUnit(state => state.unit);
+  const measureFactor = measureUnit === "мм" ? 1000 : 100;
   const [roomView, setRoomView] = useState<RoomView>("dollhouse");
   const {
     inspector,
@@ -546,27 +555,14 @@ function RoomPlannerEditor() {
     setPresetError(null);
   };
 
-  const paletteItems = useMemo(
-    () =>
-      catalog.products.filter(
-        (product) =>
-          hasAvailableStock(product) &&
-          !product.model &&
-          (paletteCat === "all" || product.category === paletteCat) &&
-          matchesProductSearch(product, query),
-      ),
-    [catalog.products, paletteCat, query],
-  );
-  const dbPaletteItems = useMemo(
-    () =>
-      dbModels.filter(
-        (m) =>
-          hasAvailableStock(m) &&
-          (paletteCat === "all" || m.category === paletteCat) &&
-          matchesProductSearch(m, query),
-      ),
-    [dbModels, paletteCat, query],
-  );
+  const activeRoomType = current?.roomType ?? "living";
+  const catalogOptions = useMemo(() => ({ roomType: activeRoomType, scope: catalogScope, category: paletteCat, query }), [activeRoomType, catalogScope, paletteCat, query]);
+  const scopedCatalog = useMemo(() => roomCatalogPolicy([...catalog.products.filter(p => !p.model), ...dbModels], catalogOptions), [catalog.products, dbModels, catalogOptions]);
+  const paletteItems = useMemo(() => roomCatalogPolicy(catalog.products.filter(p => !p.model), catalogOptions).products, [catalog.products, catalogOptions]);
+  const dbPaletteItems = useMemo(() => roomCatalogPolicy(dbModels, catalogOptions).products, [dbModels, catalogOptions]);
+  useEffect(() => {
+    if (scopedCatalog.category !== paletteCat) setPaletteCat(scopedCatalog.category);
+  }, [scopedCatalog.category, paletteCat, setPaletteCat]);
   const placement = useMemo(
     () => (current ? roomPlacementContext(current) : null),
     [current],
@@ -598,7 +594,7 @@ function RoomPlannerEditor() {
             : null;
           // Keep the previous draft available before starting a different room.
           if (useDesigns.getState().current) saveCurrent();
-          createNew("80", `${ROOM_TYPES[type].label} загвар`, type, dimensions);
+          createNew("80", `${ROOM_TYPES[type].label} загвар`, type, dimensions, prepared ? createRoomBuilderDraft(prepared) : undefined);
           if (options) {
             const configured = prepared!;
             const result = furnishRoom(
@@ -607,8 +603,10 @@ function RoomPlannerEditor() {
               options,
               catalog.products,
               furniture ?? [],
+              useDesigns.getState().current?.activeRoomId,
             );
             updateRoom({
+              wallFeatures: configured.wallFeatures,
               openings: configured.openings,
               pieces: result.pieces,
             });
@@ -639,8 +637,9 @@ function RoomPlannerEditor() {
       return;
     }
     const piece: PlacedFurniture = {
-      instanceId: `p_${Math.random().toString(36).slice(2, 10)}`,
+      instanceId: `p_${crypto.randomUUID()}`,
       productId,
+      placement: product.placement,
       x: 0,
       z: 0,
       rotation: 0,
@@ -653,7 +652,7 @@ function RoomPlannerEditor() {
         category: product.category,
       },
     };
-    const placed = findFreePlacement(piece, placement.pieces, placement.room);
+    const placed = findInitialFurniturePlacement(piece, placement.pieces, placement.room, current.activeRoomId ?? `${current.id}-room-1`);
     if (!placed) {
       setNotice(
         "Тавилга байрлуулах сул зай хүрэлцэхгүй байна. Өрөөг томруулах эсвэл байрлалаа өөрчилнө үү.",
@@ -676,9 +675,10 @@ function RoomPlannerEditor() {
     const defaultColor = model.colors[0]?.id ?? "default";
     const defaultMaterial = (model.materials[0]?.id ?? "wood") as Material;
     const piece: PlacedFurniture = {
-      instanceId: `m_${Math.random().toString(36).slice(2, 10)}`,
+      instanceId: `m_${crypto.randomUUID()}`,
       productId: model.id,
       modelId: model.id,
+      placement: model.placement,
       x: 0,
       z: 0,
       rotation: 0,
@@ -694,7 +694,7 @@ function RoomPlannerEditor() {
         category: model.category,
       },
     };
-    const placed = findFreePlacement(piece, placement.pieces, placement.room);
+    const placed = findInitialFurniturePlacement(piece, placement.pieces, placement.room, current.activeRoomId ?? `${current.id}-room-1`);
     if (!placed) {
       setNotice("Энэ загварыг байрлуулах сул зай хүрэлцэхгүй байна.");
       return;
@@ -711,16 +711,17 @@ function RoomPlannerEditor() {
     );
   };
 
-  const onMove = (id: string, x: number, z: number) => {
-    updatePieces(
-      current.pieces.map((p) => (p.instanceId === id ? { ...p, x, z } : p)),
-    );
+  const onMove = (id: string, x: number, z: number, pose?: Partial<Pick<PlacedFurniture, "elevation" | "rotation" | "attachment">>) => {
+    try {
+      updatePieces(current.pieces.map(p=>p.instanceId===id ? pose ? {...p,x,z,...pose} : moveAttachedFurniture(p,x,z,current,current.activeRoomId??`${current.id}-room-1`,current.pieces) : p));
+    }catch(reason){setNotice((reason as Error).message);}
   };
 
   const rotateSelected = () => {
     if (!selected) return;
     const piece = current.pieces.find((p) => p.instanceId === selected);
     if (!piece) return;
+    if (piece.attachment && piece.attachment.kind !== "floor") { setNotice("Бэхэлгээний тохиргооноос ханын байрлал эсвэл тулгуур гадаргууг өөрчилнө үү."); return; }
     const rotated: PlacedFurniture = {
       ...piece,
       rotation: (piece.rotation + Math.PI / 2) % (Math.PI * 2),
@@ -746,7 +747,9 @@ function RoomPlannerEditor() {
       return;
     }
     if (!selected) return;
-    updatePieces(current.pieces.filter((p) => p.instanceId !== selected));
+    const removed=new Set([selected]);
+    for(let changed=true;changed;){changed=false;for(const p of current.pieces)if(p.attachment?.kind==="surface"&&removed.has(p.attachment.parentInstanceId)&&!removed.has(p.instanceId)){removed.add(p.instanceId);changed=true;}}
+    updatePieces(current.pieces.filter(p=>!removed.has(p.instanceId)));
     setSelected(null);
   };
 
@@ -919,6 +922,7 @@ function RoomPlannerEditor() {
     patch: Partial<Pick<PlacedFurniture, "x" | "z" | "rotation">>,
   ) => {
     if (!selectedPiece) return;
+    if (selectedPiece.attachment && selectedPiece.attachment.kind !== "floor") { setNotice("Бэхэлгээний тохиргоог ашиглах эсвэл тавилгыг чирж зөөнө үү."); return; }
     const candidate = { ...selectedPiece, ...patch };
     if (!isPlacementValid(candidate, placement.pieces, placement.room)) {
       setNotice("Энэ байрлалд хана эсвэл өөр тавилга байна.");
@@ -932,10 +936,11 @@ function RoomPlannerEditor() {
   };
   const duplicateSelected = () => {
     if (!selectedPiece) return;
-    const copy = findFreePlacement(
-      { ...selectedPiece, instanceId: `p_${crypto.randomUUID()}` },
+    const copy = findInitialFurniturePlacement(
+      { ...selectedPiece, instanceId: `p_${crypto.randomUUID()}`, attachment: undefined },
       placement.pieces,
       placement.room,
+      current.activeRoomId ?? `${current.id}-room-1`,
     );
     if (!copy) {
       setNotice("Хуулбар байрлуулах зай хүрэлцэхгүй байна.");
@@ -1010,9 +1015,13 @@ function RoomPlannerEditor() {
     // latest room, including its already shifted contents, as one store write.
     const latest = useDesigns.getState().current;
     if (!latest) return "Өрөөг дахин нээнэ үү.";
+    if(latest.outline && (!shape.outline || shape.outline===latest.outline) && (shape.width!==latest.width || shape.depth!==latest.depth)) {
+      const resized=resizeRoomBuilder(createRoomBuilderDraft(latest),shape.width,shape.depth);
+      shape={...shape,outline:resized.outline};
+    }
     const shifted =
       contentShift && (contentShift.x !== 0 || contentShift.z !== 0);
-    const pieces = shifted
+    let pieces = shifted
       ? latest.pieces.map((piece) => ({
           ...piece,
           x: piece.x + contentShift.x,
@@ -1030,6 +1039,7 @@ function RoomPlannerEditor() {
             })),
           }
         : latest.lighting;
+    try { pieces = resolveFurnitureAttachments(pieces, { ...latest, ...shape }, latest.activeRoomId ?? `${latest.id}-room-1`); } catch(reason) { return (reason as Error).message; }
     const next = {
       ...latest,
       ...shape,
@@ -1291,6 +1301,13 @@ function RoomPlannerEditor() {
                 Бусад тавилга · {paletteItems.length}
               </button>
             </div>
+            <div className="planner-filter-pills" role="group" aria-label="Каталогийн хүрээ">
+              <button type="button" aria-pressed={catalogScope === "room"} onClick={() => setCatalogScope("room")}>{ROOM_TYPES[activeRoomType].label}</button>
+              <button type="button" aria-pressed={catalogScope === "all"} onClick={() => setCatalogScope("all")}>Бүх өрөө</button>
+            </div>
+            <div className="planner-filter-pills" aria-label="Өрөөний үндсэн ангилал">
+              {scopedCatalog.categories.slice(0, 3).map(category => <button type="button" key={category.id} aria-pressed={paletteCat === category.id} onClick={() => setPaletteCat(category.id)}>{category.name} · {category.count}</button>)}
+            </div>
             <label className="planner-reference-category">
               <span>Тавилгын ангилал</span>
               <select
@@ -1301,9 +1318,9 @@ function RoomPlannerEditor() {
                 }
               >
                 <option value="all">Бүх тавилга</option>
-                {CATEGORIES.map((c) => (
+                {scopedCatalog.categories.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name}
+                    {c.name} · {c.count}
                   </option>
                 ))}
               </select>
@@ -1395,6 +1412,7 @@ function RoomPlannerEditor() {
                         type="button"
                         className="planner-secondary-button"
                         onClick={() => {
+                          setCatalogScope("all");
                           setPaletteCat("all");
                           setQuery("");
                           setCatalogFormat("all");
@@ -1740,6 +1758,10 @@ function RoomPlannerEditor() {
 
         {/* right-side selection actions */}
         <div className="planner-selection-toolbar">
+          {selectedOpening && current.openings?.find(o => o.id === selectedOpening) && <details className="room-opening-context" open key={selectedOpening}>
+<summary>Хаалга, цонх засах</summary>
+<OpeningQuickEditor room={current} opening={current.openings.find(o => o.id === selectedOpening)!} onChange={changeOpening} onRemove={removeSelected} beginEdit={beginEdit} endEdit={endEdit} />
+</details>}
           {selectedOpening && (
             <>
               <button
@@ -2286,7 +2308,7 @@ function RoomPlannerEditor() {
             </h2>
             <p>
               {roomDetailsTab === "room"
-                ? "Бодит хэмжээгээ сантиметрээр оруулаарай."
+                ? "Бодит хэмжээгээ сонгосон нэгжээр оруулаарай."
                 : roomDetailsTab === "selection"
                   ? "Чирж байрлуулах эсвэл доорх сумтай товчоор хөдөлгөөрэй."
                   : "Энэ төхөөрөмж дээрх загваруудаа эндээс нээнэ."}
@@ -2328,21 +2350,24 @@ function RoomPlannerEditor() {
           <div hidden={roomDetailsTab !== "room"}>
             <div className="border-b border-[#293C32]/10 p-4">
               <div className="room-basic-dimensions">
+                <RoomMeasureUnit />
                 {(
                   [
-                    ["width", "Өргөн · см"],
-                    ["depth", "Урт · см"],
-                    ["height", "Таазны өндөр · см"],
+                    ["width", "Өргөн"],
+                    ["depth", "Урт"],
+                    ["height", "Таазны өндөр"],
                   ] as const
                 ).map(([key, label]) => (
-                  <NumberControl
+                  <RoomMeasureInput
                     key={key}
+                    beginEdit={beginEdit}
+                    endEdit={endEdit}
                     label={label}
-                    value={Math.round((current[key] ?? 2.7) * 100)}
+                    value={(current[key] ?? 2.7) * 100}
                     min={key === "height" ? 240 : 100}
                     max={key === "height" ? 300 : 2000}
                     step={10}
-                    onCommit={(value) => {
+                    onChange={(value) => {
                       const issue = applyRoomShape({
                         ...current,
                         [key]: value / 100,
@@ -2453,8 +2478,8 @@ function RoomPlannerEditor() {
                 <span>
                   <strong>Ханын хэлбэр, багана тохируулах</strong>
                   <small>
-                    {Math.round(current.width * 1000)} ×{" "}
-                    {Math.round(current.depth * 1000)} мм ·{" "}
+                    {Number((current.width * measureFactor).toFixed(1))} ×{" "}
+                    {Number((current.depth * measureFactor).toFixed(1))} {measureUnit} ·{" "}
                     {geometry.area.toFixed(2)} м²
                   </small>
                   <small>
@@ -2547,6 +2572,13 @@ function RoomPlannerEditor() {
                     </p>
                   </section>
                 )}
+                <FurnitureAttachmentControls piece={selectedPiece} pieces={current.pieces} room={current} roomId={current.activeRoomId ?? `${current.id}-room-1`} onChange={candidate => {
+                  try {
+                    const pieces=resolveFurnitureAttachments(current.pieces.map(p=>p.instanceId===candidate.instanceId?candidate:p),current,current.activeRoomId??`${current.id}-room-1`);
+                    if(!pieces.every(p=>isPlacementValid(p,pieces,placement.room)))return "Энэ байрлалд хана эсвэл өөр тавилга байна.";
+                    updatePieces(pieces);return null;
+                  }catch(reason){return (reason as Error).message;}
+                }} />
                 <div className="planner-transform">
                   <p className="label">Байрлал · өрөөний төвөөс</p>
                   <div className="planner-fields">
@@ -2993,6 +3025,7 @@ function RoomPlannerEditor() {
               options,
               catalog.products,
               furniture ?? [],
+              latest.activeRoomId,
             );
             updatePieces(result.pieces);
             result.pieces.forEach((piece) => rememberFurniture(piece));

@@ -7,6 +7,8 @@ import type {
   SavedFurniture,
 } from "./types";
 import { findFreePlacement, isPlacementValid } from "@/three/collision";
+import { ROOM_CATALOG_CATEGORIES, catalogEligible } from "./roomCatalogPolicy";
+import { findInitialFurniturePlacement } from "./furnitureAttachment";
 
 export type FurnishingMode = "empty" | "preset" | "mine";
 export interface FurnishingOptions {
@@ -27,10 +29,11 @@ export function suggestedFurniture(
   pieces: PlacedFurniture[] = [],
 ) {
   const used = new Set(pieces.map((p) => p.productId));
-  return categories[type].flatMap((category) => {
+  return ROOM_CATALOG_CATEGORIES[type].flatMap((category) => {
     const product = products.find(
       (p) =>
         p.category === category &&
+        catalogEligible(p, type, "room") &&
         p.model &&
         p.inStock &&
         p.stockQuantity !== 0 &&
@@ -43,6 +46,7 @@ export function productPiece(product: Product): PlacedFurniture {
   return {
     instanceId: `p_${crypto.randomUUID()}`,
     productId: product.id,
+    placement: product.placement,
     x: 0,
     z: 0,
     rotation: 0,
@@ -63,6 +67,7 @@ export function furnishRoom(
   options: FurnishingOptions,
   products: Product[],
   library: SavedFurniture[],
+  roomId = "id" in room ? String(room.id) : "room",
 ) {
   const candidates =
     options.furnishing === "preset"
@@ -93,6 +98,12 @@ export function furnishRoom(
   for (const piece of candidates) {
     // Large pieces first try a perimeter, leaving the centre free for circulation.
     let placed: PlacedFurniture | null = null;
+    if(piece.placement && !piece.placement.surfaces.includes("floor")) {
+      placed=findInitialFurniturePlacement({...piece,attachment:undefined},pieces,room,roomId);
+      if(placed)pieces.push(placed);else skipped.push(piece.details?.name??piece.productId);
+      continue;
+    }
+    piece.attachment=undefined;piece.elevation=0;
     for (const rotation of [piece.rotation, piece.rotation + Math.PI / 2]) {
       const size = piece.details?.dimensions;
       if (size) {

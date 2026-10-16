@@ -137,7 +137,7 @@ export function OpeningMesh(props: OpeningMeshProps) {
     const hit = raycaster.ray.intersectPlane(plane, new THREE.Vector3());
     if (!hit) return null;
     const along = new THREE.Vector3(Math.cos(location.rotation), 0, -Math.sin(location.rotation));
-    return current.opening.position + hit.sub(center).dot(along) / wallLength(current.design, current.opening.wallId);
+    return current.opening.position + hit.sub(center).dot(along) / wallLength(current.design, current.opening.wallId, current.opening.segmentId);
   };
   const projectRef = useRef(projectPosition);
   projectRef.current = projectPosition;

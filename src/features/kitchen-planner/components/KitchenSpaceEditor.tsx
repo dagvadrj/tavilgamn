@@ -1,22 +1,18 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import {
-  Box,
   ChevronRight,
-  Columns3,
-  DoorOpen,
   Droplets,
   Grid2X2,
+  Hand,
+  MousePointer2,
   Maximize,
   Minus,
-  Paintbrush,
   Plus,
-  Refrigerator,
   Ruler,
   Scan,
   SlidersHorizontal,
   Trash2,
-  Wind,
   X,
   Zap,
 } from "lucide-react";
@@ -46,9 +42,6 @@ export function KitchenSpaceEditor({
   disabled,
   onChange,
   onClose,
-  onMaterials = onClose,
-  onView3D = onClose,
-  onCatalog,
 }: {
   kitchen: ModularKitchen;
   disabled: boolean;
@@ -60,6 +53,9 @@ export function KitchenSpaceEditor({
   onView3D?: () => void;
   onCatalog?: (type: CabinetType | "appliances") => void;
 }) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [panMode, setPanMode] = useState(false);
+  const pan = useRef<{ pointerId: number; x: number; y: number; left: number; top: number } | null>(null);
   const [wall, setWall] = useState<RoomWallId | null>("back");
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -94,6 +90,7 @@ export function KitchenSpaceEditor({
       if (event.key === "Escape") {
         setWall(null);
         setSelected(null);
+        setSettingsOpen(false);
       }
     };
     window.addEventListener("keydown", clear);
@@ -186,58 +183,23 @@ export function KitchenSpaceEditor({
     });
     setWall(nextWall);
   }
-  const utilityKinds = ["water", "power", "vent"] as const;
+  const utilityKinds = ["water", "power"] as const;
   return (
-    <section className="kroom-setup" aria-label="Өрөөг хэмжих">
-      <aside className="kroom-catalog" aria-label="Модуль каталоги">
-        <header>
-          <small>МОДУЛЬ КАТАЛОГИ</small>
-          <h2>Гал тогооны элементүүд</h2>
-        </header>
-        <nav>
-          {(
-            [
-              ["base", "Доод шүүгээ (Base)", Refrigerator],
-              ["wall", "Дээд шүүгээ (Wall)", Box],
-              ["tall", "Багана шүүгээ (Tall)", Columns3],
-              ["appliances", "Цахилгаан хэрэгсэл", Zap],
-            ] as const
-          ).map(([type, label, Icon]) => (
-            <button
-              type="button"
-              key={type}
-              disabled={disabled}
-              onClick={() => {
-                if (onCatalog) onCatalog(type);
-                else onClose();
-              }}
-            >
-              <Icon size={20} />
-              {label}
-            </button>
-          ))}
-          <button type="button" disabled={disabled} onClick={onMaterials}>
-            <Paintbrush size={20} />
-            Тавцан ба фасад
-          </button>
-        </nav>
-        <footer>
-          <span>
-            Сүлжээний тор: <b>100 мм</b>
-          </span>
-          <span>
-            Хананд наалдах: <b>Идэвхтэй</b>
-          </span>
-        </footer>
-      </aside>
+    <section className={`kroom-setup kroom-canvas-first ${settingsOpen ? "is-settings-open" : ""}`} aria-label="Өрөөг хэмжих">
       <aside
         className="kroom-config"
+        id="kroom-settings"
+        hidden={!settingsOpen}
         aria-label="Өрөөний хэмжээ болон холболтууд"
       >
+        <div className="kroom-drawer-heading">
+          <strong>{"Өрөөний тохиргоо"}</strong>
+          <button type="button" onClick={() => setSettingsOpen(false)} aria-label="Тохиргоог хаах"><X size={18} /></button>
+        </div>
         <div className="kroom-config-body">
           <header className="kroom-intro">
             <div>
-              <small>АЛХАМ 01 / 04</small>
+              <small>АЛХАМ 4 / 7</small>
               <span>CAD Ноорог</span>
             </div>
             <h1>Өрөөг хэмжих</h1>
@@ -321,30 +283,6 @@ export function KitchenSpaceEditor({
             </div>
           </section>
           <section>
-            <h2>ХААЛГА, ЦОНХ БАЙРШУУЛАХ</h2>
-            <div className="kroom-openings">
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => add("door")}
-              >
-                <DoorOpen size={19} />+ Хаалга (900)
-              </button>
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => add("window")}
-              >
-                <Grid2X2 size={19} />+ Цонх (1400)
-              </button>
-            </div>
-            <p className="kroom-help">
-              {wall
-                ? `${ROOM_WALL_NAMES[wall]}д нэмнэ. Өөр хана сонгохдоо зураг дээр дарна уу.`
-                : "Нэмэх ханан дээрээ дарж сонгоно уу."}
-            </p>
-          </section>
-          <section>
             <div className="kroom-section-head">
               <h2>САНТЕХНИК & ЦАХИЛГААНЫ ХОЛБОЛТ</h2>
               <span>
@@ -361,7 +299,7 @@ export function KitchenSpaceEditor({
             <div className="kroom-utilities">
               {utilityKinds.map((kind) => {
                 const Icon =
-                  kind === "water" ? Droplets : kind === "power" ? Zap : Wind;
+                  kind === "water" ? Droplets : Zap;
                 const existing = items.filter((i) => i.kind === kind);
                 return (
                   <div key={kind}>
@@ -381,9 +319,7 @@ export function KitchenSpaceEditor({
                         </i>
                         <span>{ROOM_ITEM_NAMES[kind]}</span>
                         <b>
-                          {kind === "vent"
-                            ? `D: ${point.width}`
-                            : `X: ${["back", "front"].includes(point.wall) ? point.x : point.z}`}{" "}
+                          {`X: ${["back", "front"].includes(point.wall) ? point.x : point.z}`}{" "}
                           мм
                         </b>
                       </button>
@@ -409,28 +345,6 @@ export function KitchenSpaceEditor({
               })}
             </div>
           </section>
-          <details className="kroom-structure">
-            <summary>Багана ба бусад элемент</summary>
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => add("column")}
-            >
-              <Plus size={16} />
-              Багана нэмэх
-            </button>
-            {items
-              .filter((i) => i.kind === "column")
-              .map((i) => (
-                <button
-                  type="button"
-                  key={i.id}
-                  onClick={() => setSelected(i.id)}
-                >
-                  {ROOM_ITEM_NAMES[i.kind]} {i.width} × {i.depth} мм
-                </button>
-              ))}
-          </details>
           {item && (
             <fieldset className="kroom-item-editor" disabled={disabled}>
               <legend>{ROOM_ITEM_NAMES[item.kind]} тохируулах</legend>
@@ -534,7 +448,7 @@ export function KitchenSpaceEditor({
         </div>
         <footer className="kroom-next">
           <button type="button" disabled={disabled} onClick={onClose}>
-            Байрлал сонгох
+            Өөрөө тохижуулах
             <ChevronRight size={20} />
           </button>
           <small>
@@ -544,19 +458,21 @@ export function KitchenSpaceEditor({
         </footer>
       </aside>
       <div className="kroom-workspace">
+        <header className="kroom-workspace-heading">
+          <div><small>{"ӨРӨӨНИЙ ПЛАН"}</small><h1>{"Өрөөгөө зураарай"}</h1></div>
+          <button type="button" className="kroom-primary-action" disabled={disabled} onClick={onClose}>{"Тавилга байрлуулах"}<ChevronRight size={17} /></button>
+        </header>
         <div
           className="kroom-view-controls"
           role="group"
           aria-label="Зургийн харагдац"
         >
-          <button type="button" aria-pressed="true">
-            <Grid2X2 size={16} />
-            2D Хавтгай
-          </button>
-          <button type="button" disabled={disabled} onClick={onView3D}>
-            <Box size={16} />
-            3D Харах
-          </button>
+          <button type="button" aria-pressed={!panMode} onClick={() => setPanMode(false)}><MousePointer2 size={17} />{"Зурах"}</button>
+          <button type="button" aria-pressed={panMode} onClick={() => setPanMode(true)}><Hand size={17} />{"Шилжүүлэх"}</button>
+          <span className="kroom-control-divider" />
+          <button type="button" aria-expanded={settingsOpen} aria-controls="kroom-settings" onClick={() => setSettingsOpen(value => !value)}><Ruler size={17} />{room.width} × {room.depth} × {room.height} мм</button>
+          <button type="button" disabled={disabled} onClick={() => { setPanMode(false); add("water"); }}><Droplets size={17} />{"Ус"}</button>
+          <button type="button" disabled={disabled} onClick={() => { setPanMode(false); add("power"); }}><Zap size={17} />{"Цахилгаан"}</button>
           <span className="kroom-control-divider" />
           <button
             type="button"
@@ -599,30 +515,10 @@ export function KitchenSpaceEditor({
             мм
           </strong>
           <span>Өндөр: {room.height.toLocaleString("mn-MN")} мм</span>
-          <label className="kroom-wall-color">
-            <Paintbrush size={17} />
-            Өнгө сонгох
-            <input
-              type="color"
-              aria-label="Сонгосон хананы өнгө"
-              disabled={disabled}
-              value={wall ? (room.wallColors?.[wall] ?? "#efe6d6") : "#efe6d6"}
-              onChange={(event) => {
-                if (wall)
-                  updateRoom({
-                    ...room,
-                    wallColors: {
-                      ...room.wallColors,
-                      [wall]: event.target.value,
-                    },
-                  });
-              }}
-            />
-          </label>
           <button
             type="button"
             disabled={disabled}
-            onClick={() => heightInput.current?.querySelector("input")?.focus()}
+            onClick={() => { setSettingsOpen(true); requestAnimationFrame(() => heightInput.current?.querySelector("input")?.focus()); }}
           >
             <Ruler size={16} />
             Өндөр
@@ -636,7 +532,22 @@ export function KitchenSpaceEditor({
           </button>
         </div>
         <div
-          className="kroom-plan-card"
+          className={`kroom-plan-card ${panMode ? "is-panning" : ""}`}
+          onPointerDownCapture={event => {
+            if (!panMode || event.button !== 0) return;
+            event.stopPropagation(); event.preventDefault();
+            pan.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: event.currentTarget.scrollLeft, top: event.currentTarget.scrollTop };
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }}
+          onPointerMove={event => {
+            const current = pan.current;
+            if (!current || event.pointerId !== current.pointerId) return;
+            event.currentTarget.scrollLeft = current.left - event.clientX + current.x;
+            event.currentTarget.scrollTop = current.top - event.clientY + current.y;
+          }}
+          onPointerUp={event => { pan.current = null; if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); }}
+          onPointerCancel={() => { pan.current = null; }}
+          onLostPointerCapture={() => { pan.current = null; }}
           ref={canvas}
           onClick={() => {
             setWall(null);
@@ -668,6 +579,12 @@ export function KitchenSpaceEditor({
             />
           </div>
         </div>
+        {selected && <div className="kroom-selected-tools">
+          <strong>{item ? ROOM_ITEM_NAMES[item.kind] : ""}</strong>
+          <span>{"Чирж байрлалыг солино"}</span>
+          <button type="button" onClick={() => setSettingsOpen(true)}><SlidersHorizontal size={16} />{"Тохируулах"}</button>
+        </div>}
+        {error && !settingsOpen && <p className="kroom-canvas-error" role="alert">{error}</p>}
         <aside className="kroom-compass" aria-label="Өрөөний зүг чиг">
           <small>ЗҮГ ЧИГ</small>
           <span>Y ↑</span>
@@ -677,11 +594,11 @@ export function KitchenSpaceEditor({
               y={10}
               width={60}
               height={46}
-              fill="#eeecff"
+              fill="#eeeee7"
               stroke="#303039"
               strokeWidth={2}
             />
-            <path d="M20 10H80" stroke="#0051d5" strokeWidth={5} />
+            <path d="M20 10H80" stroke="#42634f" strokeWidth={5} />
             {!room.openFront && (
               <path d="M20 56H80" stroke="#303039" strokeWidth={2} />
             )}

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Ruler, X } from "lucide-react";
 import type { RoomShape, PlacedFurniture } from "@/lib/types";
 import type { Point } from "@/lib/roomGeometry";
 import { RoomGeometryEditor } from "./RoomGeometryEditor";
+import { RoomBuilder } from "@/features/room-planner/components/RoomBuilder";
 
 export function RoomGeometryModal({
   room,
@@ -26,6 +27,7 @@ export function RoomGeometryModal({
   endEdit: () => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [legacy, setLegacy] = useState(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -75,14 +77,19 @@ export function RoomGeometryModal({
         </button>
       </header>
       <div className="room-geometry-modal-body">
-        <RoomGeometryEditor
+        {!room.outline && <button type="button" onClick={() => setLegacy(value => !value)}>{legacy ? "Дөрвөн алхамтай байгуулагч" : "Ханын хэсэг, баганын засвар"}</button>}
+        {legacy && !room.outline ? <RoomGeometryEditor
           onMovePiece={onMovePiece}
           onSelectPiece={onSelectPiece}
           selectedPiece={selectedPiece}
           room={room}
           onApply={onApply}
           onDone={onClose}
-        />
+        /> : <RoomBuilder initial={room} onCancel={onClose} onComplete={draft => {
+          const issue = onApply(draft);
+          if (!issue) onClose();
+          return issue;
+        }} />}
       </div>
     </dialog>
   );

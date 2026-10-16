@@ -5,12 +5,13 @@ import { Armchair, Camera, ClipboardCheck, CookingPot, PanelTop, Refrigerator, R
 import type { ReactNode } from "react";
 
 export type KitchenToolbarTool = "cabinets" | "appliances" | "dining" | "items" | "search" | "photo" | "annotation";
-type Stage = "space" | "design" | "finish";
+type Stage = "space" | "design" | "suggestions" | "finish";
 
 const stages: [Stage, string][] = [
-  ["space", "Өрөөг тодорхойлох"],
-  ["design", "Өөрийнхөөрөө тохижуулах"],
-  ["finish", "Дуусгах"],
+  ["space", "4. 2D өрөөний план"],
+  ["design", "5. Өөрөө тохижуулах"],
+  ["suggestions", "6. Таван санал"],
+  ["finish", "7. Дуусгах"],
 ];
 const tools = [
   { id: "cabinets", label: "Шүүгээ", icon: PanelTop },
@@ -50,17 +51,17 @@ export function KitchenPlannerHeader({ stage, onStage, activeTool, onTool, busy,
         <Link href="/planner" title="Planner-оос гарах" aria-label="Planner-оос гарах"><X size={17} /></Link>
       </div>
     </header>
-    <div className="kitchen-main-toolbar" role="toolbar" aria-label="Тавилгын үндсэн хэрэгслүүд">
+    {stage === "design" && <div className="kitchen-main-toolbar" role="toolbar" aria-label="Тавилгын үндсэн хэрэгслүүд">
       <div className="kitchen-category-tools">
         {tools.map(({ id, label, icon: Icon }) => <button key={id} type="button" disabled={busy}
           className={id === "photo" ? "kitchen-toolbar-separated" : undefined}
           aria-label={label} aria-pressed={id === "annotation" ? annotations : activeTool === id}
-          onClick={() => onTool(id)}><span className="kitchen-category-icon"><Icon size={20} strokeWidth={1.2} /></span><span>{label}</span></button>)}
+          onClick={() => onTool(id)}><span className="kitchen-category-icon"><Icon size={20} strokeWidth={1.8} /></span><span>{label}</span></button>)}
       </div>
       <div className="kitchen-toolbar-checkout">
         <button type="button" className="kitchen-toolbar-total" onClick={() => onStage("finish")}><span>Миний гал тогоо</span><strong>{subtotal.toLocaleString("mn-MN")} ₮</strong></button>
-        <button type="button" className="kitchen-toolbar-continue" disabled={busy} onClick={() => onStage("finish")}>Үргэлжлүүлэх</button>
+        <button type="button" className="kitchen-toolbar-continue" disabled={busy} onClick={() => onStage("suggestions")}>Үргэлжлүүлэх</button>
       </div>
-    </div>
+    </div>}
   </>;
 }

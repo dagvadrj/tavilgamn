@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Check, Columns3, Plus, Ruler, Shapes, Trash2 } from "lucide-react";
 import type { RoomShape, RoomWall, PlacedFurniture } from "@/lib/types";
+import { RoomMeasureInput } from "@/features/room-planner/components/RoomMeasureInput";
+import { RoomMeasureUnit, useRoomMeasureUnit } from "@/features/room-planner/components/RoomMeasureUnit";
 import { RoomWallPlan } from "./RoomWallPlan";
 import {
   getRoomGeometry,
@@ -11,13 +13,7 @@ import {
   type Point,
 } from "@/lib/roomGeometry";
 
-function Millimetres({
-  label,
-  value,
-  onChange,
-  min = 0,
-  max = 20000,
-}: {
+function GeometryMeasure({ label, value, onChange, min = 0, max = 20000 }: {
   label: string;
   value: number;
   onChange: (value: number) => void;
@@ -25,23 +21,16 @@ function Millimetres({
   max?: number;
 }) {
   return (
-    <label className="planner-number">
-      <span>{label} · мм</span>
-      <input
-        type="number"
-        inputMode="numeric"
-        min={min}
-        max={max}
-        step={1}
-        required
-        value={Number.isFinite(value) ? Math.round(value * 1000) : ""}
-        onChange={(event) =>
-          onChange(
-            event.target.value === "" ? NaN : Number(event.target.value) / 1000,
-          )
-        }
-      />
-    </label>
+    <RoomMeasureInput
+      label={label}
+      value={value * 100}
+      min={min / 10}
+      max={max / 10}
+      step={0.1}
+      onChange={v => onChange(v / 100)}
+      beginEdit={() => {}}
+      endEdit={() => {}}
+    />
   );
 }
 
@@ -69,6 +58,7 @@ export function RoomGeometryEditor({
   }));
   const [error, setError] = useState("");
   const [section, setSection] = useState<"size" | "walls" | "columns">("size");
+  const unit = useRoomMeasureUnit(state => state.unit);
   const problem = validateRoomShape(draft);
   const preview = room;
   const geometry = getRoomGeometry(preview);
@@ -136,27 +126,27 @@ export function RoomGeometryEditor({
         >
           <div className="geometry-section-heading">
             <h3>Үндсэн хэмжээс</h3>
-            <span>мм</span>
+            <RoomMeasureUnit />
           </div>
           <p className="room-shape-help">
             Хананд чирж эсвэл доорх талбарт хэмжээг оруулж тохируулаарай.
           </p>
           <div className="room-exact-dimensions">
             <div className="planner-fields">
-              <Millimetres
+              <GeometryMeasure
                 label="AB · өргөн"
                 value={draft.width}
                 min={1000}
                 onChange={(width) => update({ width })}
               />
-              <Millimetres
+              <GeometryMeasure
                 label="BC · урт"
                 value={draft.depth}
                 min={1000}
                 onChange={(depth) => update({ depth })}
               />
             </div>
-            <Millimetres
+            <GeometryMeasure
               label="Ханын өндөр"
               value={draft.height ?? 2.7}
               min={2400}
@@ -181,7 +171,7 @@ export function RoomGeometryEditor({
                 .map((segment, index) => (
                   <li key={index}>
                     <span>Х{index + 1}</span>
-                    <strong>{Math.round(segment.length * 1000)} мм</strong>
+                    <strong>{Number((segment.length * (unit === "мм" ? 1000 : 100)).toFixed(1))} {unit}</strong>
                   </li>
                 ))}
             </ol>
@@ -255,7 +245,7 @@ export function RoomGeometryEditor({
                     ["depth", "Товойх / хонхойх гүн", 50],
                   ] as const
                 ).map(([key, label, min]) => (
-                  <Millimetres
+                  <GeometryMeasure
                     key={key}
                     label={label}
                     value={feature[key]}
@@ -336,7 +326,7 @@ export function RoomGeometryEditor({
                     ["depth", "Гүн", 50],
                   ] as const
                 ).map(([key, label, min]) => (
-                  <Millimetres
+                  <GeometryMeasure
                     key={key}
                     label={label}
                     value={column[key]}

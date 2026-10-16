@@ -45,7 +45,7 @@ function componentHarness(initial = rectangle(), accept = () => null, extra = {}
       }
     },
   };
-  const { RoomWallPlan } = loadSource("src/components/RoomWallPlan.tsx", { react: hooks });
+  const { RoomWallPlan } = loadSource("src/components/RoomWallPlan.tsx", { react: hooks, "@/features/room-planner/components/RoomMeasureUnit": { useRoomMeasureUnit: select => select({unit:"см"}) } });
   const svg = {
     getScreenCTM: () => ({ inverse: () => currentInverse }),
     setPointerCapture: id => captures.add(id),

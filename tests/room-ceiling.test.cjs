@@ -97,9 +97,9 @@ test('all lamp types render distinct housings at their actual ceiling mount heig
  }
 });
 test('centimetre input accepts incomplete typing and commits a complete value on blur',()=>{
- let draft=null,change,begin=0,end=0;
- const {RoomMeasureInput}=loadSource('src/features/room-planner/components/RoomMeasureInput.tsx',{'react':{...require('react'),useState:()=>[draft,v=>draft=v]}});
- const render=()=>nodes(RoomMeasureInput({label:'Уналтын өндөр',value:15,min:8,max:40,onChange:v=>change=v,beginEdit:()=>begin++,endEdit:()=>end++})).find(n=>n.type==='input');
+ let draft=null,change,begin=0,end=0,cursor=0;
+ const {RoomMeasureInput}=loadSource('src/features/room-planner/components/RoomMeasureInput.tsx',{'react':{...require('react'),useState:()=>cursor++ === 0 ? [draft,v=>draft=v] : ["",()=>{}]},"@/features/room-planner/components/RoomMeasureUnit": { useRoomMeasureUnit: select => select({unit:"см"}) }});
+ const render=()=>{cursor=0;return nodes(RoomMeasureInput({label:'Уналтын өндөр',value:15,min:8,max:40,onChange:v=>change=v,beginEdit:()=>begin++,endEdit:()=>end++})).find(n=>n.type==='input');};
  render().props.onFocus();render().props.onChange({target:{value:'2'}});assert.equal(change,undefined);assert.equal(render().props.value,'2');
  render().props.onChange({target:{value:'25'}});render().props.onBlur();assert.equal(change,25);assert.equal(begin,1);assert.equal(end,1);assert.equal(draft,null);
 });
