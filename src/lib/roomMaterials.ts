@@ -26,6 +26,8 @@ export interface RoomMaterialDefinition {
   tileMetersY: number;
   roughness: number;
   normalStrength: number;
+  /** Surface-specific environment response; direct lights retain their intensity. */
+  envMapIntensity?: number;
   tintColor?: boolean;
   texturePaths?: { color: string; normal: string; roughness: string };
 }
@@ -64,7 +66,7 @@ export const CEILING_MATERIALS: readonly RoomMaterialDefinition[] = [
 ];
 
 export const ROOM_MATERIALS: readonly RoomMaterialDefinition[] = [
-  { id: "wall-paint", label: "Ханын будаг", category: "Будаг", description: "Нарийн барзгар матт будаг", color: "#ffffff", accent: "#f0efec", pattern: "paint", tileMetersX: .6, tileMetersY: .6, roughness: .89, normalStrength: .16, tintColor: true, swatch: "#ffffff" },
+  { id: "wall-paint", label: "Ханын будаг", category: "Будаг", description: "Нарийн барзгар матт будаг", color: "#ffffff", accent: "#f0efec", pattern: "paint", tileMetersX: .6, tileMetersY: .6, roughness: .94, normalStrength: .08, envMapIntensity: .85, tintColor: true, swatch: "#ffffff" },
   ...FLOOR_MATERIALS,
   ...WALLPAPER_MATERIALS,
   ...CEILING_MATERIALS,

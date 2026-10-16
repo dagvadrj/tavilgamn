@@ -194,8 +194,16 @@ function generatePixels(definition: RoomMaterialDefinition): MaterialPixels {
         const plaster = definition.pattern === "plaster";
         const cloud = noise(u, v, 12, 12, seed) - 0.5;
         const fine = noise(u, v, 64, 64, seed) - 0.5;
-        shade = (cloud * 0.065 + fine * 0.04 + grainNoise * 0.028) * (plaster ? 1 : 0.15);
-        height += (cloud * 0.18 + fine * 0.15 + grainNoise * 0.06) * (plaster ? 1 : 0.1);
+        if (definition.id === "wall-paint") {
+          // Painted walls have fine roller grain, not large plaster clouds.
+          // Keep tint neutral and the highlight broad, including at grazing angles.
+          shade = fine * 0.004 + grainNoise * 0.002;
+          height += fine * 0.01 + grainNoise * 0.003;
+          rough += fine * 0.012;
+        } else {
+          shade = (cloud * 0.065 + fine * 0.04 + grainNoise * 0.028) * (plaster ? 1 : 0.15);
+          height += (cloud * 0.18 + fine * 0.15 + grainNoise * 0.06) * (plaster ? 1 : 0.1);
+        }
       }
 
       const pixel = y * size + x;
@@ -258,7 +266,7 @@ export function useRoomMaterial(
   width: number,
   height: number,
   color = "#e5e0d4",
-): Pick<MeshStandardMaterialParameters, "map" | "normalMap" | "roughnessMap" | "color" | "roughness" | "metalness" | "normalScale"> & { onUpdate: (material: MeshStandardMaterial) => void } {
+): Pick<MeshStandardMaterialParameters, "map" | "normalMap" | "roughnessMap" | "color" | "roughness" | "metalness" | "normalScale" | "envMapIntensity"> & { onUpdate: (material: MeshStandardMaterial) => void } {
   const definition = getRoomMaterial(materialId);
   const gl = useThree((state) => state.gl);
   const invalidate = useThree((state) => state.invalidate);
@@ -314,7 +322,7 @@ export function useRoomMaterial(
   }, [definition, textures, width, height, invalidate]);
 
   if (!textures || !definition || textures.materialId !== definition.id) {
-    return { map: null, normalMap: null, roughnessMap: null, color: definition?.tintColor ? color : definition?.color ?? color, roughness: definition?.roughness ?? 0.86, metalness: 0, onUpdate: refreshMaterialProgram };
+    return { map: null, normalMap: null, roughnessMap: null, color: definition?.tintColor ? color : definition?.color ?? color, roughness: definition?.roughness ?? 0.86, metalness: 0, envMapIntensity: definition?.envMapIntensity ?? 1, onUpdate: refreshMaterialProgram };
   }
   return {
     map: textures.map,
@@ -324,6 +332,7 @@ export function useRoomMaterial(
     color: definition.tintColor ? color : "#ffffff",
     roughness: 1,
     metalness: 0,
+    envMapIntensity: definition.envMapIntensity ?? 1,
     onUpdate: refreshMaterialProgram,
   };
 }

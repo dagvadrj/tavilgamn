@@ -34,6 +34,9 @@ import { useRoomMaterial } from "./roomMaterials";
 import { OpeningMesh } from "./OpeningMesh";
 import { animateToward } from "./demandAnimation";
 import { isSceneNavigationGesture } from "./sceneNavigation";
+import { applyRoomCutaway, cutawayRaycast } from "./roomCutaway";
+import { roomFloorFinish } from "./roomFloorFinish";
+import { RoomDaylightFill } from "./RoomDaylightFill";
 
 const WALL_THICKNESS = ROOM_WALL_THICKNESS;
 const noRaycast = () => {};
@@ -138,6 +141,7 @@ function RoomWallMesh({
   );
   const meshRef =
     useRef<THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>>(null);
+  const cutawayRoot = useRef<THREE.Group>(null);
   const openingCuts = (design.openings ?? [])
     .filter((opening) => opening.wallId === id && base)
     .flatMap((opening) => {
@@ -261,20 +265,14 @@ function RoomWallMesh({
       !props.interior && (view === "plan" || outside || obscuresRoom);
     const animation = animateToward(
       mesh.material.opacity,
-      faded ? 0.065 : 1,
+      faded ? 0 : 1,
       12,
       delta,
     );
-    mesh.material.opacity = animation.value;
+    applyRoomCutaway(cutawayRoot.current ?? mesh, animation.value);
     if (animation.moving) invalidate();
-    // Opaque walls belong in the opaque pass. Switch depth writes with the
-    // animated opacity so a returning wall cannot occlude furniture mid-fade.
-    const transparent = animation.value < 1;
-    if (mesh.material.transparent !== transparent) {
-      mesh.material.transparent = transparent;
-      mesh.material.needsUpdate = true;
-    }
-    mesh.material.depthWrite = !transparent;
+    // Color-write suppression keeps hidden walls out of the image. Shadow
+    // geometry stays active so orbiting cannot change the room's sunlight.
     mesh.castShadow = true;
   });
 
@@ -301,7 +299,8 @@ function RoomWallMesh({
   };
 
   return (
-    <group position={[x, 0, z]} rotation={[0, rotation, 0]}>
+    <group ref={cutawayRoot} position={[x, 0, z]} rotation={[0, rotation, 0]}
+      userData={{ previewWall: { nx: segment.nx, nz: segment.nz } }}>
       <mesh
         ref={meshRef}
         geometry={wallGeometry}
@@ -309,7 +308,6 @@ function RoomWallMesh({
         receiveShadow
         userData={{
           openingWall: base && !props.readOnly ? id : null,
-          previewWall: { nx: segment.nx, nz: segment.nz },
         }}
         onClick={click}
         onDoubleClick={(event) => {
@@ -337,6 +335,7 @@ function RoomWallMesh({
           emissiveIntensity={selectedWall === id ? 0.09 : 0}
         />
       </mesh>
+      <group userData={{ cutawayDecoration: true }} raycast={cutawayRaycast}>
       {baseboardPieces.map((piece, index) => (
         <RoundedBox
           key={index}
@@ -359,6 +358,7 @@ function RoomWallMesh({
         </RoundedBox>
       ))}
       <WallContactShade pieces={baseboardPieces} />
+      </group>
       {/* A low perimeter remains clickable from every angle and in the top-down plan. */}
       {baseboardPieces.map((piece, index) => (
         <mesh
@@ -438,9 +438,6 @@ function RoomSurfaces({
     spanZ,
     design.floorColor,
   );
-  const woodFloor =
-    design.floorMaterial?.startsWith("parquet-") ||
-    design.floorMaterial?.startsWith("laminate-");
   const ceilingProps = useRoomMaterial(
     design.ceilingMaterial ?? "ceiling-white",
     spanX,
@@ -521,9 +518,7 @@ function RoomSurfaces({
       >
         <meshPhysicalMaterial
           {...floorProps}
-          clearcoat={woodFloor ? 0.18 : 0}
-          clearcoatRoughness={0.42}
-          envMapIntensity={0.65}
+          {...roomFloorFinish(design.floorMaterial, floorProps)}
         />
       </mesh>
       <group
@@ -729,6 +724,8 @@ export function RoomStructure(props: RoomStructureProps) {
           design={design}
           opening={opening}
           view={view}
+          interior={props.interior}
+          cutawayFocus={props.readOnly ? props.wallFocus : undefined}
           selected={props.selectedOpening === opening.id}
           onSelect={props.onSelectOpening}
           onUpdate={props.onUpdateOpening}
@@ -744,6 +741,8 @@ export function RoomStructure(props: RoomStructureProps) {
           design={design}
           opening={opening}
           view={view}
+          interior={props.interior}
+          cutawayFocus={props.readOnly ? props.wallFocus : undefined}
           selected={false}
           onDragChange={props.onDragChange}
         />
@@ -890,12 +889,14 @@ export function RoomLighting({
   extent = 20,
   centre = [0, 0],
   fixtureShadows = true,
+  windowDaylight = true,
 }: {
   design: RoomDesign;
   includeSun?: boolean;
   extent?: number;
   centre?: [number, number];
   fixtureShadows?: boolean;
+  windowDaylight?: boolean;
 }) {
   const lighting = design.lighting,
     solar = solarLighting(lighting);
@@ -951,6 +952,7 @@ export function RoomLighting({
           />
         </>
       )}
+      {windowDaylight && <RoomDaylightFill design={design} daylight={solar.daylight} />}
       {(lighting?.fixtures ?? []).map((fixture, index) => (
         <CeilingLamp
           key={fixture.id}

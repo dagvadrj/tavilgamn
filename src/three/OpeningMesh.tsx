@@ -5,11 +5,12 @@ import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Edges, Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { RoomDesign, RoomOpening } from "@/lib/types";
-import { ROOM_WALL_THICKNESS } from "@/lib/roomRendering";
+import { ROOM_WALL_THICKNESS, wallBlocksFocus } from "@/lib/roomRendering";
 import { openingWorldTransform, validateOpening, wallLength, windowLayout } from "@/lib/roomOpenings";
 import { RoomWindow } from "./RoomWindow";
 import { animateToward } from "./demandAnimation";
 import { SCENE_NAVIGATION_START, isSceneNavigationGesture } from "./sceneNavigation";
+import { applyRoomCutaway, cutawayRaycast } from "./roomCutaway";
 
 const noRaycast = () => {};
 type CaptureTarget = { setPointerCapture?: (id: number) => void; releasePointerCapture?: (id: number) => void };
@@ -64,6 +65,8 @@ export interface OpeningMeshProps {
   opening: RoomOpening;
   selected: boolean;
   view: "plan" | "perspective";
+  interior?: boolean;
+  cutawayFocus?: [number, number];
   onSelect?: (id: string | null) => void;
   onUpdate?: (opening: RoomOpening) => void;
   onDragChange: (value: boolean) => void;
@@ -84,6 +87,8 @@ export function OpeningMesh(props: OpeningMeshProps) {
   const groupRef = useRef<THREE.Group>(null);
   const paneCount = windowLayout(opening).panes;
   const ghosted = useRef(false);
+  const cutawayOpacity = useRef(1);
+  const labelRef = useRef<HTMLSpanElement>(null);
   const visualMeshes = useRef<{ mesh: THREE.Mesh; material: THREE.MeshStandardMaterial; opacity: number; castShadow: boolean }[]>([]);
 
   useEffect(() => {
@@ -93,12 +98,11 @@ export function OpeningMesh(props: OpeningMeshProps) {
       if (!(object instanceof THREE.Mesh)) return;
       originalRaycasts.push({ mesh: object, raycast: object.raycast });
       object.raycast = function (raycaster, hits) {
-        if (!ghosted.current || latest.current.selected) THREE.Mesh.prototype.raycast.call(this, raycaster, hits);
+        if (!ghosted.current) THREE.Mesh.prototype.raycast.call(this, raycaster, hits);
       };
       if (object.material instanceof THREE.MeshStandardMaterial) {
         const material = object.material;
         visualMeshes.current.push({ mesh: object, material, opacity: material.opacity, castShadow: object.castShadow });
-        material.transparent = true;
       }
     });
     return () => {
@@ -110,17 +114,16 @@ export function OpeningMesh(props: OpeningMeshProps) {
   useFrame(({ camera, invalidate }, delta) => {
     const normalX = Math.sin(transform.rotation), normalZ = Math.cos(transform.rotation);
     const world = groupRef.current?.getWorldPosition(new THREE.Vector3());
-    ghosted.current = props.view !== "plan" && !!world && (camera.position.x - world.x) * normalX + (camera.position.z - world.z) * normalZ < -0.06;
-    const fade = ghosted.current ? selected ? 0.78 : 0.09 : 1;
-    let moving = false;
-    for (const { mesh, material, opacity, castShadow } of visualMeshes.current) {
-      const animation = animateToward(material.opacity, opacity * fade, 12, delta);
-      material.opacity = animation.value;
-      moving ||= animation.moving;
-      material.depthWrite = !ghosted.current && !(material instanceof THREE.MeshPhysicalMaterial);
-      mesh.castShadow = castShadow;
-    }
-    if (moving) invalidate();
+    const outside = !!world && (camera.position.x - world.x) * normalX + (camera.position.z - world.z) * normalZ < -0.06;
+    const blocksFocus = !!world && props.cutawayFocus && wallBlocksFocus(camera.position,
+      { x: props.cutawayFocus[0], z: props.cutawayFocus[1] },
+      { x: world.x, z: world.z, nx: normalX, nz: normalZ, length: wallLength(design, opening.wallId), start: 0, end: 0 });
+    ghosted.current = !props.interior && props.view !== "plan" && !!(outside || blocksFocus);
+    const animation = animateToward(cutawayOpacity.current, ghosted.current ? 0 : 1, 12, delta);
+    cutawayOpacity.current = animation.value;
+    if (groupRef.current) applyRoomCutaway(groupRef.current, animation.value);
+    if (labelRef.current) labelRef.current.style.visibility = ghosted.current ? "hidden" : "visible";
+    if (animation.moving) invalidate();
   });
 
   const projectPosition = (clientX: number, clientY: number) => {
@@ -201,6 +204,8 @@ export function OpeningMesh(props: OpeningMeshProps) {
   };
 
   return <group ref={groupRef} position={[transform.x, opening.sillHeight, transform.z]} rotation={[0, transform.rotation, 0]}
+    userData={{ previewWall: { nx: Math.sin(transform.rotation), nz: Math.cos(transform.rotation) } }}
+    raycast={cutawayRaycast}
     onPointerDown={start}
     onClick={event => event.stopPropagation()}
     onDoubleClick={event => {
@@ -219,7 +224,7 @@ export function OpeningMesh(props: OpeningMeshProps) {
       <Edges color={invalid ? "#dc2626" : "#006ab5"} lineWidth={2} raycast={noRaycast} />
     </mesh>}
     {selected && <Html position={[0, opening.height + 0.19, 0]} center style={{ pointerEvents: "none" }}>
-      <span className={`block whitespace-nowrap rounded-lg px-2 py-1 text-[10px] font-semibold shadow-sm ${invalid ? "bg-red-600 text-white" : "bg-white/95 text-slate-700"}`}>
+      <span ref={labelRef} className={`block whitespace-nowrap rounded-lg px-2 py-1 text-[10px] font-semibold shadow-sm ${invalid ? "bg-red-600 text-white" : "bg-white/95 text-slate-700"}`}>
         {invalid ? "Энэ байрлалд багтахгүй" : isDragging ? "Ханын дагуу зөөж байна" : `${Math.round(opening.width * 100)} × ${Math.round(opening.height * 100)} см`}
       </span>
     </Html>}

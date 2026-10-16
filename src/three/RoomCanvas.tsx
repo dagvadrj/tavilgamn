@@ -229,11 +229,15 @@ export function RoomCanvas({
       frameloop={paused ? "never" : "demand"}
       gl={{
         antialias: true,
-        alpha: false,
+        // ContactShadows clears its offscreen capture with scene.background=null.
+        // A transparent clear is essential; alpha:false makes the empty map opaque
+        // and darkens the entire floor. The main scene still paints its background.
+        alpha: true,
         powerPreference: "high-performance",
         preserveDrawingBuffer: true,
       }}
       onCreated={({ gl }) => {
+        gl.setClearAlpha(0);
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 1;
         gl.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -294,6 +298,7 @@ export function RoomCanvas({
           args={[solar.night ? "#252c38" : "#F1F0ED"]}
         />
         <RoomLighting
+          windowDaylight={false}
           fixtureShadows={performance.shadows && rooms.length <= 6}
           design={{
             ...design,
@@ -309,18 +314,18 @@ export function RoomCanvas({
           frames={1}
           environmentIntensity={0.08 + 0.92 * solar.daylight}
         >
-          {/* Neutral room bounce surrounds the model, including the areas between softboxes. */}
-          <color attach="background" args={["#bcbcbc"]} />
+          {/* Separate broad reflection highlights from the darker diffuse fill. */}
+          <color attach="background" args={["#777d85"]} />
           <Lightformer
             form="rect"
-            intensity={0.8}
+            intensity={1.4}
             color="#ffffff"
             scale={[8, 6, 1]}
             position={[0, 5, -8]}
           />
           <Lightformer
             form="rect"
-            intensity={0.35}
+            intensity={0.65}
             color="#ffffff"
             scale={[6, 6, 1]}
             position={[-6, 3, 0]}
@@ -328,9 +333,9 @@ export function RoomCanvas({
           />
           <Lightformer
             form="rect"
-            intensity={0.65}
+            intensity={2}
             color="#ffffff"
-            scale={[12, 12, 1]}
+            scale={[5, 7, 1]}
             position={[0, 10, 0]}
             rotation={[Math.PI / 2, 0, 0]}
           />
@@ -412,6 +417,7 @@ export function RoomCanvas({
                   <RoomLighting
                     design={roomDesign}
                     includeSun={false}
+                    windowDaylight={rooms.length <= 6 || active}
                     fixtureShadows={performance.shadows && rooms.length <= 6}
                   />
                   {!active &&
@@ -549,12 +555,14 @@ export function RoomCanvas({
         {view === "perspective" && performance.contactShadows && (
           <RoomContactShadows
             updatingLayout={isDraggingPiece}
-            position={[centerX, -0.082, centerZ]}
-            opacity={0.2}
+            // The floor surface is y=0. A receiver below it is fully occluded.
+            position={[centerX, 0.003, centerZ]}
+            opacity={0.45}
             scale={Math.max(spanX, spanZ) * 1.15}
-            blur={3.5}
-            far={2.8}
-            color="#766c5d"
+            resolution={512}
+            blur={2}
+            far={1.8}
+            color="#514b43"
           />
         )}
         {!interior && view === "perspective" && (
@@ -807,6 +815,7 @@ function DraggablePiece({
   return (
     <group
       ref={groupRef}
+      userData={{ roomContactCaster: true }}
       position={[piece.x, 0, piece.z]}
       rotation={[0, piece.rotation, 0]}
       onClick={(event) => event.stopPropagation()}
@@ -888,7 +897,6 @@ function DraggablePiece({
           basePath={`/api/models/files/${fileModel.id}/`}
           glbFile={fileModel.file}
           preservePhysicalSize={fileModel.physicalSize}
-          bakedOcclusionIntensity={0}
           trackFloorBand
           w={dims.w}
           d={dims.d}

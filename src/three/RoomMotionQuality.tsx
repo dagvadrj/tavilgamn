@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, type ComponentProps } from "react";
-import { useThree } from "@react-three/fiber";
+import { useEffect, useRef, type ComponentProps } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import type { Camera, Group } from "three";
 import { ContactShadows } from "@react-three/drei";
 import { useCameraMotionPreview } from "./CameraMotionPreview";
+import { ROOM_CONTACT_SHADOW_LAYER, syncRoomContactShadowCasters } from "./roomContactShadowCasters";
 
 /** Spend fewer pixels during interaction; authored mesh and textures stay intact. */
 export function RoomMotionResolution({ dpr }: { dpr: number | [number, number] }) {
@@ -26,5 +28,14 @@ export function RoomContactShadows({ updatingLayout, ...props }: ComponentProps<
   updatingLayout: boolean;
 }) {
   const moving = useCameraMotionPreview();
-  return <ContactShadows {...props} frames={moving && !updatingLayout ? 1 : Infinity} />;
+  const root = useRef<Group>(null);
+  useFrame(({ scene }) => {
+    // Run before drei's depth capture. Async GLB children are picked up without
+    // changing their main-camera visibility, material or physical sun shadows.
+    const camera = root.current?.children.find(child => (child as Camera).isCamera);
+    if (!camera) return;
+    camera.layers.set(ROOM_CONTACT_SHADOW_LAYER);
+    syncRoomContactShadowCasters(scene);
+  }, -1);
+  return <ContactShadows ref={root} {...props} frames={moving && !updatingLayout ? 1 : Infinity} />;
 }

@@ -146,6 +146,10 @@ test('walls use opaque depth writes inside and switch safely during camera fades
     const version = material.version;
     frame(state, 1 / 60);
     assert.equal(material.version, version, 'shader is not recompiled on every fade frame');
+    for (let i = 0; i < 100; i++) frame(state, 1 / 60);
+    assert.equal(material.opacity, 0, 'the camera-facing wall disappears completely');
+    assert.equal(material.colorWrite, false);
+    assert.equal(mesh.castShadow, true);
     camera.position.z = 0;
     frame(state, 1 / 60);
     assert.equal(material.depthWrite, false, 'returning wall remains translucent until settled');
@@ -153,6 +157,7 @@ test('walls use opaque depth writes inside and switch safely during camera fades
     assert.equal(material.opacity, 1);
     assert.equal(material.transparent, false);
     assert.equal(material.depthWrite, true);
+    assert.equal(material.colorWrite, true);
   } finally { mesh.geometry.dispose(); material.dispose(); }
 });
 
