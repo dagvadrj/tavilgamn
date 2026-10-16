@@ -1,5 +1,7 @@
 # Sofa delivery — source surface хадгалах profile
 
+2026-10-16 grazing-angle follow-up: доорх 1.95MB үр дүн нь өмнөх Meshopt high preset-тэй. Installed glTF Transform high preset хүссэн normal12-ийг 8-bit хүртэл хязгаарлаж байсныг илрүүлсэн; compressor одоо medium preset ашиглаж normal12-ийг хадгална. Ижил Luna geometry/texture-тэй шинэ candidate **2,120,424 bytes / 69,913 triangles** (`model-work/luna-grazing-audit-2026-10-16/meshopt-normal12/`). Хуучин нийтлэгдсэн R2 delivery-г солиогүй. [Хажуугийн цайралтын A/B судалгаа](../../docs/research/ikea-room-planner-2026-10-15/luna2-grazing-whitening-2026-10-16.md).
+
 Original GLB болон `C:/GLB_BAKE/auto_bake.py` өөрчлөгдөхгүй. Offline CLI шинэ output үүсгэнэ. Web-ийн original upload → worker урсгалд мөн холбогдсон; шинэ job ганц delivery GLB publish хийнэ.
 
 ## Одоо ашиглах Luna

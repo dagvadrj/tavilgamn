@@ -271,7 +271,8 @@ export function GLBFurnitureMesh({
                   0,
                   Math.min(1, bakedOcclusionIntensity),
                 );
-              clonedMaterial.side = THREE.DoubleSide;
+              // Preserve authored face culling. Forced DoubleSide exposes the
+              // backs of overlapping scan surfaces at grazing camera angles.
               const surface = kitchenCabinetSurface(
                 object.name,
                 clonedMaterial.name,

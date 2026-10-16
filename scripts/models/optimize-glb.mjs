@@ -442,7 +442,7 @@ async function main() {
 
         await transform("meshopt", [
           "--level",
-          "high",
+          "medium",
           "--quantize-position",
           "16",
           "--quantize-normal",

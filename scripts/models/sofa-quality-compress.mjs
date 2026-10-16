@@ -133,7 +133,9 @@ const compressed=await io.read(encodedPath);
 if(values.codec==='draco') {
   await compressed.transform(draco({method:'sequential',encodeSpeed:5,decodeSpeed:5,quantizePosition:16,quantizeNormal:12,quantizeTexcoord:16,quantizeGeneric:16}));
 } else {
-  await compressed.transform(meshopt({encoder:MeshoptEncoder,level:'high',quantizePosition:16,quantizeNormal:12,quantizeTexcoord:16}));
+  // The high preset caps base normals at 8 bits, regardless of quantizeNormal.
+  // Medium honors the requested 12-bit authored normal precision.
+  await compressed.transform(meshopt({encoder:MeshoptEncoder,level:'medium',quantizePosition:16,quantizeNormal:12,quantizeTexcoord:16}));
 }
 await io.write(output,compressed);
 const finalBytes=await readFile(output);

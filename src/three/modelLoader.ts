@@ -5,6 +5,7 @@ import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { instanceRepeatedModules } from "./instanceModules";
+import { configureModelTextureSampling } from "./modelTextureSampling";
 export interface ModelLoadMetrics {
   queuedAt: number;
   startedAt: number;
@@ -79,6 +80,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
     entry.promise = schedule(async () => {
       const startedAt = performance.now();
       const gltf = await owner.loader.loadAsync(url);
+      configureModelTextureSampling(gltf.scene, renderer);
       gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = true; object.receiveShadow = true; } });
       if (!gltf.animations.length && !options.preserveHierarchy) instanceRepeatedModules(gltf.scene);
       gltf.scene.updateMatrixWorld(true);

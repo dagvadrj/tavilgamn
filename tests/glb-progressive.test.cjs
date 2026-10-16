@@ -278,8 +278,19 @@ test("selection and legacy preview changes never restart the same delivery", asy
     const material=run.primitive().props.object.children[0].material;
     assert.notEqual(material,source);assert.equal(material.color.getHex(),source.color.getHex());
     assert.equal(material.map,source.map);assert.equal(material.normalMap,source.normalMap);assert.equal(material.aoMap,source.aoMap);
+    assert.equal(material.side,THREE.FrontSide,"authored culling must not expose overlapping back faces");
     assert.equal(material.envMapIntensity,1);assert.equal(source.envMapIntensity,.8);
   } finally {run.unmount();global.window=originalWindow;}
+});
+
+test("an intentionally double-sided imported material stays double-sided",async()=>{
+  const source=new THREE.MeshStandardMaterial({side:THREE.DoubleSide});
+  const run=harness();
+  try {
+    await run.flush();run.resolve(0,source);await run.flush();
+    assert.equal(run.primitive().props.object.children[0].material.side,THREE.DoubleSide);
+    assert.equal(source.side,THREE.DoubleSide);
+  }finally{run.unmount();}
 });
 
 test("room-only baked AO is disabled without changing colour maps or the shared source",async()=>{
