@@ -1,5 +1,7 @@
 "use client";
 
+import { PageSkeleton } from "@/components/PageSkeleton";
+
 import { useDraftState } from "@/hooks/useDashboardDraft";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -54,14 +56,7 @@ export function MerchantDashboard({
   }, [initialized, user, router]);
   if (!initialized || !user)
     return (
-      <main
-        id="main-content"
-        className="merchant-gate merchant-state"
-        role="status"
-      >
-        <StoreIcon size={32} />
-        Дэлгүүрийн эрхийг шалгаж байна…
-      </main>
+      <main id="main-content"><PageSkeleton variant="dashboard" label="Дэлгүүрийн эрхийг шалгаж байна…" /></main>
     );
   if (role !== "merchant")
     return (
@@ -220,9 +215,7 @@ function MerchantWorkspace({
             </button>
           </div>
         ) : (
-          <div className="merchant-load-state" role="status">
-            Дэлгүүрийг ачаалж байна…
-          </div>
+          <PageSkeleton variant="dashboard" compact label="Дэлгүүрийг ачаалж байна…" />
         )
       ) : kitchenDesignId ? (
         store ? (

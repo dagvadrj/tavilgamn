@@ -18,12 +18,41 @@ type NullableArgs = {
 type Functions = Generated["public"]["Functions"];
 type Rpc<Name extends keyof Functions> = Name extends keyof NullableArgs
   ? Omit<Functions[Name], "Args"> & {
-      Args: { [Key in keyof Functions[Name]["Args"]]:
-        Functions[Name]["Args"][Key] | (Key extends NullableArgs[Name] ? null : never) };
+      Args: {
+        [Key in keyof Functions[Name]["Args"]]:
+          | Functions[Name]["Args"][Key]
+          | (Key extends NullableArgs[Name] ? null : never);
+      };
     }
   : Functions[Name];
 export type Database = Omit<Generated, "public"> & {
-  public: Omit<Generated["public"], "Functions"> & {
+  public: Omit<Generated["public"], "Functions" | "Tables"> & {
+    Tables: Generated["public"]["Tables"] & {
+      homepage_scene_settings: {
+        Row: {
+          id: number;
+          product_ids: string[];
+          version: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id: number;
+          product_ids: string[];
+          version?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          id?: number;
+          product_ids?: string[];
+          version?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: { [Name in keyof Functions]: Rpc<Name> };
   };
 };

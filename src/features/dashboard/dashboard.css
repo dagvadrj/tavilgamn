@@ -2,17 +2,17 @@
 
 .dashboard-layout,
 .dashboard-drawer {
-  --dashboard-bg: #090a0c;
-  --dashboard-surface: #101113;
-  --dashboard-elevated: #191b1e;
-  --dashboard-border: #27292d;
-  --dashboard-ink: #f2f3f5;
-  --dashboard-muted: #a3a6ae;
-  --dashboard-accent: #a395ff;
+  --dashboard-bg: var(--site-bg);
+  --dashboard-surface: var(--site-surface);
+  --dashboard-elevated: var(--site-hover);
+  --dashboard-border: var(--site-line);
+  --dashboard-ink: var(--site-ink);
+  --dashboard-muted: var(--site-muted);
+  --dashboard-accent: var(--site-accent);
   --dashboard-success: #72c98a;
   --dashboard-danger: #ff8a86;
   --dashboard-warning: #e8bf74;
-  color-scheme: dark;
+  color-scheme: light;
   color: var(--dashboard-ink);
   background: var(--dashboard-bg);
   font-family: var(--font-dashboard-body), var(--font-sans), sans-serif;

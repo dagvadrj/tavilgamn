@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
       description: model.description,
       basePrice: Number(model.base_price),
       glbFile: fileNameFromPath(model.glb_path),
-      previewGlbFile: fileNameFromPath(model.preview_glb_path) || undefined,
       physicalSize: model.category === "kitchen-cabinet" && Boolean(model.glb_validation),
       thumbnailFile: fileNameFromPath(model.thumbnail_path),
       scale: Number(model.scale),

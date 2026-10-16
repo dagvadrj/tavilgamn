@@ -4,17 +4,17 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  --dashboard-accent: #2563eb;
+  --dashboard-accent: var(--site-accent);
   --dashboard-on-accent: #fff;
 }
 
 .dashboard-layout .dashboard-themed-shell[data-theme="light"] {
-  --dashboard-bg: #f8fafc;
-  --dashboard-surface: #fff;
-  --dashboard-elevated: #f1f5f9;
-  --dashboard-border: #e2e8f0;
-  --dashboard-ink: #0f172a;
-  --dashboard-muted: #64748b;
+  --dashboard-bg: var(--site-bg);
+  --dashboard-surface: var(--site-surface);
+  --dashboard-elevated: var(--site-hover);
+  --dashboard-border: var(--site-line);
+  --dashboard-ink: var(--site-ink);
+  --dashboard-muted: var(--site-muted);
   --dashboard-success: #15803d;
   --dashboard-danger: #dc2626;
   --dashboard-warning: #a16207;
@@ -22,6 +22,15 @@
 }
 
 .dashboard-layout .dashboard-themed-shell[data-theme="dark"] {
+  --site-ink: #f8fafc;
+  --site-muted: #a6b3c7;
+  --site-line: #293548;
+  --site-surface: #111827;
+  --site-bg: #090e18;
+  --site-hover: #1e293b;
+  --site-accent: #60a5fa;
+  --site-primary: #60a5fa;
+  --site-primary-hover: #93c5fd;
   --dashboard-bg: #090e18;
   --dashboard-surface: #111827;
   --dashboard-elevated: #1e293b;
@@ -97,22 +106,22 @@
   background: color-mix(in srgb, var(--dashboard-accent) 12%, var(--dashboard-surface));
 }
 
-/* The AI workspace retains its existing palette in both dashboard themes. */
+/* The render workspace follows the selected dashboard theme as well. */
 
 .dashboard-themed-shell .mk-render-layout {
-  --dashboard-bg: #090a0c;
-  --dashboard-surface: #101113;
-  --dashboard-elevated: #191b1e;
-  --dashboard-border: #27292d;
-  --dashboard-ink: #f2f3f5;
-  --dashboard-muted: #a3a6ae;
-  --dashboard-accent: #a395ff;
-  --dashboard-on-accent: #090a0c;
-  --dashboard-success: #72c98a;
-  --dashboard-danger: #ff8a86;
-  --dashboard-warning: #e8bf74;
+  --dashboard-bg: inherit;
+  --dashboard-surface: inherit;
+  --dashboard-elevated: inherit;
+  --dashboard-border: inherit;
+  --dashboard-ink: inherit;
+  --dashboard-muted: inherit;
+  --dashboard-accent: inherit;
+  --dashboard-on-accent: inherit;
+  --dashboard-success: inherit;
+  --dashboard-danger: inherit;
+  --dashboard-warning: inherit;
   color: var(--dashboard-ink);
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 
 @media (max-width: 639px) {

@@ -38,9 +38,9 @@
 
 .shop-shell .market-category-tile:hover .market-category-icon,
 .shop-shell .market-category-tile:focus-visible .market-category-icon {
-  color: #2563eb;
+  color: var(--site-accent);
   border-color: #bfdbfe;
-  background: #eff6ff;
+  background: var(--site-selected);
 }
 
 .shop-shell .market-hero-row {

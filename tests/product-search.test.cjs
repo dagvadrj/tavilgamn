@@ -60,7 +60,11 @@ function harness(initial = {}) {
   const previousFetch = global.fetch;
   const timers = new Map();
   let timerId = 0;
-  global.window = {
+  const styles = new Map();
+  const viewport = Object.assign(new EventTarget(), { height: 720, offsetTop: 0 });
+  global.window = Object.assign(new EventTarget(), {
+    innerHeight: 720,
+    visualViewport: viewport,
     setTimeout(fn) {
       const id = ++timerId;
       timers.set(id, fn);
@@ -69,7 +73,7 @@ function harness(initial = {}) {
     clearTimeout(id) {
       timers.delete(id);
     },
-  };
+  });
   global.fetch = async () => ({
     ok: true,
     json: async () => ({
@@ -154,6 +158,8 @@ function harness(initial = {}) {
     effects = [];
     tree = ProductSearch();
     tree.props.ref.current = {
+      getBoundingClientRect: () => ({ bottom: 120 }),
+      style: { setProperty: (name, value) => styles.set(name, value) },
       contains: () => false,
       querySelectorAll: () =>
         Array.from({ length: 6 }, () => ({
@@ -171,6 +177,8 @@ function harness(initial = {}) {
   flush();
   return {
     catalog,
+    styles,
+    viewport,
     pushes,
     nodes,
     flush,
@@ -250,6 +258,28 @@ test("search loads lazily, shows six compact real-product options and navigates 
     assert.equal(h.key("Enter"), true);
     assert.deepEqual(h.pushes, ["/product/sofa-5"]);
     assert.equal(h.input().props["aria-expanded"], false);
+  } finally {
+    h.dispose();
+  }
+});
+
+test("phone search resizes for the keyboard and touch scrolling does not select or jump to a result", () => {
+  const h = harness({ ready: true, products: [sofa] });
+  try {
+    h.enter("sofa");
+    assert.equal(h.styles.get("--search-available-height"), "582px");
+    h.viewport.height = 360;
+    h.viewport.dispatchEvent(new Event("resize"));
+    assert.equal(h.styles.get("--search-available-height"), "222px");
+    const option = h.nodes().find(node => node.props.role === "option");
+    option.props.onPointerMove({ pointerType: "touch" });
+    h.flush();
+    assert.equal(h.input().props["aria-activedescendant"], undefined);
+    assert.equal(h.scrolls, 0);
+    h.key("Escape");
+    h.viewport.height = 720;
+    h.viewport.dispatchEvent(new Event("resize"));
+    assert.equal(h.styles.get("--search-available-height"), "222px", "closing search removes viewport listeners");
   } finally {
     h.dispose();
   }

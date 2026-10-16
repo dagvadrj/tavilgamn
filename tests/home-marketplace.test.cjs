@@ -118,7 +118,7 @@ test("homepage payment labels use checkout availability, never advertise unconfi
   assert.deepEqual(offline.configuredPaymentLabels(), []);
 });
 
-test("homepage renders the initial batch on the server for automatic scrolling, excluding placeholder or uncounted products", async () => {
+test("homepage renders the initial batch after the page data loads for automatic scrolling, excluding placeholder or uncounted products", async () => {
   const products = Array.from({ length: 17 }, (_, index) => ({
     ...chair,
     id: `chair-${index}`,
@@ -127,7 +127,8 @@ test("homepage renders the initial batch on the server for automatic scrolling, 
     { ...chair, id: "placeholder", image: "/image.png" },
     { ...chair, id: "unknown-stock", stockQuantity: null },
   );
-  const Home = loadSource("src/app/(shop)/page.tsx", {
+  const Home = loadSource("src/components/pages/HomePageClient.tsx", {
+    "@/components/HomeShowcase": { HomeShowcase: () => null },
     "@/lib/catalogServer": { readProducts: async () => products },
     "@/lib/storeDirectory": { readStoreDirectory: async () => [] },
     "@/components/FeaturedMerchants": { FeaturedMerchants: () => null },
@@ -138,8 +139,8 @@ test("homepage renders the initial batch on the server for automatic scrolling, 
     "next/image": {
       default: ({ alt }) => React.createElement("span", { "aria-label": alt }),
     },
-  }).default;
-  const html = renderToStaticMarkup(await Home({}));
+  }).HomeContent;
+  const html = renderToStaticMarkup(React.createElement(Home, { catalog: products, stores: [], paymentLabels: [] }));
   assert.equal((html.match(/data-product=/g) || []).length, 18); // Eight daily + ten recommended.
   assert.ok(
     html.includes("market-scroll-loader") && !html.includes("Дахин үзүүлэх"),
@@ -157,12 +158,12 @@ test("homepage renders the initial batch on the server for automatic scrolling, 
       html.includes("Карт / зээл — тун удахгүй"),
   );
   const more = renderToStaticMarkup(
-    await Home({ searchParams: Promise.resolve({ limit: "20" }) }),
+    React.createElement(Home, { catalog: products, stores: [], paymentLabels: [], limit: "20" }),
   );
   assert.equal((more.match(/data-product=/g) || []).length, 25);
   assert.ok(!more.includes("market-scroll-loader"));
   const invalid = renderToStaticMarkup(
-    await Home({ searchParams: Promise.resolve({ limit: "-10" }) }),
+    React.createElement(Home, { catalog: products, stores: [], paymentLabels: [], limit: "-10" }),
   );
   assert.equal((invalid.match(/data-product=/g) || []).length, 18);
 });
@@ -240,7 +241,7 @@ test("studio theme, responsive and reduced-motion contracts stay scoped to the s
     .readStylesheet("src/app/(shop)/storefront.css")
     .toString();
   const tokens = readFileSync("src/app/(shop)/shop-tokens.css", "utf8");
-  for (const token of ["#fafafa", "#111111", "#2563eb"])
+  for (const token of ["var(--site-bg)", "var(--site-ink)", "var(--site-accent)"])
     assert.ok(tokens.includes(token));
   assert.match(tokens, /\.shop-shell\s*\{/);
   assert.match(css, /color-scheme: light/);
@@ -257,8 +258,14 @@ test("studio theme, responsive and reduced-motion contracts stay scoped to the s
   assert.match(carousel, /5000/);
   assert.match(carousel, /aria-pressed/);
   const layout = readFileSync("src/app/(shop)/layout.tsx", "utf8");
-  assert.match(layout, /Manrope/);
-  assert.match(layout, /"cyrillic"/);
+  assert.match(layout, /site-ui shop-shell/);
+  const sharedTheme = readFileSync("src/app/site-ui.css", "utf8");
+  assert.match(sharedTheme, /--font-market-body:\s*var\(--font-sans\)/);
+  const scopedRules = require("postcss").parse(sharedTheme);
+  scopedRules.walkRules(rule => require("postcss-selector-parser")().astSync(rule.selector).each(selector => {
+    assert.equal(selector.nodes[0]?.type, "class", `Unscoped shared UI rule: ${rule.selector}`);
+    assert.equal(selector.nodes[0]?.value, "site-ui", `Unscoped shared UI rule: ${rule.selector}`);
+  }));
   for (const path of [
     "src/app/(shop)/page.tsx",
     "src/components/Header.tsx",
@@ -306,7 +313,7 @@ test("card color selection updates the shown price, detail link and exact cart v
   tree = render();
   assert.equal(tree.find(node => node.props?.["aria-label"] === "Хушга").props["aria-pressed"], true);
   assert.ok(tree.some(node => node.type === "strong" && node.props.children === "1,573,000₮"));
-  const trigger = tree.find(node => node.props?.className === "product-3d");
+  const trigger = tree.find(node => node.props?.className === "product-view-model");
   assert.equal(trigger.type, "button");
   assert.equal(trigger.props["aria-haspopup"], "dialog");
   trigger.props.onClick();

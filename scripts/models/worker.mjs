@@ -22,7 +22,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { fileURLToPath } from "node:url";
-import { previewReference } from "./preview-reference.mjs";
+import { cleanupReadyDeliverySource, deliveryPublishFields, geometryProfileForModel } from "./delivery-policy.mjs";
+import { decodedDeliveryBounds } from "./delivery-bounds.mjs";
 import { cleanupAbandonedSources } from "./cleanup-abandoned-sources.mjs";
 import { verifyAssemblySockets } from "./assembly-sockets.mjs";
 
@@ -302,10 +303,9 @@ async function cleanupPublishedSource(modelId, jobId, sourcePath) {
 async function cleanupOneReadySource() {
   const { data, error } = await db
     .from("furniture_models")
-    .select("id,processing_job_id,source_glb_path,glb_path,preview_glb_path")
+    .select("id,processing_job_id,source_glb_path,glb_path")
     .eq("processing_status", "ready")
     .not("source_glb_path", "is", null)
-    .not("preview_glb_path", "is", null)
     .limit(1);
   if (error) throw error;
   const model = data?.[0];
@@ -317,19 +317,10 @@ async function cleanupOneReadySource() {
   ) {
     throw new Error("Ready model has an invalid source cleanup reference.");
   }
-  const { highKey } = previewReference(model, R2_BUCKET_NAME, model.processing_job_id);
-  const previewPrefix = `r2://${R2_BUCKET_NAME}/models/${model.id}/delivery/`;
-  const previewTail = model.preview_glb_path?.slice(previewPrefix.length);
-  const match = typeof previewTail === "string" && previewTail.match(/^([0-9a-f-]{36})\/preview-([0-9a-f-]{36})\.glb$/i);
-  if (!model.preview_glb_path?.startsWith(previewPrefix) || !match || match[1] !== match[2] || !isUuid(match[1])) return false;
-  for (const key of [highKey, model.preview_glb_path.slice(`r2://${R2_BUCKET_NAME}/`.length)]) {
-    const object = await r2.send(new HeadObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key }));
-    if (!object.ContentLength) throw new Error("Delivery asset is missing or empty; preserving source.");
-  }
-  return cleanupPublishedSource(
-    model.id,
-    model.processing_job_id,
-    model.source_glb_path,
+  return cleanupReadyDeliverySource(
+    model, R2_BUCKET_NAME,
+    key => r2.send(new HeadObjectCommand({ Bucket: R2_BUCKET_NAME, Key: key })),
+    cleanupPublishedSource,
   );
 }
 
@@ -404,8 +395,7 @@ async function processJob(model) {
 
     pipelineArgs.push(
       `--max-triangles=${process.env.MODEL_MAX_TRIANGLES ?? "4000000"}`,
-      `--preview-triangles=${process.env.MODEL_PREVIEW_TRIANGLES ?? "80000"}`,
-      `--preview-texture-size=${process.env.MODEL_PREVIEW_TEXTURE_SIZE ?? "512"}`,
+      `--geometry-profile=${geometryProfileForModel(model)}`,
     );
 
     await run(process.execPath, pipelineArgs);
@@ -417,14 +407,12 @@ async function processJob(model) {
     const compressed = path.join(buildDirectory, "compressed", modelId);
 
     const deliveryFile = path.join(compressed, "delivery.glb");
-    const previewFile = path.join(compressed, "preview.glb");
     const deliveryInfo = await stat(deliveryFile);
-    const previewInfo = await stat(previewFile);
     if (["kitchen-part", "kitchen-assembly"].includes(model.glb_validation?.assetRole)) {
-      await verifyAssemblySockets(sourceFile, [deliveryFile, previewFile]);
+      await verifyAssemblySockets(sourceFile, [deliveryFile]);
     }
     if (model.glb_validation) {
-      const geometryReport = JSON.parse(await readFile(path.join(buildDirectory, "geometry", modelId, "geometry-report.json"), "utf8"));
+      const geometryReport = await decodedDeliveryBounds(deliveryFile);
       const actual = geometryReport.dimensionsM;
       const projectionM = Number(model.glb_validation.frontProjectionMm ?? 0) / 1000;
       if (!Number.isFinite(projectionM) || projectionM < 0 || projectionM > 0.1 || !actual || ["w", "h", "d"].some(axis => !Number.isFinite(actual[axis]) || Math.abs(actual[axis] - Number(model[`dimensions_${axis}`]) - (axis === "d" ? projectionM : 0)) > 0.005)) throw new Error("Decoded GLB dimensions do not match approved catalog dimensions");
@@ -436,9 +424,7 @@ async function processJob(model) {
     if (!deliveryInfo.isFile() || deliveryInfo.size < 12) {
       throw new Error("Missing compressed delivery.glb");
     }
-    if (!previewInfo.isFile() || previewInfo.size < 12) {
-      throw new Error("Missing compressed preview.glb");
-    }
+
 
     // --------------------------------
     // 4. TEMP -> R2
@@ -453,11 +439,7 @@ async function processJob(model) {
     const deliveryPath = await uploadGlb(deliveryFile, deliveryKey);
     uploadedKeys.push(deliveryKey);
     console.log("[worker] uploaded delivery model.glb");
-    const previewKey =
-      `models/${modelId}/delivery/` + `${jobId}/preview-${jobId}.glb`;
-    const previewPath = await uploadGlb(previewFile, previewKey);
-    uploadedKeys.push(previewKey);
-    console.log("[worker] uploaded preview GLB");
+
 
     // --------------------------------
     // 5. Atomic publish
@@ -476,9 +458,7 @@ async function processJob(model) {
     const { data: updated, error: updateError } = await db
       .from("furniture_models")
       .update({
-        glb_path: deliveryPath,
-
-        preview_glb_path: previewPath,
+        ...deliveryPublishFields(deliveryPath),
 
         standard_glb_path: null,
 
@@ -524,7 +504,7 @@ async function processJob(model) {
       await Promise.all(uploadedKeys.map((key) => deleteR2Key(key)));
     }
     // A lost publish response may still have committed. Keep immutable assets
-    // in that uncertain case rather than deleting a live high/preview pair.
+    // in that uncertain case rather than deleting a live delivery.
 
     if (stale) {
       console.log(`[worker] stale job ignored: ${modelId}/${jobId}`);

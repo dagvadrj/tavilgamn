@@ -17,6 +17,41 @@ The `/planner` route keeps each room's surfaces, openings and fixtures in the ex
 
 ## Implementation
 
+### Furniture delivery, based on the IKEA room study
+
+The shared `GLBFurnitureMesh` renderer reserves a newly placed item's catalogue
+width, depth and height with a translucent soft-blue box. It participates in the
+normal parent selection/drag handlers. The prepared GLB replaces the box without
+moving the room camera. Preview-to-high delivery keeps its existing progressive
+loading and camera-motion optimization.
+
+Changing a model or its material keeps the previous prepared model at its original
+scale until the new asset and material textures are ready. Failed replacements
+keep the visible model and offer retry; late results from superseded requests are
+released. Delivery/export readiness tracks the current request, so a retained old
+model cannot be exported as the new choice. Room thumbnails keep their previous
+image during loading and retry on delivery frames, without a polling render loop.
+
+This implements the loading behavior observed in `.tools/rea-ikea-findings.json`.
+No exact IKEA entry-animation duration or easing was established by that study.
+The existing procedural room, materials and lighting remain the room presentation;
+matching IKEA's photographic room rendering would require our own aligned
+panorama, camera calibration, depth/occlusion and lighting assets.
+
+Run `node scripts/verify/room-model-loading.cjs` and the same command with
+`--mobile` against a local server (`PLANNER_URL` overrides the URL). The browser
+check uses an isolated guest context, an intercepted catalogue and a synthetic
+sofa GLB. It holds delivery, checks the measured placeholder, rotation while
+loading, thumbnail preservation/retry, unchanged camera and orbit target, and
+records screenshots/results under `.tools/ikea-loading-browser/`. Configure
+`CHROME_PATH` and `PLAYWRIGHT_MODULE` when the local browser/runtime paths differ.
+
+Verified on 2026-10-15: production build, lint and TypeScript passed; 26 focused
+delivery/room/camera tests passed. The full suite passed 676 of 684 tests, with
+the same eight failures reproduced against the unchanged HEAD versions of the
+two modified renderer sources. Desktop and 390 px mobile browser checks passed
+against both the dev server and the production build using the synthetic fixture.
+
 `src/lib/roomWallEditing.ts` maps visible perimeter segments to base walls or existing inset/recess faces and sides. Column edges and ambiguous shared edges are excluded. Movement is calculated from the gesture's original shape on an integer millimetre grid. The helper returns the centered-coordinate translation for furniture and lights, which is validated and stored atomically with the room shape. `RoomWallPlan` freezes SVG coordinates during each gesture, coalesces pointer samples per animation frame, and consumes the final pointer-up position. It releases capture and queued work on cancellation/unmount.
 
 `src/lib/roomOpenings.ts` defines templates, metre-based dimensions, stable wall IDs and normalized centre positions (0–1), validation and clockwise wall transforms. Frames reserve 6 cm of clearance. Invalid values, overlaps, wall-edge overflow and ceiling overflow are blocked. Existing insets, recesses and wall-touching columns are respected: openings can occupy available straight portions of the four original walls. Displaced inset/recess faces are not separate opening targets.

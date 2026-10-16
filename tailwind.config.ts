@@ -7,6 +7,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        ui: {
+          ink: "rgb(var(--site-ink-rgb) / <alpha-value>)",
+          muted: "rgb(var(--site-muted-rgb) / <alpha-value>)",
+          line: "rgb(var(--site-line-rgb) / <alpha-value>)",
+          accent: "rgb(var(--site-accent-rgb) / <alpha-value>)",
+          bg: "var(--site-bg)",
+          surface: "var(--site-surface)",
+          selected: "var(--site-selected)",
+          success: "var(--site-success)",
+        },
         bone: "#FFFFFF",
         ink: "#111111",
         clay: "#C58348",

@@ -1,4 +1,6 @@
 "use client";
+
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useEffect, useRef, useState } from "react";
 import { usePlannerPanel } from "@/features/planner/components/usePlannerPanel";
 import { X } from "lucide-react";
@@ -314,11 +316,5 @@ export function NumberControl({
 }
 
 export function PlannerSkeleton() {
-  return (
-    <div className="grid h-full w-full place-items-center bg-[#EEEEE7]">
-      <div className="text-sm text-[#6C726B]">
-        Өрөөний төлөвлөгчийг ачаалж байна…
-      </div>
-    </div>
-  );
+  return <PageSkeleton variant="planner" compact label="Өрөөний төлөвлөгчийг ачаалж байна…" />;
 }

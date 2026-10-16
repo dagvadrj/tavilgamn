@@ -97,11 +97,9 @@ export function productFromRow(row: FurnitureRow): Product {
   });
   if (row.glb_path && row.processing_status === "ready") {
     const file = row.glb_path.split("/").pop()!;
-    const previewFile = row.preview_glb_path?.split("/").pop();
     if (
       !/^[0-9a-f-]{36}$/i.test(row.id) ||
       !/^[a-zA-Z0-9._-]+$/.test(file) ||
-      (previewFile && !/^[a-zA-Z0-9._-]+$/.test(previewFile)) ||
       !Number.isFinite(Number(row.scale)) ||
       Number(row.scale) <= 0
     )
@@ -109,7 +107,6 @@ export function productFromRow(row: FurnitureRow): Product {
     product.model = {
       id: row.id,
       file,
-      ...(previewFile ? { previewFile } : {}),
       scale: Number(row.scale),
       physicalSize:
         row.category === "kitchen-cabinet" && Boolean(row.glb_validation),

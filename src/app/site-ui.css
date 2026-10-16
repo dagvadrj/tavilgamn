@@ -1,0 +1,181 @@
+/* Room planner visual language. Opt-in roots deliberately exclude the kitchen editor. */
+
+.site-ui {
+  --site-ink-rgb: 38 56 72;
+  --site-muted-rgb: 99 113 130;
+  --site-line-rgb: 224 229 234;
+  --site-accent-rgb: 8 118 194;
+  --site-ink: rgb(var(--site-ink-rgb));
+  --site-muted: rgb(var(--site-muted-rgb));
+  --site-line: rgb(var(--site-line-rgb));
+  --site-accent: rgb(var(--site-accent-rgb));
+  --site-primary: #076bb5;
+  --site-primary-hover: #075eaa;
+  --site-selected: #eaf5ff;
+  --site-bg: #f8fafc;
+  --site-surface: #fff;
+  --site-hover: #f1f5f9;
+  --site-success: #15803d;
+  --site-danger: #b91c1c;
+  --site-radius: 16px;
+  --site-control-radius: 12px;
+  --site-shadow: 0 3px 16px #20212408;
+  --font-market-body: var(--font-sans);
+  --font-market-heading: var(--font-sans);
+  --font-dashboard-body: var(--font-sans);
+  --font-auth: var(--font-sans);
+  --font-display: var(--font-sans);
+  --paper: var(--site-bg);
+  --paper-card: var(--site-surface);
+  --ink: var(--site-ink);
+  --ink-hover: var(--site-primary-hover);
+  --grain: var(--site-muted);
+  --grain-text: var(--site-muted);
+  --line: var(--site-line);
+  --teal: var(--site-accent);
+  --lacquer: var(--site-primary);
+  --lacquer-hover: var(--site-primary-hover);
+  --sand: var(--site-hover);
+  --loading-accent: var(--site-accent);
+  --loading-block: var(--site-line);
+  --loading-highlight: var(--site-bg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  color: var(--site-ink);
+  background: var(--site-bg);
+}
+
+.site-ui :is(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--site-accent);
+  outline-offset: 3px;
+}
+
+.site-ui :is(.btn-primary, .btn-secondary) {
+  min-height: 44px;
+  border: 1px solid var(--site-primary);
+  border-radius: 999px;
+  background: var(--site-primary);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.site-ui :is(.btn-primary, .btn-secondary):hover:not(:disabled) {
+  border-color: var(--site-primary-hover);
+  background: var(--site-primary-hover);
+}
+
+.site-ui .btn-ghost {
+  min-height: 44px;
+  border-color: var(--site-line);
+  border-radius: 999px;
+  background: var(--site-surface);
+  color: var(--site-ink);
+}
+
+.site-ui .btn-ghost:hover:not(:disabled) {
+  background: var(--site-hover);
+}
+
+.site-ui :is(.input, .ui-input) {
+  min-height: 44px;
+  border: 1px solid var(--site-line);
+  border-radius: var(--site-control-radius);
+  background: var(--site-surface);
+  color: var(--site-ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.site-ui :is(.input, .ui-input):focus {
+  border-color: var(--site-accent);
+}
+
+.site-ui :is(.input, .ui-input)::placeholder {
+  color: var(--site-muted);
+}
+
+.site-ui :is(.card, .ui-panel) {
+  min-width: 0;
+  border: 1px solid var(--site-line);
+  border-radius: var(--site-radius);
+  background: var(--site-surface);
+  box-shadow: var(--site-shadow);
+}
+
+.site-ui .ui-page {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding: 36px 24px 64px;
+}
+
+.site-ui .ui-page-heading {
+  margin-bottom: 28px;
+}
+
+.site-ui .ui-page-heading h1,
+.site-ui .ui-title {
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -.035em;
+  color: var(--site-ink);
+}
+
+.site-ui .ui-page-heading p {
+  margin-top: 10px;
+  max-width: 640px;
+  color: var(--site-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.site-ui :is(.label, .ui-eyebrow) {
+  color: var(--site-muted);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+}
+
+.site-ui .ui-section-title {
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -.025em;
+}
+
+.site-ui .page-skeleton-status {
+  color: var(--site-muted);
+}
+
+.site-ui .ui-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: min(640px, calc(100% - 32px));
+  margin: 48px auto;
+  padding: clamp(24px, 5vw, 48px);
+  border: 1px solid var(--site-line);
+  border-radius: var(--site-radius);
+  background: var(--site-surface);
+  text-align: center;
+}
+
+.site-ui .ui-empty h1 {
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 650;
+}
+
+.site-ui .ui-empty p {
+  color: var(--site-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 639px) {
+  .site-ui .ui-page {
+    padding: 24px 16px 40px;
+  }
+}

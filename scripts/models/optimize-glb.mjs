@@ -232,20 +232,6 @@ async function main() {
         default: "4000000",
       },
 
-      "preview-triangles": {
-        type: "string",
-        default: "80000",
-      },
-
-      "preview-texture-size": {
-        type: "string",
-        default: "512",
-      },
-
-      "preview-only": {
-        type: "boolean",
-        default: false,
-      },
     },
   });
 
@@ -267,26 +253,12 @@ async function main() {
 
   const maxTriangles = Number(values["max-triangles"]);
 
-  const previewTriangles = Number(values["preview-triangles"]);
-
-  const previewTextureSize = Number(values["preview-texture-size"]);
-
-  const previewOnly = values["preview-only"];
-
   if (![512, 1024, 2048, 4096].includes(size)) {
     throw new Error("texture-size must be 512/1024/2048/4096");
   }
 
   if (!Number.isInteger(maxTriangles) || maxTriangles < 10000) {
     throw new Error("max-triangles must be an integer >= 10000");
-  }
-
-  if (!Number.isInteger(previewTriangles) || previewTriangles < 10000) {
-    throw new Error("preview-triangles must be an integer >= 10000");
-  }
-
-  if (![256, 512, 1024].includes(previewTextureSize)) {
-    throw new Error("preview-texture-size must be 256/512/1024");
   }
 
   const env = Object.fromEntries(
@@ -360,12 +332,7 @@ async function main() {
           `(actual: ${triangles.toLocaleString()})`,
       );
     }
-    if (previewOnly) {
-      if (!(json.extensionsUsed ?? []).some(extension =>
-        ["EXT_meshopt_compression", "KHR_draco_mesh_compression"].includes(extension))) {
-        throw new Error(`${file}: preview-only input must be a compressed delivery GLB`);
-      }
-    } else {
+    {
       const validation = JSON.parse(
         await readFile(
           path.join(path.dirname(file), "geometry-report.json"),
@@ -403,7 +370,7 @@ async function main() {
           `(actual: ${triangles.toLocaleString()})`,
       );
     }
-    if (!previewOnly) {
+    {
       const validation = JSON.parse(
         await readFile(
           path.join(path.dirname(file), "geometry-report.json"),
@@ -422,7 +389,7 @@ async function main() {
       recursive: true,
     });
 
-    for (const variant of previewOnly ? ["preview"] : ["delivery", "preview"]) {
+    for (const variant of ["delivery"]) {
       const result = path.join(destination, `${variant}.glb`);
 
       try {
@@ -446,54 +413,28 @@ async function main() {
         await transform("dedup");
         await transform("prune", ["--keep-leaves", "true"]);
 
-        if (variant === "preview" && !json.scenes?.[json.scene ?? 0]?.extras?.pipelineBounds) {
-          // Legacy deliveries have no authored bounds. Capture their decoded
-          // bounds before simplification so the preview fits exactly like high.
-          const [{ NodeIO }, { ALL_EXTENSIONS }, { getBounds }] = await Promise.all([
-            import("@gltf-transform/core"),
-            import("@gltf-transform/extensions"),
-            import("@gltf-transform/functions"),
-          ]);
-          const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
-          const document = await io.read(stage);
-          for (const scene of document.getRoot().listScenes()) {
-            scene.setExtras({ ...scene.getExtras(), pipelineBounds: getBounds(scene) });
-          }
-          const next = path.join(work, `${++step}.glb`);
-          await io.write(next, document);
-          stage = next;
-        }
-
-        if (variant === "preview" && triangles > previewTriangles) {
-          await transform("weld");
-          await transform("simplify", [
-            "--ratio",
-            String(previewTriangles / triangles),
-            "--error",
-            "0.02",
-            "--lock-border",
-            "true",
-          ]);
-          await transform("prune", ["--keep-leaves", "true"]);
-        }
-
         const texturesAlreadyKtx2 = (json.images ?? []).every(
           (image) => image.mimeType === "image/ktx2",
         );
         if (json.images?.length && !texturesAlreadyKtx2) {
-          const textureLimit =
-            variant === "preview" ? previewTextureSize : size;
+          const textureLimit = size;
           await transform("resize", [
             "--width",
             String(textureLimit),
             "--height",
             String(textureLimit),
           ]);
+          // Normal maps need higher fidelity than color maps. Encode them first;
+          // the following ETC1S pass skips textures already encoded as KTX2.
+          await transform("uastc", [
+            "--slots", "*normal*", "--level", "4", "--rdo", "false",
+            "--zstd", "18", "--jobs", "4",
+          ]);
           await transform("etc1s", [
             "--quality",
-            variant === "preview" ? "128" : "192",
+            "255",
             "--compression",
-            variant === "preview" ? "5" : "4",
+            "4",
             "--jobs",
             "4",
           ]);
@@ -501,13 +442,13 @@ async function main() {
 
         await transform("meshopt", [
           "--level",
-          "high",
+          "medium",
           "--quantize-position",
-          "14",
+          "16",
           "--quantize-normal",
-          "10",
-          "--quantize-texcoord",
           "12",
+          "--quantize-texcoord",
+          "16",
         ]);
 
         const final = await readFile(stage);
@@ -526,7 +467,7 @@ async function main() {
           );
         }
         if (
-          json.images?.length &&
+          info.images?.length &&
           !(info.extensionsUsed ?? []).includes("KHR_texture_basisu")
         ) {
           throw new Error(
@@ -552,17 +493,10 @@ async function main() {
             (100 * (1 - final.length / before.length)).toFixed(2),
           ),
           triangles: triangleCount(info),
-          targetTriangles: variant === "preview" ? previewTriangles : triangles,
+          targetTriangles: triangles,
           extensions: info.extensionsUsed,
           atlas: atlasAudit(json),
         };
-
-        if (variant === "preview" && entry.triangles > previewTriangles * 1.1) {
-          console.warn(
-            `[preview-warning] simplifier retained ${entry.triangles.toLocaleString()} triangles ` +
-              `(target ${previewTriangles.toLocaleString()})`,
-          );
-        }
 
         report.push(entry);
         await writeFile(

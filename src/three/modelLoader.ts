@@ -5,6 +5,7 @@ import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { instanceRepeatedModules } from "./instanceModules";
+import { configureModelTextureSampling } from "./modelTextureSampling";
 export interface ModelLoadMetrics {
   queuedAt: number;
   startedAt: number;
@@ -14,7 +15,7 @@ export interface ModelLoadMetrics {
   resourceDurationMs: number | null;
   encodedBodySize: number | null;
 }
-export interface LoadedModel { scene: THREE.Group; bounds: THREE.Box3; metrics: ModelLoadMetrics; animations?: THREE.AnimationClip[] }
+export interface LoadedModel { scene: THREE.Group; bounds: THREE.Box3; metrics: ModelLoadMetrics; animations?: THREE.AnimationClip[]; triangles?: number }
 interface Entry { promise: Promise<LoadedModel>; refs: number; ready?: LoadedModel; used: number }
 interface Pool { loader: GLTFLoader; draco: DRACOLoader; ktx: KTX2Loader; entries: Map<string, Entry>; idle?: ReturnType<typeof setTimeout> }
 const pools = new WeakMap<THREE.WebGLRenderer, Pool>();
@@ -79,6 +80,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
     entry.promise = schedule(async () => {
       const startedAt = performance.now();
       const gltf = await owner.loader.loadAsync(url);
+      configureModelTextureSampling(gltf.scene, renderer);
       gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = true; object.receiveShadow = true; } });
       if (!gltf.animations.length && !options.preserveHierarchy) instanceRepeatedModules(gltf.scene);
       gltf.scene.updateMatrixWorld(true);
@@ -88,6 +90,12 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
         bounds = new THREE.Box3(new THREE.Vector3().fromArray(authored.min), new THREE.Vector3().fromArray(authored.max));
       }
       const completedAt = performance.now();
+      let triangles = 0;
+      gltf.scene.traverse(object => {
+        if (!(object instanceof THREE.Mesh)) return;
+        const count = object.geometry.index?.count ?? object.geometry.getAttribute("position")?.count ?? 0;
+        triangles += count / 3 * (object instanceof THREE.InstancedMesh ? object.count : 1);
+      });
       const resource = performance
         .getEntriesByName(typeof window === "undefined" ? url : new URL(url, window.location.href).href)
         .filter((entry): entry is PerformanceResourceTiming =>
@@ -96,6 +104,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
         .at(-1);
       const result = {
         scene: gltf.scene,
+        triangles,
         bounds,
         animations: gltf.animations,
         metrics: {
@@ -123,7 +132,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
     released = true; leased.refs--; leased.used = Date.now(); trim(owner, renderer);
   } };
 }
-export function cloneModel(model: LoadedModel): LoadedModel { return { scene: clone(model.scene) as THREE.Group, bounds: model.bounds, metrics: model.metrics, animations: model.animations }; }
+export function cloneModel(model: LoadedModel): LoadedModel { return { ...model, scene: clone(model.scene) as THREE.Group }; }
 export function disposeModelClone(model: LoadedModel) {
   model.scene.traverse(object => { if (object instanceof THREE.InstancedMesh) object.dispose(); });
 }

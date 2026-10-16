@@ -3,15 +3,15 @@
 .shop-shell {
   --market-bg: #ffffff;
   --market-surface: #ffffff;
-  --market-ink: #111111;
+  --market-ink: var(--site-ink);
   --market-muted: #737373;
   --market-border: #e5e5e7;
-  --market-primary: #111111;
+  --market-primary: var(--site-ink);
   --market-accent: #c58348;
   --market-sale: #c58348;
   --market-sale-soft: #faf3eb;
   --market-success: #168a4a;
-  --market-navy: #111111;
+  --market-navy: var(--site-ink);
   --market-on-primary: #ffffff;
   --market-on-accent: #ffffff;
   --market-photo: #f5f5f7;

@@ -11,7 +11,7 @@ const entries=await readdir(path.join(output,'geometry'),{withFileTypes:true});
 for(const entry of entries.filter(value=>value.isDirectory())) {
   const name=entry.name;
   const report=JSON.parse(await readFile(path.join(output,'geometry',name,'geometry-report.json'),'utf8'));
-  for(const role of ['delivery','preview']) {
+  for(const role of ['delivery']) {
     const doc=await io.read(path.join(output,'compressed',name,`${role}.glb`));
     const scene=doc.getRoot().getDefaultScene()??doc.getRoot().listScenes()[0],bounds=getBounds(scene);
     const dims=bounds.max.map((value,i)=>value-bounds.min[i]),expected=[report.dimensionsM.w,report.dimensionsM.h,report.dimensionsM.d];

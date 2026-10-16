@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { performanceDiagnosticsEnabled, reportCanvasMetric, summarizeFrames } from "@/lib/performanceDiagnostics";
+import { performanceDiagnosticsEnabled, reportCanvasMetric, summarizeFrames, summarizeMotionFrames } from "@/lib/performanceDiagnostics";
 import { useCameraMotionPreview } from "./CameraMotionPreview";
 
 export function CanvasDiagnostics({ scene }: { scene: string }) {
@@ -11,6 +11,7 @@ export function CanvasDiagnostics({ scene }: { scene: string }) {
   const moving = useCameraMotionPreview();
   const enabled = useRef(false);
   const sample = useRef({ frames: 0, intervals: [] as number[], last: 0,
+    motionIntervals: [] as number[],
     cameraMotionFrames: 0, motionTriangles: null as number | null, lastMoving: false });
 
   useFrame(() => {
@@ -18,6 +19,8 @@ export function CanvasDiagnostics({ scene }: { scene: string }) {
     const now = performance.now();
     const value = sample.current;
     if (value.last && value.intervals.length < 500) value.intervals.push(now - value.last);
+    if (moving && value.lastMoving && value.last && value.motionIntervals.length < 500)
+      value.motionIntervals.push(now - value.last);
     value.last = now;
     value.frames++;
     if (moving) {
@@ -34,17 +37,18 @@ export function CanvasDiagnostics({ scene }: { scene: string }) {
     let started = performance.now();
     const reset = () => {
       started = performance.now();
-      sample.current = { frames: 0, intervals: [], last: 0, cameraMotionFrames: 0, motionTriangles: null, lastMoving: false };
+      sample.current = { frames: 0, intervals: [], motionIntervals: [], last: 0, cameraMotionFrames: 0, motionTriangles: null, lastMoving: false };
     };
     document.addEventListener("visibilitychange", reset);
     const timer = window.setInterval(() => {
       if (document.hidden) { reset(); return; }
       const now = performance.now();
-      const { frames, intervals, cameraMotionFrames, motionTriangles } = sample.current;
+      const { frames, intervals, motionIntervals, cameraMotionFrames, motionTriangles } = sample.current;
       const memory = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory;
       reportCanvasMetric({
         scene, frames, durationMs: Math.round(now - started),
         ...summarizeFrames(intervals, frames, now - started),
+        ...summarizeMotionFrames(motionIntervals),
         drawCalls: gl.info.render.calls,
         triangles: gl.info.render.triangles,
         geometries: gl.info.memory.geometries,
@@ -55,7 +59,7 @@ export function CanvasDiagnostics({ scene }: { scene: string }) {
         cameraMotionFrames, motionTriangles,
       });
       started = now;
-      sample.current = { frames: 0, intervals: [], last: sample.current.last,
+      sample.current = { frames: 0, intervals: [], motionIntervals: [], last: sample.current.last,
         cameraMotionFrames: 0, motionTriangles: null, lastMoving: sample.current.lastMoving };
     }, 2000);
     return () => {

@@ -1,4 +1,6 @@
 "use client";
+
+import { PageSkeleton } from "@/components/PageSkeleton";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -55,11 +57,7 @@ export default function AccountPage() {
   }, [initialized, user, router]);
 
   if (!initialized || !user) {
-    return (
-      <div className="grid min-h-[50vh] place-items-center text-sm text-[#6C726B]">
-        Хэрэглэгчийн мэдээллийг ачаалж байна…
-      </div>
-    );
+    return <PageSkeleton variant="dashboard" label="Хэрэглэгчийн мэдээллийг ачаалж байна…" />;
   }
   return (
     <div className="account-layout">

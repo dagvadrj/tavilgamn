@@ -22,7 +22,7 @@ export function useRoomPlannerUi() {
   const [placementTemplate, setPlacementTemplate] = useState<string | null>(
     null,
   );
-  const [showStartHint, setShowStartHint] = useState(true);
+  const [showStartHint, setShowStartHint] = useState(false);
   const [inspector, setInspector] = useState<"catalog" | "environment">("environment");
   const [view, setView] = useState<"plan" | "perspective">("perspective");
   const [snapEnabled, setSnapEnabled] = useState(true);

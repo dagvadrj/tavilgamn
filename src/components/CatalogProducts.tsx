@@ -130,8 +130,14 @@ export function CatalogProducts({
         </div>
       ) : (
         <div className="catalog-results-grid">
-          {filtered.slice((current - 1) * 24, current * 24).map((product) => (
-            <ProductCard key={product.id} product={product} catalogStyle offerCheckedAt={checkedAt} />
+          {filtered.slice((current - 1) * 24, current * 24).map((product, index) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              catalogStyle
+              offerCheckedAt={checkedAt}
+              imageSizes={`(max-width: 539px) 100vw, (max-width: 999px) ${index % 3 === 0 ? "100vw" : "50vw"}, ${index % 6 === 0 || index % 6 === 4 ? "66vw" : "33vw"}`}
+            />
           ))}
         </div>
       )}

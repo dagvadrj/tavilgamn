@@ -9,9 +9,8 @@ import {
   ShoppingBag,
   Check,
   Box,
-  Truck,
-  Ruler,
   ArrowUpRight,
+  X,
 } from "lucide-react";
 import type { Product } from "@/lib/types";
 import {
@@ -19,24 +18,28 @@ import {
   hasProductPhoto,
   marketplacePrice,
 } from "@/lib/homeMarketplace";
-import { FREE_SHIPPING_THRESHOLD } from "@/lib/orders";
 import { useCart } from "@/store/cart";
 import { useWishlist } from "@/store/wishlist";
 import { CATEGORY_LABEL } from "@/lib/products";
 import { hasAvailableStock, stockLabel } from "@/lib/inventory";
 import { productOffer } from "@/lib/catalogPresentation";
 import { ProductQuickView } from "./ProductQuickView";
+import { cardImageSourceWidth } from "@/lib/cardImageResolution";
 
 export function ProductCard({
   product,
   catalogStyle = false,
   offerCheckedAt,
   flashSale = false,
+  imageSizes,
+  initialDetailsOpen = false,
 }: {
   product: Product;
   catalogStyle?: boolean;
   offerCheckedAt?: number;
   flashSale?: boolean;
+  imageSizes?: string;
+  initialDetailsOpen?: boolean;
 }) {
   const has = useWishlist((s) => s.has(product.id));
   const toggle = useWishlist((s) => s.toggle);
@@ -46,6 +49,44 @@ export function ProductCard({
   const [checkedAt, setCheckedAt] = useState(offerCheckedAt);
   const [colorId, setColorId] = useState(product.defaultColor);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
+  const [detailsPinned, setDetailsPinned] = useState(initialDetailsOpen);
+  const [detailsHovered, setDetailsHovered] = useState(false);
+  const [mobile, setMobile] = useState(false);
+  const detailsOpen = mobile || detailsPinned || detailsHovered;
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  const [loadedPhoto, setLoadedPhoto] = useState<{
+    element: HTMLImageElement;
+    naturalWidth: number;
+    naturalHeight: number;
+  } | null>(null);
+  const [sourceWidth, setSourceWidth] = useState(0);
+  useEffect(() => {
+    if (!loadedPhoto) return;
+    const container = loadedPhoto.element.closest(".gallery-photo-trigger");
+    if (!container) return;
+    const updateResolution = () => {
+      const bounds = container.getBoundingClientRect();
+      const nextWidth = cardImageSourceWidth({
+        width: bounds.width,
+        height: bounds.height,
+        naturalWidth: loadedPhoto.naturalWidth,
+        naturalHeight: loadedPhoto.naturalHeight,
+        fit: getComputedStyle(loadedPhoto.element).objectFit,
+      });
+      if (nextWidth > 0) setSourceWidth(nextWidth);
+    };
+    updateResolution();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(updateResolution);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [loadedPhoto, product.image]);
   useEffect(() => {
     setMounted(true);
     setCheckedAt(Date.now());
@@ -93,14 +134,13 @@ export function ProductCard({
             : product.badges?.[0]);
   const detailHref = `/product/${product.id}${selection ? `?color=${encodeURIComponent(selection.color.id)}` : ""}`;
   const viewHref = `${detailHref}${selection ? "&" : "?"}view=3d`;
-  const secondaryImage = product.images?.find(
-    (image) => image !== product.image && hasProductPhoto({ image }),
-  );
-  const sizes = flashSale
-    ? "(max-width: 639px) 72vw, (max-width: 999px) 33vw, 310px"
-    : catalogStyle
-      ? "(max-width: 639px) 50vw, (max-width: 1023px) 33vw, (max-width: 1439px) 26vw, 340px"
-      : "(max-width: 639px) 50vw, (max-width: 999px) 33vw, 320px";
+  const sizes =
+    imageSizes ??
+    (flashSale
+      ? "(max-width: 639px) 72vw, (max-width: 999px) 33vw, 310px"
+      : catalogStyle
+        ? "(max-width: 539px) 100vw, (max-width: 999px) 50vw, (max-width: 1439px) 33vw, 440px"
+        : "(max-width: 539px) 100vw, (max-width: 999px) 50vw, 360px");
   const addToCart = () => {
     if (!inStock || !selection) return;
     const added = add({
@@ -117,29 +157,62 @@ export function ProductCard({
     );
   };
 
+  const toggleDetails = () => {
+    setDetailsPinned((value) => !value);
+    setDetailsHovered(false);
+  };
+
   return (
-    <article className="product-card marketplace-product-card product-card-premium">
-      <div className={`product-photo ${secondaryImage ? "has-secondary" : ""}`}>
-        <Link href={detailHref} aria-label={`${product.name} дэлгэрэнгүй үзэх`}>
+    <article
+      className={`product-card marketplace-product-card product-card-premium gallery-product-card${detailsOpen ? " is-revealed" : ""}`}
+      onPointerEnter={(event) => {
+        if (event.pointerType === "mouse") setDetailsHovered(true);
+      }}
+      onPointerLeave={(event) => {
+        if (!event.currentTarget.contains(document.activeElement))
+          setDetailsHovered(false);
+      }}
+      onFocus={() => setDetailsHovered(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setDetailsHovered(false);
+          setDetailsPinned(false);
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || quickViewOpen) return;
+        event.currentTarget
+          .querySelector<HTMLButtonElement>(".product-details-toggle")
+          ?.focus();
+        setDetailsPinned(false);
+        setDetailsHovered(false);
+      }}
+    >
+      <div className="product-photo">
+        <button
+          type="button"
+          className="gallery-photo-trigger"
+          onClick={toggleDetails}
+          aria-label={`${product.name} — нэр, үнийг харах`}
+          aria-expanded={detailsOpen}
+        >
           {hasProductPhoto(product) ? (
             <>
               <Image
                 src={product.image}
                 alt={product.name}
                 fill
-                sizes={sizes}
+                sizes={sourceWidth > 0 ? `${sourceWidth}px` : sizes}
+                quality={95}
+                onLoad={(event) =>
+                  setLoadedPhoto({
+                    element: event.currentTarget,
+                    naturalWidth: event.currentTarget.naturalWidth,
+                    naturalHeight: event.currentTarget.naturalHeight,
+                  })
+                }
                 className="product-primary-image"
               />
-              {secondaryImage && (
-                <Image
-                  src={secondaryImage}
-                  alt=""
-                  aria-hidden="true"
-                  fill
-                  sizes={sizes}
-                  className="product-secondary-image"
-                />
-              )}
             </>
           ) : (
             <span className="product-photo-pending">
@@ -147,22 +220,15 @@ export function ProductCard({
               Зураг нэмэгдээгүй
             </span>
           )}
-        </Link>
-        <div className="product-badge-stack">
-          {badge && (
-            <span
-              className={`product-badge ${offer.compareAtPrice !== null || offer.label ? "offer" : product.isNew ? "new" : ""}`}
-            >
-              {badge}
-            </span>
-          )}
-          {product.isBestSeller &&
-            (offer.discountPercent !== null ||
-              offer.label ||
-              product.isNew) && (
-              <span className="product-badge bestseller">Эрэлттэй</span>
-            )}
-        </div>
+        </button>
+      </div>
+      <div className="gallery-card-veil" aria-hidden="true" />
+      <div className="gallery-card-topline">
+        <span
+          className={`product-badge${offer.discountPercent !== null ? " offer" : ""}`}
+        >
+          {badge || CATEGORY_LABEL[product.category]}
+        </span>
         <button
           className={`wishlist-toggle ${saved ? "saved" : ""}`}
           type="button"
@@ -173,137 +239,94 @@ export function ProductCard({
           <Heart
             size={18}
             fill={saved ? "currentColor" : "none"}
-            strokeWidth={1.7}
+            strokeWidth={1.6}
             aria-hidden="true"
           />
         </button>
-        <div className="product-media-actions">
-          {product.model && (
-            <button
-              type="button"
-              onClick={() => setQuickViewOpen(true)}
-              aria-haspopup="dialog"
-              className="product-3d"
-              aria-label={`${product.name} — 3D үзэх, шуурхай харах цонх нээх`}
-            >
-              <Box size={14} aria-hidden="true" />
-              3D / AR харах
-            </button>
-          )}
-          <Link
-            href={detailHref}
-            className="product-details-link"
-            aria-label={`${product.name} — дэлгэрэнгүй`}
-          >
-            Дэлгэрэнгүй <ArrowUpRight size={14} aria-hidden="true" />
-          </Link>
-        </div>
       </div>
-      <div className="product-info">
-        <div className="product-meta">
+      <button
+        type="button"
+        className="product-details-toggle"
+        onClick={toggleDetails}
+        aria-expanded={detailsOpen}
+        aria-label={`${product.name} — ${detailsOpen ? "мэдээлэл хураах" : "дэлгэрэнгүй"}`}
+      >
+        <span>{detailsOpen ? "Хураах" : "Дэлгэрэнгүй"}</span>
+        <span className="gallery-round-arrow">
+          {detailsOpen ? (
+            <X size={16} aria-hidden="true" />
+          ) : (
+            <ArrowUpRight size={16} aria-hidden="true" />
+          )}
+        </span>
+      </button>
+      <div
+        className="gallery-product-info"
+        aria-hidden={!detailsOpen}
+        inert={!detailsOpen}
+      >
+        <div className="gallery-info-eyebrow">
           <Link href={`/catalog/${product.category}`}>
             {CATEGORY_LABEL[product.category]}
           </Link>
           {product.reviewCount > 0 &&
             Number.isFinite(product.rating) &&
             product.rating > 0 && (
-              <div
+              <span
                 className="product-rating"
                 aria-label={`${product.rating} үнэлгээ, ${product.reviewCount} сэтгэгдэл`}
               >
                 <Star size={12} fill="currentColor" aria-hidden="true" />
                 {product.rating.toFixed(1)}
-                <small>({product.reviewCount})</small>
                 <span className="sr-only">{product.reviewCount} сэтгэгдэл</span>
-              </div>
+              </span>
             )}
         </div>
         <h3>
           <Link href={detailHref}>{product.name}</Link>
         </h3>
-        <p className="product-size">
-          <Ruler size={14} aria-hidden="true" />
-          {Math.round(product.dimensions.w * 100)} ×{" "}
-          {Math.round(product.dimensions.d * 100)} ×{" "}
-          {Math.round(product.dimensions.h * 100)} см
-        </p>
-        {product.colors.length > 0 && (
-          <div className="product-option-row">
-            <div
-              className="product-swatches"
-              role="group"
-              aria-label={`${product.name} — өнгө сонгох`}
-            >
-              {product.colors.slice(0, 4).map((c) => (
-                <button
-                  type="button"
-                  key={c.id}
-                  title={c.name}
-                  aria-label={c.name}
-                  aria-pressed={selection?.color.id === c.id}
-                  onClick={() => {
-                    setColorId(c.id);
-                    setCartMessage("");
-                  }}
-                >
-                  <span style={{ backgroundColor: c.hex }} />
-                </button>
-              ))}
-              {product.colors.length > 4 && (
-                <Link href={detailHref} aria-label="Бүх өнгийг харах">
-                  +{product.colors.length - 4}
-                </Link>
-              )}
-            </div>
-            <span className="product-color-name" title={selection?.color.name}>
-              {selection?.color.name}
-            </span>
-          </div>
-        )}
         <div className="product-price">
-          <div className="product-price-values">
-            <strong>{marketplacePrice(displayPrice)}</strong>
-            {offer.compareAtPrice !== null && (
-              <del
-                aria-label={`Өмнөх үнэ ${marketplacePrice(offer.compareAtPrice)}`}
-              >
-                {marketplacePrice(offer.compareAtPrice)}
-              </del>
-            )}
-          </div>
+          <strong>{marketplacePrice(displayPrice)}</strong>
+          <span className="gallery-dimensions">
+            {Math.round(product.dimensions.w * 100)} ×{" "}
+            {Math.round(product.dimensions.d * 100)} ×{" "}
+            {Math.round(product.dimensions.h * 100)} см
+          </span>
           {offer.compareAtPrice !== null && (
-            <span className="product-saving">
-              Хэмнэлт {marketplacePrice(offer.compareAtPrice - displayPrice)}
-            </span>
-          )}
-          {offer.label && offer.discountPercent !== null && (
-            <span className="product-promotion-note">{offer.label}</span>
+            <del
+              aria-label={`Өмнөх үнэ ${marketplacePrice(offer.compareAtPrice)}`}
+            >
+              {marketplacePrice(offer.compareAtPrice)}
+            </del>
           )}
         </div>
-        <div className="card-delivery-status">
-          {inStock && displayPrice >= FREE_SHIPPING_THRESHOLD && (
-            <span className="product-free-delivery">
-              <Truck size={14} aria-hidden="true" />
-              Үнэгүй хүргэлт
-            </span>
-          )}
-          <div className="product-availability">
-            <span
-              aria-hidden="true"
-              className={inStock ? "stock-dot available" : "stock-dot"}
-            />
-            <span className={inStock ? "in-stock" : "out-of-stock"}>
-              {stockLabel(product)}
-            </span>
+        <span className="sr-only">
+          {stockLabel(product)}. {product.deliveryTerms} {offer.label}
+        </span>
+        {product.colors.length > 1 && (
+          <div
+            className="product-swatches"
+            role="group"
+            aria-label={`${product.name} — өнгө сонгох`}
+          >
+            {product.colors.slice(0, 4).map((color) => (
+              <button
+                type="button"
+                key={color.id}
+                title={color.name}
+                aria-label={color.name}
+                aria-pressed={selection?.color.id === color.id}
+                onClick={() => {
+                  setColorId(color.id);
+                  setCartMessage("");
+                }}
+              >
+                <span style={{ backgroundColor: color.hex }} />
+              </button>
+            ))}
           </div>
-        </div>
-        {product.deliveryTerms && (
-          <p className="product-delivery" title={product.deliveryTerms}>
-            <Truck size={13} aria-hidden="true" />
-            <span>{product.deliveryTerms}</span>
-          </p>
         )}
-        <div className="product-footer-actions">
+        <div className="gallery-purchase-actions">
           <button
             type="button"
             className="product-add-cart"
@@ -313,13 +336,13 @@ export function ProductCard({
             title={
               selection
                 ? `${selection.color.name} · ${selection.material.name}`
-                : "Дэлгэрэнгүйгээс сонголтыг шалгана уу"
+                : "Сонголт боломжгүй"
             }
           >
             {cartMessage === "Сагсанд нэмэгдлээ" ? (
-              <Check size={17} aria-hidden="true" />
+              <Check size={18} aria-hidden="true" />
             ) : (
-              <ShoppingBag size={17} aria-hidden="true" />
+              <ShoppingBag size={18} aria-hidden="true" />
             )}
             <span>
               {cartMessage === "Сагсанд нэмэгдлээ"
@@ -330,25 +353,24 @@ export function ProductCard({
           {product.model && (
             <button
               type="button"
+              className="product-view-model"
               onClick={() => setQuickViewOpen(true)}
               aria-haspopup="dialog"
-              className="product-view-model"
               aria-label={`${product.name} — 3D загварын шуурхай харах цонх нээх`}
-              title="Шуурхай харах"
+              title="3D / AR харах"
             >
-              <Box size={18} aria-hidden="true" />
               <span>3D</span>
             </button>
           )}
         </div>
-        <span
-          className={cartMessage ? "product-cart-message" : "sr-only"}
-          role="status"
-          aria-live="polite"
-        >
-          {cartMessage}
-        </span>
       </div>
+      <span
+        className={cartMessage ? "gallery-cart-message" : "sr-only"}
+        role="status"
+        aria-live="polite"
+      >
+        {cartMessage}
+      </span>
       {quickViewOpen && (
         <ProductQuickView
           product={product}

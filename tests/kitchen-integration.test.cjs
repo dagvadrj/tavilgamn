@@ -32,8 +32,8 @@ test("kitchen marketplace exposes complete listing details without a duplicate d
     "src/components/AdminKitchenDesigns.tsx",
     "utf8",
   );
-  const listing = fs.readFileSync("src/app/(shop)/kitchens/page.tsx", "utf8");
-  const detail = fs.readFileSync("src/app/(shop)/kitchens/[slug]/page.tsx", "utf8");
+  const listing = fs.readFileSync("src/components/pages/KitchensPageClient.tsx", "utf8");
+  const detail = fs.readFileSync("src/components/pages/KitchenPageClient.tsx", "utf8");
   assert.match(server, /service_areas,inclusions,exclusions/);
   assert.match(server, /readPublishedKitchenDesignBySlug/);
   assert.match(server, /\.eq\("publication_status", "published"\)/);

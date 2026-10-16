@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import { BrandLoader } from "@/components/BrandLoader";
 import { AuthFrame } from "@/features/auth/AuthFrame";
 import { authErrorMessage } from "@/lib/authErrors";
 import {
@@ -75,7 +75,7 @@ export default function AuthCallbackPage() {
           </>
         ) : (
           <>
-            <LoaderCircle className="auth-spinner" size={32} />
+            <BrandLoader />
             <h1>Нэвтрэлтийг шалгаж байна…</h1>
             <p>Таны бүртгэлийг нээгээд тохирох хэсэг рүү шилжүүлнэ.</p>
           </>

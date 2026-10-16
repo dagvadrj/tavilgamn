@@ -99,7 +99,7 @@ test("marketplace cards show real price, inventory, optional delivery and no fab
       actual.includes("Намрын санал"),
   );
   assert.ok(
-    actual.includes("3D үзэх") &&
+    actual.includes("3D / AR харах") &&
       actual.includes("12 сэтгэгдэл") &&
       actual.includes("Хүргэлтийн нөхцөлийг дэлгүүртэй тохирно"),
   );
@@ -176,7 +176,7 @@ test("catalog quick filters compose promotion and 3D filters without promising s
 
 test("home promotion section is conditional on real currently available product offers", async () => {
   async function render(products) {
-    const Home = loadSource("src/app/(shop)/page.tsx", {
+    const Home = loadSource("src/components/pages/HomePageClient.tsx", {
       "@/lib/catalogServer": { readProducts: async () => products },
       "@/lib/storeDirectory": { readStoreDirectory: async () => [] },
       "@/components/FeaturedMerchants": { FeaturedMerchants: () => null },
@@ -188,8 +188,8 @@ test("home promotion section is conditional on real currently available product 
         default: ({ alt }) =>
           React.createElement("span", { "aria-label": alt }),
       },
-    }).default;
-    return renderToStaticMarkup(await Home({}));
+    }).HomeContent;
+    return renderToStaticMarkup(React.createElement(Home, { catalog: products, stores: [], paymentLabels: [] }));
   }
   assert.ok(!(await render([product])).includes('id="offers-title"'));
   const offered = await render([{ ...product, compareAtPrice: 100000 }]);
