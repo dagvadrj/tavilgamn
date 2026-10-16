@@ -29,7 +29,7 @@ test('panoramic runtime window has three transparent panes and two real shadow-c
  assert.equal(all.filter(n=>n.type==='meshPhysicalMaterial').length,3);
  for(const n of all.filter(n=>n.type==='mesh'&&n.props.children?.[1]?.type==='meshPhysicalMaterial'))assert.equal(Boolean(n.props.castShadow),false);
  const bars=all.filter(n=>n.type==='rounded'&&n.props.args[0]===.048);assert.equal(bars.length,2);assert.ok(bars.every(n=>n.props.castShadow));near(bars[0].props.position[0],-bars[1].props.position[0]);
- const {RoomPlanPreview}=loadSource('src/components/RoomPlanPreview.tsx'),preview=RoomPlanPreview({room:{...shape,openings:[openings.createOpening('window-panoramic','north')]}});
+ const {RoomPlanPreview}=loadSource('src/components/RoomPlanPreview.tsx', {"@/features/room-planner/components/RoomMeasureUnit": { useRoomMeasureUnit: select => select({unit:"см"}) }}),preview=RoomPlanPreview({room:{...shape,openings:[openings.createOpening('window-panoramic','north')]}});
  const mark=nodes(preview).find(n=>n.type?.name==='OpeningPlanMark'),draw=mark.type(mark.props);assert.equal(nodes(draw).filter(n=>n.props?.className==='room-plan-window-mullion').length,2);
 });
 test('operable window sashes swing inward or slide and return to their closed positions',()=>{
@@ -78,7 +78,7 @@ test('solar settings and new window types persist across rooms, undo/redo and JS
 });
 test('window inspector changes type without moving or resizing the opening and sun controls expose auto/manual modes',()=>{
  const react={...React,useState:v=>[v,()=>{}]},o=openings.createOpening('window-casement','north'),d=plan({...room('a'),openings:[o]});let changed,solarPatch;
- const {RoomEnvironmentPanel}=loadSource('src/components/RoomEnvironmentPanel.tsx',{react});
+ const {RoomEnvironmentPanel}=loadSource('src/components/RoomEnvironmentPanel.tsx',{react,'@/features/room-planner/components/RoomMeasureUnit':{useRoomMeasureUnit:select=>select({unit:'см'})}});
  const tree=RoomEnvironmentPanel({design:d,tab:'openings',surface:'floor',onSurfaceChange:()=>{},selectedWall:null,onSelectWall:()=>{},selectedOpening:o.id,onSelectOpening:()=>{},placementTemplate:null,onArmPlacement:()=>{},onAddOpening:()=>{},onUpdateOpening:v=>changed=v,onUpdate:()=>{},onHeight:()=>{},onNotice:()=>{},beginEdit:()=>{},endEdit:()=>{}});
  nodes(tree).find(n=>n.props?.['aria-label']==='Цонхны төрөл').props.onChange({target:{value:'window-triple'}});assert.equal(changed.templateId,'window-triple');near(changed.width,o.width);near(changed.position,o.position);assert.equal(changed.id,o.id);
  nodes(tree).find(n=>n.type==='button'&&React.Children.toArray(n.props.children).includes('Цонхыг нээх')).props.onClick();assert.equal(changed.open,true);

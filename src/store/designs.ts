@@ -11,7 +11,7 @@ import type {
   SavedFurniture,
 } from "@/lib/types";
 import { getProduct } from "./catalog";
-import { dimsFor } from "@/three/collision";
+import { dimsFor, isPlacementValid } from "@/three/collision";
 import {
   activateDesignRoom,
   DEFAULT_FLOOR_MATERIAL,
@@ -27,14 +27,16 @@ import {
   roomsOverlap,
   snapRoomPosition,
 } from "@/lib/roomLayout";
-import { layoutFurnitureIssue } from "@/three/roomPlacement";
+import { layoutFurnitureIssue, roomPlacementContext } from "@/three/roomPlacement";
 import {
   movedFurnitureId,
   reassignFurnitureRooms,
 } from "@/three/furnitureRoomOwnership";
-import { ROOM_TYPES } from "@/lib/roomGeometry";
+import { ROOM_TYPES, validateRoomShape } from "@/lib/roomGeometry";
 import { configureAddedRoom, type AddRoomOptions } from "@/lib/addRoomOptions";
 import { validateRoomSetup, type RoomSetupDimensions } from "@/lib/roomSetup";
+import { createRoomBuilderDraft, resizeRoomBuilder, type RoomBuilderDraft } from "@/lib/roomBuilderDraft";
+import { resolveFurnitureAttachments } from "@/lib/furnitureAttachment";
 
 export const ROOM_DIMENSIONS: Record<RoomSize, { w: number; d: number }> = {
   "40": { w: 6.3, d: 6.3 },
@@ -64,6 +66,7 @@ interface DesignState {
     name?: string,
     roomType?: RoomType,
     dimensions?: RoomSetupDimensions,
+    initial?: RoomBuilderDraft,
   ) => void;
   addRoom: (type: RoomType, options?: AddRoomOptions) => void;
   selectRoom: (id: string) => void;
@@ -94,6 +97,7 @@ interface DesignState {
         | "size"
         | "height"
         | "wallFeatures"
+        | "outline"
         | "columns"
         | "roomName"
         | "roomType"
@@ -213,9 +217,11 @@ export const useDesigns = create<DesignState>()(
         room.id = `room_${crypto.randomUUID()}`;
         room.name += " хуулбар";
         delete room.position;
+        const instanceIds = new Map<string, string>(room.pieces.map((p: PlacedFurniture) => [p.instanceId, `p_${crypto.randomUUID()}`]));
         room.pieces = room.pieces.map((p: PlacedFurniture) => ({
           ...p,
-          instanceId: `p_${crypto.randomUUID()}`,
+          instanceId: instanceIds.get(p.instanceId)!,
+          ...(p.attachment?.kind === "wall" ? { attachment: { ...p.attachment, roomId:room.id } } : p.attachment?.kind === "surface" ? { attachment: { ...p.attachment, parentInstanceId:instanceIds.get(p.attachment.parentInstanceId)! } } : {}),
         }));
         for (const list of [
           room.openings,
@@ -308,8 +314,9 @@ export const useDesigns = create<DesignState>()(
           future: future.slice(1),
         });
       },
-      createNew: (size, name, roomType, dimensions) => {
-        const next = blankDesign(size, name, roomType, dimensions);
+      createNew: (size, name, roomType, dimensions, initial) => {
+        const base = blankDesign(size, name, roomType, dimensions);
+        const next = initial ? cloneDesign({ ...base, ...createRoomBuilderDraft(initial) }) : base;
         const { current, designs } = get();
         const previous = current ? reassignFurnitureRooms(current) : null;
         set({ current: next, designs: previous ? [...designs.filter(design => design.id !== previous.id), previous] : designs, past: [], future: [], transaction: null });
@@ -524,8 +531,13 @@ export const useDesigns = create<DesignState>()(
       updatePieces: (pieces) => {
         const c = get().current;
         if (!c) return;
+        try { pieces = resolveFurnitureAttachments(pieces, c, c.activeRoomId ?? `${c.id}-room-1`); } catch { return; }
         if (JSON.stringify(c.pieces) === JSON.stringify(pieces)) return;
         const next = cloneDesign({ ...c, pieces, updatedAt: Date.now() });
+        if (pieces.some(p => p.attachment)) {
+          const context=roomPlacementContext(next);
+          if(pieces.some(p=>p.attachment&&!isPlacementValid(p,context.pieces,context.room)))return;
+        }
         set({
           current: get().transaction
             ? next
@@ -538,10 +550,13 @@ export const useDesigns = create<DesignState>()(
       updateRoom: (patch) => {
         const c = get().current;
         if (!c) return;
+        if(c.outline && !patch.outline && (patch.width!==undefined||patch.depth!==undefined))patch={...patch,outline:resizeRoomBuilder(createRoomBuilderDraft(c),patch.width??c.width,patch.depth??c.depth).outline};
+        if((patch.outline||c.outline)&&validateRoomShape({...c,...patch}))return;
         if (
           patch.width !== undefined ||
           patch.depth !== undefined ||
           patch.wallFeatures !== undefined ||
+          patch.outline !== undefined ||
           patch.columns !== undefined
         ) {
           const rooms = c.rooms ?? [];
@@ -560,6 +575,10 @@ export const useDesigns = create<DesignState>()(
             return;
         }
         const compatiblePatch = { ...patch };
+        try {
+          const pieces = resolveFurnitureAttachments(patch.pieces ?? c.pieces, { ...c, ...patch }, c.activeRoomId ?? `${c.id}-room-1`);
+          if (JSON.stringify(pieces) !== JSON.stringify(c.pieces) || patch.pieces) compatiblePatch.pieces = pieces;
+        } catch { return; }
         // Older integrations edit a single colour; keep that action effective after migration.
         if (
           patch.wallColor !== undefined &&

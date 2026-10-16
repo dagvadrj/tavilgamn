@@ -1,7 +1,7 @@
 "use client";
-import { useId, type KeyboardEvent } from "react";
+import { useRef, useState, type PointerEvent, type KeyboardEvent } from "react";
 import { Droplets, Wind, Zap } from "lucide-react";
-import type { KitchenRoom, KitchenSpaceItem } from "@/lib/kitchenCabinets";
+import { roomWalls, type KitchenRoom, type KitchenSpaceItem } from "@/lib/kitchenCabinets";
 import {
   roomArea,
   roomOutline,
@@ -27,7 +27,7 @@ export const ROOM_ITEM_NAMES = {
 };
 export type RoomWallId = KitchenSpaceItem["wall"];
 export function KitchenRoomDraft({
-  room,
+  room: savedRoom,
   wall,
   selectedItem,
   disabled,
@@ -45,7 +45,40 @@ export function KitchenRoomDraft({
   onClear: () => void;
   onRoomChange?: (room: KitchenRoom) => void;
 }) {
-  const pattern = useId().replace(/:/g, "");
+  const [preview, setPreview] = useState<KitchenRoom | null>(null);
+  const room = preview ?? savedRoom;
+  const drag = useRef<{ pointerId: number; item: KitchenSpaceItem; base: KitchenRoom; next: KitchenRoom; dx: number; dz: number; inverse: DOMMatrix } | null>(null);
+  function point(event: PointerEvent<SVGElement>, inverse: DOMMatrix) {
+    const svg = event.currentTarget.ownerSVGElement ?? event.currentTarget as SVGSVGElement;
+    const p = svg.createSVGPoint(); p.x = event.clientX; p.y = event.clientY;
+    return p.matrixTransform(inverse);
+  }
+  function moveUtility(event: PointerEvent<SVGSVGElement>) {
+    const current = drag.current;
+    if (!current || current.pointerId !== event.pointerId) return;
+    event.stopPropagation();
+    const p = point(event, current.inverse), x = p.x + current.dx, z = p.y + current.dz;
+    let nearest = { wall: current.item.wall, x: current.item.x, z: current.item.z, distance: Infinity };
+    for (const segment of roomWalls(current.base)) {
+      const { x: ax, z: az } = segment.start, { x: bx, z: bz } = segment.end;
+      const vx = bx - ax, vz = bz - az, length = vx * vx + vz * vz;
+      if (!length) continue;
+      const t = Math.max(0, Math.min(1, ((x - ax) * vx + (z - az) * vz) / length));
+      const px = Math.round(ax + t * vx), pz = Math.round(az + t * vz), distance = Math.hypot(x - px, z - pz);
+      if (distance < nearest.distance) nearest = { wall: segment.sourceWall ?? segment.id as RoomWallId, x: px, z: pz, distance };
+    }
+    current.next = { ...current.base, items: current.base.items?.map(item => item.id === current.item.id ? { ...item, wall: nearest.wall, x: nearest.x, z: nearest.z } : item) };
+    setPreview(current.next);
+  }
+  function finishUtility(event: PointerEvent<SVGSVGElement>, cancel = false) {
+    const current = drag.current;
+    if (!current || current.pointerId !== event.pointerId) return;
+    if (!cancel) moveUtility(event);
+    drag.current = null;
+    setPreview(null);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (!cancel && onRoomChange) onRoomChange(current.next);
+  }
   const { width: w, depth: d } = room;
   const walls: {
     id: RoomWallId;
@@ -92,7 +125,7 @@ export function KitchenRoomDraft({
         width={760}
         height={180}
         rx={90}
-        fill={active ? "#0051d5" : "#293c32"}
+        fill={active ? "#42634f" : "#293c32"}
       />
       <text
         textAnchor="middle"
@@ -111,20 +144,15 @@ export function KitchenRoomDraft({
       viewBox={`-620 -650 ${w + 1240} ${d + 1300}`}
       role="group"
       aria-label="Өрөөний хэмжээс ба холболтын 2D зураг"
+      style={{ touchAction: "none" }}
+      onPointerMove={moveUtility}
+      onPointerUp={event => finishUtility(event)}
+      onPointerCancel={event => finishUtility(event, true)}
+      onLostPointerCapture={() => { drag.current = null; setPreview(null); }}
+      onKeyDown={event => { if (event.key === "Escape") { drag.current = null; setPreview(null); } }}
       onClick={onClear}
     >
-      <defs>
-        <pattern
-          id={pattern}
-          width={100}
-          height={100}
-          patternUnits="userSpaceOnUse"
-        >
-          <path d="M100 0H0V100" fill="none" stroke="#e8e5f1" strokeWidth={2} />
-        </pattern>
-      </defs>
-      <path d={roomOutlinePath(roomOutline(room))} fill="#faf8ff" />
-      <path d={roomOutlinePath(roomOutline(room))} fill={`url(#${pattern})`} />
+      <path d={roomOutlinePath(roomOutline(room))} fill="#faf9f6" />
       <g fill="none" stroke="#79817c" strokeWidth={7}>
         <path
           d={`M0 -50V-380M${w} -50V-380M-40 -330H${w + 40}M-40 -360l80 60M${w - 40} -360l80 60`}
@@ -167,7 +195,7 @@ export function KitchenRoomDraft({
             <path
               d={item.path}
               fill="none"
-              stroke={wall === item.id ? "#0051d5" : "#303039"}
+              stroke={wall === item.id ? "#42634f" : "#303039"}
               strokeWidth={95}
               className={wall === item.id ? "is-selected" : ""}
             />
@@ -180,7 +208,7 @@ export function KitchenRoomDraft({
                   cy={y}
                   r={43}
                   fill="white"
-                  stroke="#0051d5"
+                  stroke="#42634f"
                   strokeWidth={22}
                 />
               ))}
@@ -201,7 +229,7 @@ export function KitchenRoomDraft({
         y={d / 2 + 160}
         textAnchor="middle"
         fontSize={85}
-        fill="#0051d5"
+        fill="#42634f"
       >
         {(roomArea(roomBoundary(room)) / 1000000).toFixed(2)} м²
       </text>
@@ -222,7 +250,7 @@ export function KitchenRoomDraft({
             ? "#bd7b00"
             : item.kind === "vent"
               ? "#727974"
-              : "#0051d5";
+              : "#42634f";
         return (
           <g
             key={item.id}
@@ -230,6 +258,18 @@ export function KitchenRoomDraft({
             tabIndex={disabled ? -1 : 0}
             aria-label={`${ROOM_ITEM_NAMES[item.kind]} сонгох`}
             aria-pressed={selectedItem === item.id}
+            style={{ cursor: utility && onRoomChange && !disabled ? "grab" : undefined }}
+            onPointerDown={event => {
+              if (!utility || !onRoomChange || disabled || event.button !== 0) return;
+              event.stopPropagation(); event.preventDefault();
+              const svg = event.currentTarget.ownerSVGElement;
+              const inverse = svg?.getScreenCTM()?.inverse();
+              if (!svg || !inverse) return;
+              const p = point(event, inverse);
+              drag.current = { pointerId: event.pointerId, item, base: savedRoom, next: savedRoom, dx: item.x - p.x, dz: item.z - p.y, inverse };
+              svg.setPointerCapture(event.pointerId);
+              onItem(item.id);
+            }}
             onKeyDown={action(() => onItem(item.id))}
             onClick={(event) => {
               event.stopPropagation();
@@ -243,7 +283,7 @@ export function KitchenRoomDraft({
                 <circle
                   r={120}
                   fill={color}
-                  stroke={selectedItem === item.id ? "#0051d5" : "white"}
+                  stroke={selectedItem === item.id ? "#42634f" : "white"}
                   strokeWidth={16}
                 />
                 <Icon x={-65} y={-65} width={130} height={130} color="white" />
@@ -325,7 +365,7 @@ export function KitchenRoomDraft({
                   width={560}
                   height={150}
                   rx={30}
-                  fill={selectedItem === item.id ? "#0051d5" : "#293c32"}
+                  fill={selectedItem === item.id ? "#42634f" : "#293c32"}
                 />
                 <text
                   y={180}

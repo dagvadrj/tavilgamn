@@ -18,6 +18,7 @@ import {
 } from "@/lib/roomCeiling";
 import { ROOM_SKIRTING_DEPTH, ROOM_SKIRTING_HEIGHT } from "@/lib/roomRendering";
 import { openingWorldTransform } from "@/lib/roomOpenings";
+import { polygonContains } from "@/lib/roomPolygon";
 import {
   isInsideRoom,
   isPlacementValid,
@@ -79,7 +80,7 @@ export function roomPlacementContext(
     });
   const occupied = (x: number, z: number) =>
     floors.filter(
-      (f) => inside(x, z, f.bounds) && !f.voids.some((v) => inside(x, z, v)),
+      (f) => inside(x, z, f.bounds) && (!f.r.outline || polygonContains(f.r.outline, { x: x - f.dx, z: z - f.dz })) && !f.voids.some((v) => inside(x, z, v)),
     );
   const xs = [
     ...new Set(
@@ -132,7 +133,7 @@ export function roomPlacementContext(
             ]),
           ),
         });
-      else voids.push(cell);
+      else if (!floors.some(f=>f.r.outline)) voids.push(cell);
     }
   const segments: RoomSegment[] = [],
     skirting: Bounds[] = [];
@@ -141,6 +142,10 @@ export function roomPlacementContext(
       const a = { x: s.a.x + f.dx, z: s.a.z + f.dz },
         b = { x: s.b.x + f.dx, z: s.b.z + f.dz };
       const horizontal = Math.abs(a.z - b.z) < EPS;
+      if (Math.abs(a.x - b.x) > EPS && !horizontal) {
+        segments.push({ ...s, a, b });
+        continue;
+      }
       const lo = Math.min(horizontal ? a.x : a.z, horizontal ? b.x : b.z),
         hi = Math.max(horizontal ? a.x : a.z, horizontal ? b.x : b.z);
       let spans = [[lo, hi]];
@@ -241,9 +246,11 @@ export function roomPlacementContext(
     heightZones,
     skirting,
     placementGeometry: {
+      ...(floors.some(f=>f.r.outline) ? { floorRegions:floors.map(f=>f.g.loops.map(loop=>loop.map(p=>({x:p.x+f.dx,z:p.z+f.dz})))) } : {}),
+      ...(floors.length === 1 && active.outline ? { loops: floors[0].g.loops } : {}),
       bounds: { minX: xs[0], maxX: xs.at(-1)!, minZ: zs[0], maxZ: zs.at(-1)! },
-      voids,
-      segments,
+      voids: floors.length === 1 && active.outline ? [] : voids,
+      segments: floors.length === 1 && active.outline ? floors[0].g.segments : segments,
       connected: true,
       simple: true,
     },

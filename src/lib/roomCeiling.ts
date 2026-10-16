@@ -1,5 +1,6 @@
 import type { RoomCeiling, RoomShape, CeilingFixtureKind, CeilingFixture } from "./types";
 import { getRoomGeometry, type Bounds, type RoomSegment } from "./roomGeometry";
+import { polygonContainsPolygon } from "./roomPolygon";
 
 export const CEILING_FIXTURE_TYPES: Array<{id:CeilingFixtureKind;name:string}>=[{id:"flush",name:"Плафон"},{id:"recessed",name:"Суулгадаг спот"},{id:"pendant",name:"Унждаг гэрэл"},{id:"linear",name:"Шугаман гэрэл"}];
 export const DEFAULT_ROOM_CEILING: RoomCeiling={kind:"flat",drop:.15,borderWidth:.3,coveEnabled:false,coveColor:"#ffe3b3",coveIntensity:20};
@@ -11,7 +12,7 @@ const inside=(x:number,z:number,b:Bounds)=>x>b.minX&&x<b.maxX&&z>b.minZ&&z<b.max
 const cache=new Map<string,{config:RoomCeiling;slabs:Bounds[];innerEdges:RoomSegment[];xs:number[];zs:number[]}>();
 /** Exact orthogonal ceiling cells respect notches, recesses and columns. */
 export function ceilingPlan(room:RoomShape&{ceiling?:RoomCeiling}){
-  const config=normalizeRoomCeiling(room.ceiling,room),g=getRoomGeometry(room),key=JSON.stringify([room.width,room.depth,room.wallFeatures,room.columns,config]);
+  const config=normalizeRoomCeiling(room.ceiling,room),g=getRoomGeometry(room),key=JSON.stringify([room.width,room.depth,room.outline,room.wallFeatures,room.columns,config]);
   const saved=cache.get(key);if(saved)return saved;
   const w=config.borderWidth,coords=(axis:"x"|"z")=>[...new Set(g.segments.flatMap(s=>[s.a[axis],s.b[axis],s.a[axis]-w,s.a[axis]+w,s.b[axis]-w,s.b[axis]+w]).filter(v=>v>=(axis==="x"?g.bounds.minX:g.bounds.minZ)&&v<=(axis==="x"?g.bounds.maxX:g.bounds.maxZ)))].sort((a,b)=>a-b);
   const xs=coords("x"),zs=coords("z"),slabs:Bounds[]=[],innerEdges:RoomSegment[]=[],filled=new Map<string,boolean>();
@@ -39,6 +40,7 @@ export function ceilingFixtureBounds(fixture:CeilingFixture):Bounds{
 export function fixtureFitsCeiling(room:RoomShape,fixture:CeilingFixture){
   if(![fixture.x,fixture.z,fixture.intensity].every(Number.isFinite))return false;
   const g=getRoomGeometry(room),b=ceilingFixtureBounds(fixture);
+  if(room.outline&&!polygonContainsPolygon(room.outline,[{x:b.minX,z:b.minZ},{x:b.maxX,z:b.minZ},{x:b.maxX,z:b.maxZ},{x:b.minX,z:b.maxZ}]))return false;
   return b.minX>=g.bounds.minX-.000001&&b.maxX<=g.bounds.maxX+.000001&&b.minZ>=g.bounds.minZ-.000001&&b.maxZ<=g.bounds.maxZ+.000001&&!g.voids.some(v=>b.maxX>v.minX+.000001&&b.minX<v.maxX-.000001&&b.maxZ>v.minZ+.000001&&b.minZ<v.maxZ-.000001);
 }
 export function fixtureMountHeight(room:RoomShape&{ceiling?:RoomCeiling},fixture:CeilingFixture){const p=ceilingPlan(room),b=ceilingFixtureBounds(fixture);return (room.height??2.7)-(p.slabs.some(s=>b.maxX>s.minX+.000001&&b.minX<s.maxX-.000001&&b.maxZ>s.minZ+.000001&&b.minZ<s.maxZ-.000001)?p.config.drop:0);}

@@ -511,9 +511,10 @@ function Scene(props: ModularSceneProps) {
               }}
             >
               <KitchenCabinetGLB cabinet={cabinet} selected={selectedId === cabinet.id}
+                materialDefinitions={props.materialDefinitions}
                 variant={cabinet.variantId ? props.variantModels?.[cabinet.variantId] : undefined}
                 open={Boolean(props.open && selectedId === cabinet.id)} />
-              {(selectedId === cabinet.id || invalid.has(cabinet.id)) && (
+              {Boolean(props.variantModels?.[cabinet.variantId ?? ""]?.glbFile) && (selectedId === cabinet.id || invalid.has(cabinet.id)) && (
                 <mesh
                   userData={{ exportExclude: true }}
                   raycast={() => {}}

@@ -13,9 +13,12 @@ import { getRoomGeometry, type Bounds, type Point } from "@/lib/roomGeometry";
 import {
   getRoomWallTargets,
   moveRoomWall,
+  resizeRoomSegment,
   type RoomWallTarget,
 } from "@/lib/roomWallEditing";
 import { RoomPlanPreview } from "./RoomPlanPreview";
+import { RoomMeasureInput } from "@/features/room-planner/components/RoomMeasureInput";
+import { RoomMeasureUnit, useRoomMeasureUnit } from "@/features/room-planner/components/RoomMeasureUnit";
 import { pieceRects } from "@/three/collision";
 
 type Gesture = {
@@ -68,6 +71,9 @@ export function RoomWallPlan({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [issue, setIssue] = useState("");
   const helpId = useId();
+  const unit = useRoomMeasureUnit(state => state.unit);
+  const [measurement, setMeasurement] = useState<{ index: number; x: number; y: number } | null>(null);
+  const measuredSegment = measurement ? getRoomGeometry(room).segments.filter(s => !s.hole)[measurement.index] : undefined;
   const moveFurniture = (event: PointerEvent<SVGSVGElement>) => {
     const furniture = pieceGesture.current;
     if (!furniture || furniture.pointer !== event.pointerId) return false;
@@ -218,18 +224,33 @@ export function RoomWallPlan({
       <div className="room-wall-live" aria-live="polite" aria-atomic="true">
         <span>
           <strong>
-            {Math.round(room.width * 1000)} × {Math.round(room.depth * 1000)}
+            {Number((room.width * (unit === "мм" ? 1000 : 100)).toFixed(1))} × {Number((room.depth * (unit === "мм" ? 1000 : 100)).toFixed(1))}
           </strong>{" "}
-          мм
+          {unit}
         </span>
         <span>
           <strong>{geometry.area.toFixed(2)}</strong> м²
         </span>
       </div>
+      <RoomMeasureUnit />
+{measurement && measuredSegment && <div className="room-inline-measure" key={measurement.index} style={{ left: measurement.x, top: measurement.y }} onKeyDown={event => { event.stopPropagation(); if (event.key === "Escape") setMeasurement(null); }}>
+<RoomMeasureInput autoFocus label={`Х${measurement.index + 1} · ханын урт`} value={measuredSegment.length * 100} min={5} max={2000} step={0.1}
+beginEdit={() => {}} endEdit={() => {}}
+onChange={value => {
+const result = resizeRoomSegment(room, measurement.index, value / 100);
+const error = result.error ?? onChange(result.room, result.contentShift);
+setIssue(error ?? "");
+}} />
+<button type="button" onClick={() => setMeasurement(null)}>Хаах</button>
+{issue && <p role="alert">{issue}</p>}
+</div>}
       <RoomPlanPreview
         room={room}
         pieces={pieces}
         editing={{
+onEditMeasurement: (index, rect) => {
+setMeasurement({ index, x: Math.max(12, Math.min(rect.x, window.innerWidth - 292)), y: Math.max(12, Math.min(rect.y + 24, window.innerHeight - 210)) });
+},
           svgRef,
           bounds: dragView?.bounds,
           offset: dragView?.offset,
@@ -267,13 +288,19 @@ export function RoomWallPlan({
               } else endDrag(event);
             },
             onPointerCancel: (event) => {
-              if (pieceGesture.current?.pointer === event.pointerId)
+              if (pieceGesture.current?.pointer === event.pointerId) {
+                const piece=pieceGesture.current.piece;
                 pieceGesture.current = null;
+                onMovePiece?.(piece.instanceId,piece.x,piece.z);
+              }
               endDrag(event, true);
             },
             onLostPointerCapture: (event) => {
-              if (pieceGesture.current?.pointer === event.pointerId)
+              if (pieceGesture.current?.pointer === event.pointerId) {
+                const piece=pieceGesture.current.piece;
                 pieceGesture.current = null;
+                onMovePiece?.(piece.instanceId,piece.x,piece.z);
+              }
               endDrag(event, true);
             },
           },
@@ -452,7 +479,7 @@ export function RoomWallPlan({
       >
         {issue ||
           (selected
-            ? `${selected.label} · ${Math.round(selected.segment.length * 1000)} мм`
+            ? `${selected.label} · ${Number((selected.segment.length * (unit === "мм" ? 1000 : 100)).toFixed(1))} ${unit}`
             : "Хана сонгоход тухайн хэсгийн хэмжээ энд харагдана.")}
       </div>
     </section>

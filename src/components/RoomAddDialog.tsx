@@ -4,6 +4,7 @@ import type { RoomType, RoomWall } from "@/lib/types";
 import { ROOM_TYPES, ROOM_WALLS } from "@/lib/roomGeometry";
 import type { AddRoomOptions } from "@/lib/addRoomOptions";
 import { RoomFurnishingPicker } from "./RoomFurnishingPicker";
+import { RoomBuilder } from "@/features/room-planner/components/RoomBuilder";
 
 export function RoomAddDialog({
   type,
@@ -26,6 +27,7 @@ export function RoomAddDialog({
     windowWall: "north",
   });
   const [error, setError] = useState("");
+  const [builderOpen,setBuilderOpen]=useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     dialog.current?.showModal();
@@ -50,9 +52,11 @@ export function RoomAddDialog({
     <dialog
       ref={dialog}
       onCancel={onClose}
-      className="w-[min(94vw,480px)] rounded-2xl p-6 text-[#293C32] shadow-xl backdrop:bg-black/40"
+      className={`${builderOpen ? "w-[94vw] h-[94dvh]" : "w-[min(94vw,480px)]"} rounded-2xl p-6 text-[#293C32] shadow-xl backdrop:bg-black/40`}
     >
-      <form
+      {builderOpen ? <RoomBuilder initial={options} onCancel={()=>setBuilderOpen(false)} onComplete={draft=>{
+        try{onAdd(type,{...options,...draft,door:false,window:false,furnishing:"empty"});return null;}catch(reason){return (reason as Error).message;}
+      }}/> : <form
         onSubmit={(event) => {
           event.preventDefault();
           try {
@@ -129,6 +133,7 @@ export function RoomAddDialog({
             {options.window && wallSelect("windowWall")}
           </label>
         </div>
+        <button type="button" className="btn-ghost mb-4" onClick={()=>setBuilderOpen(true)}>Өрөөний хүрээг дөрвөн алхмаар зурах</button>
         <RoomFurnishingPicker
           value={options}
           onChange={(patch) => setOptions({ ...options, ...patch })}
@@ -151,7 +156,7 @@ export function RoomAddDialog({
             Өрөө нэмэх
           </button>
         </div>
-      </form>
+      </form>}
     </dialog>
   );
 }

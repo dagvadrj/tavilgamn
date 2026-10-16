@@ -12,7 +12,10 @@ import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import { acquireModel, cloneModel, disposeModelClone, type LoadedModel } from "./modelLoader";
 import { composeKitchenGlb, setKitchenGlbOpen, type KitchenPartMotion } from "./kitchenGlbComposition";
 
-type Props = { cabinet: ModularCabinet; variant?: KitchenCatalogVariant; open?: boolean; selected?: boolean };
+import { KitchenApplianceBody } from "./KitchenCabinetBody";
+import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
+
+type Props = { cabinet: ModularCabinet; variant?: KitchenCatalogVariant; open?: boolean; selected?: boolean; materialDefinitions?: Record<string, KitchenMaterialDefinition> };
 type AssemblyDisplay = { key: string; root: Group; frame: LoadedModel; motions: KitchenPartMotion[] };
 
 function assetUrl(modelId: string, file: string) {
@@ -103,17 +106,18 @@ function AssemblyModel({ cabinet, variant, assembly, open = false, selected = fa
   </group>;
 }
 
-/** Cabinet appearance always comes from published GLBs, including individual parts. */
+/** Render catalog models only; never invent replacement cabinet geometry. */
 export function KitchenCabinetGLB({ cabinet, variant, open = false, selected = false }: Props) {
   const assembly = useMemo(() => getKitchenGlbAssembly(variant?.configuration), [variant?.configuration]);
-  if (!variant?.glbFile) return <group userData={{ deliveryPending: true }}>
-    {selected && <Html center position={[0, cabinet.height / 2000, 0]} zIndexRange={[8, 0]}>
-      <span role="status" className="whitespace-nowrap rounded-md border bg-white/95 px-3 py-2 text-xs shadow-sm">3D загвар сонгоно уу</span>
-    </Html>}
-  </group>;
+  if (!variant?.glbFile) return <KitchenApplianceBody cabinet={cabinet} open={open} />;
   if (assembly) return <AssemblyModel cabinet={cabinet} variant={variant} assembly={assembly} open={open} selected={selected} />;
-  return <GLBFurnitureMesh modelId={variant.furnitureModelId} basePath={`/api/models/files/${variant.furnitureModelId}`}
-    glbFile={variant.glbFile} selected={selected} showLoadStatus={selected}
-    preservePhysicalSize={variant.physicalSize} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
-    open={open} openAnimation={typeof variant.configuration.openAnimation === "string" ? variant.configuration.openAnimation : undefined} />;
+  const nominal = variant.nominalSizeMm;
+  const fitPlannedSize = nominal && (nominal.width !== cabinet.width || nominal.height !== cabinet.height || nominal.depth !== cabinet.depth);
+  return <group>
+    {cabinet.opening === "hood" && <KitchenApplianceBody cabinet={cabinet} open={open} />}
+    <GLBFurnitureMesh modelId={variant.furnitureModelId} basePath={`/api/models/files/${variant.furnitureModelId}`}
+    glbFile={variant.glbFile} previewGlbFile={variant.previewGlbFile ?? undefined} selected={selected} showLoadStatus={selected}
+    preservePhysicalSize={fitPlannedSize ? false : variant.physicalSize} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
+    open={open} openAnimation={typeof variant.configuration.openAnimation === "string" ? variant.configuration.openAnimation : undefined} />
+  </group>;
 }

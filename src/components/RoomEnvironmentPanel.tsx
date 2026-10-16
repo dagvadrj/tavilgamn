@@ -1,5 +1,7 @@
 "use client";
 
+import { OpeningEdgeDistance } from "@/features/room-planner/components/OpeningQuickEditor";
+import { RoomMeasureUnit, useRoomMeasureUnit } from "@/features/room-planner/components/RoomMeasureUnit";
 import { useState } from "react";
 import {
   Check,
@@ -183,6 +185,8 @@ function LightRange({
 }
 
 export function RoomEnvironmentPanel(props: Props) {
+  const unit = useRoomMeasureUnit(state => state.unit);
+  const measureFactor = unit === "мм" ? 1000 : 100;
   const {
     design,
     tab,
@@ -658,6 +662,8 @@ export function RoomEnvironmentPanel(props: Props) {
                   {...edit}
                 />
               </div>
+              <RoomMeasureUnit />
+              <OpeningEdgeDistance room={design} opening={opening} onChange={onUpdateOpening} {...edit} />
               <LightRange
                 label="Ханын дагуух байрлал"
                 value={opening.position * 100}
@@ -773,8 +779,8 @@ export function RoomEnvironmentPanel(props: Props) {
                       )?.label ?? item.kind}
                       <small>
                         {ROOM_WALLS[item.wallId]} ·{" "}
-                        {Math.round(item.width * 100)} ×{" "}
-                        {Math.round(item.height * 100)} см
+                        {Number((item.width * measureFactor).toFixed(1))} ×{" "}
+                        {Number((item.height * measureFactor).toFixed(1))} {unit}
                       </small>
                     </span>
                     <DoorOpen size={17} />

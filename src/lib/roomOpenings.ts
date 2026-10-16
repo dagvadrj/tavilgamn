@@ -46,12 +46,18 @@ export function createOpening(templateId: string, wallId: RoomWall, position = 0
     hinge: "left", swing: "inward", open: false };
 }
 
-export function wallLength(room: RoomShape, wallId: RoomWall): number {
+export function wallLength(room: RoomShape, wallId: RoomWall, segmentId?: string): number {
+  if (segmentId) return getRoomGeometry(room).segments.find(s => s.id === segmentId)?.length ?? 0;
   return wallId === "north" || wallId === "south" ? room.width : room.depth;
 }
 
 /** Local +x follows A→B→C→D clockwise; local +z always faces the interior. */
-export function openingWorldTransform(room: RoomShape, opening: Pick<RoomOpening, "wallId" | "position">): { x: number; z: number; rotation: number } {
+export function openingWorldTransform(room: RoomShape, opening: Pick<RoomOpening, "wallId" | "position" | "segmentId">): { x: number; z: number; rotation: number } {
+  if (opening.segmentId) {
+    const segment = getRoomGeometry(room).segments.find(s => s.id === opening.segmentId);
+    if (!segment) throw new Error("Нээлхийн холбогдсон хана олдсонгүй.");
+    return { x: segment.a.x + (segment.b.x - segment.a.x) * opening.position, z: segment.a.z + (segment.b.z - segment.a.z) * opening.position, rotation: -Math.atan2(segment.b.z - segment.a.z, segment.b.x - segment.a.x) };
+  }
   const along = wallLength(room, opening.wallId) * opening.position;
   switch (opening.wallId) {
     case "north": return { x: -room.width / 2 + along, z: -room.depth / 2, rotation: 0 };
@@ -74,7 +80,7 @@ function openingError(opening: RoomOpening): string | null {
 }
 
 function spans(room: RoomShape, opening: RoomOpening) {
-  const center = wallLength(room, opening.wallId) * opening.position;
+  const center = wallLength(room, opening.wallId, opening.segmentId) * opening.position;
   return { left: center - opening.width / 2 - OPENING_FRAME_MARGIN, right: center + opening.width / 2 + OPENING_FRAME_MARGIN,
     bottom: Math.max(0, opening.sillHeight - OPENING_FRAME_MARGIN), top: opening.sillHeight + opening.height + OPENING_FRAME_MARGIN };
 }
@@ -108,14 +114,16 @@ export function validateOpening(room: RoomShape, opening: RoomOpening, openings:
   const problem = openingError(opening);
   if (problem) return problem;
   const bounds = spans(room, opening);
-  if (bounds.left < -EPSILON || bounds.right > wallLength(room, opening.wallId) + EPSILON) return "Хаалга, цонх хүрээний хамт ханандаа багтах ёстой.";
+  if (opening.segmentId && !getRoomGeometry(room).segments.some(s => s.id === opening.segmentId)) return "Нээлхийн холбогдсон хана олдсонгүй.";
+  if (room.outline && !opening.segmentId) return "Нээлхийг тодорхой ханын хэсэгт холбоно уу.";
+  if (bounds.left < -EPSILON || bounds.right > wallLength(room, opening.wallId, opening.segmentId) + EPSILON) return "Хаалга, цонх хүрээний хамт ханандаа багтах ёстой.";
   if (bounds.top > (room.height ?? 2.7) + EPSILON) return "Хаалга, цонхны дээд хүрээ таазнаас өндөр байна.";
-  if (!availableWallSpans(room, opening.wallId).some(span => bounds.left >= span.start - EPSILON && bounds.right <= span.end + EPSILON)) return "Энэ хэсэгт ханын товойлт, хонхор эсвэл багана байна. Өөр хэсэгт байрлуулна уу.";
+  if (!opening.segmentId && !availableWallSpans(room, opening.wallId).some(span => bounds.left >= span.start - EPSILON && bounds.right <= span.end + EPSILON)) return "Энэ хэсэгт ханын товойлт, хонхор эсвэл багана байна. Өөр хэсэгт байрлуулна уу.";
   for (const other of openings) {
     if (other.id === opening.id) continue;
     const otherProblem = openingError(other);
     if (otherProblem) return otherProblem;
-    if (other.wallId !== opening.wallId) continue;
+    if (opening.segmentId || other.segmentId ? opening.segmentId !== other.segmentId : other.wallId !== opening.wallId) continue;
     const otherBounds = spans(room, other);
     if (Math.min(bounds.right, otherBounds.right) - Math.max(bounds.left, otherBounds.left) > EPSILON &&
       Math.min(bounds.top, otherBounds.top) - Math.max(bounds.bottom, otherBounds.bottom) > EPSILON) return "Хаалга, цонхны хүрээнүүд давхцаж байна. Байрлалыг зайлуулна уу.";

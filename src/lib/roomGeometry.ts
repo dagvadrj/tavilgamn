@@ -1,4 +1,5 @@
 import type { RoomShape, RoomType, RoomWall, WallFeature } from "./types";
+import { polygonRoomGeometry, validateRoomPolygon } from "./roomPolygon";
 
 export const ROOM_TYPES: Record<RoomType, { label: string; width: number; depth: number }> = {
   living: { label: "Зочны өрөө", width: 5, depth: 4 },
@@ -11,7 +12,7 @@ export const ROOM_TYPES: Record<RoomType, { label: string; width: number; depth:
 export const ROOM_WALLS: Record<RoomWall, string> = { north: "AB · арын хана", east: "BC · баруун хана", south: "CD · урд хана", west: "DA · зүүн хана" };
 export type Point = { x: number; z: number };
 export type Bounds = { minX: number; maxX: number; minZ: number; maxZ: number };
-export type RoomSegment = { a: Point; b: Point; nx: number; nz: number; length: number; hole: boolean };
+export type RoomSegment = { id?: string; a: Point; b: Point; nx: number; nz: number; length: number; hole: boolean };
 export type RoomGeometry = {
   bounds: Bounds; loops: Point[][]; segments: RoomSegment[]; voids: Bounds[];
   area: number; connected: boolean; simple: boolean;
@@ -59,6 +60,7 @@ function basicError(room: RoomShape): string | null {
 export function getRoomGeometry(room: RoomShape): RoomGeometry {
   const problem = basicError(room);
   if (problem) throw new Error(problem);
+  if (room.outline) return polygonRoomGeometry(room);
   const key = JSON.stringify([room.width, room.depth, room.wallFeatures ?? [], room.columns ?? []]);
   const saved = cache.get(key);
   if (saved) return saved;
@@ -155,6 +157,7 @@ export function getRoomGeometry(room: RoomShape): RoomGeometry {
 export function validateRoomShape(room: RoomShape): string | null {
   const problem = basicError(room);
   if (problem) return problem;
+  if (room.outline) return validateRoomPolygon(room);
   const geometry = getRoomGeometry(room);
   if (!geometry.connected || geometry.area < 1) return "Өрөөний ашиглах хэсэг тасарсан эсвэл 1 м²-аас бага боллоо. Товойлт, баганын хэмжээг өөрчилнө үү.";
   if (!geometry.simple) return "Хэсгүүд зөвхөн нэг цэгээр нийлж байна. Байрлалыг нь бага зэрэг зайлуулна уу.";

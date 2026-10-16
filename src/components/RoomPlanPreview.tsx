@@ -1,4 +1,5 @@
 "use client";
+import { useRoomMeasureUnit } from "@/features/room-planner/components/RoomMeasureUnit";
 import type { ReactNode, Ref, SVGProps } from "react";
 import type { PlacedFurniture, RoomOpening, RoomShape } from "@/lib/types";
 import {
@@ -19,11 +20,13 @@ function OpeningPlanMark({
   opening,
   index,
   font,
+  unit = "см",
 }: {
   room: RoomShape;
   opening: RoomOpening;
   index: number;
   font: number;
+  unit?: "см" | "мм";
 }) {
   const position = openingWorldTransform(room, opening),
     half = opening.width / 2;
@@ -34,7 +37,8 @@ function OpeningPlanMark({
     leafWidth = opening.width / (double ? 2 : 1);
   const hinges = double ? [-1, 1] : [opening.hinge === "left" ? -1 : 1];
   const name = `${isDoor ? "Хаалга" : "Цонх"} ${index + 1}`;
-  const description = `${name} · ${Math.round(opening.width * 1000)} × ${Math.round(opening.height * 1000)} мм${isDoor ? ` · ${inward ? "Дотогш" : "Гадагш"} нээгдэнэ` : ` · Шалнаас ${Math.round(opening.sillHeight * 1000)} мм`}`;
+  const measure = (v: number) => Number((v * (unit === "мм" ? 1000 : 100)).toFixed(1));
+  const description = `${name} · ${measure(opening.width)} × ${measure(opening.height)} ${unit}${isDoor ? ` · ${inward ? "Дотогш" : "Гадагш"} нээгдэнэ` : ` · Шалнаас ${measure(opening.sillHeight)} ${unit}`}`;
   return (
     <g
       className={`room-plan-opening room-plan-${opening.kind}`}
@@ -120,7 +124,7 @@ function OpeningPlanMark({
       </g>
       <text x={0} y={font * 1.7} fontSize={font * 0.7} textAnchor="middle">
         {isDoor ? "Ха" : "Ц"}
-        {index + 1} · {Math.round(opening.width * 1000)} мм
+        {index + 1} · {measure(opening.width)} {unit}
       </text>
     </g>
   );
@@ -134,6 +138,7 @@ export function RoomPlanPreview({
   room: RoomShape;
   pieces?: PlacedFurniture[];
   editing?: {
+    onEditMeasurement?: (segmentIndex: number, rect: { x: number; y: number }) => void;
     overlay: ReactNode;
     bounds?: Bounds;
     offset?: Point;
@@ -150,7 +155,8 @@ export function RoomPlanPreview({
     ),
     pad = span * 0.24,
     font = span / (editing ? 22 : 32);
-  const label = (length: number) => `${Math.round(length * 1000)} мм`;
+  const unit = useRoomMeasureUnit(state => state.unit);
+  const label = (length: number) => `${Number((length * (unit === "мм" ? 1000 : 100)).toFixed(1))} ${unit}`;
   const validOpenings = (room.openings ?? []).filter(
     (opening) => !validateOpening(room, opening),
   );
@@ -161,7 +167,7 @@ export function RoomPlanPreview({
       <figcaption>
         {editing
           ? "Ханыг чирж өрөөгөө төлөвлөх"
-          : "Өрөөний plan · дээрээс харах · мм"}
+          : `Өрөөний план · дээрээс харах · ${unit}`}
       </figcaption>
       <svg
         ref={editing?.svgRef}
@@ -253,6 +259,7 @@ export function RoomPlanPreview({
               room={room}
               opening={opening}
               index={index}
+              unit={unit}
               font={font}
             />
           ))}
@@ -269,7 +276,13 @@ export function RoomPlanPreview({
               const x = (ax + bx) / 2,
                 z = (az + bz) / 2;
               return (
-                <g key={i} className="room-plan-dimension">
+                <g key={i} className="room-plan-dimension"
+role={editing?.onEditMeasurement ? "button" : undefined}
+tabIndex={editing?.onEditMeasurement ? 0 : undefined}
+aria-label={editing?.onEditMeasurement ? `Х${i + 1} · ${label(s.length)} · хэмжээ засах` : undefined}
+onClick={event => editing?.onEditMeasurement?.(i, event.currentTarget.getBoundingClientRect())}
+onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); editing?.onEditMeasurement?.(i, event.currentTarget.getBoundingClientRect()); } }}
+style={editing?.onEditMeasurement ? { cursor: "pointer" } : undefined}>
                   <line x1={ax} y1={az} x2={bx} y2={bz} />
                   <line
                     x1={s.a.x}

@@ -4,6 +4,7 @@ export type KitchenOpening = (typeof KITCHEN_OPENINGS)[number];
 
 export type KitchenCatalogVariant = {
   physicalSize?: boolean;
+  nominalSizeMm?: { width: number; height: number; depth: number };
   furnitureModelId: string;
   productId: string;
   modelName: string;
@@ -106,11 +107,30 @@ export function similarKitchenVariants(
     .slice(0, Math.max(0, limit));
 }
 
+/** Reuse published boxes at the planned size, preserving an explicit ready choice. */
 export function preferredKitchenVariant(modules: KitchenCatalogModule[], cabinet: CabinetMatch) {
-  const variants = matchingKitchenVariants(modules, cabinet);
-  return variants.find((variant) => variant.furnitureModelId === cabinet.variantId)
-    ?? variants.find((variant) => variant.isDefault)
-    ?? variants[0];
+  const ready = modules.filter(module => module.active).flatMap(module => module.variants
+    .filter(variant => variant.active && variant.glbFile).map(variant => ({ module, variant })));
+  const selected = ready.find(({ variant }) => variant.furnitureModelId === cabinet.variantId);
+  if (selected) return selected.variant;
+  const exact = matchingKitchenVariants(modules, cabinet);
+  if (exact.length) return exact.find(variant => variant.isDefault) ?? exact[0];
+  const opening = cabinet.opening ?? "doors";
+  if (opening === "refrigerator") return undefined;
+  const candidates = ready.filter(({ module, variant }) => {
+    const appliance = ["oven", "hob"].includes(opening);
+    if (appliance) return ["oven", "hob"].includes(variant.opening);
+    return variant.opening === opening || variant.opening === "doors" || variant.opening === "open";
+  });
+  candidates.sort((a, b) => {
+    const score = ({module, variant}: typeof a) =>
+      (module.cabinetType === (cabinet.corner ? "corner" : cabinet.type) ? 0 : 10000) +
+      (variant.opening === opening ? 0 : 1000) +
+      Math.abs(module.widthMm - cabinet.width) * 4 + Math.abs(module.heightMm - cabinet.height) * 2 +
+      Math.abs(module.depthMm - cabinet.depth) * 2 + (variant.isDefault ? 0 : 1);
+    return score(a) - score(b) || a.variant.furnitureModelId.localeCompare(b.variant.furnitureModelId);
+  });
+  return candidates[0]?.variant;
 }
 
 export function applyKitchenCatalogVariants<T extends { cabinets: CabinetMatch[] }>(kitchen: T, modules: KitchenCatalogModule[]): T {

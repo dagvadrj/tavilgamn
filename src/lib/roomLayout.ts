@@ -1,6 +1,7 @@
 import type { DesignRoom, RoomConnection, RoomOpening, RoomPosition, RoomWall } from "./types";
 import { getRoomGeometry, type Bounds, type RoomSegment } from "./roomGeometry";
 import { openingWorldTransform } from "./roomOpenings";
+import { polygonContains, edgesCross } from "./roomPolygon";
 
 const EPS = 0.002;
 export const roomPosition = (room: DesignRoom): RoomPosition => room.position ?? { x: 0, z: 0 };
@@ -27,10 +28,21 @@ export function positionedRooms(rooms: DesignRoom[]): DesignRoom[] {
 function occupied(room: DesignRoom, x: number, z: number) {
   const p = roomPosition(room), g = getRoomGeometry(room), b = g.bounds;
   x -= p.x; z -= p.z;
-  return x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && !g.voids.some(v => x > v.minX && x < v.maxX && z > v.minZ && z < v.maxZ);
+  return x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ && (!room.outline || polygonContains(room.outline, { x, z }, false)) && !g.voids.some(v => x > v.minX && x < v.maxX && z > v.minZ && z < v.maxZ);
 }
 /** Check actual occupied floor cells, including recesses and notches. */
 export function roomsOverlap(a: DesignRoom, b: DesignRoom): boolean {
+  if (a.outline || b.outline) {
+    const world = (room: DesignRoom) => { const p = roomPosition(room); return getRoomGeometry(room).loops[0].map(v => ({ x: v.x + p.x, z: v.z + p.z })); };
+    const ap = world(a), bp = world(b);
+    if (ap.some(p => occupied(b, p.x, p.z)) || bp.some(p => occupied(a, p.x, p.z))) return true;
+    if (ap.some((p,i) => bp.some((q,j) => edgesCross(p,ap[(i+1)%ap.length],q,bp[(j+1)%bp.length])))) return true;
+    // Coincident boundaries can enclose the same area without strict crossings.
+    if (ap.some((p,i) => occupied(b, (p.x+ap[(i+1)%ap.length].x)/2, (p.z+ap[(i+1)%ap.length].z)/2))) return true;
+    const p = ap[0], q = ap[1];
+    const dx=q.x-p.x,dz=q.z-p.z,len=Math.hypot(dx,dz);
+    return occupied(b,(p.x+q.x)/2-dz/len*.001,(p.z+q.z)/2+dx/len*.001);
+  }
   const ab = roomWorldBounds(a), bb = roomWorldBounds(b);
   const minX = Math.max(ab.minX, bb.minX), maxX = Math.min(ab.maxX, bb.maxX), minZ = Math.max(ab.minZ, bb.minZ), maxZ = Math.min(ab.maxZ, bb.maxZ);
   if (maxX - minX <= EPS || maxZ - minZ <= EPS) return false;

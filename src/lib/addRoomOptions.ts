@@ -1,4 +1,4 @@
-import type { DesignRoom, RoomWall } from "./types";
+import type { DesignRoom, RoomWall, RoomOpening, WallFeature, RoomVertex, RoomSurfaces } from "./types";
 import {
   createOpening,
   validateRoomOpenings,
@@ -7,7 +7,12 @@ import {
 import { validateRoomSetup } from "./roomSetup";
 import type { FurnishingOptions } from "./roomFurnishing";
 
-export interface AddRoomOptions extends FurnishingOptions {
+export interface AddRoomOptions extends FurnishingOptions, Partial<RoomSurfaces> {
+  outline?: RoomVertex[];
+  wallColor?: string;
+  floorColor?: string;
+  openings?: RoomOpening[];
+  wallFeatures?: WallFeature[];
   name: string;
   width: number;
   depth: number;
@@ -29,13 +34,20 @@ export function configureAddedRoom(
     width: options.width,
     depth: options.depth,
     height: options.height,
-    connectionKind: options.door ? ("door" as const) : ("open" as const),
-    openings: [
+    outline: options.outline,
+    wallColor: options.wallColor ?? room.wallColor,
+    floorColor: options.floorColor ?? room.floorColor,
+    floorMaterial: options.floorMaterial ?? room.floorMaterial,
+    wallMaterials: options.wallMaterials ?? room.wallMaterials,
+    wallFeatures: options.wallFeatures ?? room.wallFeatures,
+    connectionKind: (options.openings ? options.openings.some(o => o.kind === "door") : options.door) ? ("door" as const) : ("open" as const),
+    openings: options.openings?.map(opening => ({ ...opening })) ?? [
       options.door ? createOpening("door-single", options.doorWall) : null,
       options.window ? createOpening("window-fixed", options.windowWall) : null,
     ].filter((item) => item !== null),
   };
   if (
+    !options.openings &&
     configured.openings.length === 2 &&
     options.doorWall === options.windowWall
   ) {

@@ -143,7 +143,7 @@ function RoomWallMesh({
     useRef<THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>>(null);
   const cutawayRoot = useRef<THREE.Group>(null);
   const openingCuts = (design.openings ?? [])
-    .filter((opening) => opening.wallId === id && base)
+    .filter((opening) => opening.segmentId ? opening.segmentId === segment.id : opening.wallId === id && base)
     .flatMap((opening) => {
       const world = openingWorldTransform(design, opening);
       const along =
