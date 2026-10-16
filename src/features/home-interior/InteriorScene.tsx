@@ -548,7 +548,7 @@ function SofaAsset({
   } | null>(null);
   const model = product?.model;
   const url = model
-    ? `/api/models/files/${model.id}/${model.previewFile || model.file}`
+    ? `/api/models/files/${model.id}/${model.file}`
     : "";
   useEffect(() => {
     if (!url) return;
@@ -625,7 +625,7 @@ function Scene({
   const preloadKey = preloadProducts
     .map((item) =>
       item?.model
-        ? `/api/models/files/${item.model.id}/${item.model.previewFile || item.model.file}`
+        ? `/api/models/files/${item.model.id}/${item.model.file}`
         : "",
     )
     .filter(Boolean)

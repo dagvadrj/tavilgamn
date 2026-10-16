@@ -1438,7 +1438,7 @@ function RoomPlannerEditor() {
                         void prefetchModel(
                           modelDeliveryUrl(
                             m.fileModelId ?? m.id,
-                            m.previewGlbFile ?? m.glbFile,
+                            m.glbFile,
                           ),
                         )
                       }

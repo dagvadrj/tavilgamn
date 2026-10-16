@@ -48,7 +48,7 @@ export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}
       configuration: { ...(row.configuration as Record<string, unknown>), ...(assembly ? { assembly } : {}) }, isDefault: Boolean(row.is_default),
       sortOrder: Number(row.sort_order), active: Boolean(row.active), glbFile: file(kitchenGlbPath),
       glbUrl: assetUrl(model.id as string, kitchenGlbPath), thumbnailUrl: assetUrl(model.id as string, model.thumbnail_path),
-      previewGlbFile: file(model.preview_glb_path), previewGlbUrl: assetUrl(model.id as string, model.preview_glb_path),
+      previewGlbFile: null, previewGlbUrl: null,
       processingStatus: String(model.processing_status ?? "idle"),
     };
     variants.set(row.module_id as string, [...(variants.get(row.module_id as string) ?? []), value]);

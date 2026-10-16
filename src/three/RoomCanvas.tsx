@@ -7,7 +7,6 @@ import {
   Grid,
   Environment,
   Lightformer,
-  ContactShadows,
   MapControls,
   Html,
   Edges,
@@ -48,6 +47,7 @@ import {
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
+import { RoomContactShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import { roomTourCamera } from "./roomCameraPlacement";
 import { RoomStreetView, CameraPointPlacement } from "./RoomStreetView";
 import { RoomPreviewCapture } from "./RoomPreviewCapture";
@@ -247,6 +247,7 @@ export function RoomCanvas({
       }}
     >
       <CameraMotionPreview interactionActive={isDraggingPiece || isLooking}>
+        <RoomMotionResolution dpr={performance.dpr} />
         <CanvasDiagnostics scene="room" />
         <RoomPreviewCapture
           designId={design.id}
@@ -546,7 +547,8 @@ export function RoomCanvas({
         ))}
 
         {view === "perspective" && performance.contactShadows && (
-          <ContactShadows
+          <RoomContactShadows
+            updatingLayout={isDraggingPiece}
             position={[centerX, -0.082, centerZ]}
             opacity={0.2}
             scale={Math.max(spanX, spanZ) * 1.15}
@@ -732,7 +734,6 @@ function DraggablePiece({
     ? {
         id: dbModel.fileModelId ?? dbModel.id,
         file: dbModel.glbFile,
-        previewFile: dbModel.previewGlbFile,
         physicalSize: dbModel.physicalSize,
       }
     : product?.model;
@@ -886,7 +887,6 @@ function DraggablePiece({
           modelId={fileModel.id}
           basePath={`/api/models/files/${fileModel.id}/`}
           glbFile={fileModel.file}
-          previewGlbFile={fileModel.previewFile}
           preservePhysicalSize={fileModel.physicalSize}
           bakedOcclusionIntensity={0}
           trackFloorBand

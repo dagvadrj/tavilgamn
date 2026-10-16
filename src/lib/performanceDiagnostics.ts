@@ -15,6 +15,9 @@ export type CanvasMetric = {
   loop: string;
   cameraMotionFrames?: number;
   motionTriangles?: number | null;
+  motionP95Ms?: number | null;
+  motionWorstMs?: number | null;
+  motionSlowFrames?: number;
 };
 
 export function performanceDiagnosticsEnabled() {
@@ -25,6 +28,18 @@ export function performanceDiagnosticsEnabled() {
 // Local, opt-in diagnostic data only. No scene contents or personal data sent.
 export function reportCanvasMetric(detail: CanvasMetric) {
   window.dispatchEvent(new CustomEvent("tavilga:canvas-performance", { detail }));
+  // Enabled only by ?performance=1 in CanvasDiagnostics; stays local.
+  console.debug("[canvas-performance]", JSON.stringify(detail));
+}
+
+export function summarizeMotionFrames(intervals: number[]) {
+  // Consecutive interaction frames are known to be active: retain long stalls.
+  const values = intervals.filter(value => Number.isFinite(value) && value > 0).sort((a,b) => a-b);
+  return {
+    motionP95Ms: values.length ? Math.round(values[Math.ceil(values.length*0.95)-1]*10)/10 : null,
+    motionWorstMs: values.length ? Math.round(values[values.length-1]*10)/10 : null,
+    motionSlowFrames: values.filter(value => value > 1000/30).length,
+  };
 }
 
 export function summarizeFrames(intervals: number[], frames: number, durationMs: number) {

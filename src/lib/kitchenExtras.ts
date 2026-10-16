@@ -24,7 +24,7 @@ export function parseKitchenExtras(value: unknown, ids: Set<string>, room: Kitch
       const m = raw.model;
       if (!m || !/^[0-9a-f-]{36}$/i.test(m.id) || !/^[a-z0-9._-]+\.glb$/i.test(m.file) ||
           (m.previewFile !== undefined && !/^[a-z0-9._-]+\.glb$/i.test(m.previewFile)) || m.scale !== 1) throw new Error("Нэмэлт тавилгын GLB мэдээлэл буруу байна.");
-      model = { id:m.id, file:m.file, scale:1, ...(m.previewFile ? {previewFile:m.previewFile} : {}) };
+      model = { id:m.id, file:m.file, scale:1 };
     }
     return { id:raw.id, productId:raw.productId, name:raw.name.trim(), category:raw.category, width:raw.width, height:raw.height, depth:raw.depth,
       position:{x:raw.position.x,y:0,z:raw.position.z,rotation:raw.position.rotation}, color:raw.color, material:raw.material, ...(model ? {model} : {}) };

@@ -14,7 +14,7 @@ test('kitchen extras render only the actual linked GLB', () => {
   const tree = KitchenExtraMesh({ extra: { ...extra, model: { id: 'rack', file: 'rack.glb', previewFile: 'rack-preview.glb', scale: 1 } } });
   assert.equal(tree.type, GLBFurnitureMesh);
   assert.equal(tree.props.glbFile, 'rack.glb');
-  assert.equal(tree.props.previewGlbFile, 'rack-preview.glb');
+  assert.equal(tree.props.previewGlbFile, undefined);
   assert.deepEqual([tree.props.w, tree.props.h, tree.props.d], [.6, 2, 1.5]);
 });
 

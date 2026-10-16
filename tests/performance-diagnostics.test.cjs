@@ -1,7 +1,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { loadSource } = require("./helpers/load-source.cjs");
-const { summarizeFrames } = loadSource("src/lib/performanceDiagnostics.ts");
+const { summarizeFrames, summarizeMotionFrames } = loadSource("src/lib/performanceDiagnostics.ts");
 const { animateToward } = loadSource("src/three/demandAnimation.ts");
 
 test("on-demand animation stays awake until settled and clamps long idle gaps", () => {
@@ -22,6 +22,13 @@ test("frame summary separates idle render rate from active animation FPS", () =>
   assert.deepEqual(summarizeFrames([16, 16, 2000, 16], 3, 2000), { renderFps: 2, activeFps: 63 });
   assert.deepEqual(summarizeFrames([], 0, 2000), { renderFps: 0, activeFps: null });
   assert.deepEqual(summarizeFrames([NaN, Infinity, -1, 0, 300], 1, 2000), { renderFps: 1, activeFps: null });
+});
+
+test("known active motion samples preserve long stalls instead of filtering them as idle", () => {
+  assert.deepEqual(summarizeMotionFrames([16,16,800,40,NaN]), {
+    motionP95Ms: 800, motionWorstMs: 800, motionSlowFrames: 2,
+  });
+  assert.deepEqual(summarizeMotionFrames([]), { motionP95Ms: null, motionWorstMs: null, motionSlowFrames: 0 });
 });
 
 test("model metrics retain a bounded local history without relying on network", () => {

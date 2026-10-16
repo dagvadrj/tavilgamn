@@ -24,6 +24,7 @@ test('asset ledger, archive/restore, pending uploads, canonical corner isolation
   await db.exec('create trigger reserve_order_stock before insert on orders for each row execute function reserve_order_stock()');
   await db.query("update furniture_models set product_id='test-cabinet' where id=$1",[model]);
   assert.equal((await db.query('select count(*)::int n from model_assets')).rows[0].n,1);
+  await db.query("update furniture_models set preview_glb_path='old-preview.glb' where id=$1",[model]);
   await db.query('select set_model_archived($1,$2,true)',[actor,model]);
   const order=[{productId:'test-cabinet',qty:1,color:'oak',material:'wood',unitPrice:100}];
   await assert.rejects(db.query('insert into orders(items) values($1)',[order]),{code:'P0004'});
@@ -48,9 +49,9 @@ test('asset ledger, archive/restore, pending uploads, canonical corner isolation
   await db.query("insert into model_assets(model_id,version_id,role,storage_path,byte_size,created_by) values($1,$2,'source','source.glb',100,$3)",[model,version,actor]);
   await db.query('select queue_model_asset($1,$2,$3,$4,$5)',[actor,model,'source.glb','a'.repeat(64),{standard:'cabinet-v1'}]);
   assert.equal((await db.query('select processing_status from furniture_models')).rows[0].processing_status,'queued');
-  await db.query("update furniture_models set glb_path='new-delivery.glb',processing_status='ready',source_glb_path=null where id=$1",[model]);
+  await db.query("update furniture_models set glb_path='new-delivery.glb',preview_glb_path=null,processing_status='ready',source_glb_path=null where id=$1",[model]);
   const assets=(await db.query('select storage_path,state from model_assets order by storage_path')).rows;
-  assert.deepEqual(assets,[{storage_path:'new-delivery.glb',state:'available'},{storage_path:'old-delivery.glb',state:'retired'},{storage_path:'source.glb',state:'deleted'}]);
+  assert.deepEqual(assets,[{storage_path:'new-delivery.glb',state:'available'},{storage_path:'old-delivery.glb',state:'retired'},{storage_path:'old-preview.glb',state:'retired'},{storage_path:'source.glb',state:'deleted'}]);
   await assert.rejects(db.query('select queue_model_asset($1,$2,$3,$4,$5)',[actor,model,'missing.glb','a'.repeat(64),{}]),/intent/);
   await assert.rejects(db.query('select set_model_archived(null,$1,true)',[model]),/Admin required/);
 });

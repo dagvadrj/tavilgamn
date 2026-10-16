@@ -21,18 +21,18 @@ import {
 import { reportModelPerformance } from "@/lib/modelPerformance";
 import { registerModelFloorBand } from "./furnitureFloorBand";
 import { modelPlacement } from "@/lib/modelPlacement";
-import { useCameraMotionPreview } from "./CameraMotionPreview";
 
 export interface GLBFurnitureMeshProps {
   preservePhysicalSize?: boolean;
   /** Reflection fill for room lighting; leaves authored colour and texture factors intact. */
   environmentBoost?: number;
-  /** Room scenes already render geometric shadows; disable broken baked AO there. */
+  /** Legacy AO override; verified local AO bakes retain their authored crease shading. */
   bakedOcclusionIntensity?: number;
   trackFloorBand?: boolean;
   modelId: string;
   basePath: string;
   glbFile: string;
+  /** @deprecated Accepted for saved scenes only; only glbFile is loaded. */
   previewGlbFile?: string;
   w: number;
   d: number;
@@ -63,7 +63,7 @@ type Display = {
   dimensions: { w: number; h: number; d: number };
   preservePhysicalSize: boolean;
   url: string;
-  variant: "preview" | "high";
+  variant: "high";
   requestedAt: number;
   asset: LoadedModel;
   release: () => void;
@@ -80,12 +80,6 @@ function releaseDisplay(display: Display) {
   display.release();
 }
 
-function raycastVisibleVariant(this: THREE.Object3D) {
-  // Three.js raycasting does not automatically skip invisible descendants.
-  // Returning false stops recursion into the inactive, retained GLB.
-  if (!this.visible) return false;
-}
-
 function applyTextureSet(
   material: THREE.MeshStandardMaterial,
   textures: KitchenMaterialTextureSet,
@@ -99,7 +93,6 @@ export function GLBFurnitureMesh({
   modelId,
   basePath,
   glbFile,
-  previewGlbFile,
   selected = false,
   showLoadStatus = true,
   deferUntilVisible = false,
@@ -121,10 +114,7 @@ export function GLBFurnitureMesh({
   openAnimation,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
-  const motionPreview = useCameraMotionPreview();
-  const retainPreview = motionPreview !== null;
   const root = useRef<THREE.Group>(null);
-  const pendingPreviewDraw = useRef<(() => void) | undefined>(undefined);
   const visibility = useRef({
     frustum: new THREE.Frustum(),
     matrix: new THREE.Matrix4(),
@@ -137,7 +127,7 @@ export function GLBFurnitureMesh({
     if (enabled) setSeen(true);
   }, [enabled]);
   useFrame(({ camera }) => {
-    if ((enabled && !pendingPreviewDraw.current) || !root.current) return;
+    if (enabled || !root.current) return;
     const { frustum, matrix, bounds } = visibility.current;
     root.current.updateWorldMatrix(true, false);
     camera.updateWorldMatrix(true, false);
@@ -148,24 +138,16 @@ export function GLBFurnitureMesh({
     bounds.applyMatrix4(root.current.matrixWorld);
     const visible = frustum.intersectsBox(bounds);
     if (!enabled && visible) setSeen(true);
-    // Non-deferred assemblies may contain cabinets behind the camera. They
-    // still need their high assets ready for whole-assembly exports.
-    if (enabled && !visible) {
-      pendingPreviewDraw.current?.();
-      pendingPreviewDraw.current = undefined;
-    }
+
   });
   const callbacks = useRef({ onReady, onError });
   callbacks.current = { onReady, onError };
   const [display, setDisplay] = useState<Display | null>(null);
-  const [previewDisplay, setPreviewDisplay] = useState<Display | null>(null);
   const owned = useRef(new Set<Display>());
 
   const [error, setError] = useState(false);
   const [retry, setRetry] = useState(0);
   const base = basePath.endsWith("/") ? basePath : `${basePath}/`;
-  const previewFile =
-    previewGlbFile && previewGlbFile !== glbFile ? previewGlbFile : null;
   const front = frontMaterial ?? materialOverride;
   const carcass = carcassMaterial ?? materialOverride;
   const frontTexturePaths = front?.texturePaths;
@@ -177,7 +159,6 @@ export function GLBFurnitureMesh({
       enabled,
       base,
       glbFile,
-      previewFile,
       retry,
       front,
       carcass,
@@ -185,7 +166,6 @@ export function GLBFurnitureMesh({
       carcassColor,
       frontTexturePaths,
       carcassTexturePaths,
-      retainPreview,
       environmentBoost,
       bakedOcclusionIntensity,
       trackFloorBand,
@@ -199,7 +179,6 @@ export function GLBFurnitureMesh({
       enabled,
       base,
       glbFile,
-      previewFile,
       retry,
       front,
       carcass,
@@ -207,7 +186,6 @@ export function GLBFurnitureMesh({
       carcassColor,
       frontTexturePaths,
       carcassTexturePaths,
-      retainPreview,
       environmentBoost,
       bakedOcclusionIntensity,
       trackFloorBand,
@@ -224,14 +202,12 @@ export function GLBFurnitureMesh({
       enabled,
       base,
       glbFile,
-      previewFile,
       front,
       carcass,
       frontColor,
       carcassColor,
       frontTexturePaths,
       carcassTexturePaths,
-      retainPreview,
       environmentBoost,
       bakedOcclusionIntensity,
       trackFloorBand,
@@ -245,14 +221,13 @@ export function GLBFurnitureMesh({
     let cancelled = false;
     let readyShown = false;
     let assetPrepared = false;
-    let releaseRenderWait: (() => void) | undefined;
     const startedAt = performance.now();
     setError(false);
     // Keep the last complete scene attached while the next GLB and its textures
     // load. A new piece has no retained scene and shows its measured placeholder.
 
-    const loadStage = async (file: string, final: boolean) => {
-      const url = base + file;
+    const loadDelivery = async () => {
+      const url = base + glbFile;
       const requestedAt = performance.now();
       const lease = acquireModel(gl, url);
       const frontTextureLease =
@@ -276,7 +251,7 @@ export function GLBFurnitureMesh({
             { w, h, d },
             preservePhysicalSize,
             url,
-            final,
+            true,
           );
 
         cloned.scene.traverse((object) => {
@@ -290,7 +265,8 @@ export function GLBFurnitureMesh({
             if (clonedMaterial instanceof THREE.MeshStandardMaterial) {
               // Preserve imported fabric grain, colour maps and baked occlusion.
               clonedMaterial.envMapIntensity *= environmentBoost;
-              if (bakedOcclusionIntensity !== undefined)
+              if (bakedOcclusionIntensity !== undefined &&
+                  !(clonedMaterial.aoMap && clonedMaterial.userData.qualityBakeOcclusion === 1))
                 clonedMaterial.aoMapIntensity = Math.max(
                   0,
                   Math.min(1, bakedOcclusionIntensity),
@@ -339,7 +315,7 @@ export function GLBFurnitureMesh({
           dimensions: { w, h, d },
           preservePhysicalSize,
           url,
-          variant: final ? "high" : "preview",
+          variant: "high",
           requestedAt,
           asset: cloned,
           release: () => {
@@ -348,16 +324,13 @@ export function GLBFurnitureMesh({
             lease.release();
           },
         };
-        const rendered = new Promise<void>((resolve) => {
-          releaseRenderWait = resolve;
-          if (!final) pendingPreviewDraw.current = resolve;
+        {
           let firstFrame = true;
           cloned.scene.traverse((object) => {
             if (!(object instanceof THREE.Mesh)) return;
             object.onAfterRender = () => {
               if (!firstFrame || cancelled) return;
               firstFrame = false;
-              if (!final) pendingPreviewDraw.current = undefined;
               reportModelPerformance({
                 asset: new URL(url, window.location.origin).pathname,
                 variant: next.variant,
@@ -377,21 +350,17 @@ export function GLBFurnitureMesh({
                 readyShown = true;
                 callbacks.current.onReady?.();
               }
-              resolve();
             };
           });
-        });
+        }
         transferred = true;
         assetPrepared = true;
         owned.current.add(next);
-        if (!final && retainPreview) setPreviewDisplay(next);
         setDisplay(next);
-        // Let preview reach the screen before even a cached high can replace it.
-        if (!final) await rendered;
         return true;
       } catch (error) {
         console.error("[GlbFurnitureMesh]", error);
-        if (!cancelled && final && !assetPrepared) {
+        if (!cancelled && !assetPrepared) {
           setError(true);
           callbacks.current.onError?.();
         }
@@ -405,37 +374,20 @@ export function GLBFurnitureMesh({
       }
     };
 
-    void (async () => {
-      if (previewFile) {
-        await loadStage(previewFile, false);
-      }
-      if (!cancelled) {
-        await loadStage(glbFile, true);
-      }
-    })();
+    void loadDelivery();
     return () => {
       cancelled = true;
-      releaseRenderWait?.();
-      pendingPreviewDraw.current = undefined;
     };
   }, [gl, request]);
 
   useEffect(() => {
-    // Cached low/high promises may settle in the same React batch. Release even
-    // clones whose intermediate state never reached a commit.
+    // Retain only the currently attached clone; shared source leases stay cached.
     for (const item of owned.current)
-      if (
-        item !== display &&
-        !(
-          retainPreview &&
-          item === previewDisplay &&
-          item.request === display?.request
-        )
-      ) {
+      if (item !== display) {
         releaseDisplay(item);
         owned.current.delete(item);
       }
-  }, [display, previewDisplay, retainPreview]);
+  }, [display]);
   useEffect(() => {
     const items = owned.current;
     return () => {
@@ -470,20 +422,6 @@ export function GLBFurnitureMesh({
   const size = ready?.asset.bounds.getSize(new THREE.Vector3());
   const origin = ready?.asset.bounds.getCenter(new THREE.Vector3());
   const valid = size && origin && Math.min(size.x, size.y, size.z) > 1e-9;
-  const retainedPreview =
-    previewDisplay?.request === ready?.request ? previewDisplay : null;
-  const previewSize = retainedPreview?.asset.bounds.getSize(
-    new THREE.Vector3(),
-  );
-  const previewOrigin = retainedPreview?.asset.bounds.getCenter(
-    new THREE.Vector3(),
-  );
-  const hasRetainedPreview =
-    ready?.variant === "high" &&
-    previewSize &&
-    previewOrigin &&
-    Math.min(previewSize.x, previewSize.y, previewSize.z) > 1e-9;
-  const showingMotionPreview = Boolean(motionPreview && hasRetainedPreview);
   const placement =
     ready && valid
       ? modelPlacement(
@@ -492,33 +430,18 @@ export function GLBFurnitureMesh({
           ready.preservePhysicalSize,
         )
       : null;
-  const previewPlacement =
-    hasRetainedPreview && retainedPreview
-      ? modelPlacement(
-          retainedPreview.asset.bounds,
-          retainedPreview.dimensions,
-          retainedPreview.preservePhysicalSize,
-          { w: size!.x, h: size!.y, d: size!.z },
-        )
-      : null;
   return (
     <group
       ref={root}
       userData={{
-        deliveryReady: currentDelivery && ready?.variant === "high",
-        deliveryPending:
-          !currentDelivery ||
-          !ready ||
-          ready.variant !== "high" ||
-          showingMotionPreview,
+        deliveryReady: Boolean(currentDelivery),
+        deliveryPending: !currentDelivery,
       }}
     >
       {ready && valid ? (
         <group
           scale={placement!.scale}
-          visible={!showingMotionPreview}
           userData={{ productDelivery: true }}
-          raycast={raycastVisibleVariant}
           dispose={null}
         >
           <primitive
@@ -528,21 +451,6 @@ export function GLBFurnitureMesh({
           />
         </group>
       ) : null}
-      {hasRetainedPreview && retainedPreview && (
-        <group
-          scale={previewPlacement!.scale}
-          visible={showingMotionPreview}
-          raycast={raycastVisibleVariant}
-          userData={{ exportExclude: true }}
-          dispose={null}
-        >
-          <primitive
-            object={retainedPreview.asset.scene}
-            position={previewPlacement!.position}
-            dispose={null}
-          />
-        </group>
-      )}
       {!ready && (
         <mesh
           name="FurnitureLoadingPlaceholder"
@@ -559,8 +467,9 @@ export function GLBFurnitureMesh({
           <Edges color="#799bb9" lineWidth={1} />
         </mesh>
       )}
-      {showLoadStatus && enabled && (!currentDelivery || error) && (
-        <Html position={[0, h + 0.1, 0]} center zIndexRange={[8, 0]}>
+      {showLoadStatus && enabled && (
+        <Html position={[0, h + 0.1, 0]} center zIndexRange={[8, 0]}
+          style={{ display: !currentDelivery || error ? undefined : "none" }}>
           {error ? (
             <div
               role="status"

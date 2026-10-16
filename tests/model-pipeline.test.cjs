@@ -66,17 +66,16 @@ test("3D canvas quality protects mobile and constrained devices", () => {
   );
 });
 
-test("delivery model assets expose preview first and preserve the high model", () => {
+test("delivery selection ignores legacy preview but historical paths remain accessible", () => {
   const high = "model-11111111-2222-4333-8444-555555555555.glb";
   const preview = "preview-11111111-2222-4333-8444-555555555555.glb";
 
   assert.deepEqual(modelLodFiles(high, preview), {
     high,
-    preview,
   });
 
   assert.equal(modelLodFiles("high.obj"), null);
-  assert.equal(modelLodFiles(high, "preview.obj"), null);
+  assert.deepEqual(modelLodFiles(high, "preview.obj"), { high });
 
   const highPath = `r2://bucket/models/${id}/delivery/${id}/model-${id}.glb`;
   const previewPath = `r2://bucket/models/${id}/delivery/${id}/preview-${id}.glb`;
@@ -87,7 +86,7 @@ test("delivery model assets expose preview first and preserve the high model", (
   ]);
 
   assert.equal(chooseModelLod(), "high");
-  assert.equal(chooseModelLod(true), "preview");
+  assert.equal(chooseModelLod(true), "high");
 });
 
 test("R2 model validation accepts the direct kitchen source GLB", () => {
@@ -343,7 +342,7 @@ test("loader shares requests, limits concurrency, retries failures and retains a
   }
 
   try {
-    const { acquireModel } = loadSource("src/three/modelLoader.ts", {
+    const { acquireModel, cloneModel } = loadSource("src/three/modelLoader.ts", {
       "three/examples/jsm/loaders/GLTFLoader.js": {
         GLTFLoader: Loader,
       },
@@ -375,7 +374,11 @@ test("loader shares requests, limits concurrency, retries failures and retains a
 
     gates.shift()();
 
-    await a.promise;
+    const loaded = await a.promise;
+    assert.equal(loaded.triangles, 12);
+    const cloned = cloneModel(loaded);
+    assert.equal(cloned.triangles, 12, "motion policy needs the triangle budget on each instance");
+    assert.notEqual(cloned.scene, loaded.scene);
 
     a.release();
 
