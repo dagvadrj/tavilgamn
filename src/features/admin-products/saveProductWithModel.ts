@@ -53,7 +53,7 @@ export async function saveProductWithModel({
       ...(product.specifications
         ? {
             specifications: Object.fromEntries(
-              specificationFields(product.category)
+              [...specificationFields(product.category), { key: "plannerRoomTypes" }]
                 .filter((field) => product.specifications?.[field.key]?.trim())
                 .map((field) => [
                   field.key,

@@ -1,6 +1,7 @@
 import type { Category } from "./catalogCategories";
 import { CATEGORY_LABEL } from "./catalogCategories";
 import type { Product } from "./types";
+import { parsePlannerRoomTypes } from "./placementMetadata";
 
 export type SpecificationField = {
   key: string;
@@ -155,6 +156,7 @@ export function parseSpecifications(value: unknown): Record<string, string> {
   const allowed = new Set(
     [...common, ...Object.values(specific).flat()].map((field) => field.key),
   );
+  allowed.add("plannerRoomTypes");
   const entries = Object.entries(value);
   if (
     entries.some(
@@ -164,6 +166,7 @@ export function parseSpecifications(value: unknown): Record<string, string> {
   ) {
     throw new Error("Үзүүлэлт бүр 300-аас ихгүй тэмдэгттэй байна.");
   }
+  if ("plannerRoomTypes" in value) parsePlannerRoomTypes((value as Record<string, string>).plannerRoomTypes);
   return Object.fromEntries(
     entries
       .filter(([, text]) => (text as string).trim())

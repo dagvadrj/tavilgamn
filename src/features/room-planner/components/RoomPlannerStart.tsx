@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { RoomBuilder } from "./RoomBuilder";
+import { createRoomBuilderDraft } from "@/lib/roomBuilderDraft";
 import { KitchenSuggestionWizard } from "@/components/KitchenSuggestionWizard";
 import {
   Armchair,
@@ -109,7 +110,6 @@ export function RoomPlannerStart({
     ? <div className="room-start-delete-confirm"><span>Энэ өрөөг устгах уу?</span><button type="button" onClick={() => { onDelete(id); setDeleteId(null); }}>Тийм, устгах</button><button type="button" onClick={() => setDeleteId(null)}>Болих</button></div>
     : <button type="button" className="room-start-delete" aria-label={`${name} өрөөг устгах`} onClick={() => setDeleteId(id)}>Устгах</button>);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [shape, setShape] = useState<"rectangle" | "l">("rectangle");
   const [openings, setOpenings] = useState<RoomOpening[]>([]);
   const unit = useRoomMeasureUnit(state => state.unit);
   const factor = unit === "мм" ? 10 : 1;
@@ -140,7 +140,7 @@ export function RoomPlannerStart({
       ? { width: Number(width) / 100, depth: Number(depth) / 100 }
       : presets[choice];
   const dimensions = { ...selectedSize, height: Number(height) / 100 };
-  const wallFeatures: WallFeature[] = shape === "l" ? [{ id: "setup-l", wall: "north", kind: "inset", offset: 0, length: dimensions.width * 0.35, depth: Math.min(3, dimensions.depth * 0.35) }] : [];
+  const wallFeatures: WallFeature[] = [];
   const previewRoom = { ...dimensions, wallFeatures, openings };
   const valid = !validateRoomSetup(dimensions);
   const openingIssue = valid ? validateRoomOpenings(previewRoom) : null;
@@ -170,7 +170,7 @@ export function RoomPlannerStart({
     setStep(2);
     if (type !== "kitchen") setBuilderOpen(true);
   }
-  if (builderOpen) return <RoomBuilder initial={dimensions} onCancel={() => setBuilderOpen(false)} onComplete={draft => { try { onStart(roomType, draft, { ...draft, name:room.label, door:false, window:false, doorWall:"south", windowWall:"north", furnishing:"empty" }); return null; } catch(reason) { return (reason as Error).message; } }} />;
+  if (builderOpen) return <RoomBuilder initial={createRoomBuilderDraft(dimensions)} onCancel={() => { setBuilderOpen(false); setStep(1); }} onComplete={draft => { try { onStart(roomType, draft, { ...draft, name:room.label, door:false, window:false, doorWall:"south", windowWall:"north", furnishing:"empty" }); return null; } catch(reason) { return (reason as Error).message; } }} />;
   if (kitchenSetup)
     return (
       <KitchenSuggestionWizard
@@ -190,12 +190,11 @@ export function RoomPlannerStart({
         </Link>
       </header>
       <div className="room-start-body">
-        <ol className="room-start-progress" aria-label="Эхлэх алхмууд">
+        {step !== 1 && <ol className="room-start-progress" aria-label="Эхлэх алхмууд">
           {(roomType === "kitchen" ? ["Гал тогоо", "Хэмжээ", "Төхөөрөмж", "2D план", "Өөрөө тохижуулах", "5 санал", "Дуусгах"] : ["Төрөл, хэлбэр", "Хэмжээ", "Хаалга, цонх", "Тавилга"]).map((label, index) => <li key={label} aria-current={step === index + 1 ? "step" : undefined}><span>{step > index + 1 ? <Check size={15} /> : index + 1}</span>{label}</li>)}
-        </ol>
+        </ol>}
         {step === 1 ? (
           <>
-            <fieldset className="room-start-shapes"><legend>Өрөөний хэлбэр</legend><button type="button" aria-pressed={shape === "rectangle"} onClick={() => setShape("rectangle")}>▭ Тэгш өнцөгт</button><button type="button" aria-pressed={shape === "l"} onClick={() => setShape("l")}>⌞ L хэлбэр</button></fieldset>
             {onOpen && designs.filter(design => design.id !== draft?.id).length > 0 && <details className="room-start-saved"><summary>Бусад өрөөнүүд ({designs.filter(design => design.id !== draft?.id).length})</summary>{designs.filter(design => design.id !== draft?.id).map(design => <div key={design.id} className="room-start-saved-row"><button type="button" onClick={() => onOpen(design.id)}>{design.name} · {roomSetupNumber(design.width * design.depth)} м² <ArrowRight size={16}/></button>{deleteControl(design.id, design.name)}</div>)}</details>}
             <div className="room-start-heading">
               <p>ӨӨРИЙНХӨӨ ОРЧНЫГ БҮТЭЭЕ</p>
@@ -203,7 +202,7 @@ export function RoomPlannerStart({
                 Ямар өрөө тохижуулах вэ?
               </h1>
               <span>
-                Өрөөгөө сонгоод, дараагийн алхамд хэмжээгээ тохируулаарай.
+                Өрөөний төрлөө сонгоод хэлбэр, хэмжээ болон дотор заслаа дарааллаар нь тохируулаарай.
               </span>
             </div>
             <div className="room-type-grid">

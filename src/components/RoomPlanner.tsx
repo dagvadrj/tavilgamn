@@ -32,7 +32,7 @@ import {
   RoomPlannerControls,
   type RoomView,
 } from "@/features/room-planner/components/RoomPlannerControls";
-import { roomCatalogPolicy, type RoomCatalogScope } from "@/lib/roomCatalogPolicy";
+import { roomPlannerCatalog, type RoomCatalogScope } from "@/lib/roomCatalogPolicy";
 import { PlannerModelCard } from "@/features/planner/components/PlannerModelCard";
 import type { CameraAction, CameraRequest } from "@/lib/plannerCamera";
 import Image from "next/image";
@@ -558,10 +558,12 @@ function RoomPlannerEditor() {
   };
 
   const activeRoomType = current?.roomType ?? "living";
-  const catalogOptions = useMemo(() => ({ roomType: activeRoomType, scope: catalogScope, category: paletteCat, query }), [activeRoomType, catalogScope, paletteCat, query]);
-  const scopedCatalog = useMemo(() => roomCatalogPolicy([...catalog.products.filter(p => !p.model), ...dbModels], catalogOptions), [catalog.products, dbModels, catalogOptions]);
-  const paletteItems = useMemo(() => roomCatalogPolicy(catalog.products.filter(p => !p.model), catalogOptions).products, [catalog.products, catalogOptions]);
-  const dbPaletteItems = useMemo(() => roomCatalogPolicy(dbModels, catalogOptions).products, [dbModels, catalogOptions]);
+  const scopedCatalog = useMemo(() => roomPlannerCatalog(
+    catalog.products.filter(p => !p.model), dbModels,
+    { roomType: activeRoomType, scope: catalogScope, category: paletteCat, query, format: catalogFormat },
+  ), [catalog.products, dbModels, activeRoomType, catalogScope, paletteCat, query, catalogFormat]);
+  const paletteItems = scopedCatalog.photos;
+  const dbPaletteItems = scopedCatalog.models;
   useEffect(() => {
     if (scopedCatalog.category !== paletteCat) setPaletteCat(scopedCatalog.category);
   }, [scopedCatalog.category, paletteCat, setPaletteCat]);
@@ -1310,13 +1312,13 @@ function RoomPlannerEditor() {
               <button type="button" aria-pressed={catalogScope === "all"} onClick={() => setCatalogScope("all")}>Бүх өрөө</button>
             </div>
             <div className="planner-filter-pills" aria-label="Өрөөний үндсэн ангилал">
-              {scopedCatalog.categories.slice(0, 3).map(category => <button type="button" key={category.id} aria-pressed={paletteCat === category.id} onClick={() => setPaletteCat(category.id)}>{category.name} · {category.count}</button>)}
+              {scopedCatalog.categories.slice(0, 3).map(category => <button type="button" key={category.id} aria-pressed={scopedCatalog.category === category.id} onClick={() => setPaletteCat(category.id)}>{category.name} · {category.count}</button>)}
             </div>
             <label className="planner-reference-category">
               <span>Тавилгын ангилал</span>
               <select
                 aria-label="Тавилгын ангилал"
-                value={paletteCat}
+                value={scopedCatalog.category}
                 onChange={(event) =>
                   setPaletteCat(event.target.value as typeof paletteCat)
                 }
@@ -1395,7 +1397,7 @@ function RoomPlannerEditor() {
           </details>
           {!kitchenOnly && (
             <>
-              {(catalog.loading || !catalog.ready) && (
+              {(catalog.loading || !catalog.ready || catalog.error) && (
                 <CatalogStatus
                   loading={catalog.loading}
                   error={catalog.error}
@@ -1411,7 +1413,18 @@ function RoomPlannerEditor() {
                       ? dbPaletteItems.length
                       : paletteItems.length) && (
                     <p className="planner-empty">
-                      Энэ ангилалд тохирох тавилга олдсонгүй.
+                      {catalogFormat === "glb" && paletteItems.length > 0
+                        ? "Энэ сонголтод 3D загвартай тавилга алга. Бусад тавилгыг үзэж болно."
+                        : catalogFormat === "photo" && dbPaletteItems.length > 0
+                          ? "Энэ сонголтод зөвхөн 3D загвартай тавилга байна."
+                          : query.trim()
+                            ? "Энэ хүрээнд хайлтад тохирох тавилга олдсонгүй."
+                            : "Энэ өрөө, ангилалд боломжтой тавилга одоогоор алга."}
+                      {((catalogFormat === "glb" && paletteItems.length > 0) || (catalogFormat === "photo" && dbPaletteItems.length > 0)) && (
+                        <button type="button" className="planner-secondary-button" onClick={() => setCatalogFormat("all")}>
+                          Энэ сонголтын бүх тавилга
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="planner-secondary-button"
