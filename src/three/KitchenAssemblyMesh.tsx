@@ -10,18 +10,18 @@ import { KitchenCabinetGLB } from "./KitchenCabinetGLB";
 import { KitchenExtraMesh } from "./KitchenExtraMesh";
 
 /** The editor, exported kitchen and room planner share the same published GLBs. */
-export function KitchenAssemblyMesh({ kitchen, centered = false, open = false, selectedId, variantModels }: {
+export function KitchenAssemblyMesh({ kitchen, centered = false, open = false, selectedId, variantModels, materialDefinitions }: {
   kitchen: ModularKitchen;
   centered?: boolean;
   open?: boolean;
   selectedId?: string | null;
   variantModels?: Record<string, KitchenCatalogVariant>;
-  /** Kept for existing callers; authored GLB materials define cabinet appearance. */
+  /** Materials for parametric cabinets; uploaded GLBs retain their authored materials. */
   materialDefinitions?: Record<string, KitchenMaterialDefinition>;
 }) {
   const { moduleCatalog } = useKitchenCatalog(!variantModels);
   const models = useMemo(() => variantModels ?? Object.fromEntries(
-    moduleCatalog.flatMap((module) => module.variants.map((variant) => [variant.furnitureModelId, variant])),
+    moduleCatalog.flatMap((module) => module.variants.map((variant) => [variant.furnitureModelId, { ...variant, nominalSizeMm: { width: module.widthMm, height: module.heightMm, depth: module.depthMm } }])),
   ), [variantModels, moduleCatalog]);
   const bounds = kitchenEnvelope(kitchen);
   return <group position={centered ? [-bounds.centerX / 1000, 0, -bounds.centerZ / 1000] : [0, 0, 0]}>
@@ -29,6 +29,7 @@ export function KitchenAssemblyMesh({ kitchen, centered = false, open = false, s
       position={[cabinet.position.x / 1000, cabinet.position.y / 1000, cabinet.position.z / 1000]}
       rotation={[0, cabinet.position.rotation, 0]}>
       <KitchenCabinetGLB cabinet={cabinet} selected={selectedId === cabinet.id}
+        materialDefinitions={materialDefinitions}
         variant={cabinet.variantId ? models[cabinet.variantId] : preferredKitchenVariant(moduleCatalog, cabinet)}
         open={Boolean(open && cabinet.id === selectedId)} />
     </group>)}

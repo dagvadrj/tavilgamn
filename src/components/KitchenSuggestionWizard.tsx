@@ -238,7 +238,7 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack }: { roomDimens
         <strong>
           <CookingPot size={21} /> tavilga.mn kitchen
         </strong>
-        <span>{summary ? "Тойм" : question.eyebrow}</span>
+        <span>Алхам 3 / 7 · {summary ? "Тойм" : question.eyebrow}</span>
       </header>
 
       {!summary ? (
@@ -286,7 +286,7 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack }: { roomDimens
         </section>
       ) : (
         <section className="ks-summary">
-          <p className="ks-eyebrow">БАРАГ БОЛЛОО</p>
+          <p className="ks-eyebrow">АЛХАМ 3 · ТОНОГ ТӨХӨӨРӨМЖИЙН СОНГОЛТ</p>
           <h1 ref={title} tabIndex={-1}>Таны гарнитурын сонголт</h1>
           <p className="ks-intro">
             Сонголтоо шалгаад, хүсвэл аль нэгийг нь буцаж өөрчилнө үү.
@@ -311,7 +311,7 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack }: { roomDimens
           {roomDimensions && <p className="ks-intro">Өрөө: {roomDimensions.width} × {roomDimensions.depth} м · {roomDimensions.width * roomDimensions.depth} м²</p>}
           {needsAdjustment && <p className="ks-intro" role="status">Энэ сонголтын зарим шүүгээ өрөөнд багтахгүй байна. Байрлалаа өөрчилж сонгох эсвэл 3D загвар дээр илүүдэл шүүгээг хасаарай.</p>}
           <button type="button" className="ks-next" onClick={continueToPlanner}>
-            3D загвараа нээх <ArrowRight size={18} />
+            2D өрөөний план зурах <ArrowRight size={18} />
           </button>
           {error && <p role="alert" className="ks-intro">{error}</p>}
         </section>

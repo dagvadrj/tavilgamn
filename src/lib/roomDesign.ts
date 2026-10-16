@@ -6,10 +6,11 @@ import type {
   RoomSurfaces,
   RoomWall,
   WallMaterial,
+  RoomShape,
 } from "./types";
 import { ROOM_TYPES } from "./roomGeometry";
 import { positionedRooms, validConnections } from "./roomLayout";
-import { normalizeRoomCeiling } from "./roomCeiling";
+import { fixtureFitsCeiling, normalizeRoomCeiling } from "./roomCeiling";
 import { normalizeSunBearing } from "./roomSunlight";
 import { interiorCamera } from "./roomInteriorCamera";
 import { lightingTime } from "./roomLighting";
@@ -35,6 +36,7 @@ function cloneSurfaces(
     id?: string;
     width?: number;
     depth?: number;
+    outline?: RoomShape["outline"];
   },
 ): RoomSurfaces {
   const wallMaterials: Partial<Record<RoomWall, WallMaterial>> = {};
@@ -66,6 +68,16 @@ function cloneSurfaces(
         : [])
     ).map((fixture) => ({ ...fixture })),
   };
+  if (room.outline && room.width && room.depth && !room.lighting?.fixtures?.length && lighting.fixtures.length) {
+    const shape=room as RoomShape;
+    const fixture=lighting.fixtures[0];
+    if(!fixtureFitsCeiling(shape,fixture)) {
+      const candidates:{x:number;z:number}[]=[];
+      for(let x=-room.width/2+.25;x<room.width/2;x+=.25)for(let z=-room.depth/2+.25;z<room.depth/2;z+=.25)candidates.push({x,z});
+      const point=candidates.sort((a,b)=>Math.hypot(a.x,a.z)-Math.hypot(b.x,b.z)).find(p=>fixtureFitsCeiling(shape,{...fixture,...p}));
+      lighting.fixtures=point?[{...fixture,...point}]:[];
+    }
+  }
   if (Number.isFinite(lighting.sunAzimuth))
     lighting.sunAzimuth = normalizeSunBearing(lighting.sunAzimuth!);
   else delete lighting.sunAzimuth;
@@ -94,6 +106,8 @@ export function cloneRoom(room: DesignRoom): DesignRoom {
     interiorCamera: interiorCamera(room),
     pieces: room.pieces.map((piece) => ({
       ...piece,
+      ...(piece.attachment ? { attachment: structuredClone(piece.attachment) } : {}),
+      ...(piece.placement ? { placement: structuredClone(piece.placement) } : {}),
       ...(piece.details
         ? {
             details: {
@@ -106,11 +120,13 @@ export function cloneRoom(room: DesignRoom): DesignRoom {
         ? { kitchen: JSON.parse(JSON.stringify(piece.kitchen)) }
         : {}),
     })),
+    outline: room.outline?.map(point => ({ ...point })),
     wallFeatures: (room.wallFeatures ?? []).map((feature) => ({ ...feature })),
     columns: (room.columns ?? []).map((column) => ({ ...column })),
     openings: (room.openings ?? []).map((opening) => ({ ...opening })),
   };
   if (cloned.connectionKind === undefined) delete cloned.connectionKind;
+  if (cloned.outline === undefined) delete cloned.outline;
   return cloned;
 }
 
@@ -135,6 +151,7 @@ export function syncDesignRooms(design: RoomDesign): RoomDesign {
     wallColor: design.wallColor,
     floorColor: design.floorColor,
     pieces: design.pieces,
+    outline: design.outline,
     wallFeatures: design.wallFeatures,
     columns: design.columns,
     openings: design.openings,
@@ -171,6 +188,7 @@ export function syncDesignRooms(design: RoomDesign): RoomDesign {
     height: active.height,
     interiorCamera: active.interiorCamera,
     connectionKind: active.connectionKind,
+    outline: active.outline,
     wallFeatures: active.wallFeatures,
     columns: active.columns,
     openings: active.openings,
@@ -179,6 +197,7 @@ export function syncDesignRooms(design: RoomDesign): RoomDesign {
     rooms,
   };
   if (next.connectionKind === undefined) delete next.connectionKind;
+  if (next.outline === undefined) delete next.outline;
   return next;
 }
 
@@ -199,12 +218,14 @@ export function activateDesignRoom(design: RoomDesign, id: string): RoomDesign {
     pieces: room.pieces,
     interiorCamera: room.interiorCamera,
     connectionKind: room.connectionKind,
+    outline: room.outline,
     wallFeatures: room.wallFeatures,
     columns: room.columns,
     openings: room.openings,
     ...cloneSurfaces(room),
   };
   if (next.connectionKind === undefined) delete next.connectionKind;
+  if (next.outline === undefined) delete next.outline;
   return next;
 }
 

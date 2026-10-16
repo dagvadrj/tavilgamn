@@ -20,6 +20,8 @@ export function reassignFurnitureRooms(design: RoomDesign, followPieceId?: strin
   const synced = syncDesignRooms(design), rooms = synced.rooms!;
   const transfers = new Map<string, { owner: string; piece: PlacedFurniture }>();
   for (const source of rooms) for (const piece of source.pieces) {
+    if (piece.attachment && piece.attachment.kind !== "floor") continue;
+    if (source.pieces.some(p=>p.attachment?.kind==="surface"&&p.attachment.parentInstanceId===piece.instanceId)) continue;
     const from = roomPosition(source), worldX = piece.x + from.x, worldZ = piece.z + from.z;
     // A centre exactly on the shared boundary keeps its current owner.
     const target = rooms.find(room => room.id !== source.id && containsCentre(room, worldX, worldZ));

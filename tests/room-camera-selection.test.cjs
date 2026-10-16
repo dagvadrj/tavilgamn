@@ -60,6 +60,7 @@ test('real planner map and scene selection keep one canvas key, current view and
   const {useDesigns:store}=loadSource('src/store/designs.ts');store.getState().createNew('40','Plan','living',{width:4,depth:4,height:2.7});const a=store.getState().current.activeRoomId;store.getState().addRoom('bedroom');const b=store.getState().current.activeRoomId;
   const h=hooks();
   const {RoomPlanner}=loadSource('src/components/RoomPlanner.tsx',{
+   '@/features/room-planner/components/RoomMeasureUnit':{useRoomMeasureUnit:select=>select({unit:'см'})},
    react:h.react,'next/dynamic':{default:()=> 'room-canvas'},'next/image':{default:'image'},'next/link':{default:'link'},
    '@/store/designs':{...loadSource('src/store/designs.ts'),useDesigns:Object.assign(()=>store.getState(),{getState:store.getState})},
    '@/store/catalog':{getProduct:()=>undefined,useCatalog:()=>({products:[],ready:true,loading:false})},

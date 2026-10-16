@@ -2,6 +2,7 @@ import { cabinetFrontExtra } from "@/lib/plitka";
 import type { PlacedFurniture, RoomShape } from "@/lib/types";
 import { modelFloorBand } from "@/lib/modelFloorBand";
 import { ROOM_SKIRTING_DEPTH } from "@/lib/roomRendering";
+import { polygonContains, edgesCross, polygonsCoverPolygon } from "@/lib/roomPolygon";
 import {
   getRoomGeometry,
   type Bounds,
@@ -16,7 +17,7 @@ export type PlacementRoom = RoomShape & {
   placementGeometry?: Pick<
     RoomGeometry,
     "bounds" | "voids" | "segments" | "connected" | "simple"
-  >;
+  > & { loops?: RoomGeometry["loops"]; floorRegions?: RoomGeometry["loops"][] };
   skirting?: Bounds[];
   heightZones?: Array<Bounds & { height: number }>;
 };
@@ -175,7 +176,7 @@ export function isInsideRoom(
 
 function rectInsideGeometry(
   r: Rect,
-  geometry: Pick<RoomGeometry, "bounds" | "voids">,
+  geometry: Pick<RoomGeometry, "bounds" | "voids"> & { loops?: RoomGeometry["loops"]; floorRegions?: RoomGeometry["loops"][] },
 ): boolean {
   if (![r.w, r.d].every((value) => Number.isFinite(value) && value > 0))
     return false;
@@ -189,6 +190,19 @@ function rectInsideGeometry(
     [hx, hz],
     [-hx, hz],
   ];
+  if(geometry.floorRegions&&!polygonsCoverPolygon(geometry.floorRegions,corners.map(([x,z])=>({x:r.cx+x*cos-z*sin,z:r.cz+x*sin+z*cos}))))return false;
+  if (geometry.loops?.length) {
+    const points = corners.map(([x, z]) => ({ x: r.cx + x * cos - z * sin, z: r.cz + x * sin + z * cos }));
+    const outer = geometry.loops[0];
+    if (points.some(p => !polygonContains(outer, p))) return false;
+    for (let i = 0; i < points.length; i++) {
+      const a = points[i], b = points[(i + 1) % points.length];
+      if (!polygonContains(outer, { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 })) return false;
+      if (outer.some((c, j) => edgesCross(a, b, c, outer[(j + 1) % outer.length]))) return false;
+    }
+    // A concave boundary may be wholly inside the rectangle without a proper crossing.
+    if (outer.some(p => polygonContains(points, p, false))) return false;
+  }
   for (const [x, z] of corners) {
     const wx = r.cx + x * cos - z * sin;
     const wz = r.cz + x * sin + z * cos;
@@ -239,6 +253,7 @@ export function floorBandRects(piece: PlacedFurniture): Rect[] {
   });
 }
 const hitsSkirting = (piece: PlacedFurniture, room: PlacementRoom) => {
+  if ((piece.elevation ?? 0) >= .11) return false;
   if (!room.skirting?.length) return false;
   const feet = floorBandRects(piece);
   return room.skirting.some((b) =>
@@ -264,19 +279,21 @@ export function isPlacementValid(
   others: PlacedFurniture[],
   room: PlacementRoom,
 ): boolean {
+  const elevation = candidate.elevation ?? 0;
+  if (!Number.isFinite(elevation) || elevation < 0 || ![candidate.x,candidate.z,candidate.rotation].every(Number.isFinite)) return false;
   if (!isInsideRoom(candidate, room) || hitsSkirting(candidate, room))
     return false;
   if (
     !room.heightZones &&
     room.height !== undefined &&
-    dimsFor(candidate).h > room.height + 1e-6
+    elevation + dimsFor(candidate).h > room.height + 1e-6
   )
     return false;
   const rectangles = pieceRects(candidate);
   if (
     room.heightZones?.some(
       (zone) =>
-        dimsFor(candidate).h > zone.height + 1e-6 &&
+        elevation + dimsFor(candidate).h > zone.height + 1e-6 &&
         rectangles.some((r) =>
           rectsOverlap(
             r,
@@ -295,6 +312,8 @@ export function isPlacementValid(
     return false;
   for (const other of others) {
     if (other.instanceId === candidate.instanceId) continue;
+    const otherBottom = other.elevation ?? 0;
+    if (elevation >= otherBottom + dimsFor(other).h - 1e-6 || otherBottom >= elevation + dimsFor(candidate).h - 1e-6) continue;
     if (
       rectangles.some((r) =>
         pieceRects(other).some((o) => rectsOverlap(r, o, true)),

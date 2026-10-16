@@ -1,6 +1,5 @@
 "use client";
-import { BrandLoader } from "@/components/BrandLoader";
-import { PlannerTour } from "@/features/planner/components/PlannerTour";
+import { KitchenDesignSuggestions } from "@/features/kitchen-planner/components/KitchenDesignSuggestions";
 
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
 import "@/features/kitchen-planner/components/kitchen-editor.css";
@@ -89,6 +88,7 @@ import {
   HelpCircle,
   Layers3,
   LayoutPanelTop,
+  Move,
   Orbit,
   Save,
   X
@@ -196,6 +196,7 @@ export function ModularKitchenPlanner({
   const [annotations, setAnnotations] = useState(true);
   const [searchRequest, setSearchRequest] = useState(0);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
   const [tourRequest, setTourRequest] = useState(0);
   const [workspaceView, setWorkspaceView] = useState<"2d" | "3d" | "interior">(
@@ -366,7 +367,7 @@ export function ModularKitchenPlanner({
   const draftRef = useRef<ModularKitchen | null>(null);
   const dragBase = useRef<ModularKitchen | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mode, setMode] = useState<"move" | "orbit">("orbit");
+  const [mode, setMode] = useState<"move" | "orbit">("move");
   const [snapMessage, setSnapMessage] = useState("");
   const [dragging, setDragging] = useState(false);
   const kitchen = preview ?? design;
@@ -378,7 +379,7 @@ export function ModularKitchenPlanner({
     () =>
       Object.fromEntries(
         moduleCatalog.flatMap((module) =>
-          module.variants.map((variant) => [variant.furnitureModelId, variant]),
+          module.variants.map((variant) => [variant.furnitureModelId, { ...variant, nominalSizeMm: { width: module.widthMm, height: module.heightMm, depth: module.depthMm } }]),
         ),
       ),
     [moduleCatalog],
@@ -776,7 +777,8 @@ export function ModularKitchenPlanner({
     }
     return commit(next) ? undefined : "Өөрчлөлтийг хийж чадсангүй.";
   }
-  function changeStage(stage: "space" | "design" | "finish") {
+  function changeStage(stage: "space" | "design" | "suggestions" | "finish") {
+    setSuggestionsOpen(stage === "suggestions");
     setSpaceOpen(stage === "space");
     setReviewOpen(stage === "finish");
     if (stage === "design") {
@@ -788,6 +790,7 @@ export function ModularKitchenPlanner({
   }
 
   function openToolbarTool(tool: KitchenToolbarTool) {
+    setSuggestionsOpen(false);
     if (tool === "photo") { changeStage("finish"); return; }
     setSpaceOpen(false);
     setReviewOpen(false);
@@ -921,6 +924,7 @@ export function ModularKitchenPlanner({
     <main
       className="kp kp-shell planner-studio planner-reference kitchen-reference kitchen-refined kitchen-flow kitchen-glb-workspace kitchen-ikea-layout"
       data-room-setup={spaceOpen}
+      data-workflow-stage={reviewOpen ? "finish" : suggestionsOpen ? "suggestions" : spaceOpen ? "space" : "design"}
       data-stage={
         reviewOpen
           ? "review"
@@ -953,7 +957,7 @@ export function ModularKitchenPlanner({
         />
       )}
       <KitchenPlannerHeader
-        stage={reviewOpen ? "finish" : spaceOpen ? "space" : "design"}
+        stage={reviewOpen ? "finish" : suggestionsOpen ? "suggestions" : spaceOpen ? "space" : "design"}
         onStage={changeStage}
         activeTool={catalogOpen ? catalogCategory === "appliances" ? "appliances" : "cabinets" : inspector === "extras" && settingsOpen ? extrasTab === "dining" ? "dining" : "items" : undefined}
         onTool={openToolbarTool}
@@ -1053,6 +1057,7 @@ export function ModularKitchenPlanner({
           </details>
         </>}
       />
+      {suggestionsOpen && <KitchenDesignSuggestions kitchen={design} disabled={busy} onApply={commit} onBack={() => changeStage("design")} onFinish={() => changeStage("finish")} />}
       {spaceOpen && (
         <KitchenSpaceEditor
           kitchen={design}
@@ -1099,7 +1104,7 @@ export function ModularKitchenPlanner({
         className="kp-layout"
         data-settings-open={settingsOpen}
         data-left-open={settingsOpen || catalogOpen}
-        hidden={spaceOpen}
+        hidden={spaceOpen || suggestionsOpen}
       >
         {catalogOpen && (
           <button
@@ -1218,6 +1223,12 @@ export function ModularKitchenPlanner({
                 <button
                   type="button"
                   disabled={busy}
+                  aria-pressed={mode === "move"}
+                  onClick={() => setMode("move")}
+                >
+                  <Move size={17} /><span>{"Тавилга зөөх"}</span>
+                </button>
+                <button type="button" disabled={busy}
                   aria-pressed={mode === "orbit"}
                   aria-label="Харах өнцөг"
                   onClick={() => setMode("orbit")}
@@ -1341,10 +1352,10 @@ export function ModularKitchenPlanner({
                 <button type="button" onClick={() => setWorkspaceView("2d")}>2D план нээх</button>
               </details>
             )}
-            {!catalogLoading && !catalogError && sceneKitchen.cabinets.some(c => !variantModels[c.variantId ?? ""]?.glbFile) && workspaceView !== "2d" && (
+            {!catalogLoading && !catalogError && sceneKitchen.cabinets.some(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")) && workspaceView !== "2d" && (
               <div className="kitchen-missing-models" role="status">
-                {sceneKitchen.cabinets.filter(c => !variantModels[c.variantId ?? ""]?.glbFile).length} шүүгээнд 3D загвар холбогдоогүй байна.
-                <button type="button" onClick={() => { const missing = sceneKitchen.cabinets.find(c => !variantModels[c.variantId ?? ""]?.glbFile); if (missing) selectCabinet(missing.id); }}>Шүүгээ сонгож загвар солих</button>
+                {sceneKitchen.cabinets.filter(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")).length} шүүгээнд бэлэн 3D загвар сонгоно уу.
+                <button type="button" onClick={() => { const missing = sceneKitchen.cabinets.find(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")); if (missing) selectCabinet(missing.id); }}>Шүүгээ сонгож загвар солих</button>
               </div>
             )}
             <p className="kp-preview-hint" hidden={workspaceView === "2d"}>

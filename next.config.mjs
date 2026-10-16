@@ -1,10 +1,10 @@
 import { fileURLToPath } from "node:url";
+import { PHASE_DEVELOPMENT_SERVER } from "next/constants.js";
 
 const projectRoot = fileURLToPath(new URL(".", import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  distDir: process.env.NEXT_DIST_DIR || ".next",
   outputFileTracingRoot: projectRoot,
   reactStrictMode: true,
   images: {
@@ -18,4 +18,7 @@ const nextConfig = {
   transpilePackages: ["three"],
 };
 
-export default nextConfig;
+export default (phase) => ({
+  ...nextConfig,
+  distDir: process.env.NEXT_DIST_DIR || (phase === PHASE_DEVELOPMENT_SERVER ? ".next-dev" : ".next"),
+});

@@ -269,8 +269,8 @@ test('measured plan shows doors, windows, real positions, dimensions, and openin
   assert.match(html, /room-plan-door/); assert.match(html, /room-plan-window/);
   assert.match(html, /translate\(2.5 -1\) rotate\(90\)/);
   assert.match(html, /translate\(0 2\) rotate\(-180\)/);
-  assert.match(html, /Гадагш нээгдэнэ/); assert.match(html, /900 × 2100 мм/); assert.match(html, /1200 × 1200 мм/);
-  assert.match(html, /Шалнаас 900 мм/); assert.match(html, /room-plan-door-swing/);
+  assert.match(html, /Гадагш нээгдэнэ/); assert.match(html, /90 × 210 см/); assert.match(html, /120 × 120 см/);
+  assert.match(html, /Шалнаас 90 см/); assert.match(html, /room-plan-door-swing/);
   assert.match(html, /A0.9,0.9 0 0 1 0.45,-0.9/);
   const removed = renderToStaticMarkup(React.createElement(RoomPlanPreview, { room: shape }));
   assert.doesNotMatch(removed, /room-plan-door-swing|class="room-plan-opening/);

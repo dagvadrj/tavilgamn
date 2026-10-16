@@ -1,22 +1,9 @@
 "use client";
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import {
-  Minus,
-  Plus,
-  Scan,
-  RotateCw,
-  Copy,
-  Trash2,
-  MousePointer2,
-  Move,
-  Ruler,
-} from "lucide-react";
-import type {
-  CabinetPose,
-  KitchenRoom,
-  ModularKitchen,
-} from "@/lib/kitchenCabinets";
-import { Plan } from "./PlannerPanels";
+import { Minus, Plus, Scan, RotateCw, Copy, Trash2, MousePointer2, Move, Ruler } from "lucide-react";
+import type { CabinetPose, KitchenRoom, ModularKitchen } from "@/lib/kitchenCabinets";
+import { DimensionInput, Plan } from "./PlannerPanels";
+import { resizeKitchenRoom } from "@/lib/kitchenSpace";
 import "./kitchen-space-usability.css";
 
 export function KitchenPlanWorkspace({
@@ -51,6 +38,15 @@ export function KitchenPlanWorkspace({
   onRoomChange?: (room: ModularKitchen["room"]) => void;
 }) {
   const [zoom, setZoom] = useState(1);
+  const [resizeError, setResizeError] = useState("");
+  function resizeRoom(patch: Partial<Pick<KitchenRoom, "width" | "depth">>) {
+    try {
+      onRoomChange?.(resizeKitchenRoom(kitchen.room, patch));
+      setResizeError("");
+    } catch (reason) {
+      setResizeError((reason as Error).message);
+    }
+  }
   const [moving, setMoving] = useState(true);
   const [layer, setLayer] = useState<"all" | "base" | "wall">("all");
   const [localMeasurements, setLocalMeasurements] = useState(true);
@@ -144,6 +140,12 @@ export function KitchenPlanWorkspace({
       aria-label="2D байрлуулах редактор"
     >
       <div className="kspace-map-toolbar">
+        {onRoomChange && <details>
+          <summary>Өрөөний хэмжээ өөрчлөх</summary>
+          <DimensionInput label="Өргөн (мм)" value={kitchen.room.width} min={2000} max={8000} disabled={disabled} onCommit={width => resizeRoom({ width: Math.round(width) })} />
+          <DimensionInput label="Урт (мм)" value={kitchen.room.depth} min={2000} max={8000} disabled={disabled} onCommit={depth => resizeRoom({ depth: Math.round(depth) })} />
+          {resizeError && <p role="alert">{resizeError}</p>}
+        </details>}
         <div role="group" aria-label="Төлөвлөгөөний горим">
           <button
             type="button"

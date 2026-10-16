@@ -83,7 +83,7 @@ test('selected product controller renders seven actions and disables unconfigure
   const html = renderToStaticMarkup(React.createElement(KitchenSelectionPanel, {
     cabinet: createCabinet('base', 'test'), modules: [], onChangeSelections() {}, onReplace() {}, onPositionChange() {}, onClose() {}, onDuplicate() {}, onRemove() {}, onZoom() {}, onToggleOpen() {},
   }));
-  for (const name of ['Modify', 'Replace', 'Open', 'Zoom', 'Position', 'Duplicate', 'Remove']) assert.ok(html.includes(`>${name}</span>`));
+  for (const name of ["Өөрчлөх","Солих","Нээх","Ойртуулах","Байрлал","Хувилах","Хасах"]) assert.ok(html.includes(`>${name}</span>`));
   assert.match(html, /title="Энэ загвар нээх хөдөлгөөнгүй"[^>]*disabled/);
 });
 

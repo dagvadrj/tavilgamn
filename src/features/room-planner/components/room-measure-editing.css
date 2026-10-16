@@ -1,0 +1,120 @@
+.room-unit-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 12px;
+}
+
+.room-unit-choice select, .room-opening-quick-editor select {
+  border: 1px solid #d8e0d3;
+  border-radius: 8px;
+  background: white;
+  color: #293c32;
+  padding: 7px;
+  min-height: 36px;
+}
+
+.room-inline-measure {
+  position: fixed;
+  z-index: 80;
+  width: 280px;
+  max-width: calc(100vw - 24px);
+  padding: 14px;
+  border: 1px solid #bdcfc0;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 8px 28px #263a3026;
+  font-size: 12px;
+}
+
+.room-inline-measure button, .room-start-shapes button, .room-opening-quick-editor > button {
+  min-height: 40px;
+  border: 1px solid #bdcfc0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #f4f7f2;
+  color: #293c32;
+}
+
+.room-opening-quick-editor {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  margin: 12px 0;
+  border: 1px solid #d8e0d3;
+  border-radius: 12px;
+  background: white;
+  color: #293c32;
+  font-size: 12px;
+}
+
+.room-opening-quick-editor header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.room-opening-quick-editor .room-field-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.room-opening-quick-editor label {
+  min-width: 0;
+}
+
+.room-opening-quick-editor .room-dimension-field {
+  margin: 0;
+}
+
+.room-opening-context > summary {
+  padding: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.room-opening-context > .room-opening-quick-editor {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 340px;
+  max-width: min(100%, calc(100vw - 28px));
+  max-height: calc(100dvh - 220px);
+  overflow: auto;
+  box-shadow: 0 8px 28px #263a3026;
+}
+
+.room-start-shapes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.room-start-shapes legend {
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.room-start-shapes [aria-pressed="true"] {
+  border-color: #075eaa;
+  background: #eaf4fc;
+}
+
+.room-start-progress {
+  flex-wrap: wrap;
+}
+
+.room-plan-dimension[role="button"]:focus-visible text {
+  fill: #075eaa;
+  text-decoration: underline;
+}
+
+.room-inline-measure [role="alert"], .room-opening-quick-editor [role="alert"] {
+  color: #a62d25;
+}

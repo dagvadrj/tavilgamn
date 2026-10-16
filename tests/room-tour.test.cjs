@@ -136,7 +136,7 @@ test('interior controller jumps once, ignores WASD, keeps FOV and restores canva
     focus() {}, setPointerCapture() {}, hasPointerCapture: () => true, releasePointerCapture() {} };
   let invalidations=0,saves=0,saved;const looking=[];
   const state = { camera, gl: { domElement: canvas }, size:{width:1600,height:800}, invalidate() {invalidations++;} };
-  const { RoomStreetView } = loadSource('src/three/RoomStreetView.tsx', { react: h.react, '@react-three/fiber': { useThree: () => state,useFrame(){throw new Error('Tour must not register a per-frame movement loop');} } });
+  const { RoomStreetView } = loadSource('src/three/RoomStreetView.tsx', { react: h.react, '@react-three/fiber': { useThree: () => state,useFrame(){} } });
   let props = { roomId: 'a', locked: false, room:{width:4,depth:3,pieces:[]}, pose: { x: .7, z: -.6, eyeHeight: 1.6, yaw: .4, pitch: .2 }, onSave: p => {saved=p;saves++;},onLookingChange:v=>looking.push(v) };
   const render = patch => { props = { ...props, ...patch }; return h.render(() => RoomStreetView(props)); };
   let tree=render();

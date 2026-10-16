@@ -1,8 +1,8 @@
 /* Two full-width toolbar rows, followed by one left drawer and the room. */
 
 .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout {
-  --ui-accent: #0058a3;
-  --ui-accent-soft: #edf4fa;
+  --ui-accent: var(--ink);
+  --ui-accent-soft: var(--sand);
   display: grid;
   grid-template-rows: 52px 78px minmax(0, 1fr);
   grid-template-columns: minmax(0, 1fr);
@@ -11,7 +11,7 @@
   min-height: 0;
   padding: 0;
   overflow: hidden;
-  color: #222;
+  color: var(--ink);
   background: #fff;
   & .kitchen-masthead {
     grid-row: 1;
@@ -41,8 +41,8 @@
     white-space: nowrap;
   }
   & .kitchen-workflow-tabs button[aria-current="step"] {
-    color: #0058a3;
-    border-bottom-color: #0058a3;
+    color: var(--ink);
+    border-bottom-color: var(--ink);
   }
   & .kitchen-project-tools {
     display: flex;
@@ -151,11 +151,11 @@
     background: #fff;
   }
   & .kitchen-category-tools button[aria-pressed="true"] {
-    color: #0058a3;
+    color: var(--ink);
   }
   & .kitchen-category-tools button[aria-pressed="true"] .kitchen-category-icon {
-    border-color: #0058a3;
-    background: #f0f6fa;
+    border-color: var(--ink);
+    background: var(--sand);
   }
   & .kitchen-category-tools > .kitchen-toolbar-separated {
     margin-left: 8px;
@@ -176,7 +176,7 @@
     padding: 0;
     border: 0;
     background: none;
-    color: #0058a3;
+    color: var(--ink);
     white-space: nowrap;
   }
   & .kitchen-toolbar-total > span {
@@ -190,7 +190,7 @@
     border: 0;
     border-radius: 0;
     color: white;
-    background: #0058a3;
+    background: var(--ink);
     font-size: 11px;
     font-weight: 600;
   }
@@ -332,8 +332,8 @@
     font-size: 11px;
   }
   & .planner-search:focus-within {
-    border-color: #0058a3;
-    outline: 1px solid #0058a3;
+    border-color: var(--ink);
+    outline: 1px solid var(--ink);
   }
   & .planner-filter-pills button {
     padding: 6px 10px;
@@ -341,9 +341,9 @@
     font-size: 10px;
   }
   & .planner-filter-pills button[aria-pressed="true"] {
-    color: #0058a3;
-    background: #edf4fa;
-    border-color: #0058a3;
+    color: var(--ink);
+    background: var(--sand);
+    border-color: var(--ink);
   }
   & .planner-model-card {
     border-radius: 0;
@@ -429,11 +429,12 @@
     background: white;
   }
   & .kitchen-view-tabs button[aria-pressed="true"] {
-    color: #0058a3;
-    background: #eef5fa;
+    color: var(--ink);
+    background: var(--sand);
   }
   & .kp-preview-bar .km-view-tools {
-    display: none;
+    display: flex;
+    gap: 4px;
   }
   & .kp-preview-hint {
     display: none;
@@ -561,4 +562,20 @@
       font-size: 9px;
     }
   }
+}
+
+/* Brand styling and visible manipulation tools, scoped to the kitchen editor. */
+.kp-shell.kitchen-ikea-layout {
+ & .kp-preview-bar .km-view-tools { display:flex; gap:4px; }
+ & .kp-preview-bar .km-view-tools[hidden] { display:none; }
+ & .km-view-tools button, & .kitchen-view-tabs button { border-radius:10px; min-height:36px; }
+ & .km-view-tools button[aria-pressed="true"] { background:var(--sand); color:var(--ink); }
+ & .kitchen-category-tools > button { flex-direction:row; font-size:12px; }
+ & .kitchen-category-icon { border-radius:10px; color:var(--teal); }
+ & .kitchen-toolbar-continue { border-radius:12px; }
+ & .kp-settings .ksp-controller { width:100%; }
+ & .kp-settings .ksp-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+ & .kp-settings .ksp-action { font-size:11px; border:1px solid var(--line); border-radius:10px; background:var(--paper); color:var(--ink); }
+ & .kp-preview-bar { border-radius:14px; flex-wrap:wrap; justify-content:center; }
+ @media(max-width:760px) { & .kitchen-category-tools > button { flex-direction:column; font-size:10px; } & .kp-preview-bar { max-width:calc(100% - 24px); } }
 }

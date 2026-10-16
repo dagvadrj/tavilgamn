@@ -1,6 +1,8 @@
-import type { Category, ColorOption, Material } from "./types";
+import type { Category, ColorOption, Material, RoomType, PlacementMetadata } from "./types";
 
 export interface DbModelInfo {
+  roomTypes?: RoomType[];
+  placement?: PlacementMetadata;
   id: string;
   fileModelId?: string;
   name: string;

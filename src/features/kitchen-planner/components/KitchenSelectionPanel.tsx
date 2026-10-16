@@ -129,13 +129,13 @@ export function KitchenSelectionPanel({
         </div>
       </div>
       <div className="ksp-actions" role="group" aria-label="Тавилгын үйлдлүүд">
-        <Action icon={Pencil} label="Modify" title="Тавилгын хэсэг, загвар, өнгийг өөрчлөх" active={view === "modify"} disabled={disabled} onClick={() => navigate("modify")} />
-        <Action icon={ArrowLeftRight} label="Replace" title="Өөр тавилгаар солих" disabled={disabled} onClick={() => navigate("replace")} />
-        <Action icon={DoorOpen} label={isOpen ? "Close" : "Open"} title={openTitle} disabled={disabled || !hasMotion} active={isOpen} onClick={onToggleOpen} />
-        <Action icon={ZoomIn} label="Zoom" title="Сонгосон тавилга руу ойртуулах" onClick={onZoom} />
-        <Action icon={Move} label="Position" title="Байрлал, эргэлтийг өөрчлөх" active={view === "position"} disabled={disabled} onClick={() => navigate("position")} />
-        <Action icon={Copy} label="Duplicate" title="Тавилгыг хувилах" disabled={disabled} onClick={onDuplicate} />
-        <Action icon={Trash2} label="Remove" title="Тавилгыг хасах" disabled={disabled} danger onClick={onRemove} />
+        <Action icon={Pencil} label="Өөрчлөх" title="Тавилгын хэсэг, загвар, өнгийг өөрчлөх" active={view === "modify"} disabled={disabled} onClick={() => navigate("modify")} />
+        <Action icon={ArrowLeftRight} label="Солих" title="Өөр тавилгаар солих" disabled={disabled} onClick={() => navigate("replace")} />
+        <Action icon={DoorOpen} label={isOpen ? "Хаах" : "Нээх"} title={openTitle} disabled={disabled || !hasMotion} active={isOpen} onClick={onToggleOpen} />
+        <Action icon={ZoomIn} label="Ойртуулах" title="Сонгосон тавилга руу ойртуулах" onClick={onZoom} />
+        <Action icon={Move} label="Байрлал" title="Байрлал, эргэлтийг өөрчлөх" active={view === "position"} disabled={disabled} onClick={() => navigate("position")} />
+        <Action icon={Copy} label="Хувилах" title="Тавилгыг хувилах" disabled={disabled} onClick={onDuplicate} />
+        <Action icon={Trash2} label="Хасах" title="Тавилгыг хасах" disabled={disabled} danger onClick={onRemove} />
       </div>
     </div>
 
