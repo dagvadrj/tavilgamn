@@ -3,7 +3,7 @@
 /* Storefront-only styling: the fullscreen room and kitchen planners stay isolated. */
 
 .shop-shell {
-  background: #f8f9f6;
+  background: var(--site-bg);
 }
 
 .shop-shell .shop-container {
@@ -11,8 +11,8 @@
 }
 
 .shop-shell .store-announcement {
-  background: #f0f2ee;
-  color: #69716c;
+  background: var(--site-bg);
+  color: var(--site-muted);
 }
 
 .shop-shell .store-announcement > div {
@@ -32,8 +32,8 @@
 .shop-shell .store-search {
   max-width: 620px;
   height: 46px;
-  background: #f5f6f3;
-  border-color: #dee3dc;
+  background: var(--site-bg);
+  border-color: var(--site-line);
   border-radius: 12px;
 }
 
@@ -47,7 +47,7 @@
 
 .shop-shell .desktop-nav {
   gap: 28px;
-  border-top-color: #eef0eb;
+  border-top-color: var(--site-line);
 }
 
 .shop-shell .desktop-nav .planner-link {
@@ -57,9 +57,9 @@
 .shop-shell .home-hero {
   margin-top: 24px;
   grid-template-columns: 1fr 1fr;
-  border: 1px solid #e2e5dd;
+  border: 1px solid var(--site-line);
   border-radius: 20px;
-  background: #edf0e7;
+  background: var(--site-selected);
 }
 
 .shop-shell .hero-copy {
@@ -154,13 +154,13 @@
 }
 
 .shop-shell .marketplace-product-card:hover {
-  border-color: #b7c5b8;
+  border-color: var(--site-line);
   box-shadow: 0 7px 22px #24352d09;
 }
 
 .shop-shell .marketplace-product-card .product-photo {
   aspect-ratio: 1.12;
-  background: #f0f2ee;
+  background: var(--site-bg);
 }
 
 .shop-shell .marketplace-product-card .product-info {
@@ -182,7 +182,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: #3b5144;
+  color: var(--site-ink);
   font-size: 10px;
   padding: 5px 7px;
 }
@@ -193,7 +193,7 @@
 }
 
 .shop-shell .marketplace-product-card .product-rating small {
-  color: #7d857e;
+  color: var(--site-muted);
   font-size: 10px;
 }
 
@@ -220,7 +220,7 @@
 
 .shop-shell .product-merchant {
   font-size: 11px;
-  color: #637166;
+  color: var(--site-muted);
   margin-top: 5px;
   white-space: nowrap;
   overflow: hidden;
@@ -265,7 +265,7 @@
 }
 
 .shop-shell .product-price-values del {
-  color: #8b928b;
+  color: var(--site-muted);
   font-size: 11px;
 }
 
@@ -281,8 +281,8 @@
   height: 36px;
   min-width: 36px;
   border-radius: 10px;
-  background: #f4f6f1;
-  border-color: #e3e8df;
+  background: var(--site-bg);
+  border-color: var(--site-line);
 }
 
 .shop-shell .marketplace-product-card .product-view:hover {
@@ -300,7 +300,7 @@
 }
 
 .shop-shell .product-availability .in-stock {
-  color: #536d57;
+  color: var(--site-accent);
 }
 
 .shop-shell .product-availability .out-of-stock {
@@ -326,7 +326,7 @@
   gap: 6px;
   margin-top: 7px;
   font-size: 10px;
-  color: #757d75;
+  color: var(--site-muted);
   line-height: 1.6;
 }
 
@@ -424,8 +424,8 @@
 
 .shop-shell .catalog-quick-filters > button[aria-pressed="true"] {
   color: var(--market-accent);
-  border-color: #a8b9a7;
-  background: #eef3ea;
+  border-color: var(--site-line);
+  background: var(--site-selected);
 }
 
 .shop-shell .catalog-price-filter {
@@ -483,7 +483,7 @@
   padding: 9px 10px;
   border: 1px solid var(--market-line);
   border-radius: 8px;
-  background: #fafbf8;
+  background: var(--site-bg);
   font-size: 13px;
 }
 

@@ -11,7 +11,7 @@
 }
 
 .shop-shell .look-heading p, .shop-shell .look-mini-label, .shop-shell .look-selection-heading > span {
-  color: #68686f;
+  color: var(--site-muted);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: .12em;
@@ -25,7 +25,7 @@
 }
 
 .shop-shell .look-heading > span {
-  color: #68686f;
+  color: var(--site-muted);
   font-size: 12px;
 }
 
@@ -39,25 +39,25 @@
 .shop-shell .look-room-pills button {
   min-height: 44px;
   padding: 10px 20px;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--site-line);
   border-radius: 999px;
   background: white;
-  color: #52525b;
+  color: var(--site-muted);
   font-size: 13px;
   transition: background-color .15s, color .15s;
 }
 
 .shop-shell .look-room-pills button[aria-pressed="true"] {
-  background: #111111;
+  background: var(--site-ink);
   color: white;
-  border-color: #111111;
+  border-color: var(--site-ink);
 }
 
 .shop-shell .look-room {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
   overflow: hidden;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--site-line);
   border-radius: 20px;
   background: white;
 }
@@ -106,7 +106,7 @@
   background: white;
   background-clip: padding-box;
   border-radius: 50%;
-  color: #111111;
+  color: var(--site-ink);
   z-index: 2;
 }
 
@@ -121,7 +121,7 @@
 }
 
 .shop-shell .look-hotspot[aria-expanded="true"] {
-  color: #2563eb;
+  color: var(--site-accent);
   border-color: #2563eb55;
 }
 
@@ -150,7 +150,7 @@
   gap: 14px;
   padding: 20px;
   background: #fffffffa;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--site-line);
   border-radius: 16px;
   box-shadow: 0 12px 40px #0002;
 }
@@ -163,7 +163,7 @@
   place-items: center;
   width: 32px;
   height: 32px;
-  color: #52525b;
+  color: var(--site-muted);
   background: white;
   border-radius: 50%;
 }
@@ -172,7 +172,7 @@
   position: relative;
   overflow: hidden;
   border-radius: 10px;
-  background: #f4f4f5;
+  background: var(--site-hover);
 }
 
 .shop-shell .look-product-photo {
@@ -206,7 +206,7 @@
 
 .shop-shell .look-colors legend {
   font-size: 11px;
-  color: #52525b;
+  color: var(--site-muted);
   margin-bottom: 6px;
 }
 
@@ -227,7 +227,7 @@
 }
 
 .shop-shell .look-colors button[aria-pressed="true"] {
-  border-color: #111111;
+  border-color: var(--site-ink);
 }
 
 .shop-shell .look-colors button span {
@@ -256,27 +256,27 @@
   justify-content: center;
   gap: 8px;
   min-height: 44px;
-  border: 1px solid #e4e4e7;
+  border: 1px solid var(--site-line);
   border-radius: 10px;
   font-size: 12px;
 }
 
 .shop-shell .look-product-actions button {
-  background: #2563eb;
+  background: var(--site-accent);
   color: white;
-  border-color: #2563eb;
+  border-color: var(--site-accent);
 }
 
 .shop-shell .look-product-actions button:disabled, .shop-shell .look-no-model {
-  color: #71717a;
-  background: #f4f4f5;
-  border-color: #e4e4e7;
+  color: var(--site-muted);
+  background: var(--site-hover);
+  border-color: var(--site-line);
 }
 
 .shop-shell .look-cart-message {
   margin: 0;
   font-size: 11px;
-  color: #2563eb;
+  color: var(--site-accent);
 }
 
 .shop-shell .look-cart-message:empty {
@@ -298,7 +298,7 @@
 
 .shop-shell .look-selection-heading p {
   font-size: 11px;
-  color: #71717a;
+  color: var(--site-muted);
 }
 
 .shop-shell .look-selection-list {
@@ -315,11 +315,11 @@
   gap: 12px;
   width: 100%;
   padding: 12px 0;
-  border-bottom: 1px solid #f4f4f5;
+  border-bottom: 1px solid var(--site-hover);
 }
 
 .shop-shell .look-selection-item[aria-pressed="true"] {
-  color: #2563eb;
+  color: var(--site-accent);
 }
 
 .shop-shell .look-selection-photo {
@@ -337,7 +337,7 @@
   display: block;
   margin-top: 5px;
   font-size: 11px;
-  color: #52525b;
+  color: var(--site-muted);
 }
 
 .shop-shell .look-browse {
@@ -348,12 +348,12 @@
   margin-top: auto;
   padding-top: 12px;
   font-size: 12px;
-  color: #2563eb;
+  color: var(--site-accent);
 }
 
 .shop-shell .look-empty {
   font-size: 12px;
-  color: #71717a;
+  color: var(--site-muted);
   line-height: 1.8;
 }
 

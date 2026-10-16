@@ -8,6 +8,7 @@ const nextConfig = {
   outputFileTracingRoot: projectRoot,
   reactStrictMode: true,
   images: {
+    qualities: [75, 90, 95],
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "res.cloudinary.com" },

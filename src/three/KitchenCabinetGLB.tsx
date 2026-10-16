@@ -116,7 +116,7 @@ export function KitchenCabinetGLB({ cabinet, variant, open = false, selected = f
   return <group>
     {cabinet.opening === "hood" && <KitchenApplianceBody cabinet={cabinet} open={open} />}
     <GLBFurnitureMesh modelId={variant.furnitureModelId} basePath={`/api/models/files/${variant.furnitureModelId}`}
-    glbFile={variant.glbFile} previewGlbFile={variant.previewGlbFile ?? undefined} selected={selected} showLoadStatus={selected}
+    glbFile={variant.glbFile} selected={selected} showLoadStatus={selected}
     preservePhysicalSize={fitPlannedSize ? false : variant.physicalSize} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
     open={open} openAnimation={typeof variant.configuration.openAnimation === "string" ? variant.configuration.openAnimation : undefined} />
   </group>;

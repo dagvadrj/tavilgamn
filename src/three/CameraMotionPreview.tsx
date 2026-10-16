@@ -15,7 +15,7 @@ type MotionControls = {
 
 export function CameraMotionPreview({ children, interactionActive = false }: {
   children: ReactNode;
-  /** Use retained preview assets during furniture placement as well as camera motion. */
+  /** Reduce render resolution during furniture placement as well as camera motion. */
   interactionActive?: boolean;
 }) {
   const controls = useThree(state => state.controls) as MotionControls | undefined;

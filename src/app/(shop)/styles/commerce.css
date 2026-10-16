@@ -3,17 +3,17 @@
 /* Shared shopping surfaces follow the white, black and Studio Blue identity. */
 
 .shop-shell .btn-primary {
-  background: #111;
+  background: var(--site-ink);
   color: #fff;
-  border: 1px solid #111;
+  border: 1px solid var(--site-ink);
   border-radius: 14px;
   min-height: 48px;
   box-shadow: none;
 }
 
 .shop-shell .btn-primary:hover:not(:disabled) {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--site-accent);
+  border-color: var(--site-accent);
 }
 
 .shop-shell .btn-primary:disabled {
@@ -21,7 +21,7 @@
 }
 
 .shop-shell .text-link {
-  color: #111;
+  color: var(--site-ink);
 }
 
 .shop-shell .breadcrumbs {
@@ -55,9 +55,9 @@
 }
 
 .shop-shell .catalog-quick-filters > button[aria-pressed="true"] {
-  color: #2563eb;
+  color: var(--site-accent);
   border-color: #bfdbfe;
-  background: #eff6ff;
+  background: var(--site-selected);
 }
 
 .shop-shell .catalog-price-fields {
@@ -67,7 +67,7 @@
 }
 
 .shop-shell .catalog-price-fields input {
-  background: #fafafa;
+  background: var(--site-bg);
 }
 
 .shop-shell .catalog-price-error {
@@ -82,7 +82,7 @@
   gap: 4px 16px;
   margin-bottom: 20px;
   padding: 8px 14px;
-  background: #f4f4f5;
+  background: var(--site-hover);
   border-radius: 12px;
   font-size: 12px;
   color: var(--market-muted);
@@ -90,7 +90,7 @@
 
 .shop-shell .catalog-filter-summary button {
   min-height: 44px;
-  color: #2563eb;
+  color: var(--site-accent);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -124,22 +124,22 @@
 }
 
 .shop-shell .checkout-steps .current {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--site-accent);
+  background: var(--site-selected);
   border-radius: 999px;
   padding: 8px 14px;
 }
 
 .shop-shell .shipping-progress {
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: var(--site-selected);
+  color: var(--site-primary-hover);
   border: 1px solid #dbeafe;
   border-radius: 16px;
   padding: 18px;
 }
 
 .shop-shell .shipping-progress progress {
-  accent-color: #2563eb;
+  accent-color: var(--site-accent);
   background: #dbeafe;
 }
 
@@ -148,11 +148,11 @@
 }
 
 .shop-shell .shipping-progress progress::-webkit-progress-value {
-  background: #2563eb;
+  background: var(--site-accent);
 }
 
 .shop-shell .shipping-progress progress::-moz-progress-bar {
-  background: #2563eb;
+  background: var(--site-accent);
 }
 
 .shop-shell .shop-empty {
@@ -162,7 +162,7 @@
 }
 
 .shop-shell .shop-empty > svg {
-  color: #2563eb;
+  color: var(--site-accent);
 }
 
 .shop-shell .product-purchase {

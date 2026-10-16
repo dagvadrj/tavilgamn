@@ -35,7 +35,7 @@ export function KitchenPlanWorkspace({
   onRotate: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
-  onRoomChange?: (room: KitchenRoom) => void;
+  onRoomChange?: (room: ModularKitchen["room"]) => void;
 }) {
   const [zoom, setZoom] = useState(1);
   const [resizeError, setResizeError] = useState("");
@@ -147,11 +147,53 @@ export function KitchenPlanWorkspace({
           {resizeError && <p role="alert">{resizeError}</p>}
         </details>}
         <div role="group" aria-label="Төлөвлөгөөний горим">
-          <button type="button" aria-pressed={!moving} onClick={() => { finish(true); setMoving(false); }}><MousePointer2 size={16}/> Сонгох</button>
-          <button type="button" aria-pressed={moving} disabled={disabled} onClick={() => setMoving(true)}><Move size={16}/> Зөөх</button>
+          <button
+            type="button"
+            aria-pressed={!moving}
+            onClick={() => {
+              finish(true);
+              setMoving(false);
+            }}
+          >
+            <MousePointer2 size={16} /> Сонгох
+          </button>
+          <button
+            type="button"
+            aria-pressed={moving}
+            disabled={disabled}
+            onClick={() => setMoving(true)}
+          >
+            <Move size={16} /> Зөөх
+          </button>
         </div>
-        <div role="group" aria-label="Шүүгээний давхарга">{([{ id: "base", label: "Доод" }, { id: "wall", label: "Дээд" }, { id: "all", label: "Бүгд" }] as const).map(option => <button type="button" key={option.id} aria-pressed={layer === option.id} onClick={() => { finish(true); setLayer(option.id); }}>{option.label}</button>)}</div>
-        <button type="button" aria-pressed={measurements} onClick={toggleMeasurements}><Ruler size={16}/> Хэмжээс</button>
+        <div role="group" aria-label="Шүүгээний давхарга">
+          {(
+            [
+              { id: "base", label: "Доод" },
+              { id: "wall", label: "Дээд" },
+              { id: "all", label: "Бүгд" },
+            ] as const
+          ).map((option) => (
+            <button
+              type="button"
+              key={option.id}
+              aria-pressed={layer === option.id}
+              onClick={() => {
+                finish(true);
+                setLayer(option.id);
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          aria-pressed={measurements}
+          onClick={toggleMeasurements}
+        >
+          <Ruler size={16} /> Хэмжээс
+        </button>
       </div>
       <div className="kitchen-plan-scroll">
         <div
@@ -171,7 +213,10 @@ export function KitchenPlanWorkspace({
               ) as SVGSVGElement | null,
               matrix = svg?.getScreenCTM()?.inverse();
             if (!piece || !p || !svg || !matrix) return;
-            if (!moving) { onSelect(piece.id); return; }
+            if (!moving) {
+              onSelect(piece.id);
+              return;
+            }
             event.preventDefault();
             onSelect(piece.id);
             onStart(piece.id);
@@ -197,7 +242,14 @@ export function KitchenPlanWorkspace({
           onPointerCancel={() => finish(true)}
           onLostPointerCapture={() => finish(true)}
         >
-          <Plan unit="см" kitchen={kitchen} selectedId={selectedId} onSelect={onSelect} layer={layer} showMeasurements={measurements}/>
+          <Plan
+            unit="см"
+            kitchen={kitchen}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            layer={layer}
+            showMeasurements={measurements}
+          />
         </div>
       </div>
       {selectedId && (
@@ -261,7 +313,11 @@ export function KitchenPlanWorkspace({
         </small>
       </aside>
       <footer>
-        <span>{moving ? "Чирж зөөнө · Хана, шүүгээнд тааруулна" : "Тавилга дээр дарж сонгоно"}</span>
+        <span>
+          {moving
+            ? "Чирж зөөнө · Хана, шүүгээнд тааруулна"
+            : "Тавилга дээр дарж сонгоно"}
+        </span>
         <span>Бүх хэмжээ см · {Math.round(zoom * 100)}%</span>
       </footer>
     </section>

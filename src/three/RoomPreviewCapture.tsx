@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { DesignRoom } from "@/lib/types";
 import type { Bounds } from "@/lib/roomGeometry";
@@ -16,6 +16,13 @@ export function captureRoomPreview(
   rooms: DesignRoom[],
   origin: { x: number; z: number },
 ) {
+  let pending = false;
+  scene.traverse((object) => {
+    if (object.userData.deliveryPending && !object.userData.exportExclude)
+      pending = true;
+  });
+  // Keep the previous thumbnail while a placeholder or old replacement is shown.
+  if (pending) return null;
   const width = 768,
     imageHeight = 480,
     camera = new THREE.PerspectiveCamera(40, width / imageHeight, 0.1, 1000);
@@ -157,20 +164,36 @@ export function RoomPreviewCapture({
   onReady?: (capture: (() => void) | null) => void;
 }) {
   const { gl, scene } = useThree();
+  const pendingCapture = useRef(false);
   const latest = useRef({ designId, bounds, height, rooms, origin, onCapture });
   latest.current = { designId, bounds, height, rooms, origin, onCapture };
+  const capture = () => {
+    const p = latest.current;
+    try {
+      const image = captureRoomPreview(
+        gl,
+        scene,
+        p.bounds,
+        p.height,
+        p.rooms,
+        p.origin,
+      );
+      pendingCapture.current = image === null;
+      if (image) p.onCapture?.(p.designId, image);
+    } catch {
+      pendingCapture.current = false;
+      /* Retain the last successful preview if the canvas is unavailable. */
+    }
+  };
+  const captureRef = useRef(capture);
+  captureRef.current = capture;
+  // Async delivery commits invalidate the demand-rendered scene. Retry on those
+  // frames instead of running a polling timer or saving the loading volume.
+  useFrame(() => {
+    if (pendingCapture.current) captureRef.current();
+  });
   useEffect(() => {
-    const capture = () => {
-      const p = latest.current;
-      try {
-        p.onCapture?.(
-          p.designId,
-          captureRoomPreview(gl, scene, p.bounds, p.height, p.rooms, p.origin),
-        );
-      } catch {
-        /* Retain the last successful preview if the canvas is unavailable. */
-      }
-    };
+    const capture = () => captureRef.current();
     onReady?.(capture);
     const leave = () => capture();
     window.addEventListener("pagehide", leave);
@@ -180,16 +203,14 @@ export function RoomPreviewCapture({
     };
   }, [gl, scene, onReady]);
   useEffect(() => {
+    pendingCapture.current = false;
     const timer = window.setTimeout(() => {
-      const p = latest.current;
-      try {
-        p.onCapture?.(
-          p.designId,
-          captureRoomPreview(gl, scene, p.bounds, p.height, p.rooms, p.origin),
-        );
-      } catch {}
+      captureRef.current();
     }, 1200);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      pendingCapture.current = false;
+    };
   }, [gl, scene, designId, revision]);
   return null;
 }

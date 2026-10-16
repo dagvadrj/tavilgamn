@@ -1,5 +1,7 @@
 "use client";
 
+import { PageSkeleton } from "@/components/PageSkeleton";
+
 export function CatalogStatus({
   loading,
   error,
@@ -22,9 +24,5 @@ export function CatalogStatus({
     );
   }
 
-  return (
-    <p role="status" className="p-6 text-sm">
-      {loading ? "Тавилга ачаалж байна…" : "Тавилгын мэдээллийг бэлдэж байна…"}
-    </p>
-  );
+  return <PageSkeleton variant="catalog" compact label={loading ? "Тавилга ачаалж байна…" : "Тавилгын мэдээллийг бэлдэж байна…"} />;
 }

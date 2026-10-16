@@ -6,7 +6,7 @@ export type DashboardPreferences = {
 };
 
 export const DEFAULT_DASHBOARD_PREFERENCES: DashboardPreferences = {
-  theme: "dark",
+  theme: "light",
   density: "comfortable",
   textSize: "standard",
   overview: "all",
@@ -25,7 +25,7 @@ export function parseDashboardPreferences(
   try {
     const value = raw ? JSON.parse(raw) : null;
     return {
-      theme: value?.theme === "light" ? "light" : "dark",
+      theme: value?.theme === "dark" ? "dark" : "light",
       density: value?.density === "compact" ? "compact" : "comfortable",
       textSize: value?.textSize === "large" ? "large" : "standard",
       overview:

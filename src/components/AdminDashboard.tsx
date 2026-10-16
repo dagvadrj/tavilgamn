@@ -1,5 +1,7 @@
 "use client";
 
+import { PageSkeleton } from "@/components/PageSkeleton";
+
 import { useDraftState } from "@/hooks/useDashboardDraft";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { AdminMessages } from "@/components/AdminMessages";
@@ -8,7 +10,7 @@ import { AdminMerchants } from "@/components/AdminMerchants";
 import { AdminShell } from "@/components/AdminShell";
 import { AdminAnalytics } from "@/components/AdminAnalytics";
 import { AdminKitchenDesigns } from "@/components/AdminKitchenDesigns";
-import { Package, ShieldCheck } from "lucide-react";
+import { Package } from "lucide-react";
 import { OrderHistory } from "@/components/OrderHistory";
 import { AdminUsers } from "@/components/AdminUsers";
 import { AdminProducts } from "@/components/AdminProducts";
@@ -18,6 +20,7 @@ import "@/app/(admin)/admin/admin.css";
 import "@/app/(admin)/admin/admin-dark.css";
 import { ModelsTab } from "@/features/admin-models/ModelsTab";
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
+import { AdminHomepageSettings } from "@/features/home-interior/AdminHomepageSettings";
 import { DashboardAccount } from "@/features/dashboard/DashboardAccount";
 import { loginPathForDestination } from "@/lib/authRedirect";
 import { useDashboardPreferences } from "@/features/dashboard/useDashboardPreferences";
@@ -99,9 +102,11 @@ export function AdminDashboard({
 
   if (!initialized || !user || role !== "admin")
     return (
-      <main id="main-content" className="admin-gate" role="status">
-        <ShieldCheck size={32} strokeWidth={1.4} />
-        <p>Удирдлагын эрхийг шалгаж байна…</p>
+      <main id="main-content">
+        <PageSkeleton
+          variant="dashboard"
+          label="Удирдлагын эрхийг шалгаж байна…"
+        />
       </main>
     );
   const currentTab = kitchenDesignId ? "kitchens" : tab;
@@ -166,12 +171,15 @@ export function AdminDashboard({
         />
       )}
       {currentTab === "settings" && (
-        <DashboardSettings
-          role="admin"
-          preferences={preferences}
-          onChange={updatePreferences}
-          onProfile={() => selectTab("profile")}
-        />
+        <>
+          <DashboardSettings
+            role="admin"
+            preferences={preferences}
+            onChange={updatePreferences}
+            onProfile={() => selectTab("profile")}
+          />
+          <AdminHomepageSettings key={user.id} />
+        </>
       )}
       {currentTab === "profile" && (
         <DashboardAccount key={user.id} role="admin" />

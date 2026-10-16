@@ -34,7 +34,7 @@ export function KitchenPlannerHeader({ stage, onStage, activeTool, onTool, busy,
   return <>
     <header className="kitchen-masthead">
       <nav className="kitchen-workflow-tabs" aria-label="Гал тогоогоо төлөвлөх алхмууд">
-        {stages.map(([id, label]) => <button key={id} type="button" disabled={busy}
+        {stages.map(([id, label]) => <button key={id} type="button" disabled={busy} data-planner-tour={id === "space" ? "kitchen-space" : undefined}
           aria-current={stage === id ? "step" : undefined} onClick={() => onStage(id)}>{label}</button>)}
       </nav>
       <div className="kitchen-project-tools">
@@ -53,12 +53,12 @@ export function KitchenPlannerHeader({ stage, onStage, activeTool, onTool, busy,
     </header>
     {stage === "design" && <div className="kitchen-main-toolbar" role="toolbar" aria-label="Тавилгын үндсэн хэрэгслүүд">
       <div className="kitchen-category-tools">
-        {tools.map(({ id, label, icon: Icon }) => <button key={id} type="button" disabled={busy}
+        {tools.map(({ id, label, icon: Icon }) => <button key={id} type="button" disabled={busy} data-planner-tour={id === "cabinets" ? "kitchen-catalog" : undefined}
           className={id === "photo" ? "kitchen-toolbar-separated" : undefined}
           aria-label={label} aria-pressed={id === "annotation" ? annotations : activeTool === id}
           onClick={() => onTool(id)}><span className="kitchen-category-icon"><Icon size={20} strokeWidth={1.8} /></span><span>{label}</span></button>)}
       </div>
-      <div className="kitchen-toolbar-checkout">
+      <div className="kitchen-toolbar-checkout" data-planner-tour="kitchen-finish">
         <button type="button" className="kitchen-toolbar-total" onClick={() => onStage("finish")}><span>Миний гал тогоо</span><strong>{subtotal.toLocaleString("mn-MN")} ₮</strong></button>
         <button type="button" className="kitchen-toolbar-continue" disabled={busy} onClick={() => onStage("suggestions")}>Үргэлжлүүлэх</button>
       </div>

@@ -63,17 +63,17 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
         </details>
     </div>
     <nav className="room-view-dock" ref={dock} aria-label="Өрөө харах, засах">
-      <div className="room-view-options" role="group" aria-label="Харах өнцөг">
+      <div className="room-view-options" role="group" aria-label="Харах өнцөг" data-planner-tour="room-view">
         <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>Өрөөний харагдац</span></button>
         <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>Дээрээс</span></button>
         <button type="button" aria-pressed={view === "front"} onClick={() => onView("front")}><Eye size={20}/><span>Урдаас</span></button>
         <button type="button" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span>Дотроос харах</span></button>
       </div>
       <div className="room-dock-edit">
-        <button type="button" onClick={onMaterials}><Paintbrush size={20}/><span>Өнгө</span></button>
+        <button type="button" onClick={onMaterials} data-planner-tour="room-material"><Paintbrush size={20}/><span>Өнгө</span></button>
         <button type="button" aria-pressed={dimensions} onClick={onDimensions}><Ruler size={20}/><span>Хэмжээс</span></button>
         <button type="button" onClick={onWindows}><PanelsTopLeft size={20}/><span>Цонх</span></button>
-        <button type="button" className="room-edit-button" onClick={onRoom}><PencilRuler size={20}/><span>Өрөө засах</span></button>
+        <button type="button" className="room-edit-button" onClick={onRoom} data-planner-tour="room-size"><PencilRuler size={20}/><span>Өрөө засах</span></button>
         <details className="room-dock-more">
           <summary aria-label="Нэмэлт удирдлага"><MoreHorizontal size={22}/><ChevronDown size={12}/></summary>
           <div className="room-dock-popover">

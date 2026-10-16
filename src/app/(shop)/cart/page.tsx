@@ -1,4 +1,6 @@
 "use client";
+
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,7 +25,7 @@ export default function CartPage() {
     return product && catalog.ready ? quantityLimit(product, items, item, item.id) : 0;
   };
   const stockIssue = catalog.ready && items.some(item => item.qty > limitFor(item));
-  if (!mounted) return <div className="shop-container py-16 text-center text-sm" role="status">Сагсыг ачаалж байна…</div>;
+  if (!mounted) return <PageSkeleton variant="detail" label="Сагсыг ачаалж байна…" />;
   if (!items.length) return <div className="shop-container py-10 sm:py-16"><div className="shop-empty"><ShoppingBag size={44} strokeWidth={1.3} /><h1>Таны сагс хоосон байна</h1><p>Гэртээ тохирох тавилгаа сонгоод сагсандаа нэмээрэй. Таны дараагийн дуртай тавилга энд бий.</p><Link href="/catalog" className="btn-primary">Тавилга үзэх <ArrowRight size={17} /></Link><Link href="/wishlist" className="text-link">Хадгалсан тавилгаа харах</Link></div></div>;
   return <div className="shop-container py-7 sm:py-10">
     <nav aria-label="Захиалгын алхмууд" className="checkout-steps"><span className="current" aria-current="step">01 · Сагс</span><ChevronRight size={13} /><span>02 · Хүргэлт</span><ChevronRight size={13} /><span>03 · Төлбөр</span></nav>

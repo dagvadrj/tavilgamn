@@ -278,10 +278,13 @@ test("mobile sidebar uses native dialog behavior and restores scroll on close an
   }
 });
 
-test("dashboard styles provide local dark tokens, visible focus and reduced-motion/mobile behavior", () => {
+test("dashboard styles share room surfaces, preserve dark mode and accessible responsive behavior", () => {
   const css = read("src/features/dashboard/dashboard.css");
-  assert.match(css, /--dashboard-bg:\s*#090a0c/);
-  assert.match(css, /color-scheme:\s*dark/);
+  assert.match(css, /--dashboard-bg:\s*var\(--site-bg\)/);
+  assert.match(css, /color-scheme:\s*light/);
+  const theme = read("src/features/dashboard/merchant-theme.css");
+  assert.match(theme, /\[data-theme="dark"\]/);
+  assert.match(theme, /color-scheme:\s*dark/);
   assert.match(css, /:focus-visible/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
   assert.match(css, /@media\s*\(max-width:\s*1023px\)/);

@@ -73,3 +73,12 @@ test('preview uses a separate fitted camera and restores renderer, walls and cei
     assert.equal(currentTarget,previous);assert.equal(roof.visible,true);assert.equal(wall.material.opacity,.3);assert.equal(scene.background.getHexString(),'ffffff');
   } finally {global.document=oldDocument;}
 });
+
+test('room thumbnails wait for furniture delivery instead of saving placeholders or stale replacements', () => {
+  const { captureRoomPreview } = loadSource('src/three/RoomPreviewCapture.tsx');
+  const scene = new THREE.Scene(), pending = new THREE.Group();
+  pending.userData.deliveryPending = true;
+  scene.add(pending);
+  // A pending scene exits before touching the renderer or allocating a target.
+  assert.equal(captureRoomPreview({}, scene, {}, 2.7, [], { x: 0, z: 0 }), null);
+});

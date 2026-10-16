@@ -38,7 +38,7 @@
 .shop-shell .store-search {
   flex: 0 1 240px;
   min-width: 150px;
-  background: #f4f4f5;
+  background: var(--site-hover);
   border: 1px solid var(--market-border);
   border-radius: 16px;
 }
@@ -63,7 +63,7 @@
 }
 
 .shop-shell .header-actions .cart-action {
-  background: #111;
+  background: var(--site-ink);
   color: #fff;
   border-radius: 16px;
   padding: 0 18px;
@@ -92,14 +92,14 @@
 }
 
 .shop-shell .market-cta {
-  background: #111;
+  background: var(--site-ink);
   color: #fff;
   border-radius: 14px;
 }
 
 .shop-shell .market-planner-promo {
-  background: #111;
-  border-color: #111;
+  background: var(--site-ink);
+  border-color: var(--site-ink);
   color: #fff;
 }
 
@@ -117,7 +117,7 @@
 }
 
 .shop-shell .marketplace-product-card .product-price strong {
-  color: #111;
+  color: var(--site-ink);
 }
 
 .shop-shell .marketplace-product-card .product-badge {
@@ -127,15 +127,15 @@
 }
 
 .shop-shell .product-add-cart {
-  background: #111;
+  background: var(--site-ink);
   color: #fff;
-  border-color: #111;
+  border-color: var(--site-ink);
   border-radius: 13px;
 }
 
 .shop-shell .product-add-cart:hover:not(:disabled) {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--site-accent);
+  border-color: var(--site-accent);
 }
 
 .shop-shell .marketplace-product-card .product-3d {

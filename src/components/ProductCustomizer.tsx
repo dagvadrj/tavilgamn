@@ -149,7 +149,7 @@ export function ProductCustomizer({
     void prefetchModel(
       modelDeliveryUrl(
         product.model.id,
-        product.model.previewFile ?? product.model.file,
+        product.model.file,
       ),
     );
   }, [product.model, viewerActive]);

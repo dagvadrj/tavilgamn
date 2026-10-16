@@ -997,19 +997,18 @@ export function ProductEditor({
         </p>
       )}
 
-      {glbMessage && (
-        <p role="status" className="product-save-progress">
-          {glbMessage}
-        </p>
-      )}
-      {create && checkpoint && (
-        <p role="status" className="text-sm">
-          Бүтээгдэхүүн бүртгэгдсэн. Үлдсэн өөрчлөлт, 3D файлыг дахин хадгалахад
-          энэ бүтээгдэхүүн шинэчлэгдэнэ.
-        </p>
-      )}
-
       <div className="admin-editor-actions">
+        {glbMessage && (
+          <p role="status" className="product-save-progress">
+            {glbMessage}
+          </p>
+        )}
+        {create && checkpoint && (
+          <p role="status" className="text-sm">
+            Бүтээгдэхүүн бүртгэгдсэн. Үлдсэн өөрчлөлт, 3D файлыг дахин
+            хадгалахад энэ бүтээгдэхүүн шинэчлэгдэнэ.
+          </p>
+        )}
         <button
           type="submit"
           className="btn-primary"

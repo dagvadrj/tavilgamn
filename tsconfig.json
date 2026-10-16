@@ -34,7 +34,8 @@
     ".next-dashboard-reference-build/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-dev/types/**/*.ts"
+    ".next-dev/types/**/*.ts",
+    ".next-site-ui/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

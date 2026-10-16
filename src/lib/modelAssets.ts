@@ -10,14 +10,9 @@ export function modelLodFiles(
     return null;
   }
 
-  if (previewFile && !previewFile.toLowerCase().endsWith(".glb")) {
-    return null;
-  }
-
-  return {
-    high: highFile,
-    ...(previewFile ? { preview: previewFile } : {}),
-  };
+  // Legacy preview references are accepted but never selected for rendering.
+  void previewFile;
+  return { high: highFile };
 }
 
 export function modelAssetPaths(
@@ -28,5 +23,6 @@ export function modelAssetPaths(
 }
 
 export function chooseModelLod(hasPreview = false): ModelLod {
-  return hasPreview ? "preview" : "high";
+  void hasPreview;
+  return "high";
 }

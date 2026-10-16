@@ -127,7 +127,7 @@
   height: 56px;
   overflow: hidden;
   border-radius: 9px;
-  background: #f4f4f5;
+  background: var(--site-hover);
 }
 
 .shop-shell .search-result-image img {
@@ -174,7 +174,7 @@
   margin-top: 8px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #f4f4f5;
+  background: var(--site-hover);
   font-size: 12px;
   font-weight: 600;
 }
@@ -300,7 +300,7 @@
 
 .shop-shell .directory-card-image {
   aspect-ratio: 16 / 9;
-  background: #f4f4f5;
+  background: var(--site-hover);
 }
 
 .shop-shell .directory-card-body {
@@ -327,7 +327,7 @@
   aspect-ratio: 16 / 10;
   overflow: hidden;
   border-radius: 13px;
-  background: #f4f4f5;
+  background: var(--site-hover);
   color: #a1a1aa;
 }
 
@@ -421,8 +421,8 @@
 .shop-shell .directory-card-tags > span {
   padding: 5px 8px;
   border-radius: 7px;
-  background: #f4f4f5;
-  color: #52525b;
+  background: var(--site-hover);
+  color: var(--site-muted);
   font-size: 11px;
 }
 

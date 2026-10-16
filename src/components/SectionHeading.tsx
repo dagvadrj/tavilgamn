@@ -15,13 +15,13 @@ export function SectionHeading({
   cta?: string;
 }) {
   return (
-    <div className="mb-10 flex flex-col items-end justify-between gap-4 md:flex-row">
+    <div className="mb-6 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
       <div className="max-w-2xl">
         {eyebrow && <p className="label mb-3">{eyebrow}</p>}
-        <h2 className="font-display text-3xl leading-tight md:text-4xl">
+        <h2 className="ui-section-title">
           {title}
         </h2>
-        {body && <p className="mt-3 text-ink/70">{body}</p>}
+        {body && <p className="mt-3 text-sm leading-7 text-ui-muted">{body}</p>}
       </div>
       {href && cta && (
         <Link
