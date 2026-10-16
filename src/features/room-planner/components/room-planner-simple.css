@@ -270,6 +270,15 @@
   color: #171717;
 }
 
+.room-side-views > summary[data-active="true"] {
+  background: #ececea;
+  color: #171717;
+}
+
+.room-side-views .room-dock-popover {
+  width: 180px;
+}
+
 .room-view-dock .room-edit-button {
   color: #075eaa;
 }
@@ -883,6 +892,14 @@
     min-height: 44px;
     padding: 4px;
     gap: 2px;
+  }
+  .room-side-views > summary {
+    font-size: 10px;
+    white-space: normal;
+    line-height: 1.3;
+  }
+  .room-side-views > summary > svg:last-child {
+    width: 10px;
   }
   .room-simple .room-camera-guide {
     display: none;

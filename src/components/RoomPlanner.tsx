@@ -47,6 +47,7 @@ import {
   Layers,
   ShoppingBag,
   Maximize,
+  Focus,
   Settings,
   X,
   Sparkles,
@@ -360,15 +361,15 @@ function RoomPlannerEditor() {
   const [cameraPlacement, setCameraPlacement] = useState(false);
   const [addRoomType, setAddRoomType] = useState<RoomType | null>(null);
   function navigateView(action: CameraAction) {
-    if (action === "fit" || action === "top" || action === "front")
+    if (["fit", "top", "front", "back", "left", "right"].includes(action))
       setCameraPlacement(false);
     if (action === "top") {
       setView("plan");
       setRoomView("top");
     }
-    if (action === "front") {
+    if (action === "front" || action === "back" || action === "left" || action === "right") {
       setView("perspective");
-      setRoomView("front");
+      setRoomView(action);
     }
     if (action === "fit") setRoomView(view === "plan" ? "top" : "dollhouse");
     if (
@@ -1630,7 +1631,7 @@ function RoomPlannerEditor() {
               setCameraRequest((previous) => ({
                 id: (previous?.id ?? 0) + 1,
                 action:
-                  next === "top" ? "top" : next === "front" ? "front" : "fit",
+                  next === "dollhouse" ? "fit" : next,
               }));
           }}
           cameraPlacement={cameraPlacement}
@@ -1811,6 +1812,18 @@ function RoomPlannerEditor() {
               >
                 <Settings size={16} />
                 <span>{selectedDetails?.name ?? "Тавилга"}</span>
+              </button>
+              <button
+                type="button"
+                aria-label="Сонгосон тавилга дээр төвлөрөх"
+                title="Сонгосон тавилга дээр төвлөрөх"
+                onClick={() => {
+                  setLocked(false);
+                  setCameraPlacement(false);
+                  setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: "focus", targetId: selected }));
+                }}
+              >
+                <Focus size={16} /><span>Ойртуулж харах</span>
               </button>
               <button
                 onClick={duplicateSelected}

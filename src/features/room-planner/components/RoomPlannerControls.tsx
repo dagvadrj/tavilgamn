@@ -6,7 +6,10 @@ import { DEFAULT_ROOM_LIGHTING } from "@/lib/roomDesign";
 import { RoomLightingTimeControls } from "./RoomLightingTimeControls";
 import { Lightbulb, PanelsTopLeft, X, Box, ChevronDown, Camera, Eye, Focus, Grid2X2, HelpCircle, Lock, Magnet, Maximize, Minus, MoreHorizontal, Paintbrush, PencilRuler, Plus, RotateCcw, RotateCw, Ruler, Unlock } from "lucide-react";
 
-export type RoomView = "dollhouse" | "top" | "front" | "interior";
+export type RoomView = "dollhouse" | "top" | "front" | "back" | "left" | "right" | "interior";
+const SIDE_VIEWS = [
+  ["front", "Урдаас"], ["back", "Араас"], ["left", "Зүүнээс"], ["right", "Баруунаас"],
+] as const;
 
 export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
   onHelp, onWindows, onCameraPlace, cameraPlacement, dimensions, onDimensions, grid, onGrid, snap, onSnap, locked, onLock,
@@ -26,6 +29,7 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
 }) {
   const dock = useRef<HTMLElement>(null);
   const lightMenu = useRef<HTMLDetailsElement>(null);
+  const sideMenu = useRef<HTMLDetailsElement>(null);
   const closeLights = () => { if (lightMenu.current) { lightMenu.current.open = false; lightMenu.current.querySelector("summary")?.focus(); } endLightingEdit?.(); };
   useEffect(() => {
     const dismiss = (event: PointerEvent | KeyboardEvent) => {
@@ -66,7 +70,15 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
       <div className="room-view-options" role="group" aria-label="Харах өнцөг" data-planner-tour="room-view">
         <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>Өрөөний харагдац</span></button>
         <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>Дээрээс</span></button>
-        <button type="button" aria-pressed={view === "front"} onClick={() => onView("front")}><Eye size={20}/><span>Урдаас</span></button>
+        <details className="room-dock-more room-side-views" ref={sideMenu}>
+          <summary aria-label="Хажуугийн харагдац" data-active={SIDE_VIEWS.some(([side]) => side === view)}><Eye size={20}/><span>{SIDE_VIEWS.find(([side]) => side === view)?.[1] ?? "Хажуугаас"}</span><ChevronDown size={12}/></summary>
+          <div className="room-dock-popover" role="group" aria-label="Харах талаа сонгох">
+            {SIDE_VIEWS.map(([side, label]) => <button type="button" key={side} aria-pressed={view === side} onClick={() => {
+              onView(side);
+              if (sideMenu.current) { sideMenu.current.open = false; sideMenu.current.querySelector("summary")?.focus(); }
+            }}>{label}</button>)}
+          </div>
+        </details>
         <button type="button" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span>Дотроос харах</span></button>
       </div>
       <div className="room-dock-edit">

@@ -38,6 +38,7 @@ import { isPlacementValid, snapToWall } from "./collision";
 import type { Measurement } from "@/lib/furnitureMeasurements";
 import { KitchenAssemblyMesh } from "./KitchenAssemblyMesh";
 import { dimsFor } from "./collision";
+import { furnitureCameraBounds } from "./roomFurnitureCamera";
 import { RoomDimensions } from "./RoomDimensions";
 import { FurnitureMeasurements } from "./FurnitureMeasurements";
 import {
@@ -234,6 +235,9 @@ export function RoomCanvas({
     design.height ?? 2.7,
     ...rooms.map((room) => room.height ?? 2.7),
   );
+  const cameraTarget = cameraRequest?.targetId
+    ? design.pieces.find((piece) => piece.instanceId === cameraRequest.targetId)
+    : undefined;
   return (
     <Canvas
       shadows={performance.shadows}
@@ -611,9 +615,10 @@ export function RoomCanvas({
         )}
         {!interior && (
           <CameraNavigation
-            request={cameraRequest}
+            enabled={!locked && !isDraggingPiece}
+            request={cameraRequest?.targetId && !cameraTarget ? undefined : cameraRequest}
             plan={view === "plan"}
-            bounds={{
+            bounds={cameraTarget ? furnitureCameraBounds(cameraTarget) : {
               width: spanX,
               depth: spanZ,
               height: roomHeight,

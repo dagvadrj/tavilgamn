@@ -2,7 +2,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { beginCameraTransition, cameraPose, shiftCameraTransition } from "@/lib/cameraTransition";
+import { applyCameraPose, beginCameraTransition, cameraPose, shiftCameraTransition } from "@/lib/cameraTransition";
 
 interface CameraControls {
   target: THREE.Vector3;
@@ -36,6 +36,7 @@ export function RoomCameraRig({ view, width, depth, height, centerX, centerZ, re
     const from = cameraPose(perspective, target);
     if (!last || last.camera !== camera || last.view !== view || last.resetKey !== resetKey) {
       perspective.fov = view === "plan" ? 35 : 40;
+      perspective.zoom = 1;
       const aspect = size.width / Math.max(size.height, 1);
       if (view === "plan") {
         target.set(centerX, 0, centerZ);
@@ -64,14 +65,9 @@ export function RoomCameraRig({ view, width, depth, height, centerX, centerZ, re
     }
     camera.updateProjectionMatrix();
     camera.updateMatrixWorld();
-    if (controls) {
-      controls.target.copy(target);
-      controls.update();
-    }
+    applyCameraPose(perspective, cameraPose(perspective, target), controls);
     if (last && last.camera === camera && (last.view !== view || last.resetKey !== resetKey)) {
-      if (beginCameraTransition(perspective, from, cameraPose(perspective, target), typeof window === "undefined" || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)) {
-        if (controls) { controls.target.copy(from.target); controls.update(); }
-      }
+      beginCameraTransition(perspective, from, cameraPose(perspective, target), typeof window === "undefined" || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches, controls);
     }
     previous.current = { camera, view, resetKey, originX, originZ, target: controls?.target ?? target, controls };
     invalidate();

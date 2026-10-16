@@ -6,9 +6,31 @@ export interface CameraPose {
     up: Vector3;
     fov: number;
     far: number;
+    zoom: number;
 }
 export function cameraPose(camera: PerspectiveCamera, target: Vector3): CameraPose {
-    return { position: camera.position.clone(), target: target.clone(), up: camera.up.clone(), fov: camera.fov, far: camera.far };
+    return { position: camera.position.clone(), target: target.clone(), up: camera.up.clone(), fov: camera.fov, far: camera.far, zoom: camera.zoom };
+}
+/** Clear manual inertia without letting controls alter the requested pose. */
+export function applyCameraPose(camera: PerspectiveCamera, pose: CameraPose, controls?: NavigationControls) {
+    const write = () => {
+        camera.position.copy(pose.position);
+        camera.up.copy(pose.up);
+        camera.fov = pose.fov;
+        camera.far = pose.far;
+        camera.zoom = pose.zoom;
+        controls?.target.copy(pose.target);
+        camera.lookAt(pose.target);
+        camera.updateProjectionMatrix();
+        camera.updateMatrixWorld();
+    };
+    write();
+    if (controls) {
+        const damping = controls.enableDamping;
+        controls.enableDamping = false;
+        try { controls.update(); }
+        finally { controls.enableDamping = damping; write(); }
+    }
 }
 const transitions = new WeakMap<PerspectiveCamera, {
     from: CameraPose;
@@ -25,25 +47,15 @@ export function shiftCameraTransition(camera: PerspectiveCamera, shift: Vector3)
             pose.target.add(shift);
         }
 }
-export function beginCameraTransition(camera: PerspectiveCamera, from: CameraPose, to: CameraPose, reducedMotion = false) {
+export function beginCameraTransition(camera: PerspectiveCamera, from: CameraPose, to: CameraPose, reducedMotion = false, controls?: NavigationControls) {
     transitions.delete(camera);
     if (reducedMotion) {
-        camera.position.copy(to.position);
-        camera.up.copy(to.up);
-        camera.fov = to.fov;
-        camera.far = to.far;
-        camera.lookAt(to.target);
-        camera.updateProjectionMatrix();
-        camera.updateMatrixWorld();
+        applyCameraPose(camera, to, controls);
         return false;
     }
-    transitions.set(camera, { from, to, elapsed: 0, duration: Math.min(2, Math.max(.35, from.position.distanceTo(to.position) * .09)) });
-    camera.position.copy(from.position);
-    camera.up.copy(from.up);
-    camera.fov = from.fov;
-    camera.lookAt(from.target);
-    camera.updateProjectionMatrix();
-    camera.updateMatrixWorld();
+    const clone = (pose: CameraPose) => ({ ...pose, position: pose.position.clone(), target: pose.target.clone(), up: pose.up.clone() });
+    transitions.set(camera, { from: clone(from), to: clone(to), elapsed: 0, duration: Math.min(2, Math.max(.35, from.position.distanceTo(to.position) * .09)) });
+    applyCameraPose(camera, from, controls);
     return true;
 }
 /** Time-based, focus-centred interpolation avoids cutting through the room on a view change. */
@@ -51,8 +63,13 @@ export function advanceCameraTransition(camera: PerspectiveCamera, controls: Nav
     const state = transitions.get(camera);
     if (!state)
         return false;
-    state.elapsed += Math.max(0, delta);
+    state.elapsed += Number.isNaN(delta) ? 0 : Math.max(0, delta);
     const t = Math.min(1, state.elapsed / state.duration), eased = 1 - (1 - t) ** 3;
+    if (t === 1) {
+        applyCameraPose(camera, state.to, controls);
+        transitions.delete(camera);
+        return false;
+    }
     const target = state.from.target.clone().lerp(state.to.target, eased);
     const start = state.from.position.clone().sub(state.from.target), end = state.to.position.clone().sub(state.to.target);
     if (start.lengthSq() && end.lengthSq()) {
@@ -67,14 +84,7 @@ export function advanceCameraTransition(camera: PerspectiveCamera, controls: Nav
     camera.up.copy(state.from.up).applyQuaternion(new Quaternion().slerp(upRotation, eased)).normalize();
     camera.fov = state.from.fov + (state.to.fov - state.from.fov) * eased;
     camera.far = Math.max(state.from.far, state.to.far);
-    camera.lookAt(target);
-    camera.updateProjectionMatrix();
-    camera.updateMatrixWorld();
-    if (controls) {
-        controls.target.copy(target);
-        controls.update();
-    }
-    if (t === 1)
-        transitions.delete(camera);
-    return t < 1;
+    camera.zoom = state.from.zoom + (state.to.zoom - state.from.zoom) * eased;
+    applyCameraPose(camera, cameraPose(camera, target), controls);
+    return true;
 }
