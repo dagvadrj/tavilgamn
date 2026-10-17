@@ -38,6 +38,7 @@ import { isPlacementValid, snapToWall } from "./collision";
 import type { Measurement } from "@/lib/furnitureMeasurements";
 import { KitchenAssemblyMesh } from "./KitchenAssemblyMesh";
 import { dimsFor } from "./collision";
+import { furnitureCameraBounds } from "./roomFurnitureCamera";
 import { RoomDimensions } from "./RoomDimensions";
 import { FurnitureMeasurements } from "./FurnitureMeasurements";
 import {
@@ -56,7 +57,11 @@ import { CameraNavigation } from "./CameraNavigation";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { CursorNavigation } from "./CursorNavigationBinding";
 import { Camera } from "lucide-react";
-import { furnitureWallId, resolveFurnitureAttachments, wallAttachedPiece } from "@/lib/furnitureAttachment";
+import {
+  furnitureWallId,
+  resolveFurnitureAttachments,
+  wallAttachedPiece,
+} from "@/lib/furnitureAttachment";
 import {
   SCENE_NAVIGATION_START,
   isSceneNavigationGesture,
@@ -92,7 +97,14 @@ interface RoomCanvasProps {
   design: RoomDesign;
   selected: string | null;
   onSelect: (id: string | null) => void;
-  onMove: (id: string, x: number, z: number, pose?: Partial<Pick<PlacedFurniture, "elevation" | "rotation" | "attachment">>) => void;
+  onMove: (
+    id: string,
+    x: number,
+    z: number,
+    pose?: Partial<
+      Pick<PlacedFurniture, "elevation" | "rotation" | "attachment">
+    >,
+  ) => void;
   view: "plan" | "perspective";
   snapEnabled: boolean;
   /** When true, orbit controls are disabled so dragging furniture doesn't move camera */
@@ -223,6 +235,9 @@ export function RoomCanvas({
     design.height ?? 2.7,
     ...rooms.map((room) => room.height ?? 2.7),
   );
+  const cameraTarget = cameraRequest?.targetId
+    ? design.pieces.find((piece) => piece.instanceId === cameraRequest.targetId)
+    : undefined;
   return (
     <Canvas
       shadows={performance.shadows}
@@ -230,11 +245,15 @@ export function RoomCanvas({
       frameloop={paused ? "never" : "demand"}
       gl={{
         antialias: true,
-        alpha: false,
+        // ContactShadows clears its offscreen capture with scene.background=null.
+        // A transparent clear is essential; alpha:false makes the empty map opaque
+        // and darkens the entire floor. The main scene still paints its background.
+        alpha: true,
         powerPreference: "high-performance",
         preserveDrawingBuffer: true,
       }}
       onCreated={({ gl }) => {
+        gl.setClearAlpha(0);
         gl.toneMapping = THREE.ACESFilmicToneMapping;
         gl.toneMappingExposure = 1;
         gl.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -295,6 +314,7 @@ export function RoomCanvas({
           args={[solar.night ? "#252c38" : "#F1F0ED"]}
         />
         <RoomLighting
+          windowDaylight={false}
           fixtureShadows={performance.shadows && rooms.length <= 6}
           design={{
             ...design,
@@ -310,18 +330,18 @@ export function RoomCanvas({
           frames={1}
           environmentIntensity={0.08 + 0.92 * solar.daylight}
         >
-          {/* Neutral room bounce surrounds the model, including the areas between softboxes. */}
-          <color attach="background" args={["#bcbcbc"]} />
+          {/* Separate broad reflection highlights from the darker diffuse fill. */}
+          <color attach="background" args={["#777d85"]} />
           <Lightformer
             form="rect"
-            intensity={0.8}
+            intensity={1.4}
             color="#ffffff"
             scale={[8, 6, 1]}
             position={[0, 5, -8]}
           />
           <Lightformer
             form="rect"
-            intensity={0.35}
+            intensity={0.65}
             color="#ffffff"
             scale={[6, 6, 1]}
             position={[-6, 3, 0]}
@@ -329,9 +349,9 @@ export function RoomCanvas({
           />
           <Lightformer
             form="rect"
-            intensity={0.65}
+            intensity={2}
             color="#ffffff"
-            scale={[12, 12, 1]}
+            scale={[5, 7, 1]}
             position={[0, 10, 0]}
             rotation={[Math.PI / 2, 0, 0]}
           />
@@ -413,6 +433,7 @@ export function RoomCanvas({
                   <RoomLighting
                     design={roomDesign}
                     includeSun={false}
+                    windowDaylight={rooms.length <= 6 || active}
                     fixtureShadows={performance.shadows && rooms.length <= 6}
                   />
                   {!active &&
@@ -550,12 +571,14 @@ export function RoomCanvas({
         {view === "perspective" && performance.contactShadows && (
           <RoomContactShadows
             updatingLayout={isDraggingPiece}
-            position={[centerX, -0.082, centerZ]}
-            opacity={0.2}
+            // The floor surface is y=0. A receiver below it is fully occluded.
+            position={[centerX, 0.003, centerZ]}
+            opacity={0.45}
             scale={Math.max(spanX, spanZ) * 1.15}
-            blur={3.5}
-            far={2.8}
-            color="#766c5d"
+            resolution={512}
+            blur={2}
+            far={1.8}
+            color="#514b43"
           />
         )}
         {!interior && view === "perspective" && (
@@ -592,9 +615,10 @@ export function RoomCanvas({
         )}
         {!interior && (
           <CameraNavigation
-            request={cameraRequest}
+            enabled={!locked && !isDraggingPiece}
+            request={cameraRequest?.targetId && !cameraTarget ? undefined : cameraRequest}
             plan={view === "plan"}
-            bounds={{
+            bounds={cameraTarget ? furnitureCameraBounds(cameraTarget) : {
               width: spanX,
               depth: spanZ,
               height: roomHeight,
@@ -714,7 +738,14 @@ function DraggablePiece({
   roomDims: RoomShape;
   selected: boolean;
   onSelect: (id: string | null) => void;
-  onMove: (id: string, x: number, z: number, pose?: Partial<Pick<PlacedFurniture, "elevation" | "rotation" | "attachment">>) => void;
+  onMove: (
+    id: string,
+    x: number,
+    z: number,
+    pose?: Partial<
+      Pick<PlacedFurniture, "elevation" | "rotation" | "attachment">
+    >,
+  ) => void;
   snapEnabled: boolean;
   gridEnabled: boolean;
   measureMode: boolean;
@@ -741,7 +772,8 @@ function DraggablePiece({
   const [dragging, setDragging] = useState(false);
   const [invalid, setInvalid] = useState(false);
   const dragBefore = useRef<PlacedFurniture | null>(null);
-  const moveCallback = useRef(onMove); moveCallback.current = onMove;
+  const moveCallback = useRef(onMove);
+  moveCallback.current = onMove;
 
   useCursor(
     hovered || dragging,
@@ -755,7 +787,12 @@ function DraggablePiece({
     const finishDrag = (event?: Event) => {
       const before = dragBefore.current;
       dragBefore.current = null;
-      if (before && event && event.type !== "pointerup") moveCallback.current(before.instanceId,before.x,before.z,{ elevation:before.elevation,rotation:before.rotation,attachment:before.attachment });
+      if (before && event && event.type !== "pointerup")
+        moveCallback.current(before.instanceId, before.x, before.z, {
+          elevation: before.elevation,
+          rotation: before.rotation,
+          attachment: before.attachment,
+        });
       const capture = dragCapture.current;
       dragCapture.current = null;
       try {
@@ -805,9 +842,19 @@ function DraggablePiece({
     const y = -((clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
     const attachment = piece.attachment;
-    const wall = attachment?.kind === "wall" ? getRoomGeometry(roomDims).segments.find(s => furnitureWallId(s) === attachment.segmentId) : undefined;
-    const planeNormal = wall ? new THREE.Vector3(wall.nx,0,wall.nz) : new THREE.Vector3(0, 1, 0);
-    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(planeNormal,new THREE.Vector3(piece.x,planeY,piece.z));
+    const wall =
+      attachment?.kind === "wall"
+        ? getRoomGeometry(roomDims).segments.find(
+            (s) => furnitureWallId(s) === attachment.segmentId,
+          )
+        : undefined;
+    const planeNormal = wall
+      ? new THREE.Vector3(wall.nx, 0, wall.nz)
+      : new THREE.Vector3(0, 1, 0);
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(
+      planeNormal,
+      new THREE.Vector3(piece.x, planeY, piece.z),
+    );
     const point = new THREE.Vector3();
     return raycaster.ray.intersectPlane(plane, point);
   };
@@ -815,7 +862,7 @@ function DraggablePiece({
   return (
     <group
       ref={groupRef}
-      position={[piece.x, piece.elevation ?? 0, piece.z]}
+      position={[piece.x, 0, piece.z]}
       rotation={[0, piece.rotation, 0]}
       onClick={(event) => event.stopPropagation()}
       onPointerOver={(event) => {
@@ -843,7 +890,11 @@ function DraggablePiece({
         onEditStart?.();
         dragBefore.current = structuredClone(piece);
 
-        dragOffset.current.set(piece.x - point.x, planeY - point.y, piece.z - point.z);
+        dragOffset.current.set(
+          piece.x - point.x,
+          planeY - point.y,
+          piece.z - point.z,
+        );
 
         onSelect(piece.instanceId);
         setDragging(true);
@@ -866,18 +917,66 @@ function DraggablePiece({
         };
         const attachment = piece.attachment;
         if (attachment?.kind === "wall") {
-          const wall = getRoomGeometry(roomDims).segments.find(s => furnitureWallId(s) === attachment.segmentId);
-          if (!wall) { setInvalid(true); return; }
-          const along = ((candidate.x-wall.a.x)*(wall.b.x-wall.a.x)+(candidate.z-wall.a.z)*(wall.b.z-wall.a.z))/wall.length;
-          try { candidate=wallAttachedPiece(piece,roomDims,attachment.roomId,attachment.segmentId,along,p.y+dragOffset.current.y); }
-          catch { setInvalid(true); return; }
+          const wall = getRoomGeometry(roomDims).segments.find(
+            (s) => furnitureWallId(s) === attachment.segmentId,
+          );
+          if (!wall) {
+            setInvalid(true);
+            return;
+          }
+          const along =
+            ((candidate.x - wall.a.x) * (wall.b.x - wall.a.x) +
+              (candidate.z - wall.a.z) * (wall.b.z - wall.a.z)) /
+            wall.length;
+          try {
+            candidate = wallAttachedPiece(
+              piece,
+              roomDims,
+              attachment.roomId,
+              attachment.segmentId,
+              along,
+              p.y + dragOffset.current.y,
+            );
+          } catch {
+            setInvalid(true);
+            return;
+          }
         } else if (attachment?.kind === "surface") {
-          const parent=allPieces.find(p=>p.instanceId===attachment.parentInstanceId);
-          if(!parent){setInvalid(true);return;}
-          const x=candidate.x-parent.x,z=candidate.z-parent.z,cos=Math.cos(parent.rotation),sin=Math.sin(parent.rotation);
-          candidate={...candidate,attachment:{...attachment,localPosition:[x*cos-z*sin,attachment.localPosition[1],x*sin+z*cos]}};
-          try{candidate=resolveFurnitureAttachments(allPieces.map(p=>p.instanceId===candidate.instanceId?candidate:p),roomDims,"id" in roomDims?String(roomDims.id):"",candidate.instanceId)[0];}
-          catch{setInvalid(true);return;}
+          const parent = allPieces.find(
+            (p) => p.instanceId === attachment.parentInstanceId,
+          );
+          if (!parent) {
+            setInvalid(true);
+            return;
+          }
+          const x = candidate.x - parent.x,
+            z = candidate.z - parent.z,
+            cos = Math.cos(parent.rotation),
+            sin = Math.sin(parent.rotation);
+          candidate = {
+            ...candidate,
+            attachment: {
+              ...attachment,
+              localPosition: [
+                x * cos - z * sin,
+                attachment.localPosition[1],
+                x * sin + z * cos,
+              ],
+            },
+          };
+          try {
+            candidate = resolveFurnitureAttachments(
+              allPieces.map((p) =>
+                p.instanceId === candidate.instanceId ? candidate : p,
+              ),
+              roomDims,
+              "id" in roomDims ? String(roomDims.id) : "",
+              candidate.instanceId,
+            )[0];
+          } catch {
+            setInvalid(true);
+            return;
+          }
         }
         if (gridEnabled && !attachment)
           candidate = {
@@ -885,16 +984,35 @@ function DraggablePiece({
             x: Math.round(candidate.x * 4) / 4,
             z: Math.round(candidate.z * 4) / 4,
           };
-        if (snapEnabled && !attachment) candidate = snapToWall(candidate, roomDims);
+        if (snapEnabled && !attachment)
+          candidate = snapToWall(candidate, roomDims);
         let ok = isPlacementValid(candidate, allPieces, roomDims);
-        if(ok && allPieces.some(p=>p.attachment?.kind==="surface"))try{
-          const owned=("pieces" in roomDims ? roomDims.pieces : allPieces) as PlacedFurniture[];
-          const resolved=resolveFurnitureAttachments(owned.map(p=>p.instanceId===candidate.instanceId?candidate:p),roomDims,"id" in roomDims?String(roomDims.id):"");
-          const combined=allPieces.map(p=>resolved.find(r=>r.instanceId===p.instanceId)??p);
-          ok=resolved.every(p=>isPlacementValid(p,combined,roomDims));
-        }catch{ok=false;}
+        if (ok && allPieces.some((p) => p.attachment?.kind === "surface"))
+          try {
+            const owned = (
+              "pieces" in roomDims ? roomDims.pieces : allPieces
+            ) as PlacedFurniture[];
+            const resolved = resolveFurnitureAttachments(
+              owned.map((p) =>
+                p.instanceId === candidate.instanceId ? candidate : p,
+              ),
+              roomDims,
+              "id" in roomDims ? String(roomDims.id) : "",
+            );
+            const combined = allPieces.map(
+              (p) => resolved.find((r) => r.instanceId === p.instanceId) ?? p,
+            );
+            ok = resolved.every((p) => isPlacementValid(p, combined, roomDims));
+          } catch {
+            ok = false;
+          }
         setInvalid(!ok);
-        if (ok) onMove(piece.instanceId, candidate.x, candidate.z, { elevation:candidate.elevation,rotation:candidate.rotation,attachment:candidate.attachment });
+        if (ok)
+          onMove(piece.instanceId, candidate.x, candidate.z, {
+            elevation: candidate.elevation,
+            rotation: candidate.rotation,
+            attachment: candidate.attachment,
+          });
       }}
       onPointerUp={(event) => {
         if (!dragging) return;
@@ -919,7 +1037,6 @@ function DraggablePiece({
           basePath={`/api/models/files/${fileModel.id}/`}
           glbFile={fileModel.file}
           preservePhysicalSize={fileModel.physicalSize}
-          bakedOcclusionIntensity={0}
           trackFloorBand
           w={dims.w}
           d={dims.d}
@@ -929,7 +1046,9 @@ function DraggablePiece({
         />
       ) : piece.details ? (
         <Html center position={[0, dims.h / 2, 0]} zIndexRange={[8, 0]}>
-          <span className="whitespace-nowrap rounded border bg-white px-3 py-2 text-xs">3D загвар холбогдоогүй</span>
+          <span className="whitespace-nowrap rounded border bg-white px-3 py-2 text-xs">
+            3D загвар холбогдоогүй
+          </span>
         </Html>
       ) : null}
       {selected && (

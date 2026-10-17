@@ -11,7 +11,8 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import type { GlbPreviewResult } from "@/components/GlbUploadPreview";
 import { ArrowLeft, Save } from "lucide-react";
-import type { Product, Material, Store } from "@/lib/types";
+import type { Product, Material, Store, RoomType } from "@/lib/types";
+import { ROOM_TYPES } from "@/lib/roomGeometry";
 import { CATEGORIES } from "@/lib/products";
 import { useAuth } from "@/store/auth";
 import { useCatalogStore } from "@/store/catalog";
@@ -133,6 +134,7 @@ export function ProductEditor({
     h?: string;
     colors?: string;
     materials?: string;
+    roomTypes?: string;
   };
 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -176,6 +178,9 @@ export function ProductEditor({
         event.preventDefault();
         if (saving.current || busy || draftStatus.loading) return;
         const nextErrors: FieldErrors = {};
+        if (create && !draft.roomTypes?.length) {
+          nextErrors.roomTypes = "Тохирох өрөөгөөс дор хаяж нэгийг сонгоно уу.";
+        }
 
         if (!draft.name.trim()) {
           nextErrors.name = "Бүтээгдэхүүний нэр оруулна уу.";
@@ -402,6 +407,23 @@ export function ProductEditor({
               ))}
             </select>
           </label>
+
+          <fieldset className="rounded-xl border border-ink/10 p-3 sm:col-span-2" aria-describedby="product-room-help">
+            <legend className="px-1 text-sm font-medium">Тохирох өрөө</legend>
+            <p id="product-room-help" className="mb-3 text-xs text-ink/60">Нэг барааг олон өрөөнд сонгож болно. Өрөөний planner-т энэ сонголтоор харагдана.</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {(Object.keys(ROOM_TYPES) as RoomType[]).map(type => <label key={type} className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={draft.roomTypes?.includes(type) ?? false} onChange={event => {
+                  const checked = event.target.checked;
+                  setDraft(current => ({ ...current, roomTypes: checked ? [...new Set([...(current.roomTypes ?? []), type])] : (current.roomTypes ?? []).filter(room => room !== type) }));
+                  setFieldErrors(current => ({ ...current, roomTypes: undefined }));
+                }} />
+                {ROOM_TYPES[type].label}
+              </label>)}
+            </div>
+            {!create && !draft.roomTypes?.length && <p className="mt-2 text-xs text-ink/60">Өрөө заагаагүй тул барааны ангиллаар санал болгоно.</p>}
+            {fieldErrors.roomTypes && <p role="alert" className="mt-2 text-xs text-red-600">{fieldErrors.roomTypes}</p>}
+          </fieldset>
 
           <label className="text-sm">
             Үндсэн үнэ (₮)

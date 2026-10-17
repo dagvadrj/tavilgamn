@@ -37,3 +37,16 @@ export function normalizeRoomTypes(raw: unknown): RoomType[] | undefined {
     const rooms: RoomType[] = ["living", "bedroom", "kitchen", "office", "bathroom", "other"];
     return Array.isArray(raw) ? [...new Set(raw.filter((type): type is RoomType => rooms.includes(type)))] : undefined;
 }
+
+/** Writes reject invalid room IDs instead of silently widening catalog eligibility. */
+export function parsePlannerRoomTypes(raw: unknown): RoomType[] {
+    const normalized = normalizeRoomTypes(raw);
+    let values = raw;
+    if (typeof values === "string") {
+        try { values = JSON.parse(values); } catch { values = null; }
+    }
+    if (!Array.isArray(values) || values.length > 6 || !normalized || values.some(value => !normalized.includes(value))) {
+        throw new Error("Өрөөний сонголт буруу байна.");
+    }
+    return normalized;
+}

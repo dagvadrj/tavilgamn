@@ -1,6 +1,6 @@
 import { parseSpecifications } from "./productSpecifications";
 import type { Product } from "./types";
-import { normalizePlacementMetadata, normalizeRoomTypes } from "./placementMetadata";
+import { normalizePlacementMetadata, parsePlannerRoomTypes } from "./placementMetadata";
 import { CATEGORY_LABEL } from "./catalogCategories";
 import { MAX_STOCK_QUANTITY } from "./inventory";
 import { parseModelColors, parseModelMaterials } from "./modelOptions";
@@ -210,10 +210,23 @@ export function parseProduct(value: unknown): Product {
     }
   }
 
+  let roomTypes: Product["roomTypes"];
+  const rawRoomTypes = value.roomTypes ?? specifications?.plannerRoomTypes;
+  if (rawRoomTypes !== undefined) {
+    try {
+      roomTypes = parsePlannerRoomTypes(rawRoomTypes);
+    } catch (error) {
+      throw new CatalogInputError((error as Error).message);
+    }
+    specifications = { ...specifications };
+    if (roomTypes.length) specifications.plannerRoomTypes = JSON.stringify(roomTypes);
+    else delete specifications.plannerRoomTypes;
+  }
+
   return {
     ...(specifications === undefined ? {} : { specifications }),
     ...((value.placement ?? specifications?.plannerPlacement) ? { placement: normalizePlacementMetadata(value.placement ?? specifications?.plannerPlacement) } : {}),
-    ...((value.roomTypes ?? specifications?.plannerRoomTypes) ? { roomTypes: normalizeRoomTypes(value.roomTypes ?? specifications?.plannerRoomTypes) } : {}),
+    ...(roomTypes === undefined ? {} : { roomTypes }),
     id,
     name: text(value.name, 200),
     category: category as Product["category"],

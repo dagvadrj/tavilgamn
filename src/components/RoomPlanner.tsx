@@ -32,7 +32,7 @@ import {
   RoomPlannerControls,
   type RoomView,
 } from "@/features/room-planner/components/RoomPlannerControls";
-import { roomCatalogPolicy, type RoomCatalogScope } from "@/lib/roomCatalogPolicy";
+import { roomPlannerCatalog, type RoomCatalogScope } from "@/lib/roomCatalogPolicy";
 import { PlannerModelCard } from "@/features/planner/components/PlannerModelCard";
 import type { CameraAction, CameraRequest } from "@/lib/plannerCamera";
 import Image from "next/image";
@@ -47,6 +47,7 @@ import {
   Layers,
   ShoppingBag,
   Maximize,
+  Focus,
   Settings,
   X,
   Sparkles,
@@ -360,15 +361,15 @@ function RoomPlannerEditor() {
   const [cameraPlacement, setCameraPlacement] = useState(false);
   const [addRoomType, setAddRoomType] = useState<RoomType | null>(null);
   function navigateView(action: CameraAction) {
-    if (action === "fit" || action === "top" || action === "front")
+    if (["fit", "top", "front", "back", "left", "right"].includes(action))
       setCameraPlacement(false);
     if (action === "top") {
       setView("plan");
       setRoomView("top");
     }
-    if (action === "front") {
+    if (action === "front" || action === "back" || action === "left" || action === "right") {
       setView("perspective");
-      setRoomView("front");
+      setRoomView(action);
     }
     if (action === "fit") setRoomView(view === "plan" ? "top" : "dollhouse");
     if (
@@ -558,10 +559,12 @@ function RoomPlannerEditor() {
   };
 
   const activeRoomType = current?.roomType ?? "living";
-  const catalogOptions = useMemo(() => ({ roomType: activeRoomType, scope: catalogScope, category: paletteCat, query }), [activeRoomType, catalogScope, paletteCat, query]);
-  const scopedCatalog = useMemo(() => roomCatalogPolicy([...catalog.products.filter(p => !p.model), ...dbModels], catalogOptions), [catalog.products, dbModels, catalogOptions]);
-  const paletteItems = useMemo(() => roomCatalogPolicy(catalog.products.filter(p => !p.model), catalogOptions).products, [catalog.products, catalogOptions]);
-  const dbPaletteItems = useMemo(() => roomCatalogPolicy(dbModels, catalogOptions).products, [dbModels, catalogOptions]);
+  const scopedCatalog = useMemo(() => roomPlannerCatalog(
+    catalog.products.filter(p => !p.model), dbModels,
+    { roomType: activeRoomType, scope: catalogScope, category: paletteCat, query, format: catalogFormat },
+  ), [catalog.products, dbModels, activeRoomType, catalogScope, paletteCat, query, catalogFormat]);
+  const paletteItems = scopedCatalog.photos;
+  const dbPaletteItems = scopedCatalog.models;
   useEffect(() => {
     if (scopedCatalog.category !== paletteCat) setPaletteCat(scopedCatalog.category);
   }, [scopedCatalog.category, paletteCat, setPaletteCat]);
@@ -1310,13 +1313,13 @@ function RoomPlannerEditor() {
               <button type="button" aria-pressed={catalogScope === "all"} onClick={() => setCatalogScope("all")}>Бүх өрөө</button>
             </div>
             <div className="planner-filter-pills" aria-label="Өрөөний үндсэн ангилал">
-              {scopedCatalog.categories.slice(0, 3).map(category => <button type="button" key={category.id} aria-pressed={paletteCat === category.id} onClick={() => setPaletteCat(category.id)}>{category.name} · {category.count}</button>)}
+              {scopedCatalog.categories.slice(0, 3).map(category => <button type="button" key={category.id} aria-pressed={scopedCatalog.category === category.id} onClick={() => setPaletteCat(category.id)}>{category.name} · {category.count}</button>)}
             </div>
             <label className="planner-reference-category">
               <span>Тавилгын ангилал</span>
               <select
                 aria-label="Тавилгын ангилал"
-                value={paletteCat}
+                value={scopedCatalog.category}
                 onChange={(event) =>
                   setPaletteCat(event.target.value as typeof paletteCat)
                 }
@@ -1395,7 +1398,7 @@ function RoomPlannerEditor() {
           </details>
           {!kitchenOnly && (
             <>
-              {(catalog.loading || !catalog.ready) && (
+              {(catalog.loading || !catalog.ready || catalog.error) && (
                 <CatalogStatus
                   loading={catalog.loading}
                   error={catalog.error}
@@ -1411,7 +1414,18 @@ function RoomPlannerEditor() {
                       ? dbPaletteItems.length
                       : paletteItems.length) && (
                     <p className="planner-empty">
-                      Энэ ангилалд тохирох тавилга олдсонгүй.
+                      {catalogFormat === "glb" && paletteItems.length > 0
+                        ? "Энэ сонголтод 3D загвартай тавилга алга. Бусад тавилгыг үзэж болно."
+                        : catalogFormat === "photo" && dbPaletteItems.length > 0
+                          ? "Энэ сонголтод зөвхөн 3D загвартай тавилга байна."
+                          : query.trim()
+                            ? "Энэ хүрээнд хайлтад тохирох тавилга олдсонгүй."
+                            : "Энэ өрөө, ангилалд боломжтой тавилга одоогоор алга."}
+                      {((catalogFormat === "glb" && paletteItems.length > 0) || (catalogFormat === "photo" && dbPaletteItems.length > 0)) && (
+                        <button type="button" className="planner-secondary-button" onClick={() => setCatalogFormat("all")}>
+                          Энэ сонголтын бүх тавилга
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="planner-secondary-button"
@@ -1617,7 +1631,7 @@ function RoomPlannerEditor() {
               setCameraRequest((previous) => ({
                 id: (previous?.id ?? 0) + 1,
                 action:
-                  next === "top" ? "top" : next === "front" ? "front" : "fit",
+                  next === "dollhouse" ? "fit" : next,
               }));
           }}
           cameraPlacement={cameraPlacement}
@@ -1798,6 +1812,18 @@ function RoomPlannerEditor() {
               >
                 <Settings size={16} />
                 <span>{selectedDetails?.name ?? "Тавилга"}</span>
+              </button>
+              <button
+                type="button"
+                aria-label="Сонгосон тавилга дээр төвлөрөх"
+                title="Сонгосон тавилга дээр төвлөрөх"
+                onClick={() => {
+                  setLocked(false);
+                  setCameraPlacement(false);
+                  setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: "focus", targetId: selected }));
+                }}
+              >
+                <Focus size={16} /><span>Ойртуулж харах</span>
               </button>
               <button
                 onClick={duplicateSelected}

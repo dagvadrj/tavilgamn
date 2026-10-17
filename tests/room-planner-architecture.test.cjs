@@ -22,7 +22,7 @@ test("one catalog policy scopes photos and models, supports shared metadata, cou
   items.push({ name: "shared", description: "", category: "chair", roomTypes: ["living", "bedroom"], inStock: true, stockQuantity: 2 });
   const options = { roomType: "bedroom", scope: "room", category: "sofa", query: "" };
   const result = policy.roomCatalogPolicy(items, options);
-  assert.equal(result.category, "all"); assert.equal(result.products.length, 0);
+  assert.equal(result.category, "all"); assert.deepEqual(result.products.map(p => p.name), ["bed", "dresser", "nightstand", "shared"]);
   assert.deepEqual(result.categories.slice(0, 4).map(c => c.id), ["bed", "wardrobe", "dresser", "nightstand"]);
   assert.equal(result.categories.find(c => c.id === "chair").count, 1);
   assert.equal(policy.roomCatalogPolicy(items, { ...options, category: "all", query: "sofa" }).products.length, 0);

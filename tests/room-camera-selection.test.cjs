@@ -86,6 +86,14 @@ test('real planner map and scene selection keep one canvas key, current view and
   moving.props.onEditEnd();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,b);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.design.pieces[0].x,0);assert.equal(moving.key,canvas.key);assert.equal(moving.props.resetKey,reset);assert.equal(moving.props.view,'plan');
   store.getState().undo();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,a);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.design.pieces[0].x,0);
   store.getState().redo();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,b);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.resetKey,reset);
+  // Focus and side navigation are ephemeral: neither changes design data nor undo history.
+  const snapshot=JSON.stringify(store.getState().current),historyLength=store.getState().past.length;
+  nodes(tree).find(n=>n.type==='button'&&n.props['aria-label']==='Сонгосон тавилга дээр төвлөрөх').props.onClick();tree=render();
+  const focused=find(tree,'room-canvas');assert.equal(focused.props.cameraRequest.action,'focus');assert.equal(focused.props.cameraRequest.targetId,bed.instanceId);assert.equal(focused.props.selected,bed.instanceId);
+  for(const side of ['front','back','left','right']) {
+   find(tree,'room-controls').props.onView(side);tree=render();assert.equal(find(tree,'room-canvas').props.cameraRequest.action,side);assert.equal(find(tree,'room-canvas').props.view,'perspective');
+  }
+  assert.equal(JSON.stringify(store.getState().current),snapshot);assert.equal(store.getState().past.length,historyLength);
   // Interior mode persists through room visits and camera placement returns to plan editing.
   find(tree,'room-controls').props.onView('interior');tree=render();
   let tour=find(tree,'room-canvas');assert.equal(tour.props.interior,true);assert.equal(tour.props.view,'perspective');assert.equal(tour.props.selected,null);

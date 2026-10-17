@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { RoomBuilder } from "./RoomBuilder";
+import { createRoomBuilderDraft } from "@/lib/roomBuilderDraft";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/auth";
 import { KITCHEN_FLOW_STAGES, saveKitchenFlowDraft, type KitchenFlowStage } from "@/lib/kitchenFlow";
@@ -186,7 +187,7 @@ export function RoomPlannerStart({
     setStep(2);
     if (type !== "kitchen") setBuilderOpen(true);
   }
-  if (builderOpen) return <RoomBuilder initial={dimensions} onCancel={() => setBuilderOpen(false)} onComplete={draft => { try { onStart(roomType, draft, { ...draft, name:room.label, door:false, window:false, doorWall:"south", windowWall:"north", furnishing:"empty" }); return null; } catch(reason) { return (reason as Error).message; } }} />;
+  if (builderOpen) return <RoomBuilder initial={createRoomBuilderDraft(dimensions)} onCancel={() => { setBuilderOpen(false); setStep(1); }} onComplete={draft => { try { onStart(roomType, draft, { ...draft, name:room.label, door:false, window:false, doorWall:"south", windowWall:"north", furnishing:"empty" }); return null; } catch(reason) { return (reason as Error).message; } }} />;
   if (kitchenSetup)
     return (
       <KitchenSuggestionWizard
@@ -209,9 +210,9 @@ export function RoomPlannerStart({
         </Link>
       </header>
       <div className="room-start-body">
-        <ol className="room-start-progress" aria-label="Эхлэх алхмууд">
+        {step !== 1 && <ol className="room-start-progress" aria-label="Эхлэх алхмууд">
           {(roomType === "kitchen" ? ["Гал тогоо", "Хэмжээ", "Төхөөрөмж", "2D план", "Өөрөө тохижуулах", "5 санал", "Дуусгах"] : ["Өрөө сонгох", "Хэмжээ", "Хаалга, цонх", "Тавилга"]).map((label, index) => <li key={label} aria-current={step === index + 1 ? "step" : undefined}>{roomType === "kitchen" ? <button type="button" onClick={() => openKitchenStage(KITCHEN_FLOW_STAGES[index])}><span>{step > index + 1 ? <Check size={15} /> : index + 1}</span>{label}</button> : <><span>{step > index + 1 ? <Check size={15} /> : index + 1}</span>{label}</>}</li>)}
-        </ol>
+        </ol>}
         {step === 1 ? (
           <>
             {draft && <article className="room-start-resume" aria-label="Өмнөх ажлаа үргэлжлүүлэх">
@@ -237,7 +238,7 @@ export function RoomPlannerStart({
                 Ямар өрөө тохижуулах вэ?
               </h1>
               <span>
-                Өрөөгөө сонгоод, дараагийн алхамд хэмжээгээ тохируулаарай.
+                Өрөөний төрлөө сонгоод хэлбэр, хэмжээ болон дотор заслаа дарааллаар нь тохируулаарай.
               </span>
             </div>
             <div className="room-type-grid">

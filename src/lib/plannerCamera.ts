@@ -1,13 +1,14 @@
 import { MathUtils, MOUSE, PerspectiveCamera, Vector3 } from "three";
+import { applyCameraPose, cameraPose } from "./cameraTransition";
 
-export type CameraAction = "zoom-in" | "zoom-out" | "fit" | "top" | "front" |
+export type CameraAction = "zoom-in" | "zoom-out" | "fit" | "focus" | "top" | "front" | "back" | "left" | "right" |
   "rotate-left" | "rotate-right" | "pan-left" | "pan-right" | "pan-up" | "pan-down";
 export type CameraRequest = { id: number; action: CameraAction; targetId?: string };
 export interface CameraBounds {
   width: number; depth: number; height: number; centerX: number; centerZ: number; centerY?: number;
 }
 export interface NavigationControls {
-  target: Vector3; update: () => void; minDistance?: number; maxDistance?: number;
+  target: Vector3; update: () => void; minDistance?: number; maxDistance?: number; enableDamping?: boolean;
 }
 type MouseControls = { domElement?: HTMLElement; mouseButtons: Partial<Record<"LEFT" | "MIDDLE" | "RIGHT", MOUSE>> };
 
@@ -58,20 +59,23 @@ export function navigateCamera(camera: PerspectiveCamera, controls: NavigationCo
     camera.position.copy(target).add(offset);
   } else {
     const top = plan || action === "top";
-    target.set(bounds.centerX, top ? 0 : bounds.centerY ?? bounds.height * .4, bounds.centerZ);
+    target.set(bounds.centerX, bounds.centerY ?? (top ? 0 : bounds.height * .4), bounds.centerZ);
     camera.up.set(0, plan ? 0 : 1, plan ? -1 : 0);
+    camera.zoom = 1;
     const halfFov = MathUtils.degToRad(camera.fov / 2);
     const horizontalFov = Math.atan(Math.tan(halfFov) * Math.max(.1, aspect));
-    const radius = Math.hypot(bounds.width / 2, bounds.depth / 2, bounds.height * .6);
+    const radius = Math.hypot(bounds.width / 2, bounds.depth / 2, bounds.height * (bounds.centerY === undefined ? .6 : .5));
     const distance = top
       ? Math.max(bounds.depth + 1, (bounds.width + 1) / Math.max(.1, aspect)) / (2 * Math.tan(halfFov))
       : radius / Math.sin(Math.min(halfFov, horizontalFov)) * 1.12;
-    const direction = top ? new Vector3(0, 1, .001) : action === "front"
-      ? new Vector3(0, .12, 1) : new Vector3(.8, .68, .82);
+    const direction = top ? new Vector3(0, 1, .001)
+      : action === "focus" && offset.lengthSq() ? offset
+      : action === "front" ? new Vector3(0, .12, 1)
+      : action === "back" ? new Vector3(0, .12, -1)
+      : action === "left" ? new Vector3(-1, .12, 0)
+      : action === "right" ? new Vector3(1, .12, 0) : new Vector3(.8, .68, .82);
     camera.position.copy(target).add(direction.normalize().multiplyScalar(MathUtils.clamp(distance, min, max)));
     camera.far = Math.max(300, distance * 4);
   }
-  camera.lookAt(target);
-  camera.updateProjectionMatrix();
-  controls.update();
+  applyCameraPose(camera, cameraPose(camera, target), controls);
 }

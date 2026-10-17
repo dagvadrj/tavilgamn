@@ -6,6 +6,7 @@ import type { DesignRoom } from "@/lib/types";
 import type { Bounds } from "@/lib/roomGeometry";
 import { getRoomGeometry } from "@/lib/roomGeometry";
 import { roomPosition } from "@/lib/roomLayout";
+import { applyRoomCutaway } from "./roomCutaway";
 
 /** Render a separate overview camera without moving the user's live camera. */
 export function captureRoomPreview(
@@ -70,27 +71,16 @@ export function captureRoomPreview(
           object.visible = visible;
         });
       }
-      if (
-        object.userData.previewWall &&
-        object instanceof THREE.Mesh &&
-        !Array.isArray(object.material)
-      ) {
-        const material = object.material as THREE.MeshStandardMaterial,
-          { nx, nz } = object.userData.previewWall;
+      if (object.userData.previewWall) {
+        const { nx, nz } = object.userData.previewWall;
         const p = object.getWorldPosition(new THREE.Vector3());
         const outside =
           (camera.position.x - p.x) * nx + (camera.position.z - p.z) * nz <
           -0.06;
-        const { opacity, transparent, depthWrite } = material;
-        material.opacity = outside ? 0.04 : 1;
-        material.transparent = outside;
-        material.depthWrite = !outside;
-        material.needsUpdate = true;
+        const opacity = object.userData.cutawayOpacity ?? 1;
+        applyRoomCutaway(object, outside ? 0 : 1);
         restore.push(() => {
-          material.opacity = opacity;
-          material.transparent = transparent;
-          material.depthWrite = depthWrite;
-          material.needsUpdate = true;
+          applyRoomCutaway(object, opacity);
         });
       }
     });

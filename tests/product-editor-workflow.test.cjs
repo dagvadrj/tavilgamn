@@ -94,6 +94,7 @@ test('real PostgreSQL migration saves metadata atomically, preserves stock check
   const gallery=readFileSync('supabase/migrations/202609090001_product_gallery.sql','utf8');
   await db.exec(gallery.slice(gallery.indexOf('create or replace function public.save_furniture_product'),gallery.indexOf('notify pgrst')));
   await db.exec(readFileSync('supabase/migrations/20261010114233_product_specifications_categories.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/20261016115740_planner_room_suitability.sql','utf8'));
   const { CATEGORIES }=loadSource('src/lib/catalogCategories.ts');
   for(const c of CATEGORIES)assert.equal((await db.query('select is_furniture_category($1) valid',[c.id])).rows[0].valid,true,c.id);
   await db.exec('set role service_role');
@@ -108,6 +109,39 @@ test('real PostgreSQL migration saves metadata atomically, preserves stock check
   assert.equal((await db.query("select count(*)::integer n from furniture_models where product_id='bad'")).rows[0].n,0);
   await save(product({id:'p',specifications:{}}),false,5);
   assert.deepEqual((await db.query("select specifications from furniture_models where product_id='p'")).rows[0].specifications,{});
+  const { parseProduct } = loadSource('src/lib/catalogValidation.ts');
+  await save(parseProduct(product({id:'p',roomTypes:['living','office'],specifications:{tiers:'5'}})),false,5);
+  const stored = (await db.query("select specifications from furniture_models where product_id='p'")).rows[0].specifications;
+  assert.deepEqual(parseProduct(product({specifications:stored})).roomTypes,['living','office']);
+  await assert.rejects(save(parseProduct(product({id:'p',roomTypes:['bedroom']})),false,4),error=>error.code==='P0003');
+  assert.deepEqual((await db.query("select specifications from furniture_models where product_id='p'")).rows[0].specifications,stored);
+  for (const invalid of ['oops','null','{}','[null]','["garage"]','["living",42]']) {
+    await assert.rejects(save(product({id:'invalid-rooms',specifications:{plannerRoomTypes:invalid}})),error=>error.code==='22023');
+  }
+  await save(parseProduct(product({id:'p',roomTypes:[],specifications:stored})),false,5);
+  assert.deepEqual((await db.query("select specifications from furniture_models where product_id='p'")).rows[0].specifications,{tiers:'5'});
   await db.exec('reset role;set role anon');
   await assert.rejects(save(product({id:'forged'})),error=>error.code==='42501');
+});
+
+test('admin room selection survives request parsing, persisted reload and an unrelated edit', async () => {
+  const { parseProduct } = loadSource('src/lib/catalogValidation.ts');
+  const { saveProductWithModel } = loadSource('src/features/admin-products/saveProductWithModel.ts');
+  const { productSpecificationRows } = loadSource('src/lib/productSpecifications.ts');
+  const original = product({ roomTypes:['living','bedroom','living'], specifications:{tiers:'5'} });
+  const parsed = parseProduct(original);
+  assert.deepEqual(parsed.roomTypes,['living','bedroom']);
+  assert.deepEqual(parsed.specifications,{tiers:'5',plannerRoomTypes:'["living","bedroom"]'});
+  const reloaded = parseProduct(product({specifications:parsed.specifications}));
+  assert.deepEqual(reloaded.roomTypes,['living','bedroom']);
+  let body;
+  await saveProductWithModel({ product:{...reloaded,name:'Renamed'}, checkpoint:{id:'saved',stockQuantity:5}, file:null, preview:null,moduleId:'',assertOwner:()=>{},onSaved:()=>{},onProgress:()=>{},
+    request: async (url,init) => { body = JSON.parse(init.body); return json({id:'saved'}); } });
+  assert.deepEqual(parseProduct(body).roomTypes,['living','bedroom']);
+  assert.equal(body.specifications.plannerRoomTypes,'["living","bedroom"]');
+  assert.ok(!productSpecificationRows(reloaded).some(row=>row.value.includes('living')));
+  const cleared = parseProduct({...reloaded,roomTypes:[]});
+  assert.deepEqual(cleared.specifications,{tiers:'5'});
+  assert.equal(parseProduct(product({specifications:cleared.specifications})).roomTypes,undefined);
+  for (const roomTypes of [['garage'],['living',null],{},'bad']) assert.throws(()=>parseProduct(product({roomTypes})));
 });
