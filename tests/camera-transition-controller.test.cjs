@@ -65,6 +65,27 @@ test('30/60/120 Hz transitions have the same pose at equal elapsed time and exac
   for(const pose of poses.slice(1)) { near(pose.position,poses[0].position); near(pose.target,poses[0].target); assert.ok(Math.abs(pose.zoom-poses[0].zoom)<1e-10); }
 });
 
+test('waking an on-demand canvas after idle does not consume the whole new camera animation', () => {
+  const { camera, controls } = fixture();
+  try {
+    const from = transition.cameraPose(camera, controls.target), to = destination(camera, controls.target);
+    transition.beginCameraTransition(camera, from, to, false, controls);
+    assert.equal(transition.advanceCameraTransition(camera, controls, 12), true);
+    near(camera.position, from.position);
+    transition.advanceCameraTransition(camera, controls, 1 / 60);
+    assert.ok(camera.position.distanceTo(from.position) > 0);
+    assert.ok(camera.position.distanceTo(to.position) > 1);
+    for (let i = 0; i < 180; i++) transition.advanceCameraTransition(camera, controls, 1 / 60);
+    near(camera.position, to.position);
+
+    transition.beginCameraTransition(camera, transition.cameraPose(camera, controls.target), from, false, controls);
+    transition.advanceCameraTransition(camera, controls, 1 / 60);
+    assert.equal(transition.advanceCameraTransition(camera, controls, 12), true, 'a background-tab gap must not snap a running transition either');
+    transition.advanceCameraTransition(camera, controls, Infinity);
+    near(camera.position, from.position);
+  } finally { controls.dispose(); }
+});
+
 test('replacement starts at the visible pose; room-origin shifts move both endpoints without mutating callers', () => {
   const {camera,controls} = fixture();
   try {

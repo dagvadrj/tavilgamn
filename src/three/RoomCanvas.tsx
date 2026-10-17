@@ -607,7 +607,8 @@ export function RoomCanvas({
             enableZoom
             zoomToCursor
             enableDamping
-            dampingFactor={0.08}
+            dampingFactor={0.055}
+            rotateSpeed={0.75}
             minDistance={0.8}
             maxDistance={Math.max(100, Math.max(spanX, spanZ) * 50)}
             minPolarAngle={0.025}
@@ -646,7 +647,8 @@ export function RoomCanvas({
         )}
         {!interior && (
           <CursorNavigation
-            enabled={!locked && !interior && !cameraPlacement}
+            smoothZoom
+            enabled={!locked && !isDraggingPiece && !interior && !cameraPlacement}
             plan={view === "plan"}
           />
         )}

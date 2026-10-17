@@ -37,7 +37,14 @@ const transitions = new WeakMap<PerspectiveCamera, {
     to: CameraPose;
     elapsed: number;
     duration: number;
+    owner?: symbol;
 }>();
+/** Only the input which owns a transition may accumulate its pending destination. */
+export function cameraTransitionDestination(camera: PerspectiveCamera, owner: symbol): CameraPose | undefined {
+    const state = transitions.get(camera);
+    if (!state || state.owner !== owner) return;
+    return { ...state.to, position: state.to.position.clone(), target: state.to.target.clone(), up: state.to.up.clone() };
+}
 export function cancelCameraTransition(camera: PerspectiveCamera) { transitions.delete(camera); }
 export function shiftCameraTransition(camera: PerspectiveCamera, shift: Vector3) {
     const state = transitions.get(camera);
@@ -47,14 +54,15 @@ export function shiftCameraTransition(camera: PerspectiveCamera, shift: Vector3)
             pose.target.add(shift);
         }
 }
-export function beginCameraTransition(camera: PerspectiveCamera, from: CameraPose, to: CameraPose, reducedMotion = false, controls?: NavigationControls) {
+export function beginCameraTransition(camera: PerspectiveCamera, from: CameraPose, to: CameraPose, reducedMotion = false, controls?: NavigationControls, options: { owner?: symbol; duration?: number } = {}) {
     transitions.delete(camera);
     if (reducedMotion) {
         applyCameraPose(camera, to, controls);
         return false;
     }
     const clone = (pose: CameraPose) => ({ ...pose, position: pose.position.clone(), target: pose.target.clone(), up: pose.up.clone() });
-    transitions.set(camera, { from: clone(from), to: clone(to), elapsed: 0, duration: Math.min(2, Math.max(.35, from.position.distanceTo(to.position) * .09)) });
+    transitions.set(camera, { from: clone(from), to: clone(to), elapsed: 0, owner: options.owner,
+        duration: options.duration ?? Math.min(2, Math.max(.35, from.position.distanceTo(to.position) * .09)) });
     applyCameraPose(camera, from, controls);
     return true;
 }
@@ -63,7 +71,13 @@ export function advanceCameraTransition(camera: PerspectiveCamera, controls: Nav
     const state = transitions.get(camera);
     if (!state)
         return false;
-    state.elapsed += Number.isNaN(delta) ? 0 : Math.max(0, delta);
+    // R3F's demand clock includes time since the last rendered frame. That
+    // idle time predates a new transition; it must not finish it on wake-up.
+    // Keep Infinity as the explicit reduced-motion/finish signal.
+    const step = delta === Infinity ? Infinity : Number.isFinite(delta)
+        ? state.elapsed === 0 && delta > .1 ? 0 : Math.min(.1, Math.max(0, delta))
+        : 0;
+    state.elapsed += step;
     const t = Math.min(1, state.elapsed / state.duration), eased = 1 - (1 - t) ** 3;
     if (t === 1) {
         applyCameraPose(camera, state.to, controls);
