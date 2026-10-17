@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   background: #fff;
-  color: #293c32;
+  color: var(--site-ink);
   font-family: inherit;
 }
 
@@ -15,7 +15,7 @@
   gap: 28px;
   min-height: 58px;
   padding: 0 24px;
-  border-bottom: 1px solid #e2e6e1;
+  border-bottom: 1px solid var(--site-line);
 }
 
 .kspace-header strong {
@@ -31,9 +31,9 @@
 }
 
 .kspace-header nav span {
-  color: #246847;
+  color: var(--site-ink);
   padding: 18px 0;
-  border-bottom: 3px solid #246847;
+  border-bottom: 3px solid var(--site-accent);
 }
 
 .kspace-toolbar {
@@ -41,7 +41,7 @@
   align-items: center;
   gap: 24px;
   padding: 12px 24px;
-  border-bottom: 1px solid #e2e6e1;
+  border-bottom: 1px solid var(--site-line);
 }
 
 .kspace-tools {
@@ -62,13 +62,13 @@
 }
 
 .kspace-tools button[aria-pressed="true"] {
-  border-color: #246847;
-  color: #246847;
-  background: #edf4ee;
+  border-color: var(--site-accent);
+  color: var(--site-ink);
+  background: var(--site-selected);
 }
 
 .kspace-tools button:hover {
-  background: #f2f5ef;
+  background: var(--site-hover);
 }
 
 .kspace-toolbar .kp-field {
@@ -85,7 +85,7 @@
   align-items: center;
   gap: 8px;
   padding: 13px 20px;
-  background: #246847;
+  background: var(--site-ink);
   color: #fff;
   border-radius: 5px;
   font-weight: 600;
@@ -102,9 +102,9 @@
   width: 300px;
   flex-shrink: 0;
   padding: 22px;
-  border-right: 1px solid #e2e6e1;
+  border-right: 1px solid var(--site-line);
   overflow-y: auto;
-  background: #fafbf8;
+  background: var(--site-selected);
 }
 
 .kspace-panel-title {
@@ -136,7 +136,7 @@
 .kspace-panel select, .kspace-panel input {
   width: 100%;
   padding: 9px;
-  border: 1px solid #cbd5cc;
+  border: 1px solid var(--site-line);
   border-radius: 4px;
   background: white;
 }
@@ -150,12 +150,12 @@
 .kspace-shapes button {
   padding: 10px;
   background: white;
-  border: 1px solid #d8ded6;
+  border: 1px solid var(--site-line);
   font-size: 12px;
 }
 
 .kspace-shapes button[aria-pressed="true"] {
-  border-color: #246847;
+  border-color: var(--site-accent);
 }
 
 .kspace-add, .kspace-result {
@@ -166,19 +166,19 @@
   width: 100%;
   padding: 12px;
   margin: 8px 0;
-  border: 1px solid #d8ded6;
+  border: 1px solid var(--site-line);
   background: white;
   font-size: 13px;
   text-align: left;
 }
 
 .kspace-result[aria-pressed="true"] {
-  border-color: #246847;
-  background: #edf4ee;
+  border-color: var(--site-accent);
+  background: var(--site-selected);
 }
 
 .kspace-panel fieldset {
-  border-top: 1px solid #d8ded6;
+  border-top: 1px solid var(--site-line);
   padding-top: 12px;
   margin-top: 18px;
 }
@@ -234,11 +234,11 @@
 }
 
 .kspace-overlay g.is-selected {
-  filter: drop-shadow(0 0 25px #246847);
+  filter: drop-shadow(0 0 25px var(--site-ink));
 }
 
 .kspace-overlay g:focus-visible {
-  outline: 2px solid #246847;
+  outline: 2px solid var(--site-accent);
 }
 
 .kspace-zoom {
@@ -247,7 +247,7 @@
   bottom: 24px;
   display: grid;
   background: white;
-  border: 1px solid #e2e6e1;
+  border: 1px solid var(--site-line);
 }
 
 .kspace-zoom button {
@@ -255,7 +255,7 @@
   min-height: 44px;
   display: grid;
   place-items: center;
-  border-bottom: 1px solid #e2e6e1;
+  border-bottom: 1px solid var(--site-line);
   font-size: 11px;
 }
 
@@ -265,7 +265,7 @@
   justify-content: center;
   gap: 22px;
   padding: 14px;
-  border-top: 1px solid #e2e6e1;
+  border-top: 1px solid var(--site-line);
   font-size: 13px;
 }
 
@@ -276,16 +276,16 @@
 }
 
 .kspace-footer span {
-  color: #246847;
+  color: var(--site-ink);
 }
 
 .kspace-header {
-  box-shadow: 0 2px 14px #293c3205;
+  box-shadow: 0 2px 14px #26384805;
 }
 
 .kspace-header strong {
   letter-spacing: -0.04em;
-  color: #246847;
+  color: var(--site-ink);
 }
 
 .kspace-header nav button {
@@ -293,12 +293,12 @@
 }
 
 .kspace-header nav button:hover {
-  color: #246847;
+  color: var(--site-ink);
 }
 
 .kspace-toolbar {
   background: #fff;
-  box-shadow: 0 4px 14px #293c3204;
+  box-shadow: 0 4px 14px #26384804;
   z-index: 5;
 }
 
@@ -310,17 +310,17 @@
 .kspace-tools button svg {
   padding: 7px;
   box-sizing: content-box;
-  background: #f5f7f2;
+  background: var(--site-bg);
   border-radius: 10px;
 }
 
 .kspace-tools button[aria-pressed="true"] svg {
-  background: #dcebdc;
+  background: var(--site-selected);
 }
 
 .kspace-continue {
   border-radius: 10px;
-  box-shadow: 0 4px 12px #24684720;
+  box-shadow: 0 4px 12px #26384820;
 }
 
 .kspace-panel {
@@ -330,9 +330,9 @@
 
 .kspace-room-summary {
   padding: 18px;
-  border: 1px solid #e1e8dc;
+  border: 1px solid var(--site-line);
   border-radius: 14px;
-  background: linear-gradient(120deg, #f0f5e9, #f8faf5);
+  background: linear-gradient(120deg, var(--site-selected), var(--site-selected));
   margin: 18px 0 22px;
 }
 
@@ -341,7 +341,7 @@
   font-size: 10px;
   letter-spacing: 0.12em;
   font-weight: 700;
-  color: #7c8c73;
+  color: var(--site-muted);
 }
 
 .kspace-room-summary strong {
@@ -360,7 +360,7 @@
 
 .kspace-room-summary p {
   margin: 4px 0 0;
-  color: #687b60;
+  color: var(--site-muted);
   font-size: 12px;
 }
 
@@ -371,18 +371,18 @@
 
 .kspace-add {
   border-radius: 10px;
-  color: #246847;
+  color: var(--site-ink);
   font-weight: 600;
-  background: #f5f8f0;
+  background: var(--site-selected);
 }
 
 .kspace-add:hover {
-  background: #eaf2e3;
+  background: var(--site-selected);
 }
 
 .kspace-result {
   border-radius: 8px;
-  border-color: #e5e9e0;
+  border-color: var(--site-line);
 }
 
 .kspace-panel select, .kspace-panel input {
@@ -391,14 +391,14 @@
 }
 
 .kspace-panel .kp-field small {
-  color: #8a9784;
+  color: var(--site-muted);
   font-size: 11px;
 }
 
 .kspace-panel fieldset {
-  background: #fafbf7;
+  background: var(--site-selected);
   padding: 16px;
-  border: 1px solid #e5e9e0;
+  border: 1px solid var(--site-line);
   border-radius: 12px;
 }
 
@@ -416,13 +416,13 @@
 }
 
 .kspace-canvas {
-  background-color: #f7f8f4;
-  background-image: radial-gradient(#dce2d6 0.8px, transparent 0.8px);
+  background-color: var(--site-bg);
+  background-image: radial-gradient(var(--site-hover) 0.8px, transparent 0.8px);
   background-size: 20px 20px;
 }
 
 .kspace-plan {
-  filter: drop-shadow(0 12px 25px #293c3214);
+  filter: drop-shadow(0 12px 25px #26384814);
 }
 
 .kspace-plan .km-plan {
@@ -433,11 +433,11 @@
 .kspace-zoom {
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px #293c320d;
+  box-shadow: 0 4px 20px #2638480d;
 }
 
 .kspace-zoom button:hover {
-  background: #f0f5e9;
+  background: var(--site-selected);
 }
 
 .kspace-footer {
@@ -446,17 +446,17 @@
 
 .kspace-footer span {
   padding: 8px 15px;
-  background: #edf4e7;
+  background: var(--site-selected);
   border-radius: 9px;
   font-weight: 600;
 }
 
 .kspace-footer small {
-  color: #809175;
+  color: var(--site-muted);
 }
 
 .kspace button:focus-visible, .kspace input:focus-visible, .kspace select:focus-visible {
-  outline: 3px solid #76a687;
+  outline: 3px solid var(--site-accent);
   outline-offset: 3px;
 }
 
@@ -511,7 +511,7 @@
     inset: 0 auto 0 0;
     width: min(300px, 85vw);
     z-index: 4;
-    box-shadow: 10px 0 30px #293c3220;
+    box-shadow: 10px 0 30px #26384820;
   }
   .kspace-footer small {
     display: none;

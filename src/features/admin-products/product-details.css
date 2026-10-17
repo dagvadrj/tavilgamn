@@ -100,8 +100,8 @@
 }
 
 .product-history-version[aria-pressed="true"] {
-  border-color: var(--dashboard-accent, #508b68);
-  box-shadow: inset 0 0 0 1px var(--dashboard-accent, #508b68);
+  border-color: var(--dashboard-accent, var(--site-accent));
+  box-shadow: inset 0 0 0 1px var(--dashboard-accent, #263848);
 }
 
 .product-history-version:disabled {
@@ -124,7 +124,7 @@
   overflow: hidden;
   border-radius: 12px;
   background: #edece7;
-  color: #26332c;
+  color: var(--site-ink);
 }
 
 .product-history-canvas {

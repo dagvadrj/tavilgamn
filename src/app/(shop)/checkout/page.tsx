@@ -96,7 +96,7 @@ export default function CheckoutPage() {
       <section className="ui-panel p-5 sm:p-7">
         <h2 className="text-xl">Захиалгын дүн</h2>
         {currentQuote ? <>
-          <ul className="my-4 space-y-3">{currentQuote.items.map((item) => <li key={JSON.stringify([item.productId, item.color, item.material])} className="text-sm"><p>{item.name} × {item.qty}</p>{item.stockQuantity != null && <p className="text-xs text-[#42634f]">Шалгах үеийн үлдэгдэл: {item.stockQuantity} ширхэг</p>}<p className="text-ui-muted">{item.colorName} · {item.materialName}</p><p>{formatPrice(item.lineTotal)}</p></li>)}</ul>
+          <ul className="my-4 space-y-3">{currentQuote.items.map((item) => <li key={JSON.stringify([item.productId, item.color, item.material])} className="text-sm"><p>{item.name} × {item.qty}</p>{item.stockQuantity != null && <p className="text-xs text-ui-accent">Шалгах үеийн үлдэгдэл: {item.stockQuantity} ширхэг</p>}<p className="text-ui-muted">{item.colorName} · {item.materialName}</p><p>{formatPrice(item.lineTotal)}</p></li>)}</ul>
           <p className="flex justify-between text-sm"><span>Хүргэлт</span><span>{currentQuote.shipping === 0 ? "Үнэгүй" : formatPrice(currentQuote.shipping)}</span></p>
           <p className="mt-4 flex justify-between font-semibold"><span>Нийт</span><span>{formatPrice(currentQuote.total)}</span></p>
         </> : <p className="my-4 text-sm text-ui-muted">Хүргэлтийн мэдээллээ оруулаад барааны одоогийн үнэ, нөөцтэй эсэхийг шалгана уу.</p>}

@@ -289,9 +289,10 @@ test("2D furniture drags keep their initial coordinates and recover after invali
     h.move(150,200);assert.deepEqual(moves.at(-1),{id:'own',x:.5,z:0});
     h.move(300,200);assert.equal(moves.length,1);
     h.move(170,200);assert.deepEqual(moves.at(-1),{id:'own',x:.7,z:0});
-    h.cancel();h.move(190,200);assert.equal(moves.length,2);
+    h.cancel();assert.deepEqual(moves.at(-1),{id:'own',x:0,z:0},'cancel restores the complete gesture baseline');
+    h.move(190,200);assert.equal(moves.length,3,'the cancelled gesture cannot accept more samples');
     const nextTarget=nodes(h.editing.overlay).find(n=>n.type==='rect'&&n.props.role==='button');
     nextTarget.props.onPointerDown({pointerId:1,button:0,clientX:170,clientY:200,stopPropagation(){},preventDefault(){}});
-    h.end(180,200);assert.deepEqual(moves.at(-1),{id:'own',x:.8,z:0});
+    h.end(180,200);assert.deepEqual(moves.at(-1),{id:'own',x:.1,z:0});
   } finally {h.cleanup();}
 });

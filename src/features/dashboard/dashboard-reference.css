@@ -40,7 +40,7 @@
   height: 10px;
   border: 2px solid var(--dashboard-surface);
   border-radius: 50%;
-  background: #10b981;
+  background: var(--site-accent);
   content: "";
 }
 
@@ -477,8 +477,8 @@
 }
 
 .dashboard-shell .reference-active-control.is-active {
-  color: #34d399;
-  background: #10b98115;
+  color: var(--site-primary);
+  background: #26384815;
 }
 
 .dashboard-shell :is(.reference-featured-control, .reference-active-control) input[type="checkbox"] {
@@ -492,13 +492,13 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 36px;
+  min-height: var(--site-button-height);
   padding: 8px 12px;
   border: 1px solid var(--dashboard-border);
-  border-radius: 10px;
+  border-radius: var(--site-button-radius);
   color: var(--dashboard-muted);
   background: var(--dashboard-bg);
-  font-weight: 600;
+  font-weight: var(--site-button-weight);
   font-size: var(--dashboard-small-size);
   white-space: nowrap;
 }
@@ -629,7 +629,7 @@
 
 .dashboard-shell .reference-inspector footer .reference-save {
   width: 100%;
-  min-height: 44px;
+  min-height: var(--site-button-height);
 }
 
 .dashboard-shell .reference-draft {
@@ -763,7 +763,7 @@
 }
 
 .dashboard-shell .reference-revenue-split span:last-child {
-  background: #10b981;
+  background: var(--site-accent);
 }
 
 .dashboard-shell .reference-revenue-legend {
@@ -873,8 +873,8 @@
 .dashboard-shell .reference-success-badge {
   padding: 4px 9px;
   border-radius: 20px;
-  color: #34d399;
-  background: #10b98115;
+  color: var(--site-primary);
+  background: #26384815;
   font-size: 11px;
 }
 
@@ -989,7 +989,7 @@
 }
 
 .dashboard-shell .reference-inventory-list .is-stocked {
-  color: #34d399;
+  color: var(--site-primary);
 }
 
 .dashboard-shell .reference-inventory-list .is-low-stock {

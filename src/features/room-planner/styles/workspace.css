@@ -5,7 +5,7 @@
 }
 
 .planner-drawer {
-  background: #fafbf8;
+  background: var(--site-selected);
 }
 
 .planner-panel-heading {
@@ -15,7 +15,7 @@
 
 .planner-search {
   min-height: 44px;
-  box-shadow: 0 2px 8px #253d2a04;
+  box-shadow: 0 2px 8px #26384804;
 }
 
 .planner-view-toolbar {
@@ -26,7 +26,7 @@
 .planner-segment, .planner-tool-group {
   border-radius: 14px;
   padding: 4px;
-  box-shadow: 0 5px 18px #263a300b;
+  box-shadow: 0 5px 18px #2638480b;
 }
 
 .planner-view-toolbar button {
@@ -45,12 +45,12 @@
 }
 
 .planner-file-actions button:last-child {
-  background: #293c32;
+  background: var(--site-primary);
   color: #fff;
 }
 
 .planner-file-actions button:last-child:hover {
-  background: #3e594a;
+  background: var(--site-primary);
 }
 
 .planner-tools-menu {
@@ -65,13 +65,13 @@
   gap: 7px;
   min-height: 50px;
   padding: 8px 12px;
-  border: 1px solid #dce3dd;
+  border: 1px solid var(--site-line);
   border-radius: 14px;
   background: #fff;
   font-size: 12px;
   cursor: pointer;
   list-style: none;
-  box-shadow: 0 5px 18px #263a300b;
+  box-shadow: 0 5px 18px #2638480b;
 }
 
 .planner-tools-menu > summary::-webkit-details-marker {
@@ -79,8 +79,8 @@
 }
 
 .planner-tools-menu[open] > summary {
-  border-color: #9dae9e;
-  background: #eaf0e7;
+  border-color: var(--site-line);
+  background: var(--site-hover);
 }
 
 .planner-tools-popover {
@@ -92,9 +92,9 @@
   padding: 8px;
   width: 210px;
   background: #fff;
-  border: 1px solid #dce3dd;
+  border: 1px solid var(--site-line);
   border-radius: 14px;
-  box-shadow: 0 14px 34px #263a3020;
+  box-shadow: 0 14px 34px #26384820;
 }
 
 .planner-tools-popover button {
@@ -110,7 +110,7 @@
   border: 1px solid #ffffffb8;
   border-radius: 14px;
   background: #ffffffd9;
-  box-shadow: 0 4px 20px #263a3006;
+  box-shadow: 0 4px 20px #26384806;
   max-width: calc(100% - 32px);
 }
 

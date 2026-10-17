@@ -52,7 +52,7 @@ export function RoomAddDialog({
     <dialog
       ref={dialog}
       onCancel={onClose}
-      className={`${builderOpen ? "w-[94vw] h-[94dvh]" : "w-[min(94vw,480px)]"} rounded-2xl p-6 text-[#293C32] shadow-xl backdrop:bg-black/40`}
+      className={`${builderOpen ? "w-[94vw] h-[94dvh]" : "w-[min(94vw,480px)]"} rounded-2xl p-6 text-ui-ink shadow-xl backdrop:bg-black/40`}
     >
       {builderOpen ? <RoomBuilder initial={options} onCancel={()=>setBuilderOpen(false)} onComplete={draft=>{
         try{onAdd(type,{...options,...draft,door:false,window:false,furnishing:"empty"});return null;}catch(reason){return (reason as Error).message;}

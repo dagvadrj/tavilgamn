@@ -1,18 +1,18 @@
 /* Shared studio chrome. No filters over the WebGL canvas or new animation loops. */
 
 .planner-studio {
-  --studio-ink: #24372f;
+  --studio-ink: var(--site-ink);
   --studio-muted: #718078;
-  --studio-line: #e1e6df;
+  --studio-line: var(--site-line);
   --studio-paper: #ffffff;
-  --studio-shell: #e8ece6;
-  --studio-accent: #d7edb8;
+  --studio-shell: var(--site-bg);
+  --studio-accent: var(--site-selected);
   color: var(--studio-ink);
   font-family: inherit;
 }
 
 .studio-header, .planner-studio .kp-planner-topbar {
-  background: #20372c;
+  background: var(--site-ink);
   color: #fff;
   border: 0;
   box-shadow: none;
@@ -54,7 +54,7 @@
 
 .studio-heading small {
   font-size: 10px;
-  color: #bccbc1;
+  color: #cbd5e1;
 }
 
 .studio-switch {
@@ -74,7 +74,7 @@
   min-height: 36px;
   padding: 0 14px;
   border-radius: 7px;
-  color: #c2cec6;
+  color: #cbd5e1;
 }
 
 .studio-switch [aria-current] {
@@ -110,45 +110,45 @@
 }
 
 .studio-file-actions .studio-primary {
-  color: #20372c;
+  color: var(--site-ink);
   background: var(--studio-accent);
   border-color: var(--studio-accent);
   font-weight: 700;
 }
 
 .studio-file-actions .studio-primary:hover {
-  background: #e4f4ce;
+  background: var(--site-selected);
 }
 
 .planner-studio :focus-visible {
-  outline: 2px solid #a9c787;
+  outline: 2px solid var(--site-accent);
   outline-offset: 3px;
 }
 
 .planner-studio .planner-drawer-body, .planner-studio .kp-settings {
   scrollbar-width: thin;
-  scrollbar-color: #bcc8bb transparent;
+  scrollbar-color: var(--site-hover) transparent;
 }
 
 .planner-studio .viewport-zoom, .planner-studio .viewport-more > summary, .planner-studio .viewport-extra {
-  border-color: #d8e1d5;
-  box-shadow: 0 4px 15px #20372c0c;
+  border-color: var(--site-line);
+  box-shadow: 0 4px 15px #2638480c;
   border-radius: 12px;
 }
 
 .planner-studio .viewport-more[open] > summary {
-  background: #20372c;
-  border-color: #20372c;
+  background: var(--site-ink);
+  border-color: var(--site-accent);
 }
 
 .planner-studio .viewport-popover {
   border-radius: 14px;
-  border-color: #d8e1d5;
+  border-color: var(--site-line);
 }
 
 .planner-studio .viewport-popover p {
   letter-spacing: .02em;
-  color: #546c5c;
+  color: var(--site-muted);
 }
 
 .planner-studio button {
@@ -175,7 +175,7 @@
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid #d9e0d4;
+  border: 1px solid var(--site-line);
   border-radius: 18px;
 }
 
@@ -197,7 +197,7 @@
 }
 
 .planner-studio .planner-panel-heading svg {
-  color: #638a52;
+  color: var(--site-primary);
 }
 
 .planner-studio .planner-panel-heading small {
@@ -207,8 +207,8 @@
 }
 
 .planner-studio .planner-search {
-  background: #f3f6f0;
-  border: 1px solid #e8ede4;
+  background: var(--site-bg);
+  border: 1px solid var(--site-line);
   border-radius: 11px;
   min-height: 44px;
 }
@@ -224,19 +224,19 @@
 }
 
 .studio-categories button {
-  border: 1px solid #e6ebe2;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   background: #fff;
   min-height: 34px;
   padding: 7px 5px;
   font-size: 10px;
-  color: #647565;
+  color: var(--site-muted);
 }
 
 .studio-categories button[aria-pressed="true"] {
-  background: #edf4e5;
-  color: #355531;
-  border-color: #b9ccaa;
+  background: var(--site-selected);
+  color: var(--site-ink);
+  border-color: var(--site-accent);
   font-weight: 650;
 }
 
@@ -254,25 +254,25 @@
   width: 100%;
   padding: 10px;
   border-radius: 12px;
-  border-color: #e4e9e0;
+  border-color: var(--site-line);
   gap: 9px;
 }
 
 .studio-catalog-list > button:hover {
-  background: #f7faf3;
-  border-color: #b9ccaa;
+  background: var(--site-selected);
+  border-color: var(--site-accent);
 }
 
 .studio-catalog-list > button > div:first-child {
-  background: #f1f3ed;
+  background: var(--site-hover);
 }
 
 .studio-catalog-list > button > div:last-child {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  background: #edf4e5;
-  color: #4c7043;
+  background: var(--site-selected);
+  color: var(--site-primary);
 }
 
 .studio-catalog-list p {
@@ -285,8 +285,8 @@
 
 .planner-studio .planner-kitchen-library > summary {
   font-size: 11px;
-  background: #f6f8f3;
-  border: 1px dashed #c8d5bf;
+  background: var(--site-selected);
+  border: 1px dashed var(--site-line);
   border-radius: 10px;
 }
 
@@ -303,8 +303,8 @@
 }
 
 .planner-studio .room-environment-tabs button[aria-pressed="true"] {
-  background: #edf4e5;
-  color: #355531;
+  background: var(--site-selected);
+  color: var(--site-ink);
   box-shadow: none;
 }
 
@@ -361,7 +361,7 @@
 .planner-studio .planner-budget-bar {
   padding: 12px 14px;
   border-radius: 12px;
-  border-color: #d9e2d3;
+  border-color: var(--site-line);
 }
 
 .planner-studio .planner-budget-bar strong {
@@ -370,7 +370,7 @@
 }
 
 .planner-studio .planner-budget-bar button:not(:disabled) {
-  background: #20372c;
+  background: var(--site-primary);
   color: #fff;
   padding: 9px 12px;
   border-radius: 8px;
@@ -412,7 +412,7 @@
 }
 
 .planner-studio .kp-top-actions > button, .planner-studio .kp-top-menu > summary, .planner-studio .kp-close-planner {
-  color: #dce6de;
+  color: #cbd5e1;
   background: #ffffff0b;
   border-color: #ffffff20;
   min-height: 40px;
@@ -435,13 +435,13 @@
 
 .planner-studio .kp-top-actions > .kp-save-button {
   background: var(--studio-accent);
-  color: #20372c;
+  color: var(--site-ink);
   border-color: var(--studio-accent);
   font-weight: 700;
 }
 
 .planner-studio .kp-top-actions > .kp-save-button:hover:not(:disabled) {
-  background: #e4f4ce;
+  background: var(--site-selected);
 }
 
 .planner-studio .kp-top-menu .km-layout-options, .planner-studio .kp-more-content {
@@ -450,7 +450,7 @@
 
 .planner-studio .kp-layout {
   margin: 12px;
-  border: 1px solid #d9e0d4;
+  border: 1px solid var(--site-line);
   border-radius: 18px;
 }
 
@@ -458,23 +458,23 @@
   font-size: 11px;
   border-radius: 12px;
   box-shadow: none;
-  border: 1px solid #e0e7db;
+  border: 1px solid var(--site-line);
 }
 
 .planner-studio .km-view-tools {
-  border-color: #d8e1d5;
-  box-shadow: 0 4px 15px #20372c08;
+  border-color: var(--site-line);
+  box-shadow: 0 4px 15px #26384808;
 }
 
 .planner-studio .kp-settings {
   border-radius: 14px;
-  border-color: #d8e1d5;
-  box-shadow: 0 8px 32px #20372c12;
+  border-color: var(--site-line);
+  box-shadow: 0 8px 32px #26384812;
 }
 
 .planner-studio .kp-settings-head {
   border-color: var(--studio-line);
-  background: #f4f7ef;
+  background: var(--site-selected);
   border-radius: 10px;
   font-size: 14px;
 }
@@ -485,10 +485,10 @@
 }
 
 .planner-studio .kp-settings > details {
-  border: 1px solid #e1e7da;
+  border: 1px solid var(--site-line);
   box-shadow: none;
   border-radius: 12px;
-  background: #f8faf5;
+  background: var(--site-selected);
 }
 
 .planner-studio .kp-settings > details > summary {
@@ -497,7 +497,7 @@
 
 .planner-studio .studio-extras-panel {
   background: #fff;
-  border-color: #e1e7da;
+  border-color: var(--site-line);
 }
 
 .studio-extras-panel h2 {
@@ -509,7 +509,7 @@
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: #f0f4eb;
+  background: var(--site-selected);
   border-radius: 9px;
   margin-bottom: 14px;
 }
@@ -523,8 +523,8 @@
 
 .studio-extras-tabs > button[aria-pressed="true"] {
   background: #fff;
-  box-shadow: 0 2px 6px #20372c0c;
-  color: #355531;
+  box-shadow: 0 2px 6px #2638480c;
+  color: var(--site-ink);
 }
 
 .studio-extras-panel .kp-field {
@@ -536,7 +536,7 @@
 }
 
 .studio-extras-panel .kp-field input {
-  background: #f5f8f1;
+  background: var(--site-selected);
   min-height: 42px;
   font-size: 14px;
 }
@@ -548,15 +548,15 @@
 }
 
 .studio-extras-panel .km-extras-list > button:hover:not(:disabled) {
-  background: #f7faf3;
-  border-color: #b9ccaa;
+  background: var(--site-selected);
+  border-color: var(--site-accent);
 }
 
 .studio-extras-panel .km-extras-list img {
   width: 64px;
   height: 64px;
   flex-shrink: 0;
-  background: #f0f4eb;
+  background: var(--site-selected);
 }
 
 .studio-extras-panel .km-extras-list small {

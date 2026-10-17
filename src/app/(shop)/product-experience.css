@@ -167,7 +167,7 @@
   width: 11px;
   height: 6px;
   border-radius: 1px;
-  background: #dddfda;
+  background: var(--site-selected);
 }
 
 .shop-shell .pdp-stock-blocks i[data-filled="true"] {

@@ -26,7 +26,11 @@ test("admin and merchant keep public URLs but no longer inherit storefront chrom
     read("src/components/MerchantShell.tsx"),
     /<main\s+id="main-content"/,
   );
-  assert.match(read("src/app/(admin)/admin/page.tsx"), /id="main-content"/);
+  assert.match(read("src/app/(admin)/admin/page.tsx"), /<AdminDashboard\s*\/>/);
+  const admin = read("src/components/AdminDashboard.tsx");
+  assert.match(admin, /<main\s+id="main-content"/);
+  assert.match(admin, /<AdminShell\b/);
+  assert.match(read("src/components/AdminShell.tsx"), /<main\s+id="main-content"/);
   assert.ok(fs.existsSync("src/app/(admin)/admin/page.tsx"));
   assert.ok(fs.existsSync("src/app/(admin)/merchant/page.tsx"));
   assert.equal(fs.existsSync("src/app/(shop)/merchant/page.tsx"), false);
@@ -109,7 +113,8 @@ test("merchant sidebar keeps all operations and settings and disables private st
 });
 
 test("redesign retains private workspace guards and merchant ownership checks", () => {
-  const admin = read("src/app/(admin)/admin/page.tsx");
+  assert.match(read("src/app/(admin)/admin/page.tsx"), /<AdminDashboard\s*\/>/);
+  const admin = read("src/components/AdminDashboard.tsx");
   const merchant = read("src/components/MerchantDashboard.tsx");
   assert.match(
     admin,

@@ -2,8 +2,8 @@
 
 .kp-planner-topbar {
   gap: 12px;
-  background: #fcfdfb;
-  box-shadow: 0 4px 20px #203b2408;
+  background: var(--site-selected);
+  box-shadow: 0 4px 20px #26384808;
 }
 
 .kp-top-actions > button, .kp-top-menu > summary, .kp-close-planner {
@@ -12,7 +12,7 @@
 
 .kp-project-name input {
   border-radius: 11px;
-  background: #f1f5ef;
+  background: var(--site-hover);
   font-size: 13px;
 }
 
@@ -72,7 +72,7 @@
 
 .kp-shell .kp-settings {
   border-radius: 18px;
-  box-shadow: 0 16px 48px #203b2420;
+  box-shadow: 0 16px 48px #26384820;
 }
 
 @media (max-width: 1000px) {
@@ -133,7 +133,7 @@
 
 .km-export-actions small,
 .km-export p {
-  color: #53614f;
+  color: var(--site-muted);
   font-size: 0.82rem;
 }
 
@@ -149,14 +149,14 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgb(24 35 29 / 0.72);
+  background: rgb(38 56 72 / 0.72);
 }
 
 .km-ar-dialog model-viewer {
   width: min(920px, 100%);
   height: min(720px, 82vh);
   border-radius: 14px;
-  background: #e9ece5;
+  background: var(--site-hover);
 }
 
 .km-ar-close {
@@ -206,7 +206,7 @@
   gap: 12px;
   width: 100%;
   padding: 9px;
-  border: 1px solid #dde4d9;
+  border: 1px solid var(--site-line);
   border-radius: 12px;
   background: #fff;
   text-align: left;
@@ -215,8 +215,8 @@
 }
 
 .kco-list > button:hover {
-  border-color: #668470;
-  background: #f5f7f1;
+  border-color: var(--site-line);
+  background: var(--site-selected);
 }
 
 .kco-list > button > span {
@@ -258,15 +258,15 @@
   flex-shrink: 0;
   padding: 9px 12px;
   min-height: 44px;
-  border: 1px solid #dbe2d6;
+  border: 1px solid var(--site-line);
   border-radius: 24px;
   font-size: 12px;
 }
 
 .kco-category-nav button[aria-pressed="true"] {
-  background: #293c32;
+  background: var(--site-primary);
   color: white;
-  border-color: #293c32;
+  border-color: var(--site-accent);
 }
 
 .kco-part {
@@ -286,7 +286,7 @@
   display: flex;
   padding: 4px;
   border-radius: 10px;
-  background: #e9eee4;
+  background: var(--site-hover);
   margin-bottom: 22px;
 }
 
@@ -303,7 +303,7 @@
 
 .kco-tabs button[aria-pressed="true"] {
   background: white;
-  box-shadow: 0 2px 8px #293c3210;
+  box-shadow: 0 2px 8px #26384810;
 }
 
 .kco-fields {
@@ -329,15 +329,15 @@
   justify-items: start;
   gap: 10px;
   padding: 14px;
-  border: 1px solid #dbe2d6;
+  border: 1px solid var(--site-line);
   background: white;
   border-radius: 12px;
   text-align: left;
 }
 
 .kco-replacements button[aria-pressed="true"] {
-  border-color: #426d59;
-  box-shadow: inset 0 0 0 1px #426d59;
+  border-color: var(--site-accent);
+  box-shadow: inset 0 0 0 1px #263848;
 }
 
 .kco-replacements strong {
@@ -380,12 +380,12 @@
   min-height: 44px;
   padding: 0 2px;
   margin: -6px 0 10px;
-  color: #47604f;
+  color: var(--site-muted);
   font-size: 13px;
 }
 
 .kco-back:hover {
-  color: #182f24;
+  color: var(--site-ink);
 }
 
 .kco-detail {
@@ -428,7 +428,7 @@
   min-width: 0;
   min-height: 86px;
   padding: 8px 6px;
-  border: 1px solid #dce3d6;
+  border: 1px solid var(--site-line);
   border-radius: 10px;
   background: white;
   text-align: center;
@@ -437,9 +437,9 @@
 }
 
 .kco-materials button[aria-pressed="true"] {
-  border-color: #426d59;
-  background: #f0f4ec;
-  box-shadow: inset 0 0 0 1px #426d59;
+  border-color: var(--site-accent);
+  background: var(--site-selected);
+  box-shadow: inset 0 0 0 1px #263848;
 }
 
 .kco-material-swatch {
@@ -455,7 +455,7 @@
   background: white;
   border-radius: 50%;
   padding: 1px;
-  color: #293c32;
+  color: var(--site-ink);
 }
 
 .kco-material-oak,
@@ -510,14 +510,14 @@
   align-items: center;
   min-width: 0;
   min-height: 46px;
-  border: 1px solid #cbd3c7;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   background: white;
 }
 
 .kco-number:focus-within {
-  border-color: #426d59;
-  box-shadow: 0 0 0 2px #426d5922;
+  border-color: var(--site-accent);
+  box-shadow: 0 0 0 2px #26384822;
 }
 
 .kco-number input {
@@ -552,7 +552,7 @@
   gap: 8px;
   padding: 0 12px;
   min-height: 46px;
-  border: 1px solid #cbd3c7;
+  border: 1px solid var(--site-line);
   border-radius: 9px;
   background: white;
 }
@@ -576,12 +576,12 @@
   align-items: center;
   gap: 5px;
   font-size: 11px;
-  color: #426d59;
+  color: var(--site-primary);
 }
 
 .kco-empty {
   padding: 22px 16px;
-  border: 1px dashed #cbd3c7;
+  border: 1px dashed var(--site-line);
   border-radius: 10px;
   color: #69756c;
   font-size: 13px;
@@ -617,7 +617,7 @@
 
 .kp-planner-steps button:hover,
 .kp-planner-steps a:hover {
-  color: #213d2e;
+  color: var(--site-ink);
 }
 
 .kp-review-layer {
@@ -626,8 +626,8 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  color: #24382c;
-  background: #f4f5f2;
+  color: var(--site-ink);
+  background: var(--site-bg);
 }
 
 .kp-review-head {
@@ -637,7 +637,7 @@
   justify-content: space-between;
   gap: 20px;
   padding: 12px clamp(20px, 3vw, 44px);
-  border-bottom: 1px solid #d8ded8;
+  border-bottom: 1px solid var(--site-line);
   background: #fff;
 }
 
@@ -659,7 +659,7 @@
   height: 44px;
   display: grid;
   place-items: center;
-  border: 1px solid #d7ddd8;
+  border: 1px solid var(--site-line);
   border-radius: 9px;
 }
 
@@ -684,7 +684,7 @@
   justify-content: center;
   gap: 6px;
   padding: 8px 12px;
-  border: 1px solid #d7ddd8;
+  border: 1px solid var(--site-line);
   border-radius: 9px;
   font-size: 13px;
 }
@@ -702,7 +702,7 @@
 .kp-review-plan,
 .kp-review-summary {
   min-height: 0;
-  border: 1px solid #dbe0db;
+  border: 1px solid var(--site-line);
   border-radius: 16px;
   background: #fff;
 }
@@ -760,7 +760,7 @@
   align-items: center;
   gap: 12px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e1e5e1;
+  border-bottom: 1px solid var(--site-line);
 }
 
 .kp-review-summary-heading > svg {
@@ -769,7 +769,7 @@
   padding: 9px;
   border-radius: 50%;
   color: #fff;
-  background: #2d6b4b;
+  background: var(--site-ink);
 }
 
 .kp-review-summary-heading p {
@@ -790,7 +790,7 @@
 .kp-review-stats > div {
   padding: 12px;
   border-radius: 10px;
-  background: #f1f3ef;
+  background: var(--site-hover);
 }
 
 .kp-review-stats dt {
@@ -809,7 +809,7 @@
   display: grid;
   gap: 4px;
   padding: 13px 14px;
-  border: 1px solid #dce2dc;
+  border: 1px solid var(--site-line);
   border-radius: 10px;
 }
 
@@ -824,9 +824,9 @@
 }
 
 .kp-review-issues {
-  border-color: #bdd5c5;
-  background: #eff7f1;
-  color: #28523a;
+  border-color: var(--site-line);
+  background: var(--site-selected);
+  color: var(--site-ink);
 }
 
 .kp-review-issues.has-error {

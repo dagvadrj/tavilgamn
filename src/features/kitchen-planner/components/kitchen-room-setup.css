@@ -220,7 +220,7 @@
 }
 
 .kroom-dimension:first-of-type > i {
-  background: #20372c;
+  background: var(--site-ink);
   color: white;
 }
 
@@ -276,14 +276,14 @@
   gap: 8px;
   padding: 12px 8px;
   border-radius: 8px;
-  background: #f1f6eb;
+  background: var(--site-selected);
 }
 
 .kroom-area strong {
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #355531;
+  color: var(--site-ink);
   font-size: 12px;
 }
 
@@ -451,7 +451,7 @@
   font-size: 14px;
   font-weight: 600;
   padding: 15px;
-  box-shadow: 0 3px 6px #293c3219;
+  box-shadow: 0 3px 6px #26384819;
 }
 
 .kroom-next small {
@@ -468,7 +468,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #355531;
+  background: var(--site-ink);
 }
 
 .kroom-workspace {
@@ -530,7 +530,7 @@
   margin: 0 auto 9px;
   padding: 10px 14px;
   border-radius: 12px;
-  background: #0a2218;
+  background: var(--site-ink);
   color: white;
   box-shadow: 0 9px 20px #00000015;
   min-height: 52px;
@@ -564,7 +564,7 @@
   gap: 6px;
   padding: 8px;
   border-radius: 5px;
-  background: #20372c;
+  background: var(--site-primary);
   font-size: 10px;
 }
 
@@ -610,7 +610,7 @@
 }
 
 .kroom-draft .is-selected {
-  filter: drop-shadow(0 0 20px #42634f30);
+  filter: drop-shadow(0 0 20px #26384830);
 }
 
 .kroom-compass {
@@ -619,7 +619,7 @@
   left: 24px;
   padding: 10px;
   width: 118px;
-  border: 1px solid #e1e6df;
+  border: 1px solid var(--site-line);
   border-radius: 12px;
   background: white;
   font-size: 9px;
@@ -738,10 +738,19 @@
   }
 }
 
-.kroom-setup { grid-template-columns: 340px minmax(0, 1fr); }
-@media (max-width: 760px) { .kroom-setup { grid-template-columns: 1fr; overflow: auto; } }
+.kroom-setup {
+  grid-template-columns: 340px minmax(0, 1fr);
+}
+
+@media (max-width: 760px) {
+  .kroom-setup {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+}
 
 /* Drawing gets the full stage; details open only when requested. */
+
 .kroom-setup.kroom-canvas-first {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -750,6 +759,7 @@
   background: var(--paper);
   color: var(--ink);
 }
+
 .kroom-canvas-first .kroom-workspace {
   grid-column: 1;
   grid-row: 1;
@@ -758,45 +768,267 @@
   padding: 24px 32px 44px;
   gap: 14px;
 }
-.kroom-workspace-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
-.kroom-workspace-heading small { color:var(--grain-text); font-size:10px; letter-spacing:.14em; }
-.kroom-workspace-heading h1 { margin:4px 0 0; font-size:22px; font-weight:600; letter-spacing:-.04em; }
-.kroom-primary-action { display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:12px; background:var(--ink); color:white; font-size:12px; }
-.kroom-canvas-first .kroom-view-controls { align-self:stretch; margin:0; padding:6px; border:1px solid var(--line); box-shadow:none; gap:4px; background:var(--paper-card); overflow-x:auto; flex-shrink:0; }
-.kroom-canvas-first .kroom-view-controls button { min-height:40px; flex-shrink:0; padding:8px 12px; border-radius:9px; color:var(--ink); white-space:nowrap; font-size:12px; }
-.kroom-canvas-first .kroom-view-controls button[aria-pressed="true"], .kroom-canvas-first .kroom-view-controls button[aria-expanded="true"] { background:var(--sand); color:var(--teal); }
-.kroom-canvas-first .kroom-view-controls button:hover { background:var(--sand); }
-.kroom-canvas-first .kroom-plan-card { position:relative; border:1px solid var(--line); border-radius:16px; background:var(--paper-card); box-shadow:none; touch-action:none; }
-.kroom-canvas-first .kroom-plan-sheet { margin:auto; }
-.kroom-canvas-first .kroom-plan-card.is-panning { cursor:grab; }
-.kroom-canvas-first .kroom-plan-card.is-panning:active { cursor:grabbing; }
-.kroom-canvas-first .is-panning .kroom-draft { pointer-events:none; }
-.kroom-canvas-first .kroom-config { position:absolute; top:16px; right:16px; bottom:16px; width:min(360px,calc(100% - 32px)); border:1px solid var(--line); border-radius:18px; box-shadow:0 18px 60px #293c3229; z-index:30; overflow:hidden; background:var(--paper-card); }
-.kroom-canvas-first .kroom-config[hidden] { display:none; }
-.kroom-drawer-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px; border-bottom:1px solid var(--line); }
-.kroom-drawer-heading strong { font-size:14px; }
-.kroom-drawer-heading button { width:36px; height:36px; display:grid; place-items:center; border-radius:10px; background:var(--paper); }
-.kroom-canvas-first .kroom-config-body { min-height:0; flex:1; overflow-y:auto; }
-.kroom-canvas-first .kroom-intro { display:none; }
-.kroom-canvas-first .kroom-next { padding:12px 20px; border-top:1px solid var(--line); position:static; }
-.kroom-canvas-first .kroom-next button { padding:12px; background:var(--ink); box-shadow:none; }
-.kroom-canvas-first .kroom-wall-toolbar { position:absolute; left:50%; transform:translateX(-50%); bottom:54px; z-index:5; margin:0; min-height:42px; max-width:calc(100% - 60px); background:var(--ink); }
-.kroom-canvas-first .kroom-wall-toolbar[hidden] { display:none; }
-.kroom-selected-tools { position:absolute; left:50%; bottom:58px; transform:translateX(-50%); display:flex; align-items:center; gap:14px; padding:10px 14px; border-radius:12px; background:var(--ink); color:white; box-shadow:0 5px 20px #293c3220; font-size:12px; z-index:5; white-space:nowrap; }
-.kroom-selected-tools span { opacity:.7; font-size:11px; }
-.kroom-selected-tools button { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:8px; background:#ffffff20; }
-.kroom-canvas-error { position:absolute; bottom:100px; left:32px; max-width:360px; padding:12px; background:#fff1ed; color:#8f4b30; border-radius:10px; font-size:12px; }
-.kroom-canvas-first .kroom-compass { display:none; }
-.kroom-canvas-first .kroom-shortcuts { right:32px; bottom:10px; background:transparent; font-size:10px; }
-@media(max-width:760px) {
-  .kroom-canvas-first .kroom-workspace { padding:12px 12px 40px; height:100%; flex:1; gap:10px; }
-  .kroom-workspace-heading h1 { font-size:18px; }
-  .kroom-primary-action { padding:10px 12px; font-size:11px; }
-  .kroom-canvas-first .kroom-view-controls { align-self:stretch; }
-  .kroom-canvas-first .kroom-view-controls button svg { display:block; }
-  .kroom-canvas-first .kroom-view-controls button { font-size:11px; padding:8px 10px; }
-  .kroom-canvas-first .kroom-config { top:10px; right:10px; bottom:10px; width:min(360px,calc(100% - 20px)); }
-  .kroom-selected-tools { gap:8px; max-width:calc(100% - 40px); font-size:11px; }
-  .kroom-selected-tools span { display:none; }
-  .kroom-canvas-first .kroom-shortcuts { right:12px; font-size:9px; }
+
+.kroom-workspace-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.kroom-workspace-heading small {
+  color: var(--grain-text);
+  font-size: 10px;
+  letter-spacing: .14em;
+}
+
+.kroom-workspace-heading h1 {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -.04em;
+}
+
+.kroom-primary-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: white;
+  font-size: 12px;
+}
+
+.kroom-canvas-first .kroom-view-controls {
+  align-self: stretch;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid var(--line);
+  box-shadow: none;
+  gap: 4px;
+  background: var(--paper-card);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.kroom-canvas-first .kroom-view-controls button {
+  min-height: 40px;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 9px;
+  color: var(--ink);
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.kroom-canvas-first .kroom-view-controls button[aria-pressed="true"], .kroom-canvas-first .kroom-view-controls button[aria-expanded="true"] {
+  background: var(--sand);
+  color: var(--teal);
+}
+
+.kroom-canvas-first .kroom-view-controls button:hover {
+  background: var(--sand);
+}
+
+.kroom-canvas-first .kroom-plan-card {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper-card);
+  box-shadow: none;
+  touch-action: none;
+}
+
+.kroom-canvas-first .kroom-plan-sheet {
+  margin: auto;
+}
+
+.kroom-canvas-first .kroom-plan-card.is-panning {
+  cursor: grab;
+}
+
+.kroom-canvas-first .kroom-plan-card.is-panning:active {
+  cursor: grabbing;
+}
+
+.kroom-canvas-first .is-panning .kroom-draft {
+  pointer-events: none;
+}
+
+.kroom-canvas-first .kroom-config {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: min(360px,calc(100% - 32px));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 18px 60px #26384829;
+  z-index: 30;
+  overflow: hidden;
+  background: var(--paper-card);
+}
+
+.kroom-canvas-first .kroom-config[hidden] {
+  display: none;
+}
+
+.kroom-drawer-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.kroom-drawer-heading strong {
+  font-size: 14px;
+}
+
+.kroom-drawer-heading button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+.kroom-canvas-first .kroom-config-body {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.kroom-canvas-first .kroom-intro {
+  display: none;
+}
+
+.kroom-canvas-first .kroom-next {
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+  position: static;
+}
+
+.kroom-canvas-first .kroom-next button {
+  padding: 12px;
+  background: var(--ink);
+  box-shadow: none;
+}
+
+.kroom-canvas-first .kroom-wall-toolbar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 54px;
+  z-index: 5;
+  margin: 0;
+  min-height: 42px;
+  max-width: calc(100% - 60px);
+  background: var(--ink);
+}
+
+.kroom-canvas-first .kroom-wall-toolbar[hidden] {
+  display: none;
+}
+
+.kroom-selected-tools {
+  position: absolute;
+  left: 50%;
+  bottom: 58px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: white;
+  box-shadow: 0 5px 20px #26384820;
+  font-size: 12px;
+  z-index: 5;
+  white-space: nowrap;
+}
+
+.kroom-selected-tools span {
+  opacity: .7;
+  font-size: 11px;
+}
+
+.kroom-selected-tools button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #ffffff20;
+}
+
+.kroom-canvas-error {
+  position: absolute;
+  bottom: 100px;
+  left: 32px;
+  max-width: 360px;
+  padding: 12px;
+  background: #fff1ed;
+  color: #8f4b30;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.kroom-canvas-first .kroom-compass {
+  display: none;
+}
+
+.kroom-canvas-first .kroom-shortcuts {
+  right: 32px;
+  bottom: 10px;
+  background: transparent;
+  font-size: 10px;
+}
+
+@media (max-width:760px) {
+  .kroom-canvas-first .kroom-workspace {
+    padding: 12px 12px 40px;
+    height: 100%;
+    flex: 1;
+    gap: 10px;
+  }
+  .kroom-workspace-heading h1 {
+    font-size: 18px;
+  }
+  .kroom-primary-action {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+  .kroom-canvas-first .kroom-view-controls {
+    align-self: stretch;
+  }
+  .kroom-canvas-first .kroom-view-controls button svg {
+    display: block;
+  }
+  .kroom-canvas-first .kroom-view-controls button {
+    font-size: 11px;
+    padding: 8px 10px;
+  }
+  .kroom-canvas-first .kroom-config {
+    top: 10px;
+    right: 10px;
+    bottom: 10px;
+    width: min(360px,calc(100% - 20px));
+  }
+  .kroom-selected-tools {
+    gap: 8px;
+    max-width: calc(100% - 40px);
+    font-size: 11px;
+  }
+  .kroom-selected-tools span {
+    display: none;
+  }
+  .kroom-canvas-first .kroom-shortcuts {
+    right: 12px;
+    font-size: 9px;
+  }
 }

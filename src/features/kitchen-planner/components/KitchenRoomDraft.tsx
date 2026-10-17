@@ -125,7 +125,7 @@ export function KitchenRoomDraft({
         width={760}
         height={180}
         rx={90}
-        fill={active ? "#42634f" : "#293c32"}
+        fill={active ? "var(--site-accent)" : "var(--site-ink)"}
       />
       <text
         textAnchor="middle"
@@ -153,7 +153,7 @@ export function KitchenRoomDraft({
       onClick={onClear}
     >
       <path d={roomOutlinePath(roomOutline(room))} fill="#faf9f6" />
-      <g fill="none" stroke="#79817c" strokeWidth={7}>
+      <g fill="none" stroke="var(--site-muted)" strokeWidth={7}>
         <path
           d={`M0 -50V-380M${w} -50V-380M-40 -330H${w + 40}M-40 -360l80 60M${w - 40} -360l80 60`}
         />
@@ -195,7 +195,7 @@ export function KitchenRoomDraft({
             <path
               d={item.path}
               fill="none"
-              stroke={wall === item.id ? "#42634f" : "#303039"}
+              stroke={wall === item.id ? "var(--site-accent)" : "#303039"}
               strokeWidth={95}
               className={wall === item.id ? "is-selected" : ""}
             />
@@ -208,7 +208,7 @@ export function KitchenRoomDraft({
                   cy={y}
                   r={43}
                   fill="white"
-                  stroke="#42634f"
+                  stroke="var(--site-accent)"
                   strokeWidth={22}
                 />
               ))}
@@ -219,7 +219,7 @@ export function KitchenRoomDraft({
         y={d / 2}
         textAnchor="middle"
         fontSize={100}
-        fill="#727974"
+        fill="var(--site-muted)"
         letterSpacing={8}
       >
         ГАЛ ТОГООНЫ ЗАЙ
@@ -229,7 +229,7 @@ export function KitchenRoomDraft({
         y={d / 2 + 160}
         textAnchor="middle"
         fontSize={85}
-        fill="#42634f"
+        fill="var(--site-accent)"
       >
         {(roomArea(roomBoundary(room)) / 1000000).toFixed(2)} м²
       </text>
@@ -249,8 +249,8 @@ export function KitchenRoomDraft({
           item.kind === "power"
             ? "#bd7b00"
             : item.kind === "vent"
-              ? "#727974"
-              : "#42634f";
+              ? "var(--site-muted)"
+              : "var(--site-accent)";
         return (
           <g
             key={item.id}
@@ -283,7 +283,7 @@ export function KitchenRoomDraft({
                 <circle
                   r={120}
                   fill={color}
-                  stroke={selectedItem === item.id ? "#42634f" : "white"}
+                  stroke={selectedItem === item.id ? "var(--site-accent)" : "white"}
                   strokeWidth={16}
                 />
                 <Icon x={-65} y={-65} width={130} height={130} color="white" />
@@ -317,8 +317,8 @@ export function KitchenRoomDraft({
                     y={-item.depth / 2}
                     width={item.width}
                     height={item.depth}
-                    fill="#d4d7d2"
-                    stroke="#293c32"
+                    fill="var(--site-line)"
+                    stroke="var(--site-ink)"
                     strokeWidth={15}
                   />
                 ) : (
@@ -351,7 +351,7 @@ export function KitchenRoomDraft({
                         <path
                           d={`M${-item.width / 2} ${item.width}A${item.width} ${item.width} 0 0 0 ${item.width / 2} 0`}
                           fill="none"
-                          stroke="#727974"
+                          stroke="var(--site-muted)"
                           strokeWidth={10}
                           strokeDasharray="24 20"
                         />
@@ -365,7 +365,7 @@ export function KitchenRoomDraft({
                   width={560}
                   height={150}
                   rx={30}
-                  fill={selectedItem === item.id ? "#42634f" : "#293c32"}
+                  fill={selectedItem === item.id ? "var(--site-accent)" : "var(--site-ink)"}
                 />
                 <text
                   y={180}

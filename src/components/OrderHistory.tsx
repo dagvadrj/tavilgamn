@@ -39,10 +39,10 @@ type HistoryOrder = OrderRecord &
 
 const userStatusTone: Record<OrderStatus, string> = {
   pending_payment: "bg-[#FFF4E5] text-[#9A5B20]",
-  paid: "bg-[#EAF3EC] text-[#42634F]",
+  paid: "bg-ui-selected text-ui-accent",
   processing: "bg-[#EDF1F7] text-[#48617B]",
   shipped: "bg-[#E8F2F4] text-[#356773]",
-  delivered: "bg-[#E8F4E9] text-[#35623C]",
+  delivered: "bg-ui-selected text-ui-accent",
   cancelled: "bg-[#F8EAEA] text-[#9A4D4D]",
 };
 

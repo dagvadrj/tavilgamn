@@ -110,7 +110,7 @@ export function KitchenReviewTimeline({
                   {design.reviews.map((review) => (
                     <li
                       key={review.id}
-                      className="relative before:absolute before:-left-[21px] before:top-1.5 before:h-2 before:w-2 before:rounded-full before:bg-[#315b43]"
+                      className="relative before:absolute before:-left-[21px] before:top-1.5 before:h-2 before:w-2 before:rounded-full before:bg-ui-accent"
                     >
                       <p className="font-medium">
                         {reviewAction[review.action]}

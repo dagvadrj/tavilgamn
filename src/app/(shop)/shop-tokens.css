@@ -11,7 +11,7 @@
   --market-primary: var(--site-primary);
   --market-sale: var(--site-accent);
   --market-sale-soft: var(--site-selected);
-  --market-success: #168a4a;
+  --market-success: var(--site-success);
   --market-navy: var(--site-ink);
   --market-on-primary: #ffffff;
   --market-on-accent: #ffffff;
@@ -28,7 +28,7 @@
   --market-hero-warm-start: #ffffff;
   --market-hero-warm-end: #f5f3f0;
   --market-hero-green-start: #ffffff;
-  --market-hero-green-end: #f1f4f1;
+  --market-hero-green-end: var(--site-surface);
   --paper: var(--market-bg);
   --paper-card: var(--market-surface);
   --ink: var(--market-ink);

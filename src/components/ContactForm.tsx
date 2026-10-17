@@ -29,6 +29,6 @@ export function ContactForm() {
       <button type="submit" className="btn-primary mt-2 disabled:opacity-50">{busy ? "Илгээж байна…" : "Илгээх"}</button>
     </fieldset>
     {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-    {sent && <p role="status" className="text-sm text-green-700">Зурвасыг хүлээн авлаа. Бид таны имэйлээр холбогдоно.</p>}
+    {sent && <p role="status" className="text-sm text-ui-success">Зурвасыг хүлээн авлаа. Бид таны имэйлээр холбогдоно.</p>}
   </form>;
 }

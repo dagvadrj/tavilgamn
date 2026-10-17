@@ -346,8 +346,8 @@ body:has(.admin-gate) {
     .admin-model-request-status.ready
   ) {
   color: var(--dashboard-success);
-  background: #14251a;
-  border-color: #284f33;
+  background: color-mix(in srgb, var(--dashboard-accent) 12%, var(--dashboard-surface));
+  border-color: var(--site-accent);
 }
 
 .admin-shell

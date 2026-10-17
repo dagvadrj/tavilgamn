@@ -335,8 +335,8 @@
 }
 
 .account-quote-status[data-status="quoted"] {
-  background: #ecfdf5;
-  color: #166534;
+  background: var(--site-selected);
+  color: var(--site-ink);
 }
 
 .account-quote-status[data-status="reviewing"] {

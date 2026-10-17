@@ -290,9 +290,9 @@
 .planner-tour-mini-catalog i {
   width: 16px;
   height: 18px;
-  border: 2px solid #a3b7aa;
+  border: 2px solid var(--site-line);
   border-radius: 3px;
-  background: #c7d4cc;
+  background: var(--site-hover);
 }
 
 .planner-tour-mini-catalog small {
@@ -366,7 +366,7 @@
   gap: 9px;
   width: max-content;
   padding: 10px 18px 10px 10px;
-  border: 1px solid #dfe6e3;
+  border: 1px solid var(--site-line);
   border-radius: 10px;
   background: white;
   box-shadow: 0 4px 16px #32456b15;
@@ -379,8 +379,8 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #edf5f0;
-  color: #5c9070;
+  background: var(--site-selected);
+  color: var(--site-muted);
 }
 
 .planner-tour-saved b {

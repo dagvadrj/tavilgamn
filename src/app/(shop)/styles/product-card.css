@@ -321,11 +321,11 @@
 
 .shop-shell .product-card.product-card-premium .product-free-delivery,
 .shop-shell .product-card.product-card-premium .in-stock {
-  color: #047857;
+  color: var(--site-ink);
 }
 
 .shop-shell .product-card.product-card-premium .stock-dot.available {
-  background: #059669;
+  background: var(--site-accent);
 }
 
 .shop-shell .product-card.product-card-premium .product-delivery {
@@ -405,7 +405,7 @@
 }
 
 .shop-shell .product-card.product-card-premium .product-cart-message {
-  color: #047857;
+  color: var(--site-ink);
   font-size: 11px;
   line-height: 1.5;
   margin-top: 8px;

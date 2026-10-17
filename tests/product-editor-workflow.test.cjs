@@ -86,6 +86,19 @@ test('admin refuses to silently discard specifications before the schema migrati
   assert.equal(response.status,503);assert.match((await response.json()).error,/migration/);assert.equal(writes,0);
 });
 
+test('an older database rejecting mounting metadata gives an actionable error and never retries without it',async()=>{
+  const calls=[];
+  const route=loadSource('src/app/api/admin/products/route.ts',{
+    '@/lib/supabase/requireAdmin':{requireAdmin:async()=>({userId:'admin',error:null})},
+    '@/lib/storeDirectory':{readStoreDirectory:async()=>[]},
+    '@/lib/supabase/admin':{getSupabaseAdmin:()=>({from:()=>({select:()=>({limit:async()=>({error:null})})}),rpc:async(name,args)=>{calls.push({name,args});return {error:{code:'22023',message:'Invalid furniture specifications'}};}})},
+  });
+  const response=await route.POST(new NextRequest('http://local/api/admin/products',{method:'POST',body:JSON.stringify(product({placement:{surfaces:['wall'],defaultElevation:1.4}}))}));
+  assert.equal(response.status,503);assert.match((await response.json()).error,/migration/);
+  assert.equal(calls.length,1);assert.equal(calls[0].name,'save_furniture_product');
+  assert.deepEqual(JSON.parse(calls[0].args.p_data.specifications.plannerPlacement),{surfaces:['wall'],defaultElevation:1.4});
+});
+
 test('real PostgreSQL migration saves metadata atomically, preserves stock checks and restricts RPC execution',async t=>{
   const db=new PGlite();t.after(()=>db.close());
   await db.exec(`create role anon;create role authenticated;create role service_role;
@@ -95,6 +108,7 @@ test('real PostgreSQL migration saves metadata atomically, preserves stock check
   await db.exec(gallery.slice(gallery.indexOf('create or replace function public.save_furniture_product'),gallery.indexOf('notify pgrst')));
   await db.exec(readFileSync('supabase/migrations/20261010114233_product_specifications_categories.sql','utf8'));
   await db.exec(readFileSync('supabase/migrations/20261016115740_planner_room_suitability.sql','utf8'));
+  await db.exec(readFileSync('supabase/migrations/20261017074935_planner_placement_metadata.sql','utf8'));
   const { CATEGORIES }=loadSource('src/lib/catalogCategories.ts');
   for(const c of CATEGORIES)assert.equal((await db.query('select is_furniture_category($1) valid',[c.id])).rows[0].valid,true,c.id);
   await db.exec('set role service_role');
@@ -120,8 +134,34 @@ test('real PostgreSQL migration saves metadata atomically, preserves stock check
   }
   await save(parseProduct(product({id:'p',roomTypes:[],specifications:stored})),false,5);
   assert.deepEqual((await db.query("select specifications from furniture_models where product_id='p'")).rows[0].specifications,{tiers:'5'});
+  const wallPlacement={surfaces:['wall'],defaultElevation:1.4,gap:.01};
+  await save(parseProduct(product({id:'p',placement:wallPlacement})),false,5);
+  const wallStored=(await db.query("select specifications from furniture_models where product_id='p'")).rows[0].specifications;
+  assert.deepEqual(parseProduct(product({specifications:wallStored})).placement,wallPlacement);
+  for(const bad of [null,{}, {surfaces:[]},{surfaces:['ceiling']},{surfaces:['wall'],gap:-1},{surfaces:['wall'],gap:.3},{surfaces:['wall'],gap:null},{surfaces:['wall'],defaultElevation:'high'},{surfaces:['floor'],supportSurfaces:[{id:'top',width:1,depth:0,elevation:1}]},{surfaces:['wall'],unknown:1}]) {
+    await assert.rejects(save(product({id:'bad-placement',specifications:{plannerPlacement:JSON.stringify(bad)}})),error=>error.code==='22023');
+  }
+  await assert.rejects(save(parseProduct(product({id:'p',placement:{surfaces:['floor']}})),false,4),error=>error.code==='P0003');
+  assert.deepEqual((await db.query("select specifications from furniture_models where product_id='p'")).rows[0].specifications,wallStored);
   await db.exec('reset role;set role anon');
   await assert.rejects(save(product({id:'forged'})),error=>error.code==='42501');
+});
+
+test('authored placement survives admin save/reload and cannot silently fall back from invalid input', async () => {
+  const {parseProduct}=loadSource('src/lib/catalogValidation.ts');
+  const {saveProductWithModel}=loadSource('src/features/admin-products/saveProductWithModel.ts');
+  const {productSpecificationRows}=loadSource('src/lib/productSpecifications.ts');
+  const placement={surfaces:['wall'],defaultElevation:1.2,gap:.02};
+  const parsed=parseProduct(product({placement,roomTypes:['living']}));
+  const loaded=parseProduct(product({specifications:parsed.specifications}));
+  assert.deepEqual(loaded.placement,placement);
+  let body;
+  await saveProductWithModel({product:{...loaded,name:'Updated'},checkpoint:{id:'saved',stockQuantity:5},file:null,preview:null,moduleId:'',assertOwner(){},onSaved(){},onProgress(){},request:async(url,init)=>{body=JSON.parse(init.body);return json({id:'saved'});}});
+  assert.deepEqual(parseProduct(body).placement,placement);
+  assert.equal(body.specifications.plannerPlacement,JSON.stringify(placement));
+  assert.ok(!productSpecificationRows(loaded).some(row=>row.value.includes('surfaces')));
+  assert.deepEqual(parseProduct({...loaded,placement:{surfaces:['floor']}}).placement,{surfaces:['floor']});
+  for(const bad of [null,{}, {surfaces:[]},{surfaces:['wall',42]},{surfaces:['wall'],gap:NaN},{surfaces:['wall'],defaultElevation:-1},{surfaces:['floor'],supportSurfaces:[{id:'top',width:1,depth:1,elevation:1},{id:'top',width:1,depth:1,elevation:1}]}])assert.throws(()=>parseProduct(product({placement:bad})));
 });
 
 test('admin room selection survives request parsing, persisted reload and an unrelated edit', async () => {

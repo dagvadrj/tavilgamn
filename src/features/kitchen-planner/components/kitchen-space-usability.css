@@ -1,7 +1,7 @@
 .kspace .kspace-toolbar {
   gap: 16px;
   padding: 10px 24px;
-  background: #f8faf9;
+  background: var(--site-bg);
 }
 
 .kspace .kspace-tools {
@@ -53,7 +53,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  border-bottom: 1px solid #e2e8e4;
+  border-bottom: 1px solid var(--site-line);
   background: #fff;
 }
 
@@ -62,7 +62,7 @@
   gap: 3px;
   padding: 3px;
   border-radius: 10px;
-  background: #f0f4f1;
+  background: var(--site-hover);
 }
 
 .kspace-map-toolbar button {
@@ -74,13 +74,13 @@
   padding: 8px 12px;
   border-radius: 8px;
   font-size: 12px;
-  color: #55665c;
+  color: var(--site-muted);
 }
 
 .kspace-map-toolbar button[aria-pressed="true"] {
   background: #fff;
-  color: #20553e;
-  box-shadow: 0 1px 5px #253a2f14, inset 0 0 0 1px #c6dacc;
+  color: var(--site-ink);
+  box-shadow: 0 1px 5px #26384814, inset 0 0 0 1px #263848;
   font-weight: 600;
 }
 
@@ -96,7 +96,7 @@
   z-index: 8;
   flex-wrap: nowrap;
   overflow-x: auto;
-  border: 1px solid #e2e8e4;
+  border: 1px solid var(--site-line);
   border-radius: 10px;
 }
 
@@ -113,7 +113,7 @@
 .kspace-selection {
   padding: 14px;
   margin-bottom: 16px;
-  border: 1px solid #c9ddcf;
+  border: 1px solid var(--site-line);
   border-radius: 12px;
   background: #fff;
 }
@@ -121,7 +121,7 @@
 .kspace .kspace-zoom {
   overflow: hidden;
   border-radius: 12px;
-  box-shadow: 0 6px 24px #253a2f12;
+  box-shadow: 0 6px 24px #26384812;
 }
 
 .kspace-zoom > span {
@@ -132,7 +132,7 @@
 }
 
 .kspace :focus-visible {
-  outline: 2px solid #246847;
+  outline: 2px solid var(--site-accent);
   outline-offset: 3px;
 }
 
@@ -144,40 +144,33 @@
     gap: 8px;
     padding: 8px 12px;
   }
-
   .kspace .kspace-tools {
     flex: 0 0 auto;
     flex-wrap: nowrap;
     width: 100%;
     overflow-x: auto;
   }
-
   .kspace .kspace-tools button {
     flex-shrink: 0;
     white-space: nowrap;
   }
-
   .kspace .kspace-continue {
     margin-left: 0;
     align-self: flex-end;
     padding: 8px 12px;
   }
-
   .kspace-map-toolbar {
     gap: 6px;
     padding: 8px;
   }
-
   .kspace-map-toolbar button {
     min-height: 44px;
     padding: 8px;
   }
-
   .kspace .kspace-workspace {
     flex-direction: column;
     overflow-y: auto;
   }
-
   .kspace .kspace-panel {
     position: static;
     inset: auto;
@@ -186,34 +179,28 @@
     max-height: 230px;
     flex-shrink: 0;
     padding: 14px;
-    border-bottom: 1px solid #e2e8e4;
+    border-bottom: 1px solid var(--site-line);
   }
-
   .kspace .kspace-room-summary {
     display: none;
   }
-
   .kspace-map-area {
     min-height: 360px;
     flex-shrink: 0;
   }
-
   .kspace .kspace-header {
     flex-wrap: wrap;
     gap: 12px;
     padding: 10px 12px;
   }
-
   .kspace .kspace-header nav {
     display: none;
   }
-
   .kspace .kspace-header > button {
     margin-left: auto;
     min-height: 44px;
     min-width: 44px;
   }
-
   .kspace .kspace-footer {
     flex-wrap: wrap;
     gap: 10px;

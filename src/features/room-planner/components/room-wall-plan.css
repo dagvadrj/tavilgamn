@@ -1,0 +1,267 @@
+.room-wall-plan {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.room-wall-canvas {
+  width: 100%;
+  height: 100%;
+  padding: 106px 32px 60px;
+  outline: none;
+}
+
+.room-wall-plan.is-line .room-wall-canvas {
+  cursor: crosshair;
+}
+
+.room-wall-hit {
+  cursor: grab;
+}
+
+.room-wall-hit:active {
+  cursor: grabbing;
+}
+
+.room-wall-length, .room-wall-live-length {
+  fill: var(--site-ink);
+  stroke: #e8e8e5;
+  stroke-width: .045;
+  paint-order: stroke;
+  font-family: var(--font-sans), sans-serif;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.room-wall-live-length {
+  fill: var(--site-primary);
+  font-weight: 700;
+}
+
+.room-wall-tools {
+  position: absolute;
+  z-index: 5;
+  top: 68px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 32px);
+  padding: 6px;
+  border: 1px solid var(--site-line);
+  border-radius: 16px;
+  background: #fffffff5;
+  box-shadow: var(--site-shadow);
+  transform: translateX(-50%);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.room-wall-tools > div {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.room-wall-tools > div + div {
+  padding-left: 6px;
+  border-left: 1px solid var(--site-line);
+}
+
+.room-builder .room-wall-tools button {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--site-muted);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.room-builder .room-wall-tools button[aria-pressed="true"] {
+  color: var(--site-primary);
+  background: var(--site-selected);
+  box-shadow: none;
+}
+
+.room-wall-exact {
+  position: absolute;
+  bottom: 55px;
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border: 1px solid var(--site-line);
+  border-radius: 12px;
+  background: #fffffff5;
+  box-shadow: var(--site-shadow);
+  color: var(--site-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.room-wall-exact input {
+  width: 90px;
+  min-height: 34px;
+  padding: 5px 8px;
+  border: 1px solid var(--site-line);
+  border-radius: 7px;
+  background: var(--site-surface);
+  color: var(--site-ink);
+  text-align: right;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.room-wall-exact input:disabled {
+  opacity: .45;
+}
+
+.room-wall-status {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  margin: 0;
+  color: var(--site-muted);
+  font-size: 12px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.room-dimensions-sidebar .room-builder-stage-heading {
+  margin-bottom: 14px;
+}
+
+.room-builder-mini-plan {
+  width: 100%;
+  height: 160px;
+  margin: 4px 0 22px;
+  padding: 18px;
+}
+
+.room-builder-unit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-block: 16px 28px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.room-builder-unit-options {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--site-line);
+  border-radius: 999px;
+}
+
+.room-builder .room-builder-unit-options button {
+  min-height: 32px;
+  min-width: 38px;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+.room-builder .room-builder-unit-options button[aria-pressed="true"] {
+  color: #fff;
+  background: var(--site-ink);
+  box-shadow: none;
+}
+
+.room-builder-orientation {
+  display: grid;
+  gap: 6px;
+}
+
+.room-builder-orientation > strong {
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.room-builder .room-builder-orientation button {
+  justify-content: flex-start;
+  min-height: 40px;
+  padding: 8px 0;
+  border: 0;
+  color: var(--site-ink);
+  font-size: 12px;
+}
+
+.room-builder .room-builder-preview-toolbar .room-builder-view-tabs {
+  position: absolute;
+  left: 50%;
+  padding: 3px;
+  border-radius: 999px;
+  background: #fff;
+  transform: translateX(-50%);
+}
+
+.room-builder .room-builder-view-tabs button {
+  width: auto;
+  min-height: 32px;
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.room-builder .room-builder-view-tabs button[aria-pressed="true"] {
+  color: white;
+  background: var(--site-ink);
+  box-shadow: none;
+}
+
+@media (max-width: 760px) {
+  .room-wall-tools {
+    top: 50px;
+    max-width: calc(100% - 16px);
+    padding: 4px;
+  }
+  .room-builder .room-wall-tools button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 7px;
+  }
+  .room-wall-canvas {
+    padding: 90px 12px 66px;
+  }
+  .room-wall-status {
+    bottom: 7px;
+    font-size: 10px;
+  }
+  .room-wall-exact {
+    bottom: 30px;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+  .room-builder-mini-plan {
+    height: 105px;
+    margin-bottom: 10px;
+  }
+  .room-builder-unit-row {
+    margin-block: 10px 16px;
+  }
+  .room-builder-preview-toolbar > span {
+    display: none;
+  }
+  .room-builder.is-dimensions {
+    grid-template-rows: minmax(300px, 55dvh) minmax(0, 1fr);
+  }
+  .room-builder .room-builder-preview-toolbar .room-builder-view-tabs {
+    position: static;
+    transform: none;
+    margin-inline: auto;
+  }
+}

@@ -39,7 +39,7 @@ export function ProductViewer({
   return (
     <div className="relative h-full w-full">
       {showStockBadge && <p
-        className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-white/95 px-3 py-2 text-xs text-[#293C32] shadow-sm"
+        className="pointer-events-none absolute left-3 top-3 z-10 rounded-full bg-white/95 px-3 py-2 text-xs text-ui-ink shadow-sm"
         role="status"
       >
         {stockLabel({ stockQuantity })}

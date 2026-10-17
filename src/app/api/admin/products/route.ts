@@ -109,6 +109,19 @@ async function save(request: NextRequest, create: boolean) {
       );
     }
 
+    if (
+      product.specifications?.plannerPlacement &&
+      error?.code === "22023" &&
+      error.message.includes("Invalid furniture specifications")
+    )
+      return apiErrorResponse(
+        {
+          error:
+            "Planner-ийн бэхэлгээний тохиргоог сервер хараахан дэмжихгүй байна. Мэдээлэл хадгалагдаагүй. Database migration хэрэгжүүлсний дараа дахин хадгална уу.",
+        },
+        { status: 503, headers },
+      );
+
     if (error?.code === "23514" && error.message.includes("category"))
       return apiErrorResponse(
         {

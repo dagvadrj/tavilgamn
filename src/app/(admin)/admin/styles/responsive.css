@@ -520,8 +520,8 @@
 }
 
 .admin-model-request-status.ready {
-  background: #eaf8ef;
-  color: #198754;
+  background: var(--site-selected);
+  color: var(--site-primary);
 }
 
 .admin-model-request-status.error {
@@ -718,17 +718,17 @@
   min-height: 36px;
   padding: 0 13px;
   border-radius: 8px;
-  color: #7b8573;
+  color: var(--site-muted);
   font-size: 10px;
   font-weight: 550;
 }
 
 .admin-model-tabs button:hover {
-  background: #f5f7f2;
+  background: var(--site-bg);
 }
 
 .admin-model-tabs button.active {
-  background: #26351f;
+  background: var(--site-primary);
   color: #fff;
 }
 
@@ -758,8 +758,8 @@
 }
 
 .admin-model-state.ready {
-  background: #edf5e8;
-  color: #577447;
+  background: var(--site-selected);
+  color: var(--site-primary);
 }
 
 .admin-model-state.processing,

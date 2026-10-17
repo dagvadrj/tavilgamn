@@ -23,14 +23,14 @@ function CabinetIllustration({ type }: { type: KitchenStandardType }) {
       aria-hidden="true"
     >
       <ellipse cx="61" cy="114" rx="38" ry="5" fill="#293c3210" />
-      <path d={`M30 ${y}h55l14 9v${h}l-14-9H30Z`} fill="#c8d0bc" />
+      <path d={`M30 ${y}h55l14 9v${h}l-14-9H30Z`} fill="var(--site-line)" />
       <rect
         x="30"
         y={y}
         width="55"
         height={h}
-        fill={type.startsWith("fridge") ? "#adb6ad" : "#e8e5d6"}
-        stroke="#b4bcaa"
+        fill={type.startsWith("fridge") ? "var(--site-muted)" : "#e8e5d6"}
+        stroke="var(--site-line)"
       />
       <rect
         x="35"
@@ -38,9 +38,9 @@ function CabinetIllustration({ type }: { type: KitchenStandardType }) {
         width="45"
         height={h - 10}
         fill="none"
-        stroke="#d1d5c5"
+        stroke="var(--site-line)"
       />
-      <path d={`M75 ${y + h / 2 - 5}v10`} stroke="#6f7e6c" strokeWidth="2" />
+      <path d={`M75 ${y + h / 2 - 5}v10`} stroke="var(--site-muted)" strokeWidth="2" />
       {type.startsWith("oven") && (
         <>
           <rect
@@ -49,27 +49,27 @@ function CabinetIllustration({ type }: { type: KitchenStandardType }) {
             width="45"
             height="35"
             rx="2"
-            fill="#313d35"
+            fill="var(--site-ink)"
           />
           <rect
             x="40"
             y={tall ? 59 : 67}
             width="35"
             height="20"
-            fill="#68796d"
+            fill="var(--site-muted)"
           />
           <path
             d={tall ? "M40 54h35" : "M40 62h35"}
-            stroke="#cfd7ce"
+            stroke="var(--site-line)"
             strokeWidth="2"
           />
         </>
       )}
       {type === "hob" && (
         <>
-          <rect x="28" y="40" width="60" height="7" rx="2" fill="#303d34" />
-          <circle cx="42" cy="43" r="2" fill="#829082" />
-          <circle cx="67" cy="43" r="2" fill="#829082" />
+          <rect x="28" y="40" width="60" height="7" rx="2" fill="var(--site-ink)" />
+          <circle cx="42" cy="43" r="2" fill="var(--site-muted)" />
+          <circle cx="67" cy="43" r="2" fill="var(--site-muted)" />
         </>
       )}
       {type === "sink" && (
@@ -80,13 +80,13 @@ function CabinetIllustration({ type }: { type: KitchenStandardType }) {
             width="36"
             height="9"
             rx="3"
-            fill="#abb8b1"
-            stroke="#6f8075"
+            fill="var(--site-muted)"
+            stroke="var(--site-muted)"
           />
           <path
             d="M66 40V30q0-8-8-8t-8 8"
             fill="none"
-            stroke="#6f8075"
+            stroke="var(--site-muted)"
             strokeWidth="3"
           />
         </>
@@ -94,18 +94,18 @@ function CabinetIllustration({ type }: { type: KitchenStandardType }) {
       {type.startsWith("fridge") && (
         <path
           d={type === "fridge-side" ? "M57 10v100" : "M30 77h55"}
-          stroke="#7e8e7d"
+          stroke="var(--site-muted)"
           strokeWidth="2"
         />
       )}
       {type === "hood-integrated" && (
-        <rect x="30" y="72" width="55" height="7" fill="#7a897c" />
+        <rect x="30" y="72" width="55" height="7" fill="var(--site-muted)" />
       )}
       {type === "hood-wall" && (
         <>
-          <rect x="30" y="22" width="55" height="48" fill="#f0f3eb" />
-          <rect x="50" y="18" width="16" height="33" fill="#98a498" />
-          <path d="m50 51-20 20h56L66 51Z" fill="#7d8c80" />
+          <rect x="30" y="22" width="55" height="48" fill="var(--site-hover)" />
+          <rect x="50" y="18" width="16" height="33" fill="var(--site-muted)" />
+          <path d="m50 51-20 20h56L66 51Z" fill="var(--site-muted)" />
         </>
       )}
     </svg>

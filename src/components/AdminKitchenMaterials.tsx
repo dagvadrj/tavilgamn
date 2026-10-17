@@ -513,7 +513,7 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
       )}
       {message && (
         <p
-          className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+          className="rounded-xl bg-ui-selected px-4 py-3 text-sm text-ui-accent"
           role="status"
         >
           {message}

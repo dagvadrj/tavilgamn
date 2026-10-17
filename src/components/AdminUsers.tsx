@@ -106,7 +106,7 @@ function UserRoleEditor({ owner, user, onSaved }: { owner: string; user: UserRow
   if (user.role === "admin") return <span className="admin-status">Администратор</span>;
   return <div className="min-w-40 space-y-2">
     <select className="input !py-2 !text-xs" aria-label={`${user.name} хэрэглэгчийн эрх`} disabled={busy} value={role} onChange={event => { setRole(event.target.value as "customer" | "merchant"); setError(null); }}><option value="customer">Хэрэглэгч</option><option value="merchant">Merchant · Худалдаа эрхлэгч</option></select>
-    {user.store && <p className="text-xs text-[#737D6C]">{user.store.name}</p>}
+    {user.store && <p className="text-xs text-ui-muted">{user.store.name}</p>}
     {role !== user.role && <button type="button" className="btn-ghost !min-h-9 !px-3 !py-2 !text-xs" disabled={busy} onClick={async () => {
       if (busy || role === "admin") return;
       setBusy(true); setError(null);

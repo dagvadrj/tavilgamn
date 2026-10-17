@@ -10,7 +10,7 @@
   --market-accent: #c58348;
   --market-sale: #c58348;
   --market-sale-soft: #faf3eb;
-  --market-success: #168a4a;
+  --market-success: var(--site-success);
   --market-navy: var(--site-ink);
   --market-on-primary: #ffffff;
   --market-on-accent: #ffffff;
@@ -26,8 +26,8 @@
   --market-hero-blue-end: #ebebef;
   --market-hero-warm-start: #faf3eb;
   --market-hero-warm-end: #f5e8d8;
-  --market-hero-green-start: #f2f4f0;
-  --market-hero-green-end: #e5e8e1;
+  --market-hero-green-start: var(--site-surface);
+  --market-hero-green-end: var(--site-hover);
   --market-line: var(--market-border);
   --paper: var(--market-bg);
   --paper-card: var(--market-surface);

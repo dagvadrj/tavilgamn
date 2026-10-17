@@ -99,7 +99,7 @@ export function KitchenQuoteRequest({
   if (sent) {
     return (
       <div
-        className="rounded-2xl border border-[#42634f]/20 bg-[#eef4ef] p-4 text-sm text-[#293c32]"
+        className="rounded-2xl border border-ui-line bg-ui-selected p-4 text-sm text-ui-ink"
         role="status"
       >
         <p className="flex items-center gap-2 font-medium">
@@ -117,7 +117,7 @@ export function KitchenQuoteRequest({
     return (
       <button
         type="button"
-        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-[#293c32]/20 px-5 text-sm font-medium text-[#293c32] disabled:opacity-60"
+        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-ui-line px-5 text-sm font-medium text-ui-ink disabled:opacity-60"
         disabled={!initialized || disabled}
         onClick={begin}
       >
@@ -129,13 +129,13 @@ export function KitchenQuoteRequest({
 
   return (
     <form
-      className="space-y-4 rounded-2xl border border-[#293c32]/15 bg-[#f8f8f4] p-4"
+      className="space-y-4 rounded-2xl border border-ui-line bg-[#f8f8f4] p-4"
       onSubmit={submit}
     >
-      {projectId && <p className="text-xs text-[#42634f]">Таны өөрчилсөн загварыг хадгалж, энэ үеийн хувилбарыг үйлдвэрлэгчид илгээнэ.</p>}
+      {projectId && <p className="text-xs text-ui-accent">Таны өөрчилсөн загварыг хадгалж, энэ үеийн хувилбарыг үйлдвэрлэгчид илгээнэ.</p>}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="font-medium text-[#293c32]">Үнийн санал авах</h2>
+          <h2 className="font-medium text-ui-ink">Үнийн санал авах</h2>
           <p className="mt-1 text-xs text-black/50">
             Энэ загвар болон өрөөний хэмжээг үйлдвэрт илгээнэ.
           </p>
@@ -220,7 +220,7 @@ export function KitchenQuoteRequest({
             placeholder="Материал, өнгө, хүргэлт зэрэг хүсэлтээ бичнэ үү."
           />
         </label>
-        <button className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#293c32] px-5 text-sm font-medium text-white disabled:cursor-wait disabled:opacity-60">
+        <button className="btn-primary w-full disabled:cursor-wait disabled:opacity-60">
           {busy ? (
             <LoaderCircle className="animate-spin" size={16} />
           ) : (

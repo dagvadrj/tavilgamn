@@ -685,7 +685,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         )}
         {uploadSuccess && (
           <p
-            className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+            className="flex items-center gap-2 rounded-xl bg-ui-selected px-4 py-3 text-sm text-ui-accent"
             role="status"
           >
             <CheckCircle size={16} />

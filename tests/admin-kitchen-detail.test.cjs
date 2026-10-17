@@ -22,8 +22,8 @@ test('admin kitchen detail validates IDs and distinguishes missing designs from 
   '@/lib/kitchenRenderConfig':{configuredKitchenRender:()=>({provider:'cloudflare',model:'flux'}),kitchenRenderConfigured:()=>true},
  });
  const get=query=>route.GET(new NextRequest('http://localhost/api/admin/kitchen-designs'+query));
- assert.equal((await get('?design=invalid')).status,400);assert.equal(reads.length,0);
- const missing=await get(`?design=${id}`);assert.equal(missing.status,404);assert.match(missing.headers.get('Cache-Control'),/no-store/);assert.deepEqual(reads,[id]);
+ const invalid=await get('?design=invalid');assert.equal(invalid.status,400);assert.equal((await invalid.json()).code,'BAD_REQUEST');assert.equal(invalid.headers.get('Cache-Control'),'private, no-store');assert.equal(reads.length,0);
+ const missing=await get(`?design=${id}`);assert.equal(missing.status,404);assert.equal((await missing.json()).code,'NOT_FOUND');assert.equal(missing.headers.get('Cache-Control'),'private, no-store');assert.deepEqual(reads,[id]);
  const list=await get('');assert.equal(list.status,200);assert.deepEqual(await list.json(),{designs:[],renderConfig:{provider:'cloudflare',model:'flux',ready:true}});assert.equal(reads[1],undefined);
 });
 

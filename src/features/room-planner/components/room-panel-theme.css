@@ -1,16 +1,16 @@
 /* The room sidebars use the same white cards, blue selection and fields as the map. */
 
 .planner-reference.room-simple {
-  --room-panel-line: #e0e5ea;
-  --room-panel-ink: #263848;
-  --room-panel-muted: #637182;
-  --room-panel-blue: #0876c2;
-  --ui-ink: #263848;
-  --ui-muted: #637182;
-  --ui-line: #e0e5ea;
-  --ui-accent: #0876c2;
-  --ui-selected: #eaf5ff;
-  --ui-primary: #076bb5;
+  --room-panel-line: var(--site-line);
+  --room-panel-ink: var(--site-ink);
+  --room-panel-muted: var(--site-muted);
+  --room-panel-blue: var(--site-accent);
+  --ui-ink: var(--site-ink);
+  --ui-muted: var(--site-muted);
+  --ui-line: var(--site-line);
+  --ui-accent: var(--site-accent);
+  --ui-selected: var(--site-selected);
+  --ui-primary: var(--site-primary);
 }
 
 .planner-reference.room-simple > .planner-drawer {

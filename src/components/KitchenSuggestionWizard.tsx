@@ -160,34 +160,34 @@ function choiceFor(key: PreferenceKey, value: string) {
 function SuggestionDiagram({ kind }: { kind: string }) {
   const layout = kind.startsWith("layout-");
   const tall = kind === "oven-high" || kind.startsWith("fridge-");
-  const cabinet = (x: number, y: number, w: number, h: number) => <g key={`${x}-${y}`}><rect x={x} y={y} width={w} height={h} fill="#fafaf7" stroke="#a0a8a0" strokeWidth="2"/><rect x={x + 5} y={y + 5} width={w - 10} height={h - 10} fill="none" stroke="#d6d9d1"/><path d={`M${x + w - 10} ${y + h / 2 - 6}v12`} stroke="#707970" strokeWidth="3"/></g>;
+  const cabinet = (x: number, y: number, w: number, h: number) => <g key={`${x}-${y}`}><rect x={x} y={y} width={w} height={h} fill="#fafaf7" stroke="var(--site-muted)" strokeWidth="2"/><rect x={x + 5} y={y + 5} width={w - 10} height={h - 10} fill="none" stroke="var(--site-line)"/><path d={`M${x + w - 10} ${y + h / 2 - 6}v12`} stroke="var(--site-muted)" strokeWidth="3"/></g>;
   return (
     <svg className="ks-choice-illustration" viewBox="0 0 320 230" aria-hidden="true">
-      <rect width="320" height="230" fill="#eef0eb"/>
-      {layout ? <g fill="#fff" stroke="#394b40" strokeWidth="3">
+      <rect width="320" height="230" fill="var(--site-hover)"/>
+      {layout ? <g fill="#fff" stroke="var(--site-ink)" strokeWidth="3">
         {kind === "layout-i" && <rect x="55" y="75" width="210" height="45"/>}
         {kind === "layout-l" && <path d="M65 55h190v45H110v80H65Z"/>}
         {kind === "layout-u" && <path d="M55 55h210v125h-45v-80H100v80H55Z"/>}
         {kind === "layout-double" && <><rect x="60" y="50" width="45" height="135"/><rect x="215" y="50" width="45" height="135"/></>}
-        <rect x="137" y="142" width="45" height="40" fill="none" stroke="#b5beb6" strokeDasharray="3 4" strokeWidth="1"/>
-      </g> : kind === "none" ? <g stroke="#839487" strokeWidth="3"><circle cx="160" cy="108" r="40" fill="none"/><path d="m132 136 56-56"/></g> : <>
+        <rect x="137" y="142" width="45" height="40" fill="none" stroke="var(--site-line)" strokeDasharray="3 4" strokeWidth="1"/>
+      </g> : kind === "none" ? <g stroke="var(--site-muted)" strokeWidth="3"><circle cx="160" cy="108" r="40" fill="none"/><path d="m132 136 56-56"/></g> : <>
         <path d="M0 193h320v37H0Z" fill="#d9c4a2"/>
         {cabinet(35, 126, 75, 67)}{cabinet(110, 126, 75, 67)}{cabinet(185, 126, 95, 67)}
         <rect x="30" y="119" width="255" height="8" fill="#bca17b"/>
-        <rect x="125" y="115" width="49" height="5" rx="2" fill="#27332e"/>
+        <rect x="125" y="115" width="49" height="5" rx="2" fill="var(--site-ink)"/>
         {!tall && kind !== "hood-wall" && <>{cabinet(35, 30, 75, 62)}{cabinet(110, 30, 75, 62)}{cabinet(185, 30, 95, 62)}</>}
         {kind.startsWith("oven-") && <>
           {tall && cabinet(185, 20, 85, 173)}
-          <rect x={tall ? 194 : 120} y={tall ? 79 : 134} width="65" height="48" rx="3" fill="#343b38"/>
-          <rect x={tall ? 201 : 127} y={tall ? 91 : 146} width="51" height="28" fill="#67746e"/>
-          <path d={tall ? "M202 87h49" : "M128 142h49"} stroke="#d9ddda" strokeWidth="3"/>
+          <rect x={tall ? 194 : 120} y={tall ? 79 : 134} width="65" height="48" rx="3" fill="var(--site-ink)"/>
+          <rect x={tall ? 201 : 127} y={tall ? 91 : 146} width="51" height="28" fill="var(--site-muted)"/>
+          <path d={tall ? "M202 87h49" : "M128 142h49"} stroke="var(--site-line)" strokeWidth="3"/>
         </>}
-        {kind === "hood-integrated" && <rect x="114" y="93" width="67" height="9" fill="#737c76"/>}
-        {kind === "hood-wall" && <g fill="#919b95"><rect x="138" y="28" width="25" height="49"/><path d="m138 77-33 28h91l-33-28Z"/></g>}
+        {kind === "hood-integrated" && <rect x="114" y="93" width="67" height="9" fill="var(--site-muted)"/>}
+        {kind === "hood-wall" && <g fill="var(--site-muted)"><rect x="138" y="28" width="25" height="49"/><path d="m138 77-33 28h91l-33-28Z"/></g>}
         {kind.startsWith("fridge-") && <>
           {cabinet(185, 20, 85, 173)}
-          <rect x="189" y="24" width="77" height="165" fill={kind === "fridge-free" ? "#78817d" : "#fafaf7"} stroke="#a0a8a0"/>
-          <path d="M190 139h75M255 75v23M255 151v20" stroke={kind === "fridge-free" ? "#ccd1cd" : "#9ca69f"} strokeWidth="3"/>
+          <rect x="189" y="24" width="77" height="165" fill={kind === "fridge-free" ? "var(--site-muted)" : "#fafaf7"} stroke="var(--site-muted)"/>
+          <path d="M190 139h75M255 75v23M255 151v20" stroke={kind === "fridge-free" ? "var(--site-line)" : "var(--site-muted)"} strokeWidth="3"/>
         </>}
       </>}
     </svg>

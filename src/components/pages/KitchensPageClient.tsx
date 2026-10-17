@@ -121,7 +121,7 @@ export function KitchensContent({
         </div>
       ) : (
         <div className="rounded-3xl border border-dashed border-black/15 px-6 py-16 text-center">
-          <CookingPot className="mx-auto text-[#69756c]" size={42} />
+          <CookingPot className="mx-auto text-ui-muted" size={42} />
           <h2 className="mt-4 text-xl font-semibold">
             {query
               ? "Хайлтад тохирох загвар олдсонгүй"
