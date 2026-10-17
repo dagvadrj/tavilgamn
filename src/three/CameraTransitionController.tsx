@@ -5,7 +5,7 @@ import type { PerspectiveCamera } from "three";
 import { advanceCameraTransition, cancelCameraTransition } from "@/lib/cameraTransition";
 import type { NavigationControls } from "@/lib/plannerCamera";
 /** The only frame writer for programmatic orbit-camera transitions. */
-export function CameraTransitionController() {
+export function CameraTransitionController({ onRest }: { onRest?: () => void } = {}) {
     const { camera, controls, gl, invalidate } = useThree();
     useEffect(() => {
         const cancel = () => cancelCameraTransition(camera as PerspectiveCamera);
@@ -38,6 +38,7 @@ export function CameraTransitionController() {
     useFrame((_, delta) => {
         if (advanceCameraTransition(camera as PerspectiveCamera, controls && "target" in controls ? controls as unknown as NavigationControls : undefined, delta))
             invalidate();
+        else onRest?.();
     });
     return null;
 }

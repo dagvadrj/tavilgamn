@@ -113,7 +113,10 @@ test('real planner map and scene selection keep one canvas key, current view and
    './RoomTourControls':{RoomTourControls:'tour-controls'},
   });
   const render=()=>h.render(()=>{const shell=RoomPlanner();return typeof shell.type==='function'?shell.type(shell.props):shell;}),find=(t,type)=>nodes(t).find(n=>n.type===type);
-  find(render(),'room-start').props.onResume();let tree=render();find(tree,'room-controls').props.onView('top');tree=render();const canvas=find(tree,'room-canvas');assert.equal(canvas.props.view,'plan');
+  find(render(),'room-start').props.onResume();let tree=render();find(tree,'room-controls').props.onView('top');tree=render();let canvas=find(tree,'room-canvas');assert.equal(canvas.props.view,'plan');
+  assert.equal(canvas.props.paused,false,'the 3D camera must finish its transition before the SVG plan replaces it');
+  assert.equal(nodes(tree).some(n=>n.props.className==='room-plan-workspace'),false);
+  canvas.props.onViewSettled('plan');tree=render();canvas=find(tree,'room-canvas');assert.equal(canvas.props.paused,true);
   for(let i=0;i<8;i++){
    find(tree,'room-map').props.onSelect(i%2?a:b);tree=render();const next=find(tree,'room-canvas');assert.equal(next.key,canvas.key);assert.equal(next.props.resetKey,canvas.props.resetKey);assert.equal(next.props.view,'plan');assert.equal(next.props.design.activeRoomId,i%2?a:b);
    next.props.onSelectRoom(i%2?b:a);tree=render();assert.equal(find(tree,'room-canvas').key,canvas.key);assert.equal(find(tree,'room-canvas').props.view,'plan');
@@ -153,6 +156,7 @@ test('real planner map and scene selection keep one canvas key, current view and
   const current=store.getState().current,wall=getRoomGeometry(current).segments.find(s=>s.nx>.9);
   const shelf=wallAttachedPiece({instanceId:'plan-shelf',productId:'plan-shelf',x:0,z:0,rotation:0,color:'oak',material:'wood',placement:{surfaces:['wall']},details:{name:'Shelf',dimensions:{w:.6,d:.3,h:.3}}},current,current.activeRoomId,furnitureWallId(wall),1,1.5);
   store.getState().updatePieces([shelf]);find(tree,'room-controls').props.onView('top');tree=render();
+  find(tree,'room-canvas').props.onViewSettled('plan');tree=render();
   const plan=nodes(tree).find(n=>n.type?.name==='RoomWallPlan');
   assert.equal(plan.props.onMovePiece(shelf.instanceId,shelf.x-.5,shelf.z+.3),null,'off-plane pointer input must be projected to the attached wall');
   const movedShelf=store.getState().current.pieces[0];assert.ok(Math.abs(movedShelf.z-shelf.z-.3)<1e-8);assert.equal(movedShelf.x,shelf.x);assert.equal(movedShelf.elevation,1.5);assert.equal(movedShelf.attachment.segmentId,shelf.attachment.segmentId);

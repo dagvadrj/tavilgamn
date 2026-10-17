@@ -127,15 +127,17 @@ test('pending navigation is interrupted before RAF and stale requests never repl
   const state={camera,controls,gl:{domElement:surface},size:{width:800,height:600},invalidate(){}};
   const {CameraNavigation}=loadSource('src/three/CameraNavigation.tsx',{react:h.react,'@react-three/fiber':{useThree:()=>state},'@/lib/cameraTransition':transition});
   const bounds={width:5,depth:4,height:2.7,centerX:0,centerZ:0};
-  let request={id:1,action:'front'},enabled=true;
-  const render=()=>h.render(()=>CameraNavigation({request,bounds,enabled}));
+  let request={id:1,action:'front'},enabled=true,rests=0;
+  const render=()=>h.render(()=>CameraNavigation({request,bounds,enabled,onRest:()=>rests++}));
   const flush=()=>{const work=[...frames.values()];frames.clear();work.forEach(fn=>fn());};
   try {
-    const before=camera.position.clone();render();assert.equal(frames.size,1);
+    const before=camera.position.clone();const pending=render();assert.equal(frames.size,1);
+    pending.props.onRest();assert.equal(rests,0,'a scheduled navigation must not report a settled view before its first frame');
     surface.emit('wheel',{deltaY:0,preventDefault(){},stopPropagation(){}});flush();near(camera.position,before);
     state.size={width:600,height:600};render();assert.equal(frames.size,0);
     request={id:2,action:'left'};render();request={id:3,action:'right'};render();assert.equal(frames.size,1);flush();
     transition.advanceCameraTransition(camera,controls,Infinity);assert.ok(camera.position.x>controls.target.x);
+    render().props.onRest();assert.equal(rests,1);
     request={id:4,action:'right'};render();assert.equal(frames.size,1);flush();
     transition.advanceCameraTransition(camera,controls,.1);const at=camera.position.clone();
     enabled=false;render();assert.equal(transition.advanceCameraTransition(camera,controls,1),false);near(camera.position,at);

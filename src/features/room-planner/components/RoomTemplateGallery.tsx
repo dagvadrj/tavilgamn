@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ArrowRight, PencilRuler } from "lucide-react";
+import { ArrowRight, ChefHat, PencilRuler } from "lucide-react";
 import type { RoomDesign, RoomType } from "@/lib/types";
 import type { RoomTemplate, RoomTemplateCard } from "@/lib/roomTemplates";
 import { ROOM_TYPES } from "@/lib/roomGeometry";
@@ -9,9 +9,11 @@ import "./room-templates.css";
 
 export function RoomTemplateGallery({
   onBuild,
+  onKitchen,
   onTemplate,
 }: {
   onBuild: (type: RoomType) => void;
+  onKitchen: () => void;
   onTemplate: (design: RoomDesign) => void;
 }) {
   const [type, setType] = useState<RoomType>("living");
@@ -111,6 +113,7 @@ export function RoomTemplateGallery({
   );
   return (
     <div className="room-template-library">
+      <div className="room-planner-entry-choices">
       <article className="room-custom-card">
         <div className="room-custom-visual" aria-hidden="true">
           <span>Өөрийн хэмжээгээр</span>
@@ -176,7 +179,7 @@ export function RoomTemplateGallery({
               value={type}
               onChange={(event) => setType(event.target.value as RoomType)}
             >
-              {Object.entries(ROOM_TYPES).map(([key, value]) => (
+              {Object.entries(ROOM_TYPES).filter(([key]) => key !== "kitchen").map(([key, value]) => (
                 <option key={key} value={key}>
                   {value.label}
                 </option>
@@ -192,6 +195,39 @@ export function RoomTemplateGallery({
           </button>
         </div>
       </article>
+      <article className="room-custom-card room-kitchen-card">
+        <div className="room-custom-visual" aria-hidden="true">
+          <span>Гал тогооны төлөвлөгч</span>
+          <svg viewBox="0 0 380 230">
+            <path d="M38 134 190 76 340 134 190 210Z" fill="url(#custom-room-oak)" />
+            <path d="M38 134V50L190 9V76Z" fill="#e1ded6" />
+            <path d="M190 9 340 50V134L190 76Z" fill="#c3bfb7" />
+            <path d="M38 50 190 9 340 50" fill="none" stroke="#fff" strokeWidth="7" />
+            <path d="M54 117 177 70 205 82 82 130Z" fill="#faf9f5" />
+            <path d="M54 117V156L82 171V130Z" fill="#c4b8a4" />
+            <path d="M82 130 205 82V123L82 171Z" fill="#e8e1d4" />
+            <path d="M121 115V156M163 99V140" stroke="#b4aa99" strokeWidth="2" />
+            <path d="M205 82 315 121 287 135 177 95Z" fill="#faf9f5" />
+            <path d="M177 95 287 135V174L177 134Z" fill="#ded4c3" />
+            <path d="M213 108V147M250 121V161" stroke="#b4aa99" strokeWidth="2" />
+            <path d="M92 103 120 92 141 100 113 111Z" fill="#a4adb0" />
+            <path d="M232 100 266 112 247 122 213 109Z" fill="#30383c" />
+            <path d="M72 67 158 35V65L72 98Z" fill="#f5f3ee" />
+            <path d="M114 51V82" stroke="#c4beb2" strokeWidth="2" />
+            <path d="M220 43 275 61V82L220 64Z" fill="#e8e5dc" />
+          </svg>
+          <ChefHat size={21} />
+        </div>
+        <div className="room-custom-copy">
+          <h2>Гал тогоогоо төлөвлөе</h2>
+          <p>Хэмжээ, төхөөрөмж, 2D план, гарнитурын зохиомжоо 7 алхмаар тохируулаарай.</p>
+          <span className="room-kitchen-steps">Хэмжих → Байрлуулах → Дуусгах</span>
+          <button type="button" disabled={opening !== null} onClick={onKitchen}>
+            Гал тогоо төлөвлөх <ArrowRight size={18} />
+          </button>
+        </div>
+      </article>
+      </div>
       {error && (
         <div className="room-template-message" role="alert">
           {error}{" "}

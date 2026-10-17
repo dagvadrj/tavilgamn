@@ -80,6 +80,7 @@ const ROOM_CAMERA = {
 };
 
 interface RoomCanvasProps {
+  onViewSettled?: (view: "plan" | "perspective") => void;
   onExportReady?: (exporter: (() => Promise<Blob>) | null) => void;
   onPlacementHintsReady?: (source: RoomPlacementHintSource | null) => void;
   paused?: boolean;
@@ -138,6 +139,7 @@ interface RoomCanvasProps {
 }
 
 export function RoomCanvas({
+  onViewSettled,
   onExportReady,
   onPlacementHintsReady,
   paused = false,
@@ -629,6 +631,7 @@ export function RoomCanvas({
         )}
         {!interior && (
           <CameraNavigation
+            onRest={() => onViewSettled?.(view)}
             enabled={!locked && !isDraggingPiece}
             request={cameraRequest?.targetId && !cameraTarget ? undefined : cameraRequest}
             plan={view === "plan"}

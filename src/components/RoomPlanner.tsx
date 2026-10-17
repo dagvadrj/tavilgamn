@@ -373,6 +373,11 @@ function RoomPlannerEditor() {
   );
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [cameraRequest, setCameraRequest] = useState<CameraRequest>();
+  const [settledPlan, setSettledPlan] = useState<string | null>(null);
+  const planReady = roomView === "top" && settledPlan === current?.id;
+  useEffect(() => {
+    if (roomView !== "top") setSettledPlan(null);
+  }, [roomView]);
   const [cameraPlacement, setCameraPlacement] = useState(false);
   const [addRoomType, setAddRoomType] = useState<RoomType | null>(null);
   function navigateView(action: CameraAction) {
@@ -1975,7 +1980,7 @@ function RoomPlannerEditor() {
             endEdit={endEdit}
           />
         )}
-        {roomView === "top" && (
+        {planReady && (
           <div
             className="room-plan-workspace"
             onPointerDownCapture={beginEdit}
@@ -2033,14 +2038,18 @@ function RoomPlannerEditor() {
         <div
           className="planner-canvas h-full w-full pt-10 xl:pt-0"
           style={
-            roomView === "top"
+            planReady
               ? { opacity: 0, pointerEvents: "none" }
+              : roomView === "top" ? { pointerEvents: "none" }
               : undefined
           }
         >
           <RoomCanvas
             onExportReady={templateAdmin.isAdmin ? exportReady : undefined}
-            paused={roomView === "top"}
+            paused={planReady}
+            onViewSettled={(settledView) => {
+              if (settledView === "plan") setSettledPlan(current.id);
+            }}
             onPreview={savePreview}
             onPreviewReady={previewReady}
             onPlacementHintsReady={placementHintsReady}

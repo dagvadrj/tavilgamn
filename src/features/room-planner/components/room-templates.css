@@ -2,6 +2,43 @@
   color: var(--site-ink,#172b41);
 }
 
+.room-planner-entry-choices {
+  display: grid;
+  gap: 20px;
+}
+
+.room-planner-entry-choices .room-custom-card {
+  max-width: none;
+  min-width: 0;
+}
+
+.room-kitchen-card .room-custom-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.room-kitchen-steps {
+  color: var(--site-muted,#667789);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (min-width:1100px) {
+  .room-planner-entry-choices {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .room-planner-entry-choices .room-custom-card {
+    grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr);
+  }
+  .room-planner-entry-choices .room-custom-copy {
+    padding: 24px;
+  }
+  .room-planner-entry-choices h2 {
+    font-size: 20px;
+  }
+}
+
 .room-template-library > section {
   margin-top: 44px;
 }

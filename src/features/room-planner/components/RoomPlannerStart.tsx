@@ -136,6 +136,19 @@ export function RoomPlannerStart({
     } catch(reason) { setError((reason as Error).message); }
   }
   function chooseType(type: RoomType) {
+    if (type === "kitchen") {
+      try {
+        const { width, depth } = ROOM_TYPES.kitchen;
+        const design = createSuggestedKitchen(DEFAULT_KITCHEN_SUGGESTION, { width, depth, height: 2.7 });
+        kitchenRouter.push(saveKitchenFlowDraft(localStorage, {
+          userId: kitchenUser?.id, draftId: crypto.randomUUID(), design,
+          preferences: DEFAULT_KITCHEN_SUGGESTION, stage: "room",
+        }));
+      } catch (reason) {
+        setError(reason instanceof Error ? reason.message : "Гал тогооны төлөвлөгчийг нээж чадсангүй.");
+      }
+      return;
+    }
     const next = ROOM_TYPES[type];
     setRoomType(type);
     setChoice(suggestedRoomIndex(type));
@@ -201,7 +214,8 @@ export function RoomPlannerStart({
               </span>
             </div>
             {isAdmin && <Link href="/admin?tab=rooms" className="room-template-admin-link">Бэлэн өрөөний санг удирдах →</Link>}
-            <RoomTemplateGallery onBuild={chooseType} onTemplate={onTemplate} />
+            <RoomTemplateGallery onBuild={chooseType} onKitchen={() => chooseType("kitchen")} onTemplate={onTemplate} />
+            {error && <p className="room-size-error" role="alert">{error}</p>}
           </>
         ) : (
           <>
