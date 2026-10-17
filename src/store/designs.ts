@@ -36,7 +36,7 @@ import { ROOM_TYPES, validateRoomShape } from "@/lib/roomGeometry";
 import { configureAddedRoom, type AddRoomOptions } from "@/lib/addRoomOptions";
 import { validateRoomSetup, type RoomSetupDimensions } from "@/lib/roomSetup";
 import { createRoomBuilderDraft, resizeRoomBuilder, type RoomBuilderDraft } from "@/lib/roomBuilderDraft";
-import { resolveFurnitureAttachments } from "@/lib/furnitureAttachment";
+import { findInitialFurniturePlacement, initialPlacementFailure, resolveFurnitureAttachments, type InitialPlacementHints } from "@/lib/furnitureAttachment";
 
 export const ROOM_DIMENSIONS: Record<RoomSize, { w: number; d: number }> = {
   "40": { w: 6.3, d: 6.3 },
@@ -84,6 +84,7 @@ interface DesignState {
   deleteDesign: (id: string) => void;
   duplicateDesign: (id: string) => void;
   updatePieces: (pieces: PlacedFurniture[]) => void;
+  placeFurniture: (piece: PlacedFurniture, hints?: InitialPlacementHints) => { piece: PlacedFurniture | null; error: string | null };
   updateRoom: (
     patch: Partial<
       Pick<
@@ -527,6 +528,23 @@ export const useDesigns = create<DesignState>()(
         set({
           designs: [...get().designs, duplicate],
         });
+      },
+      placeFurniture: (piece, hints) => {
+        const current = get().current;
+        const failure = (error: string) => ({ piece: null, error });
+        if (!current) return failure("Эхлээд өрөөгөө сонгоно уу.");
+        if (get().transaction) return failure("Одоогийн засвараа дуусгаад тавилгаа дахин нэмнэ үү.");
+        if ((current.rooms ?? [{ pieces: current.pieces }]).some(room => room.pieces.some(p => p.instanceId === piece.instanceId))) return failure("Энэ тавилга аль хэдийн нэмэгдсэн байна.");
+        try {
+          const context = roomPlacementContext(current);
+          const placed = findInitialFurniturePlacement(piece, context.pieces, context.room, current.activeRoomId ?? `${current.id}-room-1`, hints);
+          if (!placed) return failure(initialPlacementFailure(piece));
+          get().updatePieces([...current.pieces, placed]);
+          const committed = get().current?.pieces.find(p => p.instanceId === placed.instanceId);
+          return committed ? { piece: committed, error: null } : failure("Өрөөний байрлал өөрчлөгдсөн байна. Тавилгаа дахин нэмнэ үү.");
+        } catch {
+          return failure("Өрөө эсвэл тавилгын бэхэлгээний мэдээлэл тохирохгүй байна. Өрөөний тохиргоогоо шалгана уу.");
+        }
       },
       updatePieces: (pieces) => {
         const c = get().current;

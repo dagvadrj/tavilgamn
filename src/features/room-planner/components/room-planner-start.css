@@ -180,7 +180,7 @@
 }
 
 .room-tone-sage {
-  background: #dde7dc;
+  background: var(--site-hover);
 }
 
 .room-tone-blue {
@@ -188,7 +188,7 @@
 }
 
 .room-tone-aqua {
-  background: #dceceb;
+  background: var(--site-selected);
 }
 
 .room-tone-lilac {
@@ -234,7 +234,7 @@
 .room-start-saved {
   margin: 16px 0;
   padding: 16px;
-  border: 1px solid #dce5dd;
+  border: 1px solid var(--site-line);
   border-radius: 14px;
   background: #fff;
 }
@@ -287,7 +287,7 @@
   margin-top: 8px;
   padding: 10px;
   border-radius: 8px;
-  background: #f3f7f3;
+  background: var(--site-bg);
   text-align: left;
 }
 
@@ -308,21 +308,21 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 48px;
+  min-height: var(--site-button-height);
   padding: 12px 20px;
-  border-radius: 28px;
+  border-radius: var(--site-button-radius);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: var(--site-button-weight);
 }
 
 .room-start-draft button, .room-start-submit {
-  background: #075eaa;
+  background: var(--site-primary);
   color: white;
   flex-shrink: 0;
 }
 
 .room-start-draft button:hover, .room-start-submit:hover {
-  background: #004d91;
+  background: var(--site-primary-hover);
 }
 
 .room-size-layout {
@@ -468,7 +468,7 @@
 
 .room-size-preview {
   padding: 24px;
-  background: #eeefeb;
+  background: var(--site-hover);
   border: 1px solid #e4e4e2;
   border-radius: 20px;
   text-align: center;

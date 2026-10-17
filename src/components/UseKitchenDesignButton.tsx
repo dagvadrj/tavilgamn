@@ -66,7 +66,7 @@ export function UseKitchenDesignButton({
     <div>
       <button
         type="button"
-        className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#293c32] px-5 text-sm font-medium text-white disabled:cursor-wait disabled:opacity-60"
+        className="btn-primary w-full disabled:cursor-wait disabled:opacity-60"
         disabled={!initialized || busy}
         onClick={() => void handleUseDesign()}
       >

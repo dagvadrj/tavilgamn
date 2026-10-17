@@ -25,19 +25,19 @@
 
 .kroom-outline-point, .kroom-outline-midpoint {
   fill: #ffffff;
-  stroke: #42634f;
+  stroke: var(--site-muted);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
   pointer-events: none;
 }
 
 .kroom-outline-editor [role="button"]:focus-visible .kroom-outline-point, .kroom-outline-editor [role="button"]:hover .kroom-outline-point, .kroom-outline-editor [role="button"]:focus-visible .kroom-outline-midpoint, .kroom-outline-editor [role="button"]:hover .kroom-outline-midpoint {
-  fill: #dce8dd;
+  fill: var(--site-selected);
   stroke-width: 4;
 }
 
 .kroom-outline-plus {
-  stroke: #42634f;
+  stroke: var(--site-muted);
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
@@ -63,8 +63,8 @@
 }
 
 .kroom-outline-preview {
-  fill: #42634f11;
-  stroke: #42634f;
+  fill: #26384811;
+  stroke: var(--site-muted);
   stroke-width: 2;
   stroke-dasharray: 6 4;
   vector-effect: non-scaling-stroke;
@@ -72,7 +72,7 @@
 }
 
 .kroom-outline-length, .kroom-outline-error {
-  fill: #42634f;
+  fill: var(--site-accent);
   stroke: #ffffff;
   stroke-width: 18;
   paint-order: stroke fill;

@@ -10,7 +10,7 @@ function MeasurementLine({ measurement }: { measurement: Measurement }) {
   const dx = to[0] - from[0], dz = to[2] - from[2];
   const length = Math.hypot(dx, dz);
   const tick: MeasurementPoint = vertical || length < 1e-7 ? [0.07, 0, 0] : [-dz / length * 0.07, 0, dx / length * 0.07];
-  const color = kind === "size" ? "#2267a0" : "#334b3d";
+  const color = kind === "size" ? "#0876c2" : "#637182";
   return <group>
     {Math.abs(value) > 1e-7 && <Line points={[from, to]} color={color} lineWidth={1.5}
       depthTest={false} depthWrite={false} renderOrder={1000} raycast={() => {}} />}

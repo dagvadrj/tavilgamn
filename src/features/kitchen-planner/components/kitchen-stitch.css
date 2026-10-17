@@ -170,7 +170,7 @@
 }
 
 .kitchen-flow .kitchen-plan-sheet .km-room-outline {
-  stroke: #20372c;
+  stroke: var(--site-accent);
   stroke-width: 2px;
 }
 
@@ -192,7 +192,7 @@
   border-radius: 10px;
   padding: 10px;
   background: #ffffffef;
-  box-shadow: 0 3px 12px #20372c0a;
+  box-shadow: 0 3px 12px #2638480a;
   pointer-events: none;
 }
 
@@ -207,7 +207,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #355531;
+  background: var(--site-ink);
 }
 
 .kitchen-plan-minimap .km-plan {
@@ -457,9 +457,9 @@
   padding: 24px clamp(20px, 9vw, 180px);
   border-radius: 18px;
   background-color: #f1f0ed;
-  background-image: linear-gradient(#20372c08 1px, transparent 1px), linear-gradient(90deg, #20372c08 1px, transparent 1px);
+  background-image: linear-gradient(#26384808 1px, transparent 1px), linear-gradient(90deg, #26384808 1px, transparent 1px);
   background-size: 50px 50px;
-  box-shadow: 0 12px 26px #20372c15;
+  box-shadow: 0 12px 26px #26384815;
   color: #1a1b22;
 }
 
@@ -485,8 +485,8 @@
   width: 40px;
   height: 40px;
   border-radius: 9px;
-  color: #d7edb8;
-  background: #0a2218;
+  color: #cbd5e1;
+  background: var(--site-ink);
   font-family: Georgia, serif;
   font-size: 20px;
 }
@@ -499,7 +499,7 @@
   padding: 4px 10px;
   margin-left: 8px;
   border-radius: 20px;
-  background: #cee8d9;
+  background: var(--site-selected);
   font-size: 11px;
 }
 
@@ -525,7 +525,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #355531;
+  background: var(--site-ink);
 }
 
 .kitchen-start-brandbar > button {
@@ -552,7 +552,7 @@
   padding: 18px;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 3px 4px #20372c13;
+  box-shadow: 0 3px 4px #26384813;
 }
 
 .kitchen-start-thumbnail {
@@ -610,14 +610,14 @@
   content: "";
   height: 1px;
   flex: 1;
-  background: #dfe2dd;
+  background: var(--site-hover);
 }
 
 .kitchen-start-card {
   border-radius: 16px;
   padding: 20px;
   background: #fff;
-  box-shadow: 0 3px 4px #20372c13;
+  box-shadow: 0 3px 4px #26384813;
 }
 
 .kitchen-flow .kitchen-start-choices {
@@ -652,8 +652,8 @@
   display: inline-block;
   font-size: 10px;
   font-style: normal;
-  background: #d7edb8;
-  color: #20372c;
+  background: var(--site-selected);
+  color: var(--site-ink);
   border-radius: 4px;
   padding: 2px 6px;
 }
@@ -671,7 +671,7 @@
   display: grid;
   place-items: center;
   border-radius: 9px;
-  color: #20372c;
+  color: var(--site-ink);
   background: #eeedf7;
 }
 
@@ -784,7 +784,7 @@
 
 .kitchen-flow .kitchen-start-dimensions input {
   padding: 6px;
-  color: #20372c;
+  color: var(--site-ink);
   font-weight: 600;
 }
 

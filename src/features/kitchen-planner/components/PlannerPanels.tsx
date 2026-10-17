@@ -4,7 +4,6 @@ import "./kitchen-plan.css";
 import { roomOutline, roomOutlinePath } from "@/lib/kitchenRoomOutline";
 import { cabinetAxes, cabinetCorners, placementIssues } from "@/lib/kitchenPlacement";
 import { cabinetLabel, type ModularKitchen, type CabinetPose } from "@/lib/kitchenCabinets";
-import { roomOutline, roomOutlinePath } from "@/lib/kitchenRoomOutline";
 
 export function DimensionInput({
   label,
@@ -90,8 +89,8 @@ export function Plan({
   const minX = Math.min(...corners.map(p => p.x)), maxX = Math.max(...corners.map(p => p.x));
   const minZ = Math.min(...corners.map(p => p.z)), maxZ = Math.max(...corners.map(p => p.z));
   const dimension = (x1: number, z1: number, x2: number, z2: number, label: string) => Math.hypot(x2-x1, z2-z1) < 1 ? null : <g pointerEvents="none">
-    <line x1={x1} y1={z1} x2={x2} y2={z2} stroke="#246847" strokeWidth={8}/>
-    <text x={(x1+x2)/2} y={(z1+z2)/2-25} textAnchor="middle" fontSize={65} fill="#164b32" stroke="#fff" strokeWidth={18} paintOrder="stroke">{label}</text>
+    <line x1={x1} y1={z1} x2={x2} y2={z2} stroke="var(--site-ink)" strokeWidth={8}/>
+    <text x={(x1+x2)/2} y={(z1+z2)/2-25} textAnchor="middle" fontSize={65} fill="var(--site-ink)" stroke="#fff" strokeWidth={18} paintOrder="stroke">{label}</text>
   </g>;
   const format = (value: number) => `${Math.round(value / unitScale * 10) / 10} ${unit}`;
   const unitScale = unit === "см" ? 10 : 1;
@@ -142,7 +141,7 @@ export function Plan({
       <path
         d={`M0 -130H${kitchen.room.width}M0 -160v60M${kitchen.room.width} -160v60`}
         fill="none"
-        stroke="#687665"
+        stroke="var(--site-muted)"
         strokeWidth="8"
       />
       <text
@@ -220,7 +219,7 @@ export function Plan({
                     item.kind === "power"
                       ? "#bd7b00"
                       : item.kind === "vent"
-                        ? "#727974"
+                        ? "var(--site-muted)"
                         : "#0865b1"
                   }
                 />
@@ -266,7 +265,7 @@ export function Plan({
                 transform={`translate(${cabinet.position.x} ${cabinet.position.z}) rotate(${cabinet.position.rotation})`}
                 pointerEvents="none"
                 fill="none"
-                stroke={selectedId === cabinet.id ? "#0051d5" : "#727974"}
+                stroke={selectedId === cabinet.id ? "#0051d5" : "var(--site-muted)"}
                 strokeWidth="8"
               >
                 {cabinet.opening === "sink" ? (

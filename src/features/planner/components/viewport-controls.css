@@ -7,14 +7,14 @@
   align-items: end;
   flex-direction: column;
   gap: 8px;
-  color: #293c32;
+  color: var(--site-ink);
 }
 
 .viewport-zoom, .viewport-more > summary, .viewport-extra {
   background: #fffffff5;
-  border: 1px solid #dce3dd;
+  border: 1px solid var(--site-line);
   border-radius: 14px;
-  box-shadow: 0 8px 24px #1c342414;
+  box-shadow: 0 8px 24px #26384814;
   padding: 4px;
 }
 
@@ -35,7 +35,7 @@
 }
 
 .viewport-controls button:hover:not(:disabled), .viewport-more > summary:hover {
-  background: #edf3ee;
+  background: var(--site-hover);
 }
 
 .viewport-controls button:disabled {
@@ -49,7 +49,7 @@
 }
 
 .viewport-zoom button + button {
-  border-top: 1px solid #eef1ed;
+  border-top: 1px solid var(--site-line);
 }
 
 .viewport-more {
@@ -69,9 +69,9 @@
 }
 
 .viewport-more[open] > summary {
-  background: #293c32;
+  background: var(--site-ink);
   color: #fff;
-  border-color: #293c32;
+  border-color: var(--site-line);
 }
 
 .viewport-popover {
@@ -81,9 +81,9 @@
   width: 218px;
   padding: 14px;
   background: #fff;
-  border: 1px solid #dce3dd;
+  border: 1px solid var(--site-line);
   border-radius: 18px;
-  box-shadow: 0 12px 44px #1c342422;
+  box-shadow: 0 12px 44px #26384822;
 }
 
 .viewport-popover p {
@@ -100,7 +100,7 @@
 
 .viewport-presets button {
   flex: 1;
-  background: #f3f6f2;
+  background: var(--site-bg);
   font-size: 11px;
 }
 
@@ -110,7 +110,7 @@
   justify-content: space-between;
   padding: 7px 0;
   margin-bottom: 8px;
-  border-bottom: 1px solid #edf1eb;
+  border-bottom: 1px solid var(--site-line);
 }
 
 .viewport-rotate span {
@@ -128,7 +128,7 @@
 
 .viewport-pan button {
   min-height: 36px;
-  background: #f3f6f2;
+  background: var(--site-bg);
 }
 
 .viewport-pan button:nth-child(1) {
@@ -153,7 +153,7 @@
 }
 
 .viewport-extra button[aria-pressed="true"] {
-  background: #293c32;
+  background: var(--site-primary);
   color: white;
 }
 

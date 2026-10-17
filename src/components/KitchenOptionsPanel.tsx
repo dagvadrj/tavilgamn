@@ -35,7 +35,7 @@ import { KitchenComponentSheet } from "./KitchenComponentSheet";
 function Thumbnail({
   type,
   model,
-  color = "#b7c5b8",
+  color = "var(--site-line)",
 }: {
   type: ComponentType;
   model?: string;
@@ -82,12 +82,12 @@ function Thumbnail({
     paths[type] = "M25 51V19l18-6 8 12 M17 51h22 M48 25h8";
   return (
     <svg className="kco-thumbnail" viewBox="0 0 64 64" aria-hidden="true">
-      <rect width="64" height="64" rx="12" fill="#eef1e9" />
+      <rect width="64" height="64" rx="12" fill="var(--site-hover)" />
       <path
         d={paths[type]}
         fill={color}
         fillOpacity={model === "glass" ? ".2" : ".45"}
-        stroke="#3e5a49"
+        stroke="var(--site-accent)"
         strokeWidth="1.7"
         strokeLinejoin="round"
       />

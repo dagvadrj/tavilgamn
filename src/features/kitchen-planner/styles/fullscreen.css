@@ -7,7 +7,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #e7e9e5;
+  background: var(--site-hover);
 }
 
 .kp-planner-topbar {
@@ -18,9 +18,9 @@
   align-items: center;
   gap: 18px;
   padding: 8px 16px;
-  border-bottom: 1px solid #d7dcd5;
+  border-bottom: 1px solid var(--site-line);
   background: #fff;
-  box-shadow: 0 3px 16px #1d2c2310;
+  box-shadow: 0 3px 16px #26384810;
 }
 
 .kp-planner-brand {
@@ -29,7 +29,7 @@
   gap: 8px;
   min-height: 44px;
   padding-right: 18px;
-  border-right: 1px solid #e1e5df;
+  border-right: 1px solid var(--site-line);
   font-weight: 800;
   white-space: nowrap;
 }
@@ -52,8 +52,8 @@
 }
 
 .kp-planner-steps .is-active {
-  color: #213d2e;
-  border-bottom-color: #2d6b4b;
+  color: var(--site-ink);
+  border-bottom-color: var(--site-accent);
   font-weight: 700;
 }
 
@@ -75,7 +75,7 @@
   justify-content: center;
   gap: 7px;
   padding: 8px 11px;
-  border: 1px solid #d7ddd8;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   background: #fff;
   font-size: 13px;
@@ -84,17 +84,17 @@
 
 .kp-top-actions > .kp-save-button {
   color: #fff;
-  border-color: #2d6b4b;
-  background: #2d6b4b;
+  border-color: var(--site-accent);
+  background: var(--site-primary);
 }
 
 .kp-project-name input {
   width: min(16vw, 180px);
   min-height: 44px;
   padding: 8px 11px;
-  border: 1px solid #d7ddd8;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
-  background: #f8f9f7;
+  background: var(--site-bg);
 }
 
 .kp-top-menu {
@@ -120,10 +120,10 @@
   display: grid;
   gap: 7px;
   padding: 12px;
-  border: 1px solid #d8ded8;
+  border: 1px solid var(--site-line);
   border-radius: 12px;
   background: #fff;
-  box-shadow: 0 18px 55px #20312828;
+  box-shadow: 0 18px 55px #26384828;
 }
 
 .kp-top-menu .km-layout-options button,
@@ -132,7 +132,7 @@
   min-height: 42px;
   padding: 9px 11px;
   text-align: left;
-  border: 1px solid #e0e4df;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   background: #fff;
   font-size: 13px;
@@ -140,7 +140,7 @@
 
 .kp-top-menu .km-layout-options button[aria-pressed="true"] {
   color: #fff;
-  background: #293c32;
+  background: var(--site-primary);
 }
 
 .kp-more-menu > summary {
@@ -157,7 +157,7 @@
 }
 
 .km-version-history {
-  border: 1px solid #d8ded8;
+  border: 1px solid var(--site-line);
   padding: 10px;
   border-radius: 8px;
   font-size: 12px;
@@ -178,9 +178,9 @@
 
 .km-version-history button {
   padding: 8px;
-  border: 1px solid #d8ded8;
+  border: 1px solid var(--site-line);
   border-radius: 7px;
-  background: #f8f9f7;
+  background: var(--site-bg);
 }
 
 .kp-more-content .km-export {
@@ -196,7 +196,7 @@
   padding: 10px 16px;
   border-radius: 999px;
   background: #fff7ed;
-  box-shadow: 0 8px 24px #24352b20;
+  box-shadow: 0 8px 24px #26384820;
   font-size: 13px;
 }
 
@@ -245,10 +245,10 @@
 .kp-shell .kp-preview-bar > span,
 .kp-shell .km-view-tools {
   padding: 7px;
-  border: 1px solid #d5dcd5;
+  border: 1px solid var(--site-line);
   border-radius: 10px;
   background: #ffffffeb;
-  box-shadow: 0 8px 26px #25342b16;
+  box-shadow: 0 8px 26px #26384816;
   pointer-events: auto;
 }
 
@@ -269,7 +269,7 @@
   bottom: 14px;
   max-width: min(560px, calc(100% - 28px));
   padding: 10px 14px;
-  border: 1px solid #d6ddd6;
+  border: 1px solid var(--site-line);
   border-radius: 9px;
   background: #ffffffeb;
 }
@@ -284,7 +284,7 @@
   max-width: min(560px, calc(100% - 32px));
   min-height: 40px;
   border-radius: 999px;
-  box-shadow: 0 8px 24px #25342b18;
+  box-shadow: 0 8px 24px #26384818;
 }
 
 .kp-reference-panel {
@@ -303,10 +303,10 @@
   gap: 12px;
   padding: 12px;
   overflow: auto;
-  border: 1px solid #d9ded9;
+  border: 1px solid var(--site-line);
   border-radius: 14px;
-  background: #f8f9f7f5;
-  box-shadow: 0 20px 60px #2030272b;
+  background: #fffffff5;
+  box-shadow: 0 20px 60px #2638482b;
   backdrop-filter: blur(12px);
 }
 
@@ -324,8 +324,8 @@
   justify-content: space-between;
   gap: 12px;
   padding: 8px 6px 8px 10px;
-  border-bottom: 1px solid #dfe4df;
-  background: #f8f9f7fa;
+  border-bottom: 1px solid var(--site-line);
+  background: #fffffffa;
 }
 
 .kp-settings-head button {
@@ -442,6 +442,6 @@
 }
 
 .km-layout-options button[aria-pressed="true"] {
-  background: #293c32;
+  background: var(--site-primary);
   color: white;
 }

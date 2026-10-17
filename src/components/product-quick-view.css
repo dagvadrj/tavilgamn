@@ -123,6 +123,18 @@
 
 .product-quick-viewer-status.is-error {
   color: #b45309;
+  flex-wrap: wrap;
+}
+
+.product-quick-viewer-status button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 34px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 4px 8px;
+  pointer-events: auto;
 }
 
 .product-quick-photo img {
@@ -232,7 +244,7 @@
 }
 
 .product-quick-specs .is-available {
-  color: #047857;
+  color: var(--site-ink);
 }
 
 .product-quick-actions {

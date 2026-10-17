@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { apiErrorResponse } from "@/lib/api/errors";
 import { readKitchenReview } from "@/lib/kitchenMarketplace";
 import {
   kitchenMarketplaceError,
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
         designId,
       )
     )
-      return NextResponse.json(
+      return apiErrorResponse(
         { error: "Загварын дугаар буруу байна." },
         { status: 400, headers: kitchenPrivateHeaders },
       );
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       designId ?? undefined,
     );
     if (designId && designs.length === 0)
-      return NextResponse.json(
+      return apiErrorResponse(
         { error: "Загвар олдсонгүй." },
         { status: 404, headers: kitchenPrivateHeaders },
       );

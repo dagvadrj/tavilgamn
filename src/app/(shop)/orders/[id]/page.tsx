@@ -47,10 +47,10 @@ const ORDER_FLOW: { status: OrderStatus; label: string }[] = [
 
 const STATUS_TONE: Record<OrderStatus, string> = {
   pending_payment: "bg-[#FFF4E5] text-[#9A5B20]",
-  paid: "bg-[#EAF3EC] text-[#42634F]",
+  paid: "bg-ui-selected text-ui-accent",
   processing: "bg-[#EDF1F7] text-[#48617B]",
   shipped: "bg-[#E8F2F4] text-[#356773]",
-  delivered: "bg-[#E8F4E9] text-[#35623C]",
+  delivered: "bg-ui-selected text-ui-accent",
   cancelled: "bg-[#F8EAEA] text-[#9A4D4D]",
 };
 
@@ -468,7 +468,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                   className={cn(
                     "rounded-full px-2.5 py-1 text-[11px] font-medium",
                     payment.state === "paid"
-                      ? "bg-[#EAF3EC] text-[#42634F]"
+                      ? "bg-ui-selected text-ui-accent"
                       : payment.state === "needs_review"
                         ? "bg-[#F8EAEA] text-[#9A4D4D]"
                         : "bg-[#FFF4E5] text-[#9A5B20]",
@@ -492,7 +492,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
             ) : cancellationBlocksPayment(order) ? (
               <p className="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">Цуцлах хүсэлтийг шалгаж байна. Шалгалт дуусах хүртэл нэхэмжлэхээр төлбөр бүү хийгээрэй.</p>
             ) : order.status !== "pending_payment" ? (
-              <div className="mt-5 flex gap-3 rounded-xl bg-[#EEF4ED] p-4 text-sm text-[#42634F]">
+              <div className="mt-5 flex gap-3 rounded-xl bg-ui-selected p-4 text-sm text-ui-accent">
                 <CheckCircle2 className="shrink-0" size={19} />
                 <div>
                   <p className="font-medium">Төлбөр баталгаажсан</p>
@@ -541,7 +541,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                               checked={method === option.id}
                               disabled={!option.available}
                               onChange={() => setMethod(option.id)}
-                              className="accent-[#42634F]"
+                              className="accent-ui-accent"
                             />
                             <span className="font-medium">{option.name}</span>
                             {!option.available && (

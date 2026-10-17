@@ -3,7 +3,7 @@
 .ks-wizard {
   min-height: 100dvh;
   background: #f5f4ef;
-  color: #17251d;
+  color: var(--site-ink);
 }
 
 .ks-header {
@@ -13,7 +13,7 @@
   align-items: center;
   gap: 20px;
   padding: 0 clamp(18px, 4vw, 56px);
-  border-bottom: 1px solid #dfe3db;
+  border-bottom: 1px solid var(--site-line);
   background: #fff;
 }
 
@@ -49,7 +49,7 @@
 
 .ks-eyebrow {
   margin-bottom: 12px;
-  color: #52705f;
+  color: var(--site-muted);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -93,7 +93,7 @@
   border: 2px solid transparent;
   border-radius: 18px;
   background: #fff;
-  box-shadow: 0 8px 32px #24382c10;
+  box-shadow: 0 8px 32px #26384810;
   transition: transform 0.18s ease,
     border-color 0.18s ease,
     box-shadow 0.18s ease;
@@ -101,12 +101,12 @@
 
 .ks-choices > button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 40px #24382c1c;
+  box-shadow: 0 14px 40px #2638481c;
 }
 
 .ks-choices > button.is-selected {
-  border-color: #2d6b4b;
-  box-shadow: 0 0 0 4px #dcece3;
+  border-color: var(--site-accent);
+  box-shadow: 0 0 0 4px #263848;
 }
 
 .ks-choice-copy {
@@ -133,7 +133,7 @@
   height: 30px;
   display: grid;
   place-items: center;
-  border: 1px solid #cbd5ce;
+  border: 1px solid var(--site-line);
   border-radius: 50%;
   color: transparent;
   background: #fff;
@@ -141,8 +141,8 @@
 
 .is-selected > .ks-check {
   color: white;
-  border-color: #2d6b4b;
-  background: #2d6b4b;
+  border-color: var(--site-accent);
+  background: var(--site-ink);
 }
 
 .ks-next {
@@ -153,7 +153,7 @@
   gap: 12px;
   padding: 13px 24px;
   border-radius: 999px;
-  background: #17251d;
+  background: var(--site-ink);
   color: #fff;
   font-weight: 700;
 }
@@ -168,7 +168,7 @@
 .ks-diagram i {
   position: absolute;
   display: block;
-  border: 2px solid #617269;
+  border: 2px solid var(--site-line);
   background: #fff;
 }
 
@@ -191,7 +191,7 @@
   right: 43%;
   bottom: 33%;
   height: 17%;
-  background: #27332c;
+  background: var(--site-ink);
 }
 
 .ks-oven-high i:nth-child(1) {
@@ -316,7 +316,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px;
-  border: 1px solid #dfe4df;
+  border: 1px solid var(--site-line);
   border-radius: 9px;
   text-align: left;
 }
@@ -333,7 +333,7 @@
 
 .km-project-report {
   margin-top: 18px;
-  border-top: 1px solid #ccd4cd;
+  border-top: 1px solid var(--site-line);
   padding-top: 14px;
   font-size: 13px;
 }
@@ -356,7 +356,7 @@
 
 .km-report-actions button {
   padding: 9px;
-  border: 1px solid #ccd4cd;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
 }
 
@@ -373,7 +373,7 @@
 
 .km-bom-table th,.km-bom-table td {
   padding: 6px;
-  border-bottom: 1px solid #ccd4cd;
+  border-bottom: 1px solid var(--site-line);
   text-align: left;
 }
 
@@ -416,7 +416,7 @@
 
 .ks-summary-grid article {
   padding: 14px 14px 20px;
-  border: 1px solid #dfe3db;
+  border: 1px solid var(--site-line);
   border-radius: 16px;
   background: #fff;
 }
@@ -434,7 +434,7 @@
 .ks-summary-visual > svg {
   position: absolute;
   z-index: 2;
-  color: #345944;
+  color: var(--site-ink);
 }
 
 .ks-summary-visual .ks-diagram {
@@ -458,7 +458,7 @@
   margin-top: 18px;
   min-height: 42px;
   padding: 8px 15px;
-  border: 1px solid #aebbb3;
+  border: 1px solid var(--site-line);
   border-radius: 999px;
   font-size: 13px;
 }

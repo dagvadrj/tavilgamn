@@ -35,7 +35,7 @@ export function Drawer({
       {open && (
         <div
           onClick={onClose}
-          className="planner-drawer-backdrop fixed inset-0 z-[60] bg-[#293C32]/40 xl:hidden"
+          className="planner-drawer-backdrop fixed inset-0 z-[60] bg-ui-ink/40 xl:hidden"
         />
       )}
       <aside
@@ -44,19 +44,19 @@ export function Drawer({
         className={cn(
           "planner-drawer fixed inset-y-0 z-[70] flex w-[88vw] max-w-[340px] flex-col bg-[#FAF9F6] shadow-2xl transition-transform duration-300 xl:relative xl:z-auto xl:w-auto xl:max-w-none xl:translate-x-0 xl:shadow-none",
           side === "left"
-            ? "left-0 border-r border-[#293C32]/10 xl:flex"
-            : "right-0 border-l border-[#293C32]/10 xl:flex",
+            ? "left-0 border-r border-ui-line xl:flex"
+            : "right-0 border-l border-ui-line xl:flex",
           !open && "planner-drawer-closed",
           !open && side === "left" && "-translate-x-full xl:translate-x-0",
           !open && side === "right" && "translate-x-full xl:translate-x-0",
         )}
       >
-        <div className="planner-drawer-heading flex items-center justify-between border-b border-[#293C32]/10 p-4 xl:hidden">
-          <p className="text-lg text-[#293C32]">{title}</p>
+        <div className="planner-drawer-heading flex items-center justify-between border-b border-ui-line p-4 xl:hidden">
+          <p className="text-lg text-ui-ink">{title}</p>
           <button
             onClick={onClose}
             aria-label="Самбар хаах"
-            className="grid h-9 w-9 place-items-center rounded-full hover:bg-[#293C32]/5"
+            className="grid h-9 w-9 place-items-center rounded-full hover:bg-ui-ink/5"
           >
             <X className="h-4 w-4" />
           </button>
@@ -81,14 +81,14 @@ export function CompareModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[80] grid place-items-center bg-[#293C32]/60 p-6"
+      className="fixed inset-0 z-[80] grid place-items-center bg-ui-ink/60 p-6"
     >
       <div
         onClick={(e) => e.stopPropagation()}
         className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-lg bg-[#FAF9F6] p-8"
       >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl text-[#293C32]">Загваруудыг харьцуулах</h2>
+          <h2 className="text-2xl text-ui-ink">Загваруудыг харьцуулах</h2>
           <button onClick={onClose} className="btn-ghost !py-2">
             Хаах
           </button>
@@ -119,21 +119,21 @@ export function CompareModal({
                   <MiniTopDown design={d} />
                 </div>
                 <div className="p-5">
-                  <p className="text-lg text-[#293C32]">{d.name}</p>
-                  <p className="text-xs text-[#6C726B]">
+                  <p className="text-lg text-ui-ink">{d.name}</p>
+                  <p className="text-xs text-ui-muted">
                     {d.roomName ?? "Зочны өрөө"} ·{" "}
                     {getRoomGeometry(d).area.toFixed(1)} м²
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="label">Тавилга</p>
-                      <p className="font-mono font-medium text-[#293C32]">
+                      <p className="font-mono font-medium text-ui-ink">
                         {d.pieces.length}
                       </p>
                     </div>
                     <div>
                       <p className="label">Нийт үнэ</p>
-                      <p className="font-mono font-medium text-[#293C32]">
+                      <p className="font-mono font-medium text-ui-ink">
                         {formatPrice(total)}
                       </p>
                     </div>
@@ -195,7 +195,7 @@ function MiniTopDown({ design }: { design: RoomDesign }) {
                   width={r.w * scale}
                   height={r.d * scale}
                   fill={p.kitchen!.design.cabinets[0]?.color ?? "#bb915e"}
-                  stroke="#293c32"
+                  stroke="var(--site-ink)"
                   strokeWidth={0.6}
                 />
               ))}

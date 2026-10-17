@@ -30,7 +30,7 @@
 
 .kitchen-suggestions button {
   padding: 10px 16px;
-  border: 1px solid #b9c4b9;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   background: white;
 }

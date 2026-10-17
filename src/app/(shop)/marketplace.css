@@ -77,7 +77,7 @@
 }
 
 .shop-shell .hero-copy h1 > span {
-  color: #45684e;
+  color: var(--site-muted);
 }
 
 .shop-shell .hero-copy p {
@@ -159,7 +159,7 @@
 
 .shop-shell .marketplace-product-card:hover {
   border-color: var(--site-line);
-  box-shadow: 0 7px 22px #24352d09;
+  box-shadow: 0 7px 22px #26384809;
 }
 
 .shop-shell .marketplace-product-card .product-photo {
@@ -324,7 +324,7 @@
 }
 
 .shop-shell .stock-dot.available {
-  background: #65846a;
+  background: var(--site-accent);
 }
 
 .shop-shell .product-delivery {
@@ -529,7 +529,7 @@
 
 .shop-shell .featured-merchant-card:hover {
   transform: none;
-  box-shadow: 0 7px 22px #24352d09;
+  box-shadow: 0 7px 22px #26384809;
 }
 
 .shop-shell .featured-merchant-image {

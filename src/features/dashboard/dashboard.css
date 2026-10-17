@@ -9,7 +9,7 @@
   --dashboard-ink: var(--site-ink);
   --dashboard-muted: var(--site-muted);
   --dashboard-accent: var(--site-accent);
-  --dashboard-success: #72c98a;
+  --dashboard-success: var(--site-success);
   --dashboard-danger: #ff8a86;
   --dashboard-warning: #e8bf74;
   color-scheme: light;

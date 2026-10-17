@@ -34,7 +34,7 @@ export function AdminMessages() {
       {!current?.messages.length && <p className="admin-empty">Одоогоор зурвас алга.</p>}
       {current?.messages.map(message => <article key={message.id} className="admin-panel p-5">
         <h2 className="font-semibold">{message.name}</h2><a className="break-all text-sm underline" href={`mailto:${message.email}`}>{message.email}</a>
-        <p className="mt-1 text-xs text-[#74806b]">{new Date(message.created_at).toLocaleString("mn-MN", {timeZone: "Asia/Ulaanbaatar"})}</p>
+        <p className="mt-1 text-xs text-ui-muted">{new Date(message.created_at).toLocaleString("mn-MN", {timeZone: "Asia/Ulaanbaatar"})}</p>
         <p className="mt-4 whitespace-pre-wrap break-words text-sm">{message.message}</p>
       </article>)}
     </div>}

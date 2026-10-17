@@ -1,6 +1,6 @@
 import type { PlacedFurniture, RoomShape } from "./types";
 import { getRoomGeometry, type RoomSegment } from "./roomGeometry";
-import { dimsFor, findFreePlacement, isPlacementValid } from "@/three/collision";
+import { dimsFor, findFreePlacement, isInsideRoom, isPlacementValid, pieceRects, type PlacementRoom } from "@/three/collision";
 import { openingWorldTransform } from "./roomOpenings";
 import { normalizePlacementMetadata } from "./placementMetadata";
 /** Legacy edge identity deliberately changes with its geometry; never rebind by index. */
@@ -23,6 +23,7 @@ export function moveAttachedFurniture(piece: PlacedFurniture, x: number, z: numb
     return {...piece,x,z,...(attachment?.kind==="floor"?{attachment:{...attachment,x,z}}:{})};
 }
 export function wallAttachedPiece(piece: PlacedFurniture, room: RoomShape, roomId: string, segmentId: string, along: number, elevation: number): PlacedFurniture {
+    if (![along, elevation].every(Number.isFinite)) throw new Error("Бэхэлгээний байрлал, өндөр тоо байна.");
     const wall = getRoomGeometry(room).segments.find(s => !s.hole && furnitureWallId(s) === segmentId);
     if (!wall)
         throw new Error("Тавилгын холбогдсон хана өөрчлөгдсөн. Ханыг дахин сонгоно уу.");
@@ -85,6 +86,8 @@ export function resolveFurnitureAttachments(pieces: PlacedFurniture[], room: Roo
             const cos = Math.cos(parent.rotation), sin = Math.sin(parent.rotation);
             result = { ...piece, x: parent.x + x * cos + z * sin, z: parent.z - x * sin + z * cos, elevation: (parent.elevation ?? 0) + y, rotation: parent.rotation + yaw };
         }
+        else if (!normalizePlacementMetadata(piece.placement).surfaces.includes("floor"))
+            throw new Error("Энэ тавилгыг зөвшөөрсөн хана эсвэл тулгуур дээр байрлуулна уу.");
         else if (attachment?.kind === "floor")
             result = { ...piece, x: attachment.x, z: attachment.z, rotation: attachment.yaw, elevation: 0 };
         visiting.delete(piece.instanceId);
@@ -93,19 +96,64 @@ export function resolveFurnitureAttachments(pieces: PlacedFurniture[], room: Roo
     }
     return pieces.filter(piece => !onlyId || piece.instanceId === onlyId).map(resolve);
 }
-export function findInitialFurniturePlacement(piece: PlacedFurniture, others: PlacedFurniture[], room: RoomShape, roomId: string) {
+export interface InitialPlacementHints {
+    floor?: { x: number; z: number };
+    walls?: { segmentId: string; along: number }[];
+}
+export function initialPlacementFailure(piece: PlacedFurniture): string {
+    const { surfaces } = normalizePlacementMetadata(piece.placement);
+    if (surfaces.length === 1 && surfaces[0] === "wall") return "Хананд бэхлэх сул зай олдсонгүй. Хаалга, цонхны зай болон бусад ханын тавилгын байрлалыг шалгана уу.";
+    if (surfaces.length === 1 && surfaces[0] === "surface") return "Тохирох тулгуур гадаргуу дээр сул зай олдсонгүй. Тулгуур тавилга нэмэх эсвэл дээрх зүйлсийг зөөнө үү.";
+    return "Сонгосон өрөөнд байрлуулах сул зай олдсонгүй. Өөр тавилга зөөх эсвэл өрөөний хэмжээг шалгана уу.";
+}
+export function findInitialFurniturePlacement(piece: PlacedFurniture, others: PlacedFurniture[], room: RoomShape, roomId: string, hints: InitialPlacementHints = {}) {
     const metadata = normalizePlacementMetadata(piece.placement);
+    const geometry = getRoomGeometry(room);
+    // Starting a new object is scoped to the active room, even when drag can cross an open seam.
+    const activeBoundary: PlacementRoom = { ...room, placementGeometry: undefined };
+    const inside = (candidate: PlacedFurniture) => isInsideRoom(candidate, activeBoundary);
     if (metadata.surfaces.includes("floor")) {
-        const floor = findFreePlacement({ ...piece, elevation: 0, attachment: undefined }, others, room);
-        if (floor)
-            return floor;
+        const preferred = hints.floor && [hints.floor.x,hints.floor.z].every(Number.isFinite)
+            ? { x: Math.max(geometry.bounds.minX,Math.min(geometry.bounds.maxX,hints.floor.x)), z: Math.max(geometry.bounds.minZ,Math.min(geometry.bounds.maxZ,hints.floor.z)) } : piece;
+        for (const rotation of [piece.rotation, piece.rotation + Math.PI / 2]) {
+            const floor = findFreePlacement({ ...piece, x: preferred.x, z: preferred.z, rotation, elevation: 0, attachment: undefined }, others, room, { bounds: geometry.bounds, accept: inside });
+            if (floor) return floor;
+        }
     }
     if (metadata.surfaces.includes("wall")) {
-        for (const wall of getRoomGeometry(room).segments.filter(s => !s.hole)) {
-            for (const position of [.5, .25, .75, .1, .9])
+        const wallHints = (hints.walls ?? []).filter(hint => Number.isFinite(hint.along));
+        const walls = geometry.segments.filter(s => !s.hole).sort((a,b) => {
+            const rank = (wall: RoomSegment) => { const index = wallHints.findIndex(h => h.segmentId === furnitureWallId(wall)); return index < 0 ? Infinity : index; };
+            return rank(a) - rank(b);
+        });
+        for (const wall of walls) {
+            const preferred = wallHints.find(h => h.segmentId === furnitureWallId(wall))?.along ?? wall.length / 2;
+            const dimensions = dimsFor(piece), margin = dimensions.w / 2 + .01;
+            const positions = new Set([preferred, wall.length/2, margin, wall.length-margin]);
+            for (let position=margin; position<=wall.length-margin; position+=.2) positions.add(position);
+            // Exact opening/occupied edges find the gaps that evenly spaced samples miss.
+            const along = (x:number,z:number) => ((x-wall.a.x)*(wall.b.x-wall.a.x)+(z-wall.a.z)*(wall.b.z-wall.a.z))/wall.length;
+            for (const opening of room.openings ?? []) {
+                const point=openingWorldTransform(room,opening);
+                if (Math.abs((point.x-wall.a.x)*wall.nx+(point.z-wall.a.z)*wall.nz)>.001) continue;
+                const center=along(point.x,point.z), clearance=(opening.width+dimensions.w)/2+.061;
+                positions.add(center-clearance);positions.add(center+clearance);
+            }
+            for (const other of others) for(const rect of pieceRects(other)) {
+                const c=Math.cos(rect.rot),s=Math.sin(rect.rot);
+                const projected=[[-1,-1],[-1,1],[1,-1],[1,1]].map(([x,z])=>along(rect.cx+x*rect.w/2*c-z*rect.d/2*s,rect.cz+x*rect.w/2*s+z*rect.d/2*c));
+                positions.add(Math.min(...projected)-margin);positions.add(Math.max(...projected)+margin);
+            }
+            for (const position of [...positions].sort((a,b)=>Math.abs(a-preferred)-Math.abs(b-preferred)))
                 try {
-                    const candidate = wallAttachedPiece(piece, room, roomId, furnitureWallId(wall), wall.length * position, metadata.defaultElevation ?? 1.4);
-                    if (isPlacementValid(candidate, others, room))
+                    const candidate = wallAttachedPiece(piece, room, roomId, furnitureWallId(wall), position, piece.elevation ?? metadata.defaultElevation ?? 1.4);
+                    const contactSegments=(room as PlacementRoom).placementGeometry?.segments;
+                    const supported=!contactSegments || contactSegments.some(s => {
+                        if(s.hole || s.nx*wall.nx+s.nz*wall.nz<.999 || Math.abs((s.a.x-wall.a.x)*wall.nx+(s.a.z-wall.a.z)*wall.nz)>.001) return false;
+                        const a=along(s.a.x,s.a.z),b=along(s.b.x,s.b.z),center=along(candidate.x,candidate.z);
+                        return center-dimensions.w/2>=Math.min(a,b)-1e-6 && center+dimensions.w/2<=Math.max(a,b)+1e-6;
+                    });
+                    if (supported && inside(candidate) && isPlacementValid(candidate, others, room))
                         return candidate;
                 }
                 catch { /* Try the next deterministic candidate. */ }
@@ -121,11 +169,19 @@ export function findInitialFurniturePlacement(piece: PlacedFurniture, others: Pl
                     try {
                         const attached: PlacedFurniture = { ...piece, attachment: { kind: "surface", parentInstanceId: parent.instanceId, surfaceId: surface.id, localPosition: [x, surface.elevation, z], localQuaternion: [0, 0, 0, 1] } };
                         const candidate = resolveFurnitureAttachments([...others, attached], room, roomId,attached.instanceId)[0];
-                        if (isPlacementValid(candidate, others, room))
+                        if (inside(candidate) && isPlacementValid(candidate, others, room))
                             return candidate;
                     }
                     catch { /* Select a different support surface or location. */ }
             }
     }
     return null;
+}
+
+/** Duplicate on the same kind of surface, retaining authored permissions and height. */
+export function duplicateFurniturePlacement(piece: PlacedFurniture, instanceId: string, others: PlacedFurniture[], room: RoomShape, roomId: string) {
+    const metadata = normalizePlacementMetadata(piece.placement);
+    const kind = piece.attachment?.kind;
+    const copy = findInitialFurniturePlacement({ ...piece, instanceId, attachment: undefined, placement: kind ? { ...metadata, surfaces: [kind] } : metadata }, others, room, roomId);
+    return copy ? { ...copy, placement: piece.placement } : null;
 }

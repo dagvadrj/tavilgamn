@@ -1,16 +1,9 @@
 "use client";
 import dynamic from "next/dynamic";
 import { ArrowLeft, ArrowRight, Check, X, Undo2, Redo2 } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type PointerEvent,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RoomDesign, RoomShape, RoomSurfaces } from "@/lib/types";
-import { getRoomGeometry, roomPath } from "@/lib/roomGeometry";
+import { getRoomGeometry } from "@/lib/roomGeometry";
 import { ROOM_TEMPLATES, type RoomTemplate } from "@/lib/roomPolygon";
 import {
   BUILDER_STAGES,
@@ -19,7 +12,6 @@ import {
   chooseRoomTemplate,
   initializeRoomBuilder,
   selectedRoomTemplate,
-  resizeRoomBuilder,
   transformRoomBuilder,
   validateRoomBuilder,
   type RoomBuilderDraft,
@@ -32,6 +24,14 @@ import {
 import { createOpening, OPENING_TEMPLATES } from "@/lib/roomOpenings";
 import { FLOOR_MATERIALS } from "@/lib/roomMaterials";
 import { OpeningQuickEditor } from "./OpeningQuickEditor";
+import { RoomWallPlan } from "./RoomWallPlan";
+import { RoomDimensionSidebar } from "./RoomDimensionSidebar";
+import {
+  resizeDrawnWall,
+  wallUnitLabel,
+  wallUnitScale,
+  type WallDrawingUnit,
+} from "@/lib/roomWallDrawing";
 import "./room-builder.css";
 const RoomCanvas = dynamic(
   () => import("@/three/RoomCanvas").then((m) => m.RoomCanvas),
@@ -68,7 +68,8 @@ export function RoomBuilder({
     [ceiling, setCeiling] = useState(false);
   const [error, setError] = useState(""),
     [selected, setSelected] = useState(0);
-  const [unit, setUnit] = useState<"cm" | "ft">("cm");
+  const [unit, setUnit] = useState<WallDrawingUnit>("cm");
+  const [drawing, setDrawing] = useState(false);
   const [furthestStage, setFurthestStage] = useState(0);
   const [openingKind, setOpeningKind] = useState<"door" | "window">("door");
   const [selectedOpening, setSelectedOpening] = useState<string | null>(null);
@@ -76,13 +77,6 @@ export function RoomBuilder({
   useEffect(() => {
     heading.current?.focus();
   }, [stage]);
-  const gesture = useRef<{
-    pointer: number;
-    index: number;
-    matrix: DOMMatrix;
-    before: RoomBuilderDraft;
-    element: SVGSVGElement;
-  } | null>(null);
   const geometry = useMemo(() => getRoomGeometry(draft), [draft]);
   const mode = builderInteraction(stage, ceiling);
   const preview = useMemo(
@@ -114,6 +108,10 @@ export function RoomBuilder({
     send({ type: "end" });
   }, [send]);
   function selectStage(next: number) {
+    if (drawing) {
+      setError("Зурж буй хүрээгээ эхлээд хаах эсвэл болино уу.");
+      return;
+    }
     endEdit();
     const issue = validateRoomBuilder(historyRef.current.draft);
     if (issue) {
@@ -129,116 +127,42 @@ export function RoomBuilder({
     label: string,
     value: number,
     update: (value: number) => boolean,
-  ) => {
-    if (unit === "cm")
-      return (
-        <label>
-          {label} (см)
-          <input
-            key={`${label}-${value}-cm`}
-            type="number"
-            defaultValue={Number((value * 100).toFixed(2))}
-            step="0.1"
-            min="5"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                e.currentTarget.blur();
-              }
-            }}
-            onBlur={(e) => {
-              const number = Number(e.target.value) / 100;
-              if (
-                !e.target.value.trim() ||
-                !Number.isFinite(number) ||
-                (number !== value && !update(number))
-              ) {
-                e.currentTarget.value = String(
-                  Number((value * 100).toFixed(2)),
-                );
-              }
-            }}
-          />
-        </label>
-      );
-    const totalInches = Math.round((value / 0.0254) * 100) / 100,
-      feet = Math.floor(totalInches / 12),
-      inches = Number((totalInches - feet * 12).toFixed(2));
-    return (
-      <fieldset className="room-builder-history">
-        <legend>{label} · фут, инч</legend>
-        <label>
-          Фут
-          <input
-            key={`${label}-${value}-feet`}
-            type="number"
-            min="0"
-            step="1"
-            defaultValue={feet}
-            onBlur={(e) => {
-              const n = Number(e.target.value);
-              if (
-                !e.target.value.trim() ||
-                !Number.isInteger(n) ||
-                n < 0 ||
-                !update((n * 12 + inches) * 0.0254)
-              )
-                e.currentTarget.value = String(feet);
-            }}
-          />
-        </label>
-        <label>
-          Инч
-          <input
-            key={`${label}-${value}-inches`}
-            type="number"
-            min="0"
-            max="11.99"
-            step=".1"
-            defaultValue={inches}
-            onBlur={(e) => {
-              const n = Number(e.target.value);
-              if (
-                !e.target.value.trim() ||
-                !Number.isFinite(n) ||
-                n < 0 ||
-                n >= 12 ||
-                !update((feet * 12 + n) * 0.0254)
-              )
-                e.currentTarget.value = String(inches);
-            }}
-          />
-        </label>
-      </fieldset>
-    );
-  };
-  function finishGesture(event: PointerEvent<SVGSVGElement>, cancel = false) {
-    const active = gesture.current;
-    if (!active || active.pointer !== event.pointerId) return;
-    gesture.current = null;
-    send({ type: cancel ? "cancel" : "end" });
-    if (event.currentTarget.hasPointerCapture(event.pointerId))
-      event.currentTarget.releasePointerCapture(event.pointerId);
-  }
-  const points = draft.outline;
+  ) => (
+    <label>
+      {label} ({wallUnitLabel[unit]})
+      <input
+        key={`${label}-${value}-${unit}`}
+        type="number"
+        defaultValue={Number((value * wallUnitScale[unit]).toFixed(2))}
+        step={unit === "m" ? 0.01 : 1}
+        min={0.05 * wallUnitScale[unit]}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            event.currentTarget.blur();
+          }
+        }}
+        onBlur={(event) => {
+          const number = Number(event.target.value) / wallUnitScale[unit];
+          if (
+            !event.target.value.trim() ||
+            !Number.isFinite(number) ||
+            (number !== value && !update(number))
+          )
+            event.currentTarget.value = String(
+              Number((value * wallUnitScale[unit]).toFixed(2)),
+            );
+        }}
+      />
+    </label>
+  );
   const walls = geometry.segments.filter((s) => !s.hole);
   const wallIndex = builderWallIndex(selected, walls.length);
   const template = selectedRoomTemplate(draft);
   return (
     <section
-      className="room-builder"
+      className={`room-builder${stage === 1 ? " is-dimensions" : ""}`}
       aria-label="Дөрвөн алхамтай өрөө байгуулагч"
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && gesture.current) {
-          event.preventDefault();
-          event.stopPropagation();
-          const active = gesture.current;
-          gesture.current = null;
-          send({ type: "cancel" });
-          if (active.element.hasPointerCapture(active.pointer))
-            active.element.releasePointerCapture(active.pointer);
-        }
-      }}
     >
       <aside className="room-builder-panel">
         <div className="room-builder-brand">
@@ -252,23 +176,28 @@ export function RoomBuilder({
             <X size={18} />
           </button>
         </div>
-        <ol className="room-builder-steps" aria-label="Өрөө байгуулах алхмууд">
-          {BUILDER_STAGES.map((label, i) => (
-            <li key={label}>
-              <button
-                type="button"
-                disabled={i > furthestStage}
-                aria-current={stage === i ? "step" : undefined}
-                onClick={() => selectStage(i)}
-              >
-                <span>
-                  {i < stage ? <Check size={14} aria-hidden="true" /> : i + 1}
-                </span>
-                <small>{label}</small>
-              </button>
-            </li>
-          ))}
-        </ol>
+        {stage !== 1 && (
+          <ol
+            className="room-builder-steps"
+            aria-label="Өрөө байгуулах алхмууд"
+          >
+            {BUILDER_STAGES.map((label, i) => (
+              <li key={label}>
+                <button
+                  type="button"
+                  disabled={i > furthestStage}
+                  aria-current={stage === i ? "step" : undefined}
+                  onClick={() => selectStage(i)}
+                >
+                  <span>
+                    {i < stage ? <Check size={14} aria-hidden="true" /> : i + 1}
+                  </span>
+                  <small>{label}</small>
+                </button>
+              </li>
+            ))}
+          </ol>
+        )}
         <div className="room-builder-content">
           <header className="room-builder-stage-heading">
             <p className="room-builder-progress" aria-live="polite">
@@ -278,7 +207,7 @@ export function RoomBuilder({
               {
                 [
                   "Өрөөний хэлбэрээ сонгоё",
-                  "Бодит хэмжээгээ оруулъя",
+                  "Ханын хэмжээгээ тохируулъя",
                   "Хаалга, цонхоо нэмье",
                   "Өнгө, материалаа сонгоё",
                 ][stage]
@@ -288,7 +217,7 @@ export function RoomBuilder({
               {
                 [
                   "Өрөөнийхөө план зурагтай хамгийн төстэй хэлбэрийг сонгоорой.",
-                  "Эхлээд өргөн, уртаа оруулаад таазны өндрөө тохируулна.",
+                  "Ханаа чирж хэмжээг нь өөрчилнө. Шинэ хэлбэр зурах бол дээрх Line хэрэгслийг сонгоорой.",
                   "Ханаа сонгоод хаалга эсвэл цонх нэмээрэй. Дараа нь чирж байрлуулж болно.",
                   "Өөрчлөлт бүр өрөөн дээр шууд харагдана. Дуусгаад тавилгаа байрлуулаарай.",
                 ][stage]
@@ -333,157 +262,35 @@ export function RoomBuilder({
           )}
           {stage === 1 && (
             <>
-              <div className="room-builder-history">
-                <button
-                  type="button"
-                  aria-pressed={!ceiling}
-                  onClick={() => setCeiling(false)}
-                >
-                  Шалны план
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={ceiling}
-                  onClick={() => setCeiling(true)}
-                >
-                  Таазны өндөр
-                </button>
-              </div>
-              <label>
-                Хэмжих нэгж
-                <select
-                  value={unit}
-                  onChange={(e) => setUnit(e.target.value as typeof unit)}
-                >
-                  <option value="cm">Сантиметр</option>
-                  <option value="ft">Фут, инч</option>
-                </select>
-              </label>
-              {ceiling ? (
+              <RoomDimensionSidebar
+                draft={draft}
+                selected={wallIndex}
+                unit={unit}
+                onUnit={setUnit}
+                onTransform={(transform) => {
+                  if (drawing) {
+                    setError("Зурж буй хүрээгээ эхлээд хаах эсвэл болино уу.");
+                    return;
+                  }
+                  try {
+                    change(
+                      transformRoomBuilder(historyRef.current.draft, transform),
+                    );
+                  } catch (reason) {
+                    setError((reason as Error).message);
+                  }
+                }}
+              />
+              {ceiling &&
                 measure("Таазны өндөр", draft.height, (height) =>
-                  change({ ...draft, height }),
-                )
-              ) : (
-                <>
-                  {measure("Өргөн", draft.width, (width) =>
-                    change(resizeRoomBuilder(draft, width, draft.depth)),
-                  )}
-                  {measure("Урт", draft.depth, (depth) =>
-                    change(resizeRoomBuilder(draft, draft.width, depth)),
-                  )}
-                  <details className="room-builder-advanced">
-                    <summary>Ханын хэлбэрийг нарийвчлан засах</summary>
-                    <label>
-                      Ханын хэсэг
-                      <select
-                        value={wallIndex}
-                        onChange={(e) => setSelected(Number(e.target.value))}
-                      >
-                        {walls.map((s, i) => (
-                          <option key={s.id ?? i} value={i}>
-                            Хана {i + 1} · {(s.length * 100).toFixed(1)} см
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    {points &&
-                      points[wallIndex] &&
-                      measure(
-                        "Ханын урт",
-                        walls[wallIndex].length,
-                        (length) => {
-                          const a = points[wallIndex],
-                            b = points[(wallIndex + 1) % points.length],
-                            ratio = length / walls[wallIndex].length;
-                          return change({
-                            ...draft,
-                            outline: points.map((p, i) =>
-                              i === (wallIndex + 1) % points.length
-                                ? {
-                                    ...p,
-                                    x: a.x + (b.x - a.x) * ratio,
-                                    z: a.z + (b.z - a.z) * ratio,
-                                  }
-                                : p,
-                            ),
-                          });
-                        },
-                      )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!points) return;
-                        const next = [...points],
-                          a = points[wallIndex],
-                          b = points[(wallIndex + 1) % points.length],
-                          segmentId = crypto.randomUUID();
-                        next.splice(wallIndex + 1, 0, {
-                          id: crypto.randomUUID(),
-                          segmentId,
-                          x: (a.x + b.x) / 2,
-                          z: (a.z + b.z) / 2,
-                        });
-                        const openings = draft.openings?.map((o) =>
-                          o.segmentId === a.segmentId
-                            ? {
-                                ...o,
-                                segmentId:
-                                  o.position <= 0.5 ? a.segmentId : segmentId,
-                                position:
-                                  o.position <= 0.5
-                                    ? o.position * 2
-                                    : (o.position - 0.5) * 2,
-                              }
-                            : o,
-                        );
-                        change({ ...draft, outline: next, openings });
-                      }}
-                    >
-                      Хананд цэг нэмэх
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!points || points.length <= 3}
-                      onClick={() => {
-                        if (!points) return;
-                        if (
-                          change({
-                            ...draft,
-                            outline: points.filter((_, i) => i !== wallIndex),
-                          })
-                        )
-                          setSelected(0);
-                      }}
-                    >
-                      Сонгосон цэг устгах
-                    </button>
-                    <p>
-                      Цэгүүдийг чирж хэлбэрээ өөрчилнө. Хэмжээг батлахад
-                      хананууд огтлолцвол өмнөх зөв хэлбэр үлдэнэ.
-                    </p>
-                  </details>
-                </>
+                  change({ ...historyRef.current.draft, height }),
+                )}
+              {drawing && (
+                <p className="room-builder-note">
+                  Эхний цэг дээр дарж хүрээгээ хаагаарай. Escape дарвал одоогийн
+                  зургийг болино.
+                </p>
               )}
-              <details className="room-builder-advanced">
-                <summary>Хэлбэрийг эргүүлэх</summary>
-                <div className="room-builder-history">
-                  {(["flip-x", "flip-z", "rotate"] as const).map((id, i) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => {
-                        try {
-                          change(transformRoomBuilder(draft, id));
-                        } catch (reason) {
-                          setError((reason as Error).message);
-                        }
-                      }}
-                    >
-                      {["Хэвтээ эргүүлэх", "Босоо эргүүлэх", "90° эргүүлэх"][i]}
-                    </button>
-                  ))}
-                </div>
-              </details>
             </>
           )}
           {stage === 2 && (
@@ -780,8 +587,13 @@ export function RoomBuilder({
           <button
             className="room-builder-next"
             type="button"
+            disabled={drawing}
             onClick={() => {
               endEdit();
+              if (drawing) {
+                setError("Зурж буй хүрээгээ эхлээд хаагаарай.");
+                return;
+              }
               const issue = validateRoomBuilder(historyRef.current.draft);
               if (issue) {
                 setError(issue);
@@ -811,111 +623,79 @@ export function RoomBuilder({
             {mode.view === "plan" ? "Дээрээс харах" : "3D харагдац"} ·{" "}
             {geometry.area.toFixed(2)} м²
           </span>
-          <div>
-            <button
-              type="button"
-              title="Үйлдэл буцаах"
-              aria-label="Үйлдэл буцаах"
-              disabled={!past.length && !history.baseline}
-              onClick={() => send({ type: "undo" })}
+          {stage === 1 && (
+            <div
+              className="room-builder-view-tabs"
+              role="group"
+              aria-label="Хэмжээ засах харагдац"
             >
-              <Undo2 size={18} />
-            </button>
-            <button
-              type="button"
-              title="Дахин хийх"
-              aria-label="Дахин хийх"
-              disabled={!future.length || !!history.baseline}
-              onClick={() => send({ type: "redo" })}
-            >
-              <Redo2 size={18} />
-            </button>
-          </div>
+              <button
+                type="button"
+                aria-pressed={!ceiling}
+                disabled={drawing}
+                onClick={() => setCeiling(false)}
+              >
+                Шалны план
+              </button>
+              <button
+                type="button"
+                aria-pressed={ceiling}
+                disabled={drawing}
+                onClick={() => setCeiling(true)}
+              >
+                Таазны өндөр
+              </button>
+            </div>
+          )}
+          {!mode.wallEditing && (
+            <div>
+              <button
+                type="button"
+                title="Үйлдэл буцаах"
+                aria-label="Үйлдэл буцаах"
+                disabled={!past.length && !history.baseline}
+                onClick={() => send({ type: "undo" })}
+              >
+                <Undo2 size={18} />
+              </button>
+              <button
+                type="button"
+                title="Дахин хийх"
+                aria-label="Дахин хийх"
+                disabled={!future.length || !!history.baseline}
+                onClick={() => send({ type: "redo" })}
+              >
+                <Redo2 size={18} />
+              </button>
+            </div>
+          )}
         </div>
         {mode.wallEditing ? (
-          <svg
-            viewBox={`${-draft.width / 2 - 0.5} ${-draft.depth / 2 - 0.5} ${draft.width + 1} ${draft.depth + 1}`}
-            aria-label="Өрөөний шугаман план"
-            style={{ touchAction: "none" }}
-            onPointerMove={(e) => {
-              const drag = gesture.current;
-              if (!drag || drag.pointer !== e.pointerId) return;
-              const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(
-                drag.matrix,
-              );
-              change({
-                ...drag.before,
-                outline: drag.before.outline?.map((v, i) =>
-                  i === drag.index
-                    ? {
-                        ...v,
-                        x: Math.round(p.x * 1000) / 1000,
-                        z: Math.round(p.y * 1000) / 1000,
-                      }
-                    : v,
-                ),
-              });
+          <RoomWallPlan
+            draft={draft}
+            selected={wallIndex}
+            unit={unit}
+            onSelect={setSelected}
+            onChange={change}
+            onDrawingChange={setDrawing}
+            onError={setError}
+            onEditStart={beginEdit}
+            onEditEnd={(cancel) => send({ type: cancel ? "cancel" : "end" })}
+            canUndo={!!past.length || !!history.baseline}
+            canRedo={!!future.length && !history.baseline}
+            onUndo={() => send({ type: "undo" })}
+            onRedo={() => send({ type: "redo" })}
+            onResizeWall={(length) => {
+              try {
+                return change(
+                  resizeDrawnWall(historyRef.current.draft, wallIndex, length),
+                );
+              } catch (reason) {
+                setError((reason as Error).message);
+                return false;
+              }
             }}
-            onPointerUp={(e) => finishGesture(e)}
-            onPointerCancel={(e) => finishGesture(e, true)}
-            onLostPointerCapture={(e) => finishGesture(e, true)}
-          >
-            <path
-              d={roomPath(draft)}
-              fill={draft.floorColor}
-              stroke="#526859"
-              strokeWidth={0.025}
-            />
-            {walls.map((s, i) => (
-              <text
-                key={s.id ?? i}
-                x={(s.a.x + s.b.x) / 2}
-                y={(s.a.z + s.b.z) / 2 - 0.08}
-                fontSize={0.11}
-                textAnchor="middle"
-              >
-                {(s.length * 100).toFixed(1)} см
-              </text>
-            ))}
-            {mode.wallEditing &&
-              points?.map((p, i) => (
-                <circle
-                  key={p.id}
-                  cx={p.x}
-                  cy={p.z}
-                  r={0.07}
-                  fill={i === wallIndex ? "#0058a3" : "white"}
-                  stroke="#0058a3"
-                  strokeWidth={0.02}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Өрөөний цэг ${i + 1}`}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelected(i);
-                    }
-                  }}
-                  onPointerDown={(e) => {
-                    if (e.button !== 0) return;
-                    const svg = e.currentTarget.ownerSVGElement,
-                      matrix = svg?.getScreenCTM()?.inverse();
-                    if (!svg || !matrix) return;
-                    e.preventDefault();
-                    setSelected(i);
-                    beginEdit();
-                    gesture.current = {
-                      pointer: e.pointerId,
-                      index: i,
-                      matrix,
-                      before: structuredClone(historyRef.current.draft),
-                      element: svg,
-                    };
-                    svg.setPointerCapture(e.pointerId);
-                  }}
-                />
-              ))}
-          </svg>
+          />
         ) : (
           <RoomCanvas
             design={preview}
@@ -945,13 +725,15 @@ export function RoomBuilder({
             }
           />
         )}
-        <p className="room-builder-preview-hint">
-          {mode.wallEditing
-            ? "Цэгийг чирж хэлбэрээ өөрчлөх · Escape: чирэлтийг болих"
-            : mode.orbit
-              ? "Чирж эргүүлэх · Гүйлгэж ойртуулах"
-              : "Хэлбэрээ сонгоод хэмжээгээ тохируулаарай"}
-        </p>
+        {!mode.wallEditing && (
+          <p className="room-builder-preview-hint">
+            {mode.wallEditing
+              ? "Цэгийг чирж хэлбэрээ өөрчлөх · Escape: чирэлтийг болих"
+              : mode.orbit
+                ? "Чирж эргүүлэх · Гүйлгэж ойртуулах"
+                : "Хэлбэрээ сонгоод хэмжээгээ тохируулаарай"}
+          </p>
+        )}
       </div>
     </section>
   );

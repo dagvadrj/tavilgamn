@@ -124,7 +124,7 @@ function CornerSlab({ size, depth, y, thickness, surface, selected = false, over
   return <mesh position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow={!selected} receiveShadow>
     <extrudeGeometry args={[shape, { depth: thickness, bevelEnabled: false }]} />
     {selected ? <meshBasicMaterial transparent opacity={0} depthWrite={false} /> : <meshStandardMaterial {...surface} />}
-    {selected && <Edges color="#426d59" />}
+    {selected && <Edges color="#0876c2" />}
   </mesh>;
 }
 
@@ -219,7 +219,7 @@ function KitchenScene({ kitchen, selected, onSelect, open }: ViewerProps) {
           {selected === cabinet.id && <mesh position={[0, height / 2, depth / 2]}>
             <boxGeometry args={[w + 0.006, height + 0.006, depth + 0.065]} />
             <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-            <Edges color="#426d59" />
+            <Edges color="#0876c2" />
           </mesh>}
         </group>;
       })}

@@ -87,11 +87,11 @@
 
 .mk-media .kd-gallery-stage {
   border-radius: 13px;
-  background: #e8ebe5;
+  background: var(--site-hover);
 }
 
 .mk-media :is(.kd-gallery-label, .kd-gallery-count, .kd-gallery-expand) {
-  color: #24382c;
+  color: var(--site-ink);
 }
 
 .mk-media .kd-gallery-thumbnails {
@@ -465,7 +465,7 @@
   height: 64px;
   overflow: hidden;
   border-radius: 7px;
-  background: #e8ebe5;
+  background: var(--site-hover);
 }
 
 .mk-source-image img {
@@ -507,7 +507,7 @@
   overflow: hidden;
   border: 1px solid var(--dashboard-border);
   border-radius: 6px;
-  background: #e8ebe5;
+  background: var(--site-hover);
 }
 
 .mk-source-options img {
@@ -843,7 +843,7 @@
   margin: 16px 0 0;
   overflow: hidden;
   border-radius: 8px;
-  background: #e8ebe5;
+  background: var(--site-hover);
 }
 
 .mk-confirm-preview img {

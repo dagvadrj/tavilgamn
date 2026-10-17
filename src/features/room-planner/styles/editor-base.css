@@ -1,6 +1,6 @@
 .planner-workspace {
   background: #f1f0ed;
-  color: #293c32;
+  color: var(--site-ink);
   grid-template-columns: 256px minmax(0, 1fr) 292px;
   height: 100dvh;
   min-height: 0;
@@ -71,7 +71,7 @@
   gap: 8px;
   align-items: center;
   background: white;
-  border: 1px solid #dce1db;
+  border: 1px solid var(--site-line);
   padding: 10px;
   border-radius: 10px;
   margin-bottom: 14px;
@@ -103,9 +103,9 @@
   padding: 3px;
   gap: 2px;
   background: #fffffff2;
-  border: 1px solid #dce0db;
+  border: 1px solid var(--site-line);
   border-radius: 12px;
-  box-shadow: 0 3px 12px #263a3008;
+  box-shadow: 0 3px 12px #26384808;
   pointer-events: auto;
 }
 
@@ -125,11 +125,11 @@
 }
 
 .planner-view-toolbar button:hover:not(:disabled) {
-  background: #eef1ed;
+  background: var(--site-hover);
 }
 
 .planner-view-toolbar button[aria-pressed="true"] {
-  background: #293c32;
+  background: var(--site-primary);
   color: white;
 }
 
@@ -164,7 +164,7 @@
   gap: 4px;
   max-width: min(310px, calc(100% - 32px));
   padding: 9px 12px;
-  border: 1px solid #dce1db;
+  border: 1px solid var(--site-line);
   border-radius: 10px;
   background: #fffffff0;
   font-size: 11px;
@@ -185,7 +185,7 @@
   padding: 4px 7px;
   border: 1px solid #fff8;
   border-radius: 5px;
-  background: #293c32;
+  background: var(--site-ink);
   color: #fff;
   font: 11px/1.5 system-ui, sans-serif;
   box-shadow: 0 2px 8px #0002;
@@ -244,10 +244,10 @@
 
 .planner-selection-toolbar:has(button) {
   background: white;
-  border: 1px solid #dce0db;
+  border: 1px solid var(--site-line);
   padding: 5px;
   border-radius: 14px;
-  box-shadow: 0 8px 30px #263a301a;
+  box-shadow: 0 8px 30px #2638481a;
 }
 
 .planner-selection-toolbar button {
@@ -284,9 +284,9 @@
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  border: 1px solid #dce0db;
+  border: 1px solid var(--site-line);
   background: #ffffffed;
-  box-shadow: 0 5px 24px #263a3008;
+  box-shadow: 0 5px 24px #26384808;
   border-radius: 14px;
   padding: 14px;
   font-size: 12px;
@@ -319,7 +319,7 @@
   width: max-content;
   max-width: min(520px, calc(100% - 32px));
   padding: 12px 14px;
-  background: #293c32;
+  background: var(--site-ink);
   color: white;
   border-radius: 12px;
   box-shadow: 0 8px 28px #0002;
@@ -346,7 +346,7 @@
   border: 1px solid #fff;
   border-radius: 16px;
   background: #fffffff0;
-  box-shadow: 0 10px 40px #293c3210;
+  box-shadow: 0 10px 40px #26384810;
   text-align: center;
 }
 
@@ -392,11 +392,11 @@
 .planner-number input {
   width: 100%;
   min-width: 0;
-  border: 1px solid #dce1db;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   padding: 9px 10px;
   background: white;
-  color: #293c32;
+  color: var(--site-ink);
   font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
@@ -409,16 +409,16 @@
   min-width: 0;
   width: 100%;
   min-height: 44px;
-  border: 1px solid #dce1db;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   padding: 9px 8px;
   background: white;
-  color: #293c32;
+  color: var(--site-ink);
   font-size: 14px;
 }
 
 .planner-rooms {
-  border-bottom: 1px solid #dce1db;
+  border-bottom: 1px solid var(--site-line);
   margin-bottom: 20px;
   padding-bottom: 18px;
 }
@@ -446,7 +446,7 @@
   gap: 8px;
   min-height: 44px;
   margin-top: 10px;
-  color: #42634f;
+  color: var(--site-muted);
   font-size: 14px;
   text-decoration: underline;
 }
@@ -455,21 +455,21 @@
   display: block;
   width: 100%;
   height: 220px;
-  border: 1px solid #dce1db;
+  border: 1px solid var(--site-line);
   border-radius: 10px;
-  background: #f5f6f2;
+  background: var(--site-bg);
   margin: 8px 0;
 }
 
 .room-shape-preview path {
-  fill: #e0e7d9;
-  stroke: #42634f;
+  fill: var(--site-hover);
+  stroke: var(--site-muted);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
 
 .room-shape-preview text {
-  fill: #293c32;
+  fill: var(--site-ink);
   font-weight: 600;
 }
 
@@ -489,14 +489,14 @@
   gap: 10px;
   width: 100%;
   padding: 14px 10px;
-  border: 1px solid #cbd6c6;
+  border: 1px solid var(--site-line);
   border-radius: 12px;
-  background: #f2f5ee;
+  background: var(--site-selected);
   text-align: left;
 }
 
 .room-geometry-trigger:hover {
-  background: #e8eee2;
+  background: var(--site-selected);
 }
 
 .room-geometry-trigger > svg {
@@ -529,11 +529,11 @@
   max-width: none;
   max-height: calc(100dvh - 32px);
   padding: 0;
-  border: 1px solid #d7dfd1;
+  border: 1px solid var(--site-line);
   border-radius: 18px;
-  background: #fafbf8;
-  color: #293c32;
-  box-shadow: 0 24px 80px #14261d40;
+  background: var(--site-selected);
+  color: var(--site-ink);
+  box-shadow: 0 24px 80px #26384840;
 }
 
 .room-geometry-modal[open] {
@@ -542,7 +542,7 @@
 }
 
 .room-geometry-modal::backdrop {
-  background: #18271f55;
+  background: #26384855;
 }
 
 .room-geometry-modal-header {
@@ -552,7 +552,7 @@
   gap: 12px;
   flex-shrink: 0;
   padding: 16px 20px;
-  border-bottom: 1px solid #dce1db;
+  border-bottom: 1px solid var(--site-line);
 }
 
 .room-geometry-modal-header h2 {
@@ -571,7 +571,7 @@
 }
 
 .room-geometry-modal-header button:hover {
-  background: #e8eee2;
+  background: var(--site-selected);
 }
 
 .room-geometry-modal-body {
@@ -595,11 +595,11 @@
 
 .room-shape-feature {
   min-width: 0;
-  border: 1px solid #d7dfd1;
+  border: 1px solid var(--site-line);
   border-radius: 10px;
   padding: 12px;
   margin-top: 14px;
-  background: #fafbf8;
+  background: var(--site-selected);
 }
 
 .room-shape-feature legend {
@@ -626,7 +626,7 @@
 
 .room-shape-add {
   margin-top: 8px;
-  color: #42634f;
+  color: var(--site-muted);
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -671,7 +671,7 @@
   justify-content: space-between;
   gap: 4px;
   padding: 6px;
-  background: #f1f4ec;
+  background: var(--site-selected);
   font-size: 12px;
 }
 
@@ -686,7 +686,7 @@
 .planner-transform {
   margin-top: 18px;
   padding-top: 16px;
-  border-top: 1px solid #e0e5df;
+  border-top: 1px solid var(--site-line);
 }
 
 .planner-transform .label {
@@ -706,7 +706,7 @@
   place-items: center;
   width: 38px;
   height: 38px;
-  border: 1px solid #dce1db;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   background: white;
 }
@@ -718,7 +718,7 @@
 
 .planner-object-list {
   padding: 16px;
-  border-bottom: 1px solid #dce1db;
+  border-bottom: 1px solid var(--site-line);
 }
 
 .planner-object-list > p:first-child {
@@ -741,12 +741,12 @@
 }
 
 .planner-object-list > button[aria-pressed="true"] {
-  border-color: #9aaf9a;
-  background: #e9efe7;
+  border-color: var(--site-accent);
+  background: var(--site-selected);
 }
 
 .planner-object-list > button:hover {
-  background: #edf1eb;
+  background: var(--site-hover);
 }
 
 .planner-object-list > button > span:nth-child(2) {
@@ -790,9 +790,9 @@
 
 .room-measured-plan {
   margin: 16px 0;
-  border: 1px solid #dce1d5;
+  border: 1px solid var(--site-line);
   border-radius: 14px;
-  background: #f8f9f5;
+  background: var(--site-bg);
   overflow: hidden;
 }
 
@@ -806,22 +806,22 @@
   display: block;
   width: 100%;
   height: clamp(280px, 48vh, 460px);
-  color: #293c32;
+  color: var(--site-ink);
 }
 
 .room-measured-plan svg text {
-  fill: #293c32;
+  fill: var(--site-ink);
   font-family: inherit;
   paint-order: stroke;
-  stroke: #f8f9f5;
+  stroke: var(--site-muted);
   stroke-width: 3px;
   vector-effect: non-scaling-stroke;
   stroke-linejoin: round;
 }
 
 .room-plan-floor {
-  fill: #e6ecdf;
-  stroke: #4b6853;
+  fill: var(--site-selected);
+  stroke: var(--site-muted);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
@@ -834,15 +834,15 @@
 }
 
 .room-plan-furniture {
-  fill: #a9bdac;
+  fill: var(--site-accent);
   fill-opacity: .65;
-  stroke: #52705b;
+  stroke: var(--site-muted);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 
 .room-plan-dimension line {
-  stroke: #7c8d7a;
+  stroke: var(--site-muted);
   stroke-width: .8;
   vector-effect: non-scaling-stroke;
 }
@@ -875,8 +875,8 @@
   justify-content: space-between;
   gap: 6px 16px;
   padding: 12px 14px;
-  background: #e8eee2;
-  border: 1px solid #cbd6c6;
+  background: var(--site-selected);
+  border: 1px solid var(--site-line);
   border-radius: 12px;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
@@ -917,7 +917,7 @@
 }
 
 .room-wall-highlight {
-  stroke: #4b6853;
+  stroke: var(--site-muted);
   stroke-width: 3px;
   vector-effect: non-scaling-stroke;
   pointer-events: none;
@@ -928,15 +928,15 @@
 }
 
 .room-wall-grip {
-  fill: #fafbf8;
-  stroke: #4b6853;
+  fill: var(--site-selected);
+  stroke: var(--site-muted);
   stroke-width: 1.5px;
   vector-effect: non-scaling-stroke;
 }
 
 .room-wall-grip-arrow {
   fill: none;
-  stroke: #42634f;
+  stroke: var(--site-muted);
   stroke-width: 1.2px;
   vector-effect: non-scaling-stroke;
   pointer-events: none;
@@ -966,7 +966,7 @@
   padding: 10px 2px;
   font-size: 12px;
   line-height: 1.6;
-  color: #526650;
+  color: var(--site-muted);
 }
 
 .room-wall-feedback.has-error {
@@ -975,8 +975,8 @@
 
 .room-exact-dimensions {
   padding: 12px 0;
-  border-top: 1px solid #dce1db;
-  border-bottom: 1px solid #dce1db;
+  border-top: 1px solid var(--site-line);
+  border-bottom: 1px solid var(--site-line);
 }
 
 .room-exact-dimensions summary {
@@ -1013,7 +1013,7 @@
 }
 
 .planner-kitchen-library {
-  border-bottom: 1px solid #dce1db;
+  border-bottom: 1px solid var(--site-line);
   margin-bottom: 16px;
   padding-bottom: 16px;
 }
@@ -1022,9 +1022,9 @@
   font-size: 13px;
   font-weight: 650;
   padding: 12px;
-  border: 1px solid #dce3dd;
+  border: 1px solid var(--site-line);
   border-radius: 12px;
-  background: #f3f6f1;
+  background: var(--site-bg);
   cursor: pointer;
 }
 
@@ -1034,7 +1034,7 @@
 
 .planner-advanced {
   padding: 16px;
-  border-bottom: 1px solid #dce1db;
+  border-bottom: 1px solid var(--site-line);
 }
 
 .planner-advanced summary {

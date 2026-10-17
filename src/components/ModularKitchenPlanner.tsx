@@ -1,4 +1,6 @@
 "use client";
+import { BrandLoader } from "@/components/BrandLoader";
+import { PlannerTour } from "@/features/planner/components/PlannerTour";
 import { KitchenDesignSuggestions } from "@/features/kitchen-planner/components/KitchenDesignSuggestions";
 
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";

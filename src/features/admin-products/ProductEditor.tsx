@@ -19,6 +19,7 @@ import { useCatalogStore } from "@/store/catalog";
 import { authFetch } from "@/lib/authFetch";
 import { useKitchenCatalog } from "@/features/kitchen-planner/hooks/useKitchenCatalog";
 import { DimensionHelp } from "./DimensionHelp";
+import { ProductPlacementFields } from "./ProductPlacementFields";
 import { specificationFields } from "@/lib/productSpecifications";
 import {
   saveProductWithModel,
@@ -424,6 +425,8 @@ export function ProductEditor({
             {!create && !draft.roomTypes?.length && <p className="mt-2 text-xs text-ink/60">Өрөө заагаагүй тул барааны ангиллаар санал болгоно.</p>}
             {fieldErrors.roomTypes && <p role="alert" className="mt-2 text-xs text-red-600">{fieldErrors.roomTypes}</p>}
           </fieldset>
+
+          <ProductPlacementFields value={draft.placement} onChange={placement => field("placement", placement)} />
 
           <label className="text-sm">
             Үндсэн үнэ (₮)
@@ -973,7 +976,7 @@ export function ProductEditor({
 
         <fieldset className="admin-field-section">
           <legend>Харагдах дэлгүүрүүд</legend>
-          <p className="text-xs text-[#7b896c]">
+          <p className="text-xs text-ui-accent">
             Дэлгүүрүүдийг чагталж сонгоорой. Сонгоогүй бараа нийт каталогт
             харагдана.
           </p>

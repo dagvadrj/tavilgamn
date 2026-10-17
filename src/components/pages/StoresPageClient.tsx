@@ -79,7 +79,7 @@ export function StoresContent({
           <Hammer
             size={32}
             aria-hidden="true"
-            className="mx-auto mb-4 text-[#42634F]"
+            className="mx-auto mb-4 text-ui-accent"
           />
           <h2 className="text-xl font-medium">
             Энэ төрөлд дэлгүүр хараахан нэмэгдээгүй байна

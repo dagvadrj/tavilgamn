@@ -1007,7 +1007,7 @@ export function ModelsTab({
               {success && (
                 <p
                   role="status"
-                  className="flex items-center gap-2 rounded-lg bg-sage/10 px-4 py-2 text-sm text-sage"
+                  className="flex items-center gap-2 rounded-lg bg-ui-selected px-4 py-2 text-sm text-ui-accent"
                 >
                   <CheckCircle className="h-4 w-4" /> Амжилттай хуулагдлаа
                 </p>
@@ -1095,7 +1095,7 @@ export function ModelsTab({
                       )}
                       <div className="min-w-0">
                         <p className="font-medium truncate">{m.name}</p>
-                        <p className="mt-1 text-xs text-[#74806b]">
+                        <p className="mt-1 text-xs text-ui-muted">
                           {stockLabel(m)}
                         </p>
                         <p className="mt-0.5 text-xs text-ink/50">

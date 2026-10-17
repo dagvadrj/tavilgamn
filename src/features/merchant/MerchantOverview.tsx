@@ -28,11 +28,11 @@ const numberLabel = (value: string) => BigInt(value).toLocaleString("mn-MN");
 const money = (value: string) => numberLabel(value) + " ₮";
 const colors = [
   "#8b78ff",
-  "#10b981",
+  "#0876c2",
   "#f59e0b",
   "#64748b",
   "#b3a7ff",
-  "#72c98a",
+  "#7db7df",
 ];
 
 export function MerchantOverview({

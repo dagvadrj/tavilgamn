@@ -12,7 +12,7 @@
   gap: 10px;
   padding: 9px 22px;
   background: #fff;
-  border-bottom: 1px solid #e1e7db;
+  border-bottom: 1px solid var(--site-line);
   overflow-x: auto;
 }
 
@@ -25,7 +25,7 @@
   border-radius: 9px;
   white-space: nowrap;
   font-size: 12px;
-  color: #6c7c62;
+  color: var(--site-muted);
 }
 
 .kitchen-editor-stages button > span {
@@ -33,14 +33,14 @@
   place-items: center;
   width: 22px;
   height: 22px;
-  border: 1px solid #d8e1d0;
+  border: 1px solid var(--site-line);
   border-radius: 50%;
   font-size: 11px;
 }
 
 .kitchen-editor-stages button[aria-pressed="true"] {
-  background: #edf4e7;
-  color: #246847;
+  background: var(--site-selected);
+  color: var(--site-ink);
   font-weight: 600;
 }
 
@@ -57,11 +57,11 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid #dfe5d9;
+  border: 1px solid var(--site-line);
   border-radius: 10px;
   margin-bottom: 16px;
-  background: #fafbf7;
-  color: #7a896f;
+  background: var(--site-selected);
+  color: var(--site-muted);
 }
 
 .kitchen-library-search input {
@@ -73,7 +73,7 @@
 }
 
 .kitchen-library-search:focus-within {
-  outline: 2px solid #76a687;
+  outline: 2px solid var(--site-accent);
   outline-offset: 2px;
 }
 
@@ -97,29 +97,29 @@
   position: absolute;
   right: 9px;
   top: 9px;
-  color: #246847;
+  color: var(--site-ink);
 }
 
 .kitchen-reference.kitchen-refined .reference-type-grid button[aria-pressed="true"] {
-  border-color: #699365;
-  background: #f0f6e9;
-  color: #246847;
-  box-shadow: inset 0 0 0 1px #699365;
+  border-color: var(--site-accent);
+  background: var(--site-selected);
+  color: var(--site-ink);
+  box-shadow: inset 0 0 0 1px #263848;
 }
 
 .kitchen-reference.kitchen-refined .kitchen-add-summary {
-  background: linear-gradient(130deg, #f0f5e9, #fafbf7);
-  border-color: #dce7d2;
+  background: linear-gradient(130deg, var(--site-selected), var(--site-selected));
+  border-color: var(--site-line);
 }
 
 .kitchen-reference.kitchen-refined .kitchen-width-options button[aria-pressed="true"] {
-  background: #246847;
+  background: var(--site-primary);
   color: white;
-  border-color: #246847;
+  border-color: var(--site-accent);
 }
 
 .kitchen-reference.kitchen-refined .kitchen-add-summary .kp-primary {
-  background: #246847;
+  background: var(--site-primary);
   color: #fff;
 }
 
@@ -133,10 +133,10 @@
   align-items: center;
   gap: 7px;
   padding: 12px;
-  border: 1px solid #dce5d5;
+  border: 1px solid var(--site-line);
   border-radius: 15px;
   background: #fffffff5;
-  box-shadow: 0 12px 36px #293c3214;
+  box-shadow: 0 12px 36px #26384814;
   max-width: calc(100% - 36px);
 }
 
@@ -150,7 +150,7 @@
 .kitchen-selection-dock span {
   font-size: 9px;
   letter-spacing: 0.08em;
-  color: #7d8e70;
+  color: var(--site-muted);
 }
 
 .kitchen-selection-dock strong {
@@ -159,7 +159,7 @@
 
 .kitchen-selection-dock small {
   font-size: 11px;
-  color: #7d8e70;
+  color: var(--site-muted);
 }
 
 .kitchen-selection-dock button {
@@ -171,7 +171,7 @@
   min-height: 40px;
   padding: 8px;
   border-radius: 9px;
-  background: #f2f6eb;
+  background: var(--site-selected);
   font-size: 12px;
   white-space: nowrap;
 }
@@ -426,19 +426,19 @@
 }
 
 .kitchen-reference.kitchen-refined {
-  --ui-accent: #246847;
-  --ui-selected: #edf4e7;
-  --ui-primary: #246847;
+  --ui-accent: var(--site-accent);
+  --ui-selected: var(--site-bg);
+  --ui-primary: var(--site-bg);
 }
 
 .kitchen-reference.kitchen-refined .kp-error[data-tone="success"] {
-  background: #edf5e7;
-  border-color: #c7ddba;
-  color: #246847;
+  background: var(--site-selected);
+  border-color: var(--site-accent);
+  color: var(--site-ink);
 }
 
 .kitchen-reference.kitchen-refined .kp-error[data-tone="success"] button {
-  color: #246847;
+  color: var(--site-ink);
 }
 
 .planner-reference.kitchen-reference.kitchen-refined .planner-reference-rail {
@@ -488,16 +488,16 @@
   flex: 1;
   min-height: 42px;
   padding: 8px;
-  border: 1px solid #dfe5d9;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   font-size: 11px;
   background: #fff;
 }
 
 .kitchen-library-categories button[aria-pressed="true"] {
-  color: #246847;
-  background: #edf4e7;
-  border-color: #91b184;
+  color: var(--site-ink);
+  background: var(--site-selected);
+  border-color: var(--site-accent);
   font-weight: 600;
 }
 
@@ -507,7 +507,7 @@
   gap: 7px;
   min-height: 44px;
   margin: 0 0 14px;
-  color: #246847;
+  color: var(--site-ink);
   font-size: 12px;
 }
 
@@ -528,11 +528,11 @@
 
 .kitchen-standard-selected small {
   font-size: 11px;
-  color: #819073;
+  color: var(--site-muted);
 }
 
 .kitchen-reference.kitchen-refined .reference-type-grid .kitchen-product-action {
-  color: #688655;
+  color: var(--site-muted);
   font-size: 10px;
   margin-top: 5px;
 }

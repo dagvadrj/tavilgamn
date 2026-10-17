@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const React = require("react");
 const { loadSource } = require("./helpers/load-source.cjs");
 
-test("product detail keeps the delivery model during camera navigation while preserving its initial progressive load", () => {
+test("product detail loads one delivery model and never selects a preview during navigation or initial load", () => {
   const Canvas = () => null, GLBFurnitureMesh = () => null, MotionPreview = () => null, CursorNavigation = () => null;
   const { ProductViewer } = loadSource("src/three/ProductViewer.tsx", {
     react: { ...React, useRef: value => ({ current: value }) },
@@ -26,7 +26,10 @@ test("product detail keeps the delivery model during camera navigation while pre
   }
   collect(tree);
   assert.equal(all.some(node => node.type === MotionPreview), false, "camera movement must never select the low-quality model on the PDP");
-  assert.equal(all.find(node => node.type === GLBFurnitureMesh).props.previewGlbFile, "preview.glb", "the initial lightweight loading stage is still available");
+  const meshes=all.filter(node=>node.type===GLBFurnitureMesh);
+  assert.equal(meshes.length,1);
+  assert.equal(meshes[0].props.glbFile,"high.glb");
+  assert.equal(meshes[0].props.previewGlbFile,undefined,"legacy preview metadata must not trigger a second model download");
   assert.ok(all.some(node => node.type === CursorNavigation));
   const missing = [];
   function collectMissing(node) {
