@@ -64,6 +64,7 @@ test('catalog add callbacks use live state and scoped camera hints; top view and
   const product={...model,id:'product',model:{id:'item',file:'delivery.glb'},dimensions:{w:.6,d:.5,h:.7},defaultColor:'oak',materials:[{id:'wood'}]};
   const h=hooks(),{RoomPlanner}=loadSource('src/components/RoomPlanner.tsx',{
    react:h.react,'next/dynamic':{default:()=> 'room-canvas'},'next/image':{default:'image'},'next/link':{default:'link'},
+   '@/lib/authFetch':{authFetch:()=>{throw Error('Unexpected authenticated request');}},
    '@/features/room-planner/components/RoomMeasureUnit':{useRoomMeasureUnit:select=>select({unit:'см'})},
    '@/store/designs':{...loadSource('src/store/designs.ts'),useDesigns:Object.assign(()=>store.getState(),{getState:store.getState})},
    '@/store/catalog':{getProduct:()=>product,useCatalog:()=>({products:[product],ready:true,loading:false})},
@@ -100,6 +101,7 @@ test('real planner map and scene selection keep one canvas key, current view and
   const {RoomPlanner}=loadSource('src/components/RoomPlanner.tsx',{
    '@/features/room-planner/components/RoomMeasureUnit':{useRoomMeasureUnit:select=>select({unit:'см'})},
    react:h.react,'next/dynamic':{default:()=> 'room-canvas'},'next/image':{default:'image'},'next/link':{default:'link'},
+   '@/lib/authFetch':{authFetch:()=>{throw Error('Unexpected authenticated request');}},
    '@/store/designs':{...loadSource('src/store/designs.ts'),useDesigns:Object.assign(()=>store.getState(),{getState:store.getState})},
    '@/store/catalog':{getProduct:()=>undefined,useCatalog:()=>({products:[],ready:true,loading:false})},
    '@/store/kitchens':{useKitchens:()=>({items:[]})},'@/store/auth':{useAuth:select=>{const state={user:null,initialized:true,initialize:async()=>{}};return select?select(state):state;}},'@/store/cart':{useCart:select=>select({add:()=>{}})},

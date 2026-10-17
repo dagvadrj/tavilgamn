@@ -28,6 +28,12 @@ type Rpc<Name extends keyof Functions> = Name extends keyof NullableArgs
 export type Database = Omit<Generated, "public"> & {
   public: Omit<Generated["public"], "Functions" | "Tables"> & {
     Tables: Generated["public"]["Tables"] & {
+      room_templates: {
+        Row: RoomTemplateRow;
+        Insert: Omit<RoomTemplateRow, "id" | "created_at" | "updated_at" | "version"> & { id?: string; created_at?: string; updated_at?: string; version?: number };
+        Update: Partial<RoomTemplateRow>;
+        Relationships: [];
+      };
       homepage_scene_settings: {
         Row: {
           id: number;
@@ -56,3 +62,10 @@ export type Database = Omit<Generated, "public"> & {
     Functions: { [Name in keyof Functions]: Rpc<Name> };
   };
 };
+
+export type RoomTemplateRow = {
+  id: string; title: string; description: string; kind: string; furnishing: string;
+  room_type: string; area: number; preview_image: string;
+  design: import("./database.types").Json; status: string; sort_order: number;
+  version: number; updated_by: string | null; created_at: string; updated_at: string;
+}

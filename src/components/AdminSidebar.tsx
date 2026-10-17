@@ -12,6 +12,7 @@ import {
   Users,
   Store,
   CookingPot,
+  House,
   ArrowUpRight,
   CircleHelp,
   UserRound,
@@ -67,6 +68,7 @@ export const ADMIN_TABS = [
     short: "Гал тогоо",
     icon: CookingPot,
   },
+  { id: "rooms", label: "Бэлэн өрөөнүүд", short: "Өрөөнүүд", icon: House },
   {
     id: "settings",
     label: "Самбарын тохиргоо",
@@ -101,7 +103,7 @@ export function AdminSidebar({
     {
       label: "ХЭРЭГЛЭГЧ БА КОНТЕНТ",
       tabs: ADMIN_TABS.filter((item) =>
-        ["users", "messages", "models", "kitchens"].includes(item.id),
+        ["users", "messages", "models", "kitchens", "rooms"].includes(item.id),
       ),
     },
   ];

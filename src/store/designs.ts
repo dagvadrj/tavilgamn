@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { instantiateRoomTemplate } from "@/lib/roomTemplates";
 import type {
   RoomDesign,
   RoomSize,
@@ -26,6 +27,7 @@ import {
   roomContacts,
   roomsOverlap,
   snapRoomPosition,
+  placeAdjacentRoom,
 } from "@/lib/roomLayout";
 import { layoutFurnitureIssue, roomPlacementContext } from "@/three/roomPlacement";
 import {
@@ -45,6 +47,7 @@ export const ROOM_DIMENSIONS: Record<RoomSize, { w: number; d: number }> = {
 };
 
 interface DesignState {
+  importTemplate: (design: RoomDesign) => void;
   furniture: SavedFurniture[];
   rememberFurniture: (piece: PlacedFurniture, quantity?: number) => void;
   removeFurniture: (id: string) => void;
@@ -150,6 +153,12 @@ const blankDesign = (
 export const useDesigns = create<DesignState>()(
   persist(
     (set, get) => ({
+      importTemplate: (source) => {
+        const copy = instantiateRoomTemplate(source);
+        get().endEdit();
+        get().saveCurrent();
+        set(state => ({ current: copy, designs: [...state.designs, copy], past: [], future: [], transaction: null }));
+      },
       designs: [],
       furniture: [],
       rememberFurniture: (piece, quantity) => {
@@ -328,12 +337,11 @@ export const useDesigns = create<DesignState>()(
         if (!current) return;
         const synced = cloneDesign(current);
         const blank = newDesignRoom(type, synced.rooms!);
-        const room = positionedRooms([
-          ...synced.rooms!,
-          options ? configureAddedRoom(blank, options) : blank,
-        ]).at(-1)!;
+        const room = placeAdjacentRoom(options ? configureAddedRoom(blank, options) : blank, synced.rooms!, synced.activeRoomId);
+        const allRooms = [...synced.rooms!, room];
+        const connections = [...(synced.connections ?? []), ...synced.rooms!.flatMap(other => roomContacts(room, other).map(contact => defaultConnection(contact, allRooms)))];
         const next = activateDesignRoom(
-          { ...synced, rooms: [...synced.rooms!, room] },
+          { ...synced, rooms: allRooms, connections },
           room.id,
         );
         set({
@@ -593,6 +601,8 @@ export const useDesigns = create<DesignState>()(
             return;
         }
         const compatiblePatch = { ...patch };
+        if (patch.lighting?.fixtures && patch.lighting.fixtureLayout === undefined)
+          compatiblePatch.lighting = { ...patch.lighting, fixtureLayout: "manual" };
         try {
           const pieces = resolveFurnitureAttachments(patch.pieces ?? c.pieces, { ...c, ...patch }, c.activeRoomId ?? `${c.id}-room-1`);
           if (JSON.stringify(pieces) !== JSON.stringify(c.pieces) || patch.pieces) compatiblePatch.pieces = pieces;

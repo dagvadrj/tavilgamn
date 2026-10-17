@@ -57,6 +57,7 @@ test("full admin sidebar preserves every operation and marks only the selected d
       "messages",
       "models",
       "kitchens",
+      "rooms",
       "settings",
       "profile",
     ],

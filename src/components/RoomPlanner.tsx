@@ -28,6 +28,9 @@ import {
 } from "@/features/room-planner/components/PlannerPanels";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RoomPlannerStart } from "@/features/room-planner/components/RoomPlannerStart";
+import { RoomTemplateAdminControls, useRoomTemplateAdmin } from "@/features/room-planner/components/RoomTemplateAdmin";
+import { authFetch } from "@/lib/authFetch";
+import { downloadKitchenFile, kitchenExportFilename } from "@/three/kitchenExport";
 import { PlannerTour } from "@/features/planner/components/PlannerTour";
 import {
   RoomPlannerControls,
@@ -228,12 +231,20 @@ function RoomPlannerEditor() {
     "all",
   );
   const [roomStartOpen, setRoomStartOpen] = useState(true);
-  const previewCapture = useRef<(() => void) | null>(null);
+  const loadTemplate = useCallback((design: RoomDesign) => {
+    useDesigns.getState().importTemplate(design);
+    setRoomStartOpen(false);
+    return useDesigns.getState().current!.id;
+  }, []);
+  const templateAdmin = useRoomTemplateAdmin(loadTemplate);
+  const glbExporter = useRef<(() => Promise<Blob>) | null>(null);
+  const exportReady = useCallback((exporter: (() => Promise<Blob>) | null) => { glbExporter.current = exporter; }, []);
+  const previewCapture = useRef<(() => string | null) | null>(null);
   const placementHints = useRef<RoomPlacementHintSource | null>(null);
   const placementHintsReady = useCallback((source: RoomPlacementHintSource | null) => {
     placementHints.current = source;
   }, []);
-  const previewReady = useCallback((capture: (() => void) | null) => {
+  const previewReady = useCallback((capture: (() => string | null) | null) => {
     previewCapture.current = capture;
   }, []);
   useEffect(() => {
@@ -576,10 +587,12 @@ function RoomPlannerEditor() {
     () => (current ? roomPlacementContext(current) : null),
     [current],
   );
+  if (templateAdmin.loading || templateAdmin.error) return <main className="container-page py-10"><p role={templateAdmin.error ? "alert" : "status"}>{templateAdmin.error || "Бэлэн өрөөг нээж байна…"}</p><Link href="/admin?tab=rooms">Өрөөний сан руу буцах</Link></main>;
   if (roomStartOpen || !current || !placement) {
     shortcuts.current = {};
     return (
       <RoomPlannerStart
+        onTemplate={loadTemplate}
         draft={current}
         designs={designs}
         onDelete={deleteDesign}
@@ -1077,10 +1090,10 @@ function RoomPlannerEditor() {
     )
       return "Хана, товойлт эсвэл багана тавилгатай давхцаж байна. Эхлээд тавилгын байрлалыг өөрчилнө үү.";
     if (
-      lighting?.fixtures.some((fixture) => !fixtureFitsCeiling(next, fixture))
+      nextDesign.lighting?.fixtures.some((fixture) => !fixtureFitsCeiling(nextDesign, fixture))
     )
       return "Таазны гэрэл шинэ өрөөний гадна үлдэж байна. Эхлээд гэрлийн байрлалыг өөрчилнө үү.";
-    updateRoom({ ...shape, openings: next.openings, pieces, lighting });
+    updateRoom({ ...shape, openings: next.openings, pieces, lighting: nextDesign.lighting });
     setActivePreset(null);
     setLocalFile(null);
     setLocalUrl(null);
@@ -1167,9 +1180,23 @@ function RoomPlannerEditor() {
         "room-planner-layout planner-workspace planner-studio planner-reference room-reference room-simple relative overflow-hidden",
         (leftOpen || rightOpen || summaryOpen) && "room-panel-open",
         expanded && "planner-expanded",
+          templateAdmin.isAdmin && "room-admin-mode",
       )}
     >
       <PlannerTour kind="room" request={tourRequest} />
+      {templateAdmin.isAdmin && <RoomTemplateAdminControls key={current.id} design={current} initial={templateAdmin.loaded?.designId === current.id ? templateAdmin.loaded.template : undefined} customInterior={!!localUrl || !!activePreset} catalogReady={catalog.ready && !catalog.loading && !catalog.error} onCapture={() => previewCapture.current?.() ?? null} onExport={async () => {
+        if (!catalog.ready || catalog.loading || catalog.error) throw new Error("Тавилгын сан ачаалж дууссаны дараа GLB татна уу.");
+        if (!glbExporter.current || !kitchenUser) throw new Error("3D өрөө бэлэн болсны дараа дахин оролдоно уу.");
+        const response = await authFetch("/api/admin/room-templates/export", { method: "POST" }, kitchenUser.id);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        if (useDesigns.getState().current?.id !== current.id) throw new Error("Өрөө өөрчлөгдсөн байна. Дахин татна уу.");
+        const exporter = glbExporter.current;
+        if (!exporter) throw new Error("Өрөө өөрчлөгдсөн байна. Дахин оролдоно уу.");
+        const blob = await exporter();
+        if (useAuth.getState().user?.id !== kitchenUser.id || useDesigns.getState().current?.id !== current.id) throw new Error("Хэрэглэгч эсвэл өрөө өөрчлөгдсөн байна. Дахин татна уу.");
+        downloadKitchenFile(blob, kitchenExportFilename(current.name, "glb"));
+      }} />}
       <header className="studio-header room-studio-header">
         <Link href="/" className="studio-brand" aria-label="Tavilga.mn нүүр">
           <House size={19} />
@@ -2012,6 +2039,7 @@ function RoomPlannerEditor() {
           }
         >
           <RoomCanvas
+            onExportReady={templateAdmin.isAdmin ? exportReady : undefined}
             paused={roomView === "top"}
             onPreview={savePreview}
             onPreviewReady={previewReady}

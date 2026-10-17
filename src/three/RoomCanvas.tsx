@@ -8,10 +8,10 @@ import {
   Environment,
   Lightformer,
   MapControls,
-  Html,
   Edges,
   useCursor,
 } from "@react-three/drei";
+import { SceneHtml as Html } from "./SceneHtml";
 import type {
   RoomDesign,
   PlacedFurniture,
@@ -50,6 +50,8 @@ import {
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
+import { ROOM_DAY_BACKDROP, ROOM_NIGHT_BACKDROP } from "@/lib/roomLighting";
+import { RoomExportBridge } from "./RoomExportBridge";
 import { RoomContactShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import { roomTourCamera } from "./roomCameraPlacement";
 import { RoomStreetView, CameraPointPlacement } from "./RoomStreetView";
@@ -78,10 +80,11 @@ const ROOM_CAMERA = {
 };
 
 interface RoomCanvasProps {
+  onExportReady?: (exporter: (() => Promise<Blob>) | null) => void;
   onPlacementHintsReady?: (source: RoomPlacementHintSource | null) => void;
   paused?: boolean;
   onPreview?: (id: string, image: string) => void;
-  onPreviewReady?: (capture: (() => void) | null) => void;
+  onPreviewReady?: (capture: (() => string | null) | null) => void;
   onSurfaceDoubleClick?: (
     surface: "wall" | "floor" | "ceiling",
     wall: RoomWall | undefined,
@@ -135,6 +138,7 @@ interface RoomCanvasProps {
 }
 
 export function RoomCanvas({
+  onExportReady,
   onPlacementHintsReady,
   paused = false,
   onPreview,
@@ -271,6 +275,7 @@ export function RoomCanvas({
       }}
     >
       <CameraMotionPreview interactionActive={isDraggingPiece || isLooking}>
+        {onExportReady && <RoomExportBridge onReady={onExportReady} />}
         {onPlacementHintsReady && <RoomPlacementHints designId={design.id} roomId={design.activeRoomId ?? `${design.id}-room-1`} onReady={onPlacementHintsReady} />}
         <RoomMotionResolution dpr={performance.dpr} />
         <CanvasDiagnostics scene="room" />
@@ -316,7 +321,7 @@ export function RoomCanvas({
         )}
         <color
           attach="background"
-          args={[solar.night ? "#252c38" : "#F1F0ED"]}
+          args={[solar.night ? ROOM_NIGHT_BACKDROP : ROOM_DAY_BACKDROP]}
         />
         <RoomLighting
           windowDaylight={false}
@@ -325,7 +330,7 @@ export function RoomCanvas({
             ...design,
             lighting: customInterior
               ? design.lighting
-              : { ...design.lighting!, fixtures: [] },
+              : { ...design.lighting!, fixtureLayout: "manual", fixtures: [] },
           }}
           extent={Math.max(spanX, spanZ) * 0.8 + 4}
           centre={[centerX, centerZ]}
@@ -371,13 +376,14 @@ export function RoomCanvas({
             <planeGeometry
               args={[Math.max(60, spanX * 4), Math.max(60, spanZ * 4)]}
             />
-            <meshStandardMaterial
-              color={solar.night ? "#252c38" : "#eeece7"}
-              roughness={1}
+            <meshBasicMaterial
+              color={solar.night ? ROOM_NIGHT_BACKDROP : ROOM_DAY_BACKDROP}
+              toneMapped={false}
             />
           </mesh>
         )}
         {customInterior ? (
+          <group userData={{ roomExport: true }}>
           <InteriorModel
             basePath={customInterior.basePath}
             glbName={customInterior.glb}
@@ -385,6 +391,7 @@ export function RoomCanvas({
             onError={customInterior.onError}
             onLoaded={customInterior.onLoaded}
           />
+          </group>
         ) : rooms.length ? (
           <>
             {rooms.map((room) => {
@@ -406,6 +413,7 @@ export function RoomCanvas({
               return (
                 <group
                   key={room.id}
+                  userData={{ roomExport: true }}
                   position={[p.x - origin.x, 0, p.z - origin.z]}
                 >
                   <RoomStructure
@@ -495,7 +503,7 @@ export function RoomCanvas({
             })}
           </>
         ) : (
-          <>
+          <group userData={{ roomExport: true }}>
             <RoomStructure
               onSurfaceDoubleClick={onSurfaceDoubleClick}
               interior={interior}
@@ -519,7 +527,7 @@ export function RoomCanvas({
               includeSun={false}
               fixtureShadows={performance.shadows}
             />
-          </>
+          </group>
         )}
 
         {!customInterior && gridEnabled && (
@@ -554,7 +562,7 @@ export function RoomCanvas({
           <FurnitureMeasurements measurements={measurements} view={view} />
         )}
 
-        {design.pieces.map((piece) => (
+        <group userData={{ roomExport: true }}>{design.pieces.map((piece) => (
           <DraggablePiece
             key={piece.instanceId}
             piece={piece}
@@ -572,7 +580,7 @@ export function RoomCanvas({
             onEditEnd={onEditEnd}
             kitchenMaterials={kitchenMaterials}
           />
-        ))}
+        ))}</group>
 
         {view === "perspective" && performance.contactShadows && (
           <RoomContactShadows

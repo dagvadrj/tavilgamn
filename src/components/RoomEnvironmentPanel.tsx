@@ -25,6 +25,7 @@ import {
   CEILING_FIXTURE_TYPES,
   fixtureFitsCeiling,
   ceilingFixturesOverlap,
+  automaticCeilingFixtures,
 } from "@/lib/roomCeiling";
 import { exteriorWindowBearing } from "@/lib/roomSunlight";
 import { OpeningTemplatePreview } from "@/features/room-planner/components/OpeningTemplatePreview";
@@ -34,6 +35,7 @@ import { RoomLightingTimeControls } from "@/features/room-planner/components/Roo
 import { ROOM_WALLS, getRoomGeometry } from "@/lib/roomGeometry";
 import {
   OPENING_TEMPLATES,
+  PLANNER_OPENING_TEMPLATES,
   wallLength,
   windowLayout,
   openingMinimumWidth,
@@ -217,7 +219,7 @@ export function RoomEnvironmentPanel(props: Props) {
   const opening = design.openings?.find((item) => item.id === selectedOpening);
   const lighting = design.lighting ?? DEFAULT_LIGHTING;
   const [newFixtureKind, setNewFixtureKind] =
-    useState<CeilingFixtureKind>("flush");
+    useState<CeilingFixtureKind>("recessed");
   const edit = { beginEdit, endEdit };
   const applyWall = (next: WallMaterial) => {
     const walls = { ...design.wallMaterials };
@@ -231,7 +233,7 @@ export function RoomEnvironmentPanel(props: Props) {
     });
   };
   const updateLighting = (patch: Partial<RoomLighting>) => {
-    const next = { ...lighting, ...patch };
+    const next = { ...lighting, ...patch, fixtureLayout: patch.fixtureLayout ?? (patch.fixtures ? "manual" : lighting.fixtureLayout) };
     if (next.fixtures.some((f) => !fixtureFitsCeiling(design, f))) {
       onNotice(
         "Гэрлийн хэмжээ таазны дотор багтах ёстой. Байрлал эсвэл төрлийг өөрчилнө үү.",
@@ -492,7 +494,7 @@ export function RoomEnvironmentPanel(props: Props) {
           </div>
           <div className="room-control-section">
             <div className="room-opening-catalog">
-              {OPENING_TEMPLATES.map((template) => (
+              {PLANNER_OPENING_TEMPLATES.map((template) => (
                 <div
                   key={template.id}
                   className="room-opening-card"
@@ -868,6 +870,8 @@ export function RoomEnvironmentPanel(props: Props) {
               <h4>Таазны гэрэл · {lighting.fixtures.length}</h4>
               <Lightbulb size={18} />
             </div>
+            <button type="button" className="room-secondary-action" onClick={() => updateLighting({ fixtureLayout: "auto", fixtures: automaticCeilingFixtures(design, design.activeRoomId ?? design.id) })}>Өрөөний хэмжээнд тааруулж байрлуулах</button>
+            <p className="room-control-help">{lighting.fixtureLayout === "auto" ? "Жижиг спот гэрлийн тоо, байрлал өрөөний хэмжээг дагаж өөрчлөгдөнө." : "Гэрлийн байрлалыг гараар тохируулж байна."}</p>
             <label className="room-ceiling-number">
               <span>Нэмэх гэрлийн төрөл</span>
               <select

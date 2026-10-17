@@ -168,6 +168,8 @@ export interface CeilingFixture {
   color: string;
 }
 export interface RoomLighting {
+  /** Automatic downlights follow the footprint until the fixtures are edited. */
+  fixtureLayout?: "auto" | "manual";
   mode: "day" | "evening";
   /** Local solar time, 0–24 hours. Shared by all rooms in a design. */
   timeOfDay?: number;

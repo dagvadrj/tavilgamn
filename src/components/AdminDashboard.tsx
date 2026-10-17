@@ -10,6 +10,7 @@ import { AdminMerchants } from "@/components/AdminMerchants";
 import { AdminShell } from "@/components/AdminShell";
 import { AdminAnalytics } from "@/components/AdminAnalytics";
 import { AdminKitchenDesigns } from "@/components/AdminKitchenDesigns";
+import { AdminRoomTemplates } from "@/components/AdminRoomTemplates";
 import { Package } from "lucide-react";
 import { OrderHistory } from "@/components/OrderHistory";
 import { AdminUsers } from "@/components/AdminUsers";
@@ -170,6 +171,7 @@ export function AdminDashboard({
           designId={kitchenDesignId}
         />
       )}
+      {currentTab === "rooms" && <AdminRoomTemplates key={user.id} owner={user.id} />}
       {currentTab === "settings" && (
         <>
           <DashboardSettings

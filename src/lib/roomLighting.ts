@@ -1,4 +1,6 @@
 import type { RoomLighting } from "./types";
+export const ROOM_DAY_BACKDROP = "#cdcecc";
+export const ROOM_NIGHT_BACKDROP = "#252c38";
 
 export const lightingTime = (lighting?: RoomLighting) => Math.min(23.99, Math.max(0, Number.isFinite(lighting?.timeOfDay) ? lighting!.timeOfDay! : lighting?.mode === "evening" ? 21 : 12));
 export const formatLightingTime = (time: number) => `${String(Math.floor(time)).padStart(2, "0")}:${String(Math.round((time % 1) * 60)).padStart(2, "0")}`;

@@ -28,6 +28,10 @@ export const OPENING_TEMPLATES: OpeningTemplate[] = [
   { id: "window-floor", label: "Шал хүртэл өндөр цонх", kind: "window", width: 1.8, height: 2.2, sillHeight: .08, panes: 2, operation: "fixed" },
 ];
 
+export const DEFAULT_DOOR_FINISH = { leaf: "#7c7e7b", frame: "#e5e5e0", groove: "#626561", hardware: "#9fa7ab" };
+/** Existing double doors remain readable; newly added doors use one standard design. */
+export const PLANNER_OPENING_TEMPLATES = OPENING_TEMPLATES.filter(template => template.kind !== "door" || template.id === "door-single").map(template => template.id === "door-single" ? { ...template, label: "Саарал дотор хаалга" } : template);
+
 export function windowLayout(opening: Pick<RoomOpening,"templateId"|"width">) {
   const template = OPENING_TEMPLATES.find(t => t.id === opening.templateId);
   return { panes: template?.panes ?? (opening.width >= 1.05 ? 2 : 1), operation: template?.operation ?? "fixed" as const };

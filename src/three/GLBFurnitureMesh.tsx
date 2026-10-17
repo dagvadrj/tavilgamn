@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Edges, Html } from "@react-three/drei";
+import { Edges } from "@react-three/drei";
+import { SceneHtml as Html } from "./SceneHtml";
 import * as THREE from "three";
 import {
   kitchenCabinetSurface,

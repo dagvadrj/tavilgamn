@@ -7,6 +7,7 @@ import type { Bounds } from "@/lib/roomGeometry";
 import { getRoomGeometry } from "@/lib/roomGeometry";
 import { roomPosition } from "@/lib/roomLayout";
 import { applyRoomCutaway } from "./roomCutaway";
+import { ROOM_DAY_BACKDROP, ROOM_NIGHT_BACKDROP, solarLighting } from "@/lib/roomLighting";
 
 /** Render a separate overview camera without moving the user's live camera. */
 export function captureRoomPreview(
@@ -56,7 +57,7 @@ export function captureRoomPreview(
   const target = new THREE.WebGLRenderTarget(width, imageHeight);
   target.texture.colorSpace = THREE.SRGBColorSpace;
   const previous = gl.getRenderTarget(),
-    background = scene.background;
+    background = scene.background, fog = scene.fog;
   const viewport = gl.getViewport(new THREE.Vector4()),
     scissor = gl.getScissor(new THREE.Vector4()),
     scissorTest = gl.getScissorTest();
@@ -64,7 +65,7 @@ export function captureRoomPreview(
   try {
     scene.updateMatrixWorld(true);
     scene.traverse((object) => {
-      if (object.userData.previewRoof) {
+      if (object.userData.previewRoof || object.userData.previewExclude) {
         const visible = object.visible;
         object.visible = false;
         restore.push(() => {
@@ -84,7 +85,8 @@ export function captureRoomPreview(
         });
       }
     });
-    scene.background = new THREE.Color("#252c38");
+    scene.background = new THREE.Color(solarLighting(rooms[0]?.lighting).night ? ROOM_NIGHT_BACKDROP : ROOM_DAY_BACKDROP);
+    scene.fog = null;
     gl.setRenderTarget(target);
     gl.setScissorTest(false);
     gl.clear();
@@ -126,6 +128,7 @@ export function captureRoomPreview(
   } finally {
     restore.reverse().forEach((fn) => fn());
     scene.background = background;
+    scene.fog = fog;
     gl.setRenderTarget(previous);
     gl.setViewport(viewport);
     gl.setScissor(scissor);
@@ -151,7 +154,7 @@ export function RoomPreviewCapture({
   rooms: DesignRoom[];
   origin: { x: number; z: number };
   onCapture?: (id: string, image: string) => void;
-  onReady?: (capture: (() => void) | null) => void;
+  onReady?: (capture: (() => string | null) | null) => void;
 }) {
   const { gl, scene } = useThree();
   const pendingCapture = useRef(false);
@@ -170,9 +173,11 @@ export function RoomPreviewCapture({
       );
       pendingCapture.current = image === null;
       if (image) p.onCapture?.(p.designId, image);
+      return image;
     } catch {
       pendingCapture.current = false;
       /* Retain the last successful preview if the canvas is unavailable. */
+      return null;
     }
   };
   const captureRef = useRef(capture);

@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { Edges, Html } from "@react-three/drei";
+import { Edges } from "@react-three/drei";
+import { SceneHtml as Html } from "./SceneHtml";
 import * as THREE from "three";
 import type { RoomDesign, RoomOpening } from "@/lib/types";
 import { ROOM_WALL_THICKNESS, wallBlocksFocus } from "@/lib/roomRendering";
-import { openingWorldTransform, validateOpening, wallLength, windowLayout } from "@/lib/roomOpenings";
+import { openingWorldTransform, validateOpening, wallLength, windowLayout, DEFAULT_DOOR_FINISH } from "@/lib/roomOpenings";
 import { RoomWindow } from "./RoomWindow";
 import { animateToward } from "./demandAnimation";
 import { SCENE_NAVIGATION_START, isSceneNavigationGesture } from "./sceneNavigation";
@@ -30,16 +31,28 @@ function DoorLeaf({ width, height, hinge, swing, open }: { width: number; height
   return <group ref={ref} position={[-side * width / 2, 0, -0.025]}>
     <mesh position={[side * width / 2, height / 2, 0]} castShadow receiveShadow>
       <boxGeometry args={[width, height, 0.045]} />
-      <meshStandardMaterial color="#d5bd9c" roughness={0.56} />
+      <meshStandardMaterial color={DEFAULT_DOOR_FINISH.leaf} roughness={0.78} />
     </mesh>
-    {[0.29, 0.73].map(y => <mesh key={y} position={[side * width / 2, height * y, 0.024]}>
-      <boxGeometry args={[Math.max(0.1, width - 0.15), height * 0.31, 0.012]} />
-      <meshStandardMaterial color="#c6ab86" roughness={0.6} />
-    </mesh>)}
-    {[-1, 1].map(face => <mesh key={face} position={[side * (width - 0.09), Math.min(1.03, height * 0.48), face * 0.043]}>
-      <boxGeometry args={[0.11, 0.022, 0.035]} />
-      <meshStandardMaterial color="#6e7274" metalness={0.85} roughness={0.25} />
-    </mesh>)}
+    {[-1, 1].map(face => <group key={face}>
+      {[0.27, 0.56, 0.79].map(y => <mesh key={y} position={[side * width / 2, height * y, face * .0228]}>
+        <boxGeometry args={[Math.max(.08, width - .13), .0025, .001]} />
+        <meshStandardMaterial color={DEFAULT_DOOR_FINISH.groove} roughness={.85} />
+      </mesh>)}
+      <group position={[side * (width - .085), Math.min(1.03, height * .48), face * .029]}>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[.026, .026, .009, 16]} />
+          <meshStandardMaterial color={DEFAULT_DOOR_FINISH.hardware} metalness={.85} roughness={.3} />
+        </mesh>
+        <mesh position={[-side * .036, 0, face * .027]} rotation={[0, 0, Math.PI / 2]}>
+          <capsuleGeometry args={[.008, .09, 4, 8]} />
+          <meshStandardMaterial color={DEFAULT_DOOR_FINISH.hardware} metalness={.85} roughness={.3} />
+        </mesh>
+        <mesh position={[0, -.07, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[.017, .017, .008, 12]} />
+          <meshStandardMaterial color={DEFAULT_DOOR_FINISH.hardware} metalness={.85} roughness={.35} />
+        </mesh>
+      </group>
+    </group>)}
   </group>;
 }
 
@@ -49,10 +62,10 @@ function Door({ opening }: { opening: RoomOpening }) {
   const double = opening.templateId === "door-double";
   return <group>
     {[-1, 1].map(side => <mesh key={side} position={[side * (w / 2 - frame / 2), h / 2, -ROOM_WALL_THICKNESS / 2 + .015]} castShadow receiveShadow>
-      <boxGeometry args={[frame, h, ROOM_WALL_THICKNESS + .06]} /><meshStandardMaterial color="#f2eee6" roughness={0.62} />
+      <boxGeometry args={[frame, h, ROOM_WALL_THICKNESS + .06]} /><meshStandardMaterial color={DEFAULT_DOOR_FINISH.frame} roughness={0.78} />
     </mesh>)}
     <mesh position={[0, h - frame / 2, -ROOM_WALL_THICKNESS / 2 + .015]} castShadow receiveShadow>
-      <boxGeometry args={[w, frame, ROOM_WALL_THICKNESS + .06]} /><meshStandardMaterial color="#f2eee6" roughness={0.62} />
+      <boxGeometry args={[w, frame, ROOM_WALL_THICKNESS + .06]} /><meshStandardMaterial color={DEFAULT_DOOR_FINISH.frame} roughness={0.78} />
     </mesh>
     {double ? [-1, 1].map(side => <group key={side} position={[side * (w - 2 * frame) / 4, 0.012, 0]}>
       <DoorLeaf width={(w - 2 * frame) / 2 - 0.006} height={h - frame - 0.018} hinge={side === -1 ? "left" : "right"} swing={opening.swing} open={opening.open} />

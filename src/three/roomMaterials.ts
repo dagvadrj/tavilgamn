@@ -278,7 +278,7 @@ export function useRoomMaterial(
       return;
     }
     const pixels = generatePixels(definition);
-    const anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    const anisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy());
     const next: RoomTextureSet = {
       materialId: definition.id,
       map: makeTexture(pixels.albedo, pixels.size, true, anisotropy),
@@ -329,7 +329,7 @@ export function useRoomMaterial(
     normalMap: textures.normalMap,
     roughnessMap: textures.roughnessMap,
     normalScale: textures.normalScale,
-    color: definition.tintColor ? color : "#ffffff",
+    color: definition.tintColor ? color : definition.textureTint ?? "#ffffff",
     roughness: 1,
     metalness: 0,
     envMapIntensity: definition.envMapIntensity ?? 1,

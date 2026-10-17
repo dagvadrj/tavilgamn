@@ -6,7 +6,7 @@
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   padding: var(--reference-header) 0 0;
-  background: #e9e9e7;
+  background: #cdcecc;
 }
 
 .planner-reference.room-simple.room-panel-open {

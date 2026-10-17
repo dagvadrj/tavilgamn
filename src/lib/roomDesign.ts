@@ -10,7 +10,7 @@ import type {
 } from "./types";
 import { ROOM_TYPES } from "./roomGeometry";
 import { positionedRooms, validConnections } from "./roomLayout";
-import { fixtureFitsCeiling, normalizeRoomCeiling } from "./roomCeiling";
+import { automaticCeilingFixtures, normalizeRoomCeiling } from "./roomCeiling";
 import { normalizeSunBearing } from "./roomSunlight";
 import { interiorCamera } from "./roomInteriorCamera";
 import { lightingTime } from "./roomLighting";
@@ -46,38 +46,18 @@ function cloneSurfaces(
       color: room.wallColor ?? "#EFE6D6",
       ...room.wallMaterials?.[wall],
     };
+  const savedFixtures = room.lighting?.fixtures;
+  const legacyDefault = savedFixtures?.length === 1 && savedFixtures[0].id === `ceiling-${room.id}` && !savedFixtures[0].kind && savedFixtures[0].intensity === 18 && savedFixtures[0].color === "#ffe3b3" && savedFixtures[0].x === 0 && savedFixtures[0].z === 0;
+  const autoLayout = room.lighting?.fixtureLayout === "auto" || (room.lighting?.fixtureLayout !== "manual" && (legacyDefault || !savedFixtures || (savedFixtures.length === 0 && room.lighting?.autoLights === undefined)));
   const lighting: RoomLighting = {
     ...DEFAULT_ROOM_LIGHTING,
     ...room.lighting,
     timeOfDay: lightingTime(room.lighting),
-    fixtures: (
-      (room.lighting?.autoLights === undefined &&
-      room.lighting?.fixtures.length === 0
-        ? undefined
-        : room.lighting?.fixtures) ??
-      (room.id
-        ? [
-            {
-              id: `ceiling-${room.id}`,
-              x: 0,
-              z: 0,
-              intensity: 18,
-              color: "#ffe3b3",
-            },
-          ]
-        : [])
-    ).map((fixture) => ({ ...fixture })),
+    fixtureLayout: autoLayout ? "auto" : "manual",
+    fixtures: autoLayout && room.id && room.width && room.depth
+      ? automaticCeilingFixtures(room as RoomShape, room.id)
+      : (savedFixtures ?? []).map(fixture => ({ ...fixture })),
   };
-  if (room.outline && room.width && room.depth && !room.lighting?.fixtures?.length && lighting.fixtures.length) {
-    const shape=room as RoomShape;
-    const fixture=lighting.fixtures[0];
-    if(!fixtureFitsCeiling(shape,fixture)) {
-      const candidates:{x:number;z:number}[]=[];
-      for(let x=-room.width/2+.25;x<room.width/2;x+=.25)for(let z=-room.depth/2+.25;z<room.depth/2;z+=.25)candidates.push({x,z});
-      const point=candidates.sort((a,b)=>Math.hypot(a.x,a.z)-Math.hypot(b.x,b.z)).find(p=>fixtureFitsCeiling(shape,{...fixture,...p}));
-      lighting.fixtures=point?[{...fixture,...point}]:[];
-    }
-  }
   if (Number.isFinite(lighting.sunAzimuth))
     lighting.sunAzimuth = normalizeSunBearing(lighting.sunAzimuth!);
   else delete lighting.sunAzimuth;

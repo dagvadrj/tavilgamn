@@ -3,6 +3,11 @@ import * as THREE from "three";
 type AuthoredSurface = Pick<THREE.Material, "opacity" | "transparent" | "depthWrite" | "colorWrite">;
 const authored = new WeakMap<THREE.Material, AuthoredSurface>();
 
+/** Export owns a copy; recover wall visibility without changing the live view. */
+export function authoredRoomSurface(material: THREE.Material): AuthoredSurface {
+  return authored.get(material) ?? { opacity: material.opacity, transparent: material.transparent, depthWrite: material.depthWrite, colorWrite: material.colorWrite };
+}
+
 /** Hide the color pass completely while retaining physical wall/door shadows. */
 export function applyRoomCutaway(root: THREE.Object3D, opacity: number) {
   root.userData.cutawayOpacity = opacity;

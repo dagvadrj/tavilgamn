@@ -71,9 +71,9 @@ test('room captions fade near the camera and reappear when zooming out',()=>{
   assert.equal(lighting.roomLabelOpacity(3,4),0);assert.equal(lighting.roomLabelOpacity(10,4),1);
   const samples=[4,5,6,7,8].map(d=>lighting.roomLabelOpacity(d,4));assert.ok(samples.every((n,i)=>i===0||n>=samples[i-1]));
 });
-test('new rooms include an automatic ceiling lamp; deliberately removed lamps stay removed',()=>{
-  const a=rooms.newDesignRoom('living',[]);assert.equal(a.lighting.fixtures.length,1);assert.equal(a.lighting.autoLights,true);
-  assert.deepEqual(rooms.cloneRoom({...a,lighting:{...a.lighting,fixtures:[]}}).lighting.fixtures,[]);
+test('new rooms include automatic downlights; deliberately removed lamps stay removed',()=>{
+  const a=rooms.newDesignRoom('living',[]);assert.equal(a.lighting.fixtures.length,4);assert.equal(a.lighting.autoLights,true);
+  assert.deepEqual(rooms.cloneRoom({...a,lighting:{...a.lighting,fixtureLayout:'manual',fixtures:[]}}).lighting.fixtures,[]);
 });
 
 test('real store persists room movement and connection options with undo, redo, and shared solar time',()=>{
@@ -116,7 +116,7 @@ test('shared-wall CSG actually removes the open passage on both sides and keeps 
     geometry.dispose();mesh.material.dispose();
   }
 });
-test('pre-upgrade saves with empty light lists receive one default automatic lamp',()=>{
+test('pre-upgrade saves with empty light lists receive default automatic downlights',()=>{
   const saved=rooms.syncDesignRooms({...legacy(),lighting:{mode:'day',ambient:.65,sunlight:1.8,fixtures:[]}});
-  assert.equal(saved.lighting.fixtures.length,1);assert.equal(saved.lighting.autoLights,true);
+  assert.equal(saved.lighting.fixtures.length,4);assert.equal(saved.lighting.autoLights,true);
 });

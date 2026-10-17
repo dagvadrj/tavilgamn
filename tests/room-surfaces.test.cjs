@@ -117,8 +117,9 @@ test('legacy migration gives every wall its old paint and independent room surfa
   for (const wall of ['north', 'east', 'south', 'west']) assert.deepEqual(migrated.wallMaterials[wall], { mode: 'color', color: '#aabbcc' });
   const copy = rooms.syncDesignRooms(migrated);
   copy.wallMaterials.north.color = '#000000'; copy.lighting.fixtures.push({ id: 'new', x: 0, z: 0, intensity: 1, color: '#ffffff' });
-  assert.equal(migrated.wallMaterials.north.color, '#aabbcc'); assert.equal(migrated.lighting.fixtures.length, 1);
-  assert.equal(migrated.lighting.fixtures[0].id, "ceiling-saved-room-1");
+  assert.equal(migrated.wallMaterials.north.color, '#aabbcc'); assert.equal(migrated.lighting.fixtures.length, 4);
+  assert.equal(migrated.lighting.fixtures[0].kind, 'recessed');
+  assert.equal(migrated.lighting.fixtureLayout, 'auto');
   assert.equal(migrated.lighting.autoLights, true);
   assert.equal(rooms.DEFAULT_ROOM_LIGHTING.fixtures.length, 0);
 });
@@ -127,8 +128,8 @@ test('surface and opening state survives room switching, deep cloning, and JSON 
   const first = decorated(), firstId = first.activeRoomId;
   const second = rooms.newDesignRoom('bedroom', first.rooms);
   let design = rooms.activateDesignRoom({ ...first, rooms: [...first.rooms, second] }, second.id);
-  assert.equal(design.floorMaterial, 'parquet-oak'); assert.deepEqual(design.openings, []); assert.equal(design.lighting.fixtures.length, 1);
-  assert.equal(design.lighting.fixtures[0].intensity, 18);
+  assert.equal(design.floorMaterial, 'parquet-oak'); assert.deepEqual(design.openings, []); assert.equal(design.lighting.fixtures.length, 4);
+  assert.equal(design.lighting.fixtures[0].kind, 'recessed'); assert.ok(design.lighting.fixtures[0].intensity > 0);
   design = rooms.syncDesignRooms({ ...design, floorMaterial: 'tile-stone', openings: [windowOpening('west')] });
   design = rooms.activateDesignRoom(design, firstId);
   assert.equal(design.floorMaterial, 'parquet-walnut'); assert.equal(design.ceilingMaterial, 'ceiling-plaster');

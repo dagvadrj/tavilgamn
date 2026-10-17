@@ -54,9 +54,11 @@ test('preview uses a separate fitted camera and restores renderer, walls and cei
   const scene=new THREE.Scene();scene.background=new THREE.Color('#ffffff');
   const wall=new THREE.Mesh(new THREE.BoxGeometry(4,2.7,.2),new THREE.MeshStandardMaterial({opacity:.3,transparent:true,depthWrite:false}));wall.userData.previewWall={nx:0,nz:1};scene.add(wall);
   const roof=new THREE.Mesh(new THREE.BoxGeometry(4,.1,4),new THREE.MeshBasicMaterial());roof.userData.previewRoof=true;scene.add(roof);
+  const backdrop=new THREE.Group();backdrop.userData.previewExclude=true;scene.add(backdrop);
+  const fog=new THREE.Fog('#cdd',75,240);scene.fog=fog;
   const liveCamera=new THREE.PerspectiveCamera();liveCamera.position.set(1,1.6,1);const original=liveCamera.matrixWorld.clone();
   let renderCamera,fail=false;const previous={name:'old-target'},viewport=new THREE.Vector4(1,2,300,200),scissor=viewport.clone();let currentTarget=previous,scissorTest=true;
-  const gl={getRenderTarget:()=>currentTarget,setRenderTarget:t=>currentTarget=t,getViewport:v=>v.copy(viewport),setViewport:v=>assert.deepEqual(v.toArray(),viewport.toArray()),getScissor:v=>v.copy(scissor),setScissor:v=>assert.deepEqual(v.toArray(),scissor.toArray()),getScissorTest:()=>scissorTest,setScissorTest:v=>scissorTest=v,clear(){},render(s,c){renderCamera=c;assert.equal(roof.visible,false);if(fail)throw new Error('context lost');},readRenderTargetPixels(){}};
+  const gl={getRenderTarget:()=>currentTarget,setRenderTarget:t=>currentTarget=t,getViewport:v=>v.copy(viewport),setViewport:v=>assert.deepEqual(v.toArray(),viewport.toArray()),getScissor:v=>v.copy(scissor),setScissor:v=>assert.deepEqual(v.toArray(),scissor.toArray()),getScissorTest:()=>scissorTest,setScissorTest:v=>scissorTest=v,clear(){},render(s,c){renderCamera=c;assert.equal(roof.visible,false);assert.equal(backdrop.visible,false);assert.equal(s.fog,null);if(fail)throw new Error('context lost');},readRenderTargetPixels(){}};
   try {
     assert.equal(captureRoomPreview(gl,scene,{minX:-2,maxX:12,minZ:-2,maxZ:3},2.7,[],{x:0,z:0}),'data:image/jpeg;base64,preview');
     assert.notEqual(renderCamera,liveCamera);
@@ -71,6 +73,7 @@ test('preview uses a separate fitted camera and restores renderer, walls and cei
     assert.equal(wall.material.opacity,.3);assert.equal(wall.material.transparent,true);assert.equal(wall.material.depthWrite,false);
     fail=true;assert.throws(()=>captureRoomPreview(gl,scene,{minX:-2,maxX:2,minZ:-2,maxZ:2},2.7,[],{x:0,z:0}),/context lost/);
     assert.equal(currentTarget,previous);assert.equal(roof.visible,true);assert.equal(wall.material.opacity,.3);assert.equal(scene.background.getHexString(),'ffffff');
+    assert.equal(backdrop.visible,true);assert.equal(scene.fog,fog);
   } finally {global.document=oldDocument;}
 });
 
