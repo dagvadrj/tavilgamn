@@ -579,3 +579,23 @@
  & .kp-preview-bar { border-radius:14px; flex-wrap:wrap; justify-content:center; }
  @media(max-width:760px) { & .kitchen-category-tools > button { flex-direction:column; font-size:10px; } & .kp-preview-bar { max-width:calc(100% - 24px); } }
 }
+
+.kp-shell.kitchen-ikea-layout .kitchen-workflow-tabs { min-width:0; gap:16px; overflow-x:auto; }
+.kp-shell.kitchen-ikea-layout .kitchen-workflow-tabs button { flex-shrink:0; }
+.kp-shell.kitchen-ikea-layout .kitchen-project-tools { flex-shrink:0; }
+.kp-shell.kitchen-ikea-layout .kitchen-early-steps { grid-row:2 / -1; min-height:0; overflow:auto; background:var(--paper); }
+.kitchen-early-steps .ks-wizard { min-height:100%; }
+.kitchen-early-steps .ks-header { background:var(--paper-card); }
+.kitchen-setup-steps { min-height:100%; padding:40px 24px; display:grid; place-items:center; }
+.kitchen-setup-card { width:min(620px,100%); padding:32px; border:1px solid var(--line); border-radius:20px; background:var(--paper-card); }
+.kitchen-setup-card > svg { color:var(--teal); }
+.kitchen-setup-card h1 { margin:12px 0; font-size:26px; font-weight:650; }
+.kitchen-setup-card p { font-size:13px; line-height:1.7; color:var(--grain-text); }
+.kitchen-setup-room-choice { display:flex; align-items:center; gap:16px; padding:20px; margin-top:24px; border:1px solid var(--teal); border-radius:14px; background:var(--sand); }
+.kitchen-setup-room-choice span { margin-left:auto; font-size:12px; }
+.kitchen-setup-fields { display:grid; gap:18px; margin-top:24px; }
+.kitchen-setup-card footer { display:flex; justify-content:space-between; gap:12px; margin-top:28px; }
+.kitchen-setup-card footer button { display:flex; align-items:center; gap:10px; min-height:44px; padding:10px 18px; border:1px solid var(--line); border-radius:12px; }
+.kitchen-setup-card footer button:last-child { margin-left:auto; background:var(--ink); color:white; }
+.kitchen-setup-error { position:sticky; bottom:12px; max-width:600px; margin:12px auto; padding:12px 16px; border-radius:12px; background:#fff1ed; color:#8f4b30; font-size:13px; }
+@media(max-width:760px) { .kp-shell.kitchen-ikea-layout .kitchen-workflow-tabs { gap:12px; } .kitchen-setup-steps { padding:20px 12px; } .kitchen-setup-card { padding:22px; } }

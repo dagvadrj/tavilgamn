@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { RoomBuilder } from "./RoomBuilder";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/store/auth";
+import { KITCHEN_FLOW_STAGES, saveKitchenFlowDraft, type KitchenFlowStage } from "@/lib/kitchenFlow";
+import { createSuggestedKitchen, DEFAULT_KITCHEN_SUGGESTION } from "@/lib/kitchenSuggestions";
 import { KitchenSuggestionWizard } from "@/components/KitchenSuggestionWizard";
 import {
   Armchair,
@@ -34,6 +38,7 @@ import {
   type RoomSetupDimensions,
 } from "@/lib/roomSetup";
 import "./room-planner-start.css";
+import "@/features/planner/components/planner-entry-theme.css";
 import { RoomFurnishingPicker } from "@/components/RoomFurnishingPicker";
 import type { AddRoomOptions } from "@/lib/addRoomOptions";
 
@@ -104,12 +109,13 @@ export function RoomPlannerStart({
   onOpen?: (id: string) => void;
   onDelete?: (id: string) => void;
 }) {
+  const kitchenRouter = useRouter();
+  const kitchenUser = useAuth(state => state.user);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const deleteControl = (id: string, name: string) => onDelete && (deleteId === id
     ? <div className="room-start-delete-confirm"><span>Энэ өрөөг устгах уу?</span><button type="button" onClick={() => { onDelete(id); setDeleteId(null); }}>Тийм, устгах</button><button type="button" onClick={() => setDeleteId(null)}>Болих</button></div>
     : <button type="button" className="room-start-delete" aria-label={`${name} өрөөг устгах`} onClick={() => setDeleteId(id)}>Устгах</button>);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
-  const [shape, setShape] = useState<"rectangle" | "l">("rectangle");
   const [openings, setOpenings] = useState<RoomOpening[]>([]);
   const unit = useRoomMeasureUnit(state => state.unit);
   const factor = unit === "мм" ? 10 : 1;
@@ -123,6 +129,7 @@ export function RoomPlannerStart({
   const [error, setError] = useState("");
   const [builderOpen, setBuilderOpen] = useState(false);
   const [kitchenSetup, setKitchenSetup] = useState(false);
+  const [kitchenPreferences, setKitchenPreferences] = useState(DEFAULT_KITCHEN_SUGGESTION);
   const [setup, setSetup] = useState({
     furnishing: "empty" as AddRoomOptions["furnishing"],
     furnitureIds: [] as string[],
@@ -140,7 +147,7 @@ export function RoomPlannerStart({
       ? { width: Number(width) / 100, depth: Number(depth) / 100 }
       : presets[choice];
   const dimensions = { ...selectedSize, height: Number(height) / 100 };
-  const wallFeatures: WallFeature[] = shape === "l" ? [{ id: "setup-l", wall: "north", kind: "inset", offset: 0, length: dimensions.width * 0.35, depth: Math.min(3, dimensions.depth * 0.35) }] : [];
+  const wallFeatures: WallFeature[] = [];
   const previewRoom = { ...dimensions, wallFeatures, openings };
   const valid = !validateRoomSetup(dimensions);
   const openingIssue = valid ? validateRoomOpenings(previewRoom) : null;
@@ -159,6 +166,15 @@ export function RoomPlannerStart({
     setError("Энэ хананд зай хүрэхгүй байна. Одоо байгаа нээлхийн хана, байрлалыг өөрчилнө үү.");
   };
   const room = ROOM_TYPES[roomType];
+  function openKitchenStage(stage: KitchenFlowStage) {
+    if (stage === "room" || stage === "size") { setKitchenSetup(false); setStep(stage === "room" ? 1 : 2); return; }
+    if (stage === "equipment") { setKitchenSetup(true); return; }
+    try {
+      const design = createSuggestedKitchen(kitchenPreferences, dimensions);
+      const href = saveKitchenFlowDraft(localStorage, { userId: kitchenUser?.id, draftId: crypto.randomUUID(), design, preferences: kitchenPreferences, stage });
+      kitchenRouter.push(href);
+    } catch(reason) { setError((reason as Error).message); }
+  }
   function chooseType(type: RoomType) {
     const next = ROOM_TYPES[type];
     setRoomType(type);
@@ -175,11 +191,14 @@ export function RoomPlannerStart({
     return (
       <KitchenSuggestionWizard
         roomDimensions={dimensions}
+        initialPreferences={kitchenPreferences}
+        onPreferencesChange={setKitchenPreferences}
+        onSetupStage={stage => { setKitchenSetup(false); setStep(stage === "room" ? 1 : 2); }}
         onBack={() => setKitchenSetup(false)}
       />
     );
   return (
-    <section className="room-start" aria-label="Өрөөний төлөвлөгчийг эхлүүлэх">
+    <section className="room-start planner-entry-theme" aria-label="Өрөөний төлөвлөгчийг эхлүүлэх">
       <header className="room-start-header">
         <Link href="/" className="room-start-brand">
           <House size={22} /> tavilga.mn
@@ -191,12 +210,27 @@ export function RoomPlannerStart({
       </header>
       <div className="room-start-body">
         <ol className="room-start-progress" aria-label="Эхлэх алхмууд">
-          {(roomType === "kitchen" ? ["Гал тогоо", "Хэмжээ", "Төхөөрөмж", "2D план", "Өөрөө тохижуулах", "5 санал", "Дуусгах"] : ["Төрөл, хэлбэр", "Хэмжээ", "Хаалга, цонх", "Тавилга"]).map((label, index) => <li key={label} aria-current={step === index + 1 ? "step" : undefined}><span>{step > index + 1 ? <Check size={15} /> : index + 1}</span>{label}</li>)}
+          {(roomType === "kitchen" ? ["Гал тогоо", "Хэмжээ", "Төхөөрөмж", "2D план", "Өөрөө тохижуулах", "5 санал", "Дуусгах"] : ["Өрөө сонгох", "Хэмжээ", "Хаалга, цонх", "Тавилга"]).map((label, index) => <li key={label} aria-current={step === index + 1 ? "step" : undefined}>{roomType === "kitchen" ? <button type="button" onClick={() => openKitchenStage(KITCHEN_FLOW_STAGES[index])}><span>{step > index + 1 ? <Check size={15} /> : index + 1}</span>{label}</button> : <><span>{step > index + 1 ? <Check size={15} /> : index + 1}</span>{label}</>}</li>)}
         </ol>
         {step === 1 ? (
           <>
-            <fieldset className="room-start-shapes"><legend>Өрөөний хэлбэр</legend><button type="button" aria-pressed={shape === "rectangle"} onClick={() => setShape("rectangle")}>▭ Тэгш өнцөгт</button><button type="button" aria-pressed={shape === "l"} onClick={() => setShape("l")}>⌞ L хэлбэр</button></fieldset>
+            {draft && <article className="room-start-resume" aria-label="Өмнөх ажлаа үргэлжлүүлэх">
+              <div className="room-start-resume-preview">
+                {draft.previewImage ? <Image unoptimized width={240} height={160} src={draft.previewImage} alt={draft.name} /> : <PencilRuler size={36} strokeWidth={1.4} />}
+              </div>
+              <div className="room-start-resume-copy">
+                <span className="room-start-resume-tag">{"ХАДГАЛСАН АЖИЛ"}</span>
+                <h2>{"Өмнөх ажлаа үргэлжлүүлэх"}</h2>
+                <strong>{draft.name}</strong>
+                <p>{draft.roomName ?? "Өрөө"} <span>·</span> {roomSetupNumber(getRoomGeometry(draft).area)} м²</p>
+              </div>
+              <div className="room-start-resume-actions">
+                <button className="room-start-resume-button" type="button" onClick={onResume}>{"Үргэлжлүүлэх"}<ArrowRight size={18} /></button>
+                {onDelete && <details className="room-start-resume-manage"><summary>{"Төслийн үйлдэл"}</summary>{deleteControl(draft.id, draft.name)}</details>}
+              </div>
+            </article>}
             {onOpen && designs.filter(design => design.id !== draft?.id).length > 0 && <details className="room-start-saved"><summary>Бусад өрөөнүүд ({designs.filter(design => design.id !== draft?.id).length})</summary>{designs.filter(design => design.id !== draft?.id).map(design => <div key={design.id} className="room-start-saved-row"><button type="button" onClick={() => onOpen(design.id)}>{design.name} · {roomSetupNumber(design.width * design.depth)} м² <ArrowRight size={16}/></button>{deleteControl(design.id, design.name)}</div>)}</details>}
+            {draft && <div className="room-start-new-divider"><span>{"Эсвэл шинэ төлөвлөлт эхлүүлэх"}</span></div>}
             <div className="room-start-heading">
               <p>ӨӨРИЙНХӨӨ ОРЧНЫГ БҮТЭЭЕ</p>
               <h1 ref={title} tabIndex={-1}>
@@ -226,57 +260,6 @@ export function RoomPlannerStart({
                 </button>
               ))}
             </div>
-            {draft && (
-              <article
-                className="room-start-draft"
-                style={{
-                  display: "block",
-                  width: "min(360px,100%)",
-                  padding: 0,
-                  overflow: "hidden",
-                  marginInline: "auto",
-                }}
-              >
-                {draft.previewImage ? (
-                  <Image
-                    unoptimized
-                    width={768}
-                    height={480}
-                    src={draft.previewImage}
-                    alt="Өмнөх ажлын бүх өрөөний 3D зураг"
-                    style={{
-                      width: "100%",
-                      height: 190,
-                      objectFit: "contain",
-                      background: "#252c38",
-                    }}
-                  />
-                ) : (
-                  <div className="flex h-32 items-center justify-center bg-gray-100 text-sm text-gray-500">
-                    Өмнөх өрөөний загвар
-                  </div>
-                )}
-                <div className="p-4">
-                  <strong>Өмнөх ажлаа үргэлжлүүлэх</strong>
-                  <p>
-                    {draft.name} · {draft.roomName ?? "Өрөө"} ·{" "}
-                    {roomSetupNumber(getRoomGeometry(draft).area)} м²
-                  </p>
-                  <button
-                    type="button"
-                    onClick={onResume}
-                    style={{
-                      width: "100%",
-                      justifyContent: "center",
-                      marginTop: 12,
-                    }}
-                  >
-                    Үргэлжлүүлэх <ArrowRight size={17} />
-                  </button>
-                  {deleteControl(draft.id, draft.name)}
-                </div>
-              </article>
-            )}
           </>
         ) : (
           <>

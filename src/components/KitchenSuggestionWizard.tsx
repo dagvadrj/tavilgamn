@@ -8,9 +8,11 @@ import {
   Check,
   CookingPot,
 } from "lucide-react";
+import { KITCHEN_FLOW_STAGES, KITCHEN_FLOW_LABELS, saveKitchenFlowDraft, type KitchenFlowStage } from "@/lib/kitchenFlow";
 import { useAuth } from "@/store/auth";
 import type { RoomSetupDimensions } from "@/lib/roomSetup";
 import "./kitchen-planner.css";
+import "@/features/planner/components/planner-entry-theme.css";
 import { placementIssues } from "@/lib/kitchenPlacement";
 import { parseKitchen } from "@/lib/kitchenAssembly";
 import {
@@ -192,7 +194,7 @@ function SuggestionDiagram({ kind }: { kind: string }) {
   );
 }
 
-export function KitchenSuggestionWizard({ roomDimensions, onBack }: { roomDimensions?: RoomSetupDimensions; onBack?: () => void } = {}) {
+export function KitchenSuggestionWizard({ roomDimensions, onBack, initialPreferences, onPreferencesChange, onComplete, onSetupStage }: { roomDimensions?: RoomSetupDimensions; onBack?: () => void; initialPreferences?: KitchenSuggestionPreferences; onPreferencesChange?: (preferences: KitchenSuggestionPreferences) => void; onComplete?: (preferences: KitchenSuggestionPreferences) => void; onSetupStage?: (stage: "room" | "size") => void } = {}) {
   const router = useRouter();
   const user = useAuth((state) => state.user);
   const [step, setStep] = useState(0);
@@ -200,34 +202,36 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack }: { roomDimens
   const title = useRef<HTMLHeadingElement>(null);
   useEffect(() => { title.current?.focus(); }, [step]);
   const [preferences, setPreferences] = useState<KitchenSuggestionPreferences>(
-    DEFAULT_KITCHEN_SUGGESTION,
+    initialPreferences ?? DEFAULT_KITCHEN_SUGGESTION,
   );
+  useEffect(() => { onPreferencesChange?.(preferences); }, [preferences, onPreferencesChange]);
   const summary = step === QUESTIONS.length;
   const question = QUESTIONS[step];
   const design = useMemo(() => createSuggestedKitchen(preferences, roomDimensions), [preferences, roomDimensions]);
   const needsAdjustment = placementIssues(design).some(issue => issue.severity === "error");
 
-  function continueToPlanner() {
+  function continueToPlanner(stage: KitchenFlowStage = "space") {
+    if (onComplete) { onComplete(preferences); return; }
     try { parseKitchen(design); } catch {
       setError("Энэ өрөөнд сонголтууд багтахгүй байна. Өөр байрлал сонгох эсвэл өрөөний хэмжээгээ өөрчлөөрэй.");
       return;
     }
     const draftId=crypto.randomUUID();
-    const draftKey = `tavilga-kitchen-draft-${user?.id ?? "guest"}-${draftId}`;
+    let href = "";
     try {
-      localStorage.setItem(
-        draftKey,
-        JSON.stringify({ id: "", name: "Миний гал тогоо", design }),
-      );
+      href = saveKitchenFlowDraft(localStorage, { userId: user?.id, draftId, design, preferences, stage });
     } catch {
       setError("Сонголтыг хадгалж чадсангүй. Хөтчийн хадгалах эрхийг шалгаад дахин оролдоорой.");
       return;
     }
-    router.push(`/kitchen?editor=1&space=1&draft=${draftId}`);
+    router.push(href);
   }
 
   return (
-    <main className="ks-wizard">
+    <main className="ks-wizard planner-entry-theme">
+      {!onComplete && <nav className="ks-flow-steps" aria-label="Гал тогооны алхмууд">
+        {KITCHEN_FLOW_STAGES.map((stage, index) => <button type="button" key={stage} aria-current={stage === "equipment" ? "step" : undefined} onClick={() => { if (stage === "room" || stage === "size") { if (onSetupStage) onSetupStage(stage); else onBack?.(); } else if (stage === "equipment") setStep(0); else continueToPlanner(stage); }}>{KITCHEN_FLOW_LABELS[index]}</button>)}
+      </nav>}
       <header className="ks-header">
         <button
           type="button"
@@ -241,6 +245,9 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack }: { roomDimens
         <span>Алхам 3 / 7 · {summary ? "Тойм" : question.eyebrow}</span>
       </header>
 
+      <nav className="ks-progress" aria-label="Төхөөрөмжийн сонголт">
+        {(Object.keys(LABELS) as PreferenceKey[]).map((key, index) => <button key={key} type="button" aria-current={step === index ? "step" : undefined} onClick={() => setStep(index)}><span>{index < step ? <Check size={14} /> : index + 1}</span>{LABELS[key]}</button>)}
+      </nav>
       {!summary ? (
         <section className="ks-question" key={question.key}>
           <p className="ks-eyebrow">ГАРНИТУРАА СОНГОЁ · {question.eyebrow}</p>
@@ -310,7 +317,7 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack }: { roomDimens
           </div>
           {roomDimensions && <p className="ks-intro">Өрөө: {roomDimensions.width} × {roomDimensions.depth} м · {roomDimensions.width * roomDimensions.depth} м²</p>}
           {needsAdjustment && <p className="ks-intro" role="status">Энэ сонголтын зарим шүүгээ өрөөнд багтахгүй байна. Байрлалаа өөрчилж сонгох эсвэл 3D загвар дээр илүүдэл шүүгээг хасаарай.</p>}
-          <button type="button" className="ks-next" onClick={continueToPlanner}>
+          <button type="button" className="ks-next" onClick={() => continueToPlanner()}>
             2D өрөөний план зурах <ArrowRight size={18} />
           </button>
           {error && <p role="alert" className="ks-intro">{error}</p>}
