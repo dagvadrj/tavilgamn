@@ -51,16 +51,17 @@
 
 .interior-home .interior-stage-shade {
   pointer-events: none;
-  background: linear-gradient(90deg, #ffffffed, #ffffff36 42%, transparent 65%), linear-gradient(0deg, #ffffffcc, transparent 16%);
+  background: linear-gradient(90deg, #211911e8, #21191180 27%, transparent 58%), linear-gradient(0deg, #21191180, transparent 20%);
 }
 
 .interior-home .interior-chapter {
   position: absolute;
   top: 22%;
   left: max(5vw, 24px);
-  width: min(450px, 38vw);
+  width: min(380px, 31vw);
   pointer-events: none;
   animation: interior-copy-in .55s ease both;
+  color: #fff5e9;
 }
 
 .interior-home .interior-chapter :is(a, button) {
@@ -75,9 +76,13 @@
   line-height: 1.7;
 }
 
+.interior-home .interior-chapter .interior-eyebrow {
+  color: #ead1b0;
+}
+
 .interior-home .interior-chapter h1 {
   margin: 22px 0;
-  font-size: clamp(36px, 4.6vw, 72px);
+  font-size: clamp(34px, 3.8vw, 60px);
   font-weight: 450;
   letter-spacing: -.065em;
   line-height: 1.12;
@@ -88,7 +93,7 @@
   max-width: 310px;
   font-size: 14px;
   line-height: 1.9;
-  color: var(--site-muted, #637182);
+  color: #e6d9c9;
 }
 
 .interior-home .interior-hero-actions {
@@ -96,6 +101,15 @@
   flex-wrap: wrap;
   gap: 10px 20px;
   margin-top: 28px;
+}
+
+.interior-home .interior-hero-actions .interior-text-button {
+  padding: 12px 18px;
+  border: 1px solid #d4d9dc;
+  border-radius: 999px;
+  background: #ffffffd9;
+  backdrop-filter: blur(8px);
+  color: var(--interior-ink);
 }
 
 .interior-home .interior-button {
@@ -142,6 +156,7 @@
 .interior-home .interior-stage-top > span {
   font-size: 9px;
   letter-spacing: .17em;
+  color: #fff3e5;
 }
 
 .interior-home .interior-stage-top button {
@@ -171,6 +186,7 @@
   gap: 12px;
   min-height: 44px;
   font-size: 11px;
+  color: #fff3e5;
 }
 
 .interior-home .interior-scroll-hint svg {
@@ -186,6 +202,86 @@
   text-align: right;
   font-size: 12px;
   font-weight: 550;
+  max-width: 340px;
+  padding: 12px 16px;
+  border: 1px solid #ffffffb3;
+  border-radius: 12px;
+  background: #ffffffde;
+  backdrop-filter: blur(8px);
+}
+
+.interior-home .interior-model-caption > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  color: var(--interior-accent);
+  font-size: 11px;
+}
+
+.interior-home .interior-hotspot {
+  position: relative;
+  pointer-events: auto;
+}
+
+.interior-home .interior-hotspot-trigger {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ffffffd9;
+  border-radius: 50%;
+  background: #ffffffed;
+  color: #263848;
+  box-shadow: 0 2px 14px #26384830, 0 0 0 5px #ffffff24;
+  cursor: pointer;
+  transition: transform .18s, background .18s;
+}
+
+.interior-home .interior-hotspot[data-open="true"] .interior-hotspot-trigger {
+  background: #fff;
+  transform: scale(1.08);
+}
+
+.interior-home .interior-hotspot-card {
+  position: absolute;
+  bottom: calc(100% - 2px);
+  left: 50%;
+  transform: translateX(-70%);
+  display: grid;
+  gap: 8px;
+  width: 220px;
+  padding: 16px;
+  border: 1px solid #e1e3e3;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 30px #26384826;
+  text-align: left;
+  color: #263848;
+}
+
+.interior-home .interior-hotspot-card[hidden] {
+  display: none;
+}
+
+.interior-home .interior-hotspot-card strong {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.interior-home .interior-hotspot-card > span {
+  color: #637182;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.interior-home .interior-hotspot-card > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  font-size: 12px;
+  color: var(--interior-accent);
 }
 
 .interior-home .interior-model-caption small {
@@ -664,7 +760,7 @@
     min-height: 0;
   }
   .interior-home .interior-stage-shade {
-    background: linear-gradient(180deg, #ffffffeb, #ffffff70 25%, transparent 48%, #ffffff66 88%);
+    background: linear-gradient(180deg, #211911ed, #21191180 25%, transparent 52%, #21191180 88%);
   }
   .interior-home .interior-stage-top {
     top: 12px;

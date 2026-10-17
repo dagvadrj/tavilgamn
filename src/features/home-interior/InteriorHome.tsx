@@ -238,12 +238,11 @@ export function InteriorHome({
               sizes="100vw"
             />
           </div>
-          <div className="interior-canvas" aria-hidden="true">
+          <div className="interior-canvas" aria-label="Өрөөний тавилгатай танилцах 3D харагдац">
             <InteriorScene
               motion={motion}
               theme={theme}
               product={product}
-              preloadProducts={sofas}
               reduced={reduced}
               onStatus={reportStatus}
             />
@@ -296,14 +295,15 @@ export function InteriorHome({
               {phase === 3 ? "Загвараа сонгох" : "Доош гүйлгээд төсөөл"}
             </button>
             <span className="interior-model-caption">
-              {product?.name || "Таны гэрийн шинэ дүр төрх"}
+              {`${theme.name} зочны өрөө`}
               <small>
-                {unavailable
-                  ? "3D түр боломжгүй · каталог үзэх боломжтой"
-                  : status === "loading"
-                    ? "3D загварыг бэлтгэж байна…"
-                    : "Бодит бүтээгдэхүүн · 3D харагдац"}
+                {product && !unavailable && status === "ready"
+                  ? `${product.name}${product.basePrice > 0 ? ` · ${product.basePrice.toLocaleString("mn-MN")} ₮-өөс` : ""}`
+                  : "Интерьерийн санаа · Өөрийн тавилгаа сонгоорой"}
               </small>
+              <Link href={product ? `/product/${product.id}` : "/catalog?room=living"}>
+                {product ? "Онцлох буйданг үзэх" : "Зочны өрөөний тавилга"} <ArrowUpRight size={12} />
+              </Link>
             </span>
             <div
               className="interior-chapter-dots"

@@ -9,6 +9,7 @@ export type RoomMaterials = {
   wood?: THREE.Texture;
   woodNormal?: THREE.Texture;
   woodRoughness?: THREE.Texture;
+  slatWood?: THREE.Texture;
   plaster?: THREE.DataTexture;
   linen?: THREE.DataTexture;
 };
@@ -61,15 +62,24 @@ export function useRoomMaterials(): RoomMaterials {
         `/textures/room/oak-natural-v1-${suffix}`,
         (loaded) => {
           if (!active) return;
-          setMaterials((previous) => ({ ...previous, [key]: loaded }));
+          let slatWood: THREE.Texture | undefined;
+          if (key === "wood") {
+            slatWood = loaded.clone();
+            slatWood.center.set(.5, .5);
+            slatWood.rotation = Math.PI / 2;
+            slatWood.repeat.set(.12, 1.8);
+            slatWood.needsUpdate = true;
+            owned.push(slatWood);
+          }
+          setMaterials((previous) => ({ ...previous, [key]: loaded, ...(slatWood ? { slatWood } : {}) }));
           invalidate();
         },
         undefined,
         () => {},
       );
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(2, 2);
-      texture.anisotropy = Math.min(4, gl.capabilities.getMaxAnisotropy());
+      texture.repeat.set(8.4 / 1.8, 6.4 / 1.4);
+      texture.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
       texture.colorSpace =
         key === "wood" ? THREE.SRGBColorSpace : THREE.NoColorSpace;
       owned.push(texture);
@@ -80,7 +90,7 @@ export function useRoomMaterials(): RoomMaterials {
     const previousEnvironment = scene.environment;
     const previousIntensity = scene.environmentIntensity;
     scene.environment = target.texture;
-    scene.environmentIntensity = 0.45;
+    scene.environmentIntensity = 0.55;
     environment.dispose();
     generator.dispose();
     invalidate();

@@ -12,9 +12,10 @@ import { CategoryMenu } from "./CategoryMenu";
 
 export function ShopRoleLinks() {
   const role = useAuth((state) => state.role);
+  const user = useAuth((state) => state.user);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
+  if (!mounted || !user) return null;
   if (role === "admin") return <Link href="/admin">Удирдлага</Link>;
   if (role === "merchant") return <Link href="/merchant">Миний дэлгүүр</Link>;
   return null;
@@ -157,7 +158,7 @@ export function MobileShopNavigation() {
         open={open}
         onClose={() => setOpen(false)}
         merchant={mounted && role === "merchant"}
-        admin={mounted && role === "admin"}
+        admin={mounted && !!user && role === "admin"}
       />
     </>
   );

@@ -8,9 +8,9 @@ export const INTERIOR_STYLES = [
     id: "scandi",
     name: "Скандинав",
     note: "Гэрэл, мод, тайван орон зай.",
-    wall: "#e8e5db",
-    floor: "#c5aa83",
-    rug: "#c5c7b6",
+    wall: "#594536",
+    floor: "#c69b7d",
+    rug: "#b8ad99",
     sofa: "#e7dfce",
     accent: "#707b61",
     product: 0,
@@ -19,8 +19,8 @@ export const INTERIOR_STYLES = [
     id: "modern",
     name: "Модерн",
     note: "Тод хэлбэр. Цэгцтэй хэмнэл.",
-    wall: "#d3d3ce",
-    floor: "#9c9387",
+    wall: "#4d4036",
+    floor: "#af927d",
     rug: "#727770",
     sofa: "#a4a79a",
     accent: "#414b43",
@@ -30,8 +30,8 @@ export const INTERIOR_STYLES = [
     id: "warm",
     name: "Дулаан",
     note: "Байгалийн өнгө, тухтай мэдрэмж.",
-    wall: "#e5d4bd",
-    floor: "#b28a60",
+    wall: "#694b36",
+    floor: "#c39370",
     rug: "#ba886c",
     sofa: "#c99066",
     accent: "#8b563d",
@@ -41,8 +41,8 @@ export const INTERIOR_STYLES = [
     id: "minimal",
     name: "Минимал",
     note: "Цөөн зүйл. Илүү их амгалан.",
-    wall: "#f1eee6",
-    floor: "#d7cebd",
+    wall: "#695a4c",
+    floor: "#c7a88c",
     rug: "#ddd9d0",
     sofa: "#d9d4c8",
     accent: "#737870",
@@ -51,6 +51,7 @@ export const INTERIOR_STYLES = [
 ] as const;
 export type InteriorStyle = (typeof INTERIOR_STYLES)[number];
 export const LOWER_ROOM_Y = -7.2;
+export const SOFA_GROUND_Y = 0.055;
 export const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 export const smooth = (n: number) => {
   const t = clamp01(n);
@@ -58,24 +59,12 @@ export const smooth = (n: number) => {
 };
 
 /** Absolute poses make a fast scroll or restored scroll position deterministic. */
-export function storyPose(progress: number, seconds = 0, reduced = false) {
+export function storyPose(progress: number, _seconds = 0, reduced = false) {
   const p = reduced ? 1 : clamp01(progress);
   const travel = smooth((p - 0.3) / 0.32);
-  const drop = clamp01((p - 0.62) / 0.25);
-  const landing = clamp01((p - 0.87) / 0.13);
-  const bob = Math.sin(seconds * 1.5) * 0.055 * (1 - smooth(p / 0.3));
-  const sofaY =
-    p < 0.62
-      ? 1.1 + bob
-      : LOWER_ROOM_Y +
-        0.055 +
-        (1 - smooth(drop)) * 4.6 +
-        (landing > 0 && landing < 1
-          ? Math.sin(landing * Math.PI) ** 2 * 0.045
-          : 0);
   return {
     cameraY: LOWER_ROOM_Y * travel,
-    sofaY: p >= 1 ? LOWER_ROOM_Y + 0.055 : sofaY,
+    sofaY: SOFA_GROUND_Y + LOWER_ROOM_Y * travel,
     rotation: Math.PI * 2 * smooth(p / 0.3),
     phase: p < 0.3 ? 0 : p < 0.62 ? 1 : p < 1 ? 2 : 3,
     landed: p >= 1,
