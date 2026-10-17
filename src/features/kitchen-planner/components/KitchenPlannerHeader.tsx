@@ -5,9 +5,12 @@ import { Armchair, Camera, ClipboardCheck, CookingPot, PanelTop, Refrigerator, R
 import type { ReactNode } from "react";
 
 export type KitchenToolbarTool = "cabinets" | "appliances" | "dining" | "items" | "search" | "photo" | "annotation";
-type Stage = "space" | "design" | "suggestions" | "finish";
+type Stage = "room" | "size" | "equipment" | "space" | "design" | "suggestions" | "finish";
 
 const stages: [Stage, string][] = [
+  ["room", "1. Гал тогоо"],
+  ["size", "2. Хэмжээ"],
+  ["equipment", "3. Төхөөрөмж"],
   ["space", "4. 2D өрөөний план"],
   ["design", "5. Өөрөө тохижуулах"],
   ["suggestions", "6. Таван санал"],

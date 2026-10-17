@@ -1,7 +1,11 @@
 "use client";
+import { KitchenSuggestionWizard } from "./KitchenSuggestionWizard";
+import { KitchenSetupSteps } from "@/features/kitchen-planner/components/KitchenSetupSteps";
+import { isKitchenFlowStage, kitchenPreferences, restoreKitchenPreferences, updateKitchenEquipment, type KitchenFlowStage, type KitchenSetupStage } from "@/lib/kitchenFlow";
+import { DEFAULT_KITCHEN_SUGGESTION } from "@/lib/kitchenSuggestions";
+import { KitchenDesignSuggestions } from "@/features/kitchen-planner/components/KitchenDesignSuggestions";
 import { BrandLoader } from "@/components/BrandLoader";
 import { PlannerTour } from "@/features/planner/components/PlannerTour";
-import { KitchenDesignSuggestions } from "@/features/kitchen-planner/components/KitchenDesignSuggestions";
 
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
 import "@/features/kitchen-planner/components/kitchen-editor.css";
@@ -200,6 +204,9 @@ export function ModularKitchenPlanner({
   const [reviewOpen, setReviewOpen] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
+  const [setupStage, setSetupStage] = useState<KitchenSetupStage | null>(null);
+  const [flowPreferences, setFlowPreferences] = useState(DEFAULT_KITCHEN_SUGGESTION);
+  const currentFlowStage: KitchenFlowStage = setupStage ?? (reviewOpen ? "finish" : suggestionsOpen ? "suggestions" : spaceOpen ? "space" : "design");
   const [tourRequest, setTourRequest] = useState(0);
   const [workspaceView, setWorkspaceView] = useState<"2d" | "3d" | "interior">(
     "3d",
@@ -269,6 +276,7 @@ export function ModularKitchenPlanner({
       if (saved) {
         const next = cloneKitchen(saved.design);
         setDesign(next);
+        setFlowPreferences(kitchenPreferences(next));
         designRef.current = next;
         setName(saved.name);
         setSavedId(saved.id);
@@ -304,6 +312,12 @@ export function ModularKitchenPlanner({
           const draft = JSON.parse(raw),
             next = parseKitchen(draft.design, { allowEmpty: true });
           setDesign(next);
+          setFlowPreferences(restoreKitchenPreferences(draft.preferences, next));
+          if (isKitchenFlowStage(draft.flowStage)) {
+            const stage = draft.flowStage;
+            setSetupStage(stage === "room" || stage === "size" || stage === "equipment" ? stage : null);
+            setSpaceOpen(stage === "space"); setSuggestionsOpen(stage === "suggestions"); setReviewOpen(stage === "finish");
+          }
           designRef.current = next;
           setSelectedId(null);
           setName(
@@ -348,12 +362,12 @@ export function ModularKitchenPlanner({
     try {
       localStorage.setItem(
         draftKey,
-        JSON.stringify({ id: savedId, name, design, revision }),
+        JSON.stringify({ id: savedId, name, design, revision, preferences: flowPreferences, flowStage: currentFlowStage }),
       );
     } catch {
       /* Saving to the account remains available. */
     }
-  }, [ready, draftKey, savedId, name, design, revision]);
+  }, [ready, draftKey, savedId, name, design, revision, flowPreferences, currentFlowStage]);
   const designRef = useRef(design);
   designRef.current = design;
   useEffect(() => {
@@ -779,7 +793,17 @@ export function ModularKitchenPlanner({
     }
     return commit(next) ? undefined : "Өөрчлөлтийг хийж чадсангүй.";
   }
-  function changeStage(stage: "space" | "design" | "suggestions" | "finish") {
+  function changeStage(stage: KitchenFlowStage) {
+    if (setupStage === "equipment" && stage !== "equipment") {
+      try {
+        const next = updateKitchenEquipment(designRef.current, flowPreferences);
+        if (next !== designRef.current && !commit(next)) return;
+      } catch (reason) { setMessage((reason as Error).message); return; }
+    }
+    if (stage === "equipment" && setupStage !== "equipment") setFlowPreferences(kitchenPreferences(designRef.current));
+    setSetupStage(stage === "room" || stage === "size" || stage === "equipment" ? stage : null);
+    setCatalogOpen(false);
+    setSettingsOpen(false);
     setSuggestionsOpen(stage === "suggestions");
     setSpaceOpen(stage === "space");
     setReviewOpen(stage === "finish");
@@ -926,7 +950,7 @@ export function ModularKitchenPlanner({
     <main
       className="kp kp-shell planner-studio planner-reference kitchen-reference kitchen-refined kitchen-flow kitchen-glb-workspace kitchen-ikea-layout"
       data-room-setup={spaceOpen}
-      data-workflow-stage={reviewOpen ? "finish" : suggestionsOpen ? "suggestions" : spaceOpen ? "space" : "design"}
+      data-workflow-stage={currentFlowStage}
       data-stage={
         reviewOpen
           ? "review"
@@ -938,7 +962,7 @@ export function ModularKitchenPlanner({
       }
       data-view={workspaceView}
     >
-      <PlannerTour kind="kitchen" enabled={active && ready && !startOpen && !spaceOpen && !reviewOpen} request={tourRequest} />
+      <PlannerTour kind="kitchen" enabled={active && ready && !setupStage && !startOpen && !spaceOpen && !reviewOpen} request={tourRequest} />
       {ready && startOpen && (
         <KitchenStartDialog
           kitchen={design}
@@ -959,7 +983,7 @@ export function ModularKitchenPlanner({
         />
       )}
       <KitchenPlannerHeader
-        stage={reviewOpen ? "finish" : suggestionsOpen ? "suggestions" : spaceOpen ? "space" : "design"}
+        stage={currentFlowStage}
         onStage={changeStage}
         activeTool={catalogOpen ? catalogCategory === "appliances" ? "appliances" : "cabinets" : inspector === "extras" && settingsOpen ? extrasTab === "dining" ? "dining" : "items" : undefined}
         onTool={openToolbarTool}
@@ -1059,6 +1083,12 @@ export function ModularKitchenPlanner({
           </details>
         </>}
       />
+      {setupStage && <div className="kitchen-early-steps">
+        {setupStage === "equipment" ? <>
+          <KitchenSuggestionWizard roomDimensions={{ width: design.room.width / 1000, depth: design.room.depth / 1000, height: design.room.height / 1000 }} initialPreferences={flowPreferences} onPreferencesChange={setFlowPreferences} onBack={() => changeStage("size")} onComplete={() => changeStage("space")} />
+          {message && <p className="kitchen-setup-error" role="alert">{message}</p>}
+        </> : <KitchenSetupSteps stage={setupStage} kitchen={design} disabled={busy} message={message} onChange={commit} onStage={changeStage} />}
+      </div>}
       {suggestionsOpen && <KitchenDesignSuggestions kitchen={design} disabled={busy} onApply={commit} onBack={() => changeStage("design")} onFinish={() => changeStage("finish")} />}
       {spaceOpen && (
         <KitchenSpaceEditor
@@ -1106,7 +1136,7 @@ export function ModularKitchenPlanner({
         className="kp-layout"
         data-settings-open={settingsOpen}
         data-left-open={settingsOpen || catalogOpen}
-        hidden={spaceOpen || suggestionsOpen}
+        hidden={Boolean(setupStage) || spaceOpen || suggestionsOpen}
       >
         {catalogOpen && (
           <button
