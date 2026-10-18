@@ -28,6 +28,7 @@ function harness(role = "merchant") {
     getState: () => auth,
   });
   const mocks = {
+    "@/features/merchant/useMerchantResource": { useMerchantResource: () => ({data:null,loading:false,error:null,refresh(){}}) },
     react: {
       ...React,
       useEffect() {},
@@ -275,12 +276,9 @@ test("editing merchant product preserves all variants and stock version", async 
   );
   const workspace = MerchantDashboard();
   h.reset([{ id: "store-1", name: "Дэлгүүр" }, true, null, 0, "products"]);
-  const workspaceTree = workspace.type(workspace.props);
-  const list = find(
-    workspaceTree,
-    (node) =>
-      typeof node.type === "function" && node.type.name === "MerchantProducts",
-  );
+  workspace.type(workspace.props);
+  const { MerchantProducts } = loadSource("src/features/merchant/MerchantProducts.tsx", h.mocks);
+  const list = { type: MerchantProducts, props: { owner: "owner" } };
   const product = {
     id: "p-1",
     name: "Сандал",
@@ -304,7 +302,7 @@ test("editing merchant product preserves all variants and stock version", async 
     inStock: true,
     dimensions: { w: 0.6, d: 0.5, h: 0.8 },
   };
-  h.reset([[], false, null, 0, "", { product, create: false }, false]);
+  h.reset([null, "", { product, create: false }, false, false, null, null]);
   const editor = list.type(list.props);
   h.reset();
   const form = editor.type({ ...editor.props, onSave() {} });
@@ -329,6 +327,12 @@ test("merchant settings remain available during a store API failure", () => {
   const tree = workspace.type(workspace.props);
   assert.ok(find(tree, (node) => typeof node.type === "function" && node.type.name === "DashboardSettings"));
   assert.equal(find(tree, (node) => node.props.role === "alert"), undefined);
+});
+
+test("overview starts its independent blocks before the store request completes",()=>{
+ const h=harness();const {MerchantDashboard}=loadSource("src/components/MerchantDashboard.tsx",h.mocks);const workspace=MerchantDashboard();
+ h.reset([null,false,null,0,"overview"]);const tree=workspace.type(workspace.props);
+ const overview=find(tree,node=>typeof node.type==='function'&&node.type.name==='MerchantOverview');assert.ok(overview);assert.equal(overview.props.storePending,true);assert.equal(overview.props.store,null);
 });
 
 test("store-less merchant deep links show a setup action instead of an empty workspace", () => {

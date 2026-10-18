@@ -45,6 +45,13 @@ test('workflow permits only the next paid stage and holds cancellation requests'
   assert.equal(delivery.canMoveDelivery({ ...order(),cancellationStatus:'requested' },'shipped'),false);
 });
 
+test('a fast stage is visible while slower stages and staff still load',async t=>{
+ const h=hookHarness(t);h.render();
+ h.requests[0].resolve({orders:[order('incoming')],total:1,hasMore:false});await flush();
+ const state=h.render();assert.equal(state.columns.incoming.orders.length,1);assert.equal(state.stageLoading.incoming,false);assert.equal(state.stageLoading.preparing,true);assert.equal(state.loading,true);assert.equal(state.ready,false);
+ await h.load();assert.equal(h.render().ready,true);
+});
+
 test('API validates input and uses the verified merchant, never client-supplied ownership', async () => {
   const calls = []; let allowed = false, failure = null;
   const mocks = { '@/lib/supabase/requireMerchant': { requireMerchant: async () => allowed ? { userId:'verified-merchant',error:null } : { error:new Response('{}',{status:401}) } },

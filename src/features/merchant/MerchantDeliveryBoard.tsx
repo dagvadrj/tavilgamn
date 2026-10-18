@@ -26,6 +26,7 @@ import {
   PackageCheck,
   Plus,
   RefreshCw,
+  Search,
   Truck,
   Users,
 } from "lucide-react";
@@ -43,6 +44,7 @@ import {
 import { formatPrice } from "@/lib/format";
 import { DeliveryDialog, DeliveryStaffDialog } from "./DeliveryStaffDialog";
 import { useMerchantDelivery } from "./useMerchantDelivery";
+import { StatSkeleton } from "./MerchantStats";
 import "./merchant-delivery.css";
 
 const ICONS = {
@@ -109,14 +111,19 @@ function OrderDetails({ order }: { order: MerchantDeliveryOrder }) {
           </li>
         ))}
       </ul>
-      <p className="merchant-delivery-price">{formatPrice(order.subtotal)}</p>
-      <div className="merchant-delivery-customer">
+      <div className="merchant-delivery-card-summary">
         <strong>{order.delivery.name}</strong>
+        <span className="merchant-delivery-price">
+          {formatPrice(order.subtotal)}
+        </span>
+      </div>
+      <details className="merchant-delivery-customer">
+        <summary>Хүргэлтийн мэдээлэл</summary>
         <a href={`tel:${order.delivery.phone.replace(/[^+\d]/g, "")}`}>
           {order.delivery.phone}
         </a>
         <p>{order.delivery.address}</p>
-      </div>
+      </details>
       {order.driver && (
         <div className="merchant-delivery-driver">
           <Truck size={16} />
@@ -195,6 +202,9 @@ function StageBox({
   disabled,
   onPage,
   onNext,
+  loading,
+  error,
+  onRetry,
 }: {
   stage: DeliveryStage;
   column: DeliveryColumn;
@@ -203,6 +213,9 @@ function StageBox({
   disabled: boolean;
   onPage: (page: number) => void;
   onNext: (order: MerchantDeliveryOrder) => void;
+  loading?: boolean;
+  error?: string;
+  onRetry?: () => void;
 }) {
   const allowed = !!active && canMoveDelivery(active, stage) && !disabled;
   const { setNodeRef, isOver } = useDroppable({
@@ -226,7 +239,20 @@ function StageBox({
         </div>
         <span>{column.total}</span>
       </header>
-      <div className="merchant-delivery-cards">
+      <div
+        className="merchant-delivery-cards"
+        tabIndex={0}
+        aria-label={`${DELIVERY_STAGE_LABEL[stage]} захиалгын жагсаалт`}
+      >
+        {loading && !column.orders.length && <StatSkeleton rows={4} />}
+        {error && (
+          <p role="alert" className="merchant-delivery-error">
+            {error}
+            <button type="button" onClick={onRetry}>
+              Дахин оролдох
+            </button>
+          </p>
+        )}
         {column.orders.map((order) => (
           <DeliveryCard
             key={order.id}
@@ -235,7 +261,7 @@ function StageBox({
             onNext={() => onNext(order)}
           />
         ))}
-        {!column.orders.length && (
+        {!loading && !error && !column.orders.length && (
           <p className="merchant-delivery-empty">
             {allowed
               ? "Захиалгыг энд тавина уу"
@@ -385,6 +411,7 @@ export function MerchantDeliveryBoard({ owner }: { owner: string }) {
   const [pending, setPending] = useState<MerchantDeliveryOrder | null>(null);
   const [showStaff, setShowStaff] = useState(false);
   const [hint, setHint] = useState("");
+  const [query, setQuery] = useState("");
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, {
@@ -414,11 +441,21 @@ export function MerchantDeliveryBoard({ owner }: { owner: string }) {
     <StageBox
       key={stage}
       stage={stage}
-      column={board.columns[stage]}
+      column={{
+        ...board.columns[stage],
+        orders: board.columns[stage].orders.filter((order) =>
+          `${order.id} ${order.delivery.name} ${order.delivery.phone} ${order.items.map((item) => item.name).join(" ")}`
+            .toLocaleLowerCase("mn-MN")
+            .includes(query.trim().toLocaleLowerCase("mn-MN")),
+        ),
+      }}
       page={board.pages[stage]}
       active={active}
       disabled={disabled}
       onPage={(page) => board.setPage(stage, page)}
+      loading={board.stageLoading?.[stage] ?? (!board.ready && board.loading)}
+      error={board.stageErrors?.[stage]}
+      onRetry={board.reload}
       onNext={(order) => {
         const next = DELIVERY_NEXT[order.stage];
         if (next) void requestMove(order, next);
@@ -432,8 +469,8 @@ export function MerchantDeliveryBoard({ owner }: { owner: string }) {
           <span className="reference-eyebrow">ЗАХИАЛГА БА ХҮРГЭЛТ</span>
           <h1>Хүргэлтийн самбар</h1>
           <p>
-            Бариулаас чирэх эсвэл картын дараагийн алхмын товчийг дарж төлөвийг
-            хадгална.
+            Захиалга бүрийг хүлээн авахаас дуусгах хүртэл нэг самбараас
+            удирдаарай.
           </p>
         </div>
         <div className="merchant-delivery-actions">
@@ -457,6 +494,44 @@ export function MerchantDeliveryBoard({ owner }: { owner: string }) {
           </button>
         </div>
       </div>
+      <div className="merchant-pipeline-toolbar">
+        <label className="merchant-search">
+          <Search size={17} aria-hidden="true" />
+          <input
+            type="search"
+            value={query}
+            disabled={!!active}
+            onChange={(event) => setQuery(event.target.value)}
+            aria-label="Ачаалсан захиалгуудаас хайх"
+            placeholder="Нэр, утас, захиалгын дугаар…"
+          />
+        </label>
+        <div className="merchant-pipeline-totals">
+          <span>
+            Нийт{" "}
+            <strong>
+              {DELIVERY_STAGES.reduce(
+                (sum, stage) => sum + board.columns[stage].total,
+                0,
+              )}
+            </strong>
+          </span>
+          <span>
+            <Truck size={15} /> Замд{" "}
+            <strong>{board.columns.shipped.total}</strong>
+          </span>
+          <span>
+            <CheckCircle2 size={15} /> Дууссан{" "}
+            <strong>{board.columns.completed.total}</strong>
+          </span>
+        </div>
+      </div>
+      {query.trim() && (
+        <p className="merchant-delivery-feedback" role="status">
+          Багана бүрийн ачаалсан хуудсанд хайж байна. Баганын тоо нь бүх
+          захиалгын тоо.
+        </p>
+      )}
       {board.loading && (
         <p role="status">
           {board.busy
@@ -485,6 +560,7 @@ export function MerchantDeliveryBoard({ owner }: { owner: string }) {
       <DndContext
         id={contextId}
         sensors={sensors}
+        autoScroll={{ threshold: { x: 0.08, y: 0.12 }, acceleration: 5 }}
         measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
         collisionDetection={(args) =>
           args.pointerCoordinates ? pointerWithin(args) : rectIntersection(args)
@@ -518,15 +594,13 @@ export function MerchantDeliveryBoard({ owner }: { owner: string }) {
           },
         }}
       >
-        <div className="merchant-delivery-top">
-          {box("prepared")}
-          {box("shipped")}
-        </div>
-        <div className="merchant-delivery-bottom">
-          {box("incoming")}
-          {box("preparing")}
-          {box("delivered")}
-          {box("completed")}
+        <div
+          className="merchant-delivery-pipeline"
+          role="region"
+          aria-label="Хүргэлтийн төлөвийн баганууд, хажуу тийш гүйлгэнэ"
+          tabIndex={0}
+        >
+          {DELIVERY_STAGES.map(box)}
         </div>
         <DragOverlay adjustScale={false} dropAnimation={null} zIndex={85}>
           {active && (

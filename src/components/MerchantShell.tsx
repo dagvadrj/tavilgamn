@@ -7,9 +7,12 @@ import {
   type MerchantTab,
 } from "./MerchantSidebar";
 import { MerchantHeader } from "./MerchantHeader";
+import { MerchantMotion } from "@/features/merchant/MerchantMotion";
+import "@/features/merchant/merchant-stats.css";
 import type { DashboardPreferences } from "@/features/dashboard/preferences";
 import "@/features/dashboard/merchant-theme.css";
 import "@/features/dashboard/merchant-inputs.css";
+import "@/features/merchant/merchant-workspace.css";
 
 export function MerchantShell({
   active,
@@ -64,16 +67,11 @@ export function MerchantShell({
 
       <div className="merchant-workspace dashboard-workspace">
         <MerchantHeader
-          userName={userName}
           storeName={storeName}
           owner={owner}
-          onProducts={() => changeTab("products")}
+          onHome={() => changeTab("overview")}
           onKitchens={onOpenKitchen}
-          onQuotes={() => changeTab("quotes")}
-          onSettings={() => changeTab("settings")}
-          onProfile={() => changeTab("profile")}
           activeLabel={activeLabel}
-          hasStore={hasStore}
           sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen((value) => !value)}
         />
@@ -86,6 +84,7 @@ export function MerchantShell({
           tabIndex={-1}
         >
           {children}
+          <MerchantMotion page={active} />
         </main>
       </div>
     </div>

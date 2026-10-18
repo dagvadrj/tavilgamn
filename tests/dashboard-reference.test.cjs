@@ -10,10 +10,11 @@ test("merchant inventory totals preserve integer precision and unknown stock is 
     { id: "b", name: "Дууссан", category: "chair", image: "", basePrice: 1000, stockQuantity: 0 },
     { id: "c", name: "Тоолоогүй", category: "chair", image: "", basePrice: 1000, stockQuantity: null },
   ];
-  const values = [products, false, null, 0, false];
+  const values = [false, false, "inventory", "2026-10-19", 0];
   let index = 0;
   const { MerchantOverview } = loadSource("src/features/merchant/MerchantOverview.tsx", {
     react: { ...React, useState: () => [values[index++], () => {}], useEffect() {} },
+    "@/features/merchant/useMerchantResource": { useMerchantResource: (_owner,path) => ({data:path.includes("products")?{products}:null,loading:false,error:null,refresh() {}}) },
     "@/components/MerchantAnalytics": { useMerchantAnalytics: () => ({ analytics: null, loading: false, error: null, refresh() {} }) },
   });
   const html = renderToStaticMarkup(MerchantOverview({
@@ -21,8 +22,8 @@ test("merchant inventory totals preserve integer precision and unknown stock is 
     onProducts() {}, onStore() {},
   }));
   const total = (BigInt(Number.MAX_SAFE_INTEGER) * 6n).toLocaleString("mn-MN") + " ₮";
-  assert.ok(html.includes(total));
-  assert.match(html, /1 бараа багассан/);
+  assert.ok(html.replace(/<[^>]+>/g, "").includes(total));
+  assert.match(html.replace(/<[^>]+>/g, ""), /1 бараа багассан/);
   assert.match(html, /1 нөөц тоолоогүй/);
   assert.match(html, /Бэлэн бараа/);
 });

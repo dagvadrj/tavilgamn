@@ -434,11 +434,36 @@ export function MerchantKitchenDesigns({
                 onSubmit={createDraft}
                 className="km-listing"
               >
-                <div className="lg:col-span-2">
-                  <h2 className="font-semibold">Шинэ загвар нэмэх</h2>
-                  <p className="text-sm text-black/55">
-                    Хадгалсан загвараа сонгоод мэдээллээ бэлдээрэй.
-                  </p>
+                <div className="merchant-kitchen-form-heading">
+                  {" "}
+                  <div className="lg:col-span-2">
+                    <h2 className="font-semibold">Шинэ загвар нэмэх</h2>
+                    <p className="text-sm text-black/55">
+                      Хадгалсан загвараа сонгоод мэдээллээ бэлдээрэй.
+                    </p>
+                  </div>{" "}
+                  <div className="merchant-form-actions">
+                    <button
+                      type="submit"
+                      className="btn-primary w-fit"
+                      disabled={busy === "create" || !kitchens.length}
+                    >
+                      {busy === "create" ? (
+                        <LoaderCircle className="animate-spin" size={16} />
+                      ) : (
+                        <Upload size={16} />
+                      )}
+                      Загвар хадгалах
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      disabled={!!busy}
+                      onClick={closeCreate}
+                    >
+                      Болих
+                    </button>
+                  </div>
                 </div>
                 <label className="km-source-picker label">
                   Хадгалсан төсөл
@@ -472,28 +497,6 @@ export function MerchantKitchenDesigns({
                   source={sourceKitchenId ? { sourceKitchenId } : null}
                   disabled={!!busy || draftStatus.loading}
                 />
-                <div className="km-list-actions">
-                  <button
-                    type="submit"
-                    className="btn-primary w-fit"
-                    disabled={busy === "create" || !kitchens.length}
-                  >
-                    {busy === "create" ? (
-                      <LoaderCircle className="animate-spin" size={16} />
-                    ) : (
-                      <Upload size={16} />
-                    )}
-                    Загвар хадгалах
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    disabled={!!busy}
-                    onClick={closeCreate}
-                  >
-                    Болих
-                  </button>
-                </div>
               </form>
             </>
           )}

@@ -16,6 +16,8 @@ type Snapshot = {
   staff: DeliveryStaff[];
   loading: boolean;
   error: string | null;
+  stageLoading: Record<DeliveryStage, boolean>;
+  stageErrors: Partial<Record<DeliveryStage, string>>;
 };
 const emptyColumns = () =>
   Object.fromEntries(
@@ -62,48 +64,71 @@ export function useMerchantDelivery(owner: string) {
       staff: previous?.owner === owner ? previous.staff : [],
       loading: true,
       error: null,
+      stageLoading: Object.fromEntries(
+        DELIVERY_STAGES.map((stage) => [stage, true]),
+      ) as Record<DeliveryStage, boolean>,
+      stageErrors: {},
     }));
-    void Promise.all([
-      ...DELIVERY_STAGES.map((stage) =>
-        merchantRequest<DeliveryColumn>(
-          `/api/merchant/delivery?stage=${stage}&page=${currentPages[stage]}`,
-          owner,
-          { signal: controller.signal },
-        ),
-      ),
-      merchantRequest<{ staff: DeliveryStaff[] }>(
-        "/api/merchant/delivery/staff",
+    let remaining = 7;
+    const update = (change: (previous: Snapshot) => Snapshot) => {
+      if (active && isOwner(owner))
+        setSnapshot((previous) =>
+          previous?.owner === owner ? change(previous) : previous,
+        );
+    };
+    for (const stage of DELIVERY_STAGES) {
+      void merchantRequest<DeliveryColumn>(
+        `/api/merchant/delivery?stage=${stage}&page=${currentPages[stage]}`,
         owner,
         { signal: controller.signal },
-      ),
-    ])
-      .then((results) => {
-        if (!active || !isOwner(owner)) return;
-        const columns = Object.fromEntries(
-          DELIVERY_STAGES.map((stage, index) => [stage, results[index]]),
-        ) as Record<DeliveryStage, DeliveryColumn>;
-        setSnapshot({
-          owner,
-          columns,
-          staff: (results[6] as { staff: DeliveryStaff[] }).staff,
-          loading: false,
-          error: null,
+      )
+        .then((column) =>
+          update((previous) => ({
+            ...previous,
+            columns: { ...previous.columns, [stage]: column },
+          })),
+        )
+        .catch((reason) =>
+          update((previous) => ({
+            ...previous,
+            stageErrors: {
+              ...previous.stageErrors,
+              [stage]:
+                reason instanceof Error ? reason.message : "Ачаалж чадсангүй.",
+            },
+            error:
+              reason instanceof Error ? reason.message : "Ачаалж чадсангүй.",
+          })),
+        )
+        .finally(() => {
+          remaining--;
+          update((previous) => ({
+            ...previous,
+            loading: remaining > 0,
+            stageLoading: { ...previous.stageLoading, [stage]: false },
+          }));
         });
-      })
-      .catch((error) => {
-        if (active && isOwner(owner))
-          setSnapshot((previous) =>
-            previous?.owner === owner
-              ? {
-                  ...previous,
-                  loading: false,
-                  error:
-                    error instanceof Error
-                      ? error.message
-                      : "Хүргэлтийн мэдээллийг ачаалж чадсангүй.",
-                }
-              : previous,
-          );
+    }
+    void merchantRequest<{ staff: DeliveryStaff[] }>(
+      "/api/merchant/delivery/staff",
+      owner,
+      { signal: controller.signal },
+    )
+      .then((result) =>
+        update((previous) => ({ ...previous, staff: result.staff })),
+      )
+      .catch((reason) =>
+        update((previous) => ({
+          ...previous,
+          error:
+            reason instanceof Error
+              ? reason.message
+              : "Ажилтны мэдээллийг ачаалж чадсангүй.",
+        })),
+      )
+      .finally(() => {
+        remaining--;
+        update((previous) => ({ ...previous, loading: remaining > 0 }));
       });
     return () => {
       active = false;
@@ -156,6 +181,8 @@ export function useMerchantDelivery(owner: string) {
   }
   return {
     columns: view?.columns ?? emptyColumns(),
+    stageLoading: view?.stageLoading,
+    stageErrors: view?.stageErrors ?? {},
     staff: view?.staff ?? [],
     ready,
     loading: !view || view.loading,

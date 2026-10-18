@@ -22,6 +22,8 @@ import {
   merchantRequest,
 } from "@/features/merchant/merchantApi";
 import { MerchantProductEditor } from "@/features/merchant/MerchantProductEditor";
+import { useMerchantResource } from "./useMerchantResource";
+import { StatSkeleton } from "./MerchantStats";
 import { ProductDetails } from "@/features/admin-products/ProductDetails";
 
 export function MerchantProducts({
@@ -33,10 +35,7 @@ export function MerchantProducts({
   initialCreate?: boolean;
   onCreateOpened?: () => void;
 }) {
-  const [products, setProducts] = useState<MerchantProduct[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [refresh, setRefresh] = useState(0);
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useDraftState<{
     product: MerchantProduct;
@@ -52,39 +51,14 @@ export function MerchantProducts({
     setEditing({ product: blankProduct(), create: true });
     onCreateOpened?.();
   }, [initialCreate, onCreateOpened, setEditing]);
-  useEffect(() => {
-    const controller = new AbortController();
-    let active = true;
-    setLoading(true);
-    setError(null);
-    merchantRequest<{ products: MerchantProduct[] }>(
-      `/api/merchant/products${includeArchived ? "?archived=1" : ""}`,
-      owner,
-      {
-        signal: controller.signal,
-      },
-    )
-      .then((result) => {
-        if (active) setProducts(result.products);
-      })
-      .catch((reason) => {
-        if (active) {
-          setProducts([]);
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Барааг ачаалж чадсангүй.",
-          );
-        }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [owner, refresh, includeArchived]);
+  const resource = useMerchantResource<{ products: MerchantProduct[] }>(
+    owner,
+    `/api/merchant/products${includeArchived ? "?archived=1" : ""}`,
+    !editing,
+    60000,
+  );
+  const products = resource.data?.products ?? [],
+    loading = !resource.data && !resource.error;
   if (detailsId)
     return (
       <ProductDetails
@@ -105,7 +79,7 @@ export function MerchantProducts({
         onSave={() => {
           setEditing(null);
           setSaved(true);
-          setRefresh((value) => value + 1);
+          resource.refresh();
           void useCatalogStore.getState().refresh(true);
         }}
       />
@@ -146,7 +120,7 @@ export function MerchantProducts({
         <button
           className="btn-ghost"
           disabled={loading}
-          onClick={() => setRefresh((value) => value + 1)}
+          onClick={resource.refresh}
           aria-label="Барааны жагсаалт шинэчлэх"
         >
           <RefreshCw size={16} />
@@ -167,11 +141,11 @@ export function MerchantProducts({
       )}
       {loading ? (
         <div className="merchant-state" role="status">
-          Барааг ачаалж байна…
+          <StatSkeleton rows={5} />
         </div>
-      ) : error ? (
+      ) : error || resource.error ? (
         <p className="merchant-error" role="alert">
-          {error}
+          {error || resource.error}
         </p>
       ) : !filtered.length ? (
         <div className="merchant-panel merchant-state">
@@ -251,7 +225,7 @@ export function MerchantProducts({
                         body: JSON.stringify({ archived: !product.archivedAt }),
                       },
                     );
-                    setRefresh((value) => value + 1);
+                    resource.refresh();
                     void useCatalogStore.getState().refresh(true);
                   } catch (reason) {
                     setError(

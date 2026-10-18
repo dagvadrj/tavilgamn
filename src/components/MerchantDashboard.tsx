@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { useDraftState } from "@/hooks/useDashboardDraft";
@@ -16,14 +17,44 @@ import {
 import { MerchantOrders } from "@/components/MerchantOrders";
 import { MerchantShell } from "@/components/MerchantShell";
 import type { MerchantTab } from "@/components/MerchantSidebar";
-import { MerchantKitchenDesigns } from "@/components/MerchantKitchenDesigns";
-import { MerchantKitchenDesignDetail } from "@/components/MerchantKitchenDesignDetail";
-import { MerchantKitchenQuotes } from "@/components/MerchantKitchenQuotes";
+const MerchantKitchenDesigns = dynamic(
+  () =>
+    import("@/components/MerchantKitchenDesigns").then(
+      (module) => module.MerchantKitchenDesigns,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantKitchenDesignDetail = dynamic(
+  () =>
+    import("@/components/MerchantKitchenDesignDetail").then(
+      (module) => module.MerchantKitchenDesignDetail,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantKitchenQuotes = dynamic(
+  () =>
+    import("@/components/MerchantKitchenQuotes").then(
+      (module) => module.MerchantKitchenQuotes,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
 import { merchantRequest } from "@/features/merchant/merchantApi";
 import { MerchantOverview } from "@/features/merchant/MerchantOverview";
 import { MerchantDeliveryBoard } from "@/features/merchant/MerchantDeliveryBoard";
-import { StoreProfile } from "@/features/merchant/StoreProfile";
-import { MerchantProducts } from "@/features/merchant/MerchantProducts";
+const StoreProfile = dynamic(
+  () =>
+    import("@/features/merchant/StoreProfile").then(
+      (module) => module.StoreProfile,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantProducts = dynamic(
+  () =>
+    import("@/features/merchant/MerchantProducts").then(
+      (module) => module.MerchantProducts,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
 import { DashboardAccount } from "@/features/dashboard/DashboardAccount";
 import {
@@ -175,7 +206,9 @@ function MerchantWorkspace({
 
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
     });
   };
 
@@ -195,6 +228,21 @@ function MerchantWorkspace({
       hasStore={Boolean(store)}
       preferences={preferences}
     >
+      {!loaded && error && tab === "overview" && (
+        <div className="merchant-load-state">
+          <p role="alert" className="merchant-error">
+            {error}
+          </p>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => setRefresh((value) => value + 1)}
+          >
+            <RefreshCw size={16} />
+            Дэлгүүрийн мэдээллийг дахин ачаалах
+          </button>
+        </div>
+      )}
       {tab === "settings" && !kitchenDesignId ? (
         <DashboardSettings
           role="merchant"
@@ -213,7 +261,7 @@ function MerchantWorkspace({
         />
       ) : tab === "profile" && !kitchenDesignId ? (
         <DashboardAccount role="merchant" onStore={() => changeTab("store")} />
-      ) : !loaded ? (
+      ) : !loaded && (tab !== "overview" || Boolean(kitchenDesignId)) ? (
         error ? (
           <div className="merchant-load-state">
             <p role="alert" className="merchant-error">
@@ -257,6 +305,8 @@ function MerchantWorkspace({
             <MerchantOverview
               owner={owner}
               store={store}
+              storePending={!loaded}
+              onDelivery={() => changeTab("delivery")}
               mode={preferences.overview}
               customizing={customizing}
               onCustomize={setCustomizing}

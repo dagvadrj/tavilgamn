@@ -5,6 +5,7 @@ import {
   useDraftStatus,
   clearDashboardDraft,
 } from "@/hooks/useDashboardDraft";
+import { MerchantFormHeader } from "./MerchantFormHeader";
 import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 import { useState } from "react";
 import { Save } from "lucide-react";
@@ -47,7 +48,7 @@ export function StoreProfile({
   }
   return (
     <form
-      className="merchant-panel"
+      className="merchant-form-page"
       onSubmit={async (event) => {
         event.preventDefault();
         if (busy || draftStatus.loading) return;
@@ -80,140 +81,35 @@ export function StoreProfile({
         }
       }}
     >
-      <h2>{store ? "Дэлгүүрийн мэдээлэл" : "Дэлгүүрээ нээх"}</h2>
-      <p>
-        {store
-          ? "Энэ мэдээлэл хэрэглэгчдэд таны дэлгүүрийн хуудсанд харагдана."
-          : "Эхлээд дэлгүүрийн мэдээллээ бүртгээд бүтээгдэхүүнээ нэмээрэй."}
-      </p>
-      <DashboardDraftNotice scope={draftScope} disabled={busy} />
-      <fieldset disabled={busy || draftStatus.loading}>
-        <div className="merchant-form-grid">
-          <label>
-            Дэлгүүрийн нэр
-            <input
-              className="input"
-              required
-              maxLength={200}
-              value={draft.name}
-              onChange={(event) => field("name", event.target.value)}
-            />
-          </label>
-          <label>
-            Дэлгүүрийн төрөл
-            <select
-              className="input"
-              value={draft.storeType}
-              onChange={(event) =>
-                field("storeType", event.target.value as typeof draft.storeType)
-              }
-            >
-              {STORE_TYPES.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Утас
-            <input
-              className="input"
-              type="tel"
-              required
-              maxLength={40}
-              value={draft.phone}
-              onChange={(event) => field("phone", event.target.value)}
-            />
-          </label>
-          <label>
-            Хот, аймаг
-            <input
-              className="input"
-              required
-              maxLength={100}
-              value={draft.city}
-              onChange={(event) => field("city", event.target.value)}
-            />
-          </label>
-          <label>
-            Дүүрэг, сум
-            <input
-              className="input"
-              maxLength={100}
-              value={draft.district}
-              onChange={(event) => field("district", event.target.value)}
-            />
-          </label>
-          <label>
-            Дэлгэрэнгүй хаяг
-            <input
-              className="input"
-              required
-              maxLength={500}
-              value={draft.address}
-              onChange={(event) => field("address", event.target.value)}
-            />
-          </label>
-          <label className="merchant-span">
-            Танилцуулга
-            <textarea
-              className="input"
-              rows={4}
-              maxLength={5000}
-              value={draft.description}
-              onChange={(event) => field("description", event.target.value)}
-            />
-          </label>
-          <label className="merchant-span">
-            Дэлгүүрийн зургийн холбоос · заавал биш
-            <input
-              className="input"
-              placeholder="https://res.cloudinary.com/…"
-              maxLength={2000}
-              value={draft.image}
-              onChange={(event) => field("image", event.target.value)}
-            />
-            <small>
-              Cloudinary эсвэл Unsplash дээр байршуулсан HTTPS зургийн холбоос.
-            </small>
-          </label>
-        </div>
-        <fieldset className="mt-6">
-          <legend className="text-sm font-medium">
-            Худалдаалах барааны ангилал
-          </legend>
-          <div className="merchant-checks">
-            {CATEGORIES.map((category) => (
-              <label key={category.id}>
-                <input
-                  type="checkbox"
-                  checked={draft.categories.includes(category.id)}
-                  onChange={(event) =>
-                    field(
-                      "categories",
-                      event.target.checked
-                        ? [...draft.categories, category.id]
-                        : draft.categories.filter((id) => id !== category.id),
-                    )
-                  }
-                />
-                {category.name}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <div className="merchant-actions">
-          <button className="btn-primary" disabled={busy}>
-            <Save size={16} />
-            {busy
-              ? "Хадгалж байна…"
-              : store
-                ? "Өөрчлөлт хадгалах"
-                : "Дэлгүүр нээх"}
-          </button>
-        </div>
-      </fieldset>
+      <MerchantFormHeader
+        title={store ? "Дэлгүүрийн мэдээлэл" : "Дэлгүүрээ нээх"}
+        description="Энэ мэдээлэл дэлгүүрийн танилцуулгад харагдана."
+      >
+        <button
+          type="button"
+          className="btn-ghost"
+          disabled={busy || draftStatus.loading}
+          onClick={() => {
+            void clearDashboardDraft(draftScope);
+            setError(null);
+            setSaved(false);
+          }}
+        >
+          Болих
+        </button>
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={busy || draftStatus.loading}
+        >
+          <Save size={16} />
+          {busy
+            ? "Хадгалж байна…"
+            : store
+              ? "Өөрчлөлт хадгалах"
+              : "Дэлгүүр нээх"}
+        </button>
+      </MerchantFormHeader>
       {error && (
         <p className="merchant-error" role="alert">
           {error}
@@ -224,6 +120,168 @@ export function StoreProfile({
           Дэлгүүрийн мэдээлэл хадгалагдлаа.
         </p>
       )}
+      <DashboardDraftNotice scope={draftScope} disabled={busy} />
+      <fieldset
+        className="merchant-editor-grid"
+        disabled={busy || draftStatus.loading}
+      >
+        <div className="merchant-editor-main">
+          <section className="merchant-form-card ">
+            <div className="merchant-card-heading">
+              <h2>Дэлгүүрийн тухай</h2>
+              <p>Таны брэнд болон үйл ажиллагааны танилцуулга.</p>
+            </div>
+            <div className="merchant-form-grid">
+              {" "}
+              <label>
+                Дэлгүүрийн нэр
+                <input
+                  className="input"
+                  required
+                  maxLength={200}
+                  value={draft.name}
+                  onChange={(event) => field("name", event.target.value)}
+                />
+              </label>
+              <label>
+                Дэлгүүрийн төрөл
+                <select
+                  className="input"
+                  value={draft.storeType}
+                  onChange={(event) =>
+                    field(
+                      "storeType",
+                      event.target.value as typeof draft.storeType,
+                    )
+                  }
+                >
+                  {STORE_TYPES.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="merchant-span">
+                Танилцуулга
+                <textarea
+                  className="input"
+                  rows={4}
+                  maxLength={5000}
+                  value={draft.description}
+                  onChange={(event) => field("description", event.target.value)}
+                />
+              </label>
+            </div>
+          </section>
+          <section className="merchant-form-card ">
+            <div className="merchant-card-heading">
+              <h2>Холбоо барих мэдээлэл</h2>
+              <p>Хэрэглэгч тантай холбогдох хаяг, утас.</p>
+            </div>
+            <div className="merchant-form-grid">
+              {" "}
+              <label>
+                Утас
+                <input
+                  className="input"
+                  type="tel"
+                  required
+                  maxLength={40}
+                  value={draft.phone}
+                  onChange={(event) => field("phone", event.target.value)}
+                />
+              </label>
+              <label>
+                Хот, аймаг
+                <input
+                  className="input"
+                  required
+                  maxLength={100}
+                  value={draft.city}
+                  onChange={(event) => field("city", event.target.value)}
+                />
+              </label>
+              <label>
+                Дүүрэг, сум
+                <input
+                  className="input"
+                  maxLength={100}
+                  value={draft.district}
+                  onChange={(event) => field("district", event.target.value)}
+                />
+              </label>
+              <label>
+                Дэлгэрэнгүй хаяг
+                <input
+                  className="input"
+                  required
+                  maxLength={500}
+                  value={draft.address}
+                  onChange={(event) => field("address", event.target.value)}
+                />
+              </label>
+            </div>
+          </section>
+        </div>
+        <div className="merchant-editor-aside">
+          <section className="merchant-form-card ">
+            <div className="merchant-card-heading">
+              <h2>Дэлгүүрийн зураг</h2>
+              <p>Брэндээ илэрхийлэх танилцуулгын зураг.</p>
+            </div>
+            <div className="merchant-form-grid">
+              {" "}
+              <label className="merchant-span">
+                Дэлгүүрийн зургийн холбоос · заавал биш
+                <input
+                  className="input"
+                  placeholder="https://res.cloudinary.com/…"
+                  maxLength={2000}
+                  value={draft.image}
+                  onChange={(event) => field("image", event.target.value)}
+                />
+                <small>
+                  Cloudinary эсвэл Unsplash дээр байршуулсан HTTPS зургийн
+                  холбоос.
+                </small>
+              </label>
+            </div>
+          </section>
+          <section className="merchant-form-card ">
+            <div className="merchant-card-heading">
+              <h2>Барааны ангилал</h2>
+              <p>Хамгийн багадаа нэг ангилал сонгоно уу.</p>
+            </div>{" "}
+            <fieldset className="merchant-category-fieldset">
+              <legend className="text-sm font-medium">
+                Худалдаалах барааны ангилал
+              </legend>
+              <div className="merchant-checks">
+                {CATEGORIES.map((category) => (
+                  <label key={category.id}>
+                    <input
+                      type="checkbox"
+                      checked={draft.categories.includes(category.id)}
+                      onChange={(event) =>
+                        field(
+                          "categories",
+                          event.target.checked
+                            ? [...draft.categories, category.id]
+                            : draft.categories.filter(
+                                (id) => id !== category.id,
+                              ),
+                        )
+                      }
+                    />
+                    {category.name}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </section>
+        </div>
+      </fieldset>
     </form>
   );
 }

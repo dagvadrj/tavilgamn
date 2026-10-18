@@ -37,9 +37,34 @@ export function DashboardAccount({
           <h1 id="dashboard-profile-heading">Миний бүртгэл</h1>
           <p>Удирдлагын бүртгэл болон хувийн мэдээллээ эндээс шинэчлээрэй.</p>
         </div>
-        <span className="dashboard-heading-icon">
-          <UserRound size={24} />
-        </span>
+        {role === "merchant" ? (
+          <div className="merchant-form-actions">
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={pending !== null}
+              onClick={() => {
+                setName(user?.name ?? "");
+                setFeedback(null);
+              }}
+            >
+              Болих
+            </button>
+            <button
+              type="submit"
+              form="dashboard-profile-form"
+              className="btn-primary"
+              disabled={pending !== null || name.trim() === user?.name}
+            >
+              <Save size={17} />
+              {pending === "save" ? "Хадгалж байна…" : "Өөрчлөлт хадгалах"}
+            </button>
+          </div>
+        ) : (
+          <span className="dashboard-heading-icon">
+            <UserRound size={24} />
+          </span>
+        )}
       </div>
       <div className="dashboard-settings-grid">
         <section className="dashboard-panel dashboard-settings-panel">
@@ -53,6 +78,7 @@ export function DashboardAccount({
             </div>
           </div>
           <form
+            id="dashboard-profile-form"
             className="dashboard-profile-form"
             aria-busy={pending !== null}
             onSubmit={async (event) => {
@@ -105,14 +131,16 @@ export function DashboardAccount({
                 {feedback.message}
               </p>
             )}
-            <button
-              type="submit"
-              className="dashboard-secondary-action"
-              disabled={pending !== null || name.trim() === user?.name}
-            >
-              <Save size={17} />{" "}
-              {pending === "save" ? "Хадгалж байна…" : "Өөрчлөлт хадгалах"}
-            </button>
+            {role !== "merchant" && (
+              <button
+                type="submit"
+                className="dashboard-secondary-action"
+                disabled={pending !== null || name.trim() === user?.name}
+              >
+                <Save size={17} />{" "}
+                {pending === "save" ? "Хадгалж байна…" : "Өөрчлөлт хадгалах"}
+              </button>
+            )}
           </form>
         </section>
         <div className="dashboard-settings-details">

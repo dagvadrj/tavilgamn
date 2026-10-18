@@ -123,17 +123,45 @@ export function MerchantKitchenVersionEditor({
       }}
     >
       <DashboardDraftNotice scope={draftScope} disabled={busy} />
-      <div className="km-version-heading">
-        <h2>
-          {mode === "edit"
-            ? `v${design.versionNo} мэдээлэл засах`
-            : `v${design.versionNo + 1} шинэ хувилбар`}
-        </h2>
-        <p>
-          {mode === "edit"
-            ? "Энэ ноорог хувилбарын мэдээллийг шинэчилнэ."
-            : "Хадгалсан 3D төслийн хамгийн сүүлийн хувилбар болон зургийг ашиглана."}
-        </p>
+      <div className="merchant-kitchen-form-heading">
+        {" "}
+        <div className="km-version-heading">
+          <h2>
+            {mode === "edit"
+              ? `v${design.versionNo} мэдээлэл засах`
+              : `v${design.versionNo + 1} шинэ хувилбар`}
+          </h2>
+          <p>
+            {mode === "edit"
+              ? "Энэ ноорог хувилбарын мэдээллийг шинэчилнэ."
+              : "Хадгалсан 3D төслийн хамгийн сүүлийн хувилбар болон зургийг ашиглана."}
+          </p>
+        </div>{" "}
+        <div className="merchant-form-actions">
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={busy || draftStatus.loading}
+          >
+            {busy ? (
+              <LoaderCircle className="animate-spin" size={15} />
+            ) : mode === "edit" ? (
+              <Pencil size={15} />
+            ) : (
+              <GitBranch size={15} />
+            )}
+            {mode === "edit" ? "Өөрчлөлт хадгалах" : "Шинэ хувилбар хадгалах"}
+          </button>
+          <button
+            type="button"
+            className="btn-ghost"
+            disabled={busy || draftStatus.loading}
+            onClick={onCancel}
+          >
+            <X size={15} />
+            Болих
+          </button>
+        </div>
       </div>
       <KitchenListingFields
         form={form}
@@ -147,27 +175,6 @@ export function MerchantKitchenVersionEditor({
         }
         disabled={busy || draftStatus.loading}
       />
-      <div className="flex flex-wrap gap-2 md:col-span-2">
-        <button type="submit" className="btn-primary" disabled={busy}>
-          {busy ? (
-            <LoaderCircle className="animate-spin" size={15} />
-          ) : mode === "edit" ? (
-            <Pencil size={15} />
-          ) : (
-            <GitBranch size={15} />
-          )}
-          {mode === "edit" ? "Өөрчлөлт хадгалах" : "Шинэ хувилбар хадгалах"}
-        </button>
-        <button
-          type="button"
-          className="btn-ghost"
-          disabled={busy}
-          onClick={onCancel}
-        >
-          <X size={15} />
-          Болих
-        </button>
-      </div>
     </form>
   );
 }

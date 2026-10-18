@@ -16,6 +16,8 @@ type NullableArgs = {
   save_furniture_product: "p_expected_stock";
 };
 type Functions = Generated["public"]["Functions"] & {
+  merchant_dashboard_progress: { Args: { p_actor: string; p_date?: string; p_page?: number }; Returns: import("./database.types").Json };
+  merchant_dashboard_trends: { Args: { p_actor: string }; Returns: import("./database.types").Json };
   read_merchant_delivery_staff: { Args: { p_actor: string }; Returns: import("./database.types").Json };
   save_merchant_delivery_staff: { Args: { p_actor: string; p_id: string | null; p_expected_version: number | null; p_name: string; p_phone: string; p_vehicle: string; p_active: boolean }; Returns: import("./database.types").Json };
   read_merchant_delivery_orders: { Args: { p_actor: string; p_stage: string; p_page?: number }; Returns: import("./database.types").Json };

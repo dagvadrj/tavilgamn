@@ -138,11 +138,11 @@ test("headers do not advertise an inactive keyboard shortcut or a dummy message 
   assert.doesNotMatch(admin, /⌘\s*K|<kbd>/);
   assert.doesNotMatch(merchant, /⌘\s*K|<kbd>/);
   assert.doesNotMatch(admin, /admin-header-notification/);
-  assert.match(merchant, /onQuotes/);
+  assert.match(merchant, /Хуудасны зам/);
   assert.match(merchant, /<MerchantNotifications\b/);
 });
 
-test("merchant header actions are real callbacks, linked to the mobile dialog, and store-gated", () => {
+test("merchant breadcrumb replaces the large header and retains mobile navigation and notifications", () => {
   const calls = [];
   const { MerchantHeader } = loadSource("src/components/MerchantHeader.tsx");
   const tree = MerchantHeader({
@@ -152,8 +152,7 @@ test("merchant header actions are real callbacks, linked to the mobile dialog, a
     activeLabel: "Ерөнхий тойм",
     hasStore: false,
     sidebarOpen: false,
-    onProducts: () => calls.push("products"),
-    onQuotes: () => calls.push("quotes"),
+    onHome: () => calls.push("overview"),
     onKitchens() {},
     onProfile: () => calls.push("profile"),
     onToggleSidebar: () => calls.push("menu"),
@@ -164,12 +163,12 @@ test("merchant header actions are real callbacks, linked to the mobile dialog, a
   const menu = buttons.find((button) => button.props["aria-controls"]);
   assert.equal(menu.props["aria-controls"], "merchant-dashboard-navigation");
   assert.equal(menu.props["aria-expanded"], false);
-  const quotes = buttons.find(
-    (button) => button.props["aria-label"] === "Үнийн хүсэлтүүд",
-  );
-  assert.equal(quotes.props.disabled, true);
-  quotes.props.onClick();
-  assert.deepEqual(calls, ["quotes"]);
+  const home = buttons.find((button) => button.props["aria-label"] === "Дэлгүүрийн ерөнхий тойм");
+  home.props.onClick();
+  menu.props.onClick();
+  assert.deepEqual(calls, ["overview", "menu"]);
+  assert.equal(elements(tree, node => node.type === "header").length, 0);
+  assert.equal(elements(tree, node => node.props["aria-current"] === "page")[0].props.children, "Ерөнхий тойм");
 });
 
 test("admin header navigation has working callbacks and exposes matching dialog state", () => {

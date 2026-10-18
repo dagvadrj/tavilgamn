@@ -51,7 +51,11 @@ function SortableCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id, disabled: !editing });
+  } = useSortable({
+    id,
+    disabled: !editing,
+    transition: { duration: 340, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" },
+  });
   return (
     <div
       ref={setNodeRef}
@@ -142,7 +146,16 @@ function SortableRegion<T extends CardId>({
           ))}
         </div>
       </SortableContext>
-      <DragOverlay adjustScale={false} dropAnimation={null} zIndex={80}>
+      <DragOverlay
+        adjustScale={false}
+        dropAnimation={
+          typeof window !== "undefined" &&
+          window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+            ? null
+            : { duration: 280, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" }
+        }
+        zIndex={80}
+      >
         {active && cards[active] ? (
           <div className="merchant-sortable-overlay" aria-hidden="true" inert>
             {cards[active]}
