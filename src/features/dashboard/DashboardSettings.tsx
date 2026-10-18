@@ -9,6 +9,7 @@ import {
   Moon,
   Store,
   UserRound,
+  LayoutGrid,
 } from "lucide-react";
 import { useAuth } from "@/store/auth";
 import {
@@ -22,12 +23,14 @@ export function DashboardSettings({
   onChange,
   onStore,
   onProfile,
+  onEditLayout,
 }: {
   role: "admin" | "merchant";
   preferences: DashboardPreferences;
   onChange: (patch: Partial<DashboardPreferences>) => boolean;
   onStore?: () => void;
   onProfile: () => void;
+  onEditLayout?: () => void;
 }) {
   const user = useAuth((state) => state.user);
   const [feedback, setFeedback] = useState<"saved" | "error" | null>(null);
@@ -165,6 +168,15 @@ export function DashboardSettings({
                 <option value="inventory">Зөвхөн нөөц</option>
               </select>
             </label>
+          )}
+          {role === "merchant" && onEditLayout && (
+            <button
+              type="button"
+              className="dashboard-secondary-action"
+              onClick={onEditLayout}
+            >
+              <LayoutGrid size={16} /> Самбарын байршил засах
+            </button>
           )}
           <button
             type="button"

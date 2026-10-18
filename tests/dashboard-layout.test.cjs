@@ -87,7 +87,7 @@ test("merchant sidebar keeps all operations and settings and disables private st
   );
   assert.deepEqual(
     MERCHANT_TABS.map((tab) => tab.id),
-    ["overview", "products", "orders", "kitchens", "quotes", "store", "settings", "profile"],
+    ["overview", "products", "orders", "delivery", "kitchens", "quotes", "store", "settings", "profile"],
   );
   const props = {
     active: "overview",
@@ -103,7 +103,7 @@ test("merchant sidebar keeps all operations and settings and disables private st
   );
   for (const tab of MERCHANT_TABS)
     assert.ok(locked.includes(tab.label), `Missing ${tab.label}`);
-  assert.equal((locked.match(/disabled=""/g) ?? []).length, 4);
+  assert.equal((locked.match(/disabled=""/g) ?? []).length, 5);
   assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 1);
   const unlocked = desktopMarkup(
     renderToStaticMarkup(

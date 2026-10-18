@@ -646,46 +646,6 @@
   color: var(--site-muted, #637182);
 }
 
-.interior-home .interior-stats {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 6vw;
-  padding-block: 60px 100px;
-}
-
-.interior-home .interior-stats h2 {
-  margin-top: 15px;
-  font-size: 32px;
-  font-weight: 450;
-  line-height: 1.2;
-  letter-spacing: -.05em;
-}
-
-.interior-home .interior-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
-  align-items: end;
-}
-
-.interior-home .interior-stats-grid > div {
-  display: grid;
-  gap: 12px;
-  padding-top: 22px;
-  border-top: 1px solid var(--site-line, #e0e5ea);
-}
-
-.interior-home .interior-stats-grid strong {
-  font-size: clamp(25px, 3.3vw, 45px);
-  font-weight: 450;
-  letter-spacing: -.06em;
-}
-
-.interior-home .interior-stats-grid span {
-  font-size: 11px;
-  color: var(--site-muted, #637182);
-}
-
 .interior-home .interior-merchant-cta {
   border-top: 1px solid var(--site-line, #e0e5ea);
   padding-block: 85px;
@@ -747,9 +707,6 @@
 }
 
 @media (max-width: 1000px) {
-  .interior-home .interior-stats {
-    grid-template-columns: 1fr;
-  }
   .interior-home .interior-design-panel {
     width: 420px;
   }
@@ -875,17 +832,6 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
-  }
-  .interior-home .interior-stats {
-    gap: 30px;
-    padding-block: 10px 60px;
-  }
-  .interior-home .interior-stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 26px;
-  }
-  .interior-home .interior-stats-grid strong {
-    font-size: 38px;
   }
   .interior-home .interior-merchant-cta {
     padding-block: 60px;

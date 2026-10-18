@@ -28,6 +28,10 @@ import {
 } from "@/features/room-planner/components/PlannerPanels";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RoomPlannerStart } from "@/features/room-planner/components/RoomPlannerStart";
+import { RoomCatalogFilters } from "@/features/room-planner/components/RoomCatalogFilters";
+import { RoomPlacementHelp } from "@/features/room-planner/components/RoomPlacementHelp";
+import { useRoomSaveStatus } from "@/features/room-planner/hooks/useRoomSaveStatus";
+import { roomPlacementWarnings } from "@/lib/roomPlacementWarnings";
 import { RoomTemplateAdminControls, useRoomTemplateAdmin } from "@/features/room-planner/components/RoomTemplateAdmin";
 import { authFetch } from "@/lib/authFetch";
 import { downloadKitchenFile, kitchenExportFilename } from "@/three/kitchenExport";
@@ -74,7 +78,6 @@ import {
   ArrowUpRight,
   ChevronRight,
   ChevronDown,
-  HelpCircle,
   ChefHat,
 } from "lucide-react";
 import { priceFor } from "@/lib/products";
@@ -109,7 +112,6 @@ import {
 import { SavedKitchenList } from "./SavedKitchenList";
 import { useKitchens } from "@/store/kitchens";
 import { useAuth } from "@/store/auth";
-import { assessKitchenRoomFit } from "@/lib/kitchenRoomFit";
 import type { SavedKitchen } from "@/lib/kitchenAssembly";
 import { formatPrice, cn } from "@/lib/format";
 import { modelDeliveryUrl, prefetchModel } from "@/lib/modelPrefetch";
@@ -499,6 +501,7 @@ function RoomPlannerEditor() {
     if (roomStartOpen || !id || handledKitchen.current === id || !current)
       return;
     if (!kitchenUser) {
+      setKitchenOnly(true);
       setLeftOpen(true);
       return;
     }
@@ -511,26 +514,19 @@ function RoomPlannerEditor() {
     }
     handledKitchen.current = id;
     const saved = kitchenLibrary.items.find((item) => item.id === id);
-    const fit = saved
-      ? assessKitchenRoomFit(
-          saved,
-          current.pieces,
-          current,
-          `p_${crypto.randomUUID()}`,
-        )
-      : null;
-    const piece = fit?.placement;
+    const result = saved ? useDesigns.getState().placeKitchen(saved) : null;
+    const piece = result?.piece;
     if (piece) {
-      updatePieces([...current.pieces, piece]);
       setSelected(piece.instanceId);
       setRightOpen(true);
-      setNotice(`Гарнитурыг өрөөнд байрлууллаа. ${fit.message}`);
+      setNotice(`Гарнитурыг өрөөнд байрлууллаа. ${result.message}`);
     } else {
       setNotice(
         saved
-          ? `${fit?.message} Өрөө, байрлалаа тохируулаад Өөрийн загвараас дахин нэмээрэй.`
+          ? `${result?.error} Өрөөгөө тохируулаад «Миний гарнитур»-аас дахин нэмээрэй.`
           : "Хадгалсан гарнитур олдсонгүй.",
       );
+      setKitchenOnly(true);
       setLeftOpen(true);
     }
     const url = new URL(window.location.href);
@@ -592,6 +588,19 @@ function RoomPlannerEditor() {
     () => (current ? roomPlacementContext(current) : null),
     [current],
   );
+  const activePlacement = useMemo(() => placement ? {
+    ...placement, room: { ...placement.room, placementGeometry: undefined },
+  } : undefined, [placement]);
+  const libraryReturnHandled = useRef(false);
+  useEffect(() => {
+    if (!current || libraryReturnHandled.current || new URLSearchParams(window.location.search).get("library") !== "mine") return;
+    libraryReturnHandled.current = true;
+    setRoomStartOpen(false);
+    setKitchenOnly(true);
+    setLeftOpen(true);
+  }, [current, setLeftOpen]);
+  const placementWarnings = useMemo(() => current ? roomPlacementWarnings(current, catalog.products) : [], [current, catalog.products]);
+  const storageStatus = useRoomSaveStatus(current, designs, useDesigns.persist?.getOptions().name);
   if (templateAdmin.loading || templateAdmin.error) return <main className="container-page py-10"><p role={templateAdmin.error ? "alert" : "status"}>{templateAdmin.error || "Бэлэн өрөөг нээж байна…"}</p><Link href="/admin?tab=rooms">Өрөөний сан руу буцах</Link></main>;
   if (roomStartOpen || !current || !placement) {
     shortcuts.current = {};
@@ -746,8 +755,9 @@ function RoomPlannerEditor() {
       ...piece,
       rotation: (piece.rotation + Math.PI / 2) % (Math.PI * 2),
     };
+    if (rotated.attachment?.kind === "floor") rotated.attachment = { ...rotated.attachment, yaw: rotated.rotation };
     if (!isPlacementValid(rotated, placement.pieces, placement.room)) {
-      setNotice("Эргүүлэхэд хана эсвэл бусад тавилгатай давхцаж байна.");
+      setNotice("Эргүүлэхэд өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.");
       return;
     }
 
@@ -944,8 +954,9 @@ function RoomPlannerEditor() {
     if (!selectedPiece) return;
     if (selectedPiece.attachment && selectedPiece.attachment.kind !== "floor") { setNotice("Бэхэлгээний тохиргоог ашиглах эсвэл тавилгыг чирж зөөнө үү."); return; }
     const candidate = { ...selectedPiece, ...patch };
+    if (candidate.attachment?.kind === "floor") candidate.attachment = { ...candidate.attachment, x: candidate.x, z: candidate.z, yaw: candidate.rotation };
     if (!isPlacementValid(candidate, placement.pieces, placement.room)) {
-      setNotice("Энэ байрлалд хана эсвэл өөр тавилга байна.");
+      setNotice("Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.");
       return;
     }
     updatePieces(
@@ -970,10 +981,20 @@ function RoomPlannerEditor() {
     setSelected(copy.instanceId);
   };
   const save = () => {
-    endEdit();
-    saveCurrent(saveName.trim() || current.name.trim() || "Миний өрөө");
-    setSaveName("");
-    setNotice("Загварыг энэ төхөөрөмж дээр хадгаллаа.");
+    try {
+      endEdit();
+      saveCurrent(saveName.trim() || current.name.trim() || "Миний өрөө");
+      const storageName = useDesigns.persist.getOptions().name;
+      if (!storageName) throw new Error("Local storage is unavailable");
+      const stored = JSON.parse(window.localStorage.getItem(storageName) ?? "null");
+      if (!stored?.state?.designs?.some((design: RoomDesign) => design.id === current.id && design.updatedAt === useDesigns.getState().current?.updatedAt)) {
+        throw new Error("Local design persistence failed");
+      }
+      setSaveName("");
+      setNotice("Загварыг энэ төхөөрөмж дээр хадгаллаа. Өөр төхөөрөмжид автоматаар шилжихгүй.");
+    } catch {
+      setNotice("Энэ төхөөрөмж дээр хадгалж чадсангүй. Browser-ийн хадгалах зай, зөвшөөрлийг шалгаад дахин оролдоно уу.");
+    }
   };
   const nudge = (x: number, z: number) => {
     if (selectedPiece)
@@ -1208,7 +1229,7 @@ function RoomPlannerEditor() {
           <span>tavilga.mn</span>
         </Link>
         <label className="room-project-name">
-          <span>Өрөөний төлөвлөгч</span>
+          <span role="status" title={storageStatus?.detail} data-save-kind={storageStatus?.kind}>{storageStatus?.label ?? "Өрөөний төлөвлөгч"}</span>
           <input
             aria-label="Төслийн нэр"
             value={current.name}
@@ -1286,6 +1307,10 @@ function RoomPlannerEditor() {
         onClose={() => setLeftOpen(false)}
         title={kitchenOnly ? "Гарнитур нэмэх" : "Тавилга нэмэх"}
       >
+        <div className="planner-inspector-tabs" role="group" aria-label="Тавилгын сангийн хэсэг">
+          <button type="button" aria-pressed={!kitchenOnly} onClick={() => setKitchenOnly(false)}>Каталог</button>
+          <button type="button" aria-pressed={kitchenOnly} onClick={() => setKitchenOnly(true)}>Миний гарнитур</button>
+        </div>
         {!kitchenOnly && (
           <div className="border-b border-ui-line p-4">
             <div className="planner-panel-heading">
@@ -1298,7 +1323,7 @@ function RoomPlannerEditor() {
               <ChefHat size={20} />
               <span>
                 <strong>Гал тогоо төлөвлөх</strong>
-                <small>Бэлэн шүүгээ, плитка, угаалтуур, төхөөрөмж</small>
+
               </span>
               <ChevronRight size={18} />
             </Link>
@@ -1311,56 +1336,13 @@ function RoomPlannerEditor() {
                 onChange={(event) => setQuery(event.target.value)}
               />
             </label>
-            <div
-              className="planner-filter-pills"
-              aria-label="Тавилгын загварын хэлбэр"
-            >
-              <button
-                type="button"
-                aria-pressed={catalogFormat === "all"}
-                onClick={() => setCatalogFormat("all")}
-              >
-                Бүгд
-              </button>
-              <button
-                type="button"
-                aria-pressed={catalogFormat === "glb"}
-                onClick={() => setCatalogFormat("glb")}
-              >
-                3D тавилга · {dbPaletteItems.length}
-              </button>
-              <button
-                type="button"
-                aria-pressed={catalogFormat === "photo"}
-                onClick={() => setCatalogFormat("photo")}
-              >
-                Бусад тавилга · {paletteItems.length}
-              </button>
-            </div>
-            <div className="planner-filter-pills" role="group" aria-label="Каталогийн хүрээ">
-              <button type="button" aria-pressed={catalogScope === "room"} onClick={() => setCatalogScope("room")}>{ROOM_TYPES[activeRoomType].label}</button>
-              <button type="button" aria-pressed={catalogScope === "all"} onClick={() => setCatalogScope("all")}>Бүх өрөө</button>
-            </div>
-            <div className="planner-filter-pills" aria-label="Өрөөний үндсэн ангилал">
-              {scopedCatalog.categories.slice(0, 3).map(category => <button type="button" key={category.id} aria-pressed={scopedCatalog.category === category.id} onClick={() => setPaletteCat(category.id)}>{category.name} · {category.count}</button>)}
-            </div>
-            <label className="planner-reference-category">
-              <span>Тавилгын ангилал</span>
-              <select
-                aria-label="Тавилгын ангилал"
-                value={scopedCatalog.category}
-                onChange={(event) =>
-                  setPaletteCat(event.target.value as typeof paletteCat)
-                }
-              >
-                <option value="all">Бүх тавилга</option>
-                {scopedCatalog.categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} · {c.count}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <RoomCatalogFilters
+              categories={scopedCatalog.categories} category={scopedCatalog.category} onCategory={setPaletteCat}
+              scope={catalogScope} onScope={setCatalogScope} format={catalogFormat} onFormat={setCatalogFormat}
+              roomName={ROOM_TYPES[activeRoomType].label} query={query}
+              count={(catalogFormat !== "glb" ? paletteItems.length : 0) + (catalogFormat !== "photo" ? dbPaletteItems.length : 0)}
+              onReset={() => { setCatalogScope("all"); setPaletteCat("all"); setQuery(""); setCatalogFormat("all"); }}
+            />
           </div>
         )}
         <div className="studio-catalog-scroll flex-1 overflow-y-auto p-3">
@@ -1384,47 +1366,27 @@ function RoomPlannerEditor() {
               </Link>
             </div>
           )}
-          <details
-            className="planner-kitchen-library"
-            key={kitchenOnly ? "kitchen" : "catalog"}
-            open={kitchenOnly || undefined}
-          >
-            <summary>
-              {kitchenOnly
-                ? "Миний хадгалсан гарнитурууд"
-                : "Өөрийн загвар · гарнитур"}
-            </summary>
+          {kitchenOnly && <section className="planner-kitchen-library" aria-label="Миний хадгалсан гарнитурууд">
             <SavedKitchenList
+              placement={activePlacement}
               onPlace={(saved: SavedKitchen) => {
-                const fit = assessKitchenRoomFit(
-                  saved,
-                  current.pieces,
-                  current,
-                  `p_${crypto.randomUUID()}`,
-                );
-                const piece = fit.placement;
+                const result = useDesigns.getState().placeKitchen(saved);
+                const piece = result.piece;
                 if (!piece) {
-                  setNotice(fit.message);
+                  setNotice(result.error ?? result.message);
                   return;
                 }
-                updatePieces([...current.pieces, piece]);
                 setSelected(piece.instanceId);
                 setLeftOpen(false);
                 setActivePreset(null);
                 setLocalFile(null);
                 setLocalUrl(null);
                 setNotice(
-                  `Гарнитурыг бодит хэмжээгээр байрлууллаа. ${fit.message}`,
+                  `Гарнитурыг бодит хэмжээгээр байрлууллаа. ${result.message}`,
                 );
               }}
             />
-            {!kitchenOnly && (
-              <Link className="btn-ghost mt-2" href="/kitchen">
-                <Plus size={15} />
-                Гарнитур үүсгэх
-              </Link>
-            )}
-          </details>
+          </section>}
           {!kitchenOnly && (
             <>
               {(catalog.loading || !catalog.ready || catalog.error) && (
@@ -1565,15 +1527,19 @@ function RoomPlannerEditor() {
               <Redo2 size={18} />
             </button>
           </div>
-          <button
-            type="button"
-            className="room-help-button"
-            aria-label="Ашиглах заавар"
-            aria-haspopup="dialog"
-            onClick={() => { setShowStartHint(false); setTourRequest(value => value + 1); }}
-          >
-            <HelpCircle size={20} />
-          </button>
+          <RoomPlacementHelp warnings={placementWarnings}
+            onHelp={() => { setShowStartHint(false); setTourRequest(value => value + 1); }}
+            onSelect={item => {
+              endEdit();
+              selectRoom(item.roomId);
+              setSelected(item.id);
+              setSelectedOpening(null);
+              setLocked(false);
+              setCameraPlacement(false);
+              setRoomView("dollhouse");
+              setView("perspective");
+              setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: "focus", targetId: item.id }));
+            }} />
         </div>
         {recommendationsOpen && (
           <aside className="room-furniture-suggestions">
@@ -2005,7 +1971,7 @@ function RoomPlannerEditor() {
                   const candidate = moveAttachedFurniture(piece, x, z, current, current.activeRoomId ?? `${current.id}-room-1`, current.pieces);
                   const pieces = resolveFurnitureAttachments(current.pieces.map(p => p.instanceId === id ? candidate : p), current, current.activeRoomId ?? `${current.id}-room-1`);
                   const combined = placement.pieces.map(p => pieces.find(next => next.instanceId === p.instanceId) ?? p);
-                  if (!pieces.every(p => isPlacementValid(p, combined, placement.room))) return "Энэ байрлалд хана эсвэл өөр тавилга байна.";
+                  if (!pieces.every(p => isPlacementValid(p, combined, placement.room))) return "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.";
                   updatePieces(pieces);
                   return null;
                 } catch (reason) { return (reason as Error).message; }
@@ -2406,8 +2372,7 @@ function RoomPlannerEditor() {
                 </button>
               </div>
               <p className="planner-storage-note">
-                Ажлын явц энэ төхөөрөмж дээр автоматаар үлдэнэ. Хадгалсан
-                хувилбараа доороос нээнэ.
+                {storageStatus?.label}<br/>{storageStatus?.detail}
               </p>
             </div>
           </div>
@@ -2639,7 +2604,7 @@ function RoomPlannerEditor() {
                 <FurnitureAttachmentControls piece={selectedPiece} pieces={current.pieces} room={current} roomId={current.activeRoomId ?? `${current.id}-room-1`} onChange={candidate => {
                   try {
                     const pieces=resolveFurnitureAttachments(current.pieces.map(p=>p.instanceId===candidate.instanceId?candidate:p),current,current.activeRoomId??`${current.id}-room-1`);
-                    if(!pieces.every(p=>isPlacementValid(p,pieces,placement.room)))return "Энэ байрлалд хана эсвэл өөр тавилга байна.";
+                    if(!pieces.every(p=>isPlacementValid(p,pieces,placement.room)))return "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.";
                     updatePieces(pieces);return null;
                   }catch(reason){return (reason as Error).message;}
                 }} />

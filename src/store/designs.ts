@@ -29,7 +29,9 @@ import {
   snapRoomPosition,
   placeAdjacentRoom,
 } from "@/lib/roomLayout";
-import { layoutFurnitureIssue, roomPlacementContext } from "@/three/roomPlacement";
+import { activeRoomPlacementContext, layoutFurnitureIssue, roomPlacementContext } from "@/three/roomPlacement";
+import { assessKitchenRoomFit } from "@/lib/kitchenRoomFit";
+import type { KitchenSnapshot } from "@/lib/kitchenAssembly";
 import {
   movedFurnitureId,
   reassignFurnitureRooms,
@@ -88,6 +90,7 @@ interface DesignState {
   duplicateDesign: (id: string) => void;
   updatePieces: (pieces: PlacedFurniture[]) => void;
   placeFurniture: (piece: PlacedFurniture, hints?: InitialPlacementHints) => { piece: PlacedFurniture | null; error: string | null };
+  placeKitchen: (saved: KitchenSnapshot) => { piece: PlacedFurniture | null; error: string | null; message: string };
   updateRoom: (
     patch: Partial<
       Pick<
@@ -554,16 +557,33 @@ export const useDesigns = create<DesignState>()(
           return failure("Өрөө эсвэл тавилгын бэхэлгээний мэдээлэл тохирохгүй байна. Өрөөний тохиргоогоо шалгана уу.");
         }
       },
+      placeKitchen: (saved) => {
+        const current = get().current;
+        const failure = (error: string) => ({ piece: null, error, message: error });
+        if (!current) return failure("Эхлээд өрөөгөө сонгоно уу.");
+        if (get().transaction) return failure("Одоогийн засвараа дуусгаад дахин байрлуулна уу.");
+        const context = activeRoomPlacementContext(current);
+        const fit = assessKitchenRoomFit(saved, context.pieces, context.room, `p_${crypto.randomUUID()}`);
+        if (!fit.placement) return failure(fit.message);
+        get().updatePieces([...current.pieces, fit.placement]);
+        const piece = get().current?.pieces.find(item => item.instanceId === fit.placement!.instanceId);
+        return piece ? { piece, error: null, message: fit.message }
+          : failure("Өрөөний байрлал өөрчлөгдсөн байна. Гарнитураа дахин сонгоно уу.");
+      },
       updatePieces: (pieces) => {
         const c = get().current;
         if (!c) return;
         try { pieces = resolveFurnitureAttachments(pieces, c, c.activeRoomId ?? `${c.id}-room-1`); } catch { return; }
         if (JSON.stringify(c.pieces) === JSON.stringify(pieces)) return;
         const next = cloneDesign({ ...c, pieces, updatedAt: Date.now() });
-        if (pieces.some(p => p.attachment)) {
-          const context=roomPlacementContext(next);
-          if(pieces.some(p=>p.attachment&&!isPlacementValid(p,context.pieces,context.room)))return;
-        }
+        const context = roomPlacementContext(next);
+        // Validate changed footprints, including unbound floor pieces. Existing
+        // legacy errors must not prevent fixing or deleting a different item.
+        if (pieces.some(piece => {
+          const previous = c.pieces.find(p => p.instanceId === piece.instanceId);
+          return JSON.stringify(previous) !== JSON.stringify(piece)
+            && !isPlacementValid(piece, context.pieces, context.room);
+        })) return;
         set({
           current: get().transaction
             ? next

@@ -13,6 +13,7 @@ import {
   Settings,
   CircleHelp,
   UserRound,
+  Truck,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 import type { MerchantLocationTab } from "@/lib/merchantNavigation";
@@ -27,6 +28,7 @@ export const MERCHANT_TABS: {
   { id: "overview", label: "Ерөнхий тойм", icon: LayoutDashboard },
   { id: "products", label: "Бүтээгдэхүүн", icon: Package },
   { id: "orders", label: "Захиалгууд", icon: ShoppingBag },
+  { id: "delivery", label: "Хүргэлт", icon: Truck },
   { id: "kitchens", label: "Гал тогооны загвар", icon: CookingPot },
   { id: "quotes", label: "Үнийн хүсэлтүүд", icon: MessageSquareQuote },
   { id: "store", label: "Дэлгүүрийн мэдээлэл", icon: Store },
@@ -55,7 +57,9 @@ export function MerchantSidebar({
     const Icon = item.icon;
     const disabled =
       !hasStore &&
-      ["products", "orders", "kitchens", "quotes"].includes(item.id);
+      ["products", "orders", "delivery", "kitchens", "quotes"].includes(
+        item.id,
+      );
     return (
       <button
         key={item.id}
@@ -103,11 +107,15 @@ export function MerchantSidebar({
       >
         <div className="dashboard-nav-group">
           <p className="dashboard-nav-label">ДЭЛГҮҮР</p>
-          {MERCHANT_TABS.slice(0, 3).map(renderItem)}
+          {MERCHANT_TABS.filter((item) =>
+            ["overview", "products", "orders", "delivery"].includes(item.id),
+          ).map(renderItem)}
         </div>
         <div className="dashboard-nav-group">
           <p className="dashboard-nav-label">ГАЛ ТОГООНЫ MARKETPLACE</p>
-          {MERCHANT_TABS.slice(3, 5).map(renderItem)}
+          {MERCHANT_TABS.filter((item) =>
+            ["kitchens", "quotes"].includes(item.id),
+          ).map(renderItem)}
         </div>
       </nav>
 

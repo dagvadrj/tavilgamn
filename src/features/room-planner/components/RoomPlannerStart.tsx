@@ -192,10 +192,11 @@ export function RoomPlannerStart({
                 {draft.previewImage ? <Image unoptimized width={240} height={160} src={draft.previewImage} alt={draft.name} /> : <PencilRuler size={36} strokeWidth={1.4} />}
               </div>
               <div className="room-start-resume-copy">
-                <span className="room-start-resume-tag">{"ХАДГАЛСАН АЖИЛ"}</span>
+                <span className="room-start-resume-tag">{"ЭНЭ ТӨХӨӨРӨМЖ ДЭЭРХ АЖЛЫН ЯВЦ"}</span>
                 <h2>{"Өмнөх ажлаа үргэлжлүүлэх"}</h2>
                 <strong>{draft.name}</strong>
                 <p>{draft.roomName ?? "Өрөө"} <span>·</span> {roomSetupNumber(getRoomGeometry(draft).area)} м²</p>
+                <small>Өөр төхөөрөмжид автоматаар шилжихгүй.</small>
               </div>
               <div className="room-start-resume-actions">
                 <button className="room-start-resume-button" type="button" onClick={onResume}>{"Үргэлжлүүлэх"}<ArrowRight size={18} /></button>

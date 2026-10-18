@@ -35,7 +35,8 @@ test("both planners retain lazy 3D scenes and only open room inspectors reserve 
   assert.doesNotMatch(kitchen, /<PlannerRail/);
   assert.match(room, /active=\{inspector === "catalog" && leftOpen\}/);
   assert.match(room, /active=\{inspector === "environment" && rightOpen\}/);
-  assert.match(room, /aria-label="Тавилгын ангилал"/);
+  assert.match(room, /<RoomCatalogFilters/);
+  assert.match(source("src/features/room-planner/components/RoomCatalogFilters.tsx"), /aria-label="Тавилгын ангилал"/);
   assert.match(source("src/features/room-planner/components/PlannerPanels.tsx"), /if \(!active\) return null/);
 });
 

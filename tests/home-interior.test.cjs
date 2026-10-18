@@ -125,7 +125,8 @@ test("public homepage renders editorial content and controls without waiting for
     "next/link": { default: ({ href, children, ...props }) => React.createElement("a", { href, ...props }, children) },
   });
   const html = renderToStaticMarkup(React.createElement(InteriorHome, { catalog: [], stores: [], paymentLabels: [], dataError: true }));
-  for (const text of ["Гэр гэдэг", "Скандинав", "Модерн", "Дулаан", "Минимал", "Бидний төслүүд", "Долоон жилийн", "Дэлгүүрээ нээх", "Өрөөнд байрлуулах"]) assert.ok(html.includes(text), text);
+  for (const text of ["Гэр гэдэг", "Скандинав", "Модерн", "Дулаан", "Минимал", "Тохижуулалтын санаа", "Дэлгүүр бүртгүүлэх хүсэлт", "Энэ орчинд туршиж харах"]) assert.ok(html.includes(text), text);
+  for (const text of ["62 мянга", "98%", "Долоон жилийн", "240+"]) assert.ok(!html.includes(text), text);
   assert.ok(html.includes('href="/catalog"'));
   assert.ok(html.includes('href="/planner"'));
   assert.equal(html.includes("3D түр боломжгүй"), false);

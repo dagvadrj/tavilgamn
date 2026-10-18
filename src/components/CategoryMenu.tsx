@@ -51,6 +51,7 @@ export function CategoryMenu({ open, onClose, merchant, admin }: {
           })}
           <div className="category-menu-sidebar-footer">
             <Link href="/stores" onClick={onClose}>Бүх дэлгүүр <ArrowUpRight size={16} /></Link>
+            <Link href="/wishlist" onClick={onClose}>Хадгалсан тавилга <ArrowUpRight size={16} /></Link>
             <Link href="/planner" onClick={onClose}>Өрөөгөө төлөвлөх <ArrowUpRight size={16} /></Link>
             <Link href="/kitchen" onClick={onClose}>Гал тогоо төлөвлөх <ArrowUpRight size={16} /></Link>
             {merchant && <Link href="/merchant" onClick={onClose}>Миний дэлгүүр <ArrowUpRight size={16} /></Link>}

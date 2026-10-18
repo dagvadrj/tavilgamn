@@ -47,7 +47,7 @@ const CHAPTERS = [
     text: "Доороос загвараа сонгоод энэ өрөөнд байрлуулж үзээрэй.",
   },
 ];
-const PROJECTS = [
+const ROOM_IDEAS = [
   {
     title: "Өдөр бүрийн амгалан",
     type: "Зочны өрөө",
@@ -265,8 +265,11 @@ export function InteriorHome({
                   type="button"
                   onClick={skip}
                 >
-                  Өрөөнд байрлуулах <ArrowRight size={16} />
+                  Орчинд туршиж харах <ArrowRight size={16} />
                 </button>
+                <Link className="interior-text-button" href="/planner">
+                  Өөрийн өрөөг төлөвлөх <ArrowUpRight size={16} />
+                </Link>
               </div>
             )}
           </div>
@@ -396,7 +399,7 @@ export function InteriorHome({
                 }));
               }}
             >
-              {busy ? "Өрөөг шинэчилж байна…" : "Өрөөнд байрлуулах"}
+              {busy ? "Өрөөг шинэчилж байна…" : "Энэ орчинд туршиж харах"}
               <MoveUpRight size={18} />
             </button>
             <span className="interior-live-status" role="status">
@@ -434,8 +437,8 @@ export function InteriorHome({
               Тавилга хайж буй хүмүүст бүтээгдэхүүн, интерьерийн санаагаа
               хүргээрэй.
             </p>
-            <Link className="interior-text-button" href="/merchant">
-              Сурталчилгаа байрлуулах <ArrowUpRight size={16} />
+            <Link className="interior-text-button" href="/about?topic=advertising#contact">
+              Сурталчилгааны талаар холбогдох <ArrowUpRight size={16} />
             </Link>
           </div>
           <div className="interior-advert-art" aria-hidden="true">
@@ -487,15 +490,15 @@ export function InteriorHome({
         >
           <div className="interior-section-heading">
             <div>
-              <span className="interior-eyebrow">ОРОН ЗАЙН ТҮҮХҮҮД</span>
-              <h2 id="interior-projects-title">Бидний төслүүд</h2>
+              <span className="interior-eyebrow">ӨРӨӨНДӨӨ ТОХИРОХ СОНГОЛТ</span>
+              <h2 id="interior-projects-title">Тохижуулалтын санаа</h2>
             </div>
             <Link href="/catalog" className="interior-text-button">
               Бүх сонголт <ArrowUpRight size={16} />
             </Link>
           </div>
           <div className="interior-project-grid">
-            {PROJECTS.map((project, index) => (
+            {ROOM_IDEAS.map((project, index) => (
               <Link
                 href={project.href}
                 key={project.title}
@@ -516,34 +519,8 @@ export function InteriorHome({
                   </b>
                 </div>
                 <h3>{project.title}</h3>
-                <p>Тохижуулалтын санаа · {project.type}</p>
+                <p>{project.type} · Тавилга үзэх</p>
               </Link>
-            ))}
-          </div>
-        </section>
-        <section
-          className="interior-stats interior-wrap"
-          aria-labelledby="interior-stats-title"
-        >
-          <div>
-            <span className="interior-eyebrow">ХАМТДАА БҮТЭЭСЭН</span>
-            <h2 id="interior-stats-title">
-              Долоон жилийн
-              <br />
-              туршлага.
-            </h2>
-          </div>
-          <div className="interior-stats-grid">
-            {[
-              ["240+", "каталогт буй тавилга"],
-              ["62 мянга", "төлөвлөсөн өрөө"],
-              ["4 хот", "дэлгүүртэй"],
-              ["98%", "дахин худалдан авна"],
-            ].map(([number, label]) => (
-              <div key={label}>
-                <strong>{number}</strong>
-                <span>{label}</span>
-              </div>
             ))}
           </div>
         </section>
@@ -556,8 +533,8 @@ export function InteriorHome({
               <em>сайхан гэртэй холбоё.</em>
             </h2>
             <p>Үйлдвэр, гар урлаач, тавилгын дэлгүүрүүдэд нээлттэй.</p>
-            <Link href="/merchant" className="interior-button">
-              Дэлгүүрээ нээх <ArrowUpRight size={18} />
+            <Link href="/about?topic=merchant#contact" className="interior-button">
+              Дэлгүүр бүртгүүлэх хүсэлт <ArrowUpRight size={18} />
             </Link>
             <Link href="/stores" className="interior-text-button">
               Дэлгүүрүүдтэй танилцах <ArrowRight size={16} />

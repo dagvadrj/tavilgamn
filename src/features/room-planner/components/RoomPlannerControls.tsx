@@ -67,6 +67,10 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
         </details>
     </div>
     <nav className="room-view-dock" ref={dock} aria-label="Өрөө харах, засах">
+      {(locked || snap) && <div className="room-navigation-status" role="group" aria-label="Идэвхтэй удирдлага">
+        {locked && <button type="button" onClick={onLock}><Lock size={14}/> Камер түгжээтэй · Тайлах</button>}
+        {snap && <button type="button" aria-pressed={snap} onClick={onSnap}><Magnet size={14}/> Хананд тааруулах · Унтраах</button>}
+      </div>}
       <div className="room-view-options" role="group" aria-label="Харах өнцөг" data-planner-tour="room-view">
         <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>Өрөөний харагдац</span></button>
         <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>Дээрээс</span></button>

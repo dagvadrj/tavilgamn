@@ -40,9 +40,10 @@ test('a seam centre keeps its owner, crossing it reassigns but still blocks clos
  store.getState().updatePieces([piece('bed',0)]);assert.equal(store.getState().moveRoom('b',{x:8,z:0},false),null);
  next=store.getState().current;assert.equal(next.rooms[0].pieces.length,0);assert.equal(next.rooms[1].pieces[0].instanceId,'bed');near(next.pieces[0].x,0);near(roomPosition(next.rooms[1]).x,8);
 });
-test('target collisions, low ceilings, gaps and actual room voids cannot acquire furniture',()=>{
+test('target furniture may overlap; low ceilings, gaps and actual room voids cannot acquire furniture',()=>{
  const a={...room('a'),pieces:[piece('bed',4)]},b={...room('b',4),pieces:[piece('occupied')]};
- assert.equal(reassignFurnitureRooms(design([a,b],[connection(a,b)])).rooms[0].pieces.length,1);
+ const overlapping=reassignFurnitureRooms(design([a,b],[connection(a,b)]));
+ assert.equal(overlapping.rooms[0].pieces.length,0);assert.equal(overlapping.rooms[1].pieces.length,2);
  const tall={...a,pieces:[piece('tall',4)]};assert.equal(reassignFurnitureRooms(design([tall,{...b,pieces:[]}],[connection(a,b)])).rooms[0].pieces.length,1);
  const gap={...a,pieces:[piece('bed',4)]},far=room('far',8);assert.equal(reassignFurnitureRooms(design([gap,far])).rooms[0].pieces.length,1);
  const notched={...room('notched',4),wallFeatures:[{id:'inset',kind:'inset',wall:'north',offset:1,length:2,depth:1}]};

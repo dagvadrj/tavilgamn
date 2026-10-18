@@ -1,0 +1,57 @@
+.room-catalog-filters {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.room-catalog-filters label {
+  display: grid;
+  gap: 6px;
+}
+
+.room-catalog-filters select {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #dce2e8;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.room-catalog-filters summary {
+  cursor: pointer;
+  min-height: 36px;
+  align-content: center;
+  font-weight: 650;
+}
+
+.room-catalog-filters details label {
+  margin-bottom: 10px;
+}
+
+.room-catalog-filters small {
+  color: #627180;
+  line-height: 1.5;
+}
+
+.room-catalog-filter-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #627180;
+}
+
+.room-catalog-filter-status button {
+  min-height: 40px;
+  color: #075eaa;
+  text-decoration: underline;
+}
+
+.room-simple .room-kitchen-shortcut {
+  padding: 8px 0;
+  margin: 6px 0;
+  border: 0;
+  background: transparent;
+}

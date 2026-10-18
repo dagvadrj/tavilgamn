@@ -6,6 +6,7 @@ import { DEFAULT_KITCHEN_SUGGESTION } from "@/lib/kitchenSuggestions";
 import { KitchenDesignSuggestions } from "@/features/kitchen-planner/components/KitchenDesignSuggestions";
 import { BrandLoader } from "@/components/BrandLoader";
 import { PlannerTour } from "@/features/planner/components/PlannerTour";
+import { kitchenSaveStatus } from "@/lib/kitchenSaveStatus";
 
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
 import "@/features/kitchen-planner/components/kitchen-editor.css";
@@ -187,6 +188,9 @@ export function ModularKitchenPlanner({
   const [name, setName] = useState("Миний гал тогоо"),
     [savedId, setSavedId] = useState("");
   const [revision, setRevision] = useState(0);
+  const [saveFailure, setSaveFailure] = useState("");
+  const saveInFlight = useRef(false);
+  const [draftWrite, setDraftWrite] = useState<{ key: string; ok: boolean } | null>(null);
   const marketplaceSource = library.items.find(
     (item) => item.id === savedId,
   )?.sourceMarketplaceDesignId;
@@ -357,17 +361,21 @@ export function ModularKitchenPlanner({
     legacyDraftKey,
     setMessage,
   ]);
+  const draftPayload = useMemo(() => JSON.stringify({ id: savedId, name, design, revision, preferences: flowPreferences, flowStage: currentFlowStage }),
+    [savedId, name, design, revision, flowPreferences, currentFlowStage]);
   useEffect(() => {
     if (!ready) return;
     try {
-      localStorage.setItem(
-        draftKey,
-        JSON.stringify({ id: savedId, name, design, revision, preferences: flowPreferences, flowStage: currentFlowStage }),
-      );
+      localStorage.setItem(draftKey, draftPayload);
+      setDraftWrite({ key: `${draftKey}:${draftPayload}`, ok: localStorage.getItem(draftKey) === draftPayload });
     } catch {
-      /* Saving to the account remains available. */
+      setDraftWrite({ key: `${draftKey}:${draftPayload}`, ok: false });
     }
-  }, [ready, draftKey, savedId, name, design, revision, flowPreferences, currentFlowStage]);
+  }, [ready, draftKey, draftPayload]);
+  useEffect(() => { setSaveFailure(""); }, [design, name]);
+  useEffect(() => {
+    if (ready && user && savedId && revision > 0 && library.owner === user.id && !library.loaded && !library.loading && !library.error) void library.refresh();
+  }, [ready, user, savedId, revision, library]);
   const designRef = useRef(design);
   designRef.current = design;
   useEffect(() => {
@@ -418,6 +426,14 @@ export function ModularKitchenPlanner({
   const tops = useMemo(() => fitCountertops(kitchen), [kitchen]);
   const bounds = kitchenEnvelope(kitchen),
     busy = dragging || saving || versionBusy || !ready;
+  const saveStatus = useMemo(() => kitchenSaveStatus({
+    name, design: applyKitchenCatalogVariants(design, moduleCatalog),
+    saved: library.owner === user?.id ? library.items.find(item => item.id === savedId) : undefined,
+    signedIn: !!user, saving,
+    localSaved: draftWrite?.key === `${draftKey}:${draftPayload}` ? draftWrite.ok : undefined,
+    loading: !ready || (!!user && !!savedId && revision > 0 && (library.owner !== user.id || (!library.loaded && !library.error))),
+    saveError: saveFailure || (revision > 0 && !library.items.some(item => item.id === savedId) ? library.error : ""),
+  }), [name, design, moduleCatalog, library, user, savedId, saving, draftWrite, draftKey, draftPayload, ready, revision, saveFailure]);
   const bom = useMemo(
     () => buildKitchenBom(kitchen, moduleCatalog, products.products),
     [kitchen, moduleCatalog, products.products],
@@ -538,7 +554,7 @@ export function ModularKitchenPlanner({
       selectCabinet(copy.id);
   }
   async function save(place = false) {
-    if (busy || !user) return;
+    if (busy || !user || saveInFlight.current) return;
     let checked: ModularKitchen;
     try {
       checked = parseKitchen(
@@ -554,6 +570,8 @@ export function ModularKitchenPlanner({
     }
     const id = savedId || crypto.randomUUID();
     setSavedId(id);
+    saveInFlight.current = true;
+    setSaveFailure("");
     setSaving(true);
     try {
       const saved = await library.save(id, name.trim(), checked, revision);
@@ -565,9 +583,9 @@ export function ModularKitchenPlanner({
         } catch {
           /* The JSON project is already safe. */
         }
-        const thumbnail = image
-          ? await library.saveThumbnail(saved.id, image, saved.revision)
-          : null;
+        let thumbnail: string | null = null;
+        try { thumbnail = image ? await library.saveThumbnail(saved.id, image, saved.revision) : null; }
+        catch { /* The account project is already saved; a failed picture must not mark it unsaved. */ }
         setSuccessMessage(
           thumbnail
             ? "Гарнитур болон 3D нүүр зураг хадгалагдлаа."
@@ -575,12 +593,17 @@ export function ModularKitchenPlanner({
         );
         if (place) router.push(`/planner?kitchen=${saved.id}`);
         return saved;
-      } else
-        setMessage(
-          useKitchens.getState().error ||
-            "Хадгалж чадсангүй. Дахин оролдоно уу.",
-        );
+      } else {
+        const error = useKitchens.getState().error || "Хадгалж чадсангүй. Дахин оролдоно уу.";
+        setSaveFailure(error);
+        setMessage(error);
+      }
+    } catch (error) {
+      const text = error instanceof Error ? error.message : "Хадгалж чадсангүй. Дахин оролдоно уу.";
+      setSaveFailure(text);
+      setMessage(text);
     } finally {
+      saveInFlight.current = false;
       setSaving(false);
     }
   }
@@ -993,6 +1016,7 @@ export function ModularKitchenPlanner({
         onSave={user ? () => void save() : undefined}
         loginHref={`/login?next=${encodeURIComponent(new URLSearchParams(queryString).has("design") ? `/kitchen?${queryString}` : `/kitchen?importGuest=1${draftToken ? `&draft=${encodeURIComponent(draftToken)}` : ""}`)}`}
         name={name} onName={setName} subtotal={bom.knownSubtotal} annotations={annotations}
+        saveStatus={saveStatus}
         utilities={<>
           <button type="button" aria-label="Ашиглах заавар" title="Ашиглах заавар" aria-haspopup="dialog" onClick={() => { setSpaceOpen(false); setReviewOpen(false); setStartOpen(false); setCatalogOpen(false); setSettingsOpen(false); setTourRequest(value => value + 1); }}><HelpCircle size={18} /></button>
           <details className="km-layout-menu kp-top-menu" data-planner-tour="kitchen-layout">

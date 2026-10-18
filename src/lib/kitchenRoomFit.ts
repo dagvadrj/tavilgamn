@@ -1,7 +1,7 @@
 import type { KitchenSnapshot } from "./kitchenAssembly";
 import { kitchenRoomPiece } from "./kitchenRoomPiece";
-import type { PlacedFurniture, RoomShape } from "./types";
-import { dimsFor, findFreePlacement } from "@/three/collision";
+import type { PlacedFurniture } from "./types";
+import { dimsFor, findFreePlacement, type PlacementRoom } from "@/three/collision";
 
 export type KitchenRoomFitCode =
   | "fits"
@@ -28,7 +28,7 @@ function rotationLabel(rotation: number) {
 export function findKitchenPlacement(
   saved: KitchenSnapshot,
   others: PlacedFurniture[],
-  room: RoomShape,
+  room: PlacementRoom,
   instanceId: string,
 ) {
   const piece = kitchenRoomPiece(saved, instanceId);
@@ -42,7 +42,7 @@ export function findKitchenPlacement(
 export function assessKitchenRoomFit(
   saved: KitchenSnapshot,
   others: PlacedFurniture[],
-  room: RoomShape,
+  room: PlacementRoom,
   instanceId = "kitchen-fit-preview",
 ): KitchenRoomFit {
   const piece = kitchenRoomPiece(saved, instanceId);
@@ -61,7 +61,7 @@ export function assessKitchenRoomFit(
     return {
       code: "fits",
       placement,
-      message: `Бодит хэмжээгээр ${rotationLabel(placement.rotation)}байрлуулах сул зай олдлоо.`,
+      message: `Бодит хэмжээгээр ${rotationLabel(placement.rotation)}өрөөнд багтана.`,
     };
   }
 
@@ -73,10 +73,12 @@ export function assessKitchenRoomFit(
     };
   }
 
-  const clearStructure: RoomShape = {
+  const clearStructure: PlacementRoom = {
     ...room,
     columns: [],
     wallFeatures: [],
+    placementGeometry: undefined,
+    skirting: undefined,
   };
   if (
     ((room.columns?.length ?? 0) > 0 || (room.wallFeatures?.length ?? 0) > 0) &&

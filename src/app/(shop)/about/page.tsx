@@ -8,7 +8,11 @@ import { SITE_CONTACT, phoneHref } from "@/lib/siteContact";
 
 export const metadata = { title: "Бидний тухай —  tavilga.mn" };
 
-export default function AboutPage() {
+export default async function AboutPage({ searchParams = Promise.resolve({}) }: {
+  searchParams?: Promise<{ topic?: string }>;
+}) {
+  const { topic } = await searchParams;
+  const initialTopic = topic === "merchant" || topic === "advertising" ? topic : "general";
   return (
     <div className="ui-page">
       <section className="about-hero ui-panel">
@@ -171,7 +175,7 @@ export default function AboutPage() {
               </a>
             </div>
           </div>
-          <ContactForm />
+          <ContactForm key={initialTopic} initialTopic={initialTopic} />
         </div>
       </section>
     </div>

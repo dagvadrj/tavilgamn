@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Heart, ShoppingBag, UserRound, House, LayoutGrid } from "lucide-react";
+import { Heart, ShoppingBag, UserRound, House, LayoutGrid, Box } from "lucide-react";
 import { useCart } from "@/store/cart";
 import { useWishlist } from "@/store/wishlist";
 import { useAuth } from "@/store/auth";
@@ -72,7 +72,6 @@ export function ShopHeaderActions() {
 export function MobileShopNavigation() {
   const pathname = usePathname();
   const count = useCart((state) => state.count());
-  const wishes = useWishlist((state) => state.items.length);
   const user = useAuth((state) => state.user);
   const role = useAuth((state) => state.role);
   const [mounted, setMounted] = useState(false);
@@ -96,11 +95,11 @@ export function MobileShopNavigation() {
         pathname.startsWith("/catalog") || pathname.startsWith("/product"),
     },
     {
-      href: "/wishlist",
-      label: "Хадгалсан",
-      Icon: Heart,
-      count: wishes,
-      active: pathname === "/wishlist",
+      href: "/planner",
+      label: "Төлөвлөх",
+      Icon: Box,
+      count: 0,
+      active: pathname === "/planner" || pathname === "/kitchen",
     },
     {
       href: "/cart",

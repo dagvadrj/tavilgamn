@@ -140,15 +140,13 @@ function renderOrder(h, value, onUpdated) {
   return card.type({ ...card.props, ...(onUpdated ? { onUpdated } : {}) });
 }
 
-test("merchant order actions advance only the next paid fulfillment step", async () => {
-  for (const [current, next] of [
-    ["pending", "processing"],
-    ["processing", "shipped"],
-    ["shipped", "delivered"],
-  ]) {
+test("merchant orders may start preparation; dispatch and completion use the delivery board", async () => {
+  for (const current of ["pending", "processing", "shipped", "delivered"]) {
     const h = harness();
     const tree = renderOrder(h, order(current));
     const action = find(tree, (node) => node.type === "button");
+    assert.ok(find(tree, node => node.props.href === "/merchant?tab=delivery"));
+    if (current !== "pending") { assert.equal(action, undefined); assert.equal(h.requests.length, 0); continue; }
     assert.ok(action);
     await action.props.onClick();
     assert.equal(h.requests.length, 1);
@@ -156,7 +154,7 @@ test("merchant order actions advance only the next paid fulfillment step", async
     assert.equal(h.requests[0].owner, "owner");
     assert.deepEqual(JSON.parse(h.requests[0].init.body), {
       id: order(current).id,
-      status: next,
+      status: "processing",
       expectedStatus: current,
     });
   }
@@ -337,7 +335,7 @@ test("store-less merchant deep links show a setup action instead of an empty wor
   const h = harness();
   const { MerchantDashboard } = loadSource("src/components/MerchantDashboard.tsx", h.mocks);
   const workspace = MerchantDashboard();
-  for (const tab of ["products", "orders", "quotes", "kitchens"]) {
+  for (const tab of ["products", "orders", "delivery", "quotes", "kitchens"]) {
     h.reset([null, true, null, 0, tab]);
     const tree = workspace.type(workspace.props);
     const setup = find(tree, (node) => typeof node.type === "function" && node.type.name === "MerchantOverview");

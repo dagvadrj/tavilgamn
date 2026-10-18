@@ -1,0 +1,389 @@
+.dashboard-shell .merchant-delivery-board {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.dashboard-shell .merchant-delivery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-shell .merchant-delivery-top,
+.dashboard-shell .merchant-delivery-bottom {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 18px;
+}
+
+.dashboard-shell .merchant-delivery-bottom {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-shell .merchant-delivery-stage {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  color: var(--dashboard-ink);
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .merchant-delivery-stage.can-drop {
+  border-color: var(--dashboard-accent);
+  outline: 1px dashed var(--dashboard-accent);
+  outline-offset: 3px;
+}
+
+.dashboard-shell .merchant-delivery-stage.is-over {
+  outline: 3px solid var(--dashboard-accent);
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-shell .merchant-delivery-stage > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.dashboard-shell .merchant-delivery-stage > header > svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--dashboard-accent);
+}
+
+.dashboard-shell .merchant-delivery-stage > header > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-shell .merchant-delivery-stage h2 {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.dashboard-shell .merchant-delivery-stage > header p {
+  margin-top: 6px;
+  color: var(--dashboard-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.dashboard-shell .merchant-delivery-stage > header > span {
+  padding: 3px 8px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 8px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-shell .merchant-delivery-cards {
+  display: grid;
+  gap: 12px;
+  min-height: 150px;
+}
+
+.dashboard-shell .merchant-delivery-empty {
+  display: grid;
+  min-height: 150px;
+  place-content: center;
+  padding: 18px;
+  border: 1px dashed var(--dashboard-border);
+  border-radius: 12px;
+  color: var(--dashboard-muted);
+  text-align: center;
+  font-size: 12px;
+}
+
+.dashboard-shell .merchant-delivery-card {
+  position: relative;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 12px;
+  color: var(--dashboard-ink);
+  background: var(--dashboard-elevated);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-shell .merchant-delivery-card.is-dragging {
+  opacity: 0.3;
+}
+
+.dashboard-shell .merchant-delivery-card > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-right: 24px;
+  margin-bottom: 16px;
+}
+
+.dashboard-shell .merchant-delivery-card time,
+.dashboard-shell .merchant-delivery-card small {
+  color: var(--dashboard-muted);
+  font-size: 10px;
+}
+
+.dashboard-shell .merchant-delivery-card ul {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-shell .merchant-delivery-card li strong,
+.dashboard-shell .merchant-delivery-card li small {
+  display: block;
+  line-height: 1.6;
+}
+
+.dashboard-shell .merchant-delivery-grip {
+  position: absolute;
+  top: 6px;
+  right: 4px;
+  display: grid;
+  width: 32px;
+  height: 36px;
+  place-items: center;
+  color: var(--dashboard-muted);
+  cursor: grab;
+  touch-action: none;
+}
+
+.dashboard-shell .merchant-delivery-grip:focus-visible {
+  outline: 2px solid var(--dashboard-accent);
+  border-radius: 6px;
+}
+
+.dashboard-shell .merchant-delivery-grip:active {
+  cursor: grabbing;
+}
+
+.dashboard-shell .merchant-delivery-price {
+  margin-block: 12px;
+  color: var(--dashboard-accent);
+  font-weight: 650;
+}
+
+.dashboard-shell .merchant-delivery-customer {
+  display: grid;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--dashboard-border);
+  line-height: 1.6;
+}
+
+.dashboard-shell .merchant-delivery-customer p {
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .merchant-delivery-driver {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 10px;
+  background: var(--dashboard-surface);
+  font-size: 12px;
+}
+
+.dashboard-shell .merchant-delivery-driver > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.dashboard-shell .merchant-delivery-driver span {
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .merchant-delivery-card a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.dashboard-shell .merchant-delivery-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--dashboard-border);
+  color: var(--dashboard-accent);
+  text-align: left;
+}
+
+.dashboard-shell .merchant-delivery-blocked,
+.dashboard-shell .merchant-delivery-completed {
+  margin-top: 12px;
+  color: var(--dashboard-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.dashboard-shell .merchant-delivery-overlay {
+  box-shadow: 0 24px 70px #0005;
+  outline: 2px solid var(--dashboard-accent);
+}
+
+.dashboard-shell .merchant-delivery-stage nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+  font-size: 12px;
+}
+
+.dashboard-shell .merchant-delivery-stage nav button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 8px;
+}
+
+.dashboard-shell .merchant-delivery-error {
+  padding: 14px;
+  border: 1px solid var(--dashboard-warning, #f59e0b);
+  border-radius: 10px;
+  color: var(--dashboard-ink);
+  background: var(--dashboard-elevated);
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+.dashboard-shell .merchant-delivery-error button {
+  margin-left: 12px;
+}
+
+.dashboard-shell .merchant-delivery-feedback {
+  color: var(--dashboard-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.dashboard-shell .merchant-delivery-dialog {
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 18px;
+  color: var(--dashboard-ink);
+  background: var(--dashboard-surface);
+  box-shadow: 0 24px 90px #0006;
+}
+
+.dashboard-shell .merchant-delivery-dialog::backdrop {
+  background: #0008;
+}
+
+.dashboard-shell .merchant-delivery-dialog > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dashboard-shell .merchant-delivery-dialog > header button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+}
+
+.dashboard-shell .merchant-delivery-dialog h2 {
+  font-size: 19px;
+  font-weight: 650;
+}
+
+.dashboard-shell .merchant-delivery-dialog > p,
+.dashboard-shell .merchant-delivery-dialog form p {
+  margin-block: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .merchant-delivery-dialog form,
+.dashboard-shell .merchant-delivery-dialog fieldset,
+.dashboard-shell .merchant-delivery-dialog label {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dashboard-shell .merchant-delivery-dialog form {
+  margin-top: 20px;
+}
+
+.dashboard-shell .merchant-delivery-dialog label {
+  font-size: 12px;
+}
+
+.dashboard-shell .merchant-delivery-dialog .merchant-delivery-checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-shell .merchant-delivery-staff-list {
+  display: grid;
+  gap: 10px;
+  margin-block: 20px;
+}
+
+.dashboard-shell .merchant-delivery-staff-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 10px;
+}
+
+.dashboard-shell .merchant-delivery-staff-list li > div {
+  display: grid;
+  flex: 1;
+  gap: 5px;
+  min-width: 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-shell .merchant-delivery-staff-list span {
+  color: var(--dashboard-muted);
+}
+
+.dashboard-shell .merchant-delivery-board button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1500px) {
+  .dashboard-shell .merchant-delivery-bottom {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-shell .merchant-delivery-top,
+  .dashboard-shell .merchant-delivery-bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-shell .merchant-delivery-dialog {
+    padding: 18px;
+  }
+}

@@ -23,6 +23,7 @@ import {
   type MerchantProduct,
   merchantRequest,
 } from "@/features/merchant/merchantApi";
+import { MerchantDashboardLayout } from "./MerchantDashboardLayout";
 
 const numberLabel = (value: string) => BigInt(value).toLocaleString("mn-MN");
 const money = (value: string) => numberLabel(value) + " ₮";
@@ -44,6 +45,8 @@ export function MerchantOverview({
   onQuotes,
   onOrders,
   mode = "all",
+  customizing,
+  onCustomize,
 }: {
   owner: string;
   store: Store | null;
@@ -53,12 +56,15 @@ export function MerchantOverview({
   onQuotes?: () => void;
   onOrders?: () => void;
   mode?: DashboardPreferences["overview"];
+  customizing?: boolean;
+  onCustomize?: (editing: boolean) => void;
 }) {
   const [products, setProducts] = useState<MerchantProduct[]>([]);
   const [loading, setLoading] = useState(Boolean(store));
   const [error, setError] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
   const [lowOnly, setLowOnly] = useState(false);
+  const [localEditing, setLocalEditing] = useState(false);
   const finance = useMerchantAnalytics(owner, Boolean(store));
   const showInventory = mode !== "sales";
   const showSales = mode !== "inventory";
@@ -233,11 +239,13 @@ export function MerchantOverview({
           </button>
         </div>
       )}
-      <div
-        className={`reference-kpis ${mode !== "all" ? "reference-kpis-two" : ""}`}
-      >
-        {showSales && (
-          <>
+      <MerchantDashboardLayout
+        owner={owner}
+        storeId={store.id}
+        editing={customizing ?? localEditing}
+        onEditingChange={onCustomize ?? setLocalEditing}
+        kpis={{
+          revenue: showSales ? (
             <article className="reference-kpi is-featured">
               <div className="reference-kpi-label">
                 <span>Цэвэр орлого (30 хоног)</span>
@@ -249,6 +257,8 @@ export function MerchantOverview({
                 <small>Fee: {financeReady ? money(a.platformFee) : "—"}</small>
               </div>
             </article>
+          ) : null,
+          orders: showSales ? (
             <article className="reference-kpi">
               <div className="reference-kpi-label">
                 <span>Төлөгдсөн захиалга</span>
@@ -274,10 +284,8 @@ export function MerchantOverview({
                 </button>
               </div>
             </article>
-          </>
-        )}
-        {showInventory && (
-          <>
+          ) : null,
+          "inventory-val": showInventory ? (
             <article className="reference-kpi">
               <div className="reference-kpi-label">
                 <span>Агуулахын нөөцийн үнэлгээ</span>
@@ -296,6 +304,8 @@ export function MerchantOverview({
                 </small>
               </div>
             </article>
+          ) : null,
+          "stock-alert": showInventory ? (
             <article className="reference-kpi reference-stock-warning">
               <div className="reference-kpi-label">
                 <span>Нөөцийн анхааруулга</span>
@@ -315,186 +325,192 @@ export function MerchantOverview({
                 </button>
               </div>
             </article>
-          </>
-        )}
-      </div>
-      {showInventory && (
-        <div className="reference-analysis-grid reference-inventory-grid">
-          <article className="reference-panel reference-inventory-panel">
-            <header>
-              <div>
-                <h2>Бүтээгдэхүүн ба нөөцийн хяналт</h2>
-                <p>
+          ) : null,
+        }}
+        widgets={{
+          "inventory-control": showInventory ? (
+            <article className="reference-panel reference-inventory-panel">
+              <header>
+                <div>
+                  <h2>Бүтээгдэхүүн ба нөөцийн хяналт</h2>
+                  <p>
+                    {lowOnly
+                      ? "Бага нөөцтэй бараа"
+                      : "Нөөц хамгийн ихтэй 5 бараа"}
+                  </p>
+                </div>
+                <button type="button" onClick={onProducts}>
+                  Бүх бараа
+                  <ArrowUpRight size={14} />
+                </button>
+              </header>
+              {loading ? (
+                <div className="reference-empty" role="status">
+                  Нөөцийг ачаалж байна…
+                </div>
+              ) : error ? (
+                <div className="reference-empty">
+                  Нөөцийн мэдээлэл ачаалагдаагүй.
+                </div>
+              ) : shownProducts.length ? (
+                <ul className="reference-inventory-list">
+                  {shownProducts.map((p, i) => (
+                    <li key={p.id}>
+                      {p.image ? (
+                        <Image
+                          src={p.image}
+                          alt=""
+                          width={40}
+                          height={40}
+                          sizes="40px"
+                        />
+                      ) : (
+                        <span className="reference-product-number">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                      )}
+                      <div>
+                        <strong>{p.name}</strong>
+                        <small>
+                          {CATEGORY_LABEL[p.category]} ·{" "}
+                          {p.model?.file
+                            ? "3D загвартай"
+                            : p.modelRequested
+                              ? "3D хүсэлттэй"
+                              : "3D загваргүй"}
+                        </small>
+                      </div>
+                      <div>
+                        <strong>{formatPrice(p.basePrice)}</strong>
+                        <small
+                          className={
+                            p.stockQuantity != null && p.stockQuantity <= 5
+                              ? "is-low-stock"
+                              : "is-stocked"
+                          }
+                        >
+                          {stockLabel(p)}
+                        </small>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="reference-empty">
                   {lowOnly
-                    ? "Бага нөөцтэй бараа"
-                    : "Нөөц хамгийн ихтэй 5 бараа"}
-                </p>
-              </div>
-              <button type="button" onClick={onProducts}>
-                Бүх бараа
-                <ArrowUpRight size={14} />
-              </button>
-            </header>
-            {loading ? (
-              <div className="reference-empty" role="status">
-                Нөөцийг ачаалж байна…
-              </div>
-            ) : error ? (
-              <div className="reference-empty">
-                Нөөцийн мэдээлэл ачаалагдаагүй.
-              </div>
-            ) : shownProducts.length ? (
-              <ul className="reference-inventory-list">
-                {shownProducts.map((p, i) => (
-                  <li key={p.id}>
-                    {p.image ? (
-                      <Image
-                        src={p.image}
-                        alt=""
-                        width={40}
-                        height={40}
-                        sizes="40px"
-                      />
-                    ) : (
-                      <span className="reference-product-number">
-                        {String(i + 1).padStart(2, "0")}
+                    ? "Бага нөөцтэй бараа алга."
+                    : "Бүтээгдэхүүн бүртгэгдээгүй байна."}
+                </div>
+              )}
+              <footer>
+                <Link href={`/catalog/stores/${store.id}`}>
+                  Дэлгүүр үзэх
+                  <ArrowUpRight size={14} />
+                </Link>
+                <button type="button" onClick={onStore}>
+                  Дэлгүүрийн тохиргоо
+                </button>
+              </footer>
+            </article>
+          ) : null,
+          "category-chart": showInventory ? (
+            <article className="reference-panel reference-category-panel">
+              <header>
+                <div>
+                  <h2>Ангиллын бүтэц</h2>
+                  <p>
+                    {loading
+                      ? "Ачаалж байна…"
+                      : products.length + " бүтээгдэхүүний эзлэх хувь"}
+                  </p>
+                </div>
+              </header>
+              <div className="reference-category-body">
+                <div
+                  className="reference-donut"
+                  style={{ background: `conic-gradient(${donutStops})` }}
+                  aria-hidden="true"
+                >
+                  <div>
+                    <strong>{products.length}</strong>
+                    <small>Бараа</small>
+                  </div>
+                </div>
+                <ul className="reference-category-legend">
+                  {categories.map(([category, total], i) => (
+                    <li key={category}>
+                      <span>
+                        <i
+                          style={{ backgroundColor: colors[i % colors.length] }}
+                        />
+                        {CATEGORY_LABEL[category]}
                       </span>
-                    )}
-                    <div>
-                      <strong>{p.name}</strong>
-                      <small>
-                        {CATEGORY_LABEL[p.category]} ·{" "}
-                        {p.model?.file
-                          ? "3D загвартай"
-                          : p.modelRequested
-                            ? "3D хүсэлттэй"
-                            : "3D загваргүй"}
-                      </small>
-                    </div>
-                    <div>
-                      <strong>{formatPrice(p.basePrice)}</strong>
-                      <small
-                        className={
-                          p.stockQuantity != null && p.stockQuantity <= 5
-                            ? "is-low-stock"
-                            : "is-stocked"
-                        }
-                      >
-                        {stockLabel(p)}
-                      </small>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="reference-empty">
-                {lowOnly
-                  ? "Бага нөөцтэй бараа алга."
-                  : "Бүтээгдэхүүн бүртгэгдээгүй байна."}
+                      <strong>
+                        {Math.round(
+                          (total / Math.max(1, products.length)) * 100,
+                        )}
+                        % ({total})
+                      </strong>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            )}
-            <footer>
-              <Link href={`/catalog/stores/${store.id}`}>
-                Дэлгүүр үзэх
-                <ArrowUpRight size={14} />
-              </Link>
-              <button type="button" onClick={onStore}>
-                Дэлгүүрийн тохиргоо
-              </button>
-            </footer>
-          </article>
-          <article className="reference-panel reference-category-panel">
-            <header>
-              <div>
-                <h2>Ангиллын бүтэц</h2>
-                <p>
-                  {loading
-                    ? "Ачаалж байна…"
-                    : products.length + " бүтээгдэхүүний эзлэх хувь"}
-                </p>
-              </div>
-            </header>
-            <div className="reference-category-body">
-              <div
-                className="reference-donut"
-                style={{ background: `conic-gradient(${donutStops})` }}
-                aria-hidden="true"
-              >
+              {onQuotes && (
+                <button
+                  type="button"
+                  className="reference-quote-link"
+                  onClick={onQuotes}
+                >
+                  <div>
+                    <strong>Гал тогооны үнийн хүсэлтүүд</strong>
+                    <ArrowUpRight size={16} />
+                  </div>
+                  <span>
+                    Ирсэн хүсэлтүүдийг үзэж, үнийн саналаа илгээнэ үү.
+                  </span>
+                </button>
+              )}
+            </article>
+          ) : null,
+          "order-progress": showSales ? (
+            <div className="reference-panel reference-fulfillment">
+              <header>
                 <div>
-                  <strong>{products.length}</strong>
-                  <small>Бараа</small>
+                  <h2>Захиалгын явц</h2>
+                  <p>Одоогийн захиалгын төлөв</p>
+                </div>
+                <Box size={18} />
+              </header>
+              <div className="reference-mini-stats">
+                <div>
+                  <span>Хүлээгдэж буй</span>
+                  <strong>
+                    {financeReady ? numberLabel(a.pendingOrders) : "—"}
+                  </strong>
+                </div>
+                <div>
+                  <span>Бэлтгэж байгаа</span>
+                  <strong>
+                    {financeReady ? numberLabel(a.processingOrders) : "—"}
+                  </strong>
+                </div>
+                <div>
+                  <span>Хүргэлтэд гарсан</span>
+                  <strong>
+                    {financeReady ? numberLabel(a.shippedOrders) : "—"}
+                  </strong>
+                </div>
+                <div>
+                  <span>3D загварын хүсэлт</span>
+                  <strong>
+                    {financeReady ? numberLabel(a.modelRequestCount) : "—"}
+                  </strong>
                 </div>
               </div>
-              <ul className="reference-category-legend">
-                {categories.map(([category, total], i) => (
-                  <li key={category}>
-                    <span>
-                      <i
-                        style={{ backgroundColor: colors[i % colors.length] }}
-                      />
-                      {CATEGORY_LABEL[category]}
-                    </span>
-                    <strong>
-                      {Math.round((total / Math.max(1, products.length)) * 100)}
-                      % ({total})
-                    </strong>
-                  </li>
-                ))}
-              </ul>
             </div>
-            {onQuotes && (
-              <button
-                type="button"
-                className="reference-quote-link"
-                onClick={onQuotes}
-              >
-                <div>
-                  <strong>Гал тогооны үнийн хүсэлтүүд</strong>
-                  <ArrowUpRight size={16} />
-                </div>
-                <span>Ирсэн хүсэлтүүдийг үзэж, үнийн саналаа илгээнэ үү.</span>
-              </button>
-            )}
-          </article>
-        </div>
-      )}
-      {showSales && (
-        <div className="reference-panel reference-fulfillment">
-          <header>
-            <div>
-              <h2>Захиалгын явц</h2>
-              <p>Одоогийн захиалгын төлөв</p>
-            </div>
-            <Box size={18} />
-          </header>
-          <div className="reference-mini-stats">
-            <div>
-              <span>Хүлээгдэж буй</span>
-              <strong>
-                {financeReady ? numberLabel(a.pendingOrders) : "—"}
-              </strong>
-            </div>
-            <div>
-              <span>Бэлтгэж байгаа</span>
-              <strong>
-                {financeReady ? numberLabel(a.processingOrders) : "—"}
-              </strong>
-            </div>
-            <div>
-              <span>Хүргэлтэд гарсан</span>
-              <strong>
-                {financeReady ? numberLabel(a.shippedOrders) : "—"}
-              </strong>
-            </div>
-            <div>
-              <span>3D загварын хүсэлт</span>
-              <strong>
-                {financeReady ? numberLabel(a.modelRequestCount) : "—"}
-              </strong>
-            </div>
-          </div>
-        </div>
-      )}
+          ) : null,
+        }}
+      />
     </section>
   );
 }

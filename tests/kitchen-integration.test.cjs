@@ -1235,7 +1235,7 @@ test("kitchen room preflight rotates exact fits and explains every blocked condi
   );
   assert.match(
     fs.readFileSync("src/components/RoomPlanner.tsx", "utf8"),
-    /assessKitchenRoomFit/,
+    /placeKitchen/,
   );
 });
 

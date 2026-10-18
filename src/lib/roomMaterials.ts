@@ -67,7 +67,7 @@ export const CEILING_MATERIALS: readonly RoomMaterialDefinition[] = [
 ];
 
 export const ROOM_MATERIALS: readonly RoomMaterialDefinition[] = [
-  { id: "wall-paint", label: "Ханын будаг", category: "Будаг", description: "Нарийн барзгар матт будаг", color: "#ffffff", accent: "#f0efec", pattern: "paint", tileMetersX: .6, tileMetersY: .6, roughness: .94, normalStrength: .08, envMapIntensity: .85, tintColor: true, swatch: "#ffffff" },
+  { id: "wall-paint", label: "Ханын будаг", category: "Будаг", description: "Нарийн ширхэгтэй, зөөлөн гялбаатай eggshell будаг", color: "#ffffff", accent: "#ffffff", pattern: "paint", tileMetersX: .24, tileMetersY: .24, roughness: .8, normalStrength: .12, envMapIntensity: .85, tintColor: true, swatch: "#ffffff" },
   ...FLOOR_MATERIALS,
   ...WALLPAPER_MATERIALS,
   ...CEILING_MATERIALS,

@@ -1,0 +1,141 @@
+.dashboard-shell .merchant-layout-toolbar,
+.dashboard-shell .merchant-layout-toolbar > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dashboard-shell .merchant-layout-toolbar {
+  flex-wrap: wrap;
+}
+
+.dashboard-shell .merchant-layout-toolbar p {
+  flex: 1 1 280px;
+  color: var(--dashboard-muted);
+  font-size: var(--dashboard-small-size);
+  line-height: 1.6;
+}
+
+.dashboard-shell .merchant-layout-toolbar > div {
+  flex-wrap: wrap;
+}
+
+.dashboard-shell .merchant-layout-status {
+  margin-top: -12px;
+  color: var(--dashboard-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.dashboard-shell .merchant-layout-status.is-error {
+  color: var(--dashboard-warning, #f59e0b);
+}
+
+.dashboard-shell .merchant-layout-status button {
+  min-height: 32px;
+  margin-left: 8px;
+  color: inherit;
+  text-decoration: underline;
+}
+
+.dashboard-shell .merchant-dashboard-widgets {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 20px;
+}
+
+.dashboard-shell .merchant-sortable-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: 16px;
+}
+
+.dashboard-shell .merchant-sortable-card > :is(article, .reference-panel) {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+.dashboard-shell .merchant-card-inventory-control {
+  grid-column: span 7;
+}
+
+.dashboard-shell .merchant-card-category-chart {
+  grid-column: span 5;
+}
+
+.dashboard-shell .merchant-card-order-progress {
+  grid-column: 1 / -1;
+}
+
+.dashboard-shell .merchant-sortable-card.is-editing {
+  outline: 1px dashed var(--dashboard-muted);
+  outline-offset: 3px;
+}
+
+.dashboard-shell .merchant-sortable-card.is-dragging {
+  opacity: 0.25;
+}
+
+.dashboard-shell .merchant-drag-handle {
+  position: absolute;
+  top: -12px;
+  right: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 28px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 8px;
+  color: var(--dashboard-ink);
+  background: var(--dashboard-elevated);
+  box-shadow: 0 3px 8px #0002;
+  cursor: grab;
+  touch-action: none;
+}
+
+.dashboard-shell .merchant-drag-handle:hover,
+.dashboard-shell .merchant-drag-handle:focus-visible {
+  border-color: var(--dashboard-accent);
+  outline: 2px solid var(--dashboard-accent);
+  outline-offset: 2px;
+}
+
+.dashboard-shell .merchant-drag-handle:active {
+  cursor: grabbing;
+}
+
+.dashboard-shell .merchant-sortable-overlay {
+  height: 100%;
+  border-radius: 16px;
+  outline: 2px solid var(--dashboard-accent);
+  box-shadow: 0 24px 60px #0005;
+  transform: scale(1.01);
+}
+
+.dashboard-shell .merchant-sortable-overlay > :is(article, .reference-panel) {
+  height: 100%;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-shell .merchant-dashboard-widgets {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-shell .merchant-dashboard-widgets > .merchant-sortable-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell .merchant-sortable-card {
+    transition: none !important;
+  }
+  .dashboard-shell .merchant-sortable-overlay {
+    transform: none;
+  }
+}

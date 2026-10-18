@@ -1002,7 +1002,11 @@ export function DraggablePiece({
           };
         if (snapEnabled && !attachment)
           candidate = snapToWall(candidate, roomDims);
-        let ok = isPlacementValid(candidate, allPieces, roomDims);
+        if (candidate.attachment?.kind === "floor") candidate = {
+          ...candidate, attachment: { ...candidate.attachment, x: candidate.x, z: candidate.z, yaw: candidate.rotation },
+        };
+        const boundary = { ...roomDims, allowFurnitureOverlap: true };
+        let ok = isPlacementValid(candidate, allPieces, boundary);
         if (ok && allPieces.some((p) => p.attachment?.kind === "surface"))
           try {
             const owned = (
@@ -1018,7 +1022,7 @@ export function DraggablePiece({
             const combined = allPieces.map(
               (p) => resolved.find((r) => r.instanceId === p.instanceId) ?? p,
             );
-            ok = resolved.every((p) => isPlacementValid(p, combined, roomDims));
+            ok = resolved.every((p) => isPlacementValid(p, combined, boundary));
           } catch {
             ok = false;
           }

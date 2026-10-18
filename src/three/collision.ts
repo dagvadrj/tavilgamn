@@ -14,6 +14,8 @@ import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import { fitCountertops, cabinetAxes } from "@/lib/kitchenPlacement";
 
 export type PlacementRoom = RoomShape & {
+  /** Room planner permits furniture overlap; architecture remains a hard boundary. */
+  allowFurnitureOverlap?: boolean;
   placementGeometry?: Pick<
     RoomGeometry,
     "bounds" | "voids" | "segments" | "connected" | "simple"
@@ -273,7 +275,7 @@ const hitsSkirting = (piece: PlacedFurniture, room: PlacementRoom) => {
   );
 };
 
-/** Check furniture against the actual room shape, columns and other furniture. */
+/** Check structure first; optional furniture overlap is a separate placement policy. */
 export function isPlacementValid(
   candidate: PlacedFurniture,
   others: PlacedFurniture[],
@@ -310,27 +312,28 @@ export function isPlacementValid(
     )
   )
     return false;
-  for (const other of others) {
-    if (other.instanceId === candidate.instanceId) continue;
-    const otherBottom = other.elevation ?? 0;
-    if (elevation >= otherBottom + dimsFor(other).h - 1e-6 || otherBottom >= elevation + dimsFor(candidate).h - 1e-6) continue;
-    if (
-      rectangles.some((r) =>
-        pieceRects(other).some((o) => rectsOverlap(r, o, true)),
-      )
-    )
-      return false;
-  }
-  return true;
+  return room.allowFurnitureOverlap || !others.some(other => furnitureOverlaps(candidate, other));
 }
 
-/** Deterministic nearest free location; returns null instead of overlapping. */
+/** Broad-phase volumes: edge contact and vertically separated pieces are not warnings. */
+export function furnitureOverlaps(a: PlacedFurniture, b: PlacedFurniture): boolean {
+  if (a.instanceId === b.instanceId) return false;
+  const bottomA = a.elevation ?? 0, bottomB = b.elevation ?? 0;
+  if (bottomA >= bottomB + dimsFor(b).h - 1e-6 || bottomB >= bottomA + dimsFor(a).h - 1e-6) return false;
+  return pieceRects(a).some(r => pieceRects(b).some(o => rectsOverlap(r, o, true)));
+}
+
+/** Prefer an unoccupied location; allow overlap as a fallback only when requested. */
 export function findFreePlacement(
   piece: PlacedFurniture,
   others: PlacedFurniture[],
   room: PlacementRoom,
   options: { bounds?: Bounds; accept?: (piece: PlacedFurniture) => boolean } = {},
 ): PlacedFurniture | null {
+  if (room.allowFurnitureOverlap && others.length) {
+    const free = findFreePlacement(piece, others, { ...room, allowFurnitureOverlap: false }, options);
+    if (free) return free;
+  }
   const valid = (candidate: PlacedFurniture) => isPlacementValid(candidate, others, room) && (!options.accept || options.accept(candidate));
   if (valid(piece)) return piece;
   let bounds;

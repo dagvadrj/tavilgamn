@@ -37,6 +37,7 @@ import { isSceneNavigationGesture } from "./sceneNavigation";
 import { applyRoomCutaway, cutawayRaycast } from "./roomCutaway";
 import { roomFloorFinish } from "./roomFloorFinish";
 import { RoomDaylightFill } from "./RoomDaylightFill";
+import { useRoomPaintEnvironment } from "./useRoomPaintEnvironment";
 
 const WALL_THICKNESS = ROOM_WALL_THICKNESS;
 const noRaycast = () => {};
@@ -111,8 +112,9 @@ function normalizedPosition(
 
 function RoomWallMesh({
   segment,
+  paintEnvironment,
   ...props
-}: RoomStructureProps & { segment: RoomSegment }) {
+}: RoomStructureProps & { segment: RoomSegment; paintEnvironment?: THREE.Texture | null }) {
   const {
     design,
     view,
@@ -331,6 +333,7 @@ function RoomWallMesh({
       >
         <meshStandardMaterial
           {...materialProps}
+          envMap={finish?.mode !== "wallpaper" ? paintEnvironment ?? null : null}
           emissive={selectedWall === id ? "#1677b8" : "#000000"}
           emissiveIntensity={selectedWall === id ? 0.09 : 0}
         />
@@ -658,6 +661,7 @@ function OpeningDropTarget(props: RoomStructureProps) {
 
 export function RoomStructure(props: RoomStructureProps) {
   const { design, view } = props;
+  const paintEnvironment = useRoomPaintEnvironment(design);
   const geometry = getRoomGeometry(design);
   const height = design.height ?? 2.7;
   return (
@@ -683,6 +687,7 @@ export function RoomStructure(props: RoomStructureProps) {
               key={index}
               {...props}
               segment={segment}
+              paintEnvironment={paintEnvironment}
               wallEnds={{
                 ...wallMiterEnds(
                   design,

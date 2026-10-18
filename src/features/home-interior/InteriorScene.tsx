@@ -22,7 +22,12 @@ import type { Product } from "@/lib/types";
 import { SceneHtml } from "@/three/SceneHtml";
 import { InteriorHotspot } from "./InteriorHotspot";
 import { useRoomMaterials, type RoomMaterials } from "./roomMaterials";
-import { HeroBackWall, HeroWindow, TimberMediaWall, WindowDaylight } from "./HeroRoomFeatures";
+import {
+  HeroBackWall,
+  HeroWindow,
+  TimberMediaWall,
+  WindowDaylight,
+} from "./HeroRoomFeatures";
 import {
   LOWER_ROOM_Y,
   SOFA_GROUND_Y,
@@ -103,19 +108,6 @@ function Vase({
 function RoomDetails({ materials }: { materials: RoomMaterials }) {
   return (
     <group>
-      {/* A full ceiling and recessed light coves frame an interior, rather than a dollhouse. */}
-      <mesh
-        position={[0, 3.62, -0.1]}
-        rotation={[Math.PI / 2, 0, 0]}
-        receiveShadow
-      >
-        <planeGeometry args={[8.4, 6.4]} />
-        <meshStandardMaterial
-          color="#fafafa"
-          side={THREE.DoubleSide}
-          roughness={1}
-        />
-      </mesh>
       <Block
         position={[0, 3.48, -3.07]}
         size={[8.2, 0.22, 0.35]}
@@ -203,14 +195,14 @@ function RoomDetails({ materials }: { materials: RoomMaterials }) {
         ))}
       </group>
       <TimberMediaWall materials={materials} />
-      <Vase position={[2.8, .83, -2.8]} color="#ece8df" />
+      <Vase position={[2.8, 0.83, -2.8]} color="#ece8df" />
       <Block
-        position={[.2, .85, -2.8]}
+        position={[0.2, 0.85, -2.8]}
         size={[0.43, 0.06, 0.3]}
         color="#f0ebe2"
       />
       <Block
-        position={[.2, .91, -2.8]}
+        position={[0.2, 0.91, -2.8]}
         size={[0.37, 0.05, 0.27]}
         color="#68777e"
       />
@@ -412,12 +404,14 @@ function Room({
 function PlaceholderSofa({ color }: { color: string }) {
   return (
     <group>
-      {[-1.05, 1.05].flatMap(x => [-.38, .38].map(z => (
-        <mesh key={`${x}:${z}`} position={[x, .06, z]} castShadow>
-          <cylinderGeometry args={[.035, .025, .12, 8]} />
-          <meshStandardMaterial color="#4a4038" roughness={.65} />
-        </mesh>
-      )))}
+      {[-1.05, 1.05].flatMap((x) =>
+        [-0.38, 0.38].map((z) => (
+          <mesh key={`${x}:${z}`} position={[x, 0.06, z]} castShadow>
+            <cylinderGeometry args={[0.035, 0.025, 0.12, 8]} />
+            <meshStandardMaterial color="#4a4038" roughness={0.65} />
+          </mesh>
+        )),
+      )}
       <Block
         position={[0, 0.24, 0]}
         size={[2.7, 0.35, 1.02]}
@@ -467,11 +461,12 @@ function SofaAsset({
     url: string;
   } | null>(null);
   const model = product?.model;
-  const url = model
-    ? `/api/models/files/${model.id}/${model.file}`
-    : "";
+  const url = model ? `/api/models/files/${model.id}/${model.file}` : "";
   useEffect(() => {
-    if (!url) { onStatus("preview"); return; }
+    if (!url) {
+      onStatus("preview");
+      return;
+    }
     let cancelled = false;
     let owned: LoadedModel | undefined;
     onStatus("loading");
@@ -523,14 +518,30 @@ function SofaAsset({
   );
 }
 
-function SofaContactShadow({ y, sofa }: { y: number; sofa: RefObject<THREE.Group | null> }) {
+function SofaContactShadow({
+  y,
+  sofa,
+}: {
+  y: number;
+  sofa: RefObject<THREE.Group | null>;
+}) {
   const material = useRef<THREE.MeshBasicMaterial>(null);
   const texture = useMemo(() => {
-    const size = 64, data = new Uint8Array(size * size * 4);
-    for (let row = 0; row < size; row++) for (let column = 0; column < size; column++) {
-      const radius = Math.hypot((column + .5) / size * 2 - 1, (row + .5) / size * 2 - 1);
-      data[(row * size + column) * 4 + 3] = Math.max(0, (Math.exp(-radius * radius * 3) - Math.exp(-3)) / (1 - Math.exp(-3))) * 255;
-    }
+    const size = 64,
+      data = new Uint8Array(size * size * 4);
+    for (let row = 0; row < size; row++)
+      for (let column = 0; column < size; column++) {
+        const radius = Math.hypot(
+          ((column + 0.5) / size) * 2 - 1,
+          ((row + 0.5) / size) * 2 - 1,
+        );
+        data[(row * size + column) * 4 + 3] =
+          Math.max(
+            0,
+            (Math.exp(-radius * radius * 3) - Math.exp(-3)) /
+              (1 - Math.exp(-3)),
+          ) * 255;
+      }
     const result = new THREE.DataTexture(data, size, size);
     result.magFilter = THREE.LinearFilter;
     result.needsUpdate = true;
@@ -539,21 +550,33 @@ function SofaContactShadow({ y, sofa }: { y: number; sofa: RefObject<THREE.Group
   useEffect(() => () => texture.dispose(), [texture]);
   useFrame(() => {
     if (material.current && sofa.current)
-      material.current.opacity = .3 * Math.max(0, 1 - Math.abs(sofa.current.position.y - y - SOFA_GROUND_Y) / .9);
+      material.current.opacity =
+        0.3 *
+        Math.max(
+          0,
+          1 - Math.abs(sofa.current.position.y - y - SOFA_GROUND_Y) / 0.9,
+        );
   });
-  return <mesh position={[0, y + SOFA_GROUND_Y - .006, 0]} rotation={[-Math.PI / 2, 0, 0]} raycast={() => {}}>
-    <planeGeometry args={[3.2, 1.9]} />
-    <meshBasicMaterial ref={material} map={texture} transparent opacity={0} depthWrite={false} toneMapped={false} />
-  </mesh>;
+  return (
+    <mesh
+      position={[0, y + SOFA_GROUND_Y - 0.006, 0]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      raycast={() => {}}
+    >
+      <planeGeometry args={[3.2, 1.9]} />
+      <meshBasicMaterial
+        ref={material}
+        map={texture}
+        transparent
+        opacity={0}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </mesh>
+  );
 }
 
-function Scene({
-  motion,
-  theme,
-  product,
-  reduced,
-  onStatus,
-}: SceneProps) {
+function Scene({ motion, theme, product, reduced, onStatus }: SceneProps) {
   const sofa = useRef<THREE.Group>(null);
   const hotspots = useRef<THREE.Group>(null);
   const { camera, invalidate, size } = useThree();
@@ -593,7 +616,8 @@ function Scene({
     }
     if (hotspots.current) {
       hotspots.current.position.y = pose.cameraY;
-      hotspots.current.visible = (pose.phase === 0 || pose.landed) && state.swap < 0;
+      hotspots.current.visible =
+        (pose.phase === 0 || pose.landed) && state.swap < 0;
     }
     const mobile = size.width < 768;
     const parallax = reduced || pose.landed ? 0 : 0.32;
@@ -603,7 +627,7 @@ function Scene({
       mobile ? 10.2 : 7.8,
     );
     eye.x += state.pointer.x * parallax;
-    const blend = snap ? 1 : 1 - Math.exp(-Math.min(dt, .1) * 7);
+    const blend = snap ? 1 : 1 - Math.exp(-Math.min(dt, 0.1) * 7);
     camera.position.lerp(eye, blend);
     desiredTarget.set(
       mobile ? 0 : -1.65 + Math.min(1, progress / 0.7) * 2.5,
@@ -627,8 +651,8 @@ function Scene({
     <>
       <color attach="background" args={["#ffffff"]} />
       <ambientLight intensity={0.35} />
-      <hemisphereLight args={["#e9f1fa", "#a58c72", .95]} />
-      <directionalLight position={[2, 5, 6]} intensity={.7} color="#fff5e6" />
+      <hemisphereLight args={["#e9f1fa", "#a58c72", 0.95]} />
+      <directionalLight position={[2, 5, 6]} intensity={0.7} color="#fff5e6" />
       <WindowDaylight y={0} />
       <WindowDaylight y={LOWER_ROOM_Y} />
       <Room y={0} theme={theme} materials={materials} upper />
@@ -639,16 +663,32 @@ function Scene({
         <SofaAsset product={product} color={theme.sofa} onStatus={onStatus} />
       </group>
       <group ref={hotspots}>
-        <SceneHtml position={[.95, .85, .65]} center zIndexRange={[8, 5]}>
-          <InteriorHotspot title={product?.name ?? "Буйдан"}
-            detail={product && product.basePrice > 0 ? `${product.basePrice.toLocaleString("mn-MN")} ₮-өөс` : "Өрөөндөө тохирох буйдангаа олоорой"}
-            href={product ? `/product/${product.id}` : "/catalog?category=sofa"} />
+        <SceneHtml position={[0.95, 0.85, 0.65]} center zIndexRange={[8, 5]}>
+          <InteriorHotspot
+            title={product?.name ?? "Буйдан"}
+            detail={
+              product && product.basePrice > 0
+                ? `${product.basePrice.toLocaleString("mn-MN")} ₮-өөс`
+                : "Өрөөндөө тохирох буйдангаа олоорой"
+            }
+            href={product ? `/product/${product.id}` : "/catalog?category=sofa"}
+          />
         </SceneHtml>
-        <SceneHtml position={[.8, .5, 2.14]} center zIndexRange={[8, 5]}>
-          <InteriorHotspot title="Кофены ширээ" detail="Зохиомжийн санаа · Каталогоос сонгох" href="/catalog?category=coffee-table" linkLabel="Ширээнүүдийг үзэх" />
+        <SceneHtml position={[0.8, 0.5, 2.14]} center zIndexRange={[8, 5]}>
+          <InteriorHotspot
+            title="Кофены ширээ"
+            detail="Зохиомжийн санаа · Каталогоос сонгох"
+            href="/catalog?category=coffee-table"
+            linkLabel="Ширээнүүдийг үзэх"
+          />
         </SceneHtml>
-        <SceneHtml position={[2.6, 1.9, -.8]} center zIndexRange={[8, 5]}>
-          <InteriorHotspot title="Дулаан гэрэлтүүлэг" detail="Зохиомжийн санаа · Каталогоос хайх" href="/catalog?q=%D0%B3%D1%8D%D1%80%D1%8D%D0%BB" linkLabel="Гэрэлтүүлэг хайх" />
+        <SceneHtml position={[2.6, 1.9, -0.8]} center zIndexRange={[8, 5]}>
+          <InteriorHotspot
+            title="Дулаан гэрэлтүүлэг"
+            detail="Зохиомжийн санаа · Каталогоос хайх"
+            href="/catalog?q=%D0%B3%D1%8D%D1%80%D1%8D%D0%BB"
+            linkLabel="Гэрэлтүүлэг хайх"
+          />
         </SceneHtml>
       </group>
     </>

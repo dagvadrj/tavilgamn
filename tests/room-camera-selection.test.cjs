@@ -123,6 +123,7 @@ test('real planner map and scene selection keep one canvas key, current view and
   }
   // Releasing furniture in the neighbour changes ownership while keeping selection/view.
   store.getState().selectRoom(a);assert.equal(store.getState().moveRoom(b,{x:4,z:0},false),null);
+  for(const connection of store.getState().current.connections ?? []) store.getState().updateConnection(connection.id,{kind:'open'});
   const bed={instanceId:'moving-bed',productId:'unknown-bed',x:0,z:0,rotation:0,color:'cream',material:'fabric'};
   store.getState().updatePieces([bed]);tree=render();let moving=find(tree,'room-canvas');moving.props.onSelect(bed.instanceId);tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.selected,bed.instanceId);
   const reset=moving.props.resetKey;moving.props.onEditStart();moving.props.onMove(bed.instanceId,4,0);tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,a);

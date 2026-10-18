@@ -21,6 +21,7 @@ import { MerchantKitchenDesignDetail } from "@/components/MerchantKitchenDesignD
 import { MerchantKitchenQuotes } from "@/components/MerchantKitchenQuotes";
 import { merchantRequest } from "@/features/merchant/merchantApi";
 import { MerchantOverview } from "@/features/merchant/MerchantOverview";
+import { MerchantDeliveryBoard } from "@/features/merchant/MerchantDeliveryBoard";
 import { StoreProfile } from "@/features/merchant/StoreProfile";
 import { MerchantProducts } from "@/features/merchant/MerchantProducts";
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
@@ -56,7 +57,12 @@ export function MerchantDashboard({
   }, [initialized, user, router]);
   if (!initialized || !user)
     return (
-      <main id="main-content"><PageSkeleton variant="dashboard" label="Дэлгүүрийн эрхийг шалгаж байна…" /></main>
+      <main id="main-content">
+        <PageSkeleton
+          variant="dashboard"
+          label="Дэлгүүрийн эрхийг шалгаж байна…"
+        />
+      </main>
     );
   if (role !== "merchant")
     return (
@@ -99,6 +105,7 @@ function MerchantWorkspace({
     "overview",
   );
   const [createProduct, setCreateProduct] = useState(false);
+  const [customizing, setCustomizing] = useState(false);
   const { preferences, updatePreferences } = useDashboardPreferences(
     owner,
     "merchant",
@@ -195,6 +202,14 @@ function MerchantWorkspace({
           onChange={updatePreferences}
           onStore={() => changeTab("store")}
           onProfile={() => changeTab("profile")}
+          onEditLayout={
+            store
+              ? () => {
+                  setCustomizing(true);
+                  changeTab("overview");
+                }
+              : undefined
+          }
         />
       ) : tab === "profile" && !kitchenDesignId ? (
         <DashboardAccount role="merchant" onStore={() => changeTab("store")} />
@@ -215,7 +230,11 @@ function MerchantWorkspace({
             </button>
           </div>
         ) : (
-          <PageSkeleton variant="dashboard" compact label="Дэлгүүрийг ачаалж байна…" />
+          <PageSkeleton
+            variant="dashboard"
+            compact
+            label="Дэлгүүрийг ачаалж байна…"
+          />
         )
       ) : kitchenDesignId ? (
         store ? (
@@ -239,6 +258,8 @@ function MerchantWorkspace({
               owner={owner}
               store={store}
               mode={preferences.overview}
+              customizing={customizing}
+              onCustomize={setCustomizing}
               onProducts={() => changeTab("products")}
               onStore={() => changeTab("store")}
               onAddProduct={() => {
@@ -270,7 +291,9 @@ function MerchantWorkspace({
           )}
 
           {!store &&
-            ["products", "orders", "quotes", "kitchens"].includes(tab) && (
+            ["products", "orders", "delivery", "quotes", "kitchens"].includes(
+              tab,
+            ) && (
               <MerchantOverview
                 owner={owner}
                 store={null}
@@ -279,7 +302,15 @@ function MerchantWorkspace({
               />
             )}
 
-          {tab === "orders" && store && <MerchantOrders owner={owner} />}
+          {tab === "orders" && store && (
+            <MerchantOrders
+              owner={owner}
+              onDelivery={() => changeTab("delivery")}
+            />
+          )}
+          {tab === "delivery" && store && (
+            <MerchantDeliveryBoard key={owner} owner={owner} />
+          )}
           {tab === "quotes" && store && <MerchantKitchenQuotes owner={owner} />}
 
           {tab === "kitchens" && store && (

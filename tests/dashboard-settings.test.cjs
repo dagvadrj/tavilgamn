@@ -101,3 +101,18 @@ test("merchant settings deep links survive navigation without retaining a kitche
   assert.equal(path, "/merchant?campaign=test&tab=settings");
   assert.deepEqual(readMerchantLocation("?tab=settings"), { tab: "settings", designId: null });
 });
+
+test("merchant settings expose the overview layout editor without changing admin settings", () => {
+  let opened = 0;
+  const { DashboardSettings } = loadSource("src/features/dashboard/DashboardSettings.tsx", {
+    react: { ...React, useState: initial => [initial, () => {}] },
+    "@/store/auth": { useAuth: select => select({ user: null }) },
+  });
+  const nodes = tree => React.isValidElement(tree) ? [tree, ...React.Children.toArray(tree.props.children).flatMap(nodes)] : [];
+  const props = { preferences: preferencesModule.DEFAULT_DASHBOARD_PREFERENCES, onChange: () => true, onProfile() {}, onEditLayout: () => opened++ };
+  const merchant = DashboardSettings({ ...props, role: "merchant" });
+  nodes(merchant).find(node => node.type === "button" && React.Children.toArray(node.props.children).includes(" Самбарын байршил засах")).props.onClick();
+  assert.equal(opened, 1);
+  const admin = DashboardSettings({ ...props, role: "admin" });
+  assert.equal(nodes(admin).some(node => node.props.onClick === props.onEditLayout), false);
+});

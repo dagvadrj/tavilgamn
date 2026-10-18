@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Armchair, Camera, ClipboardCheck, CookingPot, PanelTop, Refrigerator, Ruler, Save, Search, Undo2, Redo2, X } from "lucide-react";
+import { Armchair, Camera, CookingPot, PanelTop, Refrigerator, Ruler, Save, Search, Undo2, Redo2, X } from "lucide-react";
 import type { ReactNode } from "react";
+import type { KitchenSaveStatus } from "@/lib/kitchenSaveStatus";
+import { KitchenProjectName } from "./KitchenProjectName";
+import "./kitchen-project-header.css";
 
 export type KitchenToolbarTool = "cabinets" | "appliances" | "dining" | "items" | "search" | "photo" | "annotation";
 type Stage = "room" | "size" | "equipment" | "space" | "design" | "suggestions" | "finish";
@@ -27,12 +30,13 @@ const tools = [
 ] as const;
 
 export function KitchenPlannerHeader({ stage, onStage, activeTool, onTool, busy, canUndo, canRedo,
-  onUndo, onRedo, onSave, loginHref, name, onName, subtotal, utilities, annotations }: {
+  onUndo, onRedo, onSave, loginHref, name, onName, subtotal, utilities, annotations, saveStatus }: {
   stage: Stage; onStage: (stage: Stage) => void;
   activeTool?: KitchenToolbarTool; onTool: (tool: KitchenToolbarTool) => void;
   busy: boolean; canUndo: boolean; canRedo: boolean;
   onUndo: () => void; onRedo: () => void; onSave?: () => void; loginHref: string;
   name: string; onName: (value: string) => void; subtotal: number; utilities: ReactNode; annotations: boolean;
+  saveStatus?: KitchenSaveStatus;
 }) {
   return <>
     <header className="kitchen-masthead">
@@ -40,11 +44,11 @@ export function KitchenPlannerHeader({ stage, onStage, activeTool, onTool, busy,
         {stages.map(([id, label]) => <button key={id} type="button" disabled={busy} data-planner-tour={id === "space" ? "kitchen-space" : undefined}
           aria-current={stage === id ? "step" : undefined} onClick={() => onStage(id)}>{label}</button>)}
       </nav>
+      <select className="kitchen-mobile-stage" aria-label="Одоогийн алхам" value={stage} disabled={busy} onChange={event => onStage(event.target.value as Stage)}>
+        {stages.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+      </select>
       <div className="kitchen-project-tools">
-        <details className="kitchen-project-menu">
-          <summary title="Төслийн нэр" aria-label="Төслийн нэр"><ClipboardCheck size={16} /></summary>
-          <label>Төслийн нэр<input value={name} maxLength={100} disabled={busy} onChange={e => onName(e.target.value)} /></label>
-        </details>
+        <KitchenProjectName name={name} onName={onName} busy={busy} status={saveStatus}/>
         {utilities}
         <span className="kitchen-tool-divider" />
         <button type="button" title="Буцаах · Ctrl+Z" aria-label="Буцаах" disabled={busy || !canUndo} onClick={onUndo}><Undo2 size={16} /></button>

@@ -7,7 +7,13 @@ out
 *.log
 .vercel
 .turbo
+.docs/research
+.docs/
+.research/
+.release-audit/evidence/
 uploads/
+.supabase/migrations/
+.tests/
 prisma/dev.db
 prisma/dev.db-journal
 .env

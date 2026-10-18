@@ -178,11 +178,12 @@ export default function AccountPage() {
           )}
           <div className="account-section-heading">
             <div>
-              <p className="account-eyebrow">Хадгалсан өрөөний загвар</p>
+              <p className="account-eyebrow">Энэ төхөөрөмж дээр хадгалсан өрөөний загвар</p>
               <h2>
                 Таны загварууд{" "}
                 <span className="account-count">{designs.length}</span>
               </h2>
+              <p className="mt-2 text-sm text-ui-muted">Өрөөний загварууд энэ browser-д хадгалагдана. Өөр төхөөрөмжид автоматаар шилжихгүй.</p>
             </div>
             <Link
               href="/planner"

@@ -15,7 +15,12 @@ type NullableArgs = {
   save_merchant_product_v2: "p_expected_stock";
   save_furniture_product: "p_expected_stock";
 };
-type Functions = Generated["public"]["Functions"];
+type Functions = Generated["public"]["Functions"] & {
+  read_merchant_delivery_staff: { Args: { p_actor: string }; Returns: import("./database.types").Json };
+  save_merchant_delivery_staff: { Args: { p_actor: string; p_id: string | null; p_expected_version: number | null; p_name: string; p_phone: string; p_vehicle: string; p_active: boolean }; Returns: import("./database.types").Json };
+  read_merchant_delivery_orders: { Args: { p_actor: string; p_stage: string; p_page?: number }; Returns: import("./database.types").Json };
+  move_merchant_delivery_order: { Args: { p_actor: string; p_order: string; p_stage: string; p_expected_version: number; p_driver?: string | null }; Returns: import("./database.types").Json };
+};
 type Rpc<Name extends keyof Functions> = Name extends keyof NullableArgs
   ? Omit<Functions[Name], "Args"> & {
       Args: {
