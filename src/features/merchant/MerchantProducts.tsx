@@ -25,6 +25,7 @@ import { MerchantProductEditor } from "@/features/merchant/MerchantProductEditor
 import { useMerchantResource } from "./useMerchantResource";
 import { StatSkeleton } from "./MerchantStats";
 import { ProductDetails } from "@/features/admin-products/ProductDetails";
+import { MerchantGlbDownload } from "./MerchantGlbDownload";
 
 export function MerchantProducts({
   owner,
@@ -178,6 +179,7 @@ export function MerchantProducts({
               <strong className="merchant-product-price">
                 {formatPrice(product.basePrice)}
               </strong>
+              {product.model && !product.archivedAt && <MerchantGlbDownload owner={owner} productId={product.id}/>}
               <button
                 className="btn-ghost"
                 disabled={

@@ -202,7 +202,7 @@ export function ModularKitchenPlanner({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [catalogCategory, setCatalogCategory] = useState<"all" | "appliances">("all");
-  const [extrasTab, setExtrasTab] = useState<"dining" | "extra">("dining");
+  const [extrasTab, setExtrasTab] = useState<"dining" | "extra" | "appliances">("dining");
   const [annotations, setAnnotations] = useState(true);
   const [searchRequest, setSearchRequest] = useState(0);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -234,6 +234,7 @@ export function ModularKitchenPlanner({
   const [reviewImage, setReviewImage] = useState<string | null>(null);
   const {
     moduleCatalog,
+    assets: kitchenAssets,
     materialCatalog,
     loading: catalogLoading,
     error: catalogError,
@@ -849,13 +850,13 @@ export function ModularKitchenPlanner({
       return;
     }
     setSelectedId(null);
-    if (tool === "dining" || tool === "items") {
-      setExtrasTab(tool === "dining" ? "dining" : "extra");
+    if (tool === "dining" || tool === "items" || tool === "appliances") {
+      setExtrasTab(tool === "dining" ? "dining" : tool === "appliances" ? "appliances" : "extra");
       setInspector("extras");
       setCatalogOpen(false);
       setSettingsOpen(true);
     } else {
-      setCatalogCategory(tool === "appliances" ? "appliances" : "all");
+      setCatalogCategory("all");
       setInspector("catalog");
       setSettingsOpen(false);
       setCatalogOpen(true);
@@ -1008,7 +1009,7 @@ export function ModularKitchenPlanner({
       <KitchenPlannerHeader
         stage={currentFlowStage}
         onStage={changeStage}
-        activeTool={catalogOpen ? catalogCategory === "appliances" ? "appliances" : "cabinets" : inspector === "extras" && settingsOpen ? extrasTab === "dining" ? "dining" : "items" : undefined}
+        activeTool={catalogOpen ? catalogCategory === "appliances" ? "appliances" : "cabinets" : inspector === "extras" && settingsOpen ? extrasTab === "dining" ? "dining" : extrasTab === "appliances" ? "appliances" : "items" : undefined}
         onTool={openToolbarTool}
         busy={busy}
         canUndo={Boolean(history.current.undoCount)} canRedo={Boolean(history.current.redoCount)}
@@ -1525,7 +1526,7 @@ export function ModularKitchenPlanner({
             <>
               <div className="kp-settings-head"><strong>{KITCHEN_INSPECTOR_LABELS[inspector]}</strong><button type="button" aria-label="Самбар хаах" onClick={() => setSettingsOpen(false)}><X size={19} /></button></div>
               {inspector === "extras" ? (
-                <ExtrasPanel key={extrasTab} initialTab={extrasTab} products={products.products} selected={selectedExtra} room={design.room} disabled={busy} error={products.error} loading={products.loading} onAdd={addExtra} onChange={changeExtra} onDuplicate={duplicateExtra} onDelete={() => { if (commit({ ...design, extras: design.extras?.filter(e => e.id !== selectedId) })) setSelectedId(null); }} />
+                <ExtrasPanel key={extrasTab} initialTab={extrasTab} products={kitchenAssets} selected={selectedExtra} room={design.room} disabled={busy} error={catalogError?"Гал тогооны сан ачаалагдсангүй.":null} loading={catalogLoading} onAdd={addExtra} onChange={changeExtra} onDuplicate={duplicateExtra} onDelete={() => { if (commit({ ...design, extras: design.extras?.filter(e => e.id !== selectedId) })) setSelectedId(null); }} />
               ) : inspector === "room" ? (
                 <section className="kp-panel"><p>Өрөөний хэмжээ, хаалга, цонхоо тохируулна.</p><button type="button" className="kp-primary" onClick={() => { setSettingsOpen(false); setSpaceOpen(true); }}>Өрөө тохируулах</button></section>
               ) : inspector === "materials" ? (

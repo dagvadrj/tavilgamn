@@ -37,6 +37,7 @@ export type KitchenCatalogModule = {
 };
 
 export type KitchenModelCandidate = {
+  asset?: import("./kitchenAssetCatalog").KitchenAsset | null;
   glbFile?: string | null;
   thumbnailUrl?: string | null;
   partKind?: KitchenPartKind | null;

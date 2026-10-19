@@ -546,9 +546,12 @@ function Scene(props: ModularSceneProps) {
           <group
             key={extra.id}
             name={`Extra-${extra.id}`}
-            position={[extra.position.x / 1000, 0, extra.position.z / 1000]}
+            position={[extra.position.x / 1000, extra.position.y / 1000, extra.position.z / 1000]}
             rotation={[0, extra.position.rotation, 0]}
             onPointerDown={(event) => start(event, extra)}
+            onPointerMove={move}
+            onPointerUp={(event)=>{if(drag.current?.pointerId===event.pointerId){event.stopPropagation();finish(false);}}}
+            onPointerCancel={(event)=>{if(drag.current?.pointerId===event.pointerId)finish(true);}}
           >
             <KitchenExtraMesh
               extra={extra}

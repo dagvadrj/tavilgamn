@@ -39,6 +39,8 @@ const ROOT = path.resolve(
 // Bounded end-to-end verification: never claim another model's queued job.
 const VERIFY_MODEL_ID = process.env.MODEL_WORKER_VERIFY_MODEL_ID;
 if (VERIFY_MODEL_ID && !isUuid(VERIFY_MODEL_ID)) throw new Error("Invalid verification model UUID");
+const VERIFY_EXPORT_ID = process.env.MODEL_WORKER_VERIFY_EXPORT_ID;
+if (VERIFY_EXPORT_ID && (!isUuid(VERIFY_EXPORT_ID) || VERIFY_MODEL_ID)) throw new Error("Invalid verification export UUID or conflicting verification modes");
 function isTransientNetworkError(error) {
   const message = error instanceof Error ? error.message : String(error);
 
@@ -179,6 +181,18 @@ async function claimJob() {
   return data[0];
 }
 async function claimExportJob() {
+  if (VERIFY_EXPORT_ID) {
+    const { data: pending, error: readError } = await db.from("furniture_models").select("*")
+      .eq("id", VERIFY_EXPORT_ID).eq("export_status", "queued").eq("processing_status", "ready").is("archived_at", null).maybeSingle();
+    if (readError) throw readError;
+    if (!pending) return null;
+    const { data, error } = await db.from("furniture_models")
+      .update({ export_status: "processing", export_updated_at: new Date().toISOString() })
+      .eq("id", pending.id).eq("export_job_id", pending.export_job_id).eq("processing_job_id", pending.processing_job_id)
+      .eq("export_status", "queued").is("archived_at", null).select("*").maybeSingle();
+    if (error) throw error;
+    return data;
+  }
   const { data, error } = await db.rpc("claim_furniture_model_export_job");
 
   if (error) {
@@ -554,14 +568,14 @@ async function main() {
 
   while (true) {
     try {
-      if (!VERIFY_MODEL_ID && Date.now() - lastSourceSweep >= 60_000) {
+      if (!VERIFY_MODEL_ID && !VERIFY_EXPORT_ID && Date.now() - lastSourceSweep >= 60_000) {
         lastSourceSweep = Date.now();
         try {
           const cleanup = await cleanupAbandonedSources(db, r2, R2_BUCKET_NAME, { apply: true });
           if (cleanup.deleted || cleanup.failed) console.log("[worker] abandoned sources", cleanup);
         } catch (error) { console.error("[worker] source sweep failed", error); }
       }
-      const job = await claimJob();
+      const job = VERIFY_EXPORT_ID ? null : await claimJob();
 
       if (job) {
         backoff = POLL_INTERVAL;
@@ -585,13 +599,16 @@ async function main() {
 
         try {
           await processExportJob(exportJob);
-        } catch {
+        } catch (error) {
+          if (VERIFY_EXPORT_ID) throw error;
           // processExportJob DB status-ээ өөрөө шинэчилнэ.
         }
 
+        if (VERIFY_EXPORT_ID) { r2.destroy(); return; }
         continue;
       }
 
+      if (VERIFY_EXPORT_ID) throw new Error("Verification export is not queued; no other jobs were touched");
       if (await cleanupOneReadySource()) {
         backoff = POLL_INTERVAL;
         continue;
@@ -601,7 +618,7 @@ async function main() {
 
       await sleep(POLL_INTERVAL);
     } catch (error) {
-      if (VERIFY_MODEL_ID) throw error;
+      if (VERIFY_MODEL_ID || VERIFY_EXPORT_ID) throw error;
       if (isTransientNetworkError(error)) {
         console.warn(
           `[worker] Supabase түр холбогдохгүй байна. ` +

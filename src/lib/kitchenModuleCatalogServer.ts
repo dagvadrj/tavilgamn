@@ -1,90 +1,238 @@
 import "server-only";
-import type { KitchenCatalogModule, KitchenCatalogVariant, KitchenModelCandidate } from "./kitchenModuleCatalog";
+import type {
+  KitchenCatalogModule,
+  KitchenCatalogVariant,
+  KitchenModelCandidate,
+} from "./kitchenModuleCatalog";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { getKitchenGlbAssembly, kitchenPartKind } from "./kitchenGlbAssembly";
+import { kitchenAsset } from "./kitchenAssetCatalog";
+import {
+  FURNITURE_FIELDS,
+  productFromRow,
+  type FurnitureRow,
+} from "./catalogServer";
 
 type Db = ReturnType<typeof getSupabaseAdmin>;
-const file = (path: unknown) => typeof path === "string" ? path.split("/").pop() ?? null : null;
+const file = (path: unknown) =>
+  typeof path === "string" ? (path.split("/").pop() ?? null) : null;
 const assetUrl = (id: string, path: unknown) => {
   const name = file(path);
   return name ? `/api/models/files/${id}/${encodeURIComponent(name)}` : null;
 };
 
-export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}, db: Db = getSupabaseAdmin()) {
-  let moduleQuery = db.from("kitchen_modules").select("id,code,name,cabinet_type,width_mm,height_mm,depth_mm,active")
-    .order("cabinet_type").order("width_mm");
-  let variantQuery = db.from("kitchen_module_variants")
-    .select("furniture_model_id,module_id,variant_code,opening,door_count,drawer_count,configuration,is_default,sort_order,active")
-    .order("sort_order").order("variant_code");
-  if (!options.admin) { moduleQuery = moduleQuery.eq("active", true); variantQuery = variantQuery.eq("active", true); }
-  const [{ data: moduleRows, error: moduleError }, { data: variantRows, error: variantError }] = await Promise.all([moduleQuery, variantQuery]);
+export async function readKitchenModuleCatalog(
+  options: { admin?: boolean } = {},
+  db: Db = getSupabaseAdmin(),
+) {
+  let moduleQuery = db
+    .from("kitchen_modules")
+    .select("id,code,name,cabinet_type,width_mm,height_mm,depth_mm,active")
+    .order("cabinet_type")
+    .order("width_mm");
+  let variantQuery = db
+    .from("kitchen_module_variants")
+    .select(
+      "furniture_model_id,module_id,variant_code,opening,door_count,drawer_count,configuration,is_default,sort_order,active",
+    )
+    .order("sort_order")
+    .order("variant_code");
+  if (!options.admin) {
+    moduleQuery = moduleQuery.eq("active", true);
+    variantQuery = variantQuery.eq("active", true);
+  }
+  const [
+    { data: moduleRows, error: moduleError },
+    { data: variantRows, error: variantError },
+  ] = await Promise.all([moduleQuery, variantQuery]);
   if (moduleError) throw moduleError;
   if (variantError) throw variantError;
-  const modelIds = [...new Set((variantRows ?? []).flatMap((row) => [row.furniture_model_id as string,
-    ...(getKitchenGlbAssembly(row.configuration)?.slots.flatMap(slot => slot.options.map(option => option.modelId)) ?? [])]))];
+  const modelIds = [
+    ...new Set(
+      (variantRows ?? []).flatMap((row) => [
+        row.furniture_model_id as string,
+        ...(getKitchenGlbAssembly(row.configuration)?.slots.flatMap((slot) =>
+          slot.options.map((option) => option.modelId),
+        ) ?? []),
+      ]),
+    ),
+  ];
   const { data: modelRows, error: modelError } = modelIds.length
-    ? await db.from("furniture_models").select("id,product_id,name,category,glb_path,preview_glb_path,source_glb_path,thumbnail_path,processing_status,archived_at,glb_validation").in("id", modelIds)
+    ? await db
+        .from("furniture_models")
+        .select(
+          "id,product_id,name,category,glb_path,preview_glb_path,source_glb_path,thumbnail_path,processing_status,archived_at,glb_validation",
+        )
+        .in("id", modelIds)
     : { data: [], error: null };
   if (modelError) throw modelError;
-  const models = new Map((modelRows ?? []).map((row) => [row.id as string, row]));
+  const models = new Map(
+    (modelRows ?? []).map((row) => [row.id as string, row]),
+  );
   const variants = new Map<string, KitchenCatalogVariant[]>();
   for (const row of variantRows ?? []) {
     const model = models.get(row.furniture_model_id as string);
-    const kitchenGlbPath = model?.processing_status === "ready" ? model?.glb_path : null;
-    if (!model || model.archived_at || model.category !== "kitchen-cabinet" || (!options.admin && !kitchenGlbPath)) continue;
+    const kitchenGlbPath =
+      model?.processing_status === "ready" ? model?.glb_path : null;
+    if (
+      !model ||
+      model.archived_at ||
+      model.category !== "kitchen-cabinet" ||
+      (!options.admin && !kitchenGlbPath)
+    )
+      continue;
     const assembly = getKitchenGlbAssembly(row.configuration);
-    if (assembly) for (const slot of assembly.slots) for (const option of slot.options) {
-      const part = models.get(option.modelId);
-      const ready = part && !part.archived_at && part.processing_status === "ready";
-      option.glbFile = ready ? file(part.glb_path) : null;
-      option.glbUrl = ready ? assetUrl(option.modelId, part.glb_path) : null;
-      option.thumbnailUrl = part && !part.archived_at ? assetUrl(option.modelId, part.thumbnail_path) : null;
-    }
+    if (assembly)
+      for (const slot of assembly.slots)
+        for (const option of slot.options) {
+          const part = models.get(option.modelId);
+          const ready =
+            part && !part.archived_at && part.processing_status === "ready";
+          option.glbFile = ready ? file(part.glb_path) : null;
+          option.glbUrl = ready
+            ? assetUrl(option.modelId, part.glb_path)
+            : null;
+          option.thumbnailUrl =
+            part && !part.archived_at
+              ? assetUrl(option.modelId, part.thumbnail_path)
+              : null;
+        }
     const value: KitchenCatalogVariant = {
       physicalSize: Boolean(model.glb_validation),
-      furnitureModelId: model.id as string, productId: model.product_id as string, modelName: model.name as string,
-      variantCode: row.variant_code as string, opening: row.opening as KitchenCatalogVariant["opening"],
-      doorCount: Number(row.door_count), drawerCount: Number(row.drawer_count),
-      configuration: { ...(row.configuration as Record<string, unknown>), ...(assembly ? { assembly } : {}) }, isDefault: Boolean(row.is_default),
-      sortOrder: Number(row.sort_order), active: Boolean(row.active), glbFile: file(kitchenGlbPath),
-      glbUrl: assetUrl(model.id as string, kitchenGlbPath), thumbnailUrl: assetUrl(model.id as string, model.thumbnail_path),
-      previewGlbFile: null, previewGlbUrl: null,
+      furnitureModelId: model.id as string,
+      productId: model.product_id as string,
+      modelName: model.name as string,
+      variantCode: row.variant_code as string,
+      opening: row.opening as KitchenCatalogVariant["opening"],
+      doorCount: Number(row.door_count),
+      drawerCount: Number(row.drawer_count),
+      configuration: {
+        ...(row.configuration as Record<string, unknown>),
+        ...(assembly ? { assembly } : {}),
+      },
+      isDefault: Boolean(row.is_default),
+      sortOrder: Number(row.sort_order),
+      active: Boolean(row.active),
+      glbFile: file(kitchenGlbPath),
+      glbUrl: assetUrl(model.id as string, kitchenGlbPath),
+      thumbnailUrl: assetUrl(model.id as string, model.thumbnail_path),
+      previewGlbFile: null,
+      previewGlbUrl: null,
       processingStatus: String(model.processing_status ?? "idle"),
     };
-    variants.set(row.module_id as string, [...(variants.get(row.module_id as string) ?? []), value]);
+    variants.set(row.module_id as string, [
+      ...(variants.get(row.module_id as string) ?? []),
+      value,
+    ]);
   }
   const modules: KitchenCatalogModule[] = (moduleRows ?? []).map((row) => ({
-    id: row.id as string, code: row.code as string, name: row.name as string,
-    cabinetType: row.cabinet_type as KitchenCatalogModule["cabinetType"], widthMm: Number(row.width_mm),
-    heightMm: Number(row.height_mm), depthMm: Number(row.depth_mm), active: Boolean(row.active),
+    id: row.id as string,
+    code: row.code as string,
+    name: row.name as string,
+    cabinetType: row.cabinet_type as KitchenCatalogModule["cabinetType"],
+    widthMm: Number(row.width_mm),
+    heightMm: Number(row.height_mm),
+    depthMm: Number(row.depth_mm),
+    active: Boolean(row.active),
     variants: variants.get(row.id as string) ?? [],
   }));
   return modules;
 }
 
 export async function readKitchenModelCandidates(db: Db = getSupabaseAdmin()) {
-  const [{ data: rows, error }, { data: links, error: linkError }, { data: moduleRows, error: moduleError }] = await Promise.all([
-    db.from("furniture_models").select("id,product_id,name,description,dimensions_w,dimensions_h,dimensions_d,glb_path,thumbnail_path,source_glb_path,processing_status,archived_at,cabinet_module_id,specifications,glb_validation")
-      .eq("category", "kitchen-cabinet").order("created_at", { ascending: false }).limit(500),
+  const [
+    { data: rows, error },
+    { data: links, error: linkError },
+    { data: moduleRows, error: moduleError },
+  ] = await Promise.all([
+    db
+      .from("furniture_models")
+      .select(
+        "id,product_id,name,description,dimensions_w,dimensions_h,dimensions_d,glb_path,thumbnail_path,source_glb_path,processing_status,archived_at,cabinet_module_id,specifications,glb_validation",
+      )
+      .eq("category", "kitchen-cabinet")
+      .order("created_at", { ascending: false })
+      .limit(500),
     db.from("kitchen_module_variants").select("furniture_model_id,module_id"),
     db.from("kitchen_modules").select("id,code"),
   ]);
   if (error) throw error;
   if (linkError) throw linkError;
   if (moduleError) throw moduleError;
-  const moduleCodes = new Map((moduleRows ?? []).map((row) => [row.id as string, row.code as string]));
-  const linked = new Map((links ?? []).map((row) => [row.furniture_model_id as string, moduleCodes.get(row.module_id as string) ?? null]));
-  return (rows ?? []).map((row): KitchenModelCandidate => ({ id: row.id as string, productId: row.product_id as string,
-    glbFile: !row.archived_at && row.processing_status === "ready" ? file(row.glb_path) : null,
+  const moduleCodes = new Map(
+    (moduleRows ?? []).map((row) => [row.id as string, row.code as string]),
+  );
+  const linked = new Map(
+    (links ?? []).map((row) => [
+      row.furniture_model_id as string,
+      moduleCodes.get(row.module_id as string) ?? null,
+    ]),
+  );
+  return (rows ?? []).map((row): KitchenModelCandidate => ({
+    id: row.id as string,
+    productId: row.product_id as string,
+    glbFile:
+      !row.archived_at && row.processing_status === "ready"
+        ? file(row.glb_path)
+        : null,
     thumbnailUrl: assetUrl(row.id, row.thumbnail_path),
     name: row.name as string,
     partKind: kitchenPartKind(row.specifications),
-    nodeNames: row.glb_validation && typeof row.glb_validation === "object" && !Array.isArray(row.glb_validation) && Array.isArray(row.glb_validation.nodeNames) ? row.glb_validation.nodeNames.filter((name): name is string => typeof name === "string") : [],
+    asset: kitchenAsset(row.specifications),
+    nodeNames:
+      row.glb_validation &&
+      typeof row.glb_validation === "object" &&
+      !Array.isArray(row.glb_validation) &&
+      Array.isArray(row.glb_validation.nodeNames)
+        ? row.glb_validation.nodeNames.filter(
+            (name): name is string => typeof name === "string",
+          )
+        : [],
     archivedAt: row.archived_at,
-    moduleCode: (row.cabinet_module_id ? moduleCodes.get(row.cabinet_module_id) : null) ?? linked.get(row.id as string)
-      ?? /^([A-Z0-9][A-Z0-9_-]{1,79}) kitchen module GLB$/.exec(String(row.description ?? ""))?.[1]
-      ?? null,
+    moduleCode:
+      (row.cabinet_module_id ? moduleCodes.get(row.cabinet_module_id) : null) ??
+      linked.get(row.id as string) ??
+      /^([A-Z0-9][A-Z0-9_-]{1,79}) kitchen module GLB$/.exec(
+        String(row.description ?? ""),
+      )?.[1] ??
+      null,
     widthMm: Math.round(Number(row.dimensions_w) * 1000),
-    heightMm: Math.round(Number(row.dimensions_h) * 1000), depthMm: Math.round(Number(row.dimensions_d) * 1000),
-    glbReady: !row.archived_at && row.processing_status === "ready" && Boolean(row.glb_path), processingStatus: row.archived_at ? "archived" : String(row.processing_status ?? "idle"), linked: linked.has(row.id as string) }));
+    heightMm: Math.round(Number(row.dimensions_h) * 1000),
+    depthMm: Math.round(Number(row.dimensions_d) * 1000),
+    glbReady:
+      !row.archived_at &&
+      row.processing_status === "ready" &&
+      Boolean(row.glb_path),
+    processingStatus: row.archived_at
+      ? "archived"
+      : String(row.processing_status ?? "idle"),
+    linked: linked.has(row.id as string),
+  }));
+}
+
+/** Dedicated kitchen assets never enter the room planner's furniture catalog. */
+export async function readKitchenAssets(db: Db = getSupabaseAdmin()) {
+  const products = [];
+  let after = "";
+  for (;;) {
+    let query = db
+      .from("furniture_models")
+      .select(FURNITURE_FIELDS)
+      .eq("category", "kitchen-cabinet")
+      .eq("processing_status", "ready")
+      .is("archived_at", null)
+      .order("id")
+      .limit(500);
+    if (after) query = query.gt("id", after);
+    const { data, error } = await query;
+    if (error) throw error;
+    const rows = (data ?? []) as unknown as FurnitureRow[];
+    products.push(
+      ...rows
+        .filter((row) => kitchenAsset(row.specifications) && row.glb_path)
+        .map(productFromRow),
+    );
+    if (rows.length < 500) return products;
+    after = rows[rows.length - 1].id;
+  }
 }

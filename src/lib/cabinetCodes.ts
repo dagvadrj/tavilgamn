@@ -8,7 +8,7 @@ export function cabinetModuleCode(type: "base" | "wall" | "tall" | "corner", wid
   return `${prefix}-${widthMm}${heightMm === standardHeight && depthMm === standardDepth ? "" : `-H${heightMm}-D${depthMm}`}`;
 }
 export function cabinetVariantCode(moduleCode: string, opening: KitchenOpening, doors: number, drawers: number, designCode = "") {
-  if (!/^(?:BASE|WALL|TALL|CORNER-BASE)-[0-9]+(?:-H[0-9]+-D[0-9]+)?$/.test(moduleCode)) throw new Error("Canonical module code буруу байна.");
+  if (!/^(?:BASE|WALL|TALL|CORNER-BASE|CORNER-WALL|FRIDGE-WALL|ISLAND)-[0-9]+(?:-H[0-9]+-D[0-9]+)?$/.test(moduleCode)) throw new Error("Canonical module code буруу байна.");
   if (!Number.isSafeInteger(doors) || !Number.isSafeInteger(drawers) || doors < 0 || doors > 4 || drawers < 0 || drawers > 4) throw new Error("Хаалга/шургуулгын тоо 0–4 байна.");
   const suffix = opening === "doors" ? `${doors}-${doors === 1 ? "DOOR" : "DOORS"}`
     : opening === "drawers" && doors ? `${doors}-${doors === 1 ? "DOOR" : "DOORS"}-${drawers}-${drawers === 1 ? "DRAWER" : "DRAWERS"}`

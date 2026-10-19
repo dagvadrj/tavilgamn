@@ -7,7 +7,7 @@ const { loadSource } = require("./helpers/load-source.cjs");
 // Run the real component's hooks and draw callbacks without needing a GPU.
 function harness(patch = {}) {
   const slots = [], requests = [], metrics = [], released = [];
-  let cursor = 0, dirty = true, effects = [], frame, tree;
+  let cursor = 0, dirty = true, effects = [], frames = [], tree;
   let motion = null;
   const renderer = {}, root = new THREE.Group();
   const props = { modelId: "model", basePath: "/models/", glbFile: "high.glb",
@@ -34,7 +34,10 @@ function harness(patch = {}) {
   };
   const { GLBFurnitureMesh } = loadSource("src/three/GLBFurnitureMesh.tsx", {
     react: mockedReact,
-    "@react-three/fiber": { useThree: () => ({ gl: renderer }), useFrame: fn => { frame = fn; } },
+    "@react-three/fiber": { useThree: selector => {
+      const state = { gl: renderer, invalidate() {} };
+      return selector ? selector(state) : state;
+    }, useFrame: fn => { frames.push(fn); } },
     "@react-three/drei": { Edges: () => null, Html: () => null },
     "./kitchenMaterialTextures": { acquireKitchenMaterialTextures: () => ({ promise: Promise.resolve({}), release() {} }) },
     "@/lib/modelPerformance": { reportModelPerformance: metric => metrics.push(metric) },
@@ -51,7 +54,7 @@ function harness(patch = {}) {
     },
   });
   function render() {
-    dirty = false; cursor = 0; effects = [];
+    dirty = false; cursor = 0; effects = []; frames = [];
     tree = GLBFurnitureMesh(props);
     tree.props.ref.current = root;
     const pending = effects; effects = [];
@@ -72,11 +75,11 @@ function harness(patch = {}) {
     }
     return null;
   }
-  function resolve(index, material = new THREE.MeshStandardMaterial(), triangles) {
+  function resolve(index, material = new THREE.MeshStandardMaterial(), triangles, animations = []) {
     const scene = new THREE.Group();
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), material);
     mesh.name = "front"; scene.add(mesh);
-    requests[index].resolve({ scene, triangles,
+    requests[index].resolve({ scene, triangles, animations,
       bounds: new THREE.Box3(new THREE.Vector3(-.5,0,-.5), new THREE.Vector3(.5,1,.5)),
       metrics: { queueMs: 0, loadDecodeMs: 10, resourceDurationMs: 8, encodedBodySize: 100 } });
   }
@@ -91,10 +94,31 @@ function harness(patch = {}) {
       assert.ok(primitive, "a loaded model must be on screen");
       primitive.props.object.traverse(object => { if (object instanceof THREE.Mesh) object.onAfterRender(); });
     },
-    camera(camera) { frame({ camera }); },
+    camera(camera, delta = 1/60) { frames.forEach(fn => fn({ camera }, delta)); },
     unmount() { slots.forEach(slot => slot?.cleanup?.()); },
   };
 }
+
+test("authored door animation runs smoothly and reverses from its current pose", async () => {
+  const clip = new THREE.AnimationClip('Open', .45, [new THREE.NumberKeyframeTrack('front.rotation[y]',[0,.45],[0,-Math.PI/2])]);
+  const run = harness({openAnimation:'Open'}), camera = new THREE.PerspectiveCamera();
+  try {
+    await run.flush(); run.resolve(0,undefined,undefined,[clip]); await run.flush();
+    const door = run.primitive().props.object.getObjectByName('front');
+    run.updateProps({open:true}); await run.flush();
+    run.camera(camera,.05); assert.ok(door.rotation.y < 0 && door.rotation.y > -Math.PI/2);
+    const partial = door.rotation.y;
+    run.updateProps({open:false}); await run.flush(); run.camera(camera,.025);
+    assert.ok(door.rotation.y > partial && door.rotation.y < 0);
+    for(let i=0;i<15;i++) run.camera(camera,.05);
+    assert.ok(Math.abs(door.rotation.y)<1e-7);
+    run.updateProps({open:true}); await run.flush(); for(let i=0;i<15;i++) run.camera(camera,.05);
+    assert.ok(Math.abs(door.rotation.y+Math.PI/2)<1e-7);
+    run.updateProps({open:false}); await run.flush(); for(let i=0;i<15;i++) run.camera(camera,.05);
+    assert.ok(Math.abs(door.rotation.y)<1e-7,'clamped endpoint can close again');
+    assert.equal(run.requests.length,1,'opening never reloads geometry');
+  } finally { run.unmount(); }
+});
 
 test("only delivery is requested even with legacy preview data; readiness and metrics report once after drawing", async () => {
   const originalWindow = global.window;

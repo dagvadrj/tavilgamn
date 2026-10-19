@@ -352,7 +352,7 @@ export function AdminKitchenDesigns({
             {(
               [
                 { id: "designs", label: "Загварууд" },
-                { id: "modules", label: "Модулиуд" },
+                { id: "modules", label: "Гал тогооны GLB сан" },
                 { id: "materials", label: "Материалууд" },
               ] as const
             ).map((item) => (

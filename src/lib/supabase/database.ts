@@ -16,6 +16,10 @@ type NullableArgs = {
   save_furniture_product: "p_expected_stock";
 };
 type Functions = Generated["public"]["Functions"] & {
+  request_merchant_model_export: {
+    Args: { p_actor: string; p_product: string };
+    Returns: import("./database.types").Json;
+  };
   read_merchant_growth: {
     Args: { p_actor: string };
     Returns: import("./database.types").Json;

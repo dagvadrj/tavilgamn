@@ -354,7 +354,7 @@ export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
       issues.push({ code: "overlap", ids: [extra.id, obstacle.id], message: obstacle.kind === "door" ? "Тавилга хаалганы нээгдэх зайг хааж байна." : "Тавилга баганатай давхцаж байна.", severity: "error" });
     if (!roomContainsFootprint(kitchen.room, cabinetCorners(extra)))
       issues.push({code:"outside",ids:[extra.id],message:"Нэмэлт тавилга өрөөний хилээс гарсан байна.",severity:"error"});
-    if (extra.height > kitchen.room.height || extra.position.y !== 0)
+    if (extra.position.y < 0 || extra.position.y + extra.height > kitchen.room.height || (!extra.asset && extra.position.y !== 0))
       issues.push({
         code: "ceiling",
         ids: [extra.id],

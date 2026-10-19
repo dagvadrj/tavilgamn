@@ -14,6 +14,32 @@ const option = { id: 'white', label: 'White door', modelId: id };
 const slot = (patch = {}) => ({ id: 'door', label: 'Door', kind: 'door', anchorNode: 'door_socket', defaultOptionId: 'white', options: [option], ...patch });
 const assembly = (slots = [slot()]) => parseKitchenGlbAssembly({ version: 1, slots });
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-7, `${a} != ${b}`);
+test('material IDs survive persistence while arbitrary URLs remain rejected', () => {
+  const config = assembly([slot({options:[{...option,materialId:'oak_front',texturePaths:{baseColor:'https://evil'}}]})]);
+  assert.equal(config.slots[0].options[0].materialId,'oak_front');
+  assert.equal(config.slots[0].options[0].texturePaths,undefined);
+  assert.throws(() => assembly([slot({options:[{...option,materialId:'https://evil'}]})]));
+});
+test('part material overrides preserve UVs and isolate original geometry and child handles', () => {
+  const { applyKitchenPartMaterial } = loadSource('src/three/kitchenPartMaterial.ts');
+  const { door, handle } = assets();
+  const mesh = door.children[1], original = mesh.material, oldMap = new THREE.Texture(); original.map = oldMap;
+  const uv = mesh.geometry.getAttribute('uv');
+  const dispose = applyKitchenPartMaterial(door,{baseColor:'#ff0000',roughness:.2,metalness:.8},{});
+  door.add(handle);
+  assert.notEqual(mesh.material,original); assert.equal(mesh.material.map,null);
+  assert.equal(mesh.material.color.getHexString(),'ff0000'); assert.equal(mesh.material.metalness,.8);
+  assert.equal(original.map,oldMap); assert.equal(mesh.geometry.getAttribute('uv'),uv);
+  assert.equal(handle.children[0].material.color.getHexString(),'111111');
+  dispose();
+});
+test('door and drawer motion samples intermediate poses and returns exactly closed', () => {
+  const { frame, door, handle } = assets();
+  const result = composeKitchenGlb(frame, assembly([slot({motion:{type:'hinge',axis:'y',amount:-90,pivotMm:[-150,0,0]}}),slot({id:'drawer',kind:'drawer',anchorNode:undefined,motion:{type:'slide',axis:'z',amount:400}})]),{},new Map([['door',door],['drawer',handle]]),[0,0,0]);
+  setKitchenGlbOpen(result.motions,.5); near(result.motions[0].object.rotation.y,-Math.PI/4); near(result.motions[1].object.position.z,.2);
+  setKitchenGlbOpen(result.motions,1); setKitchenGlbOpen(result.motions,.5); near(result.motions[1].object.position.z,.2);
+  setKitchenGlbOpen(result.motions,0); near(result.motions[0].object.rotation.y,0); near(result.motions[0].object.position.x,-.15);
+});
 function assets() {
   const frame = new THREE.Group(), socket = new THREE.Object3D();
   socket.name = 'door_socket'; socket.position.set(.2, .8, .3); frame.add(socket);
@@ -76,6 +102,25 @@ test('export retains plain Object3D socket descendants and independent GLB parts
   const snapshot = snapshotKitchen(result.root); let meshes = 0;
   snapshot.scene.traverse(node => { if (node.isMesh) meshes++; });
   assert.equal(meshes, 3); assert.ok(snapshot.scene.getObjectByName('handle_socket')); snapshot.dispose();
+});
+
+test('export remaps opening tracks to cloned nodes for multiple cabinets with identical slot names', () => {
+  const root = new THREE.Group(); root.userData.kitchenExport = true;
+  for (let i=0; i<2; i++) {
+    const { frame, door } = assets();
+    const result = composeKitchenGlb(frame,assembly([slot({motion:{type:'hinge',axis:'y',amount:-90}})]),{},new Map([['door',door]]),[0,0,0]);
+    result.root.position.x = i;
+    root.add(result.root);
+  }
+  const snapshot = snapshotKitchen(root);
+  assert.equal(snapshot.animations.length,2);
+  const targets = snapshot.animations.map(clip => THREE.PropertyBinding.parseTrackName(clip.tracks[0].name).nodeName);
+  assert.equal(new Set(targets).size,2);
+  const mixer = new THREE.AnimationMixer(snapshot.scene);
+  for(const clip of snapshot.animations) mixer.clipAction(clip).play();
+  mixer.setTime(.225);
+  for(const target of targets) near(snapshot.scene.getObjectByProperty('uuid',target).rotation.y,-Math.PI/4);
+  snapshot.dispose();
 });
 
 test('selected product controller renders seven actions and disables unconfigured Open', () => {
@@ -149,4 +194,17 @@ test('admin saves model references in existing variant configuration and rejects
   assert.equal(stored.args.p_payload.configuration.assembly.slots[0].options[0].glbUrl, undefined);
   stored = undefined; anchorExists = false;
   assert.equal((await POST(request())).status, 400); assert.equal(stored, undefined);
+});
+
+test('admin rejects inactive or wrong-surface part materials before saving the variant', async () => {
+  const { NextRequest } = require('next/server');
+  const frameId='22222222-2222-4333-8444-555555555555';
+  let materials=[], saves=0;
+  const db = { from(table) { return {select(){return this;},in(){return this;},eq(){return this;},then(resolve,reject){return Promise.resolve({data:table==='material_definitions'?materials:[{id:frameId},{id,processing_status:'ready',glb_path:'door.glb',specifications:{type:'kitchen-part:door'}}],error:null}).then(resolve,reject);}};}, async rpc(){saves++;return {error:null};}};
+  const { POST } = loadSource('src/app/api/admin/kitchen-modules/route.ts',{'@/lib/supabase/admin':{getSupabaseAdmin:()=>db},'@/lib/supabase/requireAdmin':{requireAdmin:async()=>({userId:frameId})}});
+  const body={modelId:frameId,moduleId:frameId,opening:'doors',variantCode:'BASE-WHITE',doorCount:1,drawerCount:0,assembly:assembly([slot({anchorNode:undefined,options:[{...option,materialId:'oak'}]})])};
+  const request=()=>new NextRequest('http://localhost/api/admin/kitchen-modules',{method:'POST',body:JSON.stringify(body)});
+  assert.equal((await POST(request())).status,400);
+  materials=[{id:'oak',surface_kind:'handle'}]; assert.equal((await POST(request())).status,400); assert.equal(saves,0);
+  materials=[{id:'oak',surface_kind:'front'}]; assert.equal((await POST(request())).status,201); assert.equal(saves,1);
 });

@@ -8,24 +8,35 @@ export function KitchenExportButtons({
   root,
   name,
   disabled,
+  glbOnly = false,
+  authorize,
 }: {
   root: Group | null;
   name: string;
   disabled: boolean;
+  glbOnly?: boolean;
+  authorize?: () => boolean;
 }) {
   const [working, setWorking] = useState<"glb" | "skp" | "ar" | null>(null);
   const [message, setMessage] = useState("");
-  const [skpAvailable,setSkpAvailable]=useState(false);
+  const [skpAvailable, setSkpAvailable] = useState(false);
   const lock = useRef(false),
     request = useRef<AbortController | null>(null);
   useEffect(() => () => request.current?.abort(), []);
-  useEffect(()=>{
-    const controller=new AbortController();
-    fetch('/api/kitchen/export/skp',{signal:controller.signal,cache:'no-store'}).then(async response=>{
-      if(response.ok)setSkpAvailable((await response.json()).available===true);
-    }).catch(()=>{});
-    return ()=>controller.abort();
-  },[]);
+  useEffect(() => {
+    if (glbOnly) return;
+    const controller = new AbortController();
+    fetch("/api/kitchen/export/skp", {
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        if (response.ok)
+          setSkpAvailable((await response.json()).available === true);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [glbOnly]);
   async function exportFile(format: "glb" | "skp") {
     if (!root || disabled || lock.current) return;
     lock.current = true;
@@ -35,6 +46,8 @@ export function KitchenExportButtons({
     request.current = controller;
     const timeout = setTimeout(() => controller.abort(), 120000);
     try {
+      if (authorize && !authorize())
+        throw new Error("Нэвтрэлт өөрчлөгдсөн байна. Дахин нэвтэрнэ үү.");
       const { encodeKitchenGlb, downloadKitchenFile, kitchenExportFilename } =
         await import("@/three/kitchenExport");
       if (format === "skp") {
@@ -44,10 +57,10 @@ export function KitchenExportButtons({
         const status = await response.json();
         if (!response.ok || !status.available)
           throw new Error(
-            "SKP хөрвүүлэгч сервер хараахан холбогдоогүй байна. GLB-г SketchUp 2026-д File → Import хийж, Save As → .skp гэж хадгалж болно.",
+            "SKP хөрвүүлэгч сервер хараахан холбогдоогүй байна. SketchUp-ийн File → Import жагсаалтад GLB байхгүй бол SKP хөрвүүлэлт шаардлагатай.",
           );
       }
-      const data = await encodeKitchenGlb(root);
+      const data = await encodeKitchenGlb(root, format !== "skp");
       if (controller.signal.aborted) throw new Error("Экспорт цуцлагдлаа.");
       let blob = new Blob([data], { type: "model/gltf-binary" });
       if (format === "skp") {
@@ -64,6 +77,8 @@ export function KitchenExportButtons({
         blob = await response.blob();
       }
       if (controller.signal.aborted) return;
+      if (authorize && !authorize())
+        throw new Error("Нэвтрэлт өөрчлөгдсөн байна. Дахин нэвтэрнэ үү.");
       downloadKitchenFile(blob, kitchenExportFilename(name, format));
       setMessage(
         `${format.toUpperCase()} файл бэлэн. Шалгүй, тавилгын бүх 3D хэсгийг орууллаа.`,
@@ -84,37 +99,51 @@ export function KitchenExportButtons({
   return (
     <div className="km-export" aria-label="Гарнитурын 3D файл экспортлох">
       <div className="km-export-actions">
-        {(["glb", "skp"] as const).map((format) => (
-          <button
-            key={format}
-            type="button"
-            className="btn-ghost"
-            disabled={disabled || !root || !!working || (format==='skp'&&!skpAvailable)}
-            onClick={() => void exportFile(format)}
-          >
-            {working === format ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Download size={16} />
-            )}
-            {working === format
-              ? `${format.toUpperCase()} бэлдэж байна…`
-              : `${format.toUpperCase()} татах`}
-          </button>
-        ))}
+        {(glbOnly ? (["glb"] as const) : (["glb", "skp"] as const)).map(
+          (format) => (
+            <button
+              key={format}
+              type="button"
+              className="btn-ghost"
+              disabled={
+                disabled ||
+                !root ||
+                !!working ||
+                (format === "skp" && !skpAvailable)
+              }
+              onClick={() => void exportFile(format)}
+            >
+              {working === format ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Download size={16} />
+              )}
+              {working === format
+                ? `${format.toUpperCase()} бэлдэж байна…`
+                : `${format.toUpperCase()} татах`}
+            </button>
+          ),
+        )}
 
         <small>Бүх тавилга, материалтай · Шалгүй</small>
-        {!skpAvailable&&<small>SKP сервер холбогдоогүй. GLB-г SketchUp-д import хийгээд .skp болгон хадгална.</small>}
-        <KitchenARViewer
-          root={root}
-          name={name}
-          disabled={disabled || !!working}
-          onWorkingChange={(active) => {
-            lock.current = active;
+        {!glbOnly && !skpAvailable && (
+          <small>
+            SKP сервер холбогдоогүй. SketchUp-д GLB импортын сонголт байхгүй бол
+            SKP хөрвүүлэлт шаардлагатай.
+          </small>
+        )}
+        {!glbOnly && (
+          <KitchenARViewer
+            root={root}
+            name={name}
+            disabled={disabled || !!working}
+            onWorkingChange={(active) => {
+              lock.current = active;
 
-            setWorking(active ? "ar" : null);
-          }}
-        />
+              setWorking(active ? "ar" : null);
+            }}
+          />
+        )}
       </div>
       {message && (
         <p role="status" aria-live="polite">

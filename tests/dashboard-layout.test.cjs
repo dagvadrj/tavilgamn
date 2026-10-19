@@ -61,6 +61,7 @@ test("full admin sidebar preserves every operation and marks only the selected d
       "models",
       "kitchens",
       "merchant-ops",
+      "kitchen-library",
       "rooms",
       "settings",
       "profile",

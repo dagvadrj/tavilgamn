@@ -8,7 +8,7 @@ import type { KitchenExtra } from "./kitchenExtras";
 import type { CabinetComponent } from "./kitchenComponents";
 import type { Finish, FrontStyle } from "./kitchen";
 export const CABINET_WIDTHS = [300, 400, 450, 500, 600, 700, 800, 900] as const;
-export const BASE_CABINET_WIDTHS = [...CABINET_WIDTHS, 1000] as const;
+export const BASE_CABINET_WIDTHS = [150, 200, ...CABINET_WIDTHS, 1000] as const;
 export const cabinetWidths = (type: CabinetType) => type === "base" ? BASE_CABINET_WIDTHS : CABINET_WIDTHS;
 /** Cabinet presets stay discrete; appliances retain their measured integer footprint. */
 export type CabinetWidth = number;
@@ -161,10 +161,11 @@ export function validateCabinet(cabinet: ModularCabinet): string | null {
   const spec = CABINET_DEFAULTS[cabinet.type];
   if (!spec) return "Шүүгээний төрөл буруу байна.";
   const fridge = cabinet.opening === "refrigerator", directHood = cabinet.opening === "hood" && cabinet.hoodMount === "wall";
+  const catalogSize=typeof cabinet.variantId==="string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cabinet.variantId);
   if (!Number.isInteger(cabinet.width) || (fridge ? cabinet.width < 450 || cabinet.width > 1200
-    : !(cabinetWidths(cabinet.type) as readonly number[]).includes(cabinet.width) && !(cabinet.corner === true && cabinet.type === "base" && cabinet.width === 1000))) return fridge ? "Хөргөгчийн өргөн 450–1200 мм байна." : "Доод шүүгээ 300–1000 мм, дээд болон өндөр шүүгээ 300–900 мм байна.";
+    : catalogSize ? cabinet.width<150 || cabinet.width>2400 : !(cabinetWidths(cabinet.type) as readonly number[]).includes(cabinet.width) && !(cabinet.corner === true && cabinet.type === "base" && cabinet.width === 1000))) return fridge ? "Хөргөгчийн өргөн 450–1200 мм байна." : "Шүүгээний өргөн стандарт хэмжээтэй байна.";
   const heightRange = fridge ? REFRIGERATOR_LIMITS.height : directHood ? [200, 1200] : spec.heightRange;
-  const depthRange = fridge ? REFRIGERATOR_LIMITS.depth : directHood ? [250, 600] : spec.depthRange;
+  const depthRange = fridge ? REFRIGERATOR_LIMITS.depth : directHood ? [250, 600] : catalogSize ? [250,1200] : spec.depthRange;
   if (!Number.isInteger(cabinet.height) || cabinet.height < heightRange[0] || cabinet.height > heightRange[1]) return `Өндөр ${heightRange.join("–")} мм байна.`;
   if (!Number.isInteger(cabinet.depth) || cabinet.depth < depthRange[0] || cabinet.depth > depthRange[1]) return `Гүн ${depthRange.join("–")} мм байна.`;
   if (![1, 2].includes(cabinet.doorCount) || (!fridge && cabinet.width < 600 && cabinet.doorCount === 2)) return "Хос хаалганд 600 мм-ээс багагүй өргөн сонгоно уу.";

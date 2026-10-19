@@ -75,6 +75,12 @@ export const ADMIN_TABS = [
     short: "Merchant хяналт",
     icon: ShieldCheck,
   },
+  {
+    id: "kitchen-library",
+    label: "Гал тогооны GLB сан",
+    short: "Kitchen GLB",
+    icon: CookingPot,
+  },
   { id: "rooms", label: "Бэлэн өрөөнүүд", short: "Өрөөнүүд", icon: House },
   {
     id: "settings",
@@ -116,7 +122,14 @@ export function AdminSidebar({
     {
       label: "ХЭРЭГЛЭГЧ БА КОНТЕНТ",
       tabs: ADMIN_TABS.filter((item) =>
-        ["users", "messages", "models", "kitchens", "rooms"].includes(item.id),
+        [
+          "users",
+          "messages",
+          "models",
+          "kitchens",
+          "kitchen-library",
+          "rooms",
+        ].includes(item.id),
       ),
     },
   ];
