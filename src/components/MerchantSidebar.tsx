@@ -14,6 +14,8 @@ import {
   CircleHelp,
   UserRound,
   Truck,
+  Wallet,
+  ShieldCheck,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 import type { MerchantLocationTab } from "@/lib/merchantNavigation";
@@ -26,6 +28,8 @@ export const MERCHANT_TABS: {
   icon: typeof LayoutDashboard;
 }[] = [
   { id: "overview", label: "Ерөнхий тойм", icon: LayoutDashboard },
+  { id: "activation", label: "Дэлгүүр идэвхжүүлэх", icon: ShieldCheck },
+  { id: "wallet", label: "Хэтэвч, кредит", icon: Wallet },
   { id: "products", label: "Бүтээгдэхүүн", icon: Package },
   { id: "orders", label: "Захиалгууд", icon: ShoppingBag },
   { id: "delivery", label: "Хүргэлт", icon: Truck },
@@ -57,14 +61,21 @@ export function MerchantSidebar({
     const Icon = item.icon;
     const disabled =
       !hasStore &&
-      ["products", "orders", "delivery", "kitchens", "quotes"].includes(
-        item.id,
-      );
+      [
+        "products",
+        "orders",
+        "delivery",
+        "kitchens",
+        "quotes",
+        "activation",
+        "wallet",
+      ].includes(item.id);
     return (
       <button
         key={item.id}
         type="button"
         disabled={disabled}
+        aria-label={item.label}
         title={
           disabled ? "Эхлээд дэлгүүрийн мэдээллээ бүртгэнэ үү" : item.label
         }
@@ -108,7 +119,14 @@ export function MerchantSidebar({
         <div className="dashboard-nav-group">
           <p className="dashboard-nav-label">ДЭЛГҮҮР</p>
           {MERCHANT_TABS.filter((item) =>
-            ["overview", "products", "orders", "delivery"].includes(item.id),
+            [
+              "overview",
+              "activation",
+              "wallet",
+              "products",
+              "orders",
+              "delivery",
+            ].includes(item.id),
           ).map(renderItem)}
         </div>
         <div className="dashboard-nav-group">

@@ -9,6 +9,7 @@ import { ADMIN_TABS, type AdminTab } from "@/components/AdminSidebar";
 import { AdminMerchants } from "@/components/AdminMerchants";
 import { AdminShell } from "@/components/AdminShell";
 import { AdminAnalytics } from "@/components/AdminAnalytics";
+import { AdminMerchantGrowth } from "@/features/merchant/AdminMerchantGrowth";
 import { AdminKitchenDesigns } from "@/components/AdminKitchenDesigns";
 import { AdminRoomTemplates } from "@/components/AdminRoomTemplates";
 import { Package } from "lucide-react";
@@ -120,6 +121,7 @@ export function AdminDashboard({
       panelRef={panelRef}
     >
       {currentTab === "dashboard" && <AdminAnalytics />}
+      {currentTab === "merchant-ops" && <AdminMerchantGrowth />}
       {currentTab === "merchants" && <AdminMerchants />}
 
       {currentTab === "furniture" && (
@@ -171,7 +173,9 @@ export function AdminDashboard({
           designId={kitchenDesignId}
         />
       )}
-      {currentTab === "rooms" && <AdminRoomTemplates key={user.id} owner={user.id} />}
+      {currentTab === "rooms" && (
+        <AdminRoomTemplates key={user.id} owner={user.id} />
+      )}
       {currentTab === "settings" && (
         <>
           <DashboardSettings

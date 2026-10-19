@@ -6,11 +6,19 @@ test('dashboard statistics are scoped, payment-verified, date-correct and bounde
  create table orders(id uuid primary key,status text,delivery jsonb);
  create table merchant_order_fulfillments(order_id uuid,store_id text,owner_id uuid,delivery_stage text,created_at timestamptz,updated_at timestamptz,items jsonb,subtotal bigint,merchant_net bigint);
  create table order_cancellations(order_id uuid,status text);create table order_payments(order_id uuid,state text);
- create function merchant_delivery_store(actor uuid) returns text language plpgsql as $$declare result text;begin select s.id into result from public.merchant_stores s join public.profiles p on p.id=s.owner_id where s.owner_id=actor and p.role='merchant' and s.active;if result is null then raise insufficient_privilege;end if;return result;end$$;
+ create function merchant_delivery_store(actor uuid) returns text language plpgsql as $$declare result text;begin select s.id into result from public.merchant_stores s join public.profiles p on p.id=s.owner_id where s.owner_id=actor and p.role='merchant' and s.active for share;if result is null then raise insufficient_privilege;end if;return result;end$$;
  insert into profiles values('11111111-1111-4111-8111-111111111111','merchant'),('22222222-2222-4222-8222-222222222222','merchant');
  insert into merchant_stores values('alice','11111111-1111-4111-8111-111111111111',true),('bob','22222222-2222-4222-8222-222222222222',true);`);
  await db.exec(readFileSync('supabase/migrations/20261018171950_merchant_dashboard_statistics.sql','utf8'));
  const actor='11111111-1111-4111-8111-111111111111';
+ // Reproduce PostgREST's STABLE-function transaction mode. Its POST dispatcher
+ // must choose READ WRITE for these RPCs because the ownership helper locks rows.
+ await db.exec('begin read only');
+ await assert.rejects(db.query('select merchant_dashboard_progress($1)',[actor]),{code:'25006'});
+ await db.exec('rollback');
+ await db.exec(readFileSync('supabase/migrations/20261018180530_merchant_statistics_lock_compatibility.sql','utf8'));
+ const volatility=(await db.query("select provolatile from pg_proc where proname in ('merchant_dashboard_progress','merchant_dashboard_trends')")).rows;
+ assert.equal(volatility.length,2);assert.ok(volatility.every(row=>row.provolatile==='v'));
  for(let i=1;i<=25;i++){
   const id=`aaaaaaaa-aaaa-4aaa-8aaa-${String(i).padStart(12,'0')}`;
   await db.query(`insert into orders values($1,$2,'{"name":"Customer","address":"secret-address"}');`,[id,i===1?'pending_payment':i===2?'cancelled':'paid']);

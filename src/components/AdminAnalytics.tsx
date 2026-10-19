@@ -15,6 +15,10 @@ import {
 
 import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
+import {
+  DashboardBarChart,
+  DashboardDonut,
+} from "@/features/dashboard/DashboardCharts";
 import { OrderHistory } from "@/components/OrderHistory";
 
 type TopMerchant = {
@@ -231,11 +235,6 @@ function ratio(value: string, total: string) {
 
 function RevenuePanels({ result }: { result: Analytics }) {
   const merchants = result.topMerchants.slice(0, 5);
-  const maxRevenue = merchants.reduce(
-    (max, merchant) =>
-      BigInt(merchant.grossRevenue) > BigInt(max) ? merchant.grossRevenue : max,
-    "0",
-  );
   const total = (
     BigInt(result.platformRevenue) + BigInt(result.merchantNet)
   ).toString();
@@ -252,37 +251,35 @@ function RevenuePanels({ result }: { result: Analytics }) {
           </div>
           <TrendingUp size={18} />
         </header>
-        {merchants.length ? (
-          <ul className="reference-revenue-bars">
-            {merchants.map((merchant, index) => (
-              <li key={merchant.id}>
-                <div>
-                  <span>
-                    <i>{index + 1}</i>
-                    {merchant.name}
-                  </span>
-                  <strong>{money(merchant.grossRevenue)}</strong>
-                </div>
-                <div className="reference-bar-track" aria-hidden="true">
-                  <span
-                    style={{
-                      width: ratio(merchant.grossRevenue, maxRevenue) + "%",
-                    }}
-                  />
-                </div>
+        <DashboardBarChart
+          data={merchants.map((merchant) => ({
+            label: merchant.name,
+            primary: Number(merchant.merchantNet),
+            secondary: Number(merchant.platformRevenue),
+            primaryDisplay: money(merchant.merchantNet),
+            secondaryDisplay: money(merchant.platformRevenue),
+          }))}
+          primaryLabel="Дэлгүүрийн цэвэр орлого"
+          secondaryLabel="Платформын шимтгэл"
+          formatValue={(value) => value.toLocaleString("mn-MN") + " ₮"}
+        />
+        <ul className="v14-merchant-ranking">
+          {merchants.map((merchant, index) => (
+            <li key={merchant.id}>
+              <span>
+                <i>{String(index + 1).padStart(2, "0")}</i>
+                {merchant.name}
+              </span>
+              <strong>
+                {money(merchant.grossRevenue)}
                 <small>
-                  Fee {money(merchant.platformRevenue)} ·{" "}
-                  {(merchant.commissionBps / 100).toFixed(1)}% ·{" "}
-                  {count(merchant.orders)} захиалга
+                  {count(merchant.orders)} захиалга ·{" "}
+                  {(merchant.commissionBps / 100).toFixed(1)}%
                 </small>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="reference-empty">
-            Төлөгдсөн борлуулалтын мэдээлэл одоогоор алга.
-          </div>
-        )}
+              </strong>
+            </li>
+          ))}
+        </ul>
       </section>
       <section
         className="reference-panel reference-split-panel"
@@ -294,27 +291,22 @@ function RevenuePanels({ result }: { result: Analytics }) {
             <p>GMV → Merchant net + Platform fee</p>
           </div>
         </header>
-        <div className="reference-split-labels">
-          <span>Merchant {ratio(result.merchantNet, total).toFixed(1)}%</span>
-          <span>Fee {ratio(result.platformRevenue, total).toFixed(1)}%</span>
-        </div>
-        <div className="reference-revenue-split" aria-hidden="true">
-          <span style={{ width: ratio(result.merchantNet, total) + "%" }} />
-          <span style={{ width: ratio(result.platformRevenue, total) + "%" }} />
-        </div>
-        <dl className="reference-revenue-legend">
-          <div>
-            <dt>Merchant цэвэр дүн</dt>
-            <dd>{money(result.merchantNet)}</dd>
-          </div>
-          <div>
-            <dt>Платформын орлого</dt>
-            <dd>{money(result.platformRevenue)}</dd>
-          </div>
-        </dl>
-        {BigInt(total) === 0n && (
-          <p>Төлөгдсөн борлуулалт хараахан бүртгэгдээгүй.</p>
-        )}
+        <DashboardDonut
+          segments={[
+            {
+              label: "Дэлгүүрийн цэвэр орлого",
+              value: Number(result.merchantNet),
+              display: money(result.merchantNet),
+            },
+            {
+              label: "Платформын шимтгэл",
+              value: Number(result.platformRevenue),
+              display: money(result.platformRevenue),
+            },
+          ]}
+          center={ratio(result.merchantNet, total).toFixed(1) + "%"}
+          caption="Дэлгүүрүүдэд"
+        />
         <div className="reference-pipeline">
           <div>
             <Box size={17} />

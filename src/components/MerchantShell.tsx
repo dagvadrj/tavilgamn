@@ -1,5 +1,9 @@
 "use client";
 
+import { DashboardNavigation } from "@/features/dashboard/DashboardNavigation";
+import { MerchantBalanceChip } from "@/features/merchant/MerchantGrowth";
+import "@/features/dashboard/dashboard-v14.css";
+
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import {
   MerchantSidebar,
@@ -50,7 +54,7 @@ export function MerchantShell({
 
   return (
     <div
-      className="merchant-app-shell dashboard-shell dashboard-themed-shell"
+      className="merchant-app-shell dashboard-shell dashboard-themed-shell dashboard-v14"
       data-theme={preferences?.theme ?? "dark"}
       data-density={preferences?.density ?? "comfortable"}
       data-text-size={preferences?.textSize ?? "standard"}
@@ -67,7 +71,28 @@ export function MerchantShell({
 
       <div className="merchant-workspace dashboard-workspace">
         <MerchantHeader
+          balances={
+            <MerchantBalanceChip
+              owner={owner}
+              enabled={hasStore}
+              onOpen={() => changeTab("wallet")}
+            />
+          }
+          navigation={
+            <DashboardNavigation
+              tabs={MERCHANT_TABS.filter((tab) =>
+                ["overview", "products", "orders", "delivery"].includes(tab.id),
+              ).map((tab) => ({
+                ...tab,
+                disabled: !hasStore && tab.id !== "overview",
+              }))}
+              active={active}
+              onChange={changeTab}
+            />
+          }
           storeName={storeName}
+          userName={userName}
+          onProfile={() => changeTab("profile")}
           owner={owner}
           onHome={() => changeTab("overview")}
           onKitchens={onOpenKitchen}

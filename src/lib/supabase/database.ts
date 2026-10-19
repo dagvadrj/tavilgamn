@@ -16,12 +16,81 @@ type NullableArgs = {
   save_furniture_product: "p_expected_stock";
 };
 type Functions = Generated["public"]["Functions"] & {
-  merchant_dashboard_progress: { Args: { p_actor: string; p_date?: string; p_page?: number }; Returns: import("./database.types").Json };
-  merchant_dashboard_trends: { Args: { p_actor: string }; Returns: import("./database.types").Json };
-  read_merchant_delivery_staff: { Args: { p_actor: string }; Returns: import("./database.types").Json };
-  save_merchant_delivery_staff: { Args: { p_actor: string; p_id: string | null; p_expected_version: number | null; p_name: string; p_phone: string; p_vehicle: string; p_active: boolean }; Returns: import("./database.types").Json };
-  read_merchant_delivery_orders: { Args: { p_actor: string; p_stage: string; p_page?: number }; Returns: import("./database.types").Json };
-  move_merchant_delivery_order: { Args: { p_actor: string; p_order: string; p_stage: string; p_expected_version: number; p_driver?: string | null }; Returns: import("./database.types").Json };
+  read_merchant_growth: {
+    Args: { p_actor: string };
+    Returns: import("./database.types").Json;
+  };
+  save_merchant_growth: {
+    Args: {
+      p_actor: string;
+      p_action: string;
+      p_data: import("./database.types").Json;
+    };
+    Returns: import("./database.types").Json;
+  };
+  merchant_wallet_action: {
+    Args: {
+      p_actor: string;
+      p_kind: string;
+      p_quantity: number;
+      p_request: string;
+    };
+    Returns: import("./database.types").Json;
+  };
+  admin_merchant_growth: {
+    Args: {
+      p_actor: string;
+      p_action?: string;
+      p_data?: import("./database.types").Json;
+    };
+    Returns: import("./database.types").Json;
+  };
+  merchant_growth_insights: {
+    Args: { p_actor: string; p_days: number };
+    Returns: import("./database.types").Json;
+  };
+  resolve_merchant_store_link: {
+    Args: { p_key: string };
+    Returns: import("./database.types").Json;
+  };
+  merchant_dashboard_progress: {
+    Args: { p_actor: string; p_date?: string; p_page?: number };
+    Returns: import("./database.types").Json;
+  };
+  merchant_dashboard_trends: {
+    Args: { p_actor: string };
+    Returns: import("./database.types").Json;
+  };
+  read_merchant_delivery_staff: {
+    Args: { p_actor: string };
+    Returns: import("./database.types").Json;
+  };
+  save_merchant_delivery_staff: {
+    Args: {
+      p_actor: string;
+      p_id: string | null;
+      p_expected_version: number | null;
+      p_name: string;
+      p_phone: string;
+      p_vehicle: string;
+      p_active: boolean;
+    };
+    Returns: import("./database.types").Json;
+  };
+  read_merchant_delivery_orders: {
+    Args: { p_actor: string; p_stage: string; p_page?: number };
+    Returns: import("./database.types").Json;
+  };
+  move_merchant_delivery_order: {
+    Args: {
+      p_actor: string;
+      p_order: string;
+      p_stage: string;
+      p_expected_version: number;
+      p_driver?: string | null;
+    };
+    Returns: import("./database.types").Json;
+  };
 };
 type Rpc<Name extends keyof Functions> = Name extends keyof NullableArgs
   ? Omit<Functions[Name], "Args"> & {
@@ -37,7 +106,15 @@ export type Database = Omit<Generated, "public"> & {
     Tables: Generated["public"]["Tables"] & {
       room_templates: {
         Row: RoomTemplateRow;
-        Insert: Omit<RoomTemplateRow, "id" | "created_at" | "updated_at" | "version"> & { id?: string; created_at?: string; updated_at?: string; version?: number };
+        Insert: Omit<
+          RoomTemplateRow,
+          "id" | "created_at" | "updated_at" | "version"
+        > & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          version?: number;
+        };
         Update: Partial<RoomTemplateRow>;
         Relationships: [];
       };
@@ -71,8 +148,19 @@ export type Database = Omit<Generated, "public"> & {
 };
 
 export type RoomTemplateRow = {
-  id: string; title: string; description: string; kind: string; furnishing: string;
-  room_type: string; area: number; preview_image: string;
-  design: import("./database.types").Json; status: string; sort_order: number;
-  version: number; updated_by: string | null; created_at: string; updated_at: string;
-}
+  id: string;
+  title: string;
+  description: string;
+  kind: string;
+  furnishing: string;
+  room_type: string;
+  area: number;
+  preview_image: string;
+  design: import("./database.types").Json;
+  status: string;
+  sort_order: number;
+  version: number;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};

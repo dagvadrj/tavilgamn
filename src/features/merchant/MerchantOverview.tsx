@@ -21,12 +21,13 @@ import { STORE_TYPES } from "@/lib/storeTypes";
 import { useMerchantAnalytics } from "@/components/MerchantAnalytics";
 import { type MerchantProduct } from "@/features/merchant/merchantApi";
 import { MerchantDashboardLayout } from "./MerchantDashboardLayout";
+import { MerchantLaunchCard, MerchantStoreShare } from "./MerchantGrowth";
+import { MerchantInsights } from "./MerchantInsights";
 import { useMerchantResource } from "./useMerchantResource";
 import {
   AnimatedNumber,
   StatSkeleton,
   OrderProgressCards,
-  MerchantTrends,
   todayInUlaanbaatar,
   type ProgressStats,
 } from "./MerchantStats";
@@ -35,12 +36,12 @@ import "./merchant-stats.css";
 const numberLabel = (value: string) => BigInt(value).toLocaleString("mn-MN");
 const money = (value: string) => numberLabel(value) + " ₮";
 const colors = [
-  "#0866e8",
-  "#0876c2",
-  "#22252b",
-  "#64748b",
-  "#a6caff",
-  "#7db7df",
+  "#f26440",
+  "#25232b",
+  "#f6ae95",
+  "#92909e",
+  "#e9d1c7",
+  "#c5c2d0",
 ];
 
 export function MerchantOverview({
@@ -52,6 +53,7 @@ export function MerchantOverview({
   onQuotes,
   onOrders,
   onDelivery,
+  onGrowth,
   storePending = false,
   mode = "all",
   customizing,
@@ -65,6 +67,7 @@ export function MerchantOverview({
   onQuotes?: () => void;
   onOrders?: () => void;
   onDelivery?: () => void;
+  onGrowth?: (section: "activation" | "wallet") => void;
   storePending?: boolean;
   mode?: DashboardPreferences["overview"];
   customizing?: boolean;
@@ -103,20 +106,29 @@ export function MerchantOverview({
     error = inventory.error;
   if (!store && !storePending)
     return (
-      <section className="merchant-empty-dashboard">
-        <span className="merchant-overview-icon">
-          <StoreIcon size={26} />
-        </span>
-        <h1>Дэлгүүрээ эхлээд бүртгэнэ үү</h1>
-        <p>
-          Дэлгүүрийн үндсэн мэдээллээ бүртгэсний дараа бүтээгдэхүүн, нөөц болон
-          захиалгын самбар идэвхжинэ.
-        </p>
-        <button type="button" className="btn-primary" onClick={onStore}>
-          Дэлгүүр нээх
-          <ArrowUpRight size={16} />
-        </button>
-      </section>
+      <>
+        <MerchantLaunchCard
+          owner={owner}
+          store={null}
+          onSetup={onStore}
+          onProducts={onProducts}
+          onStore={onStore}
+        />
+        <section className="merchant-empty-dashboard">
+          <span className="merchant-overview-icon">
+            <StoreIcon size={26} />
+          </span>
+          <h1>Дэлгүүрээ эхлээд бүртгэнэ үү</h1>
+          <p>
+            Дэлгүүрийн үндсэн мэдээллээ бүртгэсний дараа бүтээгдэхүүн, нөөц
+            болон захиалгын самбар идэвхжинэ.
+          </p>
+          <button type="button" className="btn-primary" onClick={onStore}>
+            Дэлгүүр нээх
+            <ArrowUpRight size={16} />
+          </button>
+        </section>
+      </>
     );
   const a = finance.analytics;
   const stock = products.reduce((sum, p) => sum + (p.stockQuantity ?? 0), 0);
@@ -179,6 +191,13 @@ export function MerchantOverview({
           Шинэчлэх
         </button>
       </div>
+      <MerchantLaunchCard
+        owner={owner}
+        store={store}
+        onSetup={() => (onGrowth ? onGrowth("activation") : onStore())}
+        onProducts={onAddProduct ?? onProducts}
+        onStore={onStore}
+      />
       <nav
         className="merchant-stats-tabs"
         aria-label="Dashboard статистикийн хэсгүүд"
@@ -226,6 +245,7 @@ export function MerchantOverview({
                 {STORE_TYPES.find((type) => type.id === store.storeType)
                   ?.label ?? store.storeType}
               </p>
+              <MerchantStoreShare owner={owner} store={store} />
             </div>
           </div>
           <div className="reference-banner-actions">
@@ -248,73 +268,6 @@ export function MerchantOverview({
       ) : !store ? (
         <StatSkeleton rows={1} />
       ) : null}
-      {section !== "inventory" && (
-        <OrderProgressCards
-          stats={progress.data}
-          loading={progress.loading}
-          error={progress.error}
-          date={date}
-          page={orderPage}
-          onDate={(day) => {
-            setDate(day);
-            setOrderPage(0);
-          }}
-          onPage={setOrderPage}
-          onRetry={progress.refresh}
-          onDelivery={onDelivery}
-        />
-      )}
-      {(section === "overview" || section === "sales") && (
-        <div className="merchant-stat-grid">
-          <MerchantTrends
-            owner={owner}
-            enabled={Boolean(store) || storePending}
-          />
-          <section className="merchant-stat-panel">
-            <header>
-              <div>
-                <h2>Захиалгын насжилт</h2>
-                <p>Дуусаагүй захиалга · хүлээгдэж буй хугацаагаар</p>
-              </div>
-            </header>
-            {!progress.data && progress.error ? (
-              <p className="merchant-error">
-                Насжилтын мэдээлэл ачаалагдаагүй.
-              </p>
-            ) : !progress.data ? (
-              <StatSkeleton rows={4} />
-            ) : (
-              <>
-                <div className="merchant-aging-bars">
-                  {progress.data.aging.map((count, index) => (
-                    <div key={index}>
-                      <strong>
-                        <AnimatedNumber value={count} />
-                      </strong>
-                      <i
-                        style={{
-                          height:
-                            15 +
-                            (count / Math.max(1, ...progress.data!.aging)) *
-                              100 +
-                            "px",
-                        }}
-                      />
-                      <span>
-                        {["0–1 өдөр", "1–3 өдөр", "3–7 өдөр", "7+ өдөр"][index]}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <p className="merchant-progress-caption">
-                  {progress.data.held} захиалга төлбөр эсвэл цуцлах хүсэлт
-                  хүлээж байна.
-                </p>
-              </>
-            )}
-          </section>
-        </div>
-      )}
       {finance.error && (
         <div className="reference-error" role="alert">
           {finance.error}
@@ -337,6 +290,62 @@ export function MerchantOverview({
           storeId={store?.id ?? "loading"}
           editing={customizing ?? localEditing}
           onEditingChange={onCustomize ?? setLocalEditing}
+          analytics={
+            (section === "overview" || section === "sales") && (
+              <MerchantInsights
+                owner={owner}
+                enabled={Boolean(store) || storePending}
+              >
+                <section className="merchant-stat-panel v14-aging-panel">
+                  <header>
+                    <div>
+                      <h2>Захиалгын насжилт</h2>
+                      <p>Дуусаагүй захиалга · хүлээгдэж буй хугацаагаар</p>
+                    </div>
+                  </header>
+                  {!progress.data && progress.error ? (
+                    <p className="merchant-error">
+                      Насжилтын мэдээлэл ачаалагдаагүй.
+                    </p>
+                  ) : !progress.data ? (
+                    <StatSkeleton rows={4} />
+                  ) : (
+                    <>
+                      <div className="merchant-aging-bars">
+                        {progress.data.aging.map((count, index) => (
+                          <div key={index}>
+                            <strong>
+                              <AnimatedNumber value={count} />
+                            </strong>
+                            <i
+                              style={{
+                                height:
+                                  (count /
+                                    Math.max(1, ...progress.data!.aging)) *
+                                    100 +
+                                  "px",
+                              }}
+                            />
+                            <span>
+                              {
+                                ["0–1 өдөр", "1–3 өдөр", "3–7 өдөр", "7+ өдөр"][
+                                  index
+                                ]
+                              }
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="merchant-progress-caption">
+                        {progress.data.held} захиалга төлбөр эсвэл цуцлах хүсэлт
+                        хүлээж байна.
+                      </p>
+                    </>
+                  )}
+                </section>
+              </MerchantInsights>
+            )
+          }
           kpis={{
             revenue: showSales ? (
               <article className="reference-kpi is-featured">
@@ -637,6 +646,22 @@ export function MerchantOverview({
           }}
         />
       </div>
+      {section !== "inventory" && (
+        <OrderProgressCards
+          stats={progress.data}
+          loading={progress.loading}
+          error={progress.error}
+          date={date}
+          page={orderPage}
+          onDate={(day) => {
+            setDate(day);
+            setOrderPage(0);
+          }}
+          onPage={setOrderPage}
+          onRetry={progress.refresh}
+          onDelivery={onDelivery}
+        />
+      )}
     </section>
   );
 }

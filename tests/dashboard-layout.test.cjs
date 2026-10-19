@@ -30,7 +30,10 @@ test("admin and merchant keep public URLs but no longer inherit storefront chrom
   const admin = read("src/components/AdminDashboard.tsx");
   assert.match(admin, /<main\s+id="main-content"/);
   assert.match(admin, /<AdminShell\b/);
-  assert.match(read("src/components/AdminShell.tsx"), /<main\s+id="main-content"/);
+  assert.match(
+    read("src/components/AdminShell.tsx"),
+    /<main\s+id="main-content"/,
+  );
   assert.ok(fs.existsSync("src/app/(admin)/admin/page.tsx"));
   assert.ok(fs.existsSync("src/app/(admin)/merchant/page.tsx"));
   assert.equal(fs.existsSync("src/app/(shop)/merchant/page.tsx"), false);
@@ -57,6 +60,7 @@ test("full admin sidebar preserves every operation and marks only the selected d
       "messages",
       "models",
       "kitchens",
+      "merchant-ops",
       "rooms",
       "settings",
       "profile",
@@ -87,7 +91,19 @@ test("merchant sidebar keeps all operations and settings and disables private st
   );
   assert.deepEqual(
     MERCHANT_TABS.map((tab) => tab.id),
-    ["overview", "products", "orders", "delivery", "kitchens", "quotes", "store", "settings", "profile"],
+    [
+      "overview",
+      "activation",
+      "wallet",
+      "products",
+      "orders",
+      "delivery",
+      "kitchens",
+      "quotes",
+      "store",
+      "settings",
+      "profile",
+    ],
   );
   const props = {
     active: "overview",
@@ -103,7 +119,7 @@ test("merchant sidebar keeps all operations and settings and disables private st
   );
   for (const tab of MERCHANT_TABS)
     assert.ok(locked.includes(tab.label), `Missing ${tab.label}`);
-  assert.equal((locked.match(/disabled=""/g) ?? []).length, 5);
+  assert.equal((locked.match(/disabled=""/g) ?? []).length, 7);
   assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 1);
   const unlocked = desktopMarkup(
     renderToStaticMarkup(
@@ -163,12 +179,18 @@ test("merchant breadcrumb replaces the large header and retains mobile navigatio
   const menu = buttons.find((button) => button.props["aria-controls"]);
   assert.equal(menu.props["aria-controls"], "merchant-dashboard-navigation");
   assert.equal(menu.props["aria-expanded"], false);
-  const home = buttons.find((button) => button.props["aria-label"] === "Дэлгүүрийн ерөнхий тойм");
+  const home = buttons.find(
+    (button) => button.props["aria-label"] === "Дэлгүүрийн ерөнхий тойм",
+  );
   home.props.onClick();
   menu.props.onClick();
   assert.deepEqual(calls, ["overview", "menu"]);
-  assert.equal(elements(tree, node => node.type === "header").length, 0);
-  assert.equal(elements(tree, node => node.props["aria-current"] === "page")[0].props.children, "Ерөнхий тойм");
+  assert.equal(elements(tree, (node) => node.type === "header").length, 0);
+  assert.equal(
+    elements(tree, (node) => node.props["aria-current"] === "page")[0].props
+      .children,
+    "Ерөнхий тойм",
+  );
 });
 
 test("admin header navigation has working callbacks and exposes matching dialog state", () => {

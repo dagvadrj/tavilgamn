@@ -1,10 +1,15 @@
 "use client";
+import type { ReactNode } from "react";
 
 import { ChevronRight, House, Menu } from "lucide-react";
 import { MerchantNotifications } from "./MerchantNotifications";
 
 /** A location trail replaces the dashboard's large header panel. */
 export function MerchantHeader({
+  navigation,
+  balances,
+  userName,
+  onProfile,
   storeName,
   owner,
   onHome,
@@ -13,6 +18,10 @@ export function MerchantHeader({
   sidebarOpen,
   onToggleSidebar,
 }: {
+  navigation?: ReactNode;
+  balances?: ReactNode;
+  userName?: string;
+  onProfile?: () => void;
   storeName: string;
   owner: string;
   onHome: () => void;
@@ -51,7 +60,25 @@ export function MerchantHeader({
           </li>
         </ol>
       </nav>
+      {navigation}
+      {balances}
       <MerchantNotifications owner={owner} onKitchens={onKitchens} />
+      {onProfile && (
+        <button
+          type="button"
+          className="v14-profile"
+          onClick={onProfile}
+          aria-label={`${userName ?? "Миний"} — бүртгэл`}
+        >
+          <span className="v14-profile-avatar">
+            {userName?.trim().slice(0, 1) || "M"}
+          </span>
+          <span>
+            <strong>{userName}</strong>
+            <small>{storeName}</small>
+          </span>
+        </button>
+      )}
     </div>
   );
 }

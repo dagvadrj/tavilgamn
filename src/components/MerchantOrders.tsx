@@ -10,6 +10,7 @@ import {
   Truck,
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
+import { merchantRequest } from "@/features/merchant/merchantApi";
 import { useAuth } from "@/store/auth";
 import { formatPrice } from "@/lib/format";
 import type { DeliveryAddress, OrderLine } from "@/lib/orders";
@@ -69,14 +70,11 @@ export function MerchantOrders({
     setResult(null);
     void (async () => {
       try {
-        const response = await authFetch(
+        const data = await merchantRequest<{ orders: MerchantOrder[]; hasMore: boolean }>(
           `/api/merchant/orders?page=${page}`,
-          { signal: controller.signal },
           owner,
+          { signal: controller.signal },
         );
-        const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.error ?? "Захиалгыг ачаалж чадсангүй.");
         if (active && isOwner(owner)) setResult(data);
       } catch (reason) {
         if (active)

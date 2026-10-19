@@ -171,12 +171,14 @@ export function MerchantDashboardLayout({
   storeId,
   kpis,
   widgets,
+  analytics,
   editing,
   onEditingChange,
 }: {
   owner: string;
   storeId: string;
   kpis: Partial<Record<KpiId, ReactNode>>;
+  analytics?: ReactNode;
   widgets: Partial<Record<WidgetId, ReactNode>>;
   editing: boolean;
   onEditingChange: (editing: boolean) => void;
@@ -250,6 +252,7 @@ export function MerchantDashboardLayout({
           if (next !== layout.kpis) save({ ...layout, kpis: next });
         }}
       />
+      {analytics}
       <SortableRegion
         key={`widgets-${enabled}-${[...widgetIds].sort().join()}`}
         ids={widgetIds}

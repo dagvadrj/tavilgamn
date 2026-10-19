@@ -14,6 +14,7 @@ import {
   Send,
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
+import { merchantRequest } from "@/features/merchant/merchantApi";
 import { formatPrice } from "@/lib/format";
 import type { KitchenQuoteStatus } from "@/lib/kitchenQuotes";
 import { useAuth } from "@/store/auth";
@@ -66,16 +67,11 @@ export function MerchantKitchenQuotes({ owner }: { owner: string }) {
     setError(null);
     void (async () => {
       try {
-        const response = await authFetch(
+        const data = await merchantRequest<{ quotes: MerchantKitchenQuote[]; hasMore: boolean }>(
           `/api/merchant/kitchen-quotes?page=${page}${quoteId ? `&quote=${quoteId}` : ""}`,
-          { signal: controller.signal },
           owner,
+          { signal: controller.signal },
         );
-        const data = await response.json().catch(() => null);
-        if (!response.ok || !data)
-          throw new Error(
-            data?.error ?? "Үнийн хүсэлтүүдийг ачаалж чадсангүй.",
-          );
         if (active && isOwner(owner)) setResult(data);
       } catch (reason) {
         if (active && !controller.signal.aborted) {

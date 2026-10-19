@@ -6,6 +6,7 @@ import {
   clearDashboardDraft,
 } from "@/hooks/useDashboardDraft";
 import { MerchantFormHeader } from "./MerchantFormHeader";
+import { MerchantModelAttachment } from "./MerchantModelAttachment";
 import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 import { useEffect, useState } from "react";
 import Image from "next/image";
@@ -602,6 +603,18 @@ export function MerchantProductEditor({
                 </span>
               </label>
 
+              {create ? (
+                <p>
+                  Өөрийн .glb / .gltf загварыг хавсаргах бол эхлээд бараагаа
+                  хадгалаад “Засах” хэсгийг нээнэ үү.
+                </p>
+              ) : (
+                <MerchantModelAttachment
+                  owner={owner}
+                  productId={product.id}
+                  onBusy={setBusy}
+                />
+              )}
               {modelRequested && (
                 <p>
                   <Box size={15} />

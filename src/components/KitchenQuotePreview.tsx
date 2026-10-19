@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { authFetch } from "@/lib/authFetch";
+import { merchantRequest } from "@/features/merchant/merchantApi";
 import { parseKitchen } from "@/lib/kitchenAssembly";
 import type { ModularKitchen } from "@/lib/kitchenCabinets";
 import { buildKitchenBom } from "@/lib/kitchenBom";
@@ -25,10 +25,8 @@ export function KitchenQuotePreview({ owner, quoteId }: { owner: string; quoteId
     const previewDialog = dialog.current;
     previewDialog?.showModal();
     const controller = new AbortController(); setData(null); setError("");
-    void authFetch(`/api/merchant/kitchen-quotes/${quoteId}/project`, { signal: controller.signal }, owner)
-      .then(async response => {
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error ?? "Загвар ачаалагдсангүй.");
+    void merchantRequest<{ name: string; design: ModularKitchen }>(`/api/merchant/kitchen-quotes/${quoteId}/project`, owner, { signal: controller.signal })
+      .then(result => {
         if (!controller.signal.aborted) setData({ name: result.name, design: parseKitchen(result.design) });
       }).catch(error => { if (!controller.signal.aborted) setError(error instanceof Error ? error.message : "Загвар ачаалагдсангүй."); });
     return () => { controller.abort(); previewDialog?.close(); };

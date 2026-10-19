@@ -3,6 +3,7 @@
 import { useAuth } from "@/store/auth";
 import { authFetch } from "@/lib/authFetch";
 import type { Product } from "@/lib/types";
+import { merchantQueryFor } from "./merchantQueries";
 
 export type MerchantProduct = Product & {
   modelRequested?: boolean;
@@ -59,13 +60,73 @@ export async function merchantRequest<T>(
   owner: string,
   init?: RequestInit,
 ): Promise<T> {
-  const response = await authFetch(path, init, owner);
-  const result = await response.json().catch(() => null);
-  if (!response.ok || !result)
-    throw new Error(
-      result?.error ?? "Мэдээллийг ачаалж чадсангүй. Дахин оролдоно уу.",
-    );
   if (!isOwner(owner))
     throw new Error("Нэвтрэлт өөрчлөгдсөн байна. Дахин нэвтэрнэ үү.");
-  return result as T;
+  const query =
+    !init?.method || init.method.toUpperCase() === "GET"
+      ? merchantQueryFor(path)
+      : null;
+  let variables: Record<string, unknown> | undefined = query?.variables;
+  const products: MerchantProduct[] = [],
+    cursors = new Set<string>();
+  for (;;) {
+    const response = await authFetch(
+      query ? "/api/merchant/graphql" : path,
+      query
+        ? {
+            ...init,
+            method: "POST",
+            headers: {
+              ...init?.headers,
+              "Content-Type": "application/json",
+              Accept: "application/graphql-response+json, application/json",
+            },
+            body: JSON.stringify({
+              query: query.query,
+              operationName: query.operationName,
+              variables,
+            }),
+          }
+        : init,
+      owner,
+    );
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result)
+      throw new Error(
+        result?.error ??
+          result?.errors?.[0]?.message ??
+          "Мэдээллийг ачаалж чадсангүй. Дахин оролдоно уу.",
+      );
+    if (!isOwner(owner))
+      throw new Error("Нэвтрэлт өөрчлөгдсөн байна. Дахин нэвтэрнэ үү.");
+    if (query) {
+      if (
+        result.errors?.length ||
+        !result.data ||
+        !(query.field in result.data)
+      )
+        throw new Error(
+          result.errors?.[0]?.message ?? "GraphQL мэдээллийг ачаалж чадсангүй.",
+        );
+      if (query.paginate) {
+        const page = result.data[query.field];
+        if (!Array.isArray(page?.products))
+          throw new Error("Барааны мэдээлэл буруу байна.");
+        products.push(...page.products);
+        if (page.nextCursor != null) {
+          if (
+            typeof page.nextCursor !== "string" ||
+            cursors.has(page.nextCursor)
+          )
+            throw new Error("Барааны хуудас давтагдсан байна.");
+          cursors.add(page.nextCursor);
+          variables = { ...variables, after: page.nextCursor };
+          continue;
+        }
+        return { products } as T;
+      }
+      return (query.wrap ? result.data : result.data[query.field]) as T;
+    }
+    return result as T;
+  }
 }

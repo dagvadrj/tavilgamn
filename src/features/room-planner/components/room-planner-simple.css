@@ -1,24 +1,42 @@
-/* The room editor has one canvas and one dismissible inspector. Kitchen styles stay shared. */
+/* Own the room grid and overlays even when shared planner CSS loads later on navigation. */
 
-.planner-reference.room-simple {
+.planner-workspace.planner-reference.room-simple {
   --reference-header: 76px;
+  position: relative;
   display: grid;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  height: 100dvh;
+  min-height: 0;
+  margin: 0;
+  gap: 0;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   padding: var(--reference-header) 0 0;
   background: #cdcecc;
 }
 
-.planner-reference.room-simple.room-panel-open {
+.planner-workspace.planner-reference.room-simple.planner-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.planner-workspace.planner-reference.room-simple.room-panel-open {
   grid-template-columns: minmax(0, 1fr) 360px;
 }
 
-.planner-reference.room-simple > .planner-stage {
+.planner-workspace.planner-reference.room-simple > .planner-stage {
   grid-column: 1;
   grid-row: 1;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
 }
 
-.planner-reference.room-simple > .planner-drawer {
+.planner-workspace.planner-reference.room-simple > .planner-drawer {
   position: relative;
   inset: auto;
   grid-column: 2;
@@ -31,23 +49,23 @@
   border-left: 1px solid #dededc;
 }
 
-.room-simple .planner-drawer-heading {
+.planner-workspace.planner-reference.room-simple .planner-drawer-heading {
   display: flex;
   min-height: 64px;
   padding: 12px 18px;
   font-weight: 650;
 }
 
-.room-simple .planner-drawer-heading button {
+.planner-workspace.planner-reference.room-simple .planner-drawer-heading button {
   width: 44px;
   height: 44px;
 }
 
-.room-simple .planner-drawer-backdrop {
+.planner-workspace.planner-reference.room-simple .planner-drawer-backdrop {
   display: none;
 }
 
-.room-simple .room-studio-header {
+.planner-workspace.planner-reference.room-simple .room-studio-header {
   gap: 18px;
   padding-inline: 24px;
 }
@@ -78,12 +96,12 @@
   text-overflow: ellipsis;
 }
 
-.room-simple .studio-file-actions {
+.planner-workspace.planner-reference.room-simple .studio-file-actions {
   margin-left: auto;
   gap: 9px;
 }
 
-.room-simple .studio-file-actions button {
+.planner-workspace.planner-reference.room-simple .studio-file-actions button {
   border: 0;
   padding: 10px 12px;
   border-radius: 24px;
@@ -97,7 +115,7 @@
   color: #202124;
 }
 
-.room-simple .studio-file-actions .room-summary-button {
+.planner-workspace.planner-reference.room-simple .studio-file-actions .room-summary-button {
   min-height: var(--site-button-height);
   min-width: 102px;
   background: var(--site-primary);
@@ -107,7 +125,7 @@
   font-weight: var(--site-button-weight);
 }
 
-.room-simple .studio-file-actions .room-summary-button:hover {
+.planner-workspace.planner-reference.room-simple .studio-file-actions .room-summary-button:hover {
   background: var(--site-primary-hover);
 }
 
@@ -284,7 +302,7 @@
   color: #075eaa;
 }
 
-.room-simple :is(.room-view-dock, .room-zoom-controls, .room-history-controls) button:hover:not(:disabled), .room-help-button:hover, .room-add-button:hover:not([aria-expanded="true"]) {
+.planner-workspace.planner-reference.room-simple :is(.room-view-dock, .room-zoom-controls, .room-history-controls) button:hover:not(:disabled), .room-help-button:hover, .room-add-button:hover:not([aria-expanded="true"]) {
   background: #f1f1ef;
 }
 
@@ -338,27 +356,29 @@
   margin-bottom: 8px;
 }
 
-.room-simple .planner-room-caption {
+.planner-workspace.planner-reference.room-simple .planner-room-caption {
   top: auto;
   bottom: 126px;
   left: 24px;
   max-width: calc(100% - 96px);
   pointer-events: none;
   padding: 0;
+  border: 0;
+  box-shadow: none;
   background: none;
 }
 
-.room-simple .planner-room-caption strong {
+.planner-workspace.planner-reference.room-simple .planner-room-caption strong {
   font-size: 12px;
   color: #515154;
 }
 
-.room-simple .planner-room-caption span {
+.planner-workspace.planner-reference.room-simple .planner-room-caption span {
   font-size: 11px;
   color: #71717a;
 }
 
-.room-simple .room-camera-guide {
+.planner-workspace.planner-reference.room-simple .room-camera-guide {
   display: block;
   left: 24px;
   right: 24px;
@@ -372,7 +392,7 @@
   pointer-events: none;
 }
 
-.room-simple .planner-selection-toolbar {
+.planner-workspace.planner-reference.room-simple .planner-selection-toolbar {
   top: 86px;
   bottom: auto;
   left: 50%;
@@ -383,26 +403,26 @@
   justify-content: center;
 }
 
-.room-simple .planner-selection-toolbar button {
+.planner-workspace.planner-reference.room-simple .planner-selection-toolbar button {
   min-height: 44px;
   border-radius: 20px;
 }
 
-.room-simple .planner-selection-name {
+.planner-workspace.planner-reference.room-simple .planner-selection-name {
   max-width: 180px;
 }
 
-.room-simple .planner-selection-name span {
+.planner-workspace.planner-reference.room-simple .planner-selection-name span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.room-simple .planner-canvas {
+.planner-workspace.planner-reference.room-simple .planner-canvas {
   padding: 0;
 }
 
-.room-simple .planner-measure-readout {
+.planner-workspace.planner-reference.room-simple .planner-measure-readout {
   top: 160px;
   bottom: auto;
   max-width: calc(100% - 100px);
@@ -512,7 +532,7 @@
   text-underline-offset: 3px;
 }
 
-.room-simple .planner-model-format, .room-simple .planner-model-info small {
+.planner-workspace.planner-reference.room-simple .planner-model-format, .planner-workspace.planner-reference.room-simple .planner-model-info small {
   display: none;
 }
 
@@ -550,16 +570,16 @@
   color: var(--ui-ink);
 }
 
-.room-simple .planner-model-grid {
+.planner-workspace.planner-reference.room-simple .planner-model-grid {
   align-items: stretch;
 }
 
-.room-simple .room-product-card:disabled {
+.planner-workspace.planner-reference.room-simple .room-product-card:disabled {
   cursor: not-allowed;
   opacity: 1;
 }
 
-.room-simple .room-product-card:disabled img {
+.planner-workspace.planner-reference.room-simple .room-product-card:disabled img {
   opacity: 0.7;
 }
 
@@ -580,7 +600,7 @@
   color: var(--ui-muted);
 }
 
-.room-simple .room-product-card p:first-child {
+.planner-workspace.planner-reference.room-simple .room-product-card p:first-child {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -591,15 +611,15 @@
   line-height: 1.5;
 }
 
-.room-simple .planner-model-grid > .planner-empty {
+.planner-workspace.planner-reference.room-simple .planner-model-grid > .planner-empty {
   grid-column: 1 / -1;
 }
 
-.room-simple .studio-catalog-scroll {
+.planner-workspace.planner-reference.room-simple .studio-catalog-scroll {
   min-width: 0;
 }
 
-.room-simple .planner-search input {
+.planner-workspace.planner-reference.room-simple .planner-search input {
   min-height: 0;
   height: 24px;
   padding: 0;
@@ -725,34 +745,34 @@
 }
 
 @media (max-width: 1200px) {
-  .room-simple .studio-file-actions button > span {
+  .planner-workspace.planner-reference.room-simple .studio-file-actions button > span {
     display: none;
   }
-  .room-simple .studio-file-actions .room-summary-button > span {
+  .planner-workspace.planner-reference.room-simple .studio-file-actions .room-summary-button > span {
     display: inline;
   }
-  .room-simple.room-panel-open .room-view-dock button {
+  .planner-workspace.planner-reference.room-simple.room-panel-open .room-view-dock button {
     padding-inline: 10px;
     gap: 6px;
   }
-  .room-simple.room-panel-open .room-view-dock {
+  .planner-workspace.planner-reference.room-simple.room-panel-open .room-view-dock {
     display: grid;
     justify-items: center;
     gap: 4px;
     border-radius: 24px;
   }
-  .room-simple.room-panel-open .room-dock-edit {
+  .planner-workspace.planner-reference.room-simple.room-panel-open .room-dock-edit {
     border-left: 0;
     border-top: 1px solid #eee;
     padding: 4px 0 0;
   }
-  .room-simple.room-panel-open .planner-room-caption {
+  .planner-workspace.planner-reference.room-simple.room-panel-open .planner-room-caption {
     bottom: 172px;
   }
-  .room-simple.room-panel-open .room-camera-guide {
+  .planner-workspace.planner-reference.room-simple.room-panel-open .room-camera-guide {
     bottom: 149px;
   }
-  .room-simple.room-panel-open .room-view-options button:first-child > span {
+  .planner-workspace.planner-reference.room-simple.room-panel-open .room-view-options button:first-child > span {
     max-width: 60px;
     white-space: normal;
     font-size: 10px;
@@ -761,11 +781,11 @@
 }
 
 @media (max-width: 959px) {
-  .planner-reference.room-simple, .planner-reference.room-simple.room-panel-open {
+  .planner-workspace.planner-reference.room-simple, .planner-workspace.planner-reference.room-simple.room-panel-open {
     --reference-header: 64px;
     grid-template-columns: minmax(0, 1fr);
   }
-  .planner-reference.room-simple > .planner-drawer {
+  .planner-workspace.planner-reference.room-simple > .planner-drawer {
     position: fixed;
     top: var(--reference-header);
     bottom: 0;
@@ -774,10 +794,10 @@
     width: min(380px, 100%);
     z-index: 70;
   }
-  .room-simple .planner-drawer-backdrop {
+  .planner-workspace.planner-reference.room-simple .planner-drawer-backdrop {
     display: block;
   }
-  .room-simple .room-studio-header {
+  .planner-workspace.planner-reference.room-simple .room-studio-header {
     padding-inline: 14px;
     gap: 12px;
   }
@@ -785,7 +805,7 @@
     flex: 1;
     width: auto;
   }
-  .room-simple .studio-brand > span {
+  .planner-workspace.planner-reference.room-simple .studio-brand > span {
     display: none;
   }
   .room-header-price {
@@ -817,20 +837,20 @@
     width: 100%;
     justify-content: center;
   }
-  .room-simple .studio-file-actions {
+  .planner-workspace.planner-reference.room-simple .studio-file-actions {
     gap: 2px;
   }
-  .room-simple .studio-file-actions button {
+  .planner-workspace.planner-reference.room-simple .studio-file-actions button {
     min-width: 36px;
     padding: 8px;
   }
-  .room-simple .studio-file-actions .room-summary-button {
+  .planner-workspace.planner-reference.room-simple .studio-file-actions .room-summary-button {
     min-width: 62px;
     gap: 2px;
     padding-inline: 9px;
     font-size: 12px;
   }
-  .room-simple .studio-file-actions button[aria-label="Зураг татах"], .room-simple .studio-file-actions button[aria-label="Хадгалсан загварууд"] {
+  .planner-workspace.planner-reference.room-simple .studio-file-actions button[aria-label="Зураг татах"], .planner-workspace.planner-reference.room-simple .studio-file-actions button[aria-label="Хадгалсан загварууд"] {
     display: none;
   }
   .room-project-name input {
@@ -871,13 +891,13 @@
     border-top: 1px solid #eee;
     padding-top: 4px;
   }
-  .room-view-dock button, .room-simple.room-panel-open .room-view-dock button {
+  .room-view-dock button, .planner-workspace.planner-reference.room-simple.room-panel-open .room-view-dock button {
     padding: 7px 5px;
     gap: 5px;
     min-height: 44px;
     font-size: 10px;
   }
-  .room-view-dock .room-view-options button:first-child > span, .room-simple.room-panel-open .room-view-options button:first-child > span {
+  .room-view-dock .room-view-options button:first-child > span, .planner-workspace.planner-reference.room-simple.room-panel-open .room-view-options button:first-child > span {
     max-width: 70px;
     white-space: normal;
     line-height: 1.3;
@@ -902,14 +922,14 @@
   .room-side-views > summary > svg:last-child {
     width: 10px;
   }
-  .room-simple .room-camera-guide {
+  .planner-workspace.planner-reference.room-simple .room-camera-guide {
     display: none;
   }
-  .room-simple .planner-room-caption {
+  .planner-workspace.planner-reference.room-simple .planner-room-caption {
     left: 14px;
     bottom: 132px;
   }
-  .room-simple.room-panel-open .planner-room-caption {
+  .planner-workspace.planner-reference.room-simple.room-panel-open .planner-room-caption {
     bottom: 132px;
   }
   .room-welcome-card {
@@ -926,7 +946,7 @@
     gap: 12px;
     margin-bottom: 14px;
   }
-  .room-simple .planner-selection-toolbar {
+  .planner-workspace.planner-reference.room-simple .planner-selection-toolbar {
     left: 12px;
     right: 70px;
     top: 78px;
@@ -934,18 +954,18 @@
     max-width: none;
     justify-content: flex-start;
   }
-  .room-simple .planner-selection-name {
+  .planner-workspace.planner-reference.room-simple .planner-selection-name {
     flex-basis: 100%;
     max-width: 100%;
   }
-  .room-simple .planner-selection-toolbar button {
+  .planner-workspace.planner-reference.room-simple .planner-selection-toolbar button {
     font-size: 10px;
     padding-inline: 8px;
   }
-  .room-simple .planner-measure-readout {
+  .planner-workspace.planner-reference.room-simple .planner-measure-readout {
     top: 205px;
   }
-  .room-simple .planner-notice {
+  .planner-workspace.planner-reference.room-simple .planner-notice {
     bottom: 140px;
     font-size: 12px;
   }
@@ -963,10 +983,10 @@
     border-top: 1px solid #eee;
     padding: 4px 0 0;
   }
-  .room-simple .planner-room-caption {
+  .planner-workspace.planner-reference.room-simple .planner-room-caption {
     bottom: 180px;
   }
-  .room-simple .room-camera-guide {
+  .planner-workspace.planner-reference.room-simple .room-camera-guide {
     bottom: 156px;
   }
 }
@@ -984,18 +1004,18 @@
   }
 }
 
-.room-simple .room-kitchen-button {
+.planner-workspace.planner-reference.room-simple .room-kitchen-button {
   border: 1px solid #c9ddf0;
   background: #f3f8fd;
   transition: background 150ms, box-shadow 150ms;
 }
 
-.room-simple .room-kitchen-button:hover, .room-simple .room-kitchen-button[aria-expanded="true"] {
+.planner-workspace.planner-reference.room-simple .room-kitchen-button:hover, .planner-workspace.planner-reference.room-simple .room-kitchen-button[aria-expanded="true"] {
   background: #e3f0fc;
   box-shadow: 0 4px 18px #075eaa18;
 }
 
-.room-simple .room-kitchen-button:focus-visible, .room-kitchen-create:focus-visible {
+.planner-workspace.planner-reference.room-simple .room-kitchen-button:focus-visible, .room-kitchen-create:focus-visible {
   outline: 3px solid #075eaa;
   outline-offset: 3px;
 }

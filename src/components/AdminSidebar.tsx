@@ -16,6 +16,7 @@ import {
   ArrowUpRight,
   CircleHelp,
   UserRound,
+  ShieldCheck,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 
@@ -68,6 +69,12 @@ export const ADMIN_TABS = [
     short: "Гал тогоо",
     icon: CookingPot,
   },
+  {
+    id: "merchant-ops",
+    label: "Баталгаажуулалт, хэтэвч",
+    short: "Merchant хяналт",
+    icon: ShieldCheck,
+  },
   { id: "rooms", label: "Бэлэн өрөөнүүд", short: "Өрөөнүүд", icon: House },
   {
     id: "settings",
@@ -97,7 +104,13 @@ export function AdminSidebar({
     {
       label: "УДИРДЛАГА",
       tabs: ADMIN_TABS.filter((item) =>
-        ["dashboard", "merchants", "furniture", "orders"].includes(item.id),
+        [
+          "dashboard",
+          "merchants",
+          "merchant-ops",
+          "furniture",
+          "orders",
+        ].includes(item.id),
       ),
     },
     {
@@ -139,6 +152,7 @@ export function AdminSidebar({
                   key={item.id}
                   type="button"
                   title={item.label}
+                  aria-label={item.label}
                   aria-current={active === item.id ? "page" : undefined}
                   className="dashboard-nav-button"
                   onClick={() => onChange(item.id)}

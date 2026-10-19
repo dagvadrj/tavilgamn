@@ -25,7 +25,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { authFetch } from "@/lib/authFetch";
+import { merchantRequest as request } from "@/features/merchant/merchantApi";
 import type {
   KitchenDesignSummary,
   KitchenRenderUsage,
@@ -53,18 +53,6 @@ type LoadResult = {
 };
 
 const splitList = kitchenListTokens;
-
-async function request<T>(
-  path: string,
-  owner: string,
-  init?: RequestInit,
-): Promise<T> {
-  const response = await authFetch(path, init, owner);
-  const data = await response.json().catch(() => null);
-  if (!response.ok || !data)
-    throw new Error(data?.error ?? "Мэдээллийг ачаалж чадсангүй.");
-  return data as T;
-}
 
 export function MerchantKitchenDesigns({
   owner,

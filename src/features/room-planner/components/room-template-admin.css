@@ -9,7 +9,7 @@
   font-size: 12px;
 }
 
-.planner-reference.room-simple.room-admin-mode {
+.planner-workspace.planner-reference.room-simple.room-admin-mode {
   padding-top: calc(var(--reference-header) + 56px);
 }
 
@@ -114,7 +114,7 @@
 }
 
 @media (max-width:430px) {
-  .planner-reference.room-simple.room-admin-mode {
+  .planner-workspace.planner-reference.room-simple.room-admin-mode {
     padding-top: calc(var(--reference-header) + 100px);
   }
 }

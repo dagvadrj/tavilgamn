@@ -1,5 +1,7 @@
 export type MerchantLocationTab =
   | "overview"
+  | "activation"
+  | "wallet"
   | "products"
   | "orders"
   | "delivery"
@@ -11,6 +13,8 @@ export type MerchantLocationTab =
 
 const MERCHANT_TABS = new Set<MerchantLocationTab>([
   "overview",
+  "activation",
+  "wallet",
   "products",
   "orders",
   "delivery",

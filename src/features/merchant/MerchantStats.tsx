@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { DashboardBarChart } from "@/features/dashboard/DashboardCharts";
 import { CheckCircle2, Clock3, ArrowUpRight, Package } from "lucide-react";
 import {
   DELIVERY_STAGE_LABEL,
@@ -408,14 +409,7 @@ export function MerchantTrends({
       60000,
     ),
     months = result.data?.months;
-  const max = Math.max(1, ...(months ?? []).map((m) => Number(m.gross)));
-  const path = (field: "gross" | "net") =>
-    (months ?? [])
-      .map(
-        (m, i) =>
-          `${i ? "L" : "M"} ${40 + i * 100} ${180 - (Number(m[field]) / max) * 145}`,
-      )
-      .join(" ");
+  const [chartMode, setChartMode] = useState<"bar" | "line">("bar");
   return (
     <section className="merchant-stat-panel merchant-trends">
       <header>
@@ -423,7 +417,22 @@ export function MerchantTrends({
           <h2>Борлуулалтын хандлага</h2>
           <p>Сүүлийн 6 сар · төлбөр төлөгдсөн захиалга</p>
         </div>
-        <span>₮</span>
+        <div className="v14-chart-toggle" aria-label="Графикийн харагдац">
+          <button
+            type="button"
+            aria-pressed={chartMode === "bar"}
+            onClick={() => setChartMode("bar")}
+          >
+            Багана
+          </button>
+          <button
+            type="button"
+            aria-pressed={chartMode === "line"}
+            onClick={() => setChartMode("line")}
+          >
+            Шугам
+          </button>
+        </div>
       </header>
       {result.error && (
         <p className="merchant-error" role="alert">
@@ -444,40 +453,26 @@ export function MerchantTrends({
             />
             <small>Худалдаа эрхлэгчийн цэвэр орлого</small>
           </div>
-          <svg
-            className="merchant-sales-chart"
-            viewBox="0 0 580 220"
-            role="img"
-            aria-label="Сарын нийт борлуулалт ба цэвэр орлогын график"
-          >
-            {[35, 83, 131, 180].map((y) => (
-              <line key={y} x1="35" x2="550" y1={y} y2={y} />
-            ))}
-            <path d={path("gross")} className="merchant-chart-gross" />
-            <path d={path("net")} className="merchant-chart-net" />
-            {months.map((m, i) => (
-              <g key={m.month}>
-                <circle
-                  cx={40 + i * 100}
-                  cy={180 - (Number(m.net) / max) * 145}
-                  r="4"
-                >
-                  <title>
-                    {m.month}: {BigInt(m.net).toLocaleString("mn-MN")} ₮ ·{" "}
-                    {m.orders} захиалга
-                  </title>
-                </circle>
-                <text x={40 + i * 100} y="210" textAnchor="middle">
-                  {m.month.slice(5)} сар
-                </text>
-              </g>
-            ))}
-          </svg>
-          <div className="merchant-chart-legend">
-            <span>● Цэвэр орлого</span>
-            <span>┄ Нийт борлуулалт</span>
-            {result.loading && <small>Шинэчилж байна…</small>}
-          </div>
+          <DashboardBarChart
+            mode={chartMode}
+            data={months.map((month) => ({
+              label: month.month.slice(5) + " сар",
+              primary: Number(month.net),
+              secondary: Math.max(0, Number(month.gross) - Number(month.net)),
+              primaryDisplay: BigInt(month.net).toLocaleString("mn-MN") + " ₮",
+              secondaryDisplay:
+                (BigInt(month.gross) > BigInt(month.net)
+                  ? BigInt(month.gross) - BigInt(month.net)
+                  : 0n
+                ).toLocaleString("mn-MN") + " ₮",
+            }))}
+            primaryLabel="Цэвэр орлого"
+            secondaryLabel="Шимтгэл"
+            formatValue={(value) => value.toLocaleString("mn-MN") + " ₮"}
+          />
+          {result.loading && (
+            <small className="v14-chart-note">Шинэчилж байна…</small>
+          )}
         </>
       )}
     </section>

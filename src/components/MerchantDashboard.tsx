@@ -40,6 +40,8 @@ const MerchantKitchenQuotes = dynamic(
 );
 import { merchantRequest } from "@/features/merchant/merchantApi";
 import { MerchantOverview } from "@/features/merchant/MerchantOverview";
+import { MerchantActivation } from "@/features/merchant/MerchantActivation";
+import { MerchantWallet } from "@/features/merchant/MerchantWallet";
 import { MerchantDeliveryBoard } from "@/features/merchant/MerchantDeliveryBoard";
 const StoreProfile = dynamic(
   () =>
@@ -307,6 +309,7 @@ function MerchantWorkspace({
               store={store}
               storePending={!loaded}
               onDelivery={() => changeTab("delivery")}
+              onGrowth={(section) => changeTab(section)}
               mode={preferences.overview}
               customizing={customizing}
               onCustomize={setCustomizing}
@@ -321,6 +324,18 @@ function MerchantWorkspace({
             />
           )}
 
+          {tab === "activation" && store && (
+            <MerchantActivation
+              owner={owner}
+              onStore={() => changeTab("store")}
+            />
+          )}
+          {tab === "wallet" && store && (
+            <MerchantWallet
+              owner={owner}
+              onSetup={() => changeTab("activation")}
+            />
+          )}
           {tab === "store" && (
             <StoreProfile
               key={owner}
@@ -341,9 +356,15 @@ function MerchantWorkspace({
           )}
 
           {!store &&
-            ["products", "orders", "delivery", "quotes", "kitchens"].includes(
-              tab,
-            ) && (
+            [
+              "products",
+              "orders",
+              "delivery",
+              "quotes",
+              "kitchens",
+              "activation",
+              "wallet",
+            ].includes(tab) && (
               <MerchantOverview
                 owner={owner}
                 store={null}

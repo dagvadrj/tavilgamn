@@ -1203,7 +1203,7 @@ function RoomPlannerEditor() {
     <div
       ref={workspaceRef}
       className={cn(
-        "room-planner-layout planner-workspace planner-studio planner-reference room-reference room-simple relative overflow-hidden",
+        "room-planner-layout planner-workspace planner-studio planner-reference room-simple relative overflow-hidden",
         (leftOpen || rightOpen || summaryOpen) && "room-panel-open",
         expanded && "planner-expanded",
           templateAdmin.isAdmin && "room-admin-mode",
