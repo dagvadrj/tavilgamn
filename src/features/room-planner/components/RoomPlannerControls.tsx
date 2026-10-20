@@ -72,7 +72,7 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
         {snap && <button type="button" aria-pressed={snap} onClick={onSnap}><Magnet size={14}/> Хананд тааруулах · Унтраах</button>}
       </div>}
       <div className="room-view-options" role="group" aria-label="Харах өнцөг" data-planner-tour="room-view">
-        <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>Өрөөний харагдац</span></button>
+        <button type="button" aria-label="Өрөөний харагдац" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span className="room-view-label-long">Өрөөний харагдац</span><span className="room-view-label-short" aria-hidden="true">3D өрөө</span></button>
         <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>Дээрээс</span></button>
         <details className="room-dock-more room-side-views" ref={sideMenu}>
           <summary aria-label="Хажуугийн харагдац" data-active={SIDE_VIEWS.some(([side]) => side === view)}><Eye size={20}/><span>{SIDE_VIEWS.find(([side]) => side === view)?.[1] ?? "Хажуугаас"}</span><ChevronDown size={12}/></summary>

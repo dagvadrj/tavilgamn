@@ -29,6 +29,9 @@ import "@/features/planner/components/planner-studio.css";
 import "@/features/planner/components/planner-tools.css";
 import "@/features/planner/components/planner-usability.css";
 import { usePlannerPanel } from "@/features/planner/components/usePlannerPanel";
+import { PlannerSheetGrip } from "@/features/planner/components/PlannerSheetGrip";
+import { PlannerViewport } from "@/features/planner/components/PlannerViewport";
+import "@/features/planner/components/planner-responsive.css";
 import { ViewportControls } from "@/features/planner/components/ViewportControls";
 import { EditorHistory } from "@/lib/editorHistory";
 import { FINISHES } from "@/lib/kitchen";
@@ -218,13 +221,17 @@ export function ModularKitchenPlanner({
   const catalogRef = usePlannerPanel(
     catalogOpen && !spaceOpen && !startOpen && !reviewOpen && !settingsOpen,
     () => setCatalogOpen(false),
-    759,
+    1279,
+    false,
   );
   const settingsRef = usePlannerPanel(
     settingsOpen && !spaceOpen && !startOpen && !reviewOpen,
     () => setSettingsOpen(false),
-    759,
+    1279,
+    false,
   );
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+  useEffect(() => setSheetExpanded(false), [catalogOpen, settingsOpen]);
   const [inspectorTab, setInspector] = useState<
     keyof typeof KITCHEN_INSPECTOR_LABELS
   >(() =>
@@ -648,6 +655,7 @@ export function ModularKitchenPlanner({
     return true;
   }
   function selectCabinet(id: string) {
+    setSheetExpanded(false);
     if (fitBacksplashes(kitchen).some((panel) => panel.id === id)) {
       setMessage(
         "Ханын хавтанг чирж зөөнө. Өндөр, хэмжээ, нарийн байрлалыг Тавцан хэсгээс тохируулна.",
@@ -970,6 +978,13 @@ export function ModularKitchenPlanner({
     }
     replaceCabinet(nextCabinet);
   }
+  const plannerNotice = (inline = false) => message && (
+    <div className={`kp-error ${inline ? "kp-sheet-notice" : "kp-global-notice"}`}
+      data-tone={notice.tone} role={notice.tone === "success" ? "status" : "alert"}>
+      <span>{message}</span>
+      <button type="button" onClick={() => setMessage("")}>Хаах</button>
+    </div>
+  );
   return (
     <main
       className="kp kp-shell planner-studio planner-reference kitchen-reference kitchen-refined kitchen-flow kitchen-glb-workspace kitchen-ikea-layout"
@@ -987,6 +1002,7 @@ export function ModularKitchenPlanner({
       data-view={workspaceView}
     >
       <PlannerTour kind="kitchen" enabled={active && ready && !setupStage && !startOpen && !spaceOpen && !reviewOpen} request={tourRequest} />
+      <PlannerViewport />
       {ready && startOpen && (
         <KitchenStartDialog
           kitchen={design}
@@ -1173,9 +1189,12 @@ export function ModularKitchenPlanner({
         )}
         <aside
           ref={catalogRef}
+          data-sheet-expanded={sheetExpanded}
           className={`kitchen-flow-catalog ${catalogOpen ? "is-open" : ""}`}
           aria-label="Шүүгээ, төхөөрөмжийн каталог"
         >
+          <PlannerSheetGrip expanded={sheetExpanded} onExpand={setSheetExpanded} onClose={() => setCatalogOpen(false)} />
+          {catalogOpen && plannerNotice(true)}
           <header>
             <div>
               <small>МОДУЛЬ КАТАЛОГИ</small>
@@ -1281,6 +1300,8 @@ export function ModularKitchenPlanner({
                   type="button"
                   disabled={busy}
                   aria-pressed={mode === "move"}
+                  aria-label="Тавилга зөөх"
+                  title="Тавилга зөөх"
                   onClick={() => setMode("move")}
                 >
                   <Move size={17} /><span>{"Тавилга зөөх"}</span>
@@ -1503,7 +1524,9 @@ export function ModularKitchenPlanner({
         {settingsOpen && (
           <button type="button" className="planner-inspector-backdrop" aria-label="Самбар хаах" onClick={() => setSettingsOpen(false)} />
         )}
-        <aside ref={settingsRef} className={`kp-settings kitchen-left-inspector ${settingsOpen ? "is-open" : ""}`} aria-label="Тавилгын тохиргоо">
+        <aside ref={settingsRef} data-sheet-expanded={sheetExpanded} className={`kp-settings kitchen-left-inspector ${settingsOpen ? "is-open" : ""}`} aria-label="Тавилгын тохиргоо">
+          <PlannerSheetGrip expanded={sheetExpanded} onExpand={setSheetExpanded} onClose={() => setSettingsOpen(false)} />
+          {settingsOpen && plannerNotice(true)}
           {selected && (inspector === "selection" || inspector === "materials") ? (
             <KitchenSelectionPanel
               key={`${selected.id}:${selected.variantId ?? ""}:${inspector}`}
@@ -1766,18 +1789,7 @@ export function ModularKitchenPlanner({
           </div>
         </section>
       )}
-      {message && (
-        <div
-          className="kp-error"
-          data-tone={notice.tone}
-          role={notice.tone === "success" ? "status" : "alert"}
-        >
-          <span>{message}</span>
-          <button type="button" onClick={() => setMessage("")}>
-            Хаах
-          </button>
-        </div>
-      )}
+      {plannerNotice()}
     </main>
   );
 }

@@ -142,6 +142,8 @@ import "@/features/planner/components/planner-geometry.css";
 import "@/features/room-planner/components/room-planner-simple.css";
 import "@/features/room-planner/components/room-panel-theme.css";
 import "@/features/planner/components/planner-tools.css";
+import "@/features/planner/components/planner-responsive.css";
+import { PlannerViewport } from "@/features/planner/components/PlannerViewport";
 import { RoomProductCard } from "@/features/room-planner/components/RoomProductCard";
 import { type DbModelInfo, getDbModel } from "@/lib/modelRegistry";
 
@@ -1210,6 +1212,7 @@ function RoomPlannerEditor() {
       )}
     >
       <PlannerTour kind="room" request={tourRequest} />
+      <PlannerViewport />
       {templateAdmin.isAdmin && <RoomTemplateAdminControls key={current.id} design={current} initial={templateAdmin.loaded?.designId === current.id ? templateAdmin.loaded.template : undefined} customInterior={!!localUrl || !!activePreset} catalogReady={catalog.ready && !catalog.loading && !catalog.error} onCapture={() => previewCapture.current?.() ?? null} onExport={async () => {
         if (!catalog.ready || catalog.loading || catalog.error) throw new Error("Тавилгын сан ачаалж дууссаны дараа GLB татна уу.");
         if (!glbExporter.current || !kitchenUser) throw new Error("3D өрөө бэлэн болсны дараа дахин оролдоно уу.");

@@ -1,0 +1,559 @@
+/* Loaded by both editors. Desktop keeps its existing layout. */
+
+.planner-sheet-grip {
+  display: none;
+}
+
+.kp-sheet-notice {
+  display: none;
+}
+
+.room-view-label-short {
+  display: none;
+}
+
+@media (max-width: 1279px) {
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-drawer-backdrop,
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-flow .planner-inspector-backdrop,
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-flow .kitchen-catalog-backdrop {
+    display: none;
+  }
+  .planner-reference :is(input, select, textarea) {
+    font-size: 16px;
+  }
+  .planner-reference :is(button, summary) {
+    touch-action: manipulation;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-settings:has(.kitchen-selection-panel) {
+    overflow: auto;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-settings .ksp-controller {
+    width: 100%;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout:has(.kp-layout[data-left-open="true"]) > .kp-global-notice {
+    display: none;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout :is(.kp-settings, .kitchen-flow-catalog) > .kp-sheet-notice {
+    position: static;
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    width: auto;
+    max-width: 100%;
+    margin: 8px;
+    padding: 8px 12px;
+    gap: 10px;
+    font-size: 12px;
+    transform: none;
+  }
+  .kp-sheet-notice > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .planner-workspace.planner-reference.planner-studio.room-simple.room-panel-open {
+    grid-template-columns: minmax(0, 1fr) min(320px, 42vw);
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple > .planner-drawer {
+    position: relative;
+    inset: auto;
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    height: auto;
+    max-height: 100%;
+    margin: 0;
+    max-width: none;
+    transform: none;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-layout[data-left-open] {
+    display: grid;
+    grid-template-columns: min(320px, 42vw) minmax(0, 1fr);
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-layout[data-left-open="false"] {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-workspace {
+    position: relative;
+    inset: auto;
+    grid-column: 2;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout :is(.kitchen-flow-catalog, .kp-settings.is-open) {
+    position: relative;
+    inset: auto;
+    grid-column: 1;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    overflow: auto;
+    transform: none;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .ksp-controller {
+    width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  .planner-workspace.planner-reference.planner-studio.room-simple,
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout {
+    --planner-sheet-height: min(calc(var(--planner-visible-height, 100dvh) * .44), 420px);
+    height: 100svh;
+    height: var(--planner-visible-height, 100dvh);
+    min-width: 0;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple:has(> .planner-drawer[data-sheet-expanded="true"]),
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout:has([data-sheet-expanded="true"].is-open) {
+    --planner-sheet-height: min(calc(var(--planner-visible-height, 100dvh) * .82), calc(var(--planner-visible-height, 100dvh) - 72px));
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple.room-panel-open {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple.room-panel-open > .planner-stage {
+    height: auto;
+    max-height: calc(var(--planner-visible-height, 100dvh) - var(--reference-header) - var(--planner-sheet-height));
+    margin-bottom: var(--planner-sheet-height);
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple > .planner-drawer,
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout :is(.kp-settings.is-open, .kitchen-flow-catalog.is-open) {
+    position: fixed;
+    inset: auto 0 var(--planner-keyboard-offset, 0px);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    height: var(--planner-sheet-height);
+    min-height: 0;
+    max-height: calc(var(--planner-visible-height, 100dvh) - 72px);
+    margin: 0;
+    padding: 0 0 env(safe-area-inset-bottom, 0px);
+    border: 1px solid var(--site-line, #dbe1e7);
+    border-bottom: 0;
+    border-radius: 18px 18px 0 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    background: #fff;
+    box-shadow: 0 -8px 28px #26384818;
+    transform: none;
+    z-index: 70;
+  }
+  .planner-sheet-grip {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 40px;
+    width: 100%;
+    min-height: 40px;
+    gap: 8px;
+    border-radius: 18px 18px 0 0;
+    background: #fff;
+    color: #536575;
+    font-size: 11px;
+    touch-action: none;
+  }
+  .planner-sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 4px;
+    background: #c4cbd1;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-drawer-heading {
+    min-height: 48px;
+    padding: 0 14px 8px;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-category-tools > button {
+    min-width: 70px;
+    font-size: 11px;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-toolbar-continue {
+    font-size: 12px;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-preview-bar {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    left: 8px;
+    bottom: 8px;
+    width: calc(100% - 16px);
+    max-width: none;
+    padding: 4px;
+    border-radius: 14px;
+    overflow-x: auto;
+    transform: none;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout :is(.kitchen-view-tabs, .kp-preview-bar .km-view-tools) {
+    flex: 0 0 auto;
+    min-width: 0;
+    width: auto;
+    padding: 0;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-layout[data-left-open="true"] .kitchen-navigation-map {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-drawer-heading p {
+    font-size: 15px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-drawer-body {
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-drawer[data-sheet-expanded="false"] .planner-panel-heading,
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-drawer[data-sheet-expanded="false"] .room-kitchen-shortcut {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-drawer-body > .border-b {
+    padding: 8px 12px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-search {
+    margin: 0;
+    min-height: 44px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-catalog-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 10px;
+    margin-top: 6px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-reference-category > span {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-catalog-filters details {
+    margin: 0;
+    align-self: start;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-catalog-filters details[open] {
+    grid-column: 1 / -1;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-catalog-filters summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-catalog-filter-status {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock {
+    display: flex;
+    justify-content: flex-start;
+    width: calc(100% - 16px);
+    max-width: none;
+    left: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    padding: 4px;
+    border-radius: 16px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    transform: none;
+    scrollbar-width: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple :is(.room-view-options, .room-dock-edit) {
+    flex-shrink: 0;
+    border-top: 0;
+    padding-top: 0;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock :is(button, summary) {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock button > span {
+    font-size: 10px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-dock-popover {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 72px;
+    width: auto;
+    max-height: min(50dvh, 350px);
+    overflow: auto;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple.room-panel-open :is(.room-camera-guide, .planner-room-caption, .room-mini-plan) {
+    display: none;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-layout[data-left-open] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-workspace {
+    position: relative;
+    inset: auto;
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-layout[data-left-open="true"] .kp-workspace {
+    margin-bottom: var(--planner-sheet-height);
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .ksp-controller {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-selection-panel {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .ksp-actions {
+    display: flex;
+    overflow-x: auto;
+    justify-content: flex-start;
+    max-width: 100%;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .ksp-actions > button {
+    flex: 0 0 auto;
+    min-width: 48px;
+    min-height: 44px;
+  }
+  .planner-reference :is(.kp-settings, .kitchen-flow-catalog, .planner-drawer) :is(input, select, textarea) {
+    max-width: 100%;
+    min-height: 44px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 959px) and (max-height: 500px) {
+  .planner-reference :is(.room-project-name small, .room-header-price, .kitchen-workflow-tabs, .planner-preview-minimap, .room-mini-plan) {
+    display: none;
+  }
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-navigation-map {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple {
+    --reference-header: 52px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planner-reference :is(.planner-drawer, .kp-settings, .kitchen-flow-catalog) {
+    transition: none;
+  }
+}
+
+/* Control sizes follow their function instead of stretching every button. */
+
+.planner-workspace.planner-reference.planner-studio.room-simple :is(.room-history-controls button, .room-help-button, .room-zoom-controls button) {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 8px;
+}
+
+.planner-workspace.planner-reference.planner-studio.room-simple :is(.room-add-button, .room-kitchen-button) {
+  min-height: 44px;
+  padding: 10px 16px;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.planner-workspace.planner-reference.planner-studio.room-simple .room-zoom-controls {
+  padding: 4px;
+  border-radius: 24px;
+}
+
+.planner-workspace.planner-reference.planner-studio.room-simple .room-history-controls {
+  padding: 2px;
+}
+
+.planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock :is(button, summary) {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.planner-workspace.planner-reference.planner-studio.room-simple .studio-file-actions .room-summary-button {
+  min-height: 40px;
+  min-width: 80px;
+  padding: 8px 14px;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.planner-workspace.planner-reference.planner-studio.room-simple .planner-drawer-heading button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 8px;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-project-tools > :is(button, a),
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-project-tools summary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 36px;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-project-tools .kitchen-project-menu > summary {
+  justify-content: flex-start;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  padding: 4px 0;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-category-tools > button {
+  flex-direction: column;
+  justify-content: center;
+  flex: 0 0 76px;
+  width: 76px;
+  min-width: 76px;
+  min-height: 56px;
+  padding: 0 4px;
+  gap: 4px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 13px;
+  white-space: normal;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-category-icon {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-toolbar-continue {
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kitchen-view-tabs button {
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-preview-bar .km-view-tools button {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 8px;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-preview-bar .km-view-tools button span {
+  display: none;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-settings .ksp-controller-heading {
+  height: 44px;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout :is(.kp-settings .ksp-controller-heading .ksp-icon-button, .kitchen-flow-catalog > header > button, .ksp-header .ksp-icon-button) {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .kp-settings .ksp-action {
+  min-height: 48px;
+  padding: 6px 8px;
+  gap: 4px;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+@media (max-width: 767px) {
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-sheet-grip,
+  .kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout .planner-sheet-grip {
+    flex-basis: 36px;
+    min-height: 36px;
+    height: 36px;
+    padding: 0 12px;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 16px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-stage-actions {
+    top: 16px;
+    left: 12px;
+    right: 12px;
+    gap: 8px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock button > span {
+    font-size: 11px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple :is(.room-view-options, .room-dock-edit) {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    width: auto;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    gap: 2px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock :is(button, summary) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 74px;
+    width: 74px;
+    min-width: 74px;
+    height: 48px;
+    min-height: 48px;
+    padding: 4px;
+    gap: 3px;
+    border-radius: 10px;
+    font-size: 10px;
+    line-height: 13px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-options button > span,
+  .planner-workspace.planner-reference.planner-studio.room-simple.room-panel-open .room-view-options button:first-child > span {
+    max-width: none;
+    white-space: nowrap;
+    font-size: 10px;
+    line-height: 13px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-options .room-view-label-long,
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-side-views > summary > svg:last-child {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-options .room-view-label-short {
+    display: inline;
+  }
+}

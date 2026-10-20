@@ -714,6 +714,14 @@
 
 @media (max-width: 767px) {
   .interior-home .interior-sticky {
+    position: relative;
+    top: auto;
+    height: min(760px, calc(100svh - 64px));
+  }
+  .interior-home .interior-runway {
+    height: 0;
+  }
+  .interior-home .interior-sticky {
     min-height: 0;
   }
   .interior-home .interior-stage-shade {
@@ -778,9 +786,9 @@
     gap: 7px;
   }
   .interior-home .interior-designs {
-    padding: 36svh 16px 100px;
+    padding: 28px 16px 40px;
     align-items: flex-end;
-    min-height: 125svh;
+    min-height: 0;
   }
   .interior-home .interior-design-panel {
     width: 100%;

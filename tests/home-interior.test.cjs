@@ -48,6 +48,13 @@ test("scrolling back from the settled room replays the journey and restores the 
     assert.deepEqual(story.storyPose(motion.progress, 0), story.storyPose(motion.progress, 1));
     scroll(-1044);
     assert.equal(story.storyPose(motion.progress).landed, true, "a second downward journey still lands");
+    refs[4].current = true;
+    window.matchMedia = () => ({ matches: true });
+    scroll(76);
+    assert.equal(motion.progress, 1, "mobile preview remains settled when scrolling back to the scene");
+    window.matchMedia = () => ({ matches: false });
+    scroll(76);
+    assert.equal(motion.progress, 0, "returning to desktop restores the reversible journey");
   } finally {
     cleanup?.();
     for (const [key, value] of Object.entries(previous)) {

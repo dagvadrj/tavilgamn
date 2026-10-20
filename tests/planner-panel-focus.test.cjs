@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { loadSource } = require("./helpers/load-source.cjs");
 
-function setup(mobile) {
+function setup(mobile, modal = true) {
   const previous = { document: global.document, window: global.window };
   const trigger = { isConnected: true, focus() { document.activeElement = this; } };
   const first = { getClientRects: () => [1], focus() { document.activeElement = this; } };
@@ -19,7 +19,7 @@ function setup(mobile) {
   const { usePlannerPanel } = loadSource("src/features/planner/components/usePlannerPanel.ts", {
     react: { useRef: value => ({ current: value }), useEffect: fn => { effect = fn; } },
   });
-  const ref = usePlannerPanel(true, () => closed++); ref.current = panel;
+  const ref = usePlannerPanel(true, () => closed++, 959, modal); ref.current = panel;
   const cleanup = effect();
   return { first, last, trigger, attrs, media,
     key(key, shiftKey = false) {
@@ -54,5 +54,23 @@ test("desktop planner inspectors remain non-modal and activate mobile focus hand
     assert.equal(h.key("Escape"), false); assert.equal(h.closed, 0);
     h.media.matches = true; h.media.dispatchEvent(new Event("change"));
     assert.equal(document.activeElement, h.first); assert.equal(h.attrs.get("role"), "dialog");
+  } finally { h.dispose(); }
+});
+
+test("modeless touch sheets keep the canvas and keyboard navigation accessible", () => {
+  const h = setup(true, false);
+  try {
+    assert.equal(document.activeElement, h.trigger);
+    assert.equal(document.body.style.overflow, "auto");
+    assert.equal(h.attrs.has("aria-modal"), false);
+    h.first.focus();
+    assert.equal(h.key("Tab", true), false);
+    assert.equal(document.activeElement, h.first);
+    assert.equal(h.key("Escape"), true);
+    assert.equal(h.closed, 1);
+    h.media.matches = false;
+    h.media.dispatchEvent(new Event("change"));
+    assert.equal(document.activeElement, h.first);
+    assert.equal(document.body.style.overflow, "auto");
   } finally { h.dispose(); }
 });

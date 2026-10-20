@@ -123,7 +123,7 @@ export function AdminHomepageSettings() {
               );
               return (
                 <div
-                  className="rounded-xl border border-ui-line p-4"
+                  className="min-w-0 overflow-hidden rounded-xl border border-ui-line p-4"
                   key={index}
                 >
                   <label className="grid gap-2 text-sm font-medium">

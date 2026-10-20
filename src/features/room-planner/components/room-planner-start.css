@@ -10,6 +10,16 @@
   outline-offset: 4px;
 }
 
+@media (max-width: 1279px) {
+  .room-start .room-template-filters button {
+    min-height: 44px;
+  }
+  .room-start :is(input, select, textarea) {
+    min-height: 44px;
+    font-size: 16px;
+  }
+}
+
 .room-start-heading h1:focus {
   outline: none;
 }
@@ -752,6 +762,10 @@
 }
 
 @media (max-width:700px) {
+  .room-start button {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
   .room-start-resume {
     grid-template-columns: 96px minmax(0,1fr);
     gap: 16px;

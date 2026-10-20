@@ -83,6 +83,7 @@ export function InteriorHome({
     swap: -1,
     visible: true,
   });
+  const mobilePreview = useRef(false);
   const [phase, setPhase] = useState(0);
   const [selected, setSelected] = useState(0);
   const [applied, setApplied] = useState(0);
@@ -139,8 +140,9 @@ export function InteriorHome({
         (headerHeight - node.getBoundingClientRect().top) / (height * 1.4),
       );
       // The journey follows the scroll in both directions; below it the sofa rests.
-      motion.current.progress = reduced ? 1 : progress;
-      if (!reduced && progress < 0.98 && motion.current.swap >= 0) {
+      const preview = mobilePreview.current && window.matchMedia("(max-width: 767px)").matches;
+      motion.current.progress = reduced || preview ? 1 : progress;
+      if (!reduced && !preview && progress < 0.98 && motion.current.swap >= 0) {
         setRequest(null);
         setBusy(false);
         motion.current.swap = -1;
@@ -378,6 +380,7 @@ export function InteriorHome({
               className="interior-button interior-place-button"
               disabled={busy}
               onClick={() => {
+                mobilePreview.current = true;
                 motion.current.progress = 1;
                 setPhase(3);
                 if (
@@ -388,8 +391,7 @@ export function InteriorHome({
                   window.scrollTo({
                     top:
                       window.scrollY +
-                      experience.current.getBoundingClientRect().top +
-                      stage.current.clientHeight * (reduced ? 0 : 1.4),
+                      experience.current.getBoundingClientRect().top,
                     behavior: reduced ? "instant" : "smooth",
                   });
                 }

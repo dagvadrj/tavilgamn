@@ -1,0 +1,50 @@
+/* Shared touch ergonomics; each feature retains its own desktop layout. */
+
+@media (max-width: 1279px) {
+  .site-ui.shop-shell .pdp-view-modes button {
+    min-height: 44px;
+  }
+  .site-ui.dashboard-layout .dashboard-shell :is(button, summary),
+  .site-ui.shop-shell :is(button, summary),
+  .site-ui.product-quick-view :is(button, summary),
+  .site-ui.auth-layout :is(button, summary) {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  .site-ui.dashboard-layout .dashboard-shell :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
+  .site-ui.shop-shell :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
+  .site-ui.product-quick-view :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]),
+  .site-ui.auth-layout :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]) {
+    min-height: 44px;
+    max-width: 100%;
+    font-size: 16px;
+  }
+  .site-ui.dashboard-layout .dashboard-shell :is(form, fieldset, label) {
+    min-width: 0;
+  }
+  .site-ui.dashboard-layout .dashboard-shell .merchant-delivery-pipeline {
+    max-width: 100%;
+    contain: inline-size;
+  }
+  .site-ui.dashboard-layout .dashboard-shell .admin-model-tabs {
+    max-width: 100%;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .site-ui.dashboard-layout .dashboard-shell .admin-model-request-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .site-ui.dashboard-layout .dashboard-shell .admin-model-request-stats > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .site-ui.dashboard-layout .dashboard-shell :is(.dashboard-content, .dashboard-main) {
+    min-width: 0;
+  }
+  .site-ui.dashboard-layout .dashboard-shell :is(.dashboard-drawer, [role="dialog"]) {
+    max-width: 100%;
+    max-height: 100dvh;
+    overscroll-behavior: contain;
+  }
+}
