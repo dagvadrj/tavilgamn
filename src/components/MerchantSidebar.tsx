@@ -16,6 +16,7 @@ import {
   Truck,
   Wallet,
   ShieldCheck,
+  MapPin, Users, MessageSquare, Bot, Undo2,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 import type { MerchantLocationTab } from "@/lib/merchantNavigation";
@@ -33,6 +34,11 @@ export const MERCHANT_TABS: {
   { id: "products", label: "Бүтээгдэхүүн", icon: Package },
   { id: "orders", label: "Захиалгууд", icon: ShoppingBag },
   { id: "delivery", label: "Хүргэлт", icon: Truck },
+  { id: "branches", label: "Салбар, агуулах", icon: MapPin },
+  { id: "staff", label: "Ажилтны эрх", icon: Users },
+  { id: "reviews", label: "Сэтгэгдэл хянах", icon: MessageSquare },
+  { id: "assistant", label: "AI туслах / FAQ", icon: Bot },
+  { id: "returns", label: "Буцаалт, гомдол", icon: Undo2 },
   { id: "kitchens", label: "Гал тогооны загвар", icon: CookingPot },
   { id: "quotes", label: "Үнийн хүсэлтүүд", icon: MessageSquareQuote },
   { id: "store", label: "Дэлгүүрийн мэдээлэл", icon: Store },
@@ -48,6 +54,7 @@ export function MerchantSidebar({
   userName,
   open,
   onClose,
+  allowedTabs,
 }: {
   active: MerchantTab;
   onChange: (tab: MerchantTab) => void;
@@ -56,8 +63,10 @@ export function MerchantSidebar({
   userName: string;
   open: boolean;
   onClose: () => void;
+  allowedTabs?: MerchantTab[];
 }) {
   const renderItem = (item: (typeof MERCHANT_TABS)[number]) => {
+    if (allowedTabs && !allowedTabs.includes(item.id)) return null;
     const Icon = item.icon;
     const disabled =
       !hasStore &&
@@ -69,6 +78,7 @@ export function MerchantSidebar({
         "quotes",
         "activation",
         "wallet",
+        "branches", "staff", "reviews", "assistant", "returns",
       ].includes(item.id);
     return (
       <button
@@ -126,6 +136,7 @@ export function MerchantSidebar({
               "products",
               "orders",
               "delivery",
+              "branches", "staff", "reviews", "assistant", "returns",
             ].includes(item.id),
           ).map(renderItem)}
         </div>

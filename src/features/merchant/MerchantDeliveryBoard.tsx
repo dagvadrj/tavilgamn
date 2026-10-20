@@ -404,8 +404,8 @@ function AssignDeliveryDialog({
   );
 }
 
-export function MerchantDeliveryBoard({ owner }: { owner: string }) {
-  const board = useMerchantDelivery(owner),
+export function MerchantDeliveryBoard({ owner, staffRole }: { owner: string; staffRole?: "driver" | "warehouse" }) {
+  const board = useMerchantDelivery(owner, staffRole),
     contextId = useId();
   const [active, setActive] = useState<MerchantDeliveryOrder | null>(null);
   const [pending, setPending] = useState<MerchantDeliveryOrder | null>(null);
@@ -419,6 +419,7 @@ export function MerchantDeliveryBoard({ owner }: { owner: string }) {
     }),
   );
   const disabled = board.busy || !board.ready;
+  const visibleStages: readonly DeliveryStage[] = staffRole === "driver" ? ["shipped", "delivered", "completed"] : staffRole === "warehouse" ? ["incoming", "preparing", "prepared"] : DELIVERY_STAGES;
   const orders = DELIVERY_STAGES.flatMap(
     (stage) => board.columns[stage].orders,
   );
@@ -474,7 +475,7 @@ export function MerchantDeliveryBoard({ owner }: { owner: string }) {
           </p>
         </div>
         <div className="merchant-delivery-actions">
-          <button
+          {!staffRole && <button
             type="button"
             className="btn-ghost"
             disabled={disabled}
@@ -482,7 +483,7 @@ export function MerchantDeliveryBoard({ owner }: { owner: string }) {
           >
             <Users size={16} />
             Хүргэлтийн ажилтнууд
-          </button>
+          </button>}
           <button
             type="button"
             className="btn-ghost"
@@ -600,7 +601,7 @@ export function MerchantDeliveryBoard({ owner }: { owner: string }) {
           aria-label="Хүргэлтийн төлөвийн баганууд, хажуу тийш гүйлгэнэ"
           tabIndex={0}
         >
-          {DELIVERY_STAGES.map(box)}
+          {visibleStages.map(box)}
         </div>
         <DragOverlay adjustScale={false} dropAnimation={null} zIndex={85}>
           {active && (

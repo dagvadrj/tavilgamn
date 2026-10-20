@@ -31,6 +31,10 @@ export function merchantError(error: unknown, fallback: string) {
   const message =
     error instanceof CatalogInputError
       ? error.message
+      : code === "22023" || code === "23514" || code === "23502" || code === "22P02"
+        ? "Мэдээлэл буруу байна. Бүртгэл, хэмжээ болон сонголтуудаа шалгана уу."
+      : code === "23505"
+        ? "Энэ бүртгэл өмнө нь нэмэгдсэн байна. Жагсаалтаа шинэчилнэ үү."
       : code === "42501"
         ? "Дэлгүүрийн эрх өөрчлөгдсөн байна. Эрхээ шалгана уу."
         : code === "P0002"
@@ -47,6 +51,10 @@ export function merchantError(error: unknown, fallback: string) {
   const status =
     error instanceof CatalogInputError
       ? 400
+      : ["22023", "23514", "23502", "22P02"].includes(String(code))
+        ? 400
+      : code === "23505"
+        ? 409
       : code === "42501"
         ? 403
         : code === "P0002"

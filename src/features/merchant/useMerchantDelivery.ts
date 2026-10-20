@@ -9,6 +9,8 @@ import {
   type MerchantDeliveryOrder,
 } from "@/lib/merchantDelivery";
 import { isOwner, merchantRequest } from "./merchantApi";
+import { authFetch } from "@/lib/authFetch";
+import { useAuth } from "@/store/auth";
 
 type Snapshot = {
   owner: string;
@@ -26,7 +28,40 @@ const emptyColumns = () =>
       { orders: [], total: 0, hasMore: false } as DeliveryColumn,
     ]),
   ) as Record<DeliveryStage, DeliveryColumn>;
-export function useMerchantDelivery(owner: string) {
+const isCurrentDelivery = (
+  actor: string,
+  staffRole?: "driver" | "warehouse",
+) => (staffRole ? useAuth.getState().user?.id === actor : isOwner(actor));
+async function requestDelivery<T>(
+  path: string,
+  actor: string,
+  staffRole: "driver" | "warehouse" | undefined,
+  init?: RequestInit,
+): Promise<T> {
+  if (!staffRole) return merchantRequest<T>(path, actor, init);
+  if (!isCurrentDelivery(actor, staffRole)) throw new Error("Session changed");
+  const endpoint = path.endsWith("/staff")
+    ? "/api/merchant/team-delivery?staff=1"
+    : path.replace("/api/merchant/delivery", "/api/merchant/team-delivery");
+  const response = await authFetch(endpoint, init, actor);
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error ?? "Request failed");
+  if (!isCurrentDelivery(actor, staffRole)) throw new Error("Session changed");
+  if (Array.isArray(data.orders))
+    data.orders = data.orders.map((order: MerchantDeliveryOrder) => ({
+      ...order,
+      readOnly:
+        staffRole === "driver"
+          ? order.stage !== "shipped"
+          : !["incoming", "preparing"].includes(order.stage),
+    }));
+  return data as T;
+}
+
+export function useMerchantDelivery(
+  owner: string,
+  staffRole?: "driver" | "warehouse",
+) {
   const [pages, setPages] = useState(
     () =>
       Object.fromEntries(DELIVERY_STAGES.map((stage) => [stage, 0])) as Record<
@@ -71,15 +106,16 @@ export function useMerchantDelivery(owner: string) {
     }));
     let remaining = 7;
     const update = (change: (previous: Snapshot) => Snapshot) => {
-      if (active && isOwner(owner))
+      if (active && isCurrentDelivery(owner, staffRole))
         setSnapshot((previous) =>
           previous?.owner === owner ? change(previous) : previous,
         );
     };
     for (const stage of DELIVERY_STAGES) {
-      void merchantRequest<DeliveryColumn>(
+      void requestDelivery<DeliveryColumn>(
         `/api/merchant/delivery?stage=${stage}&page=${currentPages[stage]}`,
         owner,
+        staffRole,
         { signal: controller.signal },
       )
         .then((column) =>
@@ -109,9 +145,10 @@ export function useMerchantDelivery(owner: string) {
           }));
         });
     }
-    void merchantRequest<{ staff: DeliveryStaff[] }>(
+    void requestDelivery<{ staff: DeliveryStaff[] }>(
       "/api/merchant/delivery/staff",
       owner,
+      staffRole,
       { signal: controller.signal },
     )
       .then((result) =>
@@ -134,7 +171,7 @@ export function useMerchantDelivery(owner: string) {
       active = false;
       controller.abort();
     };
-  }, [owner, pageKey, refresh]);
+  }, [owner, pageKey, refresh, staffRole]);
   const view = snapshot?.owner === owner ? snapshot : null;
   const ready = !!view && !view.loading && !view.error;
   async function mutate(
@@ -143,7 +180,8 @@ export function useMerchantDelivery(owner: string) {
     body: unknown,
     success: string,
   ): Promise<boolean> {
-    if (mutating.current || !ready || !isOwner(owner)) return false;
+    if (mutating.current || !ready || !isCurrentDelivery(owner, staffRole))
+      return false;
     mutating.current = true;
     const token = Symbol("delivery-mutation");
     mutationToken.current = token;
@@ -151,24 +189,36 @@ export function useMerchantDelivery(owner: string) {
     setMutationError("");
     setMessage("");
     try {
-      await merchantRequest(path, owner, {
+      await requestDelivery(path, owner, staffRole, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!alive.current || !isOwner(owner) || token !== mutationToken.current)
+      if (
+        !alive.current ||
+        !isCurrentDelivery(owner, staffRole) ||
+        token !== mutationToken.current
+      )
         return false;
       setMessage(success);
       return true;
     } catch (error) {
-      if (alive.current && isOwner(owner) && token === mutationToken.current)
+      if (
+        alive.current &&
+        isCurrentDelivery(owner, staffRole) &&
+        token === mutationToken.current
+      )
         setMutationError(
           error instanceof Error ? error.message : "Өөрчлөлт хадгалагдсангүй.",
         );
       return false;
     } finally {
       if (token === mutationToken.current) mutating.current = false;
-      if (alive.current && isOwner(owner) && token === mutationToken.current) {
+      if (
+        alive.current &&
+        isCurrentDelivery(owner, staffRole) &&
+        token === mutationToken.current
+      ) {
         setBusy(false);
         // Refresh on success, conflicts, and uncertain network failures. Never
         // display a local drag as if it were an acknowledged database write.

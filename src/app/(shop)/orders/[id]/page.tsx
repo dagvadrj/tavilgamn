@@ -35,6 +35,7 @@ import {
 } from "@/lib/payments";
 import { formatDateTime, formatPrice, cn } from "@/lib/format";
 import { CustomerOrderActions, OrderFulfillmentSummary } from "@/components/CommerceOrderActions";
+import { CustomerStoreFeedback } from "@/components/StoreFeedback";
 import { cancellationBlocksPayment, type CommerceOrderDetails } from "@/lib/commerceOperations";
 
 const ORDER_FLOW: { status: OrderStatus; label: string }[] = [
@@ -334,6 +335,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
       <div className="mt-5 space-y-3">
         <OrderFulfillmentSummary order={order} />
         <CustomerOrderActions key={order.id} order={order} paid={payment?.state === "paid"} onUpdated={load} />
+        <CustomerStoreFeedback key={`feedback:${order.id}`} orderId={order.id} />
         {payment?.requires_review && <p role="status" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">Төлбөр бүртгэгдсэн боловч тулгах шалгалт шаардлагатай. Дахин төлбөр бүү хийгээрэй; админтай холбоо барина уу.</p>}
       </div>
       {error && (

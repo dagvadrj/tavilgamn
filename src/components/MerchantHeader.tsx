@@ -17,6 +17,7 @@ export function MerchantHeader({
   activeLabel,
   sidebarOpen,
   onToggleSidebar,
+  hideNotifications,
 }: {
   navigation?: ReactNode;
   balances?: ReactNode;
@@ -29,6 +30,7 @@ export function MerchantHeader({
   activeLabel: string;
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
+  hideNotifications?: boolean;
 }) {
   return (
     <div className="merchant-location-bar">
@@ -62,7 +64,7 @@ export function MerchantHeader({
       </nav>
       {navigation}
       {balances}
-      <MerchantNotifications owner={owner} onKitchens={onKitchens} />
+      {!hideNotifications && <MerchantNotifications owner={owner} onKitchens={onKitchens} />}
       {onProfile && (
         <button
           type="button"

@@ -8,6 +8,7 @@ import { ArrowLeft, MapPin, Phone, BadgeCheck } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { STORE_TYPES } from "@/lib/storeTypes";
 import { CATEGORY_LABEL } from "@/lib/products";
+import { StoreAssistant } from "@/components/StoreFeedback";
 
 export function StorePageClient({
   id,
@@ -103,6 +104,7 @@ export function StoreContent({
         </div>
       </div>
 
+      <StoreAssistant storeId={store.id} />
       <p className="ui-eyebrow mb-6">
         {products.length > 0
           ? `${products.length} бүтээгдэхүүн`

@@ -97,6 +97,7 @@ export default function AccountPage() {
               Миний дэлгүүр
             </Link>
           )}
+          {role === "customer" && <Link href="/merchant" className="account-nav-link"><Store className="h-4 w-4" />Дэлгүүрийн ажилтны самбар</Link>}
           {[
             { href: "#designs", label: "Хадгалсан загвар", icon: LayoutGrid },
             {

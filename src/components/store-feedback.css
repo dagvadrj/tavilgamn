@@ -1,0 +1,128 @@
+.store-feedback {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  font-size: 14px;
+  color: #25332c;
+}
+
+.store-feedback h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.store-feedback p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+}
+
+.store-feedback small {
+  color: #64736b;
+}
+
+.feedback-card {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  border: 1px solid #e0e6e1;
+  padding: 20px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+details.feedback-card {
+  display: block;
+}
+
+.store-feedback summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 44px;
+  align-content: center;
+}
+
+.store-feedback form, .store-feedback fieldset, .store-feedback label {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.store-feedback form {
+  margin-top: 16px;
+}
+
+.store-feedback fieldset {
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.store-feedback .input {
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+}
+
+.store-feedback textarea {
+  min-height: 100px;
+}
+
+.store-feedback input[type="file"] {
+  max-width: 100%;
+  min-height: 44px;
+}
+
+.feedback-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.feedback-photos img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.store-feedback blockquote, .feedback-answer {
+  padding: 16px;
+  background: #f2f6f3;
+  border-radius: 10px;
+}
+
+.store-assistant {
+  border: 1px solid #dce5df;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin: 0 0 28px;
+  background: #fff;
+}
+
+.store-assistant summary {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.feedback-faqs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feedback-faqs button {
+  white-space: normal;
+  text-align: left;
+}
+
+@media (max-width: 700px) {
+  .store-feedback .input {
+    font-size: 16px;
+  }
+  .feedback-card {
+    padding: 16px;
+  }
+}

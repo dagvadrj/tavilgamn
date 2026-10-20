@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from "./admin";
 import { apiErrorResponse } from "../api/errors";
 
 type Role = "admin" | "merchant";
-type AuthResult = { userId: string; error: null } | { userId: null; error: ReturnType<typeof apiErrorResponse> };
+type AuthResult = { userId: string; error: null; verifiedEmail?: string | null } | { userId: null; error: ReturnType<typeof apiErrorResponse> };
 
 /** Fresh verified identity and DB role, never client-editable user_metadata. */
 export async function authorize(request: NextRequest, role?: Role): Promise<AuthResult> {
@@ -25,7 +25,7 @@ export async function authorize(request: NextRequest, role?: Role): Promise<Auth
       if (profile?.role !== role) return reject(403,
         role === "admin" ? "Admin эрх шаардлагатай." : "Дэлгүүр эрхлэгчийн эрх шаардлагатай.");
     }
-    return { userId: data.user.id, error: null };
+    return { userId: data.user.id, error: null, verifiedEmail: data.user.email_confirmed_at ? data.user.email ?? null : null };
   } catch {
     return reject(503, "Нэвтрэх эрхийг шалгах үйлчилгээ түр боломжгүй байна.");
   }

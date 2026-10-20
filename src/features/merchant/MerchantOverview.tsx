@@ -23,6 +23,7 @@ import { type MerchantProduct } from "@/features/merchant/merchantApi";
 import { MerchantDashboardLayout } from "./MerchantDashboardLayout";
 import { MerchantLaunchCard, MerchantStoreShare } from "./MerchantGrowth";
 import { MerchantInsights } from "./MerchantInsights";
+import { MerchantRiskSummary } from "./MerchantOperations";
 import { useMerchantResource } from "./useMerchantResource";
 import {
   AnimatedNumber,
@@ -647,7 +648,7 @@ export function MerchantOverview({
         />
       </div>
       {section !== "inventory" && (
-        <OrderProgressCards
+        <><MerchantRiskSummary owner={owner} date={date} /><OrderProgressCards
           stats={progress.data}
           loading={progress.loading}
           error={progress.error}
@@ -660,7 +661,7 @@ export function MerchantOverview({
           onPage={setOrderPage}
           onRetry={progress.refresh}
           onDelivery={onDelivery}
-        />
+        /></>
       )}
     </section>
   );

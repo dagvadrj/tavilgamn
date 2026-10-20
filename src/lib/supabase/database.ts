@@ -16,6 +16,13 @@ type NullableArgs = {
   save_furniture_product: "p_expected_stock";
 };
 type Functions = Generated["public"]["Functions"] & {
+  merchant_workspace_access: { Args: { p_actor: string }; Returns: import("./database.types").Json };
+  claim_merchant_membership: { Args: { p_actor: string; p_verified_email: string }; Returns: undefined };
+  merchant_operations: { Args: { p_actor: string; p_action: string; p_data: import("./database.types").Json }; Returns: import("./database.types").Json };
+  staff_delivery: { Args: { p_actor: string; p_action: string; p_data: import("./database.types").Json }; Returns: import("./database.types").Json };
+  customer_store_feedback: { Args: { p_actor: string; p_action: string; p_data: import("./database.types").Json }; Returns: import("./database.types").Json };
+  public_store_feedback: { Args: { p_store?: string; p_product?: string }; Returns: import("./database.types").Json };
+  feedback_media: { Args: { p_actor: string; p_order: string; p_id: string; p_url?: string }; Returns: import("./database.types").Json };
   queue_kitchen_model_asset: Generated["public"]["Functions"]["queue_model_asset"];
   set_kitchen_model_archived: Generated["public"]["Functions"]["set_model_archived"];
   request_kitchen_model_export: Generated["public"]["Functions"]["request_furniture_model_export"];

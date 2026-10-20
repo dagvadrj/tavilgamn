@@ -37,6 +37,7 @@ export type AssignedDeliveryStaff = Pick<
   "id" | "name" | "phone" | "vehicle"
 >;
 export type MerchantDeliveryOrder = {
+  readOnly?: boolean;
   id: string;
   items: OrderLine[];
   subtotal: number;
@@ -58,6 +59,7 @@ export type DeliveryColumn = {
 export function deliveryBlockReason(
   order: MerchantDeliveryOrder,
 ): string | null {
+  if (order.readOnly) return "Энэ шатанд харах эрхтэй";
   if (order.paymentStatus !== "paid") return "Төлбөр төлөгдөөгүй";
   if (order.cancellationStatus === "requested")
     return "Цуцлах хүсэлтийг шалгаж байна";

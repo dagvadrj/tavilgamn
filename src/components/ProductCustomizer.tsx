@@ -17,7 +17,6 @@ import {
   Camera,
   Truck,
   ArrowUpRight,
-  MessageSquare,
 } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { productSpecificationRows } from "@/lib/productSpecifications";
@@ -34,6 +33,7 @@ import type { Group } from "three";
 import { ProductScaleHUD } from "./ProductScaleHUD";
 import { ProductFinancingOptions } from "./ProductFinancingOptions";
 import { ProductFinancing } from "./ProductFinancing";
+import { PublishedProductReviews } from "./StoreFeedback";
 
 const ProductAR = dynamic(
   () => import("./ProductAR").then((module) => module.ProductAR),
@@ -719,11 +719,6 @@ export function ProductCustomizer({
                 }}
               >
                 {tab.label}
-                {tab.id === "reviews" && (
-                  <span className="pdp-review-count">
-                    {product.reviewCount}
-                  </span>
-                )}
               </button>
             ))}
           </div>
@@ -832,26 +827,7 @@ export function ProductCustomizer({
           hidden={detailTab !== "reviews"}
           tabIndex={0}
         >
-          {product.reviewCount > 0 ? (
-            <>
-              <div className="pdp-review-summary">
-                <Star size={24} aria-hidden="true" />
-                <strong>{product.rating.toFixed(1)}</strong>
-                <span>/ 5 · {product.reviewCount} сэтгэгдэл</span>
-              </div>
-              <p>
-                Сэтгэгдлийн дэлгэрэнгүй мэдээлэл хараахан нэмэгдээгүй байна.
-              </p>
-            </>
-          ) : (
-            <>
-              <MessageSquare size={28} aria-hidden="true" />
-              <h2>Сэтгэгдэл хараахан байхгүй</h2>
-              <p>
-                Энэ бүтээгдэхүүнд одоогоор үнэлгээ, сэтгэгдэл нэмэгдээгүй байна.
-              </p>
-            </>
-          )}
+          <PublishedProductReviews productId={product.id} />
         </section>
       </div>
       <ProductFinancing total={price * qty} />

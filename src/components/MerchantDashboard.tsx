@@ -43,6 +43,8 @@ import { MerchantOverview } from "@/features/merchant/MerchantOverview";
 import { MerchantActivation } from "@/features/merchant/MerchantActivation";
 import { MerchantWallet } from "@/features/merchant/MerchantWallet";
 import { MerchantDeliveryBoard } from "@/features/merchant/MerchantDeliveryBoard";
+import { MerchantBranches, MerchantStaff, MerchantFeedback, MerchantAssistant } from "@/features/merchant/MerchantOperations";
+import { MerchantTeamWorkspace } from "@/features/merchant/MerchantTeamWorkspace";
 const StoreProfile = dynamic(
   () =>
     import("@/features/merchant/StoreProfile").then(
@@ -98,16 +100,17 @@ export function MerchantDashboard({
       </main>
     );
   if (role !== "merchant")
-    return (
+    return <MerchantTeamWorkspace owner={user.id} userName={user.name} fallback={(
       <main id="main-content" className="merchant-gate merchant-state">
         <StoreIcon size={32} />
         <h1>Худалдаа эрхлэгчийн хэсэг</h1>
         <p>Дэлгүүр нээхийн тулд админаар merchant эрхээ идэвхжүүлнэ үү.</p>
+        <p>Ажилтан бол дэлгүүрийн эзэмшигчийн бүртгэсэн имэйлээр нэвтэрч, имэйлээ баталгаажуулна уу.</p>
         <Link href={accountPathForRole(role)} className="btn-ghost">
           Миний бүртгэл
         </Link>
       </main>
-    );
+    )} />;
   return (
     <MerchantWorkspace
       key={user.id}
@@ -364,6 +367,7 @@ function MerchantWorkspace({
               "kitchens",
               "activation",
               "wallet",
+              "branches", "staff", "reviews", "assistant", "returns",
             ].includes(tab) && (
               <MerchantOverview
                 owner={owner}
@@ -382,6 +386,11 @@ function MerchantWorkspace({
           {tab === "delivery" && store && (
             <MerchantDeliveryBoard key={owner} owner={owner} />
           )}
+          {tab === "branches" && store && <MerchantBranches owner={owner} />}
+          {tab === "staff" && store && <MerchantStaff owner={owner} />}
+          {tab === "reviews" && store && <MerchantFeedback owner={owner} />}
+          {tab === "returns" && store && <MerchantFeedback owner={owner} cases />}
+          {tab === "assistant" && store && <MerchantAssistant owner={owner} />}
           {tab === "quotes" && store && <MerchantKitchenQuotes owner={owner} />}
 
           {tab === "kitchens" && store && (

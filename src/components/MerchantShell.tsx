@@ -29,6 +29,7 @@ export function MerchantShell({
   hasStore,
   preferences,
   children,
+  allowedTabs,
 }: {
   active: MerchantTab;
   onChange: (tab: MerchantTab) => void;
@@ -39,6 +40,7 @@ export function MerchantShell({
   hasStore: boolean;
   preferences?: DashboardPreferences;
   children: ReactNode;
+  allowedTabs?: MerchantTab[];
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
@@ -69,12 +71,13 @@ export function MerchantShell({
         storeName={storeName}
         open={sidebarOpen}
         onClose={closeSidebar}
+        allowedTabs={allowedTabs}
       />
 
       <div className="merchant-workspace dashboard-workspace">
         <MerchantHeader
           balances={
-            <MerchantBalanceChip
+            !allowedTabs && <MerchantBalanceChip
               owner={owner}
               enabled={hasStore}
               onOpen={() => changeTab("wallet")}
@@ -83,7 +86,7 @@ export function MerchantShell({
           navigation={
             <DashboardNavigation
               tabs={MERCHANT_TABS.filter((tab) =>
-                ["overview", "products", "orders", "delivery"].includes(tab.id),
+                allowedTabs ? allowedTabs.includes(tab.id) : ["overview", "products", "orders", "delivery"].includes(tab.id),
               ).map((tab) => ({
                 ...tab,
                 disabled: !hasStore && tab.id !== "overview",
@@ -94,9 +97,10 @@ export function MerchantShell({
           }
           storeName={storeName}
           userName={userName}
-          onProfile={() => changeTab("profile")}
+          onProfile={allowedTabs ? undefined : () => changeTab("profile")}
+          hideNotifications={!!allowedTabs}
           owner={owner}
-          onHome={() => changeTab("overview")}
+          onHome={() => changeTab(allowedTabs?.[0] ?? "overview")}
           onKitchens={onOpenKitchen}
           activeLabel={activeLabel}
           sidebarOpen={sidebarOpen}

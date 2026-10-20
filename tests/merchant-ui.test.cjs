@@ -82,7 +82,7 @@ function harness(role = "merchant") {
   };
 }
 
-test("merchant portal guards customer and administrator before mounting private workspace", () => {
+test("merchant portal checks scoped membership before mounting a non-owner workspace", () => {
   for (const role of ["customer", "admin"]) {
     const h = harness(role);
     const { MerchantDashboard } = loadSource(
@@ -90,7 +90,8 @@ test("merchant portal guards customer and administrator before mounting private 
       h.mocks,
     );
     const html = renderToStaticMarkup(MerchantDashboard());
-    assert.match(html, /merchant эрхээ идэвхжүүлнэ/);
+    assert.match(html, /Ажилтны эрхийг шалгаж байна/);
+    assert.doesNotMatch(html, /Хэтэвч, кредит|Цэвэр орлого/);
     assert.equal(h.requests.length, 0);
   }
   const h = harness();

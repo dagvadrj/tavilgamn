@@ -68,6 +68,7 @@ Thumbs.db
 
 # Architecture documentation is versioned; other existing feature notes stay local.
 /docs/*
+!/docs/merchant-operations.md
 !/docs/architecture.md
 !/docs/data-dictionary.md
 !/docs/role-permissions.md
