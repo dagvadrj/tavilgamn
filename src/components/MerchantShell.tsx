@@ -1,6 +1,7 @@
 "use client";
 
 import { DashboardNavigation } from "@/features/dashboard/DashboardNavigation";
+import { DashboardFormAssist } from "@/features/dashboard/DashboardFormAssist";
 import { MerchantBalanceChip } from "@/features/merchant/MerchantGrowth";
 import "@/features/dashboard/dashboard-v14.css";
 
@@ -59,6 +60,7 @@ export function MerchantShell({
       data-density={preferences?.density ?? "comfortable"}
       data-text-size={preferences?.textSize ?? "standard"}
     >
+      <DashboardFormAssist />
       <MerchantSidebar
         active={active}
         onChange={changeTab}

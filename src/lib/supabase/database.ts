@@ -16,6 +16,9 @@ type NullableArgs = {
   save_furniture_product: "p_expected_stock";
 };
 type Functions = Generated["public"]["Functions"] & {
+  queue_kitchen_model_asset: Generated["public"]["Functions"]["queue_model_asset"];
+  set_kitchen_model_archived: Generated["public"]["Functions"]["set_model_archived"];
+  request_kitchen_model_export: Generated["public"]["Functions"]["request_furniture_model_export"];
   request_merchant_model_export: {
     Args: { p_actor: string; p_product: string };
     Returns: import("./database.types").Json;
@@ -106,8 +109,15 @@ type Rpc<Name extends keyof Functions> = Name extends keyof NullableArgs
     }
   : Functions[Name];
 export type Database = Omit<Generated, "public"> & {
-  public: Omit<Generated["public"], "Functions" | "Tables"> & {
+  public: Omit<Generated["public"], "Functions" | "Tables" | "Views"> & {
+    Views: Generated["public"]["Views"] & {
+      model_records: {
+        Row: Generated["public"]["Tables"]["furniture_models"]["Row"];
+        Relationships: [];
+      };
+    };
     Tables: Generated["public"]["Tables"] & {
+      kitchen_models: Generated["public"]["Tables"]["furniture_models"];
       room_templates: {
         Row: RoomTemplateRow;
         Insert: Omit<

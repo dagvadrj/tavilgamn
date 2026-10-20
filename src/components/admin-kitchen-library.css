@@ -95,6 +95,72 @@
   font-weight: 600;
 }
 
+.ak-setup {
+  display: grid;
+  gap: 16px;
+}
+
+.ak-setup-steps, .ak-setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ak-setup-steps button {
+  border: 1px solid var(--dashboard-border, #dbe1e7);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.ak-setup-steps button[aria-current="step"] {
+  background: var(--dashboard-accent, #243e50);
+  color: #fff;
+}
+
+.ak-setup-parts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+}
+
+.ak-setup-part {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 16px;
+  border: 1px solid var(--dashboard-border, #dbe1e7);
+  border-radius: 12px;
+}
+
+.ak-setup-part h3 {
+  font-weight: 700;
+}
+
+.ak-setup-part .input, .ak-setup-mode .input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.ak-setup-part summary {
+  cursor: pointer;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.ak-setup-position {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.ak-setup-mode {
+  border-top: 1px solid var(--dashboard-border, #dbe1e7);
+  padding-top: 16px;
+}
+
 @media (max-width: 640px) {
   .ak-category-grid {
     grid-template-columns: repeat(2,minmax(0,1fr));

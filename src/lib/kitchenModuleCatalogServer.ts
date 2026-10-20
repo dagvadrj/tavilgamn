@@ -59,7 +59,7 @@ export async function readKitchenModuleCatalog(
   ];
   const { data: modelRows, error: modelError } = modelIds.length
     ? await db
-        .from("furniture_models")
+        .from("kitchen_models")
         .select(
           "id,product_id,name,category,glb_path,preview_glb_path,source_glb_path,thumbnail_path,processing_status,archived_at,glb_validation",
         )
@@ -146,7 +146,7 @@ export async function readKitchenModelCandidates(db: Db = getSupabaseAdmin()) {
     { data: moduleRows, error: moduleError },
   ] = await Promise.all([
     db
-      .from("furniture_models")
+      .from("kitchen_models")
       .select(
         "id,product_id,name,description,dimensions_w,dimensions_h,dimensions_d,glb_path,thumbnail_path,source_glb_path,processing_status,archived_at,cabinet_module_id,specifications,glb_validation",
       )
@@ -216,7 +216,7 @@ export async function readKitchenAssets(db: Db = getSupabaseAdmin()) {
   let after = "";
   for (;;) {
     let query = db
-      .from("furniture_models")
+      .from("kitchen_models")
       .select(FURNITURE_FIELDS)
       .eq("category", "kitchen-cabinet")
       .eq("processing_status", "ready")

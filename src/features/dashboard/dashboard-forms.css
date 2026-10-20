@@ -1,0 +1,89 @@
+.dashboard-form-section {
+  min-width: 0;
+  border: 1px solid var(--dashboard-border, #dbe1e7);
+  border-radius: 14px;
+  background: var(--dashboard-surface, #fff);
+}
+
+.dashboard-form-section > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dashboard-form-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-form-section > summary > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-form-section > summary strong {
+  display: block;
+  color: var(--dashboard-ink, #172b3d);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.dashboard-form-section > summary small {
+  display: block;
+  margin-top: 4px;
+  color: var(--dashboard-muted, #718096);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.dashboard-form-optional {
+  color: var(--dashboard-muted, #718096);
+  font-size: 11px;
+}
+
+.dashboard-form-section > summary > svg {
+  flex-shrink: 0;
+  transition: transform 160ms ease;
+}
+
+.dashboard-form-section[open] > summary > svg {
+  transform: rotate(180deg);
+}
+
+.dashboard-form-section-body {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 0 18px 18px;
+}
+
+.dashboard-form-section > summary:focus-visible {
+  outline: 2px solid var(--dashboard-accent, #0674d7);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+.dashboard-shell .dashboard-content :is(input, select, textarea)[aria-invalid="true"],
+.dashboard-shell .dashboard-content :is(input, select, textarea):user-invalid {
+  border-color: #df5858;
+}
+
+.dashboard-form-hint {
+  color: var(--dashboard-muted, #718096);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+  .dashboard-form-section > summary {
+    padding: 14px;
+  }
+  .dashboard-form-section-body {
+    padding: 0 14px 14px;
+  }
+  .dashboard-form-optional {
+    display: none;
+  }
+}

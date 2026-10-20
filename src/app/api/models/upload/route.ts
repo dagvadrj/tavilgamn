@@ -194,7 +194,9 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: model, error: databaseError } = await supabase
-      .from("furniture_models")
+      .from(
+        category === "kitchen-cabinet" ? "kitchen_models" : "furniture_models",
+      )
       .insert({
         id,
         product_id: id,

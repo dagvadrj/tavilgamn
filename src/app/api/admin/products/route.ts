@@ -59,6 +59,10 @@ async function save(request: NextRequest, create: boolean) {
     });
 
     const stores = await readStoreDirectory({ includeInactive: true });
+    if (product.category === "kitchen-cabinet")
+      throw new CatalogInputError(
+        "Гал тогооны загварыг «Гал тогооны GLB сан» хэсгээс удирдана уу.",
+      );
     if (
       product.storeIds?.some((id) => !stores.some((store) => store.id === id))
     ) {

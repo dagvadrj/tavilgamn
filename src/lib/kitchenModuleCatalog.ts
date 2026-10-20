@@ -1,5 +1,18 @@
-import { KitchenAssemblyInputError, parseKitchenGlbAssembly, type KitchenPartKind } from "./kitchenGlbAssembly";
-export const KITCHEN_OPENINGS = ["doors", "drawers", "open", "sink", "hob", "oven", "hood", "refrigerator"] as const;
+import {
+  KitchenAssemblyInputError,
+  parseKitchenGlbAssembly,
+  type KitchenPartKind,
+} from "./kitchenGlbAssembly";
+export const KITCHEN_OPENINGS = [
+  "doors",
+  "drawers",
+  "open",
+  "sink",
+  "hob",
+  "oven",
+  "hood",
+  "refrigerator",
+] as const;
 export type KitchenOpening = (typeof KITCHEN_OPENINGS)[number];
 
 export type KitchenCatalogVariant = {
@@ -72,13 +85,26 @@ type CabinetMatch = {
   corner?: boolean;
 };
 
-export function matchingKitchenVariants(modules: KitchenCatalogModule[], cabinet: CabinetMatch) {
+export function matchingKitchenVariants(
+  modules: KitchenCatalogModule[],
+  cabinet: CabinetMatch,
+) {
   const cabinetType = cabinet.corner ? "corner" : cabinet.type;
   const opening = cabinet.opening ?? "doors";
   return modules
-    .filter((module) => module.active && module.cabinetType === cabinetType && module.widthMm === cabinet.width && module.heightMm === cabinet.height && module.depthMm === cabinet.depth)
+    .filter(
+      (module) =>
+        module.active &&
+        module.cabinetType === cabinetType &&
+        module.widthMm === cabinet.width &&
+        module.heightMm === cabinet.height &&
+        module.depthMm === cabinet.depth,
+    )
     .flatMap((module) => module.variants)
-    .filter((variant) => variant.active && !!variant.glbFile && variant.opening === opening);
+    .filter(
+      (variant) =>
+        variant.active && !!variant.glbFile && variant.opening === opening,
+    );
 }
 
 /** Nearby catalog products for the selected cabinet, ordered by compatibility. */
@@ -91,104 +117,223 @@ export function similarKitchenVariants(
   const opening = cabinet.opening ?? "doors";
   return modules
     .filter((module) => module.active && module.cabinetType === cabinetType)
-    .flatMap((module) => module.variants
-      .filter((variant) => variant.active && !!variant.glbFile)
-      .map((variant) => ({
-        module,
-        variant,
-        score:
-          (variant.opening === opening ? 0 : 10_000) +
-          Math.abs(module.widthMm - cabinet.width) * 4 +
-          Math.abs(module.heightMm - cabinet.height) * 2 +
-          Math.abs(module.depthMm - cabinet.depth) * 2 +
-          (variant.furnitureModelId === cabinet.variantId ? -20_000 : 0) +
-          variant.sortOrder,
-      })))
-    .sort((a, b) => a.score - b.score || a.variant.modelName.localeCompare(b.variant.modelName))
+    .flatMap((module) =>
+      module.variants
+        .filter((variant) => variant.active && !!variant.glbFile)
+        .map((variant) => ({
+          module,
+          variant,
+          score:
+            (variant.opening === opening ? 0 : 10_000) +
+            Math.abs(module.widthMm - cabinet.width) * 4 +
+            Math.abs(module.heightMm - cabinet.height) * 2 +
+            Math.abs(module.depthMm - cabinet.depth) * 2 +
+            (variant.furnitureModelId === cabinet.variantId ? -20_000 : 0) +
+            variant.sortOrder,
+        })),
+    )
+    .sort(
+      (a, b) =>
+        a.score - b.score ||
+        a.variant.modelName.localeCompare(b.variant.modelName),
+    )
     .slice(0, Math.max(0, limit));
 }
 
 /** Reuse published boxes at the planned size, preserving an explicit ready choice. */
-export function preferredKitchenVariant(modules: KitchenCatalogModule[], cabinet: CabinetMatch) {
-  const ready = modules.filter(module => module.active).flatMap(module => module.variants
-    .filter(variant => variant.active && variant.glbFile).map(variant => ({ module, variant })));
-  const selected = ready.find(({ variant }) => variant.furnitureModelId === cabinet.variantId);
+export function preferredKitchenVariant(
+  modules: KitchenCatalogModule[],
+  cabinet: CabinetMatch,
+) {
+  const ready = modules
+    .filter((module) => module.active)
+    .flatMap((module) =>
+      module.variants
+        .filter((variant) => variant.active && variant.glbFile)
+        .map((variant) => ({ module, variant })),
+    );
+  const selected = ready.find(
+    ({ variant }) => variant.furnitureModelId === cabinet.variantId,
+  );
   if (selected) return selected.variant;
   const exact = matchingKitchenVariants(modules, cabinet);
-  if (exact.length) return exact.find(variant => variant.isDefault) ?? exact[0];
+  if (exact.length)
+    return exact.find((variant) => variant.isDefault) ?? exact[0];
   const opening = cabinet.opening ?? "doors";
   if (opening === "refrigerator") return undefined;
   const candidates = ready.filter(({ module, variant }) => {
     const appliance = ["oven", "hob"].includes(opening);
     if (appliance) return ["oven", "hob"].includes(variant.opening);
-    return variant.opening === opening || variant.opening === "doors" || variant.opening === "open";
+    return (
+      variant.opening === opening ||
+      variant.opening === "doors" ||
+      variant.opening === "open"
+    );
   });
   candidates.sort((a, b) => {
-    const score = ({module, variant}: typeof a) =>
-      (module.cabinetType === (cabinet.corner ? "corner" : cabinet.type) ? 0 : 10000) +
+    const score = ({ module, variant }: typeof a) =>
+      (module.cabinetType === (cabinet.corner ? "corner" : cabinet.type)
+        ? 0
+        : 10000) +
       (variant.opening === opening ? 0 : 1000) +
-      Math.abs(module.widthMm - cabinet.width) * 4 + Math.abs(module.heightMm - cabinet.height) * 2 +
-      Math.abs(module.depthMm - cabinet.depth) * 2 + (variant.isDefault ? 0 : 1);
-    return score(a) - score(b) || a.variant.furnitureModelId.localeCompare(b.variant.furnitureModelId);
+      Math.abs(module.widthMm - cabinet.width) * 4 +
+      Math.abs(module.heightMm - cabinet.height) * 2 +
+      Math.abs(module.depthMm - cabinet.depth) * 2 +
+      (variant.isDefault ? 0 : 1);
+    return (
+      score(a) - score(b) ||
+      a.variant.furnitureModelId.localeCompare(b.variant.furnitureModelId)
+    );
   });
   return candidates[0]?.variant;
 }
 
-export function applyKitchenCatalogVariants<T extends { cabinets: CabinetMatch[] }>(kitchen: T, modules: KitchenCatalogModule[]): T {
+export function applyKitchenCatalogVariants<
+  T extends { cabinets: CabinetMatch[] },
+>(kitchen: T, modules: KitchenCatalogModule[]): T {
   if (!modules.some((module) => module.variants.length)) return kitchen;
   let changed = false;
   const cabinets = kitchen.cabinets.map((cabinet) => {
     const preferred = preferredKitchenVariant(modules, cabinet);
     if (preferred?.furnitureModelId === cabinet.variantId) return cabinet;
     changed = true;
-    const { variantId: _variantId, partSelections: _selections, ...withoutVariant } = cabinet;
-    if (preferred) return { ...withoutVariant, variantId: preferred.furnitureModelId };
+    const {
+      variantId: _variantId,
+      partSelections: _selections,
+      ...withoutVariant
+    } = cabinet;
+    if (preferred)
+      return { ...withoutVariant, variantId: preferred.furnitureModelId };
     return withoutVariant;
   });
   return changed ? { ...kitchen, cabinets } : kitchen;
 }
 
 export class KitchenModuleInputError extends Error {}
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function parseKitchenVariantInput(value: unknown) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new KitchenModuleInputError("Variant мэдээлэл буруу байна.");
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new KitchenModuleInputError("Variant мэдээлэл буруу байна.");
   const raw = value as Record<string, unknown>;
   const modelId = typeof raw.modelId === "string" ? raw.modelId : "";
   const moduleId = typeof raw.moduleId === "string" ? raw.moduleId : "";
   const opening = typeof raw.opening === "string" ? raw.opening : "";
-  const variantCode = typeof raw.variantCode === "string" ? raw.variantCode.trim().toUpperCase() : "";
-  const designCode = typeof raw.designCode === "string" ? raw.designCode.trim().toUpperCase() : "";
-  if (designCode && !/^[A-Z0-9]{1,16}(?:-[A-Z0-9]{1,16}){0,3}$/.test(designCode)) throw new KitchenModuleInputError("Хийцийн code буруу байна.");
-  const integer = (input: unknown, fallback: number) => input === undefined ? fallback : Number(input);
-  const doorCount = integer(raw.doorCount, 0), drawerCount = integer(raw.drawerCount, 0), sortOrder = integer(raw.sortOrder, 0);
-  if (!UUID.test(modelId) || !UUID.test(moduleId)) throw new KitchenModuleInputError("Model эсвэл module ID буруу байна.");
-  if (!(KITCHEN_OPENINGS as readonly string[]).includes(opening)) throw new KitchenModuleInputError("Нээлтийн төрөл буруу байна.");
-  if (!/^[A-Z0-9][A-Z0-9_-]{1,79}$/.test(variantCode)) throw new KitchenModuleInputError("Variant code 2–80 тэмдэгт байна.");
-  if (![doorCount, drawerCount, sortOrder].every(Number.isSafeInteger) || doorCount < 0 || doorCount > 2 || drawerCount < 0 || drawerCount > 4 || sortOrder < 0 || sortOrder > 10000) {
-    throw new KitchenModuleInputError("Хаалга, шургуулга эсвэл эрэмбийн утга буруу байна.");
+  const variantCode =
+    typeof raw.variantCode === "string"
+      ? raw.variantCode.trim().toUpperCase()
+      : "";
+  const designCode =
+    typeof raw.designCode === "string"
+      ? raw.designCode.trim().toUpperCase()
+      : "";
+  if (
+    designCode &&
+    !/^[A-Z0-9]{1,16}(?:-[A-Z0-9]{1,16}){0,3}$/.test(designCode)
+  )
+    throw new KitchenModuleInputError("Хийцийн code буруу байна.");
+  const integer = (input: unknown, fallback: number) =>
+    input === undefined ? fallback : Number(input);
+  const doorCount = integer(raw.doorCount, 0),
+    drawerCount = integer(raw.drawerCount, 0),
+    sortOrder = integer(raw.sortOrder, 0);
+  if (!UUID.test(modelId) || !UUID.test(moduleId))
+    throw new KitchenModuleInputError("Model эсвэл module ID буруу байна.");
+  if (!(KITCHEN_OPENINGS as readonly string[]).includes(opening))
+    throw new KitchenModuleInputError("Нээлтийн төрөл буруу байна.");
+  if (!/^[A-Z0-9][A-Z0-9_-]{1,79}$/.test(variantCode))
+    throw new KitchenModuleInputError("Variant code 2–80 тэмдэгт байна.");
+  if (
+    ![doorCount, drawerCount, sortOrder].every(Number.isSafeInteger) ||
+    doorCount < 0 ||
+    doorCount > 2 ||
+    drawerCount < 0 ||
+    drawerCount > 4 ||
+    sortOrder < 0 ||
+    sortOrder > 10000
+  ) {
+    throw new KitchenModuleInputError(
+      "Хаалга, шургуулга эсвэл эрэмбийн утга буруу байна.",
+    );
   }
-  const configuration: Record<string, unknown> = designCode ? { designCode } : {};
+  const configuration: Record<string, unknown> = designCode
+    ? { designCode }
+    : {};
+  if (raw.assemblyMode !== undefined) {
+    if (raw.assemblyMode !== "parts" && raw.assemblyMode !== "authored")
+      throw new KitchenModuleInputError("Угсралтын төрөл буруу байна.");
+    configuration.assemblyMode = raw.assemblyMode;
+  }
   if (raw.assembly !== undefined && raw.assembly !== null) {
-    try { configuration.assembly = parseKitchenGlbAssembly(raw.assembly); }
-    catch (error) { if (error instanceof KitchenAssemblyInputError) throw new KitchenModuleInputError(error.message); throw error; }
+    try {
+      configuration.assembly = parseKitchenGlbAssembly(raw.assembly);
+    } catch (error) {
+      if (error instanceof KitchenAssemblyInputError)
+        throw new KitchenModuleInputError(error.message);
+      throw error;
+    }
   }
-  return { modelId, moduleId, payload: { variantCode, opening, doorCount, drawerCount,
-    isDefault: raw.isDefault === true, sortOrder, configuration } };
+  if (raw.assemblyMode === "parts") {
+    const assembly = configuration.assembly as
+      import("./kitchenGlbAssembly").KitchenGlbAssembly | undefined;
+    if (
+      (assembly?.slots.filter((slot) => slot.kind === "door").length ?? 0) !==
+        doorCount ||
+      (assembly?.slots.filter(
+        (slot) => slot.kind === "drawer" || slot.kind === "drawer-front",
+      ).length ?? 0) !== drawerCount
+    )
+      throw new KitchenModuleInputError(
+        `${doorCount} хаалга, ${drawerCount} шургуулгын GLB-г тус бүр холбоно уу.`,
+      );
+    if (
+      assembly?.slots.some(
+        (slot) =>
+          ["door", "drawer", "drawer-front"].includes(slot.kind) &&
+          (slot.optional || !slot.defaultOptionId),
+      )
+    )
+      throw new KitchenModuleInputError(
+        "Хаалга, шургуулгын үндсэн GLB сонголт шаардлагатай.",
+      );
+  }
+  return {
+    modelId,
+    moduleId,
+    payload: {
+      variantCode,
+      opening,
+      doorCount,
+      drawerCount,
+      isDefault: raw.isDefault === true,
+      sortOrder,
+      configuration,
+    },
+  };
 }
 
 export function parseVariantState(value: unknown) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new KitchenModuleInputError("Variant мэдээлэл буруу байна.");
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new KitchenModuleInputError("Variant мэдээлэл буруу байна.");
   const raw = value as Record<string, unknown>;
-  if (typeof raw.modelId !== "string" || !UUID.test(raw.modelId) || typeof raw.active !== "boolean") throw new KitchenModuleInputError("Variant төлөв буруу байна.");
+  if (
+    typeof raw.modelId !== "string" ||
+    !UUID.test(raw.modelId) ||
+    typeof raw.active !== "boolean"
+  )
+    throw new KitchenModuleInputError("Variant төлөв буруу байна.");
   return { modelId: raw.modelId, active: raw.active };
 }
 
 export function parseKitchenModelDelete(value: unknown) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) throw new KitchenModuleInputError("Устгах model-ийн мэдээлэл буруу байна.");
-  const modelId = typeof (value as Record<string, unknown>).modelId === "string"
-    ? (value as Record<string, unknown>).modelId as string
-    : "";
-  if (!UUID.test(modelId)) throw new KitchenModuleInputError("Устгах model ID буруу байна.");
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new KitchenModuleInputError("Устгах model-ийн мэдээлэл буруу байна.");
+  const modelId =
+    typeof (value as Record<string, unknown>).modelId === "string"
+      ? ((value as Record<string, unknown>).modelId as string)
+      : "";
+  if (!UUID.test(modelId))
+    throw new KitchenModuleInputError("Устгах model ID буруу байна.");
   return { modelId };
 }

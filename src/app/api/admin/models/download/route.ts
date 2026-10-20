@@ -72,7 +72,7 @@ export async function GET(
     } =
       await getSupabaseAdmin()
         .from(
-          "furniture_models",
+          "model_records",
         )
         .select(
           "processing_status,glb_path,export_status,standard_glb_path",

@@ -195,7 +195,7 @@ export function parseKitchenGlbAssembly(
       kind: slot.kind as KitchenPartKind,
       positionMm: vector(slot.positionMm, [0, 0, 0], 10000),
       rotationDeg: vector(slot.rotationDeg, [0, 0, 0], 360),
-      scale: vector(slot.scale, [1, 1, 1], 10, true),
+      scale: vector(slot.scale, [1, 1, 1], 10),
       hideNodes: ((slot.hideNodes ?? []) as unknown[]).map((node) =>
         label(node, "Node", 128),
       ),
@@ -203,6 +203,8 @@ export function parseKitchenGlbAssembly(
       defaultOptionId,
       options,
     };
+    if (result.scale.some((value) => value === 0))
+      fail("Scale 0 байж болохгүй.");
     if (slot.parentSlotId) result.parentSlotId = id(slot.parentSlotId);
     if (slot.anchorNode)
       result.anchorNode = label(slot.anchorNode, "Anchor node", 128);

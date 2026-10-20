@@ -8,6 +8,7 @@ import {
 import { MerchantFormHeader } from "./MerchantFormHeader";
 import { MerchantModelAttachment } from "./MerchantModelAttachment";
 import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
+import { DashboardFormSection } from "@/features/dashboard/DashboardFormSection";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Box, ImagePlus, Save, X } from "lucide-react";
@@ -175,7 +176,7 @@ export function MerchantProductEditor({
     >
       <MerchantFormHeader
         title={create ? "Бараа нэмэх" : "Бүтээгдэхүүн засах"}
-        description="Мэдээлэл, зураг болон худалдах нөхцөлөө шинэчлээрэй."
+        description="Нэр, үнэ, нөөц, зураг, хэмжээг бөглөөд хадгална. Нэмэлт тохиргоог хэрэгтэй үедээ нээнэ."
       >
         <button
           type="button"
@@ -235,7 +236,9 @@ export function MerchantProductEditor({
                     field("category", event.target.value as Product["category"])
                   }
                 >
-                  {CATEGORIES.map((category) => (
+                  {CATEGORIES.filter(
+                    (category) => category.id !== "kitchen-cabinet",
+                  ).map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
@@ -294,79 +297,87 @@ export function MerchantProductEditor({
                   Өнгө, материалын бүх сонголтын нийт нөөц. Дууссан бол 0.
                 </small>
               </label>
-              <label>
-                Хямдралын өмнөх бодит үнэ (₮) · заавал биш
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  max={Number.MAX_SAFE_INTEGER}
-                  step={1}
-                  value={draft.compareAtPrice ?? ""}
-                  onChange={(event) => {
-                    const value =
-                      event.target.value === ""
-                        ? null
-                        : event.target.valueAsNumber;
-                    setDraft((current) => ({
-                      ...current,
-                      compareAtPrice: value,
-                      ...(value == null
-                        ? { promotionLabel: null, promotionEndsAt: null }
-                        : {}),
-                    }));
-                  }}
-                />
-                <small>
-                  Худалдах үнээс өндөр, өмнө нь бодитоор мөрдсөн үнэ. Хоосон бол
-                  хямдрал харуулахгүй.
-                </small>
-              </label>
-              <label>
-                Урамшууллын нэр · заавал биш
-                <input
-                  className="input"
-                  maxLength={80}
-                  disabled={draft.compareAtPrice == null}
-                  value={draft.promotionLabel ?? ""}
-                  onChange={(event) =>
-                    field("promotionLabel", event.target.value)
-                  }
-                />
-              </label>
-              <label>
-                Урамшуулал дуусах · таны төхөөрөмжийн цаг
-                <input
-                  className="input"
-                  type="datetime-local"
-                  disabled={draft.compareAtPrice == null}
-                  value={
-                    draft.promotionEndsAt
-                      ? new Date(
-                          Date.parse(draft.promotionEndsAt) -
-                            new Date(
-                              draft.promotionEndsAt,
-                            ).getTimezoneOffset() *
-                              60000,
-                        )
-                          .toISOString()
-                          .slice(0, 16)
-                      : ""
-                  }
-                  onChange={(event) =>
-                    field(
-                      "promotionEndsAt",
-                      event.target.value
-                        ? new Date(event.target.value).toISOString()
-                        : null,
-                    )
-                  }
-                />
-                <small>
-                  Дуусмагц хямдралын тэмдэг нуугдана. Худалдах үнэ автоматаар
-                  өөрчлөгдөхгүй.
-                </small>
-              </label>
+              <DashboardFormSection
+                title="Хямдрал, урамшуулал"
+                description="Хямдрал зарлах үед л бөглөнө."
+                optional
+                className="merchant-span"
+                defaultOpen={draft.compareAtPrice != null}
+              >
+                <label>
+                  Хямдралын өмнөх бодит үнэ (₮) · заавал биш
+                  <input
+                    className="input"
+                    type="number"
+                    min={0}
+                    max={Number.MAX_SAFE_INTEGER}
+                    step={1}
+                    value={draft.compareAtPrice ?? ""}
+                    onChange={(event) => {
+                      const value =
+                        event.target.value === ""
+                          ? null
+                          : event.target.valueAsNumber;
+                      setDraft((current) => ({
+                        ...current,
+                        compareAtPrice: value,
+                        ...(value == null
+                          ? { promotionLabel: null, promotionEndsAt: null }
+                          : {}),
+                      }));
+                    }}
+                  />
+                  <small>
+                    Худалдах үнээс өндөр, өмнө нь бодитоор мөрдсөн үнэ. Хоосон
+                    бол хямдрал харуулахгүй.
+                  </small>
+                </label>
+                <label>
+                  Урамшууллын нэр · заавал биш
+                  <input
+                    className="input"
+                    maxLength={80}
+                    disabled={draft.compareAtPrice == null}
+                    value={draft.promotionLabel ?? ""}
+                    onChange={(event) =>
+                      field("promotionLabel", event.target.value)
+                    }
+                  />
+                </label>
+                <label>
+                  Урамшуулал дуусах · таны төхөөрөмжийн цаг
+                  <input
+                    className="input"
+                    type="datetime-local"
+                    disabled={draft.compareAtPrice == null}
+                    value={
+                      draft.promotionEndsAt
+                        ? new Date(
+                            Date.parse(draft.promotionEndsAt) -
+                              new Date(
+                                draft.promotionEndsAt,
+                              ).getTimezoneOffset() *
+                                60000,
+                          )
+                            .toISOString()
+                            .slice(0, 16)
+                        : ""
+                    }
+                    onChange={(event) =>
+                      field(
+                        "promotionEndsAt",
+                        event.target.value
+                          ? new Date(event.target.value).toISOString()
+                          : null,
+                      )
+                    }
+                  />
+                  <small>
+                    Дуусмагц хямдралын тэмдэг нуугдана. Худалдах үнэ автоматаар
+                    өөрчлөгдөхгүй.
+                  </small>
+                </label>
+              </DashboardFormSection>
             </div>
           </section>
           <section className="merchant-form-card ">
@@ -560,11 +571,12 @@ export function MerchantProductEditor({
               )}
             </div>
           </section>
-          <section className="merchant-form-card ">
-            <div className="merchant-card-heading">
-              <h2>Хүргэлт ба 3D</h2>
-              <p>Худалдан авагчид харагдах нэмэлт мэдээлэл.</p>
-            </div>
+          <DashboardFormSection
+            title="Хүргэлт ба 3D"
+            description="Хүргэлтийн тайлбар, 3D файл эсвэл загвар бэлтгүүлэх хүсэлт."
+            optional
+            defaultOpen={modelRequested}
+          >
             <div className="merchant-form-grid">
               {" "}
               <label className="merchant-span">
@@ -622,7 +634,7 @@ export function MerchantProductEditor({
                 </p>
               )}
             </div>
-          </section>
+          </DashboardFormSection>
         </div>
       </fieldset>
     </form>

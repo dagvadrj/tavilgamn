@@ -156,7 +156,7 @@ test('catalog resolves registered part URLs and disables archived part choices',
   const rows = {
     kitchen_modules: [{ id: frameId, code: 'BASE', name: 'Base', cabinet_type: 'base', width_mm: 600, height_mm: 840, depth_mm: 600, active: true }],
     kitchen_module_variants: [{ furniture_model_id: frameId, module_id: frameId, variant_code: 'BASE-WHITE', opening: 'doors', door_count: 1, drawer_count: 0, configuration: { assembly: config }, active: true }],
-    furniture_models: [
+    kitchen_models: [
       { id: frameId, product_id: frameId, name: 'Frame', category: 'kitchen-cabinet', processing_status: 'ready', glb_path: 'r2://bucket/frame.glb' },
       { id, processing_status: 'ready', glb_path: 'r2://bucket/door.glb', thumbnail_path: 'r2://bucket/door.png' },
       { id: archivedId, processing_status: 'ready', glb_path: 'r2://bucket/green.glb', archived_at: '2026-01-01' },

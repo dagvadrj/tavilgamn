@@ -1,6 +1,7 @@
 "use client";
 
 import { DashboardNavigation } from "@/features/dashboard/DashboardNavigation";
+import { DashboardFormAssist } from "@/features/dashboard/DashboardFormAssist";
 import "@/features/dashboard/dashboard-v14.css";
 
 import { useCallback, useState, type ReactNode, type RefObject } from "react";
@@ -41,6 +42,7 @@ export function AdminShell({
       data-density={preferences.density}
       data-text-size={preferences.textSize}
     >
+      <DashboardFormAssist />
       <AdminSidebar
         active={active}
         onChange={changeTab}

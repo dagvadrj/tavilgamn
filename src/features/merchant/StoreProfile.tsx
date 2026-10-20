@@ -1,4 +1,5 @@
 "use client";
+import { DashboardFormSection } from "@/features/dashboard/DashboardFormSection";
 
 import {
   useDraftState,
@@ -8,6 +9,8 @@ import {
 import { MerchantFormHeader } from "./MerchantFormHeader";
 import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 import { useState } from "react";
+import { authFetch } from "@/lib/authFetch";
+import { isOwner } from "@/features/merchant/merchantApi";
 import { Save } from "lucide-react";
 import type { Store } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
@@ -36,6 +39,11 @@ export function StoreProfile({
     categories: store?.categories ?? [],
   }));
   const [busy, setBusy] = useState(false);
+  const [imageFile, setImageFile] = useDraftState<File | null>(
+    draftScope,
+    "imageFile",
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const draftStatus = useDraftStatus(draftScope);
@@ -60,13 +68,41 @@ export function StoreProfile({
         }
         setBusy(true);
         try {
+          let image = draft.image;
+          if (imageFile) {
+            if (
+              !["image/jpeg", "image/png", "image/webp"].includes(
+                imageFile.type,
+              ) ||
+              !imageFile.size ||
+              imageFile.size > 3 * 1024 * 1024
+            )
+              throw new Error(
+                "JPG, PNG эсвэл WebP зураг сонгоно уу. Хэмжээ 3 MB хүртэл.",
+              );
+            const form = new FormData();
+            form.set("file", imageFile);
+            const response = await authFetch(
+              "/api/merchant/images",
+              { method: "POST", body: form },
+              owner,
+            );
+            const uploaded = await response.json().catch(() => null);
+            if (!response.ok || typeof uploaded?.url !== "string")
+              throw new Error(uploaded?.error ?? "Зураг оруулж чадсангүй.");
+            if (!isOwner(owner))
+              throw new Error("Merchant нэвтрэлт өөрчлөгдсөн байна.");
+            image = uploaded.url;
+            field("image", image);
+            setImageFile(null);
+          }
           const result = await merchantRequest<{ store: Store }>(
             "/api/merchant/store",
             owner,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(draft),
+              body: JSON.stringify({ ...draft, image }),
             },
           );
           void clearDashboardDraft(draftScope, false);
@@ -120,7 +156,11 @@ export function StoreProfile({
           Дэлгүүрийн мэдээлэл хадгалагдлаа.
         </p>
       )}
-      <DashboardDraftNotice scope={draftScope} disabled={busy} />
+      <DashboardDraftNotice
+        scope={draftScope}
+        disabled={busy}
+        files={[imageFile]}
+      />
       <fieldset
         className="merchant-editor-grid"
         disabled={busy || draftStatus.loading}
@@ -225,29 +265,56 @@ export function StoreProfile({
           </section>
         </div>
         <div className="merchant-editor-aside">
-          <section className="merchant-form-card ">
+          <DashboardFormSection title="Дэлгүүрийн зураг" optional>
             <div className="merchant-card-heading">
               <h2>Дэлгүүрийн зураг</h2>
               <p>Брэндээ илэрхийлэх танилцуулгын зураг.</p>
             </div>
-            <div className="merchant-form-grid">
-              {" "}
-              <label className="merchant-span">
-                Дэлгүүрийн зургийн холбоос · заавал биш
-                <input
-                  className="input"
-                  placeholder="https://res.cloudinary.com/…"
-                  maxLength={2000}
-                  value={draft.image}
-                  onChange={(event) => field("image", event.target.value)}
-                />
-                <small>
-                  Cloudinary эсвэл Unsplash дээр байршуулсан HTTPS зургийн
-                  холбоос.
-                </small>
-              </label>
-            </div>
-          </section>
+            <label className="merchant-span">
+              Зураг сонгох
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) =>
+                  setImageFile(event.target.files?.[0] ?? null)
+                }
+              />
+              <small>
+                {imageFile
+                  ? imageFile.name
+                  : "JPG, PNG, WebP · 3 MB хүртэл. Хадгалах үед зураг орно."}
+              </small>
+            </label>
+            {imageFile && (
+              <button
+                type="button"
+                className="btn-ghost"
+                onClick={() => setImageFile(null)}
+              >
+                Сонгосон зураг хасах
+              </button>
+            )}
+            <details>
+              <summary>Зургийн холбоосоор оруулах</summary>
+              <div className="merchant-form-grid">
+                {" "}
+                <label className="merchant-span">
+                  Дэлгүүрийн зургийн холбоос · заавал биш
+                  <input
+                    className="input"
+                    placeholder="https://res.cloudinary.com/…"
+                    maxLength={2000}
+                    value={draft.image}
+                    onChange={(event) => field("image", event.target.value)}
+                  />
+                  <small>
+                    Cloudinary эсвэл Unsplash дээр байршуулсан HTTPS зургийн
+                    холбоос.
+                  </small>
+                </label>
+              </div>
+            </details>
+          </DashboardFormSection>
           <section className="merchant-form-card ">
             <div className="merchant-card-heading">
               <h2>Барааны ангилал</h2>

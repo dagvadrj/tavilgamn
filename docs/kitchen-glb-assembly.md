@@ -16,13 +16,13 @@ Merchant-ийн GLB таталт зөвхөн worker-оор бэлдсэн Stand
 
 ## Өгөгдлийн зохион байгуулалт
 
-Одоо байгаа JSONB багануудыг ашигласан тул шинэ SQL migration шаардахгүй.
+`20261020134417_separate_kitchen_model_library.sql` нь гал тогооны мөрүүдийг ID, архивын төлөв, файлын түүхтэй нь `kitchen_models` руу шилжүүлнэ. Ерөнхий каталог `furniture_models`-оос уншина. `model_registry` нийтлэг файлын түүхийн холбоосыг хадгална. `model_records` нь зөвхөн серверийн файл хүргэлт, төлөв, цэвэрлэгээний шалгалтад ашиглах read-only view. Шинэ хүснэгтүүд RLS-тэй, service role-оор хандана. Дараагийн reference guard migration нь merchant store-ийн FK-г хадгална.
 
 | Хадгалах газар | Агуулга |
 | --- | --- |
-| `furniture_models` | Их бие болон эд анги бүрийн файл, бодит хэмжээ, зураг, боловсруулалтын төлөв |
-| `furniture_models.specifications` | Эд ангийн `type: kitchen-part:door`, `kitchen-part:handle` зэрэг төрөл; `assembly: connector-origin` |
-| `furniture_models.glb_validation` | Upload-аас шалгасан node нэрс, хэмжээ, assetRole |
+| `kitchen_models` | Их бие болон эд анги бүрийн файл, бодит хэмжээ, зураг, боловсруулалтын төлөв |
+| `kitchen_models.specifications` | Эд ангийн `type: kitchen-part:door`, `kitchen-part:handle` зэрэг төрөл; `assembly: connector-origin` |
+| `kitchen_models.glb_validation` | Upload-аас шалгасан node нэрс, хэмжээ, assetRole |
 | `kitchen_module_variants.configuration.assembly` | Slot, parent, anchor, байрлал, хөдөлгөөн, зөвшөөрсөн GLB хувилбарууд |
 | Хадгалсан дизайны `cabinet.partSelections` | `slotId → optionId`; optional slot-ийн хоосон утга нь салгасан хэсэг |
 
@@ -65,3 +65,11 @@ GLB upload болон worker-т `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_
 Blender export нэртэй Empty node-уудыг хадгална. Delivery болон preview шахалт `prune --keep-leaves true` ашиглана. Worker нь assembly/part загварын source болон шахсан хоёр файлын anchor-уудын world transform-ийг харьцуулж, алга болсон эсвэл шилжсэн бол нийтлэхгүй. Эд ангийн connector origin-ийг доод төв рүү шилжүүлэхгүй.
 
 Угсралтын тестүүд нь parent хөдөлгөөн, GLB сольсон үед их биеийн материал хадгалагдах, optional хэсэг салгах, дизайн хадгалах/сэргээх, API model reference, архивлагдсан сонголт болон anchor export-ийг шалгана. Хуучин үйлдвэрлэлийн геометрийн тест fixture нь planner-ийн runtime renderer-ээс тусдаа байна.
+
+## Хялбар угсралтын урсгал
+
+Их бие → хийц → хаалга/шургуулга → бариул → 3D шалгалт → хадгалах. Хоёр хаалгатай хийцэд хоёр slot заавал холбоно. Ижил GLB-г хоёр талд ашиглаж болно; баруун хаалгыг X тэнхлэгээр толин тусгал болгоно. Хоёр хаалга урагш нээгдэхээр local хөдөлгөөнийг тохируулна. Бодит хэмжээг сунгахгүй; нугасны origin, байрлалыг preview дээр шалгана. Шинэ эд анги upload хийсний дараа угсралтын draft руу буцаж холбогдоно. Worker дууссаны дараа хадгална.
+
+`assemblyMode: parts` үед сервер хаалга, шургуулгын тоо болон GLB бүрийн төрөл, бэлэн төлөвийг шалгана. Бүтэн GLB-д `authored` горимыг ашиглана. Сангийн жагсаалтыг нэр, ангилал, боловсруулалтын төлөв, өргөнөөр шүүнэ.
+
+Worker нь `claim_furniture_model_job`, `claim_kitchen_model_job` болон хоёр сангийн export RPC-г ээлжлэн шалгана. Шилжилтийн дараа worker-ийг шинэ кодоор дахин эхлүүлнэ. Файлын R2 зам, `/api/models/files/:id/:filename` холбоос өөрчлөгдөхгүй.

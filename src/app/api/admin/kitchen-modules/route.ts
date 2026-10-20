@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
           "Үндсэн шүүгээг өөрийнх нь эд ангиар сонгохгүй.",
         );
       const { data: parts, error: partsError } = await db
-        .from("furniture_models")
+        .from("kitchen_models")
         .select(
           "id,glb_path,processing_status,archived_at,specifications,dimensions_w,dimensions_h,dimensions_d,glb_validation",
         )
@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
               `${slot.label}: бэлэн, идэвхтэй GLB сонгоно уу.`,
             );
           const kind = kitchenPartKind(part.specifications);
-          if (kind && kind !== slot.kind)
+          if (kind && kind !== slot.kind && !(slot.kind === "drawer-front" && kind === "drawer"))
             throw new KitchenModuleInputError(
               `${slot.label}: эд ангийн төрөл таарахгүй байна.`,
             );
@@ -266,7 +266,7 @@ export async function DELETE(request: NextRequest) {
     );
     const db = getSupabaseAdmin();
     const { data: model, error: modelError } = await db
-      .from("furniture_models")
+      .from("kitchen_models")
       .select(
         "id,category,glb_path,source_glb_path,preview_glb_path,standard_glb_path,thumbnail_path",
       )
@@ -281,7 +281,7 @@ export async function DELETE(request: NextRequest) {
     if (model.category !== "kitchen-cabinet")
       throw new KitchenModuleInputError("Зөвхөн kitchen GLB устгаж болно.");
 
-    const { error } = await db.rpc("set_model_archived", {
+    const { error } = await db.rpc("set_kitchen_model_archived", {
       p_actor: auth.userId,
       p_model: modelId,
       p_archived: true,

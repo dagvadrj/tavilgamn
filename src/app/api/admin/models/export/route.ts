@@ -1,60 +1,38 @@
 import { apiErrorResponse } from "@/lib/api/errors";
-import {
-  NextRequest,
-  NextResponse,
-} from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { randomUUID } from "crypto";
 
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
-export const dynamic =
-  "force-dynamic";
+export const dynamic = "force-dynamic";
 
 const headers = {
-  "Cache-Control":
-    "private, no-store",
+  "Cache-Control": "private, no-store",
 };
 
-function modelId(
-  value: unknown,
-) {
+function modelId(value: unknown) {
   return (
-    typeof value ===
-      "string" &&
-    /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(
-      value,
-    )
+    typeof value === "string" &&
+    /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(value)
   );
 }
 
-export async function POST(
-  request: NextRequest,
-) {
+export async function POST(request: NextRequest) {
   try {
-    const auth =
-      await requireAdmin(
-        request,
-      );
+    const auth = await requireAdmin(request);
 
     if (auth.error) {
       return auth.error;
     }
 
-    const body =
-      await request
-        .json()
-        .catch(() => null);
+    const body = await request.json().catch(() => null);
 
-    if (
-      !body ||
-      !modelId(body.modelId)
-    ) {
+    if (!body || !modelId(body.modelId)) {
       return apiErrorResponse(
         {
-          error:
-            "Model ID буруу байна.",
+          error: "Model ID буруу байна.",
         },
         {
           status: 400,
@@ -63,31 +41,38 @@ export async function POST(
       );
     }
 
-    const { data, error } =
-      await getSupabaseAdmin().rpc(
-        "request_furniture_model_export",
-        {
-          p_actor:
-            auth.userId,
-
-          p_model:
-            body.modelId,
-        },
+    const db = getSupabaseAdmin();
+    const model = await db
+      .from("model_records")
+      .select("category")
+      .eq("id", body.modelId)
+      .maybeSingle();
+    if (model.error) throw model.error;
+    if (!model.data)
+      return apiErrorResponse(
+        { error: "Загвар олдсонгүй." },
+        { status: 404, headers },
       );
+    const { data, error } = await db.rpc(
+      model.data.category === "kitchen-cabinet"
+        ? "request_kitchen_model_export"
+        : "request_furniture_model_export",
+      {
+        p_actor: auth.userId,
+
+        p_model: body.modelId,
+      },
+    );
 
     if (error) {
       throw error;
     }
 
-    return NextResponse.json(
-      data,
-      { headers },
-    );
+    return NextResponse.json(data, { headers });
   } catch {
     return apiErrorResponse(
       {
-        error:
-          "Standard GLB export эхлүүлж чадсангүй.",
+        error: "Standard GLB export эхлүүлж чадсангүй.",
       },
       {
         status: 503,
@@ -97,31 +82,20 @@ export async function POST(
   }
 }
 
-export async function GET(
-  request: NextRequest,
-) {
+export async function GET(request: NextRequest) {
   try {
-    const auth =
-      await requireAdmin(
-        request,
-      );
+    const auth = await requireAdmin(request);
 
     if (auth.error) {
       return auth.error;
     }
 
-    const id =
-      new URL(
-        request.url,
-      ).searchParams.get(
-        "modelId",
-      );
+    const id = new URL(request.url).searchParams.get("modelId");
 
     if (!id || !modelId(id)) {
       return apiErrorResponse(
         {
-          error:
-            "Model ID буруу байна.",
+          error: "Model ID буруу байна.",
         },
         {
           status: 400,
@@ -130,19 +104,11 @@ export async function GET(
       );
     }
 
-    const {
-      data,
-      error,
-    } =
-      await getSupabaseAdmin()
-        .from(
-          "furniture_models",
-        )
-        .select(
-          "export_status,export_error,standard_glb_path",
-        )
-        .eq("id", id)
-        .maybeSingle();
+    const { data, error } = await getSupabaseAdmin()
+      .from("model_records")
+      .select("export_status,export_error,standard_glb_path")
+      .eq("id", id)
+      .maybeSingle();
 
     if (error) {
       throw error;
@@ -150,27 +116,20 @@ export async function GET(
 
     return NextResponse.json(
       {
-        status:
-          data?.export_status ??
-          "idle",
+        status: data?.export_status ?? "idle",
 
-        error:
-          data?.export_error ??
-          null,
+        error: data?.export_error ?? null,
 
         ready:
-          data?.export_status ===
-            "ready" &&
-          typeof data?.standard_glb_path ===
-            "string",
+          data?.export_status === "ready" &&
+          typeof data?.standard_glb_path === "string",
       },
       { headers },
     );
   } catch {
     return apiErrorResponse(
       {
-        error:
-          "Export төлөвийг уншиж чадсангүй.",
+        error: "Export төлөвийг уншиж чадсангүй.",
       },
       {
         status: 503,

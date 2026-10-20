@@ -36,6 +36,12 @@ import AdminKitchenAssemblyEditor, {
   PART_LABELS,
 } from "./AdminKitchenAssemblyEditor";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
+import { AdminKitchenCabinetSetup } from "./AdminKitchenCabinetSetup";
+import {
+  cabinetSetupAssembly,
+  bindCabinetPart,
+  cabinetSetupProblem,
+} from "@/lib/kitchenCabinetSetup";
 import {
   getKitchenGlbAssembly,
   type KitchenGlbAssembly,
@@ -232,6 +238,12 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   const [family, setFamily] = useState("base");
   const [libraryQuery, setLibraryQuery] = useState("");
   const [libraryGroup, setLibraryGroup] = useState("all");
+  const [libraryStatus, setLibraryStatus] = useState("all");
+  const [libraryWidth, setLibraryWidth] = useState("");
+  const [pendingPart, setPendingPart] = useState<{
+    slotId: string;
+    kind: KitchenPartKind;
+  } | null>(null);
   const [modelId, setModelId] = useDraftState(draftScope, "modelId", "");
   const [moduleId, setModuleId] = useDraftState(draftScope, "moduleId", "");
   const [presetId, setPresetId] = useDraftState(
@@ -269,6 +281,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     draftScope,
     "assembly",
     null,
+  );
+  const [assemblyMode, setAssemblyMode] = useDraftState<"parts" | "authored">(
+    draftScope,
+    "assemblyMode",
+    "parts",
   );
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -337,6 +354,18 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   useEffect(() => {
     void load();
   }, [load]);
+  useEffect(() => {
+    if (
+      !models.some(
+        (model) =>
+          !model.archivedAt &&
+          ["queued", "processing"].includes(model.processingStatus),
+      )
+    )
+      return;
+    const timer = setTimeout(() => void load(), 3000);
+    return () => clearTimeout(timer);
+  }, [models, load]);
 
   const selectedModel = models.find((model) => model.id === modelId);
   const matchingModules = useMemo(
@@ -356,10 +385,32 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   );
   const selectedModule = modules.find((module) => module.id === moduleId);
   const uploadModule = modules.find((module) => module.id === uploadModuleId);
+  const setupAssembly = useMemo(
+    () =>
+      cabinetSetupAssembly(
+        assembly,
+        doorCount,
+        drawerCount,
+        selectedModule ??
+          selectedModel ?? { widthMm: 600, heightMm: 840, depthMm: 600 },
+      ),
+    [assembly, doorCount, drawerCount, selectedModule, selectedModel],
+  );
   const assetDefinition = KITCHEN_ASSET_TYPES[assetType];
   const isAsset = group !== "cabinets" && group !== "parts";
   const filteredModels = models.filter(
     (model) =>
+      (!libraryWidth || model.widthMm === Number(libraryWidth)) &&
+      (libraryStatus === "all" ||
+        (libraryStatus === "ready"
+          ? model.glbReady
+          : libraryStatus === "archived"
+            ? Boolean(model.archivedAt)
+            : libraryStatus === "processing"
+              ? ["queued", "processing", "idle"].includes(
+                  model.processingStatus,
+                )
+              : model.processingStatus === "error")) &&
       (libraryGroup === "all" ||
         (model.asset
           ? assetGroup(model.asset)
@@ -474,6 +525,93 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         setVariantCode("");
       }
     }
+  }
+
+  function uploadSetupPart(slotId: string, kind: KitchenPartKind) {
+    let next = setupAssembly;
+    if (kind === "handle" && !next.slots.some((slot) => slot.id === slotId))
+      next = {
+        ...next,
+        slots: [
+          ...next.slots,
+          {
+            id: slotId,
+            label: "Бариул",
+            kind: "handle",
+            parentSlotId: slotId.slice("handle-".length),
+            positionMm: [0, 0, 0],
+            rotationDeg: [0, 0, 0],
+            scale: [1, 1, 1],
+            hideNodes: [],
+            optional: true,
+            defaultOptionId: "default",
+            options: [{ id: "default", label: "Бариул", modelId: "" }],
+          },
+        ],
+      };
+    setAssembly(next);
+    setPendingPart({ slotId, kind });
+    chooseGroup("parts");
+    setUploadPartKind(kind);
+    setUploadName(
+      `${selectedModel?.name ?? "Шүүгээ"} · ${next.slots.find((slot) => slot.id === slotId)?.label ?? PART_LABELS[kind]}`,
+    );
+    setUploadGlb(null);
+    setPreview(null);
+    setUploadThumbnail(null);
+    setWorkspace("upload");
+  }
+
+  function cancelPartUpload() {
+    if (uploading) return;
+    if (pendingPart)
+      setAssembly((current) =>
+        current
+          ? {
+              ...current,
+              slots: current.slots.filter(
+                (slot) =>
+                  slot.id !== pendingPart.slotId ||
+                  slot.kind !== "handle" ||
+                  slot.options.some((option) => option.modelId),
+              ),
+            }
+          : current,
+      );
+    setPendingPart(null);
+  }
+
+  function chooseCabinet(id: string) {
+    cancelPartUpload();
+    const linked = modules
+      .flatMap((module) =>
+        module.variants.map((variant) => ({ module, variant })),
+      )
+      .find((item) => item.variant.furnitureModelId === id);
+    setModelId(id);
+    setAssembly(
+      linked ? getKitchenGlbAssembly(linked.variant.configuration) : null,
+    );
+    setAssemblyMode(
+      linked?.variant.configuration.assemblyMode === "parts"
+        ? "parts"
+        : linked
+          ? "authored"
+          : "parts",
+    );
+    if (linked) {
+      setModuleId(linked.module.id);
+      setDesignCode(String(linked.variant.configuration.designCode ?? ""));
+      setIsDefault(linked.variant.isDefault);
+      const preset = VARIANT_PRESETS.find(
+        (item) =>
+          item.opening === linked.variant.opening &&
+          item.doorCount === linked.variant.doorCount &&
+          item.drawerCount === linked.variant.drawerCount,
+      );
+      if (preset) setPresetId(preset.id);
+    }
+    setWorkspace("link");
   }
 
   async function uploadModel(event: React.FormEvent) {
@@ -643,6 +781,30 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         setModelId(uploadedModelId);
         setModuleId(uploadedModuleId);
         setAssembly(null);
+        setAssemblyMode("parts");
+        setWorkspace("link");
+      } else if (pendingPart) {
+        const candidate: KitchenModelCandidate = {
+          id: uploadedModelId,
+          productId: uploadedModelId,
+          name: uploadName.trim(),
+          partKind: uploadPartKind || null,
+          widthMm: uploadSize.widthMm,
+          heightMm: uploadSize.heightMm,
+          depthMm: uploadSize.depthMm,
+          glbReady: false,
+          processingStatus: "queued",
+          linked: false,
+          moduleCode: null,
+        };
+        setAssembly((current) =>
+          bindCabinetPart(
+            current ?? setupAssembly,
+            pendingPart.slotId,
+            candidate,
+          ),
+        );
+        setPendingPart(null);
         setWorkspace("link");
       }
     } catch (reason) {
@@ -659,6 +821,13 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   async function save(event: React.FormEvent) {
     event.preventDefault();
     if (busy || draftStatus.loading) return;
+    if (assemblyMode === "parts") {
+      const problem = cabinetSetupProblem(setupAssembly, models);
+      if (problem) {
+        setError(problem);
+        return;
+      }
+    }
     setBusy("save");
     setError(null);
     try {
@@ -676,7 +845,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             doorCount,
             drawerCount,
             isDefault,
-            assembly,
+            assembly: assemblyMode === "parts" ? setupAssembly : assembly,
+            assemblyMode,
             sortOrder: 0,
           }),
         },
@@ -692,6 +862,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       setDesignCode("");
       setIsDefault(false);
       setAssembly(null);
+      setAssemblyMode("parts");
       await load();
     } catch (reason) {
       setError(
@@ -733,7 +904,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     setError(null);
     try {
       const response = await authFetch(
-        `/api/models/${id}`,
+        `/api/models/${id}?domain=kitchen`,
         { method: "PATCH" },
         owner,
       );
@@ -817,7 +988,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             type="button"
             key={id}
             aria-pressed={workspace === id}
-            onClick={() => setWorkspace(id)}
+            disabled={uploading}
+            onClick={() => {
+              if (id !== "upload") cancelPartUpload();
+              setWorkspace(id);
+            }}
           >
             {label}
           </button>
@@ -833,6 +1008,22 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           <CheckCircle size={16} />
           {uploadSuccess}
         </p>
+      )}
+      {pendingPart && workspace === "upload" && (
+        <div className="ak-setup-actions" role="status">
+          <span>Угсралтад {PART_LABELS[pendingPart.kind]} нэмэх</span>
+          <button
+            type="button"
+            className="btn-ghost"
+            disabled={uploading}
+            onClick={() => {
+              cancelPartUpload();
+              setWorkspace("link");
+            }}
+          >
+            Угсралт руу буцах
+          </button>
+        </div>
       )}
       <section
         hidden={workspace !== "upload"}
@@ -1058,9 +1249,12 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                 type="file"
                 accept=".glb,model/gltf-binary"
                 required={!uploadGlb}
-                onChange={(event) =>
-                  setUploadGlb(event.target.files?.[0] ?? null)
-                }
+                onChange={(event) => {
+                  const file = event.target.files?.[0] ?? null;
+                  setUploadGlb(file);
+                  if (file && !uploadName.trim())
+                    setUploadName(file.name.replace(/\.glb$/i, ""));
+                }}
               />
               <small className="mt-1 block text-black/45">200 MB хүртэл</small>
             </label>
@@ -1158,7 +1352,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <span className="admin-eyebrow">3D CATALOG</span>
+            <span className="admin-eyebrow">ГАЛ ТОГООНЫ ТУСДАА САН</span>
             <h2 className="mt-1 text-lg font-semibold">
               {workspace === "link"
                 ? "Шүүгээний хийц ба солих эд анги"
@@ -1192,19 +1386,21 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               className="grid gap-3 rounded-xl bg-black/[0.03] p-4 md:grid-cols-2 xl:grid-cols-4"
             >
               <label className="label">
-                Kitchen GLB
+                1. Их биеийн GLB
                 <select
                   className="input mt-1 w-full"
                   required
                   value={modelId}
                   onChange={(event) => {
-                    setModelId(event.target.value);
-                    setAssembly(null);
+                    chooseCabinet(event.target.value);
                   }}
                 >
                   <option value="">Сонгоно уу</option>
                   {models
-                    .filter((model) => !model.partKind)
+                    .filter(
+                      (model) =>
+                        !model.partKind && !model.asset && !model.archivedAt,
+                    )
                     .map((model) => (
                       <option
                         key={model.id}
@@ -1250,41 +1446,91 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                   ))}
                 </select>
               </label>
-              <label className="label">
-                Variant code
-                <input
-                  className="input mt-1 w-full"
-                  required
-                  maxLength={80}
-                  value={variantCode}
-                  readOnly
-                />
-              </label>
-              <label className="label">
-                Хийцийн ялгах code (сонголттой)
-                <input
-                  className="input mt-1 w-full"
-                  value={designCode}
-                  onChange={(event) =>
-                    setDesignCode(event.target.value.toUpperCase())
-                  }
-                  placeholder="Ж: TOP144"
-                  maxLength={40}
-                />
-              </label>
-              <div className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs text-black/55">
-                <strong className="text-black/70">Хаалга:</strong> {doorCount} ·{" "}
-                <strong className="text-black/70">Шургуулга:</strong>{" "}
-                {drawerCount}
-              </div>
-              <label className="flex items-center gap-2 self-end pb-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={isDefault}
-                  onChange={(event) => setIsDefault(event.target.checked)}
-                />
-                Module-ийн үндсэн хувилбар
-              </label>
+              {selectedModel && (
+                <section className="ak-setup-mode md:col-span-2 xl:col-span-4">
+                  <label className="label">
+                    Загварын бэлтгэл
+                    <select
+                      className="input"
+                      value={assemblyMode}
+                      onChange={(event) =>
+                        setAssemblyMode(
+                          event.target.value as "parts" | "authored",
+                        )
+                      }
+                    >
+                      <option value="parts">
+                        Их бие + тусдаа хаалга / шургуулга
+                      </option>
+                      <option value="authored">
+                        Бүтэн угсарсан GLB / нарийвчилсан тохиргоо
+                      </option>
+                    </select>
+                  </label>
+                  <p className="ak-help">
+                    Гал тогооны загвар ердийн барааны каталогт орохгүй.{" "}
+                    {assemblyMode === "parts"
+                      ? `${doorCount} хаалга, ${drawerCount} шургуулгын GLB холбоод угсралтаа шалгана.`
+                      : "GLB дотроо хаалгатай бол давхар эд анги нэмэхгүй."}
+                  </p>
+                </section>
+              )}
+              {selectedModel && assemblyMode === "parts" && (
+                <div className="md:col-span-2 xl:col-span-4">
+                  <AdminKitchenCabinetSetup
+                    key={modelId}
+                    assembly={setupAssembly}
+                    onChange={setAssembly}
+                    models={models}
+                    baseModel={selectedModel}
+                    materials={materials}
+                    onUpload={uploadSetupPart}
+                  />
+                </div>
+              )}
+              <details className="md:col-span-2 xl:col-span-4">
+                <summary>
+                  Нэмэлт тохиргоо · хийцийн код, үндсэн хувилбар
+                </summary>
+                <div className="grid gap-3 pt-3 md:grid-cols-2 xl:grid-cols-4">
+                  <label className="label">
+                    Хийцийн код · автоматаар үүснэ
+                    <input
+                      className="input mt-1 w-full"
+                      required
+                      maxLength={80}
+                      value={variantCode}
+                      readOnly
+                    />
+                  </label>
+                  <label className="label">
+                    Хийцийн ялгах code (сонголттой)
+                    <input
+                      className="input mt-1 w-full"
+                      value={designCode}
+                      onChange={(event) =>
+                        setDesignCode(event.target.value.toUpperCase())
+                      }
+                      placeholder="Ж: TOP144"
+                      maxLength={40}
+                    />
+                  </label>
+                  <div className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs text-black/55">
+                    <strong className="text-black/70">Хаалга:</strong>{" "}
+                    {doorCount} ·{" "}
+                    <strong className="text-black/70">Шургуулга:</strong>{" "}
+                    {drawerCount}
+                  </div>
+                  <label className="flex items-center gap-2 self-end pb-3 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={isDefault}
+                      onChange={(event) => setIsDefault(event.target.checked)}
+                    />
+                    Module-ийн үндсэн хувилбар
+                  </label>
+                </div>
+              </details>
               <button
                 className="btn-primary self-end"
                 disabled={
@@ -1296,7 +1542,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                 ) : (
                   <Link2 size={15} />
                 )}
-                GLB холбох
+                Угсралт хадгалах
               </button>
               {selectedModel && !matchingModules.length && (
                 <p className="text-sm text-red-600 md:col-span-2 xl:col-span-4">
@@ -1305,7 +1551,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                   бүтээгдэхүүний хэмжээг шалгана уу.
                 </p>
               )}
-              {selectedModel && (
+              {selectedModel && assemblyMode === "authored" && (
                 <details
                   className="ak-assembly md:col-span-2 xl:col-span-4"
                   open={Boolean(assembly?.slots.length)}
@@ -1349,7 +1595,37 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                   </option>
                 ))}
               </select>
+              <select
+                className="input"
+                aria-label="GLB төлөв"
+                value={libraryStatus}
+                onChange={(event) => setLibraryStatus(event.target.value)}
+              >
+                <option value="all">Бүх төлөв</option>
+                <option value="ready">Бэлэн</option>
+                <option value="processing">Боловсруулж буй</option>
+                <option value="error">Алдаатай</option>
+                <option value="archived">Архивласан</option>
+              </select>
+              <select
+                className="input"
+                aria-label="GLB өргөн"
+                value={libraryWidth}
+                onChange={(event) => setLibraryWidth(event.target.value)}
+              >
+                <option value="">Бүх өргөн</option>
+                {[...new Set(models.map((model) => model.widthMm))]
+                  .sort((a, b) => a - b)
+                  .map((width) => (
+                    <option key={width} value={width}>
+                      {width} мм
+                    </option>
+                  ))}
+              </select>
             </div>
+            <p className="ak-help">
+              {filteredModels.length} / {models.length} гал тогооны загвар
+            </p>
             <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
               {filteredModels.map((model) => (
                 <div
@@ -1392,6 +1668,16 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                     )}
                     {model.archivedAt ? "Сэргээх" : "Архивлах"}
                   </button>
+                  {!model.partKind && !model.asset && !model.archivedAt && (
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      disabled={!model.glbReady}
+                      onClick={() => chooseCabinet(model.id)}
+                    >
+                      {model.linked ? "Угсралт засах" : "Угсрах"}
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1459,6 +1745,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                               setIsDefault(variant.isDefault);
                               setAssembly(
                                 getKitchenGlbAssembly(variant.configuration),
+                              );
+                              setAssemblyMode(
+                                variant.configuration.assemblyMode === "parts"
+                                  ? "parts"
+                                  : "authored",
                               );
                               document
                                 .querySelector(

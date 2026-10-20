@@ -133,7 +133,7 @@ export async function readProducts(
       if (error) throw error;
       if (!data?.length) return products;
       const rows = data as unknown as FurnitureRow[];
-      products.push(...rows.filter(row => !kitchenPartKind(row.specifications)).map(productFromRow));
+      products.push(...rows.filter(row => row.category !== "kitchen-cabinet" && !kitchenPartKind(row.specifications)).map(productFromRow));
       if (rows.length < 500) return products;
       after = rows[rows.length - 1].id;
     }
@@ -191,7 +191,7 @@ export async function readProduct(
       .maybeSingle();
     if (error) throw error;
     const row = data as unknown as FurnitureRow | null;
-    return row && !kitchenPartKind(row.specifications) ? productFromRow(row) : undefined;
+    return row && row.category !== "kitchen-cabinet" && !kitchenPartKind(row.specifications) ? productFromRow(row) : undefined;
   };
 
   try {

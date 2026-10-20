@@ -1,4 +1,5 @@
 "use client";
+import { DashboardFormSection } from "@/features/dashboard/DashboardFormSection";
 
 import { useEffect, useId, useRef, useState } from "react";
 import { LoaderCircle, Sparkles } from "lucide-react";
@@ -487,7 +488,12 @@ export function KitchenListingFields({
             ]}
             disabled={disabled}
           />
-          <div className="km-field-wide">
+          <DashboardFormSection
+            title="Хайлтад харагдах түлхүүр үгс"
+            description="Хэрэглэгч хайж олох үгсээ дараа нь нэмж болно."
+            optional
+            className="km-field-wide"
+          >
             <KitchenTokenInput
               label="Хайлтын tag"
               value={form.tags}
@@ -505,7 +511,7 @@ export function KitchenListingFields({
             <p className="km-field-hint">
               20 хүртэл tag. Хэрэглэгч эдгээр үгээр загварыг хайж олно.
             </p>
-          </div>
+          </DashboardFormSection>
         </div>
       </fieldset>
     </div>

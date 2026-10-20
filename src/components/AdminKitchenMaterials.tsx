@@ -1,5 +1,10 @@
 "use client";
-import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
+import { DashboardFormSection } from "@/features/dashboard/DashboardFormSection";
+import {
+  useDraftState,
+  useDraftStatus,
+  clearDashboardDraft,
+} from "@/hooks/useDashboardDraft";
 import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 
 import { useCallback, useEffect, useState } from "react";
@@ -113,8 +118,16 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
     [],
   );
   const draftScope = `admin:${owner}:kitchen-material`;
-  const [form, setForm] = useDraftState<MaterialForm>(draftScope, "form", emptyForm);
-  const [editingId, setEditingId] = useDraftState<string | null>(draftScope, "editingId", null);
+  const [form, setForm] = useDraftState<MaterialForm>(
+    draftScope,
+    "form",
+    emptyForm,
+  );
+  const [editingId, setEditingId] = useDraftState<string | null>(
+    draftScope,
+    "editingId",
+    null,
+  );
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const draftStatus = useDraftStatus(draftScope);
@@ -164,13 +177,16 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
     setError(null);
     setMessage(null);
     try {
+      const materialId =
+        form.id || `material_${crypto.randomUUID().replaceAll("-", "")}`;
+      if (!form.id) setForm((current) => ({ ...current, id: materialId }));
       const response = await authFetch(
         "/api/admin/kitchen-materials",
         {
           method: editingId ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            id: form.id,
+            id: materialId,
             name: form.name,
             surfaceKind: form.surfaceKind,
             baseColor: form.baseColor,
@@ -337,24 +353,6 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <label className="label">
-            Материалын код
-            <input
-              className="input mt-1 w-full"
-              required
-              disabled={!!editingId}
-              maxLength={64}
-              pattern="[a-z0-9][a-z0-9_-]{0,63}"
-              placeholder="Ж: dark_oak"
-              value={form.id}
-              onChange={(event) =>
-                update("id", event.target.value.toLowerCase())
-              }
-            />
-            <small className="mt-1 block text-black/45">
-              Англи жижиг үсэг, тоо, - эсвэл _
-            </small>
-          </label>
-          <label className="label">
             Харагдах нэр
             <input
               className="input mt-1 w-full"
@@ -394,6 +392,7 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
                 }
               />
               <input
+                aria-label="Материалын өнгөний HEX код"
                 className="input min-w-0 flex-1"
                 required
                 pattern="#[0-9A-Fa-f]{6}"
@@ -404,38 +403,65 @@ export function AdminKitchenMaterials({ owner }: { owner: string }) {
               />
             </div>
           </label>
-          <label className="label">
-            Барзгар чанар
-            <input
-              className="input mt-1 w-full"
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              required
-              value={form.roughness}
-              onChange={(event) => update("roughness", event.target.value)}
-            />
-            <small className="mt-1 block text-black/45">
-              0 = гялгар, 1 = матт
-            </small>
-          </label>
-          <label className="label">
-            Металл чанар
-            <input
-              className="input mt-1 w-full"
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              required
-              value={form.metalness}
-              onChange={(event) => update("metalness", event.target.value)}
-            />
-            <small className="mt-1 block text-black/45">
-              Мод, чулуу ихэвчлэн 0
-            </small>
-          </label>
+
+          <DashboardFormSection
+            title="Нарийвчилсан материалын тохиргоо"
+            description="Код автоматаар үүснэ. Барзгар болон металл чанарыг шаардлагатай үед өөрчилнө."
+            optional
+            className="md:col-span-2 xl:col-span-4"
+          >
+            <div className="grid gap-3 md:grid-cols-3">
+              <label className="label">
+                Материалын код
+                <input
+                  className="input mt-1 w-full"
+                  disabled={!!editingId}
+                  maxLength={64}
+                  pattern="[a-z0-9][a-z0-9_-]{0,63}"
+                  placeholder="Хоосон бол автоматаар үүснэ"
+                  value={form.id}
+                  onChange={(event) =>
+                    update("id", event.target.value.toLowerCase())
+                  }
+                />
+                <small className="mt-1 block text-black/45">
+                  Англи жижиг үсэг, тоо, - эсвэл _
+                </small>
+              </label>
+              <label className="label">
+                Барзгар чанар
+                <input
+                  className="input mt-1 w-full"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  required
+                  value={form.roughness}
+                  onChange={(event) => update("roughness", event.target.value)}
+                />
+                <small className="mt-1 block text-black/45">
+                  0 = гялгар, 1 = матт
+                </small>
+              </label>
+              <label className="label">
+                Металл чанар
+                <input
+                  className="input mt-1 w-full"
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  required
+                  value={form.metalness}
+                  onChange={(event) => update("metalness", event.target.value)}
+                />
+                <small className="mt-1 block text-black/45">
+                  Мод, чулуу ихэвчлэн 0
+                </small>
+              </label>
+            </div>
+          </DashboardFormSection>
         </div>
         <details className="rounded-xl border border-black/10 bg-white p-3">
           <summary className="cursor-pointer text-sm font-medium">
