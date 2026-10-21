@@ -1,7 +1,6 @@
-import { RoomPlanner } from "@/components/RoomPlanner";
-import { Suspense } from "react";
+import { RoomPlannerEntry } from "@/features/planner/components/PlannerEntry";
 export const metadata = { title: "Өрөөний төлөвлөгч — tavilga.mn" };
 
 export default function PlannerPage() {
-  return <RoomPlanner />;
+  return <RoomPlannerEntry />;
 }

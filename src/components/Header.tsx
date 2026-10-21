@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { ProductSearch } from "./ProductSearch";
 import { ShopHeaderActions, MobileShopNavigation, ShopRoleLinks } from "./ShopHeaderActions";
 

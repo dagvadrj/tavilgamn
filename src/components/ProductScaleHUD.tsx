@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { useState, type CSSProperties } from "react";
 import { Ruler, ChevronDown, PersonStanding } from "lucide-react";
 import type { Product } from "@/lib/types";

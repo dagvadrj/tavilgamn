@@ -179,7 +179,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
   }
 
   if (!initialized) {
-    return <PageSkeleton variant="detail" />;
+    return <PageSkeleton variant="detail" layout="order" />;
   }
 
   if (!userId) {
@@ -201,7 +201,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
   }
 
   if (loading && !current) {
-    return <PageSkeleton variant="detail" label="Захиалгын мэдээлэл ачаалж байна…" />;
+    return <PageSkeleton variant="detail" layout="order" label="Захиалгын мэдээлэл ачаалж байна…" />;
   }
 
   if (!current) {

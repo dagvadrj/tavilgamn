@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { ArrowUpRight, Check } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import type { RoomLook } from "@/lib/shopTheLook";

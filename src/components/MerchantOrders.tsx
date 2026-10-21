@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -111,9 +112,7 @@ export function MerchantOrders({
         </button>
       </div>
       {loading ? (
-        <div className="merchant-state" role="status">
-          Захиалгыг ачаалж байна…
-        </div>
+        <PageSkeleton compact layout="rows" />
       ) : error ? (
         <p className="merchant-error" role="alert">
           {error}

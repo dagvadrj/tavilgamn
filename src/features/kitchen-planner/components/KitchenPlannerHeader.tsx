@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { Armchair, Camera, CookingPot, PanelTop, Refrigerator, Ruler, Save, Search, Undo2, Redo2, X } from "lucide-react";
 import type { ReactNode } from "react";
 import type { KitchenSaveStatus } from "@/lib/kitchenSaveStatus";

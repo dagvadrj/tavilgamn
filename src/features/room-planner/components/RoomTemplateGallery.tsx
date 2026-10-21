@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ArrowRight, ChefHat, PencilRuler } from "lucide-react";
@@ -239,12 +240,10 @@ export function RoomTemplateGallery({
           </button>
         </div>
       )}
-      {!templates && !error && (
-        <p role="status">Бэлэн өрөөнүүдийг ачаалж байна…</p>
-      )}
       <section aria-labelledby="empty-room-heading">
         <h2 id="empty-room-heading">Хоосон өрөөнүүд</h2>
         <p>Бэлэн хэлбэр, засалтай өрөөг сонгоод тавилгаа байрлуулаарай.</p>
+        {!templates && !error && <PageSkeleton compact layout="cards" label="Хоосон өрөөнүүдийг ачаалж байна…" />}
         {cards(expanded ? empty : empty.slice(0, 8))}
         {templates && !empty.length && (
           <p className="room-template-empty">
@@ -296,6 +295,7 @@ export function RoomTemplateGallery({
             </select>
           </label>
         </div>
+        {!templates && !error && <PageSkeleton compact layout="cards" label="Тохижуулсан өрөөнүүдийг ачаалж байна…" />}
         {cards(furnished)}
         {templates && !furnished.length && (
           <p className="room-template-empty">

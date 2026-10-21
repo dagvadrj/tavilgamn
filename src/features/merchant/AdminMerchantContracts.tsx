@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Save, Send, RefreshCw } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
@@ -120,6 +121,7 @@ export function AdminMerchantContracts({ owner }: { owner: string }) {
     }
   };
   const rows = data?.acceptances.slice(0, 50) ?? [];
+  if (!data && !error) return <PageSkeleton compact layout="contract-form" />;
   return (
     <section className="merchant-commerce">
       <div className="merchant-section-heading">

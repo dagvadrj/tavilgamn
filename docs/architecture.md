@@ -1,5 +1,7 @@
 # Architecture
 
+For everyday button, input, loading and feature changes, start with [the developer map](developer-map.md).
+
 Updated: 2026-10-02 (Phase 4). This document describes the current implementation, not a future redesign.
 
 ## Route shells
@@ -10,8 +12,8 @@ flowchart TD
   Root --> Planner["(planner)/layout: fullscreen main"]
   Root --> Admin["(admin)/layout: admin main"]
   Shop --> Catalog["catalog, product, stores, account, merchant, checkout"]
-  Planner --> Room["/planner → RoomPlanner controller"]
-  Planner --> Kitchen["/kitchen → KitchenPlanner → ModularKitchenPlanner controller"]
+  Planner --> Room["/planner → PlannerEntry → RoomPlanner controller"]
+  Planner --> Kitchen["/kitchen → PlannerEntry → KitchenPlanner → ModularKitchenPlanner controller"]
   Room --> RoomUI["features/room-planner: UI hook + panels"]
   Kitchen --> KitchenUI["features/kitchen-planner: catalog hook + panels"]
   Room --> Scenes["three/: dynamically loaded scenes + model delivery"]

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { AlertTriangle, CheckCircle2, Ruler } from "lucide-react";
 import { useMemo } from "react";
 import type { ModularKitchen } from "@/lib/kitchenCabinets";

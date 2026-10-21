@@ -16,7 +16,7 @@ import {
 } from "@/lib/merchantNavigation";
 const MerchantOrders = dynamic(
   () => import("@/components/MerchantOrders").then((m) => m.MerchantOrders),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
 );
 import { MerchantShell } from "@/components/MerchantShell";
 import type { MerchantTab } from "@/components/MerchantSidebar";
@@ -25,21 +25,21 @@ const MerchantKitchenDesigns = dynamic(
     import("@/components/MerchantKitchenDesigns").then(
       (module) => module.MerchantKitchenDesigns,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
 );
 const MerchantKitchenDesignDetail = dynamic(
   () =>
     import("@/components/MerchantKitchenDesignDetail").then(
       (module) => module.MerchantKitchenDesignDetail,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="document" compact /> },
 );
 const MerchantKitchenQuotes = dynamic(
   () =>
     import("@/components/MerchantKitchenQuotes").then(
       (module) => module.MerchantKitchenQuotes,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
 );
 import { merchantRequest } from "@/features/merchant/merchantApi";
 import { MerchantOverview } from "@/features/merchant/MerchantOverview";
@@ -48,47 +48,47 @@ const MerchantActivation = dynamic(
     import("@/features/merchant/MerchantActivation").then(
       (m) => m.MerchantActivation,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
 );
 const MerchantWallet = dynamic(
   () =>
     import("@/features/merchant/MerchantWallet").then((m) => m.MerchantWallet),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="metrics" compact /> },
 );
 const MerchantDeliveryBoard = dynamic(
   () =>
     import("@/features/merchant/MerchantDeliveryBoard").then(
       (m) => m.MerchantDeliveryBoard,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="board" compact /> },
 );
 const MerchantBranches = dynamic(
   () =>
     import("@/features/merchant/MerchantOperations").then(
       (m) => m.MerchantBranches,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
 );
 const MerchantStaff = dynamic(
   () =>
     import("@/features/merchant/MerchantOperations").then(
       (m) => m.MerchantStaff,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
 );
 const MerchantFeedback = dynamic(
   () =>
     import("@/features/merchant/MerchantOperations").then(
       (m) => m.MerchantFeedback,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
 );
 const MerchantAssistant = dynamic(
   () =>
     import("@/features/merchant/MerchantOperations").then(
       (m) => m.MerchantAssistant,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="assistant-form" compact /> },
 );
 const MerchantTeamWorkspace = dynamic(
   () =>
@@ -98,7 +98,7 @@ const MerchantTeamWorkspace = dynamic(
   {
     loading: () => (
       <PageSkeleton
-        variant="dashboard"
+        variant="dashboard" layout="status"
         compact
         label="Ажилтны эрхийг шалгаж байна…"
       />
@@ -110,28 +110,28 @@ const StoreProfile = dynamic(
     import("@/features/merchant/StoreProfile").then(
       (module) => module.StoreProfile,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="store-profile" compact /> },
 );
 const MerchantProducts = dynamic(
   () =>
     import("@/features/merchant/MerchantProducts").then(
       (module) => module.MerchantProducts,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
 );
 const MerchantReports = dynamic(
   () =>
     import("@/features/merchant/MerchantReports").then(
       (m) => m.MerchantReports,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="report-form" compact /> },
 );
 const MerchantContracts = dynamic(
   () =>
     import("@/features/merchant/MerchantContracts").then(
       (m) => m.MerchantContracts,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+  { loading: () => <PageSkeleton variant="dashboard" layout="document" compact /> },
 );
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
 import { DashboardAccount } from "@/features/dashboard/DashboardAccount";
@@ -170,6 +170,7 @@ export function MerchantDashboard({
         <PageSkeleton
           variant="dashboard"
           label="Дэлгүүрийн эрхийг шалгаж байна…"
+          layout="status"
         />
       </main>
     );

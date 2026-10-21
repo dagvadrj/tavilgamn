@@ -1,7 +1,7 @@
 "use client";
 
 import { PageSkeleton } from "@/components/PageSkeleton";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -58,7 +58,7 @@ export default function AccountPage() {
   }, [initialized, user, router]);
 
   if (!initialized || !user) {
-    return <PageSkeleton variant="dashboard" label="Хэрэглэгчийн мэдээллийг ачаалж байна…" />;
+    return <PageSkeleton layout="status" label="Хэрэглэгчийн мэдээллийг ачаалж байна…" />;
   }
   return (
     <div className="account-layout">

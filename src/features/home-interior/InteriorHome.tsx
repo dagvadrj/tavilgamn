@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowDown,

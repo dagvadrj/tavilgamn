@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, Box } from "lucide-react";
@@ -33,7 +34,7 @@ export function KitchenModelLibrary({ modules, loading, error, retry, disabled, 
       {Object.entries(TYPES).filter(([id]) => models.some(item => item.module.cabinetType === id)).map(([id, label]) =>
         <button type="button" key={id} aria-pressed={type === id} onClick={() => setType(id)}>{label}</button>)}
     </div>
-    {loading && <p className="planner-empty" role="status">3D загваруудыг ачаалж байна…</p>}
+    {loading && !models.length && <PageSkeleton compact layout="cards" label="3D загваруудыг ачаалж байна…" />}
     {error && <div className="planner-empty" role="alert"><p>3D загварын санг ачаалж чадсангүй.</p><button type="button" className="planner-secondary-button" onClick={retry}>Дахин оролдох</button></div>}
     {!loading && !error && !filtered.length && <p className="planner-empty">{models.length ? "Хайлтад тохирох загвар олдсонгүй." : "Одоогоор энэ ангилалд GLB загвар алга. Админаас оруулсан загварууд энд харагдана."}</p>}
     {!loading && !error && models.length > 0 && <div className="kitchen-result-count"><span>{filtered.length} загвар</span>{(query || type !== "all") && <button type="button" onClick={() => { setQuery(""); setType("all"); }}>Шүүлтүүр арилгах</button>}</div>}

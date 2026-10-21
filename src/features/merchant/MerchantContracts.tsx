@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useEffect, useState } from "react";
 import { Download, Check } from "lucide-react";
 import { merchantRequest } from "./merchantApi";
@@ -50,7 +51,7 @@ export function MerchantContracts({ owner }: { owner: string }) {
         </p>
       )}
       {resource.loading && !resource.data && (
-        <p role="status">Гэрээг ачаалж байна…</p>
+        <PageSkeleton compact layout="document" />
       )}
       {resource.data && !contract && (
         <div className="merchant-panel">

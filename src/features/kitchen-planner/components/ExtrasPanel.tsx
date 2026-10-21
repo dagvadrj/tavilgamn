@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useState } from "react";
 import Image from "next/image";
 import type { Product } from "@/lib/types";
@@ -183,7 +184,7 @@ export function ExtrasPanel({
           {error ? (
             <p role="alert">{error}</p>
           ) : loading ? (
-            <p role="status">Каталог ачаалж байна…</p>
+            !options.length && <PageSkeleton compact layout="rows" label="Каталог ачаалж байна…" />
           ) : !options.length ? (
             <p>Энэ төрөлд 3D загвартай бүтээгдэхүүн олдсонгүй.</p>
           ) : null}

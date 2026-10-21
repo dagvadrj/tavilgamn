@@ -67,7 +67,7 @@ export function RemotePage<K extends keyof PageData>({
 
   const current =
     result?.url === url && result.attempt === attempt ? result : null;
-  if (!current) return <PageSkeleton variant={variant} />;
+  if (!current) return <PageSkeleton variant={variant} layout={page === "product" ? "detail" : page === "kitchen" ? "kitchen-detail" : page} />;
   if (current.error)
     return (
       <div className="shop-container py-16 text-center">

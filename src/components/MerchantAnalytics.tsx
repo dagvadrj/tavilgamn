@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { useMerchantResource } from "@/features/merchant/useMerchantResource";
 
@@ -62,9 +63,7 @@ export function MerchantAnalytics({ owner }: { owner: string }) {
   const { analytics, loading, error, refresh } = useMerchantAnalytics(owner);
   if (loading) {
     return (
-      <div className="merchant-state" role="status">
-        Dashboard ачаалж байна…
-      </div>
+      <PageSkeleton compact layout="metrics" />
     );
   }
 

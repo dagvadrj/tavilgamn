@@ -1,4 +1,5 @@
 ﻿"use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -402,10 +403,7 @@ export function AdminKitchenDesigns({
               </div>
               <div className="admin-kitchen-list" aria-busy={loading}>
                 {loading ? (
-                  <p className="admin-kitchen-list-empty" role="status">
-                    <LoaderCircle size={20} className="animate-spin mx-auto" />
-                    Загваруудыг ачаалж байна…
-                  </p>
+                  <PageSkeleton compact layout="rows" />
                 ) : (
                   visible.map((item) => {
                     const preview =
@@ -466,10 +464,7 @@ export function AdminKitchenDesigns({
       )}
       {designId &&
         (loading ? (
-          <div className="mk-loading" role="status">
-            <LoaderCircle size={22} className="animate-spin" />
-            Загварын мэдээллийг ачаалж байна…
-          </div>
+          <PageSkeleton compact layout="detail" />
         ) : !design ? (
           <p className="admin-kitchen-list-empty">Загвар олдсонгүй.</p>
         ) : (

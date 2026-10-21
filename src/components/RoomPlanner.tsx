@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { RoomPlannerSignIn } from "@/features/room-planner/components/RoomPlannerSignIn";
 import { trackProduct3d } from "@/lib/productEngagement";
 import { duplicateFurniturePlacement, moveAttachedFurniture, resolveFurnitureAttachments } from "@/lib/furnitureAttachment";
@@ -46,7 +47,7 @@ import { roomPlannerCatalog, type RoomCatalogScope } from "@/lib/roomCatalogPoli
 import { PlannerModelCard } from "@/features/planner/components/PlannerModelCard";
 import type { CameraAction, CameraRequest } from "@/lib/plannerCamera";
 import Image from "next/image";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import {
   Plus,
   Save,
@@ -175,7 +176,7 @@ export function RoomPlanner() {
   useEffect(() => {
     void initialize();
   }, [initialize]);
-  if (!initialized) return <div role="status" className="container-page py-10">Өмнөх өрөөг сэргээж байна…</div>;
+  if (!initialized) return <PageSkeleton variant="planner" layout="room-start" label="Өмнөх өрөөг сэргээж байна…"/>;
   return <RoomPlannerEditor key={user?.id ?? "guest"} />;
 }
 
@@ -1235,6 +1236,7 @@ function RoomPlannerEditor() {
   return (
     <div
       ref={workspaceRef}
+      data-planner-ready="room"
       className={cn(
         "room-planner-layout planner-workspace planner-studio planner-reference room-simple relative overflow-hidden",
         (leftOpen || rightOpen || summaryOpen) && "room-panel-open",

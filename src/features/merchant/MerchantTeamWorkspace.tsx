@@ -74,7 +74,7 @@ export function MerchantTeamWorkspace({
     );
   if (!loaded)
     return (
-      <PageSkeleton variant="dashboard" label="Ажилтны эрхийг шалгаж байна…" />
+      <PageSkeleton layout="status" label="Ажилтны эрхийг шалгаж байна…" />
     );
   if (!access || access.role === "owner") return fallback;
   return (

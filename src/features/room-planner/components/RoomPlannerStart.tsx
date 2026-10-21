@@ -1,4 +1,5 @@
 "use client";
+import { startPlannerNavigation } from "@/lib/plannerNavigation";
 import { RoomPlannerSignIn } from "./RoomPlannerSignIn";
 
 import { useEffect, useRef, useState } from "react";
@@ -133,6 +134,7 @@ export function RoomPlannerStart({
     try {
       const design = createSuggestedKitchen(kitchenPreferences, dimensions);
       const href = saveKitchenFlowDraft(localStorage, { userId: kitchenUser?.id, draftId: crypto.randomUUID(), design, preferences: kitchenPreferences, stage });
+      startPlannerNavigation(href);
       kitchenRouter.push(href);
     } catch(reason) { setError((reason as Error).message); }
   }
@@ -141,10 +143,12 @@ export function RoomPlannerStart({
       try {
         const { width, depth } = ROOM_TYPES.kitchen;
         const design = createSuggestedKitchen(DEFAULT_KITCHEN_SUGGESTION, { width, depth, height: 2.7 });
-        kitchenRouter.push(saveKitchenFlowDraft(localStorage, {
+        const href = saveKitchenFlowDraft(localStorage, {
           userId: kitchenUser?.id, draftId: crypto.randomUUID(), design,
           preferences: DEFAULT_KITCHEN_SUGGESTION, stage: "room",
-        }));
+        });
+        startPlannerNavigation(href);
+        kitchenRouter.push(href);
       } catch (reason) {
         setError(reason instanceof Error ? reason.message : "Гал тогооны төлөвлөгчийг нээж чадсангүй.");
       }
@@ -172,7 +176,7 @@ export function RoomPlannerStart({
       />
     );
   return (
-    <section className="room-start planner-entry-theme" aria-label="Өрөөний төлөвлөгчийг эхлүүлэх">
+    <section className="room-start planner-entry-theme" data-planner-ready="room" aria-label="Өрөөний төлөвлөгчийг эхлүүлэх">
       <header className="room-start-header flex-wrap">
         <Link href="/" className="room-start-brand">
           <House size={22} /> tavilga.mn

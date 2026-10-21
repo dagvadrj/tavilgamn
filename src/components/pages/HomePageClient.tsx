@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import Image from "next/image";
 import { useState } from "react";
 import {

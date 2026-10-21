@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heart, ShoppingBag, UserRound, House, LayoutGrid, Box } from "lucide-react";

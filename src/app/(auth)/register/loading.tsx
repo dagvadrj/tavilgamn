@@ -1,5 +1,5 @@
-import { PageSkeleton } from "@/components/PageSkeleton";
+import { AuthFormSkeleton } from "@/features/auth/AuthFormSkeleton";
 
 export default function Loading() {
-  return <PageSkeleton variant="form" />;
+  return <AuthFormSkeleton mode="register" />;
 }

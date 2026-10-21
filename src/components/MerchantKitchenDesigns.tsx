@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import {
   useDraftState,
   useDraftStatus,
@@ -7,7 +8,7 @@ import {
 import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 
 import Image from "next/image";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import {
   useCallback,
   useEffect,
@@ -361,7 +362,7 @@ export function MerchantKitchenDesigns({
   }
 
   if (!data && !error)
-    return <div className="merchant-load-state">Загваруудыг ачаалж байна…</div>;
+    return <PageSkeleton compact layout="list" />;
   return (
     <section className="space-y-5">
       <div className="merchant-page-heading">

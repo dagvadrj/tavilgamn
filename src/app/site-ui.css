@@ -59,7 +59,7 @@
 }
 
 .site-ui :is(.input, .ui-input) {
-  min-height: 44px;
+  min-height: var(--site-input-height);
   border: 1px solid var(--site-line);
   border-radius: var(--site-control-radius);
   background: var(--site-surface);

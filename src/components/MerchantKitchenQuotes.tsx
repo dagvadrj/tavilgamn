@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { KitchenCommercePanel } from "./KitchenCommercePanel";
 import Image from "next/image";
@@ -122,9 +123,7 @@ export function MerchantKitchenQuotes({ owner }: { owner: string }) {
         </button>
       </div>
       {loading ? (
-        <div className="merchant-state" role="status">
-          Үнийн хүсэлтүүдийг ачаалж байна…
-        </div>
+        <PageSkeleton compact layout="rows" />
       ) : error ? (
         <p className="merchant-error" role="alert">
           {error}

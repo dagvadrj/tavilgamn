@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { KitchenCommercePanel } from "./KitchenCommercePanel";
 import Link from "next/link";
@@ -84,12 +85,7 @@ export function KitchenQuoteHistory() {
 
   if (loading)
     return (
-      <div
-        className="account-card p-8 text-sm text-[#68686f]"
-        role="status"
-      >
-        Үнийн хүсэлтүүдийг ачаалж байна…
-      </div>
+      <PageSkeleton compact layout="rows" />
     );
   if (error)
     return (

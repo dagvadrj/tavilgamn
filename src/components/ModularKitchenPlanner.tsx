@@ -1,10 +1,11 @@
 "use client";
+import { startPlannerNavigation } from "@/lib/plannerNavigation";
 import { KitchenSuggestionWizard } from "./KitchenSuggestionWizard";
 import { KitchenSetupSteps } from "@/features/kitchen-planner/components/KitchenSetupSteps";
 import { isKitchenFlowStage, kitchenPreferences, restoreKitchenPreferences, updateKitchenEquipment, type KitchenFlowStage, type KitchenSetupStage } from "@/lib/kitchenFlow";
 import { DEFAULT_KITCHEN_SUGGESTION } from "@/lib/kitchenSuggestions";
 import { KitchenDesignSuggestions } from "@/features/kitchen-planner/components/KitchenDesignSuggestions";
-import { BrandLoader } from "@/components/BrandLoader";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { PlannerTour } from "@/features/planner/components/PlannerTour";
 import { kitchenSaveStatus } from "@/lib/kitchenSaveStatus";
 
@@ -105,7 +106,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { useRouter } from "next/navigation";
 import { useCallback,useEffect,useMemo,useRef,useState } from "react";
 import type { Group } from "three";
@@ -151,10 +152,7 @@ const Scene = dynamic(
   {
     ssr: false,
     loading: () => (
-      <p className="kp-viewer-message" role="status">
-        <BrandLoader />
-        3D загварыг бэлдэж байна…
-      </p>
+      <PageSkeleton compact layout="viewport" label="3D загварыг бэлдэж байна…" />
     ),
   },
 );
@@ -607,7 +605,7 @@ export function ModularKitchenPlanner({
             ? "Гарнитур болон 3D нүүр зураг хадгалагдлаа."
             : "Гарнитур хадгалагдлаа. 3D нүүр зургийг энэ удаа хадгалж чадсангүй.",
         );
-        if (place) router.push(`/planner?kitchen=${saved.id}`);
+        if (place) { const href = `/planner?kitchen=${saved.id}`; startPlannerNavigation(href); router.push(href); }
         return saved;
       } else {
         const error = useKitchens.getState().error || "Хадгалж чадсангүй. Дахин оролдоно уу.";
@@ -997,6 +995,7 @@ export function ModularKitchenPlanner({
     <main
       className="kp kp-shell planner-studio planner-reference kitchen-reference kitchen-refined kitchen-flow kitchen-glb-workspace kitchen-ikea-layout"
       data-room-setup={spaceOpen}
+      data-planner-ready={ready ? "kitchen" : undefined}
       data-workflow-stage={currentFlowStage}
       data-stage={
         reviewOpen

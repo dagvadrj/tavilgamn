@@ -16,7 +16,7 @@ import { useCheckoutQuote } from "@/components/useCheckoutQuote";
 export default function CheckoutPage() {
   const user = useAuth((state) => state.user);
   const initialized = useAuth((state) => state.initialized);
-  if (!initialized) return <PageSkeleton variant="form" />;
+  if (!initialized) return <PageSkeleton layout="status" label="Нэвтрэлтийг шалгаж байна…" />;
   if (!user) return <div className="ui-empty"><h1>Захиалга өгөхийн тулд нэвтэрнэ үү</h1><p>Сагсны бараануудыг таны бүртгэлд нэмээд захиалгыг үргэлжлүүлнэ.</p><Link className="btn-primary" href="/login?next=/checkout" onClick={requestGuestCartTransfer}>Нэвтрээд үргэлжлүүлэх</Link></div>;
   return <CheckoutForm key={user.id} ownerId={user.id} />;
 }

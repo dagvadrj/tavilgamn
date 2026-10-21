@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { useEffect, useState } from "react";
 
@@ -161,10 +162,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
         </button>
       </div>
       {loading ? (
-        <div className="admin-loading" role="status">
-          <RefreshCw size={22} />
-          <p>Marketplace аналитик ачаалж байна…</p>
-        </div>
+        <PageSkeleton compact layout="metrics" />
       ) : error ? (
         <p className="admin-error" role="alert">
           {error}

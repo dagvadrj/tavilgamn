@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { useEffect, useRef, useState } from "react";
 import { Armchair, ArrowRight, ArrowUpRight, BedDouble, BriefcaseBusiness, ChevronRight, Factory, Hammer, LayoutGrid, Store, UtensilsCrossed, X } from "lucide-react";
 import { CATEGORY_LABEL } from "@/lib/products";

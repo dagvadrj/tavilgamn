@@ -328,7 +328,7 @@ export function NumberControl({
 
 export function PlannerSkeleton() {
   return (
-    <PageSkeleton
+    <PageSkeleton layout="viewport"
       variant="planner"
       compact
       label="Өрөөний төлөвлөгчийг ачаалж байна…"

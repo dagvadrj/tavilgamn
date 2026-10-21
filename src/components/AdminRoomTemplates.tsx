@@ -1,7 +1,8 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { Plus, PencilRuler } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
 import type { RoomTemplateCard } from "@/lib/roomTemplates";
@@ -83,7 +84,7 @@ export function AdminRoomTemplates({ owner }: { owner: string }) {
           </button>
         </p>
       )}
-      {!items && !error && <p role="status">Өрөөнүүдийг ачаалж байна…</p>}
+      {!items && !error && <PageSkeleton compact layout="rows" />}
       <div className="room-template-grid">
         {visible.map((item) => (
           <Link

@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useState } from "react";
 import { FileDown, RefreshCw } from "lucide-react";
 import { useMerchantResource } from "./useMerchantResource";
@@ -110,7 +111,7 @@ export function MerchantReports({ owner }: { owner: string }) {
           {error || resource.error}
         </p>
       )}
-      {resource.loading && !data && <p role="status">Тайланг бэлтгэж байна…</p>}
+      {resource.loading && !data && <PageSkeleton compact layout="metrics" />}
       {data && (
         <>
           <p>

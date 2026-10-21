@@ -1,4 +1,5 @@
 "use client";
+import { startPlannerNavigation } from "@/lib/plannerNavigation";
 
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { ModularKitchenPlanner } from "./ModularKitchenPlanner";
@@ -19,7 +20,7 @@ export function KitchenPlanner() {
 
 function KitchenPlannerLoading() {
   return (
-    <PageSkeleton variant="planner" label="Төлөвлөх орчныг ачаалж байна…" />
+    <PageSkeleton variant="planner" layout="kitchen-planner" label="Төлөвлөх орчныг ачаалж байна…" />
   );
 }
 
@@ -34,7 +35,7 @@ function Editor() {
   if (!initialized) return <KitchenPlannerLoading />;
   if (params.get("setup") === "1") {
     return (
-      <KitchenSuggestionWizard onBack={() => router.push("/planner?setup=1")} />
+      <KitchenSuggestionWizard onBack={() => { startPlannerNavigation("/planner?setup=1"); router.push("/planner?setup=1"); }} />
     );
   }
   return (

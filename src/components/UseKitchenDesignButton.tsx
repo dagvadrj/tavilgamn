@@ -1,4 +1,5 @@
 "use client";
+import { startPlannerNavigation } from "@/lib/plannerNavigation";
 
 import { useEffect, useRef, useState } from "react";
 import { Copy, LoaderCircle } from "lucide-react";
@@ -51,7 +52,9 @@ export function UseKitchenDesignButton({
           body?.error ?? "Загварыг өөрийн төсөлд хуулж чадсангүй.",
         );
       }
-      router.push(`/kitchen?design=${encodeURIComponent(body.kitchen.id)}`);
+      const href = `/kitchen?design=${encodeURIComponent(body.kitchen.id)}`;
+      startPlannerNavigation(href);
+      router.push(href);
     } catch (reason) {
       setError(
         reason instanceof Error

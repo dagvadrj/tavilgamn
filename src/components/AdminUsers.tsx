@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { useEffect, useState } from "react";
 import { Search, Users, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
@@ -91,7 +92,7 @@ function UserList({ owner }: { owner: string }) {
   return <div>
     <div className="admin-page-heading"><div><span className="admin-eyebrow">ХЭРЭГЛЭГЧИЙН БҮРТГЭЛ</span><h1>Хэрэглэгчид</h1><p>Хэрэглэгчийн эрх, дэлгүүр болон захиалгын мэдээлэл.</p></div><span className="admin-heading-icon"><Users size={25} strokeWidth={1.5} /></span></div>
     <div className="admin-toolbar"><label className="admin-search"><Search size={18} /><input aria-label="Энэ хуудсан дахь хэрэглэгч хайх" placeholder="Энэ хуудсанд нэр, имэйлээр хайх…" value={query} onChange={e => setQuery(e.target.value)} /></label><button type="button" className="btn-ghost" disabled={loading} onClick={() => setRefresh(v => v + 1)}><RefreshCw size={15} />Шинэчлэх</button></div>
-    {loading ? <div className="admin-loading" role="status"><Users size={24} />Хэрэглэгчдийг ачаалж байна…</div> : error ? <p className="admin-error" role="alert">{error}</p> : !visible.length ? <div className="admin-empty"><Users size={30} /><strong>{query ? "Хэрэглэгч олдсонгүй" : "Энэ хуудсанд хэрэглэгч алга"}</strong><p>{query ? "Нэр, имэйлээ өөрчлөх эсвэл өөр хуудас сонгоорой." : "Шинэ бүртгэлүүд энд харагдана."}</p></div> : <>
+    {loading ? <PageSkeleton compact layout="rows" /> : error ? <p className="admin-error" role="alert">{error}</p> : !visible.length ? <div className="admin-empty"><Users size={30} /><strong>{query ? "Хэрэглэгч олдсонгүй" : "Энэ хуудсанд хэрэглэгч алга"}</strong><p>{query ? "Нэр, имэйлээ өөрчлөх эсвэл өөр хуудас сонгоорой." : "Шинэ бүртгэлүүд энд харагдана."}</p></div> : <>
       <p className="admin-result-count">{visible.length} хэрэглэгч · Энэ хуудсанд · Захиалгын бүх төлөв багтсан</p>
       <div className="admin-panel"><table className="admin-data-table admin-user-table"><thead><tr><th scope="col">Хэрэглэгч</th><th scope="col">Имэйл хаяг</th><th scope="col">Эрх / Дэлгүүр</th><th scope="col">Захиалга</th><th scope="col">Бүртгүүлсэн</th></tr></thead><tbody>{visible.map(user => <tr key={user.id}><td data-label="Хэрэглэгч"><div className="admin-product-name"><span className="admin-avatar">{user.name.slice(0,1).toUpperCase()}</span><strong>{user.name}</strong></div></td><td data-label="Имэйл">{user.email ?? "Имэйл бүртгээгүй"}</td><td data-label="Эрх / Дэлгүүр"><UserRoleEditor key={`${user.id}-${user.role}`} owner={owner} user={user} onSaved={(role) => setResult(current => current && ({ ...current, users: current.users.map(item => item.id === user.id ? { ...item, role } : item) }))} /></td><td data-label="Захиалга"><span className="admin-status">{user.orders} захиалга</span></td><td data-label="Бүртгүүлсэн">{new Date(user.joined).toLocaleDateString("mn-MN", {timeZone:"Asia/Ulaanbaatar"})}</td></tr>)}</tbody></table></div>
     </>}
