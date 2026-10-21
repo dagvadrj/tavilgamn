@@ -862,9 +862,9 @@
 @media (max-width: 767px), (max-height: 500px) {
   .planner-workspace.planner-reference.planner-studio.room-simple .room-lighting-popup {
     position: fixed;
-    inset: calc(var(--reference-header) + 12px) 12px auto auto;
-    width: min(320px, calc(100vw - 24px));
-    max-width: calc(100vw - 24px);
+    inset: calc(var(--reference-header) + 12px) auto auto var(--room-light-menu-left, 12px);
+    width: var(--room-light-menu-width, min(320px, calc(100vw - 80px)));
+    max-width: calc(100vw - 80px);
     max-height: calc(var(--planner-visible-height, 100dvh) - var(--reference-header) - 24px);
   }
 }

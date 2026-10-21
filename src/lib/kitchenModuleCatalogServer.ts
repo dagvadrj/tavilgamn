@@ -7,11 +7,12 @@ import type {
 import { getSupabaseAdmin } from "./supabase/admin";
 import { getKitchenGlbAssembly, kitchenPartKind } from "./kitchenGlbAssembly";
 import { kitchenAsset } from "./kitchenAssetCatalog";
-import {
-  FURNITURE_FIELDS,
-  productFromRow,
-  type FurnitureRow,
-} from "./catalogServer";
+import { productFromRow, type FurnitureRow } from "./catalogServer";
+
+// Kitchen models are a separate schema domain. Furniture-only commerce fields
+// (for example made_to_order) must never leak into this table's read projection.
+export const KITCHEN_ASSET_FIELDS =
+  "id,product_id,name,category,description,base_price,image_url,thumbnail_path,glb_path,preview_glb_path,processing_status,scale,dimensions_w,dimensions_d,dimensions_h,colors,materials,default_color,in_stock,rating,review_count,badges,is_new,is_best_seller,store_ids,images,glb_validation,compare_at_price,promotion_label,promotion_ends_at,delivery_terms,specifications";
 
 type Db = ReturnType<typeof getSupabaseAdmin>;
 const file = (path: unknown) =>
@@ -217,7 +218,7 @@ export async function readKitchenAssets(db: Db = getSupabaseAdmin()) {
   for (;;) {
     let query = db
       .from("kitchen_models")
-      .select(FURNITURE_FIELDS)
+      .select(KITCHEN_ASSET_FIELDS)
       .eq("category", "kitchen-cabinet")
       .eq("processing_status", "ready")
       .is("archived_at", null)

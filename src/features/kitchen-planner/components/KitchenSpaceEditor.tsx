@@ -6,6 +6,7 @@ import {
   Grid2X2,
   Hand,
   MousePointer2,
+  PaintBucket,
   Maximize,
   Minus,
   Plus,
@@ -23,13 +24,15 @@ import {
   ROOM_WALL_NAMES,
   type RoomWallId,
 } from "./KitchenRoomDraft";
-import type {
-  CabinetType,
-  KitchenRoom,
-  KitchenSpaceItem,
-  ModularKitchen,
+import {
+  roomWalls,
+  type CabinetType,
+  type KitchenRoom,
+  type KitchenSpaceItem,
+  type ModularKitchen,
 } from "@/lib/kitchenCabinets";
 import {
+  DEFAULT_KITCHEN_WALL_COLOR,
   parseKitchenSpace,
   resizeKitchenRoom,
   spaceItemCandidates,
@@ -61,11 +64,25 @@ export function KitchenSpaceEditor({
   const [error, setError] = useState("");
   const [zoom, setZoom] = useState(1);
   const [fitZoom, setFitZoom] = useState(1);
+  const [paintTarget, setPaintTarget] = useState<RoomWallId | "all">("all");
+  const [paintColor, setPaintColor] = useState(kitchen.room.wallColors?.back ?? DEFAULT_KITCHEN_WALL_COLOR);
   const canvas = useRef<HTMLDivElement>(null);
   const heightInput = useRef<HTMLDivElement>(null);
+  const paintSettings = useRef<HTMLElement>(null);
   const room = kitchen.room,
     items = room.items ?? [];
   const item = items.find((i) => i.id === selected);
+  const existingWalls = new Set(roomWalls(room).map((entry) => entry.sourceWall ?? entry.id));
+  const paintWalls = (Object.keys(ROOM_WALL_NAMES) as RoomWallId[]).filter((id) => existingWalls.has(id));
+  const effectivePaintTarget = paintTarget === "all" || paintWalls.includes(paintTarget) ? paintTarget : "all";
+  const paintTargets = effectivePaintTarget === "all" ? paintWalls : [effectivePaintTarget];
+  const savedPaintColors = paintTargets.map((id) => room.wallColors?.[id] ?? DEFAULT_KITCHEN_WALL_COLOR);
+  const savedPaintKey = savedPaintColors.join("|");
+  const savedPaintColor = savedPaintColors[0] ?? DEFAULT_KITCHEN_WALL_COLOR;
+  const paintValid = /^#[0-9a-f]{6}$/i.test(paintColor);
+  useEffect(() => {
+    setPaintColor(savedPaintColor);
+  }, [effectivePaintTarget, savedPaintKey, savedPaintColor]);
   useEffect(() => {
     const root = canvas.current;
     if (!root) return;
@@ -121,6 +138,25 @@ export function KitchenSpaceEditor({
     } catch (reason) {
       setError((reason as Error).message);
     }
+  }
+  function applyPaint() {
+    if (disabled || !paintValid || !paintTargets.length) return;
+    const color = paintColor.toLowerCase();
+    if (savedPaintColors.every((saved) => saved.toLowerCase() === color)) return;
+    updateRoom({
+      ...room,
+      wallColors: {
+        ...room.wallColors,
+        ...Object.fromEntries(paintTargets.map((id) => [id, color])),
+      },
+    });
+  }
+  function openPaint() {
+    setSettingsOpen(true);
+    requestAnimationFrame(() => {
+      paintSettings.current?.scrollIntoView({ block: "nearest" });
+      paintSettings.current?.querySelector("select")?.focus({ preventScroll: true });
+    });
   }
   function add(kind: KitchenSpaceItem["kind"]) {
     if (disabled) return;
@@ -229,6 +265,59 @@ export function KitchenSpaceEditor({
                 </button>
               ))}
             </div>
+          </section>
+          <section className="kroom-paint" ref={paintSettings} id="kroom-paint">
+            <h2>ХАНЫН БУДАГ</h2>
+            <fieldset disabled={disabled}>
+              <label>
+                Хана сонгох
+                <select
+                  aria-label="Будах хана"
+                  value={effectivePaintTarget}
+                  onChange={(event) => {
+                    const target = event.target.value as RoomWallId | "all";
+                    setPaintTarget(target);
+                    setPaintColor(room.wallColors?.[target === "all" ? paintWalls[0] ?? "back" : target] ?? DEFAULT_KITCHEN_WALL_COLOR);
+                  }}
+                >
+                  <option value="all">Бүх хана</option>
+                  {paintWalls.map((id) => <option key={id} value={id}>{ROOM_WALL_NAMES[id]}</option>)}
+                </select>
+              </label>
+              <div className="kroom-paint-inputs">
+                <label>
+                  Өнгө
+                  <input
+                    type="color"
+                    aria-label="Ханын будгийн өнгө"
+                    value={paintValid ? paintColor : savedPaintColor}
+                    onChange={(event) => setPaintColor(event.target.value)}
+                  />
+                </label>
+                <label>
+                  HEX код
+                  <input
+                    type="text"
+                    aria-label="Ханын өнгөний HEX код"
+                    aria-invalid={!paintValid}
+                    aria-describedby="kroom-paint-help"
+                    spellCheck={false}
+                    autoCapitalize="off"
+                    maxLength={7}
+                    value={paintColor}
+                    onChange={(event) => setPaintColor(event.target.value)}
+                  />
+                </label>
+              </div>
+              <small id="kroom-paint-help">
+                {!paintValid ? "# тэмдэг болон 6 оронтой HEX код оруулна."
+                  : new Set(savedPaintColors).size > 1 ? "Ханууд өөр өнгөтэй. Хэрэглэхэд сонгосон өнгөөр жигдэрнэ."
+                  : "Өнгө нь 3D харагдац болон хадгалсан загварт орно."}
+              </small>
+              <button type="button" disabled={!paintValid || !paintTargets.length} onClick={applyPaint}>
+                <PaintBucket size={16} />Өнгийг хэрэглэх
+              </button>
+            </fieldset>
           </section>
           <section className="kroom-sizes">
             <div className="kroom-section-head">
@@ -471,6 +560,7 @@ export function KitchenSpaceEditor({
           <button type="button" aria-pressed={panMode} onClick={() => setPanMode(true)}><Hand size={17} />{"Шилжүүлэх"}</button>
           <span className="kroom-control-divider" />
           <button type="button" aria-expanded={settingsOpen} aria-controls="kroom-settings" onClick={() => setSettingsOpen(value => !value)}><Ruler size={17} />{room.width} × {room.depth} × {room.height} мм</button>
+          <button type="button" className="kroom-paint-open" aria-controls="kroom-paint" disabled={disabled} onClick={openPaint}><PaintBucket size={17} />Ханын будаг</button>
           <button type="button" disabled={disabled} onClick={() => { setPanMode(false); add("water"); }}><Droplets size={17} />{"Ус"}</button>
           <button type="button" disabled={disabled} onClick={() => { setPanMode(false); add("power"); }}><Zap size={17} />{"Цахилгаан"}</button>
           <span className="kroom-control-divider" />

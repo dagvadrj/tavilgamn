@@ -71,8 +71,9 @@
 .room-lighting-popup-header button {
   display: grid;
   place-items: center;
-  width: 30px;
-  min-height: 30px;
+  width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
   padding: 4px;
   border-radius: 7px;
 }

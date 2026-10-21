@@ -30,6 +30,15 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
   const dock = useRef<HTMLElement>(null);
   const lightMenu = useRef<HTMLDetailsElement>(null);
   const sideMenu = useRef<HTMLDetailsElement>(null);
+  const positionLights = useCallback(() => {
+    const menu = lightMenu.current;
+    if (!menu?.open) return;
+    const anchor = menu.querySelector("summary")!.getBoundingClientRect();
+    const right = Math.max(12, anchor.left - 12);
+    const width = Math.min(320, Math.max(0, right - 12));
+    menu.style.setProperty("--room-light-menu-left", `${Math.max(12, right - width)}px`);
+    menu.style.setProperty("--room-light-menu-width", `${width}px`);
+  }, []);
   const positionMenu = useCallback((menu: HTMLDetailsElement) => {
     if (!menu.open || !dock.current) return;
     const anchor = menu.querySelector("summary")!.getBoundingClientRect();
@@ -61,7 +70,10 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
     };
     document.addEventListener("pointerdown", dismiss);
     document.addEventListener("keydown", dismiss);
-    const reposition = () => dock.current?.querySelectorAll<HTMLDetailsElement>("details[open]").forEach(positionMenu);
+    const reposition = () => {
+      dock.current?.querySelectorAll<HTMLDetailsElement>("details[open]").forEach(positionMenu);
+      positionLights();
+    };
     const observer = new ResizeObserver(reposition);
     const bar = dock.current;
     if (bar) observer.observe(bar);
@@ -74,7 +86,7 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
       window.removeEventListener("resize", reposition);
       bar?.removeEventListener("scroll", reposition);
     };
-  }, [positionMenu]);
+  }, [positionMenu, positionLights]);
   return <>
     <div className="room-zoom-controls" role="group" aria-label="Өрөөг ойртуулах, холдуулах">
       <button type="button" aria-label="Ойртуулах" title="Ойртуулах" disabled={locked} onClick={() => onZoom("zoom-in")}><Plus size={22}/></button>
@@ -82,7 +94,7 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
       <button type="button" aria-label="Холдуулах" title="Холдуулах" disabled={locked} onClick={() => onZoom("zoom-out")}><Minus size={22}/></button>
     </div>
     <div className="room-scene-light-anchor">
-        <details className="room-scene-lighting" ref={lightMenu} onToggle={event => { if (!event.currentTarget.open) endLightingEdit?.(); }}>
+        <details className="room-scene-lighting" ref={lightMenu} onToggle={event => { if (event.currentTarget.open) positionLights(); else endLightingEdit?.(); }}>
           <summary aria-label="Гэрлийн тохиргоо" title="Гэрэлтүүлэг"><Lightbulb size={21}/></summary>
           <div className="room-lighting-popup" role="dialog" aria-label="Гэрлийн тохиргоо">
             <div className="room-lighting-popup-header"><strong><Lightbulb size={18}/> Гэрэлтүүлэг</strong><button type="button" aria-label="Гэрлийн тохиргоог хаах" onClick={closeLights}><X size={16}/></button></div>

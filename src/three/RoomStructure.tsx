@@ -28,8 +28,10 @@ import {
 } from "@/lib/roomRendering";
 import { sunDirection, exteriorWindowBearing } from "@/lib/roomSunlight";
 import { solarLighting } from "@/lib/roomLighting";
+import { plannerLighting } from "@/lib/plannerLighting";
 import { openingWorldTransform } from "@/lib/roomOpenings";
 import { createWallGeometry, type WallCut, type WallEnds } from "./wallCsg";
+import { assignWallSurfaceGroups } from "./wallSurfaceGroups";
 import { useRoomMaterial } from "./roomMaterials";
 import { OpeningMesh } from "./OpeningMesh";
 import { animateToward } from "./demandAnimation";
@@ -142,7 +144,7 @@ function RoomWallMesh({
     finish?.color ?? design.wallColor,
   );
   const meshRef =
-    useRef<THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>>(null);
+    useRef<THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[]>>(null);
   const cutawayRoot = useRef<THREE.Group>(null);
   const openingCuts = (design.openings ?? [])
     .filter((opening) => opening.segmentId ? opening.segmentId === segment.id : opening.wallId === id && base)
@@ -193,7 +195,7 @@ function RoomWallMesh({
   const cutKey = JSON.stringify(openingCuts);
   const wallGeometry = useMemo(
     () =>
-      createWallGeometry(
+      assignWallSurfaceGroups(createWallGeometry(
         segment.length,
         height,
         WALL_THICKNESS,
@@ -204,7 +206,7 @@ function RoomWallMesh({
           openStart,
           openEnd,
         },
-      ),
+      )),
     [
       segment.length,
       height,
@@ -266,7 +268,7 @@ function RoomWallMesh({
     const faded =
       !props.interior && (view === "plan" || outside || obscuresRoom);
     const animation = animateToward(
-      mesh.material.opacity,
+      (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material).opacity,
       faded ? 0 : 1,
       12,
       delta,
@@ -305,6 +307,7 @@ function RoomWallMesh({
       userData={{ previewWall: { nx: segment.nx, nz: segment.nz } }}>
       <mesh
         ref={meshRef}
+        name="room-wall"
         geometry={wallGeometry}
         position={[0, height / 2, -WALL_THICKNESS / 2]}
         receiveShadow
@@ -322,21 +325,23 @@ function RoomWallMesh({
           );
         }}
         raycast={function (
-          this: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>,
+          this: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[]>,
           raycaster,
           intersections,
         ) {
           const mesh = this;
-          if (mesh.material.opacity < 0.2 && !placementTemplate) return;
+          if ((Array.isArray(mesh.material) ? mesh.material[0] : mesh.material).opacity < 0.2 && !placementTemplate) return;
           THREE.Mesh.prototype.raycast.call(mesh, raycaster, intersections);
         }}
       >
         <meshStandardMaterial
+          attach="material-0"
           {...materialProps}
           envMap={finish?.mode !== "wallpaper" ? paintEnvironment ?? null : null}
           emissive={selectedWall === id ? "#1677b8" : "#000000"}
           emissiveIntensity={selectedWall === id ? 0.09 : 0}
         />
+        <meshStandardMaterial attach="material-1" color="#e2dfd8" roughness={0.92} metalness={0} />
       </mesh>
       <group userData={{ cutawayDecoration: true }} raycast={cutawayRaycast}>
       {baseboardPieces.map((piece, index) => (
@@ -912,6 +917,7 @@ export function RoomLighting({
 }) {
   const lighting = design.lighting,
     solar = solarLighting(lighting);
+  const rig = plannerLighting(lighting);
   const target = useMemo(() => new THREE.Object3D(), []);
   const invalidate = useThree((state) => state.invalidate);
   const [centreX, centreZ] = centre;
@@ -944,21 +950,19 @@ export function RoomLighting({
         <>
           <primitive object={target} />
           <ambientLight
-            intensity={
-              (lighting?.ambient ?? 0.65) * (0.2 + 0.9 * solar.daylight)
-            }
-            color={solar.night ? "#a0b7db" : "#ffffff"}
+            intensity={rig.ambientIntensity}
+            color={rig.ambientColor}
           />
           <hemisphereLight
-            intensity={0.08 + 0.6 * solar.daylight}
-            color="#f1f6ff"
-            groundColor="#c6beb0"
+            intensity={rig.hemisphereIntensity}
+            color={rig.skyColor}
+            groundColor={rig.groundColor}
           />
           <directionalLight
             target={target}
             castShadow
-            color={solar.warm ? "#ffbf7d" : "#fff7e9"}
-            intensity={(lighting?.sunlight ?? 1.8) * solar.daylight}
+            color={rig.sunColor}
+            intensity={rig.sunlightIntensity}
             position={[
               centreX + sun.x * radius,
               sun.y * radius,

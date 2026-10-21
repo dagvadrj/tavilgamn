@@ -1,6 +1,8 @@
 import { roomWalls, type KitchenRoom, type KitchenSpaceItem } from "./kitchenCabinets";
 import { onRoomSegment, roomContainsFootprint, validateRoomOutline } from "./kitchenRoomOutline";
 
+export const DEFAULT_KITCHEN_WALL_COLOR = "#eeede7";
+
 export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFront" | "items" | "wallColors" | "outline"> {
   const outline = validateRoomOutline(room);
   if (room.openFront !== undefined && typeof room.openFront !== "boolean") throw new Error("Өрөөний хэлбэр буруу байна.");

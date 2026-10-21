@@ -5,8 +5,6 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import {
   OrbitControls,
   Grid,
-  Environment,
-  Lightformer,
   MapControls,
   Edges,
   useCursor,
@@ -29,6 +27,8 @@ import { roomLabelOpacity, solarLighting } from "@/lib/roomLighting";
 import { animateToward } from "./demandAnimation";
 import { getRoomGeometry } from "@/lib/roomGeometry";
 import { RoomStructure, RoomLighting } from "./RoomStructure";
+import { PlannerEnvironment } from "./PlannerEnvironment";
+import { configurePlannerRenderer } from "./plannerRenderer";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import { InteriorModel } from "./InteriorModel";
 import { getProduct } from "@/store/catalog";
@@ -264,10 +264,7 @@ export function RoomCanvas({
       }}
       onCreated={({ gl }) => {
         gl.setClearAlpha(0);
-        gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1;
-        gl.shadowMap.type = THREE.PCFSoftShadowMap;
-        gl.outputColorSpace = THREE.SRGBColorSpace;
+        configurePlannerRenderer(gl);
       }}
       camera={ROOM_CAMERA}
       className="!h-full !w-full"
@@ -337,37 +334,7 @@ export function RoomCanvas({
           extent={Math.max(spanX, spanZ) * 0.8 + 4}
           centre={[centerX, centerZ]}
         />
-        <Environment
-          resolution={128}
-          frames={1}
-          environmentIntensity={0.08 + 0.92 * solar.daylight}
-        >
-          {/* Separate broad reflection highlights from the darker diffuse fill. */}
-          <color attach="background" args={["#777d85"]} />
-          <Lightformer
-            form="rect"
-            intensity={1.4}
-            color="#ffffff"
-            scale={[8, 6, 1]}
-            position={[0, 5, -8]}
-          />
-          <Lightformer
-            form="rect"
-            intensity={0.65}
-            color="#ffffff"
-            scale={[6, 6, 1]}
-            position={[-6, 3, 0]}
-            rotation={[0, Math.PI / 2, 0]}
-          />
-          <Lightformer
-            form="rect"
-            intensity={2}
-            color="#ffffff"
-            scale={[5, 7, 1]}
-            position={[0, 10, 0]}
-            rotation={[Math.PI / 2, 0, 0]}
-          />
-        </Environment>
+        <PlannerEnvironment daylight={solar.daylight} />
         {!customInterior && view === "perspective" && (
           <mesh
             position={[centerX, -0.091, centerZ]}
