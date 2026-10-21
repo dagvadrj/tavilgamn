@@ -17,6 +17,7 @@ import {
   CircleHelp,
   UserRound,
   ShieldCheck,
+  FileText,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 
@@ -82,6 +83,7 @@ export const ADMIN_TABS = [
     icon: CookingPot,
   },
   { id: "rooms", label: "Бэлэн өрөөнүүд", short: "Өрөөнүүд", icon: House },
+  { id: "contracts", label: "Merchant гэрээ", short: "Гэрээ", icon: FileText },
   {
     id: "settings",
     label: "Самбарын тохиргоо",
@@ -114,6 +116,7 @@ export function AdminSidebar({
           "dashboard",
           "merchants",
           "merchant-ops",
+          "contracts",
           "furniture",
           "orders",
         ].includes(item.id),

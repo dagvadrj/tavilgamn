@@ -16,7 +16,13 @@ import {
   Truck,
   Wallet,
   ShieldCheck,
-  MapPin, Users, MessageSquare, Bot, Undo2,
+  FileText,
+  BarChart3,
+  MapPin,
+  Users,
+  MessageSquare,
+  Bot,
+  Undo2,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 import type { MerchantLocationTab } from "@/lib/merchantNavigation";
@@ -31,6 +37,8 @@ export const MERCHANT_TABS: {
   { id: "overview", label: "Ерөнхий тойм", icon: LayoutDashboard },
   { id: "activation", label: "Дэлгүүр идэвхжүүлэх", icon: ShieldCheck },
   { id: "wallet", label: "Хэтэвч, кредит", icon: Wallet },
+  { id: "reports", label: "Тайлан татах", icon: BarChart3 },
+  { id: "contracts", label: "Платформын гэрээ", icon: FileText },
   { id: "products", label: "Бүтээгдэхүүн", icon: Package },
   { id: "orders", label: "Захиалгууд", icon: ShoppingBag },
   { id: "delivery", label: "Хүргэлт", icon: Truck },
@@ -78,7 +86,13 @@ export function MerchantSidebar({
         "quotes",
         "activation",
         "wallet",
-        "branches", "staff", "reviews", "assistant", "returns",
+        "reports",
+        "contracts",
+        "branches",
+        "staff",
+        "reviews",
+        "assistant",
+        "returns",
       ].includes(item.id);
     return (
       <button
@@ -133,10 +147,16 @@ export function MerchantSidebar({
               "overview",
               "activation",
               "wallet",
+              "reports",
+              "contracts",
               "products",
               "orders",
               "delivery",
-              "branches", "staff", "reviews", "assistant", "returns",
+              "branches",
+              "staff",
+              "reviews",
+              "assistant",
+              "returns",
             ].includes(item.id),
           ).map(renderItem)}
         </div>

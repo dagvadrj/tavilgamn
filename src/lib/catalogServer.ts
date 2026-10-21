@@ -71,7 +71,7 @@ export function productFromRow(row: FurnitureRow): Product {
       row.image_url ||
       (thumbnail
         ? `/api/models/files/${row.id}/${thumbnail}`
-        : "/public/image.png"),
+        : "/image.png"),
     compareAtPrice:
       row.compare_at_price == null ? null : Number(row.compare_at_price),
     promotionLabel: row.promotion_label,

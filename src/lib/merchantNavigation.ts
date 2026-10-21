@@ -2,10 +2,16 @@ export type MerchantLocationTab =
   | "overview"
   | "activation"
   | "wallet"
+  | "reports"
+  | "contracts"
   | "products"
   | "orders"
   | "delivery"
-  | "branches" | "staff" | "reviews" | "assistant" | "returns"
+  | "branches"
+  | "staff"
+  | "reviews"
+  | "assistant"
+  | "returns"
   | "kitchens"
   | "quotes"
   | "store"
@@ -16,10 +22,16 @@ const MERCHANT_TABS = new Set<MerchantLocationTab>([
   "overview",
   "activation",
   "wallet",
+  "reports",
+  "contracts",
   "products",
   "orders",
   "delivery",
-  "branches", "staff", "reviews", "assistant", "returns",
+  "branches",
+  "staff",
+  "reviews",
+  "assistant",
+  "returns",
   "kitchens",
   "quotes",
   "store",

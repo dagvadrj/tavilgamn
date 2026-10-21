@@ -6,27 +6,75 @@ import { useDraftState } from "@/hooks/useDashboardDraft";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { AdminMessages } from "@/components/AdminMessages";
 import { ADMIN_TABS, type AdminTab } from "@/components/AdminSidebar";
-import { AdminMerchants } from "@/components/AdminMerchants";
+const AdminMerchants = dynamic(
+  () => import("@/components/AdminMerchants").then((m) => m.AdminMerchants),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
 import { AdminShell } from "@/components/AdminShell";
-import { AdminAnalytics } from "@/components/AdminAnalytics";
-import { AdminMerchantGrowth } from "@/features/merchant/AdminMerchantGrowth";
-import { AdminKitchenDesigns } from "@/components/AdminKitchenDesigns";
-import { AdminKitchenModules } from "@/components/AdminKitchenModules";
-import { AdminRoomTemplates } from "@/components/AdminRoomTemplates";
+const AdminAnalytics = dynamic(
+  () => import("@/components/AdminAnalytics").then((m) => m.AdminAnalytics),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const AdminMerchantGrowth = dynamic(
+  () =>
+    import("@/features/merchant/AdminMerchantGrowth").then(
+      (m) => m.AdminMerchantGrowth,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const AdminKitchenDesigns = dynamic(
+  () =>
+    import("@/components/AdminKitchenDesigns").then(
+      (m) => m.AdminKitchenDesigns,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const AdminKitchenModules = dynamic(
+  () =>
+    import("@/components/AdminKitchenModules").then(
+      (m) => m.AdminKitchenModules,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const AdminRoomTemplates = dynamic(
+  () =>
+    import("@/components/AdminRoomTemplates").then((m) => m.AdminRoomTemplates),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
 import { Package } from "lucide-react";
-import { OrderHistory } from "@/components/OrderHistory";
-import { AdminUsers } from "@/components/AdminUsers";
-import { AdminProducts } from "@/components/AdminProducts";
+const OrderHistory = dynamic(
+  () => import("@/components/OrderHistory").then((m) => m.OrderHistory),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const AdminUsers = dynamic(
+  () => import("@/components/AdminUsers").then((m) => m.AdminUsers),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const AdminProducts = dynamic(
+  () => import("@/components/AdminProducts").then((m) => m.AdminProducts),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/auth";
 import "@/app/(admin)/admin/admin.css";
 import "@/app/(admin)/admin/admin-dark.css";
-import { ModelsTab } from "@/features/admin-models/ModelsTab";
+const ModelsTab = dynamic(
+  () => import("@/features/admin-models/ModelsTab").then((m) => m.ModelsTab),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
 import { AdminHomepageSettings } from "@/features/home-interior/AdminHomepageSettings";
 import { DashboardAccount } from "@/features/dashboard/DashboardAccount";
 import { loginPathForDestination } from "@/lib/authRedirect";
 import { useDashboardPreferences } from "@/features/dashboard/useDashboardPreferences";
+import dynamic from "next/dynamic";
+const AdminMerchantContracts = dynamic(
+  () =>
+    import("@/features/merchant/AdminMerchantContracts").then(
+      (m) => m.AdminMerchantContracts,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
 import "@/features/dashboard/dashboard-usability.css";
 import "@/features/dashboard/dashboard-reference.css";
 
@@ -179,6 +227,9 @@ export function AdminDashboard({
       )}
       {currentTab === "rooms" && (
         <AdminRoomTemplates key={user.id} owner={user.id} />
+      )}
+      {currentTab === "contracts" && (
+        <AdminMerchantContracts key={user.id} owner={user.id} />
       )}
       {currentTab === "settings" && (
         <>

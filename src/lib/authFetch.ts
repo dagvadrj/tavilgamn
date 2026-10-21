@@ -21,6 +21,7 @@ export async function authFetch(
   });
   if (
     response.ok &&
+    response.headers?.get?.("X-Merchant-Mutation") !== "none" &&
     init?.method &&
     !["GET", "HEAD"].includes(init.method.toUpperCase()) &&
     /^\/api\/merchant\/(orders|delivery|store|products|kitchen)/.test(url) &&

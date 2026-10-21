@@ -63,6 +63,7 @@ test("full admin sidebar preserves every operation and marks only the selected d
       "merchant-ops",
       "kitchen-library",
       "rooms",
+      "contracts",
       "settings",
       "profile",
     ],
@@ -96,6 +97,8 @@ test("merchant sidebar keeps all operations and settings and disables private st
       "overview",
       "activation",
       "wallet",
+      "reports",
+      "contracts",
       "products",
       "orders",
       "delivery",
@@ -121,7 +124,7 @@ test("merchant sidebar keeps all operations and settings and disables private st
   );
   for (const tab of MERCHANT_TABS)
     assert.ok(locked.includes(tab.label), `Missing ${tab.label}`);
-  assert.equal((locked.match(/disabled=""/g) ?? []).length, 12);
+  assert.equal((locked.match(/disabled=""/g) ?? []).length, 14);
   assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 1);
   const unlocked = desktopMarkup(
     renderToStaticMarkup(

@@ -14,7 +14,10 @@ import {
   merchantLocationPath,
   readMerchantLocation,
 } from "@/lib/merchantNavigation";
-import { MerchantOrders } from "@/components/MerchantOrders";
+const MerchantOrders = dynamic(
+  () => import("@/components/MerchantOrders").then((m) => m.MerchantOrders),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
 import { MerchantShell } from "@/components/MerchantShell";
 import type { MerchantTab } from "@/components/MerchantSidebar";
 const MerchantKitchenDesigns = dynamic(
@@ -40,11 +43,68 @@ const MerchantKitchenQuotes = dynamic(
 );
 import { merchantRequest } from "@/features/merchant/merchantApi";
 import { MerchantOverview } from "@/features/merchant/MerchantOverview";
-import { MerchantActivation } from "@/features/merchant/MerchantActivation";
-import { MerchantWallet } from "@/features/merchant/MerchantWallet";
-import { MerchantDeliveryBoard } from "@/features/merchant/MerchantDeliveryBoard";
-import { MerchantBranches, MerchantStaff, MerchantFeedback, MerchantAssistant } from "@/features/merchant/MerchantOperations";
-import { MerchantTeamWorkspace } from "@/features/merchant/MerchantTeamWorkspace";
+const MerchantActivation = dynamic(
+  () =>
+    import("@/features/merchant/MerchantActivation").then(
+      (m) => m.MerchantActivation,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantWallet = dynamic(
+  () =>
+    import("@/features/merchant/MerchantWallet").then((m) => m.MerchantWallet),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantDeliveryBoard = dynamic(
+  () =>
+    import("@/features/merchant/MerchantDeliveryBoard").then(
+      (m) => m.MerchantDeliveryBoard,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantBranches = dynamic(
+  () =>
+    import("@/features/merchant/MerchantOperations").then(
+      (m) => m.MerchantBranches,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantStaff = dynamic(
+  () =>
+    import("@/features/merchant/MerchantOperations").then(
+      (m) => m.MerchantStaff,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantFeedback = dynamic(
+  () =>
+    import("@/features/merchant/MerchantOperations").then(
+      (m) => m.MerchantFeedback,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantAssistant = dynamic(
+  () =>
+    import("@/features/merchant/MerchantOperations").then(
+      (m) => m.MerchantAssistant,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantTeamWorkspace = dynamic(
+  () =>
+    import("@/features/merchant/MerchantTeamWorkspace").then(
+      (m) => m.MerchantTeamWorkspace,
+    ),
+  {
+    loading: () => (
+      <PageSkeleton
+        variant="dashboard"
+        compact
+        label="Ажилтны эрхийг шалгаж байна…"
+      />
+    ),
+  },
+);
 const StoreProfile = dynamic(
   () =>
     import("@/features/merchant/StoreProfile").then(
@@ -56,6 +116,20 @@ const MerchantProducts = dynamic(
   () =>
     import("@/features/merchant/MerchantProducts").then(
       (module) => module.MerchantProducts,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantReports = dynamic(
+  () =>
+    import("@/features/merchant/MerchantReports").then(
+      (m) => m.MerchantReports,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" compact /> },
+);
+const MerchantContracts = dynamic(
+  () =>
+    import("@/features/merchant/MerchantContracts").then(
+      (m) => m.MerchantContracts,
     ),
   { loading: () => <PageSkeleton variant="dashboard" compact /> },
 );
@@ -100,17 +174,26 @@ export function MerchantDashboard({
       </main>
     );
   if (role !== "merchant")
-    return <MerchantTeamWorkspace owner={user.id} userName={user.name} fallback={(
-      <main id="main-content" className="merchant-gate merchant-state">
-        <StoreIcon size={32} />
-        <h1>Худалдаа эрхлэгчийн хэсэг</h1>
-        <p>Дэлгүүр нээхийн тулд админаар merchant эрхээ идэвхжүүлнэ үү.</p>
-        <p>Ажилтан бол дэлгүүрийн эзэмшигчийн бүртгэсэн имэйлээр нэвтэрч, имэйлээ баталгаажуулна уу.</p>
-        <Link href={accountPathForRole(role)} className="btn-ghost">
-          Миний бүртгэл
-        </Link>
-      </main>
-    )} />;
+    return (
+      <MerchantTeamWorkspace
+        owner={user.id}
+        userName={user.name}
+        fallback={
+          <main id="main-content" className="merchant-gate merchant-state">
+            <StoreIcon size={32} />
+            <h1>Худалдаа эрхлэгчийн хэсэг</h1>
+            <p>Дэлгүүр нээхийн тулд админаар merchant эрхээ идэвхжүүлнэ үү.</p>
+            <p>
+              Ажилтан бол дэлгүүрийн эзэмшигчийн бүртгэсэн имэйлээр нэвтэрч,
+              имэйлээ баталгаажуулна уу.
+            </p>
+            <Link href={accountPathForRole(role)} className="btn-ghost">
+              Миний бүртгэл
+            </Link>
+          </main>
+        }
+      />
+    );
   return (
     <MerchantWorkspace
       key={user.id}
@@ -339,6 +422,8 @@ function MerchantWorkspace({
               onSetup={() => changeTab("activation")}
             />
           )}
+          {tab === "reports" && store && <MerchantReports owner={owner} />}
+          {tab === "contracts" && store && <MerchantContracts owner={owner} />}
           {tab === "store" && (
             <StoreProfile
               key={owner}
@@ -367,7 +452,13 @@ function MerchantWorkspace({
               "kitchens",
               "activation",
               "wallet",
-              "branches", "staff", "reviews", "assistant", "returns",
+              "reports",
+              "contracts",
+              "branches",
+              "staff",
+              "reviews",
+              "assistant",
+              "returns",
             ].includes(tab) && (
               <MerchantOverview
                 owner={owner}
@@ -389,7 +480,9 @@ function MerchantWorkspace({
           {tab === "branches" && store && <MerchantBranches owner={owner} />}
           {tab === "staff" && store && <MerchantStaff owner={owner} />}
           {tab === "reviews" && store && <MerchantFeedback owner={owner} />}
-          {tab === "returns" && store && <MerchantFeedback owner={owner} cases />}
+          {tab === "returns" && store && (
+            <MerchantFeedback owner={owner} cases />
+          )}
           {tab === "assistant" && store && <MerchantAssistant owner={owner} />}
           {tab === "quotes" && store && <MerchantKitchenQuotes owner={owner} />}
 

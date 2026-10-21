@@ -6,7 +6,10 @@
     "node": ">=22.14 <23"
   },
   "overrides": {
-    "postcss": "$postcss"
+    "postcss": "$postcss",
+    "exceljs": {
+      "uuid": "11.1.1"
+    }
   },
   "scripts": {
     "models:decoders": "node scripts/models/sync-decoders.mjs",
@@ -46,6 +49,8 @@
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
     "clsx": "^2.1.1",
+    "exceljs": "4.4.0",
+    "fflate": "0.8.3",
     "framer-motion": "^11.11.17",
     "graphql": "16.14.2",
     "lucide-react": "^0.460.0",

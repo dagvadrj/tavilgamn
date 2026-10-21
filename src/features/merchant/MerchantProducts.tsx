@@ -11,6 +11,8 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Upload,
+  Download,
 } from "lucide-react";
 import { CATEGORY_LABEL } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
@@ -31,6 +33,13 @@ import {
   ModelRequestButton,
 } from "./MerchantShowroom";
 import { MerchantGlbDownload } from "./MerchantGlbDownload";
+import dynamic from "next/dynamic";
+import { CATEGORIES } from "@/lib/catalogCategories";
+import { merchantDownload } from "./merchantDownload";
+import "./merchant-commerce.css";
+const MerchantProductImport = dynamic(() =>
+  import("./MerchantProductImport").then((m) => m.MerchantProductImport),
+);
 
 export function MerchantProducts({
   owner,
@@ -51,6 +60,9 @@ export function MerchantProducts({
   const [includeArchived, setIncludeArchived] = useState(false);
   const [archiveBusy, setArchiveBusy] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [category, setCategory] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [exportBusy, setExportBusy] = useState("");
   useEffect(() => {
     if (!initialCreate) return;
     setSaved(false);
@@ -90,10 +102,10 @@ export function MerchantProducts({
         }}
       />
     );
-  const filtered = products.filter((product) =>
-    `${product.name} ${CATEGORY_LABEL[product.category]}`
-      .toLowerCase()
-      .includes(query.trim().toLowerCase()),
+  const filtered = products.filter(
+    (product) =>
+      (!category || product.category === category) &&
+      product.name.toLowerCase().includes(query.trim().toLowerCase()),
   );
   return (
     <section>
@@ -102,17 +114,36 @@ export function MerchantProducts({
           <h2 className="text-2xl">Миний бүтээгдэхүүн</h2>
           <p className="merchant-muted">{products.length} бараа</p>
         </div>
-        <button
-          className="btn-primary"
-          onClick={() => {
-            setSaved(false);
-            setEditing({ product: blankProduct(), create: true });
-          }}
-        >
-          <Plus size={18} />
-          Бараа нэмэх
-        </button>
+        <div className="merchant-commerce-toolbar">
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => setImporting(true)}
+          >
+            <Upload size={16} /> Excel импорт
+          </button>
+          <button
+            className="btn-primary"
+            onClick={() => {
+              setSaved(false);
+              setEditing({ product: blankProduct(), create: true });
+            }}
+          >
+            <Plus size={18} />
+            Бараа нэмэх
+          </button>
+        </div>
       </div>
+      {importing && (
+        <MerchantProductImport
+          owner={owner}
+          onClose={() => setImporting(false)}
+          onImported={() => {
+            resource.refresh();
+            void useCatalogStore.getState().refresh(true);
+          }}
+        />
+      )}
       <div className="merchant-search">
         <Search size={18} />
         <input
@@ -121,6 +152,7 @@ export function MerchantProducts({
           aria-label="Өөрийн бараа хайх"
           placeholder="Барааны нэрээр хайх…"
           value={query}
+          maxLength={100}
           onChange={(event) => setQuery(event.target.value)}
         />
         <button
@@ -131,6 +163,65 @@ export function MerchantProducts({
         >
           <RefreshCw size={16} />
         </button>
+      </div>
+      <div className="merchant-commerce-toolbar mb-4">
+        <label>
+          Ангилал
+          <select
+            className="input"
+            aria-label="Барааны ангилал"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            <option value="">Бүх ангилал</option>
+            {CATEGORIES.filter((c) => c.id !== "kitchen-cabinet").map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        {(["xlsx", "pdf"] as const).map((format) => (
+          <button
+            key={format}
+            type="button"
+            className="btn-ghost"
+            disabled={!!exportBusy || loading}
+            onClick={async () => {
+              setError(null);
+              setExportBusy(format);
+              try {
+                const params = new URLSearchParams({
+                  format,
+                  category,
+                  search: query.trim(),
+                });
+                if (includeArchived) params.set("archived", "1");
+                await merchantDownload(
+                  "/api/merchant/products/export?" + params,
+                  owner,
+                  `baraa-${category || "all"}.${format}`,
+                );
+              } catch (e) {
+                setError(
+                  e instanceof Error ? e.message : "Экспорт амжилтгүй боллоо.",
+                );
+              } finally {
+                setExportBusy("");
+              }
+            }}
+          >
+            <Download size={16} />
+            {exportBusy === format
+              ? "Үүсгэж байна…"
+              : format === "xlsx"
+                ? "Excel экспорт"
+                : "PDF экспорт"}
+          </button>
+        ))}
+        <span className="merchant-muted">
+          {filtered.length} бараа · Экспорт энэ шүүлтүүрээр гарна
+        </span>
       </div>
       <label className="merchant-muted flex items-center gap-2 mb-4">
         <input
