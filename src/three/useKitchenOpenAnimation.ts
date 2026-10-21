@@ -24,6 +24,12 @@ export function useKitchenOpenAnimation(
   const timeline = useRef<{ mixer: AnimationMixer; duration: number } | null>(
     null,
   );
+  const applied = useRef<{
+    root?: Object3D;
+    clip?: AnimationClip;
+    motions?: KitchenPartMotion[];
+    progress: number;
+  }>({ progress: -1 });
   useEffect(() => {
     if (!root || !clip) return;
     const mixer = new AnimationMixer(root);
@@ -43,8 +49,13 @@ export function useKitchenOpenAnimation(
     invalidate();
   }, [open, motions, invalidate]);
   useFrame((_, delta) => {
-    if (!root) return;
+    if (!root || (!clip && !motions?.length)) return;
     const target = Number(open);
+    const last = applied.current;
+    // An idle door must not resample its entire animation hierarchy every time
+    // the camera requests a frame. Apply once again when an async model changes.
+    if (progress.current === target && last.progress === target &&
+      last.root === root && last.clip === clip && last.motions === motions) return;
     const reduce =
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -62,6 +73,10 @@ export function useKitchenOpenAnimation(
       action.paused = false;
       current.mixer.setTime(eased * current.duration);
     }
+    last.root = root;
+    last.clip = clip;
+    last.motions = motions;
+    last.progress = progress.current;
     if (progress.current !== target) invalidate();
   });
 }

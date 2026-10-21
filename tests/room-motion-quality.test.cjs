@@ -14,12 +14,13 @@ test("room camera interaction lowers pixel work and restores the configured DPR"
   });
   function render() { effects.length = 0; RoomMotionResolution({ dpr: configuredDpr }); effects[0](); }
   render(); assert.equal(dpr, 1.5);
-  moving = true; render(); assert.equal(dpr, 1);
+  moving = true; render(); assert.equal(dpr, 0.85);
   moving = false; render(); assert.equal(dpr, 1.5);
-  configuredDpr = 1; moving = true; render(); moving = false; render(); assert.equal(dpr, 1, "mobile cap survives interaction");
-  configuredDpr = 0.75; moving = true; render(); assert.equal(dpr, 0.75);
+  configuredDpr = 1; moving = true; render(); assert.equal(dpr, 0.7, "1x mobile still reduces pixel work"); moving = false; render(); assert.equal(dpr, 1, "mobile cap survives interaction");
+  configuredDpr = 0.75; moving = true; render(); assert.equal(dpr, 0.75 * 0.7);
   const unmount = effects[1](); unmount(); assert.equal(dpr, 0.75);
-  state.viewport.initialDpr = 0; render(); assert.equal(values.at(-1), 0.75);
+  configuredDpr = 0.4; render(); assert.equal(dpr, 0.4, "preview must never increase an already lower DPR");
+  state.viewport.initialDpr = 0; render(); assert.equal(values.at(-1), 0.4);
 });
 
 test("contact shadows freeze only for camera motion and keep updating during placement", () => {
@@ -36,6 +37,64 @@ test("contact shadows freeze only for camera motion and keep updating during pla
   assert.equal(render(true).props.frames, Infinity);
   assert.equal(render(true).props.opacity, 0.2);
   moving = false; assert.equal(render(false).props.frames, Infinity);
+});
+
+test("camera-only shadow cache refreshes on edits/delivery and restores renderer policy on rest/unmount", () => {
+  const oldWindow = global.window; global.window = new EventTarget();
+  let moving = false, invalidations = 0, cursor = 0;
+  const slots = [], pending = [], gl = { shadowMap: { autoUpdate: true, needsUpdate: false } };
+  const { PlannerMotionShadows } = loadSource("src/three/RoomMotionQuality.tsx", {
+    react: { ...require("react"), useEffect: (fn, deps) => {
+      const index = cursor++, old = slots[index];
+      if (!old || deps.some((value, i) => !Object.is(value, old.deps[i]))) pending.push(() => {
+        old?.cleanup?.(); slots[index] = { deps, cleanup: fn() };
+      });
+    } },
+    "@react-three/fiber": { useThree: selector => selector({ gl, invalidate }) },
+    "@react-three/drei": { ContactShadows() {} },
+    "./CameraMotionPreview": { useCameraMotionPreview: () => moving },
+  });
+  function invalidate() { invalidations++; }
+  const revision = {};
+  const render = (updatingLayout = false, currentRevision = revision) => {
+    cursor = 0; PlannerMotionShadows({ updatingLayout, revision: currentRevision });
+    pending.splice(0).forEach(fn => fn());
+  };
+  try {
+    render(); assert.equal(gl.shadowMap.autoUpdate, true);
+    gl.shadowMap.needsUpdate = false; moving = true; render();
+    assert.equal(gl.shadowMap.autoUpdate, false); assert.equal(gl.shadowMap.needsUpdate, false);
+    global.window.dispatchEvent(new Event("tavilga:model-performance")); assert.equal(gl.shadowMap.needsUpdate, true);
+    gl.shadowMap.needsUpdate = false; render(false, {}); assert.equal(gl.shadowMap.needsUpdate, true, "editing while orbiting refreshes cached shadows");
+    render(true); assert.equal(gl.shadowMap.autoUpdate, true, "furniture placement cannot freeze shadows");
+    render(); assert.equal(gl.shadowMap.autoUpdate, false);
+    moving = false; render(); assert.equal(gl.shadowMap.autoUpdate, true);
+    moving = true; render(); assert.equal(gl.shadowMap.autoUpdate, false);
+    slots.forEach(slot => slot?.cleanup?.());
+    assert.equal(gl.shadowMap.autoUpdate, true); assert.equal(gl.shadowMap.needsUpdate, true);
+    gl.shadowMap.needsUpdate = false; const count = invalidations;
+    global.window.dispatchEvent(new Event("tavilga:model-performance"));
+    assert.equal(invalidations, count, "unmount removes delivery listener");
+  } finally { global.window = oldWindow; }
+});
+
+test("contact-shadow layer traversal reuses the camera-only cache but continues during furniture edits", () => {
+  const THREE = require("three"), React = require("react");
+  let moving = false, cursor = 0, frame, traversals = 0;
+  const refs = [];
+  const { RoomContactShadows } = loadSource("src/three/RoomMotionQuality.tsx", {
+    react: { ...React, useRef: value => refs[cursor++] ?? (refs[cursor - 1] = { current: value }) },
+    "@react-three/fiber": { useFrame: fn => { frame = fn; } },
+    "@react-three/drei": { ContactShadows() {} },
+    "./CameraMotionPreview": { useCameraMotionPreview: () => moving },
+    "./roomContactShadowCasters": { ROOM_CONTACT_SHADOW_LAYER: 10, syncRoomContactShadowCasters() { traversals++; } },
+  });
+  const render = (updatingLayout = false) => { cursor = 0; RoomContactShadows({ updatingLayout }); };
+  render(); refs[0].current = { children: [new THREE.OrthographicCamera()] };
+  frame({ scene: {} }); frame({ scene: {} }); assert.equal(traversals, 2);
+  moving = true; render(); frame({ scene: {} }); frame({ scene: {} }); assert.equal(traversals, 3);
+  render(true); frame({ scene: {} }); frame({ scene: {} }); assert.equal(traversals, 5);
+  moving = false; render(); frame({ scene: {} }); assert.equal(traversals, 6);
 });
 
 test("contact capture includes async furniture but excludes the room and invisible selection volumes", () => {

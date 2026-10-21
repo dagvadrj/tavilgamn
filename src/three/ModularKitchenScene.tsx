@@ -12,6 +12,8 @@ import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Edges, OrbitControls } from "@react-three/drei";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
+import { CameraMotionPreview } from "./CameraMotionPreview";
+import { PlannerMotionShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import {
   Plane,
   Object3D,
@@ -89,7 +91,7 @@ type CaptureTarget = {
   setPointerCapture: (id: number) => void;
   releasePointerCapture: (id: number) => void;
 };
-function Scene(props: ModularSceneProps) {
+function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
   const { capture: registerCapture, kitchen, selectedId, mode } = props;
   // Stable while dragging; layout selection remounts this view to frame the new layout.
   const focus = useRef({
@@ -250,7 +252,10 @@ function Scene(props: ModularSceneProps) {
       )
     : undefined;
   return (
-    <>
+    <CameraMotionPreview interactionActive={dragActive}>
+      <RoomMotionResolution dpr={props.dpr} />
+      <PlannerMotionShadows updatingLayout={dragActive || Boolean(props.open)} revision={kitchen} />
+      <CanvasDiagnostics scene="modular-kitchen" />
       {!props.interior && <CameraFit focus={focus} />}
       <color attach="background" args={[ROOM_DAY_BACKDROP]} />
       <PlannerEnvironment daylight={lighting.solar.daylight} />
@@ -439,7 +444,7 @@ function Scene(props: ModularSceneProps) {
           </group>
         ))}
       </group>
-    </>
+    </CameraMotionPreview>
   );
 }
 class SceneBoundary extends Component<
@@ -482,8 +487,7 @@ export function ModularKitchenScene(props: ModularSceneProps) {
           </p>
         }
       >
-        <CanvasDiagnostics scene="modular-kitchen" />
-        <Scene {...props} />
+        <Scene {...props} dpr={performance.dpr} />
       </Canvas>
     </SceneBoundary>
   );

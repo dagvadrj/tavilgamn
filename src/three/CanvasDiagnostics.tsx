@@ -57,6 +57,7 @@ export function CanvasDiagnostics({ scene }: { scene: string }) {
         heapMiB: memory ? Math.round(memory.usedJSHeapSize / 1048576) : null,
         loop: get().frameloop,
         cameraMotionFrames, motionTriangles,
+        shadowAutoUpdate: gl.shadowMap.autoUpdate,
       });
       started = now;
       sample.current = { frames: 0, intervals: [], motionIntervals: [], last: sample.current.last,

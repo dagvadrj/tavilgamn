@@ -65,9 +65,10 @@ test("furniture dragging keeps preview active through camera idle, then restores
   const { CameraMotionPreview } = loadSource("src/three/CameraMotionPreview.tsx", {
     react: { ...React,
       useState: () => [moving, value => { moving = value; }],
+      useRef: value => ({ current: value }),
       useEffect: fn => { if (!mounted) { mounted = true; cleanup = fn(); } },
     },
-    "@react-three/fiber": { useThree: selector => selector({ controls, invalidate: () => invalidations++ }) },
+    "@react-three/fiber": { useThree: selector => selector({ controls, invalidate: () => invalidations++ }), useFrame() {} },
   });
   const preview = dragging => CameraMotionPreview({ interactionActive: dragging, children: null }).props.value;
   try {
@@ -87,4 +88,52 @@ test("furniture dragging keeps preview active through camera idle, then restores
     global.window = previousWindow; global.document = previousDocument;
   }
   assert.equal(listeners.size, 0);
+});
+
+test("observed interior travel and view transitions restore after the camera settles", context => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const edges = [], motion = createCameraMotion(value => edges.push(value));
+  motion.observe();
+  context.mock.timers.tick(200); motion.observe();
+  context.mock.timers.tick(249); assert.deepEqual(edges, [true]);
+  context.mock.timers.tick(1); assert.deepEqual(edges, [true, false]);
+  motion.observe(true); assert.deepEqual(edges, [true, false], "idle automatic rotation stays sharp");
+  motion.start(); motion.observe(true); motion.end();
+  context.mock.timers.tick(250); assert.deepEqual(edges, [true, false, true, false]);
+  motion.dispose();
+});
+
+test("real camera pose changes are detected without controls and material-only renders stay sharp", context => {
+  context.mock.timers.enable({ apis: ["setTimeout"] });
+  const oldWindow = global.window, oldDocument = global.document;
+  global.window = new EventTarget(); global.document = new EventTarget();
+  const React = require("react"), THREE = require("three");
+  let moving = false, cleanup, frame, mounted = false;
+  const refs = []; let cursor = 0;
+  const { CameraMotionPreview } = loadSource("src/three/CameraMotionPreview.tsx", {
+    react: { ...React, useState: () => [moving, value => { moving = value; }],
+      useRef: value => refs[cursor++] ?? (refs[cursor - 1] = { current: value }),
+      useEffect: fn => { if (!mounted) { mounted = true; cleanup = fn(); } } },
+    "@react-three/fiber": { useFrame: fn => { frame = fn; }, useThree: selector => selector({ invalidate() {} }) },
+  });
+  const camera = new THREE.PerspectiveCamera();
+  const render = () => { cursor = 0; return CameraMotionPreview({ children: null }).props.value; };
+  try {
+    render(); frame({ camera }); frame({ camera }); assert.equal(render(), false);
+    for (const change of [() => camera.position.x += 0.1, () => camera.rotation.y += 0.1,
+      () => camera.fov += 5, () => camera.zoom += 0.1]) {
+      change(); frame({ camera }); assert.equal(render(), true);
+      context.mock.timers.tick(250); assert.equal(render(), false);
+      frame({ camera }); assert.equal(render(), false, "unchanged camera must not restart preview");
+    }
+    camera.position.x += 0.0001; frame({ camera });
+    assert.equal(render(), false, "imperceptible damping tail must not re-enter preview after restoration");
+    camera.position.x += 0.001; frame({ camera }); assert.equal(render(), true, "slow motion accumulates against the last sampled pose");
+    context.mock.timers.tick(250); assert.equal(render(), false);
+    frame({ camera: new THREE.PerspectiveCamera() }); assert.equal(render(), false, "camera replacement rebases pose");
+    camera.position.z += 1; frame({ camera }); camera.position.z += 1; frame({ camera });
+    assert.equal(render(), true);
+    global.window.dispatchEvent(new Event("blur")); assert.equal(render(), false);
+  } finally { cleanup?.(); global.window = oldWindow; global.document = oldDocument; }
+  context.mock.timers.tick(1000);
 });

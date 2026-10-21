@@ -52,7 +52,7 @@ import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
 import { ROOM_DAY_BACKDROP, ROOM_NIGHT_BACKDROP } from "@/lib/roomLighting";
 import { RoomExportBridge } from "./RoomExportBridge";
-import { RoomContactShadows, RoomMotionResolution } from "./RoomMotionQuality";
+import { PlannerMotionShadows, RoomContactShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import { roomTourCamera } from "./roomCameraPlacement";
 import { RoomStreetView, CameraPointPlacement } from "./RoomStreetView";
 import { RoomPreviewCapture } from "./RoomPreviewCapture";
@@ -277,6 +277,7 @@ export function RoomCanvas({
         {onExportReady && <RoomExportBridge onReady={onExportReady} />}
         {onPlacementHintsReady && <RoomPlacementHints designId={design.id} roomId={design.activeRoomId ?? `${design.id}-room-1`} onReady={onPlacementHintsReady} />}
         <RoomMotionResolution dpr={performance.dpr} />
+        <PlannerMotionShadows updatingLayout={isDraggingPiece} revision={design.updatedAt} />
         <CanvasDiagnostics scene="room" />
         <RoomPreviewCapture
           designId={design.id}
