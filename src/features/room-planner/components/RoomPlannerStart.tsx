@@ -1,4 +1,5 @@
 "use client";
+import { RoomPlannerSignIn } from "./RoomPlannerSignIn";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -172,11 +173,12 @@ export function RoomPlannerStart({
     );
   return (
     <section className="room-start planner-entry-theme" aria-label="Өрөөний төлөвлөгчийг эхлүүлэх">
-      <header className="room-start-header">
+      <header className="room-start-header flex-wrap">
         <Link href="/" className="room-start-brand">
           <House size={22} /> tavilga.mn
         </Link>
         <span>3D өрөөний төлөвлөгч</span>
+        {step === 1 && <RoomPlannerSignIn />}
         <Link href="/">
           Нүүр рүү буцах <ArrowRight size={16} />
         </Link>

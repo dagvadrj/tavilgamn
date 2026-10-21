@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Heart, ShoppingBag, UserRound, House, LayoutGrid, Box } from "lucide-react";
 import { useCart } from "@/store/cart";
@@ -9,6 +9,7 @@ import { useWishlist } from "@/store/wishlist";
 import { useAuth } from "@/store/auth";
 import { accountPathForRole } from "@/lib/authRedirect";
 import { CategoryMenu } from "./CategoryMenu";
+import { prepareShopLogin, shopLoginHref } from "@/lib/shopAuthReturn";
 
 export function ShopRoleLinks() {
   const role = useAuth((state) => state.role);
@@ -22,6 +23,7 @@ export function ShopRoleLinks() {
 }
 
 export function ShopHeaderActions() {
+  const pathname = usePathname(), router = useRouter();
   const cartCount = useCart((state) => state.count());
   const wishCount = useWishlist((state) => state.items.length);
   const user = useAuth((state) => state.user);
@@ -31,7 +33,8 @@ export function ShopHeaderActions() {
   return (
     <nav className="header-actions" aria-label="Хэрэглэгчийн цэс">
       <Link
-        href={mounted && user ? accountPathForRole(role) : "/login"}
+        href={mounted && user ? accountPathForRole(role) : shopLoginHref(pathname)}
+        onClick={event => { if (!user && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); router.push(prepareShopLogin()); } }}
         className="header-action account-action"
         aria-label={mounted && user ? "Миний бүртгэл" : "Нэвтрэх"}
       >
@@ -71,6 +74,7 @@ export function ShopHeaderActions() {
 /** Preserve the existing mobile category dialog and authenticated role shortcuts. */
 export function MobileShopNavigation() {
   const pathname = usePathname();
+  const router = useRouter();
   const count = useCart((state) => state.count());
   const user = useAuth((state) => state.user);
   const role = useAuth((state) => state.role);
@@ -109,7 +113,7 @@ export function MobileShopNavigation() {
       active: pathname === "/cart" || pathname === "/checkout",
     },
     {
-      href: mounted && user ? accountPathForRole(role) : "/login",
+      href: mounted && user ? accountPathForRole(role) : shopLoginHref(pathname),
       label: "Миний",
       Icon: UserRound,
       count: 0,
@@ -139,6 +143,7 @@ export function MobileShopNavigation() {
             <Link
               key={href}
               href={href}
+              onClick={event => { if (label === "Миний" && !user && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); router.push(prepareShopLogin()); } }}
               className={active ? "active" : ""}
               aria-current={active ? "page" : undefined}
             >

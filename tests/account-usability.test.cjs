@@ -93,12 +93,12 @@ test("contact details use mail and phone links without placeholder email", async
   const { phoneHref } = loadSource("src/lib/siteContact.ts");
   assert.equal(phoneHref("+976 8844 2741"), "tel:+97688442741");
   const render = async email => {
-    const Page = loadSource("src/app/(shop)/about/page.tsx", {
-      "next/image": { default: () => null },
+    const { Footer } = loadSource("src/components/Footer.tsx", {
       "@/lib/siteContact": { SITE_CONTACT: { email, phone: "+976 8844 2741" }, phoneHref },
-      "@/components/ContactForm": { ContactForm: () => null },
-    }).default;
-    return renderToStaticMarkup(await Page({}));
+      "@/components/FooterContact": { FooterContact: () => null },
+      "@/lib/paymentPresentationServer": { configuredPaymentLabels: () => [] },
+    });
+    return renderToStaticMarkup(React.createElement(Footer));
   };
   assert.match(await render("support@fixture.test"), /href="mailto:support@fixture.test"/);
   const html = await render("");

@@ -588,7 +588,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                       Нэхэмжлэхийн хариуг дэлгүүрээр шалгуулах шаардлагатай.
                     </p>
                     <Link
-                      href="/about#contact"
+                      href="/#contact"
                       className="mt-3 inline-block underline"
                     >
                       Холбоо барих

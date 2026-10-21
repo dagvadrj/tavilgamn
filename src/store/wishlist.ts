@@ -32,6 +32,11 @@ export const useWishlist = create<WishlistState>()(
     { name: "casa-wishlist-guest" },
   ),
 );
+export function requestGuestWishlistTransfer() {
+  if (typeof window === "undefined" || useWishlist.persist.getOptions().name !== "casa-wishlist-guest") return;
+  try { window.sessionStorage.setItem("casa-wishlist-auth-handoff", JSON.stringify({ createdAt: Date.now(), items: useWishlist.getState().items })); } catch { /* The guest list stays available on this device. */ }
+}
+
 export function setWishlistOwner(userId: string | null) {
   if (typeof window === "undefined") return;
 
@@ -53,6 +58,16 @@ export function setWishlistOwner(userId: string | null) {
     items = [];
   }
 
+  let transferred = false;
+  if (userId) try {
+    const pending = JSON.parse(window.sessionStorage.getItem("casa-wishlist-auth-handoff") ?? "null");
+    if (Array.isArray(pending?.items) && Number.isFinite(pending.createdAt) && Date.now() - pending.createdAt >= 0 && Date.now() - pending.createdAt < 86400000) {
+      for (const item of pending.items) if (typeof item?.productId === "string" && item.productId.length <= 100 && Number.isFinite(item.addedAt) && !items.some(saved => saved.productId === item.productId)) items.push({ productId: item.productId, addedAt: item.addedAt });
+      transferred = true;
+    }
+  } catch { /* Ignore invalid handoffs without changing account ownership. */ }
+
   useWishlist.persist.setOptions({ name: storageName });
   useWishlist.setState({ items });
+  if (transferred) window.sessionStorage.removeItem("casa-wishlist-auth-handoff");
 }

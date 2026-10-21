@@ -30,6 +30,7 @@ import { CatalogStatus } from "@/components/CatalogStatus";
 import { formatPrice } from "@/lib/format";
 import "./account.css";
 import { FurnitureLibrary } from "@/components/FurnitureLibrary";
+import { loginPathForDestination } from "@/lib/authRedirect";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (initialized && !user) {
-      router.replace("/login");
+      router.replace(loginPathForDestination("/account" + window.location.hash));
     }
   }, [initialized, user, router]);
 
@@ -235,7 +236,7 @@ export default function AccountPage() {
                     </div>
                     <div className="flex gap-2">
                       <Link
-                        href="/planner"
+                        href={`/planner?design=${encodeURIComponent(d.id)}`}
                         onClick={() => loadDesign(d.id)}
                         aria-label={`${d.name} загварыг нээх`}
                         className="account-icon-button"

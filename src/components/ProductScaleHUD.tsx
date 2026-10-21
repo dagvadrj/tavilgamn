@@ -141,7 +141,7 @@ export function ProductScaleHUD({ product }: { product: Product }) {
             <strong>{formatMeasurement(product.dimensions.d)}</strong>. Өрөөний
             зай, хаалга, гарцыг давхар хэмжээрэй.
           </p>
-          <Link href="/planner">Өрөөний төлөвлөгчөөр байрлуулж үзэх →</Link>
+          <Link href={product.model ? `/planner?product=${encodeURIComponent(product.id)}` : "/planner"}>Өрөөний төлөвлөгчөөр байрлуулж үзэх →</Link>
         </div>
       )}
     </div>

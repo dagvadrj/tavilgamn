@@ -80,7 +80,7 @@ export function AuthFrame({
       </div>
       <footer className="auth-page-footer">
         © {new Date().getFullYear()} TAVILGA{" "}
-        <Link href="/about#contact">Тусламж авах</Link>
+        <Link href="/#contact">Тусламж авах</Link>
       </footer>
     </main>
   );

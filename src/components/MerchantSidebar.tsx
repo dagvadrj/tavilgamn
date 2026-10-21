@@ -157,7 +157,7 @@ export function MerchantSidebar({
         {MERCHANT_TABS.filter((item) =>
           ["store", "settings", "profile"].includes(item.id),
         ).map(renderItem)}
-        <Link href="/about#contact" className="dashboard-sidebar-link">
+        <Link href="/#contact" className="dashboard-sidebar-link">
           <CircleHelp size={18} />
           Тусламж
         </Link>

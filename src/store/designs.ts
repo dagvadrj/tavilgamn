@@ -720,6 +720,19 @@ export function setDesignOwner(userId: string | null) {
     current = null;
   }
 
+  let handoff: RoomDesign | null = null;
+  if (userId) {
+    try {
+      const pending = JSON.parse(window.sessionStorage.getItem("casa-room-auth-handoff") ?? "null");
+      if (pending?.source === "guest" && Number.isFinite(pending.createdAt) && Date.now() - pending.createdAt >= 0 && Date.now() - pending.createdAt < 86400000 && /^d_[a-f0-9-]{36}$/i.test(pending.design?.id)) {
+        handoff = cloneDesign(pending.design);
+        // Never overwrite a project already belonging to the signed-in account.
+        if (designs.some(design => design.id === handoff!.id)) handoff = null;
+        if (handoff) { designs = [...designs, handoff]; current = handoff; }
+      }
+    } catch { /* A missing or invalid handoff must not affect the account library. */ }
+  }
+
   useDesigns.persist.setOptions({ name: storageName });
   useDesigns.setState({
     designs,
@@ -729,4 +742,27 @@ export function setDesignOwner(userId: string | null) {
     future: [],
     transaction: null,
   });
+  if (handoff) {
+    const stored = JSON.parse(window.localStorage.getItem(storageName) ?? "null");
+    if (stored?.state?.current?.id === handoff.id) window.sessionStorage.removeItem("casa-room-auth-handoff");
+  }
+}
+
+/** Explicitly carry only the open guest project through this tab's sign-in. */
+export function prepareRoomAuthReturn(): string {
+  const store = useDesigns.getState();
+  store.endEdit();
+  store.saveCurrent();
+  const current = useDesigns.getState().current;
+  if (!current) return "/planner";
+  let id = current.id;
+  if (useDesigns.persist.getOptions().name === "casa-designs-guest") {
+    // A separate identity keeps existing account projects and the guest original intact.
+    const design = cloneDesign({ ...current, id: createDesignId() });
+    const pending = JSON.stringify({ source: "guest", createdAt: Date.now(), design });
+    window.sessionStorage.setItem("casa-room-auth-handoff", pending);
+    if (window.sessionStorage.getItem("casa-room-auth-handoff") !== pending) throw new Error("Нэвтрэхийн өмнө загварыг хадгалж чадсангүй. Browser-ийн хадгалалтын зөвшөөрлийг шалгана уу.");
+    id = design.id;
+  }
+  return `/planner?design=${encodeURIComponent(id)}`;
 }

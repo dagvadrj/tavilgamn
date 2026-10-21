@@ -10,6 +10,8 @@ import { Trash2, ArrowUpRight, Pencil } from "lucide-react";
 import { assessKitchenRoomFit } from "@/lib/kitchenRoomFit";
 import type { PlacementRoom } from "@/three/collision";
 import type { PlacedFurniture } from "@/lib/types";
+import { prepareRoomAuthReturn } from "@/store/designs";
+import { loginPathForDestination } from "@/lib/authRedirect";
 
 export function SavedKitchenList({
   onPlace,
@@ -28,6 +30,7 @@ export function SavedKitchenList({
   const { owner, items, loading, loaded, error, refresh, remove } =
     useKitchens();
   const [failedThumbnail, setFailedThumbnail] = useState<string[]>([]);
+  const [signInError, setSignInError] = useState("");
   const fits = useMemo(() => new Map(owner === user?.id && placement ? items.map(item => [item.id,
     assessKitchenRoomFit(item, placement.pieces, placement.room, `fit-${item.id}`),
   ]) : []), [items, owner, user?.id, placement]);
@@ -47,10 +50,21 @@ export function SavedKitchenList({
         <Link
           className="underline"
           href={`/login?next=${encodeURIComponent(account ? "/account#kitchen-garniture" : returnPath)}`}
+          onClick={event => {
+            if (account || !returnPath.startsWith("/planner") || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            try {
+              setSignInError("");
+              const destination = new URL(prepareRoomAuthReturn(), window.location.origin);
+              destination.searchParams.set("library", "mine");
+              window.location.assign(loginPathForDestination(destination.pathname + destination.search));
+            } catch (reason) { setSignInError(reason instanceof Error ? reason.message : "Загварыг хадгалж чадсангүй."); }
+          }}
         >
           Нэвтэрч
         </Link>{" "}
         хадгалсан гарнитураа харна уу.
+        {signInError && <span role="alert" className="block text-sm text-red-700">{signInError}</span>}
       </p>
     );
   return (

@@ -206,7 +206,7 @@ export function AdminSidebar({
           <UserRound size={18} />
           Миний бүртгэл
         </button>
-        <Link href="/about#contact" className="dashboard-sidebar-link">
+        <Link href="/#contact" className="dashboard-sidebar-link">
           <CircleHelp size={18} />
           Тусламж, холбоо барих
         </Link>

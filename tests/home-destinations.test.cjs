@@ -22,19 +22,31 @@ test('homepage room ideas link to supported catalog filters; seller and advertis
     const page = await CatalogPage({ searchParams: Promise.resolve({ room }) });
     assert.equal(page.props.initialRoom, room);
   }
-  assert.match(html, /href="\/about\?topic=merchant#contact"[^>]*>Дэлгүүр бүртгүүлэх хүсэлт/);
-  assert.match(html, /href="\/about\?topic=advertising#contact"[^>]*>Сурталчилгааны талаар холбогдох/);
+  assert.match(html, /href="\/\?topic=merchant#contact"[^>]*>Дэлгүүр бүртгүүлэх хүсэлт/);
+  assert.match(html, /href="\/\?topic=advertising#contact"[^>]*>Сурталчилгааны талаар холбогдох/);
   assert.ok(html.includes('href="/stores"'));
   assert.ok(!html.includes('Бидний төслүүд') && !html.includes('interior-stats'));
 });
 
-test('contact destination accepts only known topics, without requiring sign-in', async () => {
-  function Form() { return null; }
-  const About = loadSource('src/app/(shop)/about/page.tsx', { '@/components/ContactForm': { ContactForm: Form } }).default;
-  for (const [topic, expected] of [['merchant', 'merchant'], ['advertising', 'advertising'], ['unknown', 'general'], [undefined, 'general']]) {
-    const page = await About({ searchParams: Promise.resolve({ topic }) });
-    assert.equal(nodes(page).find(node => node.type === Form).props.initialTopic, expected);
-    assert.ok(nodes(page).some(node => node.props?.id === 'contact'));
+test('legacy about destinations redirect to footer with only known contact topics', async () => {
+  const About = loadSource('src/app/(shop)/about/page.tsx', {
+    'next/navigation': { redirect: destination => { throw new Error(destination); } },
+  }).default;
+  for (const [topic, expected] of [['merchant', '/?topic=merchant#contact'], ['advertising', '/?topic=advertising#contact'], ['unknown', '/#contact'], [undefined, '/#contact']]) {
+    await assert.rejects(About({ searchParams: Promise.resolve({ topic }) }), error => error.message === expected);
+  }
+});
+
+test('footer contact selects known topics and defaults arbitrary input to general', () => {
+  for (const [topic, expected] of [['merchant', 'merchant'], ['advertising', 'advertising'], ['unknown', 'general'], [null, 'general']]) {
+    function Form() { return null; }
+    const { FooterContact } = loadSource('src/components/FooterContact.tsx', {
+      'next/navigation': { useSearchParams: () => new URLSearchParams(topic ? { topic } : {}) },
+      '@/components/ContactForm': { ContactForm: Form },
+      react: { ...React, useRef: () => ({ current: null }), useEffect() {} },
+    });
+    const tree = FooterContact();
+    assert.equal(nodes(tree).find(node => node.type === Form).props.initialTopic, expected);
   }
 });
 

@@ -635,7 +635,7 @@ export function ProductCustomizer({
                       ? "Сагсанд нэмэх"
                       : "Нөөц дууссан"}
               </button>
-              <Link href="/planner" className="pdp-room-link">
+              <Link href={product.model ? `/planner?product=${encodeURIComponent(product.id)}` : "/planner"} className="pdp-room-link">
                 <Box size={16} aria-hidden="true" />
                 Өрөөнд үзэх
               </Link>
@@ -814,7 +814,7 @@ export function ProductCustomizer({
             </p>
             <Link
               className="inline-block min-h-11 pt-3 underline"
-              href="/about#contact"
+              href="/#contact"
             >
               Хүргэлтийн бүс, хугацааг лавлах
             </Link>

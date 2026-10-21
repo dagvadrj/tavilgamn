@@ -1,4 +1,5 @@
 "use client";
+import { RoomPlannerSignIn } from "@/features/room-planner/components/RoomPlannerSignIn";
 import { trackProduct3d } from "@/lib/productEngagement";
 import { duplicateFurniturePlacement, moveAttachedFurniture, resolveFurnitureAttachments } from "@/lib/furnitureAttachment";
 import type { RoomPlacementHintSource } from "@/three/RoomPlacementHints";
@@ -595,6 +596,17 @@ function RoomPlannerEditor() {
     ...placement, room: { ...placement.room, placementGeometry: undefined },
   } : undefined, [placement]);
   const libraryReturnHandled = useRef(false);
+  const authReturnHandled = useRef(false);
+  useEffect(() => {
+    if (authReturnHandled.current) return;
+    const id = new URLSearchParams(window.location.search).get("design");
+    if (!id) return;
+    authReturnHandled.current = true;
+    const state = useDesigns.getState();
+    if (state.current?.id === id) setRoomStartOpen(false);
+    else if (state.designs.some(design => design.id === id)) { state.loadDesign(id); setRoomStartOpen(false); }
+    else { setRoomStartOpen(true); setNotice("Энэ загвар энэ хэрэглэгчийн төхөөрөмжийн хадгалалтад олдсонгүй."); }
+  }, [setNotice]);
   useEffect(() => {
     if (!current || libraryReturnHandled.current || new URLSearchParams(window.location.search).get("library") !== "mine") return;
     libraryReturnHandled.current = true;
@@ -1261,6 +1273,7 @@ function RoomPlannerEditor() {
           />
         </label>
         <div className="studio-file-actions">
+          <RoomPlannerSignIn />
           <button
             type="button"
             title="Хадгалсан загварууд"

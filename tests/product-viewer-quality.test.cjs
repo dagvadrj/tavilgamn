@@ -6,9 +6,9 @@ const { loadSource } = require("./helpers/load-source.cjs");
 test("product detail loads one delivery model and never selects a preview during navigation or initial load", () => {
   const Canvas = () => null, GLBFurnitureMesh = () => null, MotionPreview = () => null, CursorNavigation = () => null;
   const { ProductViewer } = loadSource("src/three/ProductViewer.tsx", {
-    react: { ...React, useRef: value => ({ current: value }) },
+    react: { ...React, useRef: value => ({ current: value }), useState: value => [value, () => {}], useCallback: fn => fn, useMemo: fn => fn() },
     "@react-three/fiber": { Canvas },
-    "@react-three/drei": { OrbitControls: () => null, ContactShadows: () => null, Environment: () => null },
+    "@react-three/drei": { OrbitControls: () => null, ContactShadows: () => null, Environment: () => null, Lightformer: () => null },
     "./GLBFurnitureMesh": { GLBFurnitureMesh },
     "./ProductAppearanceGroup": { ProductAppearance: () => null },
     "./canvasPerformance": { useCanvasPerformance: () => ({ shadows: false, dpr: 1, autoRotate: false }) },
@@ -31,6 +31,7 @@ test("product detail loads one delivery model and never selects a preview during
   assert.equal(meshes[0].props.glbFile,"high.glb");
   assert.equal(meshes[0].props.previewGlbFile,undefined,"legacy preview metadata must not trigger a second model download");
   assert.ok(all.some(node => node.type === CursorNavigation));
+  assert.ok(!all.some(node => node.props.preset || node.props.files), 'product lighting does not rely on a remote HDR resource');
   const missing = [];
   function collectMissing(node) {
     if (!React.isValidElement(node)) return;

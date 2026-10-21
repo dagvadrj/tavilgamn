@@ -439,7 +439,7 @@ export function InteriorHome({
               Тавилга хайж буй хүмүүст бүтээгдэхүүн, интерьерийн санаагаа
               хүргээрэй.
             </p>
-            <Link className="interior-text-button" href="/about?topic=advertising#contact">
+            <Link className="interior-text-button" href="/?topic=advertising#contact">
               Сурталчилгааны талаар холбогдох <ArrowUpRight size={16} />
             </Link>
           </div>
@@ -480,7 +480,7 @@ export function InteriorHome({
                 Бид тавилгыг өрөөндөө урьдчилан байрлуулж, бодит сонголтоо
                 харьцуулах боломжийг нэг дор бүрдүүлж байна.
               </p>
-              <Link href="/about" className="interior-text-button">
+              <Link href="/#about" className="interior-text-button">
                 Бидэнтэй танилцах <ArrowUpRight size={16} />
               </Link>
             </div>
@@ -535,7 +535,7 @@ export function InteriorHome({
               <em>сайхан гэртэй холбоё.</em>
             </h2>
             <p>Үйлдвэр, гар урлаач, тавилгын дэлгүүрүүдэд нээлттэй.</p>
-            <Link href="/about?topic=merchant#contact" className="interior-button">
+            <Link href="/?topic=merchant#contact" className="interior-button">
               Дэлгүүр бүртгүүлэх хүсэлт <ArrowUpRight size={18} />
             </Link>
             <Link href="/stores" className="interior-text-button">

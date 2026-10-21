@@ -4,8 +4,16 @@ type AccountRole = "customer" | "merchant" | "admin" | null;
 const tabs = {
   "/merchant": [
     "overview",
+    "activation",
+    "wallet",
     "products",
     "orders",
+    "delivery",
+    "branches",
+    "staff",
+    "reviews",
+    "assistant",
+    "returns",
     "kitchens",
     "quotes",
     "store",
@@ -23,14 +31,124 @@ const tabs = {
     "kitchens",
     "settings",
     "profile",
+    "merchant-ops",
+    "kitchen-library",
+    "rooms",
   ],
 };
 
 // Accept only known app destinations, with a small allowlist of query fields.
 export function safeAuthDestination(value: string | null): string | null {
-  if (!value) return null;
-  if (["/account", "/checkout", "/admin", "/merchant"].includes(value))
+  if (!value || value.length > 2048 || /[\u0000-\u0020\u007f\\]/.test(value))
+    return null;
+  if (
+    [
+      "/",
+      "/account",
+      "/checkout",
+      "/cart",
+      "/wishlist",
+      "/planner",
+      "/admin",
+      "/merchant",
+      "/catalog",
+      "/stores",
+      "/kitchens",
+    ].includes(value)
+  )
     return value;
+  if (
+    [
+      "/account#orders",
+      "/account#kitchen-garniture",
+      "/account#profile",
+      "/account#designs",
+      "/account#kitchen-quotes",
+      "/account#wishlist",
+    ].includes(value)
+  )
+    return value;
+  const productSection =
+    /^(\/product\/[a-zA-Z0-9_-]+(?:\?[^#]+)?)#(product-(?:specifications|description|delivery|reviews|financing|details))$/.exec(
+      value,
+    );
+  if (productSection) {
+    const destination = safeAuthDestination(productSection[1]);
+    return destination ? `${destination}#${productSection[2]}` : null;
+  }
+  const uuid =
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
+  const room = /^\/planner\?([^#]+)$/.exec(value);
+  if (room) {
+    const params = new URLSearchParams(room[1]);
+    for (const [key, field] of params) {
+      if (params.getAll(key).length !== 1) return null;
+      if (key === "design") {
+        if (!/^d_[a-f0-9-]{36}$/i.test(field) || !uuid.test(field.slice(2)))
+          return null;
+      } else if (key === "kitchen" || key === "product") {
+        if (!uuid.test(field)) return null;
+      } else if (key === "library") {
+        if (field !== "mine") return null;
+      } else if (key === "setup") {
+        if (field !== "1") return null;
+      } else if (key === "source") {
+        if (field !== "showroom") return null;
+      } else return null;
+    }
+    return params.size ? `/planner?${params.toString()}` : null;
+  }
+  const shop =
+    /^(\/catalog(?:\/[a-z0-9-]+|\/stores\/[a-f0-9-]{36})?|\/stores|\/store\/[a-z0-9-]+|\/product\/[a-zA-Z0-9_-]+|\/kitchens)(?:\?([^#]+))?$/.exec(
+      value,
+    );
+  if (shop) {
+    const path = shop[1],
+      params = new URLSearchParams(shop[2]);
+    const allowed = path.startsWith("/product/")
+      ? ["color", "view"]
+      : path === "/catalog"
+        ? ["q", "room", "sort", "offers"]
+        : path === "/stores"
+          ? ["type"]
+          : path === "/kitchens"
+            ? ["q"]
+            : [];
+    for (const [key, field] of params) {
+      if (
+        !allowed.includes(key) ||
+        params.getAll(key).length !== 1 ||
+        field.length > 120 ||
+        /[\u0000-\u001f\u007f]/.test(field)
+      )
+        return null;
+      if (key === "view" && field !== "3d") return null;
+      if (key === "offers" && field !== "1") return null;
+    }
+    return `${path}${params.size ? `?${params.toString()}` : ""}`;
+  }
+  if (/^\/orders\/[a-f0-9-]+$/i.test(value) && uuid.test(value.slice(8)))
+    return value;
+  if (
+    /^\/kitchens\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) &&
+    value.length <= 100
+  )
+    return value;
+  if (value === "/kitchen") return value;
+  const kitchen = /^\/kitchen\?([^#]+)$/.exec(value);
+  if (kitchen) {
+    const params = new URLSearchParams(kitchen[1]);
+    for (const [key, field] of params) {
+      if (params.getAll(key).length !== 1) return null;
+      if (key === "design" || key === "draft") {
+        if (!uuid.test(field)) return null;
+      } else if (["importGuest", "new", "space"].includes(key)) {
+        if (field !== "1") return null;
+      } else return null;
+    }
+    if (!params.size) return null;
+    return `/kitchen?${params.toString()}`;
+  }
   const kitchenDetail =
     /^\/merchant\/kitchens\/([a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})$/i.exec(
       value,
