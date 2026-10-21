@@ -172,6 +172,14 @@ export function ModularKitchenPlanner({
   active?: boolean;
   queryString?: string;
 }) {
+  const [navigationMapOpen, setNavigationMapOpen] = useState(false);
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 768px)");
+    const sync = () => setNavigationMapOpen(wide.matches);
+    sync();
+    wide.addEventListener("change", sync);
+    return () => wide.removeEventListener("change", sync);
+  }, []);
   const [design, setDesign] = useState<ModularKitchen>(() => ({ ...createUnifiedKitchen(), cabinets: [] }));
   const products = useCatalog();
   const history = useRef(new EditorHistory<ModularKitchen>());
@@ -1424,7 +1432,7 @@ export function ModularKitchenPlanner({
               />
             )}
             {workspaceView !== "2d" && (
-              <details className="kitchen-navigation-map" open>
+              <details className="kitchen-navigation-map" open={navigationMapOpen} onToggle={event => setNavigationMapOpen(event.currentTarget.open)}>
                 <summary>Өрөөний зураг</summary>
                 <Plan kitchen={kitchen} selectedId={selectedId} onSelect={selectCabinet} readOnly showMeasurements={false} showSpaceItems={false}/>
                 <button type="button" onClick={() => setWorkspaceView("2d")}>2D план нээх</button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { RoomLighting, RoomCeiling } from "@/lib/types";
 import { DEFAULT_ROOM_LIGHTING } from "@/lib/roomDesign";
 import { RoomLightingTimeControls } from "./RoomLightingTimeControls";
@@ -30,6 +30,22 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
   const dock = useRef<HTMLElement>(null);
   const lightMenu = useRef<HTMLDetailsElement>(null);
   const sideMenu = useRef<HTMLDetailsElement>(null);
+  const positionMenu = useCallback((menu: HTMLDetailsElement) => {
+    if (!menu.open || !dock.current) return;
+    const anchor = menu.querySelector("summary")!.getBoundingClientRect();
+    const bar = dock.current.getBoundingClientRect();
+    const width = Math.min(280, window.innerWidth - 24);
+    menu.style.setProperty("--room-menu-left", `${Math.max(12, Math.min(anchor.right - width, window.innerWidth - width - 12))}px`);
+    menu.style.setProperty("--room-menu-bottom", `${window.innerHeight - bar.top + 10}px`);
+    menu.style.setProperty("--room-menu-height", `${Math.max(80, bar.top - 24)}px`);
+  }, []);
+  const toggleMenu = (menu: HTMLDetailsElement) => {
+    if (!menu.open) return;
+    dock.current?.querySelectorAll<HTMLDetailsElement>("details[open]").forEach(other => {
+      if (other !== menu) other.open = false;
+    });
+    positionMenu(menu);
+  };
   const closeLights = () => { if (lightMenu.current) { lightMenu.current.open = false; lightMenu.current.querySelector("summary")?.focus(); } endLightingEdit?.(); };
   useEffect(() => {
     const dismiss = (event: PointerEvent | KeyboardEvent) => {
@@ -45,11 +61,20 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
     };
     document.addEventListener("pointerdown", dismiss);
     document.addEventListener("keydown", dismiss);
+    const reposition = () => dock.current?.querySelectorAll<HTMLDetailsElement>("details[open]").forEach(positionMenu);
+    const observer = new ResizeObserver(reposition);
+    const bar = dock.current;
+    if (bar) observer.observe(bar);
+    window.addEventListener("resize", reposition);
+    bar?.addEventListener("scroll", reposition);
     return () => {
       document.removeEventListener("pointerdown", dismiss);
       document.removeEventListener("keydown", dismiss);
+      observer.disconnect();
+      window.removeEventListener("resize", reposition);
+      bar?.removeEventListener("scroll", reposition);
     };
-  }, []);
+  }, [positionMenu]);
   return <>
     <div className="room-zoom-controls" role="group" aria-label="Өрөөг ойртуулах, холдуулах">
       <button type="button" aria-label="Ойртуулах" title="Ойртуулах" disabled={locked} onClick={() => onZoom("zoom-in")}><Plus size={22}/></button>
@@ -66,15 +91,15 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
           </div>
         </details>
     </div>
-    <nav className="room-view-dock" ref={dock} aria-label="Өрөө харах, засах">
-      {(locked || snap) && <div className="room-navigation-status" role="group" aria-label="Идэвхтэй удирдлага">
+    {(locked || snap) && <div className="room-navigation-status" role="group" aria-label="Идэвхтэй удирдлага">
         {locked && <button type="button" onClick={onLock}><Lock size={14}/> Камер түгжээтэй · Тайлах</button>}
         {snap && <button type="button" aria-pressed={snap} onClick={onSnap}><Magnet size={14}/> Хананд тааруулах · Унтраах</button>}
-      </div>}
+    </div>}
+    <nav className="room-view-dock" ref={dock} aria-label="Өрөө харах, засах">
       <div className="room-view-options" role="group" aria-label="Харах өнцөг" data-planner-tour="room-view">
         <button type="button" aria-label="Өрөөний харагдац" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span className="room-view-label-long">Өрөөний харагдац</span><span className="room-view-label-short" aria-hidden="true">3D өрөө</span></button>
         <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>Дээрээс</span></button>
-        <details className="room-dock-more room-side-views" ref={sideMenu}>
+        <details className="room-dock-more room-side-views" ref={sideMenu} onToggle={event => toggleMenu(event.currentTarget)}>
           <summary aria-label="Хажуугийн харагдац" data-active={SIDE_VIEWS.some(([side]) => side === view)}><Eye size={20}/><span>{SIDE_VIEWS.find(([side]) => side === view)?.[1] ?? "Хажуугаас"}</span><ChevronDown size={12}/></summary>
           <div className="room-dock-popover" role="group" aria-label="Харах талаа сонгох">
             {SIDE_VIEWS.map(([side, label]) => <button type="button" key={side} aria-pressed={view === side} onClick={() => {
@@ -83,14 +108,14 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
             }}>{label}</button>)}
           </div>
         </details>
-        <button type="button" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span>Дотроос харах</span></button>
+        <button type="button" aria-label="Дотроос харах" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span className="room-view-label-long">Дотроос харах</span><span className="room-view-label-short" aria-hidden="true">Дотроос</span></button>
       </div>
       <div className="room-dock-edit">
         <button type="button" onClick={onMaterials} data-planner-tour="room-material"><Paintbrush size={20}/><span>Өнгө</span></button>
         <button type="button" aria-pressed={dimensions} onClick={onDimensions}><Ruler size={20}/><span>Хэмжээс</span></button>
         <button type="button" onClick={onWindows}><PanelsTopLeft size={20}/><span>Цонх</span></button>
         <button type="button" className="room-edit-button" onClick={onRoom} data-planner-tour="room-size"><PencilRuler size={20}/><span>Өрөө засах</span></button>
-        <details className="room-dock-more">
+        <details className="room-dock-more" onToggle={event => toggleMenu(event.currentTarget)}>
           <summary aria-label="Нэмэлт удирдлага"><MoreHorizontal size={22}/><ChevronDown size={12}/></summary>
           <div className="room-dock-popover">
             <button type="button" aria-pressed={cameraPlacement} onClick={onCameraPlace}><Camera size={17}/> Камер байрлуулах</button>

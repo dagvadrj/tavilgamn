@@ -44,3 +44,12 @@ test('changing a hood choice preserves every unrelated cabinet and its manual pl
   assert.equal(next.room, kitchen.room);
   assert.equal(next.extras, kitchen.extras);
 });
+
+test('mobile and desktop continue actions enter the same suggestion step and preserve busy protection', () => {
+  const visits = [], props = { stage:'design',onStage:stage=>visits.push(stage),onTool(){},busy:false,canUndo:false,canRedo:false,onUndo(){},onRedo(){},loginHref:'/',name:'Saved',onName(){},subtotal:0,utilities:null,annotations:false };
+  const tree = KitchenPlannerHeader(props);
+  const actions = nodes(tree).filter(n=>n.type==='button'&&['kitchen-mobile-continue','kitchen-toolbar-continue'].includes(n.props.className));
+  assert.equal(actions.length,2);actions.forEach(n=>n.props.onClick());assert.deepEqual(visits,['suggestions','suggestions']);
+  assert.ok(nodes(KitchenPlannerHeader({...props,busy:true})).filter(n=>n.type==='button'&&['kitchen-mobile-continue','kitchen-toolbar-continue'].includes(n.props.className)).every(n=>n.props.disabled));
+  assert.equal(nodes(KitchenPlannerHeader({...props,stage:'space'})).some(n=>n.props.className==='kitchen-mobile-continue'),false);
+});

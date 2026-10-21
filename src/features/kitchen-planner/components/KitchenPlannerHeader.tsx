@@ -47,6 +47,7 @@ export function KitchenPlannerHeader({ stage, onStage, activeTool, onTool, busy,
       <select className="kitchen-mobile-stage" aria-label="Одоогийн алхам" value={stage} disabled={busy} onChange={event => onStage(event.target.value as Stage)}>
         {stages.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
       </select>
+      {stage === "design" && <button type="button" className="kitchen-mobile-continue" disabled={busy} onClick={() => onStage("suggestions")}>Үргэлжлүүлэх</button>}
       <div className="kitchen-project-tools">
         <KitchenProjectName name={name} onName={onName} busy={busy} status={saveStatus}/>
         {utilities}
