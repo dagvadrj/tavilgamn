@@ -38,13 +38,10 @@ export async function PATCH(request: NextRequest) {
       }),
     );
     const { data, error } = await getSupabaseAdmin().rpc(
-      "move_merchant_delivery_order",
+      "move_showroom_delivery",
       {
         p_actor: auth.userId,
-        p_order: input.orderId,
-        p_stage: input.stage,
-        p_expected_version: input.expectedVersion,
-        p_driver: input.driverId,
+        p_data: input,
       },
     );
     if (error) throw error;

@@ -212,6 +212,7 @@ export function ProductCustomizer({
       material,
       unitPrice: price,
       stockQuantity: availableStock(product),
+      madeToOrder: product.madeToOrder,
       qty,
     });
     setAdded(true);
@@ -441,7 +442,7 @@ export function ProductCustomizer({
               aria-label={stockLabel(product)}
             >
               <span>
-                {product.stockQuantity == null ? (
+                {product.madeToOrder && stock === 0 ? "Захиалгаар хийнэ · 7–14 хоног" : product.stockQuantity == null ? (
                   "Нөөц шалгаж байна"
                 ) : stock > 0 ? (
                   <>

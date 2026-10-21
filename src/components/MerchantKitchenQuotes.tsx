@@ -1,9 +1,8 @@
 "use client";
 
+import { KitchenCommercePanel } from "./KitchenCommercePanel";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useDraftState, useDraftStatus, clearDashboardDraft } from "@/hooks/useDashboardDraft";
-import { DashboardDraftNotice } from "./DashboardDraftNotice";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,7 +10,6 @@ import {
   MessageSquareQuote,
   Phone,
   RefreshCw,
-  Send,
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
 import { merchantRequest } from "@/features/merchant/merchantApi";
@@ -186,23 +184,18 @@ function MerchantKitchenQuoteCard({
   quote: MerchantKitchenQuote;
   onUpdated: (id: string, changes: Partial<MerchantKitchenQuote>) => void;
 }) {
-  const draftScope = `merchant:${owner}:kitchen-quote:${quote.id}`;
-  const [price, setPrice] = useDraftState(draftScope, "price", quote.quotedPrice?.toString() ?? "");
-  const [note, setNote] = useDraftState(draftScope, "note", quote.merchantNote);
-  const draftStatus = useDraftStatus(draftScope);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const room = quote.roomDetails;
 
-  const changeStatus = async (status: "reviewing" | "quoted" | "closed") => {
-    if (busy || draftStatus.loading) return;
+  const changeStatus = async (status: "reviewing" | "closed") => {
+    if (busy) return;
     setBusy(true);
     setError(null);
     setMessage(null);
     try {
-      const quotedPrice =
-        status === "quoted" ? Number(price) : quote.quotedPrice;
+      const quotedPrice = quote.quotedPrice, note = quote.merchantNote;
       const response = await authFetch(
         "/api/merchant/kitchen-quotes",
         {
@@ -224,7 +217,6 @@ function MerchantKitchenQuoteCard({
           data?.error ?? "Үнийн хүсэлтийн төлөвийг шинэчилж чадсангүй.",
         );
       if (isOwner(owner)) {
-        void clearDashboardDraft(draftScope, false);
         onUpdated(quote.id, { status, quotedPrice, merchantNote: note });
         setMessage("Хэрэглэгчид шинэ төлөвийн мэдэгдэл илгээгдлээ.");
       }
@@ -310,9 +302,9 @@ function MerchantKitchenQuoteCard({
           <strong>{formatPrice(quote.quotedPrice)}</strong>
         </div>
       ) : null}
+      <KitchenCommercePanel actor={owner} quoteId={quote.id} merchant status={quote.status} onPublished={(total, note) => onUpdated(quote.id, { status: "quoted", quotedPrice: total, merchantNote: note })}/>
       {quote.status !== "closed" ? (
-        <fieldset className="mt-5 space-y-3" disabled={busy || draftStatus.loading}>
-          <DashboardDraftNotice scope={draftScope} disabled={busy} />
+        <fieldset className="mt-5 space-y-3" disabled={busy}>
           {quote.status === "submitted" ? (
             <button
               type="button"
@@ -321,41 +313,6 @@ function MerchantKitchenQuoteCard({
             >
               Шалгаж эхлэх
             </button>
-          ) : null}
-          {quote.status === "submitted" || quote.status === "reviewing" ? (
-            <div className="merchant-form-grid">
-              <label>
-                Үнийн санал (₮)
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  max={Number.MAX_SAFE_INTEGER}
-                  step={1}
-                  value={price}
-                  onChange={(event) => setPrice(event.target.value)}
-                />
-              </label>
-              <label className="merchant-span">
-                Тайлбар
-                <textarea
-                  className="input min-h-24"
-                  maxLength={5000}
-                  value={note}
-                  onChange={(event) => setNote(event.target.value)}
-                  placeholder="Материал, ажлын хугацаа, нөхцөл…"
-                />
-              </label>
-              <button
-                type="button"
-                className="btn-primary"
-                disabled={!price || !Number.isSafeInteger(Number(price))}
-                onClick={() => void changeStatus("quoted")}
-              >
-                <Send size={16} />
-                Үнийн санал илгээх
-              </button>
-            </div>
           ) : null}
           <button
             type="button"

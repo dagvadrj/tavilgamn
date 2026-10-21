@@ -1,4 +1,5 @@
 "use client";
+import { DeliveryProofDialog, DeliveryProofViewer } from "./DeliveryProofDialog";
 import { useId, useState } from "react";
 import {
   DndContext,
@@ -123,7 +124,11 @@ function OrderDetails({ order }: { order: MerchantDeliveryOrder }) {
           {order.delivery.phone}
         </a>
         <p>{order.delivery.address}</p>
+        <p>{order.delivery.floor == null ? "Давхар тодорхойгүй" : `${order.delivery.floor}-р давхар`} · {({ none: "Лифтгүй", passenger: "Зорчигчийн лифттэй", freight: "Ачааны лифттэй", unknown: "Лифт тодорхойгүй" })[order.delivery.elevator ?? "unknown"]}</p>
       </details>
+      {(order.delivery.assemblyRequested || order.assemblyTeam) && <p className="merchant-delivery-driver"><Hammer size={15}/>{order.assemblyTeam ? "Жолооч + Угсрагч" : "Угсралт шаардлагатай"}</p>}
+      {order.items.some(item => (item.madeToOrderQuantity ?? 0) > 0) && <p>Захиалгаар үйлдвэрлэнэ · 7–14 хоног</p>}
+      {order.proofAvailable && <DeliveryProofViewer orderId={order.id}/>}
       {order.driver && (
         <div className="merchant-delivery-driver">
           <Truck size={16} />
@@ -312,12 +317,13 @@ function AssignDeliveryDialog({
   busy: boolean;
   ready: boolean;
   error: string;
-  onConfirm: (driverId: string) => Promise<void>;
+  onConfirm: (driverId: string, assemblyTeam: boolean) => Promise<void>;
   onManage: () => void;
   onClose: () => void;
   onReload: () => void;
 }) {
   const [driverId, setDriverId] = useState("");
+  const [assemblyTeam, setAssemblyTeam] = useState(order.delivery.assemblyRequested ?? false);
   const available = staff.filter((person) => person.active),
     selected = available.find((person) => person.id === driverId);
   return (
@@ -333,7 +339,7 @@ function AssignDeliveryDialog({
       <form
         onSubmit={async (event) => {
           event.preventDefault();
-          if (selected && ready) await onConfirm(selected.id);
+          if (selected && ready) await onConfirm(selected.id, assemblyTeam);
         }}
       >
         <fieldset disabled={busy || !ready}>
@@ -354,6 +360,7 @@ function AssignDeliveryDialog({
               ))}
             </select>
           </label>
+          <label><input type="checkbox" checked={assemblyTeam} onChange={e => setAssemblyTeam(e.target.checked)}/>Жолооч + Угсрагч</label>
           {!available.length && (
             <p>Идэвхтэй хүргэлтийн ажилтан алга. Эхлээд ажилтнаа нэмнэ үү.</p>
           )}
@@ -409,6 +416,7 @@ export function MerchantDeliveryBoard({ owner, staffRole }: { owner: string; sta
     contextId = useId();
   const [active, setActive] = useState<MerchantDeliveryOrder | null>(null);
   const [pending, setPending] = useState<MerchantDeliveryOrder | null>(null);
+  const [proofOrder, setProofOrder] = useState<MerchantDeliveryOrder | null>(null);
   const [showStaff, setShowStaff] = useState(false);
   const [hint, setHint] = useState("");
   const [query, setQuery] = useState("");
@@ -436,6 +444,7 @@ export function MerchantDeliveryBoard({ owner, staffRole }: { owner: string; sta
     }
     setHint("");
     if (target === "shipped") setPending(order);
+    else if (target === "delivered") setProofOrder(order);
     else await board.move(order, target);
   }
   const box = (stage: DeliveryStage) => (
@@ -615,6 +624,7 @@ export function MerchantDeliveryBoard({ owner, staffRole }: { owner: string; sta
           )}
         </DragOverlay>
       </DndContext>
+      {proofOrder && <DeliveryProofDialog owner={owner} order={proofOrder} busy={board.busy} error={board.mutationError} onClose={() => setProofOrder(null)} onConfirm={async () => { if (await board.move(proofOrder, "delivered")) setProofOrder(null); }}/> }
       {showStaff && (
         <DeliveryStaffDialog
           staff={board.staff}
@@ -646,10 +656,10 @@ export function MerchantDeliveryBoard({ owner, staffRole }: { owner: string; sta
           onClose={() => setPending(null)}
           onManage={() => setShowStaff(true)}
           onReload={board.reload}
-          onConfirm={async (driverId) => {
+          onConfirm={async (driverId, assemblyTeam) => {
             if (
               currentPending &&
-              (await board.move(currentPending, "shipped", driverId))
+              (await board.move(currentPending, "shipped", driverId, assemblyTeam))
             )
               setPending(null);
           }}

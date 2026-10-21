@@ -111,11 +111,16 @@ function CheckoutForm({ ownerId }: { ownerId: string }) {
         <label className="block text-sm">Хүлээн авагчийн нэр<input className="input mt-2" autoComplete="name" required minLength={2} maxLength={100} value={delivery.name} onChange={(e) => setDelivery({ ...delivery, name: e.target.value })} /></label>
         <label className="block text-sm">Утас<input className="input mt-2" type="tel" autoComplete="tel" required minLength={8} maxLength={24} value={delivery.phone} onChange={(e) => setDelivery({ ...delivery, phone: e.target.value })} /></label>
         <label className="block text-sm">Хүргэлтийн хаяг<textarea className="input mt-2" autoComplete="street-address" rows={4} required minLength={10} maxLength={500} placeholder="Хот, дүүрэг, хороо, байр, тоот" value={delivery.address} onChange={(e) => setDelivery({ ...delivery, address: e.target.value })} /></label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm">Давхар<input className="input mt-2" type="number" min={0} max={150} value={delivery.floor ?? ""} onChange={e => setDelivery({ ...delivery, floor: e.target.value === "" ? undefined : Number(e.target.value) })}/></label>
+          <label className="block text-sm">Лифт<select className="input mt-2" value={delivery.elevator ?? "unknown"} onChange={e => setDelivery({ ...delivery, elevator: e.target.value as DeliveryAddress["elevator"] })}><option value="unknown">Тодорхойгүй</option><option value="none">Лифтгүй</option><option value="passenger">Зорчигчийн лифттэй</option><option value="freight">Ачааны лифттэй</option></select></label>
+        </div>
+        <label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={delivery.assemblyRequested ?? false} onChange={e => setDelivery({ ...delivery, assemblyRequested: e.target.checked })}/>Гэрт угсруулах шаардлагатай</label>
       </fieldset>
       <section className="ui-panel p-5 sm:p-7" aria-busy={quoteLoading}>
         <h2 className="text-xl">Захиалгын дүн</h2>
         {currentQuote ? <>
-          <ul className="my-4 space-y-3">{currentQuote.items.map((item) => <li key={JSON.stringify([item.productId, item.color, item.material])} className="text-sm"><p>{item.name} × {item.qty}</p>{item.stockQuantity != null && <p className="text-xs text-ui-accent">Шалгах үеийн үлдэгдэл: {item.stockQuantity} ширхэг</p>}<p className="text-ui-muted">{item.colorName} · {item.materialName}</p><p>{formatPrice(item.lineTotal)}</p></li>)}</ul>
+          <ul className="my-4 space-y-3">{currentQuote.items.map((item) => <li key={JSON.stringify([item.productId, item.color, item.material])} className="text-sm"><p>{item.name} × {item.qty}</p>{item.productionDays && <p className="text-sm text-ui-accent">Захиалгаар үйлдвэрлэнэ · {item.productionDays} хоног</p>}{item.stockQuantity != null && <p className="text-xs text-ui-accent">Шалгах үеийн үлдэгдэл: {item.stockQuantity} ширхэг</p>}<p className="text-ui-muted">{item.colorName} · {item.materialName}</p><p>{formatPrice(item.lineTotal)}</p></li>)}</ul>
           <p className="flex justify-between text-sm"><span>Хүргэлт</span><span>{currentQuote.shipping === 0 ? "Үнэгүй" : formatPrice(currentQuote.shipping)}</span></p>
           <p className="mt-4 flex justify-between font-semibold"><span>Нийт</span><span>{formatPrice(currentQuote.total)}</span></p>
         </> : quoteLoading ? <p role="status" className="my-4 text-sm text-ui-muted">Одоогийн үнэ, үлдэгдлийг шалгаж байна…</p> : null}

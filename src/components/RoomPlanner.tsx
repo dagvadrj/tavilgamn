@@ -1,4 +1,5 @@
 "use client";
+import { trackProduct3d } from "@/lib/productEngagement";
 import { duplicateFurniturePlacement, moveAttachedFurniture, resolveFurnitureAttachments } from "@/lib/furnitureAttachment";
 import type { RoomPlacementHintSource } from "@/three/RoomPlacementHints";
 import { FurnitureAttachmentControls } from "@/features/room-planner/components/FurnitureAttachmentControls";
@@ -601,12 +602,27 @@ function RoomPlannerEditor() {
     setKitchenOnly(true);
     setLeftOpen(true);
   }, [current, setLeftOpen]);
+  const handledShowroom = useRef<string | null>(null);
+  const [showroomProduct, setShowroomProduct] = useState<string | null>(null);
+  useEffect(() => { setShowroomProduct(new URLSearchParams(window.location.search).get("product")); }, []);
+  useEffect(() => {
+    if (!showroomProduct || roomStartOpen || !current || !catalog.ready || catalog.loading || handledShowroom.current === showroomProduct) return;
+    const product = catalog.products.find(p => p.id === showroomProduct);
+    handledShowroom.current = showroomProduct;
+    if (!product?.model) { setNotice("QR-ийн барааны 3D загвар одоогоор ашиглах боломжгүй байна."); return; }
+    const result = useDesigns.getState().placeFurniture({ instanceId: `p_${crypto.randomUUID()}`, productId: product.id, x: 0, z: 0, rotation: 0, color: product.defaultColor, material: product.materials[0]?.id ?? "wood", placement: product.placement, details: { name: product.name, dimensions: { ...product.dimensions }, image: product.image, category: product.category } });
+    if (result.piece) { rememberFurniture(result.piece); setSelected(result.piece.instanceId); setCatalogOpen(false); setLeftOpen(false); trackProduct3d(product.id, "placement"); setNotice(`${product.name}-г таны өрөөнд байрлууллаа. Чирж байрлалыг нь тохируулаарай.`); }
+    else setNotice(result.error ?? "Өрөөнд багтах сул зай алга. Өрөөний хэмжээгээ шалгаад бараагаа каталогоос дахин сонгоорой.");
+    const url = new URL(window.location.href); url.searchParams.delete("product"); url.searchParams.delete("source"); window.history.replaceState(window.history.state, "", url);
+  }, [showroomProduct, roomStartOpen, current, catalog.ready, catalog.loading, catalog.products, rememberFurniture, setSelected, setCatalogOpen, setLeftOpen, setNotice]);
   const placementWarnings = useMemo(() => current ? roomPlacementWarnings(current, catalog.products) : [], [current, catalog.products]);
   const storageStatus = useRoomSaveStatus(current, designs, useDesigns.persist?.getOptions().name);
   if (templateAdmin.loading || templateAdmin.error) return <main className="container-page py-10"><p role={templateAdmin.error ? "alert" : "status"}>{templateAdmin.error || "Бэлэн өрөөг нээж байна…"}</p><Link href="/admin?tab=rooms">Өрөөний сан руу буцах</Link></main>;
   if (roomStartOpen || !current || !placement) {
     shortcuts.current = {};
     return (
+      <>
+      {showroomProduct && <p className="container-page py-3 text-sm" role="status">QR-аар сонгосон бараа: <strong>{catalog.products.find(p => p.id === showroomProduct)?.name ?? "Ачаалж байна…"}</strong>. Гэрийнхээ хэмжээг оруулаарай. Өрөө байгуулахад барааг автоматаар байрлуулна.</p>}
       <RoomPlannerStart
         onTemplate={loadTemplate}
         draft={current}
@@ -664,6 +680,7 @@ function RoomPlannerEditor() {
           setLeftOpen(type === "kitchen");
         }}
       />
+      </>
     );
   }
 
@@ -679,6 +696,7 @@ function RoomPlannerEditor() {
     const result = useDesigns.getState().placeFurniture(piece, hints);
     if (!result.piece) { setNotice(result.error ?? "Тавилга байрлуулж чадсангүй."); return; }
     rememberFurniture(result.piece);
+    if (!piece.modelId && !piece.kitchen) trackProduct3d(piece.productId, "placement");
     setSelected(result.piece.instanceId);
     setSelectedOpening(null);
     setSelectedWall(null);
@@ -898,6 +916,7 @@ function RoomPlannerEditor() {
         unitPrice: getPiecePrice(piece),
         qty: 1,
         stockQuantity: product.stockQuantity,
+      madeToOrder: product.madeToOrder,
       });
       added += count;
       if (!count) skipped++;
@@ -2712,15 +2731,16 @@ function RoomPlannerEditor() {
                           type="button"
                           aria-label={color.name}
                           aria-pressed={selectedPiece.color === color.id}
-                          onClick={() =>
+                          onClick={() => {
+                            if (selectedPiece.color !== color.id && !selectedPiece.modelId) trackProduct3d(selectedPiece.productId, "color", color.id);
                             updatePieces(
                               current.pieces.map((piece) =>
                                 piece.instanceId === selectedPiece.instanceId
                                   ? { ...piece, color: color.id }
                                   : piece,
                               ),
-                            )
-                          }
+                            );
+                          }}
                           style={{ background: color.hex }}
                           className={cn(
                             "h-7 w-7 rounded-full border-2",
@@ -2739,15 +2759,16 @@ function RoomPlannerEditor() {
                         <button
                           key={material.id}
                           type="button"
-                          onClick={() =>
+                          onClick={() => {
+                            if (selectedPiece.material !== material.id && !selectedPiece.modelId) trackProduct3d(selectedPiece.productId, "material", material.id);
                             updatePieces(
                               current.pieces.map((piece) =>
                                 piece.instanceId === selectedPiece.instanceId
                                   ? { ...piece, material: material.id }
                                   : piece,
                               ),
-                            )
-                          }
+                            );
+                          }}
                           className={cn(
                             "rounded-full border px-3 py-1.5 text-xs transition",
                             selectedPiece.material === material.id

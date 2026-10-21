@@ -53,6 +53,7 @@ export interface Product {
   /** footprint in meters for the room planner */
   dimensions: { w: number; d: number; h: number };
   inStock: boolean;
+  madeToOrder?: boolean;
   /** Available units shared by all variants; null means not counted yet. */
   stockQuantity?: number | null;
   isNew?: boolean;

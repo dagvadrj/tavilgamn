@@ -251,6 +251,7 @@ export function useMerchantDelivery(
       order: MerchantDeliveryOrder,
       stage: DeliveryStage,
       driverId?: string,
+      assemblyTeam?: boolean,
     ) => {
       if (!canMoveDelivery(order, stage)) return Promise.resolve(false);
       return mutate(
@@ -260,7 +261,7 @@ export function useMerchantDelivery(
           orderId: order.id,
           stage,
           expectedVersion: order.version,
-          ...(driverId ? { driverId } : {}),
+          ...(driverId ? { driverId, assemblyTeam: assemblyTeam ?? false } : {}),
         },
         "Захиалгын шинэ төлөв хадгалагдлаа.",
       );

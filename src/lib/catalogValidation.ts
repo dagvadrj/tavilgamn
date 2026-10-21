@@ -257,7 +257,8 @@ export function parseProduct(value: unknown): Product {
       value.stockQuantity == null
         ? null
         : integer(value.stockQuantity, MAX_STOCK_QUANTITY),
-    inStock:
+    madeToOrder: bool(value.madeToOrder ?? false),
+    inStock: value.madeToOrder === true ||
       value.stockQuantity != null &&
       integer(value.stockQuantity, MAX_STOCK_QUANTITY) > 0,
     isNew: bool(value.isNew ?? false),

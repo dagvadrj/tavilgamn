@@ -62,7 +62,7 @@ test('API validates input and uses the verified merchant, never client-supplied 
   for (const body of [{},{orderId:id,stage:'shipped',expectedVersion:2},{orderId:id,stage:'prepared',expectedVersion:-1},{orderId:id,stage:'prepared',expectedVersion:2,driverId}]) assert.equal((await routes.PATCH(request(body))).status,400);
   assert.equal(calls.length,0);
   assert.equal((await routes.PATCH(request({orderId:id,stage:'shipped',expectedVersion:2,driverId,ownerId:'victim'}))).status,200);
-  assert.deepEqual(calls[0],{name:'move_merchant_delivery_order',args:{p_actor:'verified-merchant',p_order:id,p_stage:'shipped',p_expected_version:2,p_driver:driverId}});
+  assert.deepEqual(calls[0],{name:'move_showroom_delivery',args:{p_actor:'verified-merchant',p_data:{orderId:id,stage:'shipped',expectedVersion:2,driverId}}});
   failure = {code:'P0020'}; assert.equal((await routes.PATCH(request({orderId:id,stage:'shipped',expectedVersion:2,driverId}))).status,409);
   for (const query of ['?stage=unknown','?stage=prepared&page=-1','?stage=prepared&page=1.5']) assert.equal((await routes.GET(new NextRequest(`http://localhost/api/merchant/delivery${query}`))).status,400);
   const staffRoutes = loadSource('src/app/api/merchant/delivery/staff/route.ts',mocks); failure = null;
@@ -84,7 +84,7 @@ test('board loads every stage and staff; failures remain read-only until a succe
 test('drag mutations are serialized, acknowledge server writes and refresh instead of claiming a local move', async t => {
   const h = hookHarness(t); h.render(); await h.load(); let state = h.render();
   const pending = state.move(order(),'shipped',driverId); assert.equal(await state.move(order(),'shipped',driverId),false);
-  assert.equal(h.requests.length,8); assert.deepEqual(JSON.parse(h.requests[7].options.body),{orderId:id,stage:'shipped',expectedVersion:2,driverId});
+  assert.equal(h.requests.length,8); assert.deepEqual(JSON.parse(h.requests[7].options.body),{orderId:id,stage:'shipped',expectedVersion:2,driverId,assemblyTeam:false});
   assert.equal(h.render().columns.shipped.orders.length,0,'not moved optimistically');
   h.requests[7].reject(Error('Stale delivery version')); await pending; state = h.render();
   assert.equal(state.mutationError,'Stale delivery version'); assert.equal(state.ready,false);
@@ -127,7 +127,7 @@ test('dragging prepared furniture opens staff assignment; cancel does not persis
   nodes(assignment).find(node=>node.type==='select').props.onChange({target:{value:driverId}});
   assignment=h.render(()=>modal.type(modal.props));
   await nodes(assignment).find(node=>node.type==='form').props.onSubmit({preventDefault(){}});
-  assert.deepEqual(moves,[[prepared,'shipped',driverId]]);
+  assert.deepEqual(moves,[[prepared,'shipped',driverId,false]]);
   h.reset(); moves.length=0;
   // Re-open from the board to verify cancellation independently.
   context().props.onDragEnd({active:{id},over:{id:'stage:shipped'}});
@@ -135,7 +135,7 @@ test('dragging prepared furniture opens staff assignment; cancel does not persis
   modal.props.onClose(); assert.equal(nodes(render()).some(node=>node.type?.name==='AssignDeliveryDialog'),false); assert.equal(moves.length,0);
   context().props.onDragEnd({active:{id},over:{id:'stage:shipped'}});
   modal = nodes(render()).find(node=>node.type?.name==='AssignDeliveryDialog');
-  await modal.props.onConfirm(driverId); assert.deepEqual(moves,[[prepared,'shipped',driverId]]);
+  await modal.props.onConfirm(driverId,true); assert.deepEqual(moves,[[prepared,'shipped',driverId,true]]);
   assert.equal(nodes(render()).some(node=>node.type?.name==='AssignDeliveryDialog'),false);
 });
 

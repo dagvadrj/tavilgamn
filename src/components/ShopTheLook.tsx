@@ -36,6 +36,7 @@ function LookProduct({
       material: selection.material.id,
       unitPrice: price,
       stockQuantity: product.stockQuantity,
+      madeToOrder: product.madeToOrder,
     });
     setMessage(
       added ? "Сагсанд нэмэгдлээ" : "Сагс дахь тоо үлдэгдлийн хязгаарт хүрсэн",

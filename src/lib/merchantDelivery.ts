@@ -37,6 +37,8 @@ export type AssignedDeliveryStaff = Pick<
   "id" | "name" | "phone" | "vehicle"
 >;
 export type MerchantDeliveryOrder = {
+  assemblyTeam?: boolean;
+  proofAvailable?: boolean;
   readOnly?: boolean;
   id: string;
   items: OrderLine[];

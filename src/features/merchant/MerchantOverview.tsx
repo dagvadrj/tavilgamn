@@ -1,4 +1,6 @@
 "use client";
+import { MadeToOrderSwitch } from "./MerchantShowroom";
+import { Merchant3dInsights, MerchantWalletWidget } from "./MerchantShowroomInsights";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -521,6 +523,7 @@ export function MerchantOverview({
                             {stockLabel(p)}
                           </small>
                         </div>
+                        <MadeToOrderSwitch owner={owner} product={p}/>
                       </li>
                     ))}
                   </ul>
@@ -647,6 +650,7 @@ export function MerchantOverview({
           }}
         />
       </div>
+      {showSales && <><MerchantWalletWidget owner={owner} onOpen={() => onGrowth?.("wallet")} onBank={() => onGrowth?.("activation")}/><Merchant3dInsights owner={owner}/></>}
       {section !== "inventory" && (
         <><MerchantRiskSummary owner={owner} date={date} /><OrderProgressCards
           stats={progress.data}

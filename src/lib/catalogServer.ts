@@ -6,7 +6,7 @@ import type { Tables } from "./supabase/database.types";
 import { kitchenPartKind } from "./kitchenGlbAssembly";
 
 export const FURNITURE_ORDER_FIELDS =
-  "id,product_id,name,category,description,base_price,image_url,thumbnail_path,glb_path,preview_glb_path,processing_status,scale,dimensions_w,dimensions_d,dimensions_h,colors,materials,default_color,in_stock,rating,review_count,badges,is_new,is_best_seller,store_ids";
+  "id,product_id,name,category,description,base_price,image_url,thumbnail_path,glb_path,preview_glb_path,processing_status,scale,dimensions_w,dimensions_d,dimensions_h,colors,materials,default_color,in_stock,made_to_order,rating,review_count,badges,is_new,is_best_seller,store_ids";
 const FURNITURE_LEGACY_FIELDS = `${FURNITURE_ORDER_FIELDS},images,glb_validation`;
 const FURNITURE_COMMERCE_FIELDS = `${FURNITURE_LEGACY_FIELDS},compare_at_price,promotion_label,promotion_ends_at,delivery_terms`;
 export const FURNITURE_FIELDS = `${FURNITURE_COMMERCE_FIELDS},specifications`;
@@ -36,7 +36,7 @@ export type FurnitureRow = Pick<
   | "is_new"
   | "is_best_seller"
   | "store_ids"
-> &
+> & { made_to_order?: boolean } &
   Partial<
     Pick<
       Tables<"furniture_models">,
@@ -88,6 +88,7 @@ export function productFromRow(row: FurnitureRow): Product {
       h: Number(row.dimensions_h),
     },
     stockQuantity: row.in_stock,
+    madeToOrder: row.made_to_order ?? false,
     rating: Number(row.rating ?? 0),
     reviewCount: row.review_count ?? 0,
     badges: row.badges ?? [],

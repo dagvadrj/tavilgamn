@@ -14,9 +14,15 @@ export interface DeliveryAddress {
   name: string;
   phone: string;
   address: string;
+  floor?: number;
+  elevator?: "unknown" | "none" | "passenger" | "freight";
+  assemblyRequested?: boolean;
 }
 
 export interface OrderLine extends OrderSelection {
+  productionDays?: string;
+  reservedQuantity?: number;
+  madeToOrderQuantity?: number;
   stockQuantity?: number;
   image?: string;
   name: string;

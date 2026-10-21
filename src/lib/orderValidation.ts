@@ -38,7 +38,14 @@ export function parseDelivery(value: unknown): DeliveryAddress {
     typeof address !== "string" || address.trim().length < 10 || address.trim().length > 500) {
     throw new OrderInputError("Хүлээн авагчийн нэр, утас, дэлгэрэнгүй хаягаа зөв оруулна уу.");
   }
-  return { name: name.trim(), phone: phone.trim(), address: address.trim() };
+  if ((value.floor !== undefined && (!Number.isInteger(value.floor) || Number(value.floor) < 0 || Number(value.floor) > 150)) ||
+    (value.elevator !== undefined && !["unknown", "none", "passenger", "freight"].includes(String(value.elevator))) ||
+    (value.assemblyRequested !== undefined && typeof value.assemblyRequested !== "boolean"))
+    throw new OrderInputError("Давхар, лифт, угсралтын мэдээллээ шалгана уу.");
+  return { name: name.trim(), phone: phone.trim(), address: address.trim(),
+    ...(value.floor === undefined ? {} : { floor: Number(value.floor) }),
+    ...(value.elevator === undefined ? {} : { elevator: value.elevator as DeliveryAddress["elevator"] }),
+    ...(value.assemblyRequested === undefined ? {} : { assemblyRequested: value.assemblyRequested as boolean }) };
 }
 
 export function parseOrderBody(value: unknown) {

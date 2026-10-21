@@ -1,5 +1,6 @@
 "use client";
 
+import { KitchenCommercePanel } from "./KitchenCommercePanel";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -172,6 +173,7 @@ export function KitchenQuoteHistory() {
               {quote.merchantNote}
             </p>
           ) : null}
+          {user && <KitchenCommercePanel actor={user.id} quoteId={quote.id}/>}
         </article>
       ))}
       <nav

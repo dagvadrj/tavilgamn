@@ -1,6 +1,6 @@
 // Pure query documents: no GraphQL runtime is shipped to the browser.
-const item = `productId name color material colorName materialName qty unitPrice lineTotal`;
-const address = `name phone address`;
+const item = `madeToOrderQuantity productionDays productId name color material colorName materialName qty unitPrice lineTotal`;
+const address = `name phone address floor elevator assemblyRequested`;
 const order = `id items { ${item} } subtotal delivery { ${address} }`;
 const progress = `asOf selectedDate total hasMore held aging
   dayTotals { orders paidOrders gross net completed }
@@ -9,7 +9,7 @@ const progress = `asOf selectedDate total hasMore held aging
   orders { id stage progress createdAt updatedAt customer subtotal title itemCount held }`;
 const product = `id name category description basePrice compareAtPrice promotionLabel promotionEndsAt deliveryTerms rating reviewCount image images badges defaultColor
   colors { id name hex priceDelta } materials { id name priceDelta } dimensions { w d h }
-  inStock stockQuantity isNew isBestSeller modelRequested archivedAt storeIds roomTypes specifications
+  inStock madeToOrder stockQuantity isNew isBestSeller modelRequested archivedAt storeIds roomTypes specifications
   model { id file previewFile physicalSize scale } placement { surfaces defaultElevation gap supportSurfaces { id width depth elevation } }`;
 const kitchen = `id storeId storeName slug publicationStatus publishedVersionId versionId versionNo reviewStatus title shortDescription description style layout tags pricingMode priceFrom priceTo materials sourceKitchenId leadTimeDays installationIncluded warrantyMonths serviceAreas inclusions exclusions cabinetCount roomWidthMm roomDepthMm maxHeightMm thumbnailUrl updatedAt`;
 const usage = `limit used enabled nextResetAt`;
@@ -69,7 +69,7 @@ export function merchantQueryFor(path: string) {
       };
     case "/api/merchant/delivery":
       return {
-        query: `query MerchantDelivery($stage: DeliveryStage!, $page: Int!) { delivery(stage: $stage, page: $page) { total hasMore orders { ${order} stage version createdAt updatedAt completedAt paymentStatus cancellationStatus driver { id name phone vehicle } } } }`,
+        query: `query MerchantDelivery($stage: DeliveryStage!, $page: Int!) { delivery(stage: $stage, page: $page) { total hasMore orders { ${order} assemblyTeam proofAvailable stage version createdAt updatedAt completedAt paymentStatus cancellationStatus driver { id name phone vehicle } } } }`,
         operationName: "MerchantDelivery",
         variables: { stage: params.get("stage"), page },
         field: "delivery",

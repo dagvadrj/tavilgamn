@@ -47,7 +47,7 @@ export async function quoteOrder(
       );
     }
 
-    if ((quantities.get(product.id) ?? 0) > availableStock(product)) {
+    if (!product.madeToOrder && (quantities.get(product.id) ?? 0) > availableStock(product)) {
       throw new OrderInputError(`${product.name}: үлдэгдэл ${availableStock(product)} ширхэг байна. Сагсны тоог бууруулна уу.`, 409);
     }
 
@@ -89,6 +89,7 @@ export async function quoteOrder(
       unitPrice,
       lineTotal: unitPrice * item.qty,
       stockQuantity: availableStock(product),
+      productionDays: product.madeToOrder && (quantities.get(product.id) ?? 0) > availableStock(product) ? "7–14" : undefined,
     };
   });
 

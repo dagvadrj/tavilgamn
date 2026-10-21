@@ -25,6 +25,11 @@ import { MerchantProductEditor } from "@/features/merchant/MerchantProductEditor
 import { useMerchantResource } from "./useMerchantResource";
 import { StatSkeleton } from "./MerchantStats";
 import { ProductDetails } from "@/features/admin-products/ProductDetails";
+import {
+  MadeToOrderSwitch,
+  ProductQrButton,
+  ModelRequestButton,
+} from "./MerchantShowroom";
 import { MerchantGlbDownload } from "./MerchantGlbDownload";
 
 export function MerchantProducts({
@@ -161,7 +166,10 @@ export function MerchantProducts({
       ) : (
         <div className="merchant-products">
           {filtered.map((product) => (
-            <article className="merchant-product" key={product.id}>
+            <article
+              className="merchant-product merchant-showroom-product"
+              key={product.id}
+            >
               <Image
                 src={product.image}
                 alt={product.name}
@@ -179,70 +187,83 @@ export function MerchantProducts({
               <strong className="merchant-product-price">
                 {formatPrice(product.basePrice)}
               </strong>
-              {product.model && !product.archivedAt && <MerchantGlbDownload owner={owner} productId={product.id}/>}
-              <button
-                className="btn-ghost"
-                disabled={
-                  Boolean(product.archivedAt) || archiveBusy === product.id
-                }
-                aria-label={`${product.name} засах`}
-                onClick={() => {
-                  setSaved(false);
-                  setEditing({ product, create: false });
-                }}
-              >
-                <Pencil size={15} />
-                Засах
-              </button>
-              <button
-                type="button"
-                className="btn-ghost"
-                aria-label={`${product.name} дэлгэрэнгүй`}
-                onClick={() => setDetailsId(product.id)}
-              >
-                <Info size={15} /> Дэлгэрэнгүй
-              </button>
-              <button
-                type="button"
-                className="btn-ghost"
-                disabled={archiveBusy === product.id}
-                aria-label={`${product.name} ${product.archivedAt ? "сэргээх" : "архивлах"}`}
-                onClick={async () => {
-                  if (
-                    !product.archivedAt &&
-                    !window.confirm(
-                      "Барааг худалдаанаас түр нууж архивлах уу? Зураг, 3D болон захиалгын түүх устахгүй.",
-                    )
-                  )
-                    return;
-                  setArchiveBusy(product.id);
-                  setError(null);
-                  try {
-                    await merchantRequest(
-                      `/api/merchant/products/${encodeURIComponent(product.id)}`,
-                      owner,
-                      {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ archived: !product.archivedAt }),
-                      },
-                    );
-                    resource.refresh();
-                    void useCatalogStore.getState().refresh(true);
-                  } catch (reason) {
-                    setError(
-                      reason instanceof Error
-                        ? reason.message
-                        : "Архивлаж чадсангүй.",
-                    );
-                  } finally {
-                    setArchiveBusy(null);
+              <MadeToOrderSwitch owner={owner} product={product} />
+              <div className="merchant-product-actions">
+                <ProductQrButton owner={owner} product={product} />
+                <ModelRequestButton
+                  owner={owner}
+                  product={product}
+                  onEdit={() => setEditing({ product, create: false })}
+                />
+                {product.model && !product.archivedAt && (
+                  <MerchantGlbDownload owner={owner} productId={product.id} />
+                )}
+                <button
+                  className="btn-ghost"
+                  disabled={
+                    Boolean(product.archivedAt) || archiveBusy === product.id
                   }
-                }}
-              >
-                <Archive size={15} />{" "}
-                {product.archivedAt ? "Сэргээх" : "Архивлах"}
-              </button>
+                  aria-label={`${product.name} засах`}
+                  onClick={() => {
+                    setSaved(false);
+                    setEditing({ product, create: false });
+                  }}
+                >
+                  <Pencil size={15} />
+                  Засах
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  aria-label={`${product.name} дэлгэрэнгүй`}
+                  onClick={() => setDetailsId(product.id)}
+                >
+                  <Info size={15} /> Дэлгэрэнгүй
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  disabled={archiveBusy === product.id}
+                  aria-label={`${product.name} ${product.archivedAt ? "сэргээх" : "архивлах"}`}
+                  onClick={async () => {
+                    if (
+                      !product.archivedAt &&
+                      !window.confirm(
+                        "Барааг худалдаанаас түр нууж архивлах уу? Зураг, 3D болон захиалгын түүх устахгүй.",
+                      )
+                    )
+                      return;
+                    setArchiveBusy(product.id);
+                    setError(null);
+                    try {
+                      await merchantRequest(
+                        `/api/merchant/products/${encodeURIComponent(product.id)}`,
+                        owner,
+                        {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            archived: !product.archivedAt,
+                          }),
+                        },
+                      );
+                      resource.refresh();
+                      void useCatalogStore.getState().refresh(true);
+                    } catch (reason) {
+                      setError(
+                        reason instanceof Error
+                          ? reason.message
+                          : "Архивлаж чадсангүй.",
+                      );
+                    } finally {
+                      setArchiveBusy(null);
+                    }
+                  }}
+                >
+                  <Archive size={15} />{" "}
+                  {product.archivedAt ? "Сэргээх" : "Архивлах"}
+                </button>
+              </div>
             </article>
           ))}
         </div>

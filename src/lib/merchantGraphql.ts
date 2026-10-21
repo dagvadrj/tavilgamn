@@ -27,11 +27,11 @@ export const merchantSchema = buildSchema(`
   type MonthStat { month: String! gross: String! net: String! orders: Int! }
   type Trends { asOf: String! months: [MonthStat!]! }
   type Analytics { periodStart: String! asOf: String! storeId: ID! storeName: String! commissionBps: Int! grossRevenue: String! platformFee: String! merchantNet: String! paidOrders: String! pendingOrders: String! processingOrders: String! shippedOrders: String! productCount: String! totalStock: String! lowStockCount: String! modelRequestCount: String! }
-  type Address { name: String! phone: String! address: String! }
-  type OrderItem { productId: ID! name: String! color: String! material: String! colorName: String! materialName: String! qty: Int! unitPrice: Float! lineTotal: Float! }
+  type Address { name: String! phone: String! address: String! floor: Int elevator: String assemblyRequested: Boolean }
+  type OrderItem { madeToOrderQuantity: Int productionDays: String productId: ID! name: String! color: String! material: String! colorName: String! materialName: String! qty: Int! unitPrice: Float! lineTotal: Float! }
   type Driver { id: ID! name: String! phone: String! vehicle: String! }
   type Staff { id: ID! name: String! phone: String! vehicle: String! active: Boolean! version: Int! }
-  type DeliveryOrder { id: ID! items: [OrderItem!]! subtotal: Float! delivery: Address! stage: DeliveryStage! version: Int! createdAt: String! updatedAt: String! completedAt: String paymentStatus: String! cancellationStatus: String driver: Driver }
+  type DeliveryOrder { assemblyTeam: Boolean proofAvailable: Boolean id: ID! items: [OrderItem!]! subtotal: Float! delivery: Address! stage: DeliveryStage! version: Int! createdAt: String! updatedAt: String! completedAt: String paymentStatus: String! cancellationStatus: String driver: Driver }
   type DeliveryColumn { orders: [DeliveryOrder!]! total: Int! hasMore: Boolean! }
   type Order { id: ID! items: [OrderItem!]! subtotal: Float! currency: String! delivery: Address! created_at: String! status: String! paymentStatus: String! commissionBps: Int platformFee: Float merchantNet: Float cancellationStatus: String }
   type OrderPage { orders: [Order!]! hasMore: Boolean! }
@@ -45,7 +45,7 @@ export const merchantSchema = buildSchema(`
   type ProductModel { id: ID! file: String! previewFile: String physicalSize: Boolean scale: Float! }
   type SupportSurface { id: ID! width: Float! depth: Float! elevation: Float! }
   type Placement { surfaces: [String!]! defaultElevation: Float gap: Float supportSurfaces: [SupportSurface!] }
-  type Product { id: ID! name: String! category: String! description: String! basePrice: Float! compareAtPrice: Float promotionLabel: String promotionEndsAt: String deliveryTerms: String rating: Float! reviewCount: Int! image: String! images: [String!] badges: [String!] defaultColor: String! colors: [ProductColor!]! materials: [ProductMaterial!]! dimensions: Dimensions! inStock: Boolean! stockQuantity: Int isNew: Boolean isBestSeller: Boolean modelRequested: Boolean archivedAt: String storeIds: [String!] roomTypes: [String!] model: ProductModel specifications: Specifications placement: Placement }
+  type Product { id: ID! name: String! category: String! description: String! basePrice: Float! compareAtPrice: Float promotionLabel: String promotionEndsAt: String deliveryTerms: String rating: Float! reviewCount: Int! image: String! images: [String!] badges: [String!] defaultColor: String! colors: [ProductColor!]! materials: [ProductMaterial!]! dimensions: Dimensions! inStock: Boolean! madeToOrder: Boolean stockQuantity: Int isNew: Boolean isBestSeller: Boolean modelRequested: Boolean archivedAt: String storeIds: [String!] roomTypes: [String!] model: ProductModel specifications: Specifications placement: Placement }
   type ProductPage { products: [Product!]! nextCursor: String }
   type ModelVersion { id: ID! createdAt: String! name: String! status: String! assetId: ID previewKind: String byteSize: Float }
   type ProductDetails { product: Product! createdAt: String! updatedAt: String! processingStatus: String processingError: String archivedAt: String versions: [ModelVersion!]! }

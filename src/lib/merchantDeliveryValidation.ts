@@ -34,6 +34,7 @@ export function parseDeliveryMove(value: unknown) {
   if (stage === "incoming")
     throw new CatalogInputError("Захиалгыг өмнөх шат руу буцаахгүй.");
   const driverId = raw.driverId == null ? null : id(raw.driverId);
+  if (raw.assemblyTeam !== undefined && (stage !== "shipped" || typeof raw.assemblyTeam !== "boolean")) throw new CatalogInputError("Угсралтын багийн сонголт буруу байна.");
   if (stage === "shipped" ? !driverId : !!driverId)
     throw new CatalogInputError(
       "Хүргэлтэд гаргахдаа хүргэлтийн ажилтан сонгоно уу.",
@@ -43,6 +44,7 @@ export function parseDeliveryMove(value: unknown) {
     stage,
     expectedVersion: version(raw.expectedVersion),
     driverId,
+    ...(raw.assemblyTeam === undefined ? {} : { assemblyTeam: raw.assemblyTeam as boolean }),
   };
 }
 export function parseDeliveryStaff(value: unknown, creating: boolean) {
