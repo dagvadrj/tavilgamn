@@ -115,7 +115,7 @@ export function MerchantShell({
           tabIndex={-1}
         >
           {children}
-          <MerchantMotion page={active} />
+          <MerchantMotion page={active} rootRef={panelRef} />
         </main>
       </div>
     </div>

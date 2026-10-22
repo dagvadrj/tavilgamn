@@ -430,15 +430,8 @@
   width: 75%;
 }
 
-.merchant-app-shell .merchant-reveal {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 400ms ease, transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.merchant-app-shell .merchant-reveal.is-revealed {
-  opacity: 1;
-  transform: none;
+.merchant-app-shell .merchant-animated-number {
+  font-variant-numeric: tabular-nums;
 }
 
 @keyframes merchant-stat-shimmer {
@@ -497,10 +490,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .merchant-app-shell .merchant-reveal {
-    opacity: 1;
-    transform: none;
-  }
   .merchant-app-shell .merchant-sales-chart path,
   .merchant-app-shell .merchant-progress-ring circle,
   .merchant-app-shell .merchant-stat-skeleton i {

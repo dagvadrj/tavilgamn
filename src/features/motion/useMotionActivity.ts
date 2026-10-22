@@ -1,13 +1,32 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useInView, useReducedMotion } from "framer-motion";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useInView } from "framer-motion";
+
+const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (notify: () => void) => {
+  const preference = window.matchMedia(reducedMotionQuery);
+  preference.addEventListener("change", notify);
+  return () => preference.removeEventListener("change", notify);
+};
+const readReducedMotion = () => window.matchMedia(reducedMotionQuery).matches;
+const serverReducedMotion = () => false;
 
 /** A shared boundary for finite animation; background tabs never keep ticking. */
 export function useMotionActivity<T extends Element = HTMLDivElement>() {
   const ref = useRef<T>(null);
-  const inView = useInView(ref, { amount: 0.15 });
-  const reduced = useReducedMotion();
+  const visibilityRef = useRef<Element>(null);
+  // Observe the chart viewport: WebKit can miss intersections on SVG paths.
+  // Register this effect before useInView installs its observer.
+  useEffect(() => {
+    visibilityRef.current = ref.current?.closest("svg") ?? ref.current;
+  }, []);
+  const inView = useInView(visibilityRef, { amount: 0.15 });
+  const reduced = useSyncExternalStore(
+    subscribeReducedMotion,
+    readReducedMotion,
+    serverReducedMotion,
+  );
   const [foreground, setForeground] = useState(true);
   useEffect(() => {
     const update = () => setForeground(document.visibilityState !== "hidden");

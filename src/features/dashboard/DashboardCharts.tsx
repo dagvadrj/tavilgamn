@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ChartPath, ChartRect } from "./ChartMotion";
+import { ChartCircle, ChartPath, ChartRect } from "./ChartMotion";
 
 export type ChartDatum = {
   label: string;
@@ -159,6 +159,7 @@ export function DashboardBarChart({
                   {mode === "bar" ? (
                     <>
                       <ChartRect
+                        entranceDelay={index * 55}
                         className="v14-bar-primary"
                         x={x(index) - Math.min(18, step * 0.28)}
                         y={190 - height(item.primary)}
@@ -168,6 +169,7 @@ export function DashboardBarChart({
                       />
                       {item.secondary > 0 && (
                         <ChartRect
+                          entranceDelay={index * 55}
                           className="v14-bar-secondary"
                           x={x(index) - Math.min(18, step * 0.28)}
                           y={190 - height(item.primary + item.secondary)}
@@ -249,7 +251,7 @@ export function DashboardDonut({
             const start = cursor;
             cursor += fraction * 100;
             return (
-              <circle
+              <ChartCircle
                 key={segment.label}
                 cx="100"
                 cy="100"
@@ -260,7 +262,7 @@ export function DashboardDonut({
                 className={`v14-donut-segment v14-segment-${index % 4}${selected === index ? " is-active" : ""}`}
               >
                 <title>{`${segment.label}: ${segment.display}`}</title>
-              </circle>
+              </ChartCircle>
             );
           })}
         </svg>
