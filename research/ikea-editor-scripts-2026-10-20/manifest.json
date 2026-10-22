@@ -1,0 +1,3617 @@
+{
+  "capture_path": "C:\\Users\\my tech\\Downloads\\tavilgamn\\research\\ikea-editor-passive-2026-10-20.json",
+  "capture_sha256": "e0b5bfc193bd4d7ae0bc4ac38ea1d4c32917cb25604dfcfaf63eb93a3fb33b31",
+  "capture_kind": "page-inspection",
+  "source_evidence_id": "ev_67d9f6277d78afd5f40be2abac2e0acf7f7523b030358793f562f129daa3b1bd",
+  "capture_completeness": {
+    "status": "policy_filtered",
+    "conditions": [
+      "attach_limited",
+      "policy_filtered"
+    ],
+    "policy_filtered_sections": [
+      "console_events",
+      "console_text",
+      "dom",
+      "frames",
+      "json_body_shapes",
+      "metadata",
+      "resources",
+      "scripts",
+      "source_maps",
+      "storage_keys",
+      "websocket_shapes",
+      "workers"
+    ],
+    "attach_limited_sections": [
+      "console_events",
+      "metadata",
+      "network_requests",
+      "websocket_connections",
+      "websocket_frames"
+    ],
+    "truncated_sections": [],
+    "unavailable_sections": [],
+    "excluded": [
+      {
+        "section": "console_events",
+        "reason": "unattributed_origin",
+        "count": 1
+      },
+      {
+        "section": "console_text",
+        "reason": "not_approved",
+        "count": null
+      },
+      {
+        "section": "dom",
+        "reason": "disallowed_origin",
+        "count": 1
+      },
+      {
+        "section": "dom",
+        "reason": "unsupported_url",
+        "count": 2
+      },
+      {
+        "section": "frames",
+        "reason": "disallowed_origin",
+        "count": 1
+      },
+      {
+        "section": "frames",
+        "reason": "unsupported_url",
+        "count": 2
+      },
+      {
+        "section": "json_body_shapes",
+        "reason": "not_approved",
+        "count": null
+      },
+      {
+        "section": "metadata",
+        "reason": "disallowed_origin",
+        "count": 40
+      },
+      {
+        "section": "metadata",
+        "reason": "unsupported_url",
+        "count": 2
+      },
+      {
+        "section": "resources",
+        "reason": "disallowed_origin",
+        "count": 23
+      },
+      {
+        "section": "scripts",
+        "reason": "disallowed_origin",
+        "count": 24
+      },
+      {
+        "section": "scripts",
+        "reason": "unattributed_origin",
+        "count": 16
+      },
+      {
+        "section": "source_maps",
+        "reason": "disallowed_origin",
+        "count": 25
+      },
+      {
+        "section": "storage_keys",
+        "reason": "not_approved",
+        "count": null
+      },
+      {
+        "section": "websocket_shapes",
+        "reason": "not_approved",
+        "count": null
+      },
+      {
+        "section": "workers",
+        "reason": "out_of_target_scope",
+        "count": 2
+      }
+    ],
+    "dropped_events": {
+      "scripts": 0,
+      "network_requests": 0,
+      "console_events": 0,
+      "websocket_connections": 0,
+      "websocket_frames": 0,
+      "webmcp_tools": 0,
+      "timeline_events": 0,
+      "total": 0
+    }
+  },
+  "output_directory": "C:\\Users\\my tech\\Downloads\\tavilgamn\\research\\ikea-editor-scripts-2026-10-20",
+  "analysis_input": {
+    "input_path": "C:\\Users\\my tech\\Downloads\\tavilgamn\\research\\ikea-editor-scripts-2026-10-20\\files",
+    "format": "directory"
+  },
+  "scripts": [
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_00e0dfd3f141f6e5d6da4013011df932b58da11f1411ef5586f947db21e1fd23",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/1cd1d6c43331e04cdf87f9472299f7adbbbeb883-e5815c008a2c7e8f26b2.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/1cd1d6c43331e04cdf87f9472299f7adbbbeb883-e5815c008a2c7e8f26b2.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "31a1f88cbdd48d2004a787183f5368a7ca966561bf3a6af36865812137d64fc5",
+        "bytes": 44101,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_019dfa1586b06ef26625abfd3da630886b1e3f1bf07bfad5624935c0649feed4",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/header.route-CZfIk1z3.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/header.route-CZfIk1z3.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "7b227eb0c62a2b466ae85845ff7742c537aa474003acfd8099c0f344ac3a4d51",
+        "bytes": 3119,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_0534963b5902cb23a0a4afda2a07a357d65d22ccf413113309e2983459b1cbda",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-W3W6Fb8r.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-W3W6Fb8r.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "7ae532e81c43fee492e33671607514d943bf06c0a8a0d17764aeef35a497526f",
+        "bytes": 4482,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_06325278443030efaac77b91e0775189e1440baab0f10a296bdc4a7a2bcf9f8c",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-BdCQqCCx.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-BdCQqCCx.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "da7aea1e4dfc62d1600b098da2221a653ee08c5c776e56f55c6575c67cb73a08",
+        "bytes": 5482,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_075921986da752584880800f35f4e85f93c2a342f902972043b3867ca610ba29",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-5-284577b4415b98853215a274985b5b8766b86e2046d0d287b0b102b176c45f42.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "2435de934f62f289ec36bb0a0bb28df95fa79f971697ed078d767bb29d8fcfa9",
+        "bytes": 1897,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_0acc4ab09cdb4cb9fc0059e4b6c23ff3fd4a2bf0feacfd62bc95cfae8be98a6b",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/8de51afe8ad06b3c857cbb5b1977fd0d1f3d2e42-ef20f398deaf5aff9111.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/8de51afe8ad06b3c857cbb5b1977fd0d1f3d2e42-ef20f398deaf5aff9111.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "91ceec21edc211b492559343c96cea354f7a1b45a15ed2b3d3b3bbb159e85687",
+        "bytes": 24992,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_0c1d9bfb81c5dc4705334cd6902cffb04c5a438e7ff965c642a5060638b2dab1",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/meta-global.4dff1390.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/meta-global.4dff1390.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "dd12a28d769da195cdbcbe4e4de9028b23e125eb994df3d7870180af310e20cc",
+        "bytes": 8180,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_0cf3db1f69c0be78369b28b8ff42c6796c765ae2c38c213eb113d960368df871",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/route.utils-cF-yrc3n.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/route.utils-cF-yrc3n.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "f69e801b28332a7293a03738eb0023079326d5e2e26f78990eaaa0be5782bf0f",
+        "bytes": 2968,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_0ececf335ad26480f41696cab545b0ae0a49e982d8033021d47270064e4010c4",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/8204-244bdee26e54a2b2c373.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/8204-244bdee26e54a2b2c373.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "ce7f746163681f6a9747865cc03b7616f6042c37cfcacf395691bbe37e4e2075",
+        "bytes": 1530,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_0f415c721e022ddd96c4c9d9150070db778cafd9fa57dd2eeb3e1e9670d4e3cd",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/stores-Ca-OtM7N.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/stores-Ca-OtM7N.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "7fa10941a443686416afb1da2db66bccda2d0b78e9e2366cf15db238c6d50f82",
+        "bytes": 18115,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_0fb3a80d1bae6bf4cd286e4d0c828e0e83459c21a9471712d397b69eb1c06635",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/reddit.2527b76b.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/reddit.2527b76b.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "cfbea665eb8efaebd2399b6e09ebdbd566bb87f1ece5ca5fe58180944b2203bc",
+        "bytes": 4183,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_101e0c79d8d4057d99dcc73c68269493993dcb94faf19aa8400eaefb9716f7da",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/meta-ab.439c6d2e.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/meta-ab.439c6d2e.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "97e727f5f26c70eeed69df5788433fddb7ef80d437f0abb37bc857b74782403e",
+        "bytes": 8245,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_1072f75fdf1764a2b31133509f55cd094852a4c533e7f9e8ca55e775e94f8fbd",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/8867f0efac7dfed118754ed6c6e0fd7ba769b4cc-6bbf50bed0f88882a638.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/8867f0efac7dfed118754ed6c6e0fd7ba769b4cc-6bbf50bed0f88882a638.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c7ba4c550a58f78b63952da125cd86fbcb6299bd76887fd6d424e0fd5fe0a71d",
+        "bytes": 22295,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_12b5c2c79a0b90c15b9d50e1491ebcf7ca283ed42d67a1eadb9088fdb87b0fa6",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/mt-script-loader.6b6caa3a.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/mt-script-loader.6b6caa3a.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c851aee0fe3dd308b0811c20a2ff00fd58e02d0192525b2bad13723b3808a795",
+        "bytes": 11808,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_1407ddd262dd8c0026a2226e29de09aa95a144cb87b139b2bdfd1807afc0325d",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/80e165c2f590ef4533bc1e989b89ca002bc83fd1-461b204543c1f7898855.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/80e165c2f590ef4533bc1e989b89ca002bc83fd1-461b204543c1f7898855.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "53596e41530cdd00b1b0ef532667a365365c9aa72b2061e424823106d1b0be7a",
+        "bytes": 54647,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_15145987045f08f0969ab67d77fe4dd9099003fe2fbf2d8d58ce534019ab4f62",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/claritas.a033bb0e.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/claritas.a033bb0e.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "3a8c50ab60aabd7c4188ecbb541b4faa27f675fd7f1ac7e0c5d04751fe70b1eb",
+        "bytes": 1091,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_153af9989f2fda7b2c3b8c9921fc0b22b36ade28900061ff4080becc2ae4aa45",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/sentry.8b98d30f.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/sentry.8b98d30f.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "6a97b3d50a27fa9ef1f469ea98a563440f9cdb1545ead69905015a43380588ae",
+        "bytes": 300,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_182898529b2da2459ff2433533d7796f3c6fe5eea8fd4c8a056f01c7ce57f3fa",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/chevron-right-lhj5pdtR.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/chevron-right-lhj5pdtR.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "710d10313f16ca64384bd93276e17dda7e2e079d8d3d1ee00a8c3870da110bab",
+        "bytes": 440,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_184e2af943e1e3825ed074e24f0c58da0782d65c0578147821d03a050792a008",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/_commonjsHelpers-CqkleIqs.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/_commonjsHelpers-CqkleIqs.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "4c81dcd54e7e877a79145c4c6fde30ac0e8d857f412b73f48f6970e5d7eab938",
+        "bytes": 116,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_193ee9d365e41037c51effc70bfb44f948c201bb8e64b8ce98573ef33abf81ad",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-B_xQFO1R.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-B_xQFO1R.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "ba773cf75ec502a3c4cc4b97264985241fdee1fce43199d63aee0716dd0421ff",
+        "bytes": 2177,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_1adf89308376315e8ae222de6b4cc06b0ca04b5aae886deb774cc8ad1870c4a5",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/ads-dm-global.586edea6.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/ads-dm-global.586edea6.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "2cbceb0c229bc393d5fd025d5f7e51a38a0b4c129d1f5fb071bd936bdecdfefe",
+        "bytes": 6453,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_1d624c1efc17896d5c24e4914a851accbf8206b13656953453fbe6d2b93e01f2",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/customer-item-availabilities-api-DD6T_AiT.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/customer-item-availabilities-api-DD6T_AiT.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "31fa9adf49a3dcfc5a2ddb6542f0d3661ea09497861dc5ea11b08189a4d6dde3",
+        "bytes": 1183,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_1e24a447595c2321a0c81eec878a39d508c0580572f2f9d8a64afe4482ffccd5",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/cross-small-CbO9W1ZS.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/cross-small-CbO9W1ZS.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "53be85fd23bcf51464e256e7f4e9492f1671599822c01c07e881c43575a5e28e",
+        "bytes": 338,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_1e4cf16219339aa0917f59d63a585d64a3bc88db7a28fe98056c815a827ae5a1",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": "https://www.ikea.com/us/en/shoppingcart/agent/index-D4r_Mge-.js.map"
+      },
+      "url": "https://www.ikea.com/us/en/shoppingcart/agent/index-D4r_Mge-.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/shoppingcart/agent/index-D4r_Mge-.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "0f169c6470de05160f2a61fa270538d4b3bd341094e66a982cf2046550287d06",
+        "bytes": 8555,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_1e97af6a5686ffa2d91de27313c781a93a2fb54c12645a17180fd4da87456df2",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/information-circle-DbmBn1b9.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/information-circle-DbmBn1b9.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "feef96e48f8b5e1dc123d3c0d7814d65ea35d0a4cb04b0aab2f709e53eb41663",
+        "bytes": 398,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_21797f718e610103ecdc03527fb07100851e1979f39d801328ed31443b2e194e",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/pinterest-global.c7638f3b.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/pinterest-global.c7638f3b.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "64b2f937668c1d033d9177d2e3893bffa022bdaf63469ffeb928cc9e9aa0b0cf",
+        "bytes": 8529,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_23fc7b2793014a540807f043be339b3a4690a91b98494182587bca1ce38a746a",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/information-circle-DhVX1vZU.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/information-circle-DhVX1vZU.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a27cbbab2610eda3c1dc4294c51d140aba708ac14d2199d47f485a6bd1af2e21",
+        "bytes": 459,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_2525a3218c0beee5922e2086ca9e3816a2334fce08e4d2341784e7335fa95254",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/meta-local.2f086a35.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/meta-local.2f086a35.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "92169a82847f13df86dca30a976f5b85eea3e641125b0ba72dfbf9d2512972d5",
+        "bytes": 946,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_2782b1bce66ea32f28d3ff741aadd80fc8bd71ea192734fa6ede6190a3159db9",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/nudge/vendor.preact.chunk.Don6TFqJ.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/nudge/vendor.preact.chunk.Don6TFqJ.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "7fd2a068faa00f4a0337d2254451aa2e80c1e3e76e4b2f7fc9dfb71eb0086aed",
+        "bytes": 24586,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_2f3c6ef7ed77cd15c0f2f837db68e336c417797fcc5a690e6138fda32dd1fc5b",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/3fff1979-dc4ca61809fb4be84661.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/3fff1979-dc4ca61809fb4be84661.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "fa6585f81e10c7321fceeb1c7df23598d72dae20ad506f35dbb4806171e43183",
+        "bytes": 156072,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_304c9fc6465850087c941cc6f1447c48dd7c0fef5c4237107a47a7d24d75a433",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": "https://www.ikea.com/us/en/favs-agent/agent/agent-list-agent-v1-84-0.syhM1Atz.js.map"
+      },
+      "url": "https://www.ikea.com/us/en/favs-agent/agent/agent-list-agent-v1-84-0.syhM1Atz.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/favs-agent/agent/agent-list-agent-v1-84-0.syhM1Atz.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "47b08f0b97e5f6eb16c734b052774306c13ff8764d9c1aa135eecf3cc2584374",
+        "bytes": 107,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_34d50e5b6a5b620a4b5e90ddfe2b1a778bf23af7858e7741a7f0f75142a1c76e",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/4a34be1a279ecc816d0f64a3828741a66846822e-4329de78d1572f125741.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/4a34be1a279ecc816d0f64a3828741a66846822e-4329de78d1572f125741.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "fa6eff4bb38c6db2ed14a146403503864938994b3dbc7fcf5f4532a5c72b9161",
+        "bytes": 14067,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_370ba531d2d65622c6bcd240ad34edaf53a27b64a84bc5d58599cb700de2b4de",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/renderPaths-dtj-2F7l.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/renderPaths-dtj-2F7l.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "ce4e8535bb83a073772660f7679007cab702ba48d544c669aba7c9ef916b9c42",
+        "bytes": 1005,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_3b4cfeed3c03e7a4e8c5bff2021c199d41928901dd90811e1413f0433beba3fc",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": "https://www.ikea.com/us/en/ingka-isx-billie-widget/assets/index-BL0dXeJX.js.map"
+      },
+      "url": "https://www.ikea.com/us/en/ingka-isx-billie-widget/assets/index-BL0dXeJX.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/ingka-isx-billie-widget/assets/index-BL0dXeJX.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "6515255fc469c5d8c4ff291bb3a787f6ff07cdcd3b8e48dbe7e3e06f0a14f83b",
+        "bytes": 172373,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_3f90615252f849e156b9f96907b8705b2fd21e2c52653ef13ef4d9efe3ae8dff",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-CNNPBMPl.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-CNNPBMPl.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c3308500eb92dc0e675d8738ee4091d01d209fc35c94cdf5acd98e6b1ae2bb53",
+        "bytes": 1041,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_3fc6a75068ce177bb6315056078eaa620a03dd9f24b6390060be9594b8040c2e",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/4298c3a7cffb19d3560cc2876975371edadbb14c-0fa6125a6e5d2d368478.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/4298c3a7cffb19d3560cc2876975371edadbb14c-0fa6125a6e5d2d368478.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "14a601887cb2b68899c72b25f331941058b3244386d3ea2f75f5fafac2dac2e1",
+        "bytes": 69305,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_3fdfd96f95825bebff8a5da745d9540a36171f2061ffe9f0fcf9139f97ee4b7a",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/in-clude/in-clude.min.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/in-clude/in-clude.min.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "8b646c80327e8969fa9198f4a8e70982d6ff58ab0acc5681f51d6d9ca274d1fb",
+        "bytes": 8116,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_3ffc24af33ebbe4e9ac3b6e1471b9c9eeded3a3667000cc33a11a97006453781",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/VocFeedbackModal-nJbyQadU.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/VocFeedbackModal-nJbyQadU.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "deecd4851e0795b62868330bc1cabdb80e86eb2ce95a542f175283f2d9598967",
+        "bytes": 11388,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_406494a15b697e7281a7bb4669460976266c01ac83984d38950f12a04d638e8b",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/gtaggtw/aw-17648757747/?l=gtwDataLayer",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-39-ef4db263ec49d43d13d206f36d159914b395eb6818bfb7346e2c6b93bdd88753.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "2b7b7c1bcc0d6c614eaf23c4e104a70c5070e733a18aaf47e983bc0722c6f170",
+        "bytes": 463842,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_40f26d133f0d12782be73c8bbb0d2dbd89f88d20693c9d53ca402b27e0d0a53f",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/feedback-sad-5i7mx8k9.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/feedback-sad-5i7mx8k9.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a0f7eea0569f2502193d5a6c54e3f9cf1feba7676feb7936c9b7651b424f080d",
+        "bytes": 8178,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_42f118aae2442387fa12787cd3ea8686cb0ad17d227490ba067acfa3cd5ae5da",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/ext/optimizelyjs/s/united_states_web.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/ext/optimizelyjs/s/united_states_web.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "23501acfee4135617e8d2628ac6b3c05f7cdaf69d54becdca2ebf27a97bb11a7",
+        "bytes": 781315,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_444559503ed3d94ff4f555cbb7bd7f6e14c98826d7592a4bac09bb2627355feb",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/framework-a782a58bd4f29bb2ad17.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/framework-a782a58bd4f29bb2ad17.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "b790903f29f85d8872feae21580497f293615ca40c51a0fba741753ab479cb40",
+        "bytes": 141837,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_4611d4d8c3bd578d0ca52434a1f1cf95e4473c52cda77658ed2da368abae92c0",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/preload-helper-C3afcOe8.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/preload-helper-C3afcOe8.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "9f4c7faf9853c96422e973d9832cc898930201d4a29e77afc63e2028adc2e9f7",
+        "bytes": 1130,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_478583a6c513aa7bb26a28eb58715d680705fc29228e1fb25a3b938d4ea13eb4",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/Header-Dcd4EJDT.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/Header-Dcd4EJDT.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "5cee7a08924965f6dcafeb0349da867d528119e509a3ce20c031c92f6ea1864e",
+        "bytes": 106156,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_4ce101569817744823ec41b6cceeab5e863c8636b00366ba9535214e1d6f26eb",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/token-service/token-service-CqBvbyE5.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/token-service/token-service-CqBvbyE5.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "d402dc0c41ed8fa552ff93e96040cc43d590036e1ed1f6b468feefb658ef17d4",
+        "bytes": 21300,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_4e5e1cf39b8eb65ad8ed3c21b2e24fd4831aa5f9eabc8c6692a37056b95b8ec9",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/loyalty/wlo-modal/assets/index-D4-5G0ii.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/loyalty/wlo-modal/assets/index-D4-5G0ii.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "6a53c2b02c81a535a5927c9590d65e6cb8648877589671c8ccd7fa72e76d201e",
+        "bytes": 52420,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_4e6d2296a871ac86992a798fd6bd9cc5e56524dc301f5e60084cc8ea1823b54b",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-47-230fb3b0967522b2e2d07978abcd4359b7aae0c121b61752ddbb61916bf1194e.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "a3579c2b9dc7270d91fb6876fcaa657cc4a638abdb28a608c7bb3457b36e4320",
+        "bytes": 1184,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_4ee8c49cf69abed45c810fc3568e9de3ba852e19c2920bbfce823659b33881cb",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/information-circle-569p37Et.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/information-circle-569p37Et.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "371d86ba002ab86925fef0752cf2581e7d7c0d15e427efc69b091571c3a8a056",
+        "bytes": 125,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_516eaf103745e5b16b3513950c816bf39083bd9bf74a7911ec1c2d870b4badad",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": "https://www.ikea.com/us/en/favs-agent/agent/agent-BQuORcPZ.js.map"
+      },
+      "url": "https://www.ikea.com/us/en/favs-agent/agent/agent-BQuORcPZ.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/favs-agent/agent/agent-BQuORcPZ.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "789d1aa2e618049cd166795e755cc3053a6c1c4b6e63635137609b319b92c742",
+        "bytes": 32112,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_52817c9d2aa2b80c4896d0d8a66242c7ffa972c71bdd5edcd58c5e343ff22e1f",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/Footer-BKLJjiMz.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/Footer-BKLJjiMz.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "6052dff4b4304611c080cc72d7dc654203a6f956e8ae4ff409f798e9a6660dde",
+        "bytes": 55999,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_551aadb72de5e8bf1361c17488105cc17ba50dcb235d2ea43c07f248a420bec5",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/gift-registry/agent/agent.Cp8a7kzo.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/gift-registry/agent/agent.Cp8a7kzo.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "33e36eeee6a80e830b43401328f60615ef182a5e661442bb609f804fcf14b349",
+        "bytes": 20897,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_581b420ead7edeeae669bf40f602f820caa90f77b8c00bfe2d5faaa0b19cc883",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/renderPaths-SbPNwCwS.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/renderPaths-SbPNwCwS.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "3ea917d16c8c4612c8db17673517bcaef7c0bb5929cb210ea7b7a87d483d5cdb",
+        "bytes": 400,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_58d9798da48dfbae4d448dc463834e828cc7385f23f7f282eb918800fc6ddb44",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/Footer-BRvjiZCr.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/Footer-BRvjiZCr.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c5c19046256775f39ff5e63044f5cba38199dbc835669b3bba5114af90dc6b54",
+        "bytes": 2011,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_5daefa0cd912b009441cd6b941e47eec4a01d3156f24b0e4611273d2de311e79",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-DpntpFfJ.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-DpntpFfJ.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "36c311da657108a5a35be3c088673a01a3cade608191f71454b4bc8d681f77ba",
+        "bytes": 676,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_5dfff4f1240699ce68beee8ce5e2e777b1574d4cf5ffa4f52b207dbf3b4d9fe4",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/16d8457367c7d224baf74b83884205ca0b20acda-d99903fa4748c008e4e4.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/16d8457367c7d224baf74b83884205ca0b20acda-d99903fa4748c008e4e4.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c7f25c0493f7f4be4fa098df9f2eef2227fa609fe9570e1f1963918930dfdd9f",
+        "bytes": 16690,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_626490636b711c4ae73716ead7dc1757a2a0b249603acc2c530e8359cc7d021f",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-56-e92050a1f036ebb932c0107020044ec75019ebea9103d9adb5582e2cfa1db254.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "bf5a181faf51728a05b3a1795e1313cc789695fb58c27b901c3c48cf4b2e35ea",
+        "bytes": 567,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_63ec51598685e7cf3453d6c82d1defbbdd539542f498b1ba5fb2f7ef6cc0da32",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec_non_initial_555.ee6068c1.chunk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/rec_non_initial_555.ee6068c1.chunk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "1206f19e29047df43c8b9cbd6db3fafe35f3d4efa7e881173805e92f2178c951",
+        "bytes": 28127,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_67fe4a3eb02c36fbe6d7ba7ca429c8d71bf274410b811aa360fda2aaee940f9c",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/tradedesk.09dd98a1.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/tradedesk.09dd98a1.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "ef080ce468b0642a34e77d88d9d1d13bbe4d00d8c1e105a3e9542ca5342957a2",
+        "bytes": 607,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_6bfff224e59af7c7b2e0c4b2f60d3662ec5cbd5ecb0fb6c4d8a4f62619e4e7d5",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/adform-us.7607a02d.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/adform-us.7607a02d.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "e85a97fadbbaa30f5cad2cd2cc34e11fafc648f97257af100de269db39ec8875",
+        "bytes": 8409,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_6d431eb16acfb4d140079e551b5e0643f4d87fd0bacee4a5f01a3fcf503cd77a",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-xabcz8hC.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-xabcz8hC.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c4cbd15098ca76df83fa74cd1b5368751dc778d48e526571c55a514600bdd5cc",
+        "bytes": 10235,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_6dedc363a1f68e887e995d95063cc0cf078ad98ffb9d985ff144f3879a42245b",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/products/javascripts/price-package-scripts.db14ab02fcb8b7288e88.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/products/javascripts/price-package-scripts.db14ab02fcb8b7288e88.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "42c9425ce0502bd9382e4a65d468f5a3c3c6a44168a488a2376f083bf3003cc5",
+        "bytes": 16956,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_6e16a6391c23624ded7d4ca124d408235c9a4e94351e51a84c99b88de607c22e",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/dom-CJAzQv3h.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/dom-CJAzQv3h.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a58fe8863d2d5185572afc5f110ddd2d2e1a97485988e33f70de8d7eb9f72979",
+        "bytes": 354,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_6ef419700babe0da94a41103de2249af4b6f81fc65a654952b0f3c2695ca838d",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-CDwLao_E.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-CDwLao_E.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "94ced883046ba571d32aa24781523fc184fbd40bd441da4d8f040ce5ac863bbf",
+        "bytes": 722,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_6f86a384e326019be944ecaba03af6049b16a26f855d1a38eefdca57957c0364",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/2975-b90fde56b81984e84e4f.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/2975-b90fde56b81984e84e4f.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "71c2bf4965ebcc29544a8f2890ff4f815bdfdca818f1b1b30704a022a371a96e",
+        "bytes": 7509,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_70faf738efdcc8b2f900b01bb8a66db5729787d429d80acf554e0b9da198696c",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-65-7c343afee802c5670d6d8f32ab94f4a43cfb3bc8136fcb54f1b50903e67f5888.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "92e22f193777445d515eef7e9dad6e66f0795aab4b13e24b81cd145794168704",
+        "bytes": 2358,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_71c0ff95c57c08f9adc60d5364c4541cb82283a24d39c4a308e093fdcbcef11c",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/fragments-D-DzSofc.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/fragments-D-DzSofc.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "cd6df44e3a5a56120b372c0a2dd5794546b1a06eabf05f7c5ed08837e92c7bfd",
+        "bytes": 7091,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_7431937561ac52afd3143acc851d60be7248da4c8560b53af0b3ccfc5caa4ea9",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/24b1ad5b34354aaa0afb2a91e7187f23ed84c30e-1af91aef8c85b193724c.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/24b1ad5b34354aaa0afb2a91e7187f23ed84c30e-1af91aef8c85b193724c.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "42f492a39a55ba306fd78fbf0fc875a91d371b887137d0e27f979c3b32be4bf8",
+        "bytes": 15224,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_74ee9e63c8d3a35e973723d0c51a5e22639a110e4a0a3d4533cf91873813fc3c",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/webpack-runtime-526ea877b960d908c43f.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/webpack-runtime-526ea877b960d908c43f.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "143074c773e3d58c5480a7925a0f2cc8e9117fc46ab7a7cc97df4ad346289b76",
+        "bytes": 7731,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_79e4d52254f8f34ce48dd3b7c031da74e6679d7007f40f66fdc83de18d3584ac",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/gtaggtw/dc-15895561/?l=gtwDataLayer",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-69-eb7a4da3be49a610ae0c3c2675bd6d89676a9339850a6da592c0083f862aab73.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "4771c764d74aa6c3de4e16030cf9314c397b80b98ec5de6b1c8cbe6fbf6a9ce8",
+        "bytes": 447846,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_7ae1acf01059eebf1f3eece8d87d2ee91b9711c2ee0f15f58106fc4b2731db1d",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/theme-DwqTjZys.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/theme-DwqTjZys.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "fbd0d6f55921b6bcdb6be5a7bd72f8b6d210a448482d06a94c3ec1040a1bd3c2",
+        "bytes": 98,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_7d5b70bfc86f84a4314e02bd3e9878a76fd07a5b8b60f19555436780728d4874",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-71-371ece7383f68a73ee150ff493783c43e499bcf6f83948bbf7e9f95b5be0711c.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "bf8baacae7e76da04d40f95e07130cd8161f142355e9ff5b9dfad65b61cd65ba",
+        "bytes": 934,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_7e8ef79e3bc00798b531f5b322909c32d5db053809f1a04321fee4df9aa4e7ad",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/renderPaths-DsomnUJD.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/renderPaths-DsomnUJD.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "e3bca3097389d81a8442e670d145be28986d935b6d9ef763a9ec1e70685fd9dd",
+        "bytes": 400,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_7e9288c808c6b39099a20ad07a55233e55aa8fad1a2d8554dec28aa1b342588d",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-73-533a13018f43422b5051cd515e0fb9d0edcdeb0b3f60f8fc3f7516f102df7eb7.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "da813916f82ffc3c2c1ce38b6615a5f5230643ebd38c4546d9cd4809c8a9bd92",
+        "bytes": 45,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_7f3a2275133bf6824cf157173b8c03d445ae4bc572b65f865c325b53c054388b",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/content-rec/fragments/static/initer.d96b9c44.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/content-rec/fragments/static/initer.d96b9c44.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "49927517bb2773569397d19acf92b2f38da81f6521cb23e67fede1bb2c682db8",
+        "bytes": 3795,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_7fb5a4a1038ccba16ac6245cda91230f82d51810145323c0800ea0b300ef4ce5",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/root-CvUi6HiL.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/root-CvUi6HiL.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "74f5720aef4827a12d392ba525df1493c853e0d7f8627991ff43a393ddbc8063",
+        "bytes": 10296,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_80331682a56789cb4ccbf789f808a0ddd05b57c07f706efeb32c6288cbcdeb57",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/analytics/scripts/ga-main.324fe339.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/analytics/scripts/ga-main.324fe339.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "765ee7c232c4dc55caf100ab3560aadb1781d4be739740e9a91bc8bfd946e522",
+        "bytes": 577190,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_81c8d8fe848312809321ce3ff89ba138594d4ad04b35dd3795b696c916d9df6a",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/search/v2/box.AyFEogBg.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/search/v2/box.AyFEogBg.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "405661285ea9c6598e39d0d1862176d7e4a8cfa5d4d69cad707e6c65eadb807d",
+        "bytes": 78990,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_829465afcb578b112cf1fe800a63c597369dbe5e93a2122ccd3a1b7106ec600f",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-78-634a4e82b334c1945e7e50aed2487aeee80252dcc9f66173d45b35c76bf3b1c0.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "1e068791c91c3840a86716e31b191c4d32f76cae6d297a0cc299a8f50ff04ad1",
+        "bytes": 152,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_82a6029e15893ce2cda8b9187756e5ba1aba578d5b3e21968cfc9058767bff5d",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/sales-item-api-BEmPhgLO.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/sales-item-api-BEmPhgLO.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "18bf53adc154013a483e129b33306d7b42174c0f7887b2082c3db08eb7ab3514",
+        "bytes": 19832,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_88c85371155a378d48ed457271f7387b7c644a7f8debec1c5a8be287e7d91f99",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec_non_initial_984.b06b20df.chunk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/rec_non_initial_984.b06b20df.chunk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "ea004ebc19d28c634e8b1112332850542f0778f3d2754198760722ed7b62d2f1",
+        "bytes": 151225,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_8939609d4db995407c432f0d829693cb75518b393907b5fcd679bbd2edd02d9d",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/experiments-BbM8CxDN.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/experiments-BbM8CxDN.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "346b2929b4f918a5163bb5be34f4f01cf5bae226186b36f723f67f6ee6f42e83",
+        "bytes": 1811,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_8a65cfa23a59b171d56384b3d56e0adb7b9a83995c1862f6c2ad42520a230578",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/326c12863b0fb14e1f47a81c5818226e5ddcee64-a58ec0d382cddcefca84.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/326c12863b0fb14e1f47a81c5818226e5ddcee64-a58ec0d382cddcefca84.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "e311a9a71fea03d32ce60e3d8118609c05bb482bf22af629e972c614179e3ebc",
+        "bytes": 421831,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_8c4a736e390c5a92940b664b186846b9e61601d5ec4d8897c144def9710dc47b",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/footer.route-BvQ-fOuq.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/footer.route-BvQ-fOuq.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "328b9522315a094270ca0a200f7a9c36aa651c59b699a6210926d01c245b6c18",
+        "bytes": 3517,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_8cd9a127ac9f03ae1c4d3dd1136009413e2164fa25edfef191d23503b59da8b4",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/link-out-DEaiS4G8.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/link-out-DEaiS4G8.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "66a500616aac237af86ff89483cd0c2c5b98f17f4adc4873b39b249b8be1f1d0",
+        "bytes": 784,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_8f480188437f4226f4e4758f0df7d56e6d775ec84b1b46d96a352ea71ba7d809",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/experiment-fragment/scripts/index-SPEL7CBO.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/experiment-fragment/scripts/index-SPEL7CBO.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "6e8b467db9b7e5e56ae3df0ad67b2e6027b4c86c40eec9dfcd9339f64f2254af",
+        "bytes": 147956,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_9000e31c8f7bb46caf8b48f7dc3e3329d39e2f025f6ad7a524ffd39481f478f5",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/chevron-left-9ruQ-QXi.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/chevron-left-9ruQ-QXi.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "962e591e34400c85ea48711b76d499e403e9f3803cee23256388c6033cdf1065",
+        "bytes": 241,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_9089b7321c4050397cff4df702eb58ca0a6f0d8c5a8d634ecc104f4b41fecf5e",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-BVFGK6Re.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-BVFGK6Re.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "dea94963815db9f8da112f4e9e8386e7725f7cea36a509739268edeb17c8d391",
+        "bytes": 5821,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_90ca8c095c04c50c2b7427696b43b9a4db6aa42820cf04aec0f5a19596b34928",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/yahoo-dot.341177ef.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/yahoo-dot.341177ef.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "47d0b71eaee49ca6ca717b35081c68c343211df92a0c614d828808a31fc67eec",
+        "bytes": 3244,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_91ef2fff459702c7ad416d0fbeea45a7c898500fa654fe2c17efa80e7321d4be",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/adform-local.92387887.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/adform-local.92387887.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "e1c476cdbc98230dad3b52560259da9f41d36bea8cde32ef51ed77e16e7f34cb",
+        "bytes": 6507,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_9221f636bbdbb8cbb39be9197743bd8079e13ff655c568e70b4483b4930d6f27",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-6ke7f_ug.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-6ke7f_ug.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "3952d67e3436b6865706079939efe3f44d9f29710eb31f86d822558fc0cdffc4",
+        "bytes": 771,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_92fc6ff4a685d7c2520a36452142a724237aa45d78141d37f7b9300d3abed11d",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/instantpage-CyzbhCwV.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/instantpage-CyzbhCwV.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "5bc4530bca76fe0d77414aac33cfb9a30e5d57a17fa32d7f95acd4294085a228",
+        "bytes": 993,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_93e226debb7335e618f1dd99183eca90feef31146b040e645968bc90be76a159",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/component---src-pages-room-tsx-691cfaebdd2187597ded.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/component---src-pages-room-tsx-691cfaebdd2187597ded.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "5b1840084905537086552813632fb205c28d27731a8ed3fef94337daf2b5dbde",
+        "bytes": 34059,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_9712eef026bcdf05581969fb1b70dab2f325803f0e90c35f58850c362adda99c",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/tvsquared.47775549.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/tvsquared.47775549.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "4423df1e1e694c198142fa320ae180333e378786ec61f3be1a724cfe88a5e78e",
+        "bytes": 462,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_9f28f43d501301c327d38e394fb0c51a550dd1462ed772ab8b07b6fad99f83e9",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/gtaggtw/aw-1035699132/?l=gtwDataLayer",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-94-afe5b5816e1053498302c56fb760845304a75c9f45cbc0345bd710ebf09f3ff1.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "f81219a2e4b709a95e11b8feae36871a5703d14b29adef7f4dfd7b7c24f39bb9",
+        "bytes": 545334,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_9fc90bb0299650f875a503bc6d2709d91911c6b0c047a31a7c39b09bc5ebfe76",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/image-B5KIpB9K.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/image-B5KIpB9K.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "62c4e62f1a9174960f6efd49d9a96633850559080081bb9b9ff3c4132b5634c1",
+        "bytes": 278,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_a0152769c50ad797807304b9135e4d99bd1b29cd720340dc5933765855793ac1",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/amazon.d1b43b6c.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/amazon.d1b43b6c.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "ed6db090a299b7df2a0bcdd4f22ccbb4e67823dec8d35d79d35e7dee0864af7f",
+        "bytes": 4776,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_a144c1fe39f2c7fe35cc137b4b6ad904b9b36282f4b0fa0859d186eb908d2adc",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/flashtalking.651fd155.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/flashtalking.651fd155.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a39f1491260778581c832a8ab021ea6e5f9048214e1fcc436d8415aa0b0fcaed",
+        "bytes": 1825,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_a3501085297f1a25a4b6100a60517a1dd201f6c5132a0e47dc9b5175b55f8dff",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "WebAssembly",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/a3b60de7b26c9298cb6b.wasm",
+      "content": {
+        "state": "unavailable",
+        "reason": "unsupported-language",
+        "message": "Debugger reported language WebAssembly; JavaScript export was not inferred."
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_a399da7168a8aa6a0fce238eccf6562ce8155bfde9e6083486d8017d3119cad7",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/analytics/scripts/incognito.324fe339.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/analytics/scripts/incognito.324fe339.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "d753885fa0a76da28b4da0821d236bb65a7c40bcc2e7393f9308b2d999822f28",
+        "bytes": 23020,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_a3a562af51435baa996ca63b32f4d6fc5390d0c07d8abb5a1c1ead9b05350cf2",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/experiment-fragment/scripts/kickstart-L4ZW5VIT.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/experiment-fragment/scripts/kickstart-L4ZW5VIT.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "637085cc7d052b3b5c9ada2d0cb9029bc29d19b08d64b817bca2ffef2b1e92c3",
+        "bytes": 322,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_a7cfefc6fe59ccc42540d91bdfc2f91daad1ad802136c0c2c9444cf2c59469ac",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-Czqzsyx2.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-Czqzsyx2.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "076b283c720af932e7d1aa3abbe9d64594a6aced5d98e8fdc08e5f81ad9ae631",
+        "bytes": 20812,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_a81232860bdf57c8fa02ba1989936ddf758b8274bbe0884372da86523cd2bd56",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec_vendors_ingka.6d0190f5.chunk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/rec_vendors_ingka.6d0190f5.chunk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "4e8cb2befe6166fe1b51ca13ddb3cb6365854fea562d202e09246a6d816fd2d7",
+        "bytes": 78759,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_aa901172d74d73134b4519a0549e1c873a7a5b0e8b7a209ef2ecc4238eb36942",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-103-6b3504bb33c8e8477e88a0c666623a71e38facc8e6d935b67e9e762aaaa2d322.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "929c3f2f566690e5d8c4e31d82aedfdcac6a9aa925b3a4a60a394b8d588ade3b",
+        "bytes": 1105,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_ac2a03ad910d3db036b52cf3687980050b6845ff6d6610e4f442a7324c70cf8a",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/bf06317352297aad4eacd7eddd2bdeb5833fe120-7d80c638b6921d3f3dba.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/bf06317352297aad4eacd7eddd2bdeb5833fe120-7d80c638b6921d3f3dba.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "002477245459918222e24c00ca92bcf8ae30d87cdc02880bbf831b229c7b3b6d",
+        "bytes": 1390365,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_ac5d3d8f8c4227b16fc1d54ab4082b2acda3f9feddf5c09a20af629a29a154dd",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/65cf681db574c1fa56c9f838b572d61c5047371b-d0039fcd915a52523d88.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/65cf681db574c1fa56c9f838b572d61c5047371b-d0039fcd915a52523d88.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "899ab6ee61bc9341936b62d3fe7ba99a0a14d2abb8e705b3c6826fe31bb91c14",
+        "bytes": 281080,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_af0460ec01b8ca4e93521ea88c7a3dbb55dabf12055447b304a080d6e38697c2",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/utils-DZTybWfu.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/utils-DZTybWfu.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "4b0b4fa5d96614a9fa3f7f0b9f7ea85d6d98b8bedc9a594544a8515ac61514c8",
+        "bytes": 80482,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_b24fa45c68f26809727036fe95f20cc43a5385d3ed4cf3dc78b033d3e14ec8b3",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/ingka-isx-billie-widget/assets/rolldown-runtime-BMeI84Mc.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/ingka-isx-billie-widget/assets/rolldown-runtime-BMeI84Mc.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "94de4b316e732b3f170c313a8f904f3be58b37765bee4366e4d6d4410a8fb003",
+        "bytes": 1247,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_b253073bb3b0ff38b305375056046693026b3386d88df6cf8609273f879b38c8",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/Sheets-DlsNg-rc.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/Sheets-DlsNg-rc.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "1070cd7d0fcacc951ab5196d410b24f802478e8bbd870e60b04a26852a730dab",
+        "bytes": 15482,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_b593772e01be6486777db3cab1163b96c4bbdc2412e6865248a5936938fb944c",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/rakuten.3d5781b4.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/rakuten.3d5781b4.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "d5f9248a4c022a412efde5fd41f4078147e33e59e652be88f6175201b1d31684",
+        "bytes": 6748,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_b730481defc690ed1e8d75d981a9ae2bd4ff217a73dc5ecf5aa356c99baee03f",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/teads-global.c703c2c6.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/teads-global.c703c2c6.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "939bee9251621c4b92064e9a4b0c403f1d903d1c2308ff77f2b1e0bafa1994b5",
+        "bytes": 2112,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_b82f809b069bbafea796f4827cd932a808fc3c62508c19607e9588f7c4b9f732",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/68da09307fd5d0139d52e395ab06059456e80c68-a591fe85fda2c43bddc5.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/68da09307fd5d0139d52e395ab06059456e80c68-a591fe85fda2c43bddc5.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "766eaa1cf6e3a2d76037b455b56abc107e7e86de98287a3ec9debd0bbd8386e2",
+        "bytes": 15099,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_b851f55ea7226aa9d48b66d17f2ffd1c7f70f4434189db4f4d99f1ff05338f54",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-CJGNz493.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-CJGNz493.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a19f1bc770f439608d134071ca3cd4a1367a57ade99af4ecda8d917e274b509d",
+        "bytes": 5352,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_bd630d4442d91a261c29dc88d7e52659fbfff8e10597f24538ca62cf816f2b9a",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec_vendors_preact.85f2942a.chunk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/rec_vendors_preact.85f2942a.chunk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "dd5beb8c58cc0a67f0e8589421e6a98342a3285cd9049a0e44d62f955a81d2b9",
+        "bytes": 26640,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_c2d7d9a0e4fa8ae5175f4cd3938c18f589e55471c6c688c885d546aecbcaa9b2",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/preact-BrGjQMqm.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/preact-BrGjQMqm.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "b33d888785920bbb264e7ef01dc3583fbee1a571bfb0654154ab012f9b724db7",
+        "bytes": 24412,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_c3cb05379d46f8e7f3a4f6d042c850bfd0a4baa63bc000e36dae2e0344981803",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-115-5937e8d38211c52637ec5ddabea2ec6f02d23f1844d4dcf44422974909c18f9c.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "637bd4efd995791852e8bee85649ae8a50c80a19740406e3e51cad2e3a496326",
+        "bytes": 244,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_c66a4716a02932909ccd39bbe824c78deec3e19db3a1228e08309f2db6544046",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/snapchat-global.ea36e91a.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/snapchat-global.ea36e91a.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "d7f7f50ca9d11756b41d65e9fed16b4f72d8a2cddea477e2a8851d79aa35959c",
+        "bytes": 6133,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_c748bc4f67c2132e83037c4736a11061ff27967807096193d1f4e25a1532bf6e",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-Duk5zhlB.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-Duk5zhlB.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a822b7d2ba5d8091c51049bc9f9dadd16313624117d12f6aa045413fc26a0072",
+        "bytes": 946,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_c8ef89b26c04224d7d706cf9147fb714dfbdf32514b6e1de8af70fb90c3b7bc9",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-nVT6TQQ3.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-nVT6TQQ3.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "ea3ee469daca88a680473841a3176ff8883f907587d7778d91446799ebf11e3d",
+        "bytes": 727,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_ca3987986bfaa1415da6e8979c8c2d60dff66e43ceb5c65e6ca29b059e6adcd0",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/app-1f0c2a2e6bb7361da9e3.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/app-1f0c2a2e6bb7361da9e3.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "0c147988bcb81f510e9e6c40e665b6424cfd2a45a91204252aeb9ab8261edd26",
+        "bytes": 522484,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_cb414f76ce8ffb323676d4e61e8040abc7008089e6b3b4626d5d3bca12dadb66",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-07mW0Ywx.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-07mW0Ywx.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "15bdd157e1cdf3b167350b8b9bac473b8cd615433bb8e30b6227adfd923be30b",
+        "bytes": 487,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_cb6896d53670307806ff5efe7c835eccf0a16e8ed77f68f0203f11cc2eb3bdd7",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/6135cf6f-d3652d17d8d132cc9cce.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/6135cf6f-d3652d17d8d132cc9cce.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "9e42b3bfb7945d075f8b013e15039a218b9995b2edd3e850584167e889bb3a2a",
+        "bytes": 247698,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_cdfde1df3898d800dc24aaa93642d5a4c6777825296fc05862b9999906ed8f29",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/translation-context-Dy0UDaW9.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/translation-context-Dy0UDaW9.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "73238f838556ee10c6b93bed7d4aaaed88015834e462bea07b413702cda5be57",
+        "bytes": 17949,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_ced8a41ccb53171636944b1702a606e6c79962008fb3403f93ad1483bffad527",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/bf9fdf3bd692118cb48c911a82e6b79abe9a111d-d7338869e3792108451b.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/bf9fdf3bd692118cb48c911a82e6b79abe9a111d-d7338869e3792108451b.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "b18acff58c5fe166bdff396c7598a72ef2d9b977f92896fa56090bf4e0773189",
+        "bytes": 23224,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_d098b8df12099df02c35282dc9ca924467d919f84cdf951a040c82970b49f74b",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec-add-to-cart.5565f7f7.chunk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/rec-add-to-cart.5565f7f7.chunk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "471760b80b3dba8696519b534045a77e4f6bfa1ef731bb59b2a1aaa876b94367",
+        "bytes": 6766,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_d3a367dd353d6187ef8ad56454558265a9c2c675ecf951e0caa74ddaa2710cee",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/c0d53ec4-7928475049ce39075dfd.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/c0d53ec4-7928475049ce39075dfd.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "8b7169a1be01b285837621e8be9dc6b2acbc4cc3c7bd93ff77b977e031daa87d",
+        "bytes": 64587,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_d59c81bffee03f35f6884d7e361ea4bb4177210cdd40bc19fdb6396763f79100",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/40852cc836382ae5985af1ec31175c26fcffba05-22f815494940b33e92d2.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/40852cc836382ae5985af1ec31175c26fcffba05-22f815494940b33e92d2.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "ae8a57a5a96577baf1033ad1d1eae34ca231a41e5ec21a94e1de466531dc751d",
+        "bytes": 19674,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_d6cc4659991cb4b4b86ad1fa7aa92ee1d8826f7c2522ca06186fb59525d75890",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/analytics-C2_7wxzD.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/analytics-C2_7wxzD.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "078f5a2eac30c0202087e0a12d26629c6d9f8e0ca1df5e4bdecb51961dbf7378",
+        "bytes": 4821,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_d84c17770860fcc82a428a2addefac4b0643c1e293e95ea14ef3b2bee2b92711",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/runtime.ce1298a5.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/runtime.ce1298a5.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "0597dc7eb8dec06ea151ab82b164dbe9ec2da85fbdd9dcd62d9a723a01047d42",
+        "bytes": 4272,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_d917c213d80c6c8c90337e85755afeae737c5532a746e021996d499bc8224b2d",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/Icon-D0y2LWjH.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/Icon-D0y2LWjH.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "70a8d909b93d882add72909ea1032269e088fbda9cd00bb76945be6d594a1cb2",
+        "bytes": 42243,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_da5f9c8135c4edda4b4b3f89d82c61c9b7532e1e8e919830d3d4775253b1d599",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/cloudflare-web-analytics.9f98e3fc.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/cloudflare-web-analytics.9f98e3fc.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "acce947aacb0f7bd01c8c1e5aa959da1f1cce19ca3d2640c0d2df56da57fa2d1",
+        "bytes": 257,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_dc8fda8aae3776996470619f15d1e3354bd0b018d8f6a1ab18b664de12dd6c17",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/main.ce1298a5.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/main.ce1298a5.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "b1572b57f2dbbf52b746de159861c0a76551895f19850049a212c6c51d21c207",
+        "bytes": 5068,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_de0fd25e0a9e9b8d7ca0eb3ab667808e6f591d976f69922ac1a74df605c42502",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/expt-store-Cpljy5Z5.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/expt-store-Cpljy5Z5.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c1a3b9de78d968ec5565be2a6644d0c9dde8ed7dcc57053f5793c0818c4de2fc",
+        "bytes": 2190,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_de91a15842921dad6d8d0cf366d402c47ea8d454f4f881f9af1839ffd412bfce",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/checkmark-circle-B4QwF3mg.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/checkmark-circle-B4QwF3mg.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "6b90aa5c62cf57f3bebe9e0ee4fbdfcdd5685c13e11e5f6770abf93073564c61",
+        "bytes": 361,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_dfd31bcb27e35272cff825ae58573f03b028ab7ed41c86c8461d827421509d78",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec-init-mount-panels.9f15e30b.chunk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/rec-init-mount-panels.9f15e30b.chunk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "27c5e2915332a06bba5de890d3a2e22f93462f3fef531e370e9588665e21d49c",
+        "bytes": 29096,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_e58a5ac632ea548332975cc38d415f2aac7cdd319cdd3c94938ac381dc430a58",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-135-936108bcc5ce4053b9c838c4069973020502a64136f7b54adc3ffbfbe39362e7.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "80ff636d317bce4a7929b85265c341f84f8df5cf8b56ea85824204daaec04e1a",
+        "bytes": 56,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_e6cc5aa1043b9bf865708011f8d055c953f0b22bed634e778f56f9356fd87c8f",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-R_5Hlymk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-R_5Hlymk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "8ee1c99ec41373d664010acf29ac49d219b551f866a79b97677bd21d66a2977f",
+        "bytes": 2803,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_e6de29f1e9ac4237b57bb5aaf4c26a4780720263229bcdf9abb0b897cc37d3f4",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/preact-Ljv1PC7l.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/preact-Ljv1PC7l.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "13c9fd78c522530f7333734492614ac9e435be59dd40364545af42fa046a0945",
+        "bytes": 455,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_e6e3ee0c58126bb05d46ef6b3f2fd08fb3d09c8694779aa66019527a772691a0",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": "https://www.ikea.com/us/en/shoppingcart/agent/_commonjsHelpers-CqkleIqs.js.map"
+      },
+      "url": "https://www.ikea.com/us/en/shoppingcart/agent/_commonjsHelpers-CqkleIqs.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/shoppingcart/agent/_commonjsHelpers-CqkleIqs.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "84de5b1724808f6a399a33d5fa7887ba0f752bbb73fbb26cc100fbec111abf63",
+        "bytes": 170,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_e7ca2b60936056662affe054a5ce025cd6bfb6e1749b1d3d85f616a6b266b946",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/main-CbF5lEbf.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/main-CbF5lEbf.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c838d602060a6678def0ef09f9fe96c02d13b47dca5e91d764ffc19fdcf6207b",
+        "bytes": 29499,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_e8a309278f7e05a9856e1993b9ca4eb74021b21e3fbcf3b3a6d4dcf3393b8c05",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/fb7d5399-496d3313c669bc03640c.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/fb7d5399-496d3313c669bc03640c.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "816e5133f3e396bf374ef1c5cf2ee1d46a24b22a2c4bbe79343d17510621de27",
+        "bytes": 580617,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_e8e2c12ed7b1d0da9e598db7eea90ad04cd78fec6ef1b44a3f104daccb8e5413",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/jivox.c6a1c545.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/jivox.c6a1c545.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "53fb99d4c77a055441e2157912a6b51560d01887938300939a06bcee9ec98682",
+        "bytes": 3156,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_e9265af7990e443c2fc1a27bf7a4a05c7f40862c27ed98e33faf52b3251fc5c3",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/cookieconsent/scripts/cookieconsent-onetrust-js.js?v=mudtqw57",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-142-cf70e4f66c83b386200b48cca025135f11347a3c65dcaaa0cb63679371b04fb7.js",
+        "layout": "isolated",
+        "layout_reason": "URL query, fragment, or credentials cannot select a canonical local module.",
+        "sha256": "bbd5d152cfebc919d88d8af3f75547cfc512f65b8bebc4c82c7986a490d89839",
+        "bytes": 7428,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_eafd0032b143c12d8ec14471a4892d73f568d875e01675ea778a6bdccdd27d49",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/root-CtqXo7BE.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/root-CtqXo7BE.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "8c1df2f8ae7f3a4a55cf05595ce71f3a775abaeae716e45c6a9f46c2c13c3b41",
+        "bytes": 13237,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_ed0fefb96bdfa76cbbbe0cd0a464e53d02ef940440abbac0b68b6410b8666026",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/tiktok-global.aaad7d98.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/tiktok-global.aaad7d98.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c5e444315db09695fe29bc436141c60108ceb6eca6ae3a2841a9b3a45402d3c4",
+        "bytes": 4215,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_ed458547331b2767c49daa04a61aee87b3ee5fe34b34f9394bbfdabf1a9e949c",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-fYT4M2dR.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-fYT4M2dR.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "0c229fa79fce2f6552d46e17c8840d2373d08838960b89c7045e2b7e6a57aba0",
+        "bytes": 2886,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_ed7c53fd5bfa587fcd3a0afda1a11821a716c50cfb9000b69aea10ad0eb30b19",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/google-tags.9021e541.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/google-tags.9021e541.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "41885953f8b088c0b1b9148b447f65968ab68ebabb760f885a3e924b575c61ea",
+        "bytes": 6795,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_f022ded623446ac502262aafb3b0e4d5984e6b29fead4891c090fa558667895e",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/store-picker-modal.component-O1OuSYgR.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/store-picker-modal.component-O1OuSYgR.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "1fa644c3e0d4b269c869d6e85ae2ecd045fd68e37868d7c2a749fc0b31218bef",
+        "bytes": 35518,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_f23c94744699c3708c098a3a40f075ebe858ee43ad8471dca20c225a44844d39",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/c8f7fe3b0e41be846d5687592cf2018ff6e22687-0203cfe5b3a2b03f0443.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/c8f7fe3b0e41be846d5687592cf2018ff6e22687-0203cfe5b3a2b03f0443.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a711c78249f0a3792c8b8e61afa9d2470137baee2526e8c43ed9a0e98e880cc9",
+        "bytes": 599521,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_f314c2f18fa98c07c819fb3a8280d7b6fc4e376966685c4e88b7bc18e8546904",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": "https://www.ikea.com/us/en/shoppingcart/agent/agent-3-0-0.c3P_TgOy.js.map"
+      },
+      "url": "https://www.ikea.com/us/en/shoppingcart/agent/agent-3-0-0.c3P_TgOy.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/shoppingcart/agent/agent-3-0-0.c3P_TgOy.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "b8943724db050386d5f4ebfd23b4ead72267f92d416c7698a4ff03d02d44657d",
+        "bytes": 38642,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_f5d7945e5c03d6acf6aee401c10d5f8cbf0997b76038d01df92b1155f745c7a5",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/nudge/main.CjwWoFGV.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/nudge/main.CjwWoFGV.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c8a49941abac8a782ab2f5187ee3fa09a71f14ae53bfc04c2f3b489f385f5184",
+        "bytes": 39391,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_f64e839ed9b13040a109bf501daf2a1a0ada11bf05ec465b1277f37d0e5e8af4",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/StorePicker-C7itxoLf.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/StorePicker-C7itxoLf.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "b19ec47400ada58c60ed6a32f72faa9785a757813c0fc32ccc2d62206a26a884",
+        "bytes": 5109,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_f6623752ef9e5c7672a0a2a4feed67e3e5d12a3dec81d848693a5aa6abc60cb6",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/global-store-picker.route-BqOBZdp8.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/global-store-picker.route-BqOBZdp8.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "408cc8f37cb1717045c151e8b5d8a8ceedb434b7882995e86525d19dbf77b18a",
+        "bytes": 943,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_f875df13aba31940968a3952d8c0ff3f7725729b49fa9b1cb0116c9e75238d32",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/floodlight-dm-global.f07439b1.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/floodlight-dm-global.f07439b1.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "16f22418cc0e957da2b8e1b451c850bbb776929a7d57f65e88b3013b47f3b256",
+        "bytes": 19096,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_f99973e09295ffb51bb22ac4d8cc33373019d538833da0086cae0ab4e9088747",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-BQlrOOvq.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-BQlrOOvq.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "724184b85250f1c7038c282daa0451edf7f2bb1b4af08f26e3563e912f6b1391",
+        "bytes": 691,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_fa910775f7d17445149de2756a30d2a08b31d6e22f81632a7f1d446e309da880",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/preact-CyNEoCgL.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/preact-CyNEoCgL.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "77c8d607e67fcaf0f450630232dff49979c2d4b8aec7c3f426773485d83be3cd",
+        "bytes": 24695,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_fc76dd99db74a27088dd3f2f3f792bdda189f33a039811e3e606a7138f6a4471",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/bing.e4df8a7a.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/bing.e4df8a7a.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "9fe392b5724b754cc5df92a124e44fcca39e172c918fcaf0f18fd814f94ba98b",
+        "bytes": 3472,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_fea556cbee96df5b231866bb74232e5bfd43c86dbe161d4989a7605fb9bd9062",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": false,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/room/?roomType=generic",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-157-cf09c7267cf6febc7140240bf8d9e851974e68c21b480b0b6c827092ebf8869b.js",
+        "layout": "isolated",
+        "layout_reason": "URL path is not an ordinary portable JavaScript module path.",
+        "sha256": "0565cbe83bcf81400a62328c7372ce312036cccf2456dd48bf1fe0938da16df5",
+        "bytes": 305,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    },
+    {
+      "source": {
+        "kind": "page-script",
+        "script_key": "scr_ff694f3da0e1fda8524c1f572da3eacae47ba356598eb9276f3ebd8a3b81a09f",
+        "frame_id": "49C4C0D446275357AF33F353908A30A6",
+        "is_module": true,
+        "language": "JavaScript",
+        "source_map_url": null
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-BH5SiGA1.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-BH5SiGA1.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "5f21aad4bd9b36fb53dc99734dbe629d28e8d0e3740b15bd8f41e551f19f2cea",
+        "bytes": 869,
+        "media_type": "text/javascript",
+        "redacted": null,
+        "representation": "debugger-source-utf8"
+      }
+    }
+  ],
+  "limitations": [
+    "Observation starts when REA attaches; prior network and console activity is unavailable.",
+    "Raw network headers, bodies, cookies, storage values, console objects, and WebSocket payloads are never retained; explicitly requested primitive console text is retained verbatim, while payload captures retain value-free shapes.",
+    "Source maps are reported only as declarative URLs and are not fetched.",
+    "URL-less scripts and console events without an allowed source URL are excluded because their origin cannot be proven.",
+    "CDP discovery omitted the target attachment state; attached is reported as unknown.",
+    "Only script bytes retained in this capture are exported. Sources are not refetched or executed, and a response or Debugger source does not prove execution.",
+    "Ordinary unambiguous URL paths preserve relative module layouts by origin, including case-distinct spellings. Query variants, exact path collisions, file/directory prefixes, inline sources, and unrepresentable paths are isolated. A case-distinct pair is isolated only when the destination filesystem cannot store both spellings; the record names that pair. Browser module relationships of isolated paths remain unknown.",
+    "Local JavaScript analysis does not implement browser import maps, root-relative URL resolution, remote URL loading, or browser runtime behavior. It may strip import queries and fragments; isolated variants are not canonical targets.",
+    "Source-map declarations are retained as metadata. No source maps or missing dependencies are fetched or reconstructed.",
+    "Scenario response bytes preserve the output of Playwright's Response.body() API; any source-body provenance caveat from the capture is retained in this manifest. Debugger sources are the exposed text encoded as UTF-8. Redacted bytes are exported exactly as retained, and may no longer parse as JavaScript."
+  ]
+}

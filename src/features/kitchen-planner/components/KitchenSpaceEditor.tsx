@@ -463,6 +463,14 @@ export function KitchenSpaceEditor({
                 max={3000}
                 onCommit={(width) => changeItem({ width: Math.round(width) })}
               />
+              {["door", "window"].includes(item.kind) && <>
+                <DimensionInput label="Нээлхийн өндөр" value={item.height ?? (item.kind === "door" ? 2100 : 1100)} min={300} max={room.height}
+                  onCommit={height => changeItem({ height: Math.round(height) })} />
+                {item.kind === "window" && <DimensionInput label="Цонхны тавцан шалнаас" value={item.sillHeight ?? 900} min={0} max={room.height - 300}
+                  onCommit={sillHeight => changeItem({ sillHeight: Math.round(sillHeight) })} />}
+                {item.kind === "door" && <label>Нээгдэх чиглэл<select value={item.swing ?? "inward"} onChange={e => changeItem({ swing: e.target.value as "inward" | "outward" })}>
+                  <option value="inward">Дотогш</option><option value="outward">Гадагш</option></select></label>}
+              </>}
               <DimensionInput
                 label={
                   item.kind === "column"

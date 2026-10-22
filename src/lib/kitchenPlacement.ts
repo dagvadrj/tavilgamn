@@ -1,5 +1,6 @@
 import { applianceIssue } from "./plitka";
 import { roomContainsFootprint } from "./kitchenRoomOutline";
+import { kitchenWallPanels } from "./kitchenWallPanels";
 import {
   roomWalls,
   type CabinetPose,
@@ -239,7 +240,9 @@ export function resolveElevations(kitchen: ModularKitchen): ModularKitchen {
         };
       if (cabinet.type === "base")
         return { ...cabinet, position: { ...cabinet.position, y: 0 } };
-      if (!cabinet.autoElevation) return cabinet;
+      // Repair legacy wall cabinets accidentally stored on the floor, while
+      // respecting deliberately positioned wall cabinets above floor level.
+      if (!cabinet.autoElevation && cabinet.position.y > 0) return cabinet;
       const below = bases.filter((base) => footprintsOverlap(cabinet, base));
       const top = below.length
         ? Math.max(...below.map((base) => base.height + base.position.y))
@@ -272,24 +275,63 @@ export function wallCabinetClearance(
     : null;
 }
 export interface PlacementIssue {
-  code: "appliance" | "overlap" | "outside" | "ceiling" | "wall" | "clearance";
+  code: "appliance" | "overlap" | "outside" | "ceiling" | "wall" | "clearance" | "floor" | "opening" | "corner";
   ids: string[];
   message: string;
   severity: "error" | "warning";
 }
+
+/** Shared by editing, insertion and candidate generation; uses rendered apertures. */
+export function kitchenOpeningIssues(kitchen: ModularKitchen): PlacementIssue[] {
+  return roomWalls(kitchen.room).flatMap(wall => {
+    const { tangent } = wallFrame(wall);
+    const { openings } = kitchenWallPanels(wall, kitchen.room);
+    const mid = { x: (wall.start.x + wall.end.x) / 2, z: (wall.start.z + wall.end.z) / 2 };
+    return [...kitchen.cabinets, ...(kitchen.extras ?? [])].flatMap(item => {
+      const corners = cabinetCorners(item);
+      const gap = Math.min(...corners.map(p => dot(sub(p, wall.start), wall.inward)));
+      if (gap > 2) return [];
+      const along = corners.map(p => dot(sub(p, mid), tangent));
+      return openings.filter(o => item.position.y < o.top * 1000 - EPS && item.position.y + item.height > o.bottom * 1000 + EPS &&
+        Math.min(Math.max(...along), (o.x + o.width / 2) * 1000) - Math.max(Math.min(...along), (o.x - o.width / 2) * 1000) > EPS)
+        .map(o => ({ code: "opening" as const, ids: [item.id, o.id], severity: "error" as const,
+          message: o.kind === "window" ? "Тавилга цонхны нээлхийг хааж байна." : "Тавилга хаалганы нээлхийг хааж байна." }));
+    });
+  });
+}
+
+export function placementIssueAction(issue: PlacementIssue): { target: "item" | "room"; label: string } {
+  if (issue.code === "ceiling") return { target: "room", label: "Өрөөний өндөр засах" };
+  return { target: "item", label: issue.code === "wall" || issue.code === "corner" ? "Хананд байрлуулах" :
+    issue.code === "clearance" || issue.code === "floor" ? "Өндөр тохируулах" : "Тавилгын байрлал засах" };
+}
 export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
-  const issues: PlacementIssue[] = [], walls = roomWalls(kitchen.room);
+  const issues: PlacementIssue[] = kitchenOpeningIssues(kitchen), walls = roomWalls(kitchen.room);
   const obstacles = (kitchen.room.items ?? []).filter(item => ["column", "door"].includes(item.kind)).map(item => {
     const position = { x: item.x, z: item.z, y: 0, rotation: 0 };
+    const depth = item.kind === "door" ? (item.swing === "outward" ? 60 : item.width) : item.depth;
     if (item.kind === "door") {
-      if (item.wall === "back") position.z += item.width / 2;
-      if (item.wall === "front") position.z -= item.width / 2;
-      if (item.wall === "left") position.x += item.width / 2;
-      if (item.wall === "right") position.x -= item.width / 2;
+      if (item.wall === "back") position.z += depth / 2;
+      if (item.wall === "front") { position.z -= depth / 2; position.rotation = Math.PI; }
+      if (item.wall === "left") { position.x += depth / 2; position.rotation = Math.PI / 2; }
+      if (item.wall === "right") { position.x -= depth / 2; position.rotation = -Math.PI / 2; }
     }
-    return { id: item.id, kind: item.kind, width: item.width, depth: item.kind === "door" ? item.width : item.depth, height: kitchen.room.height, position };
+    return { id: item.id, kind: item.kind, width: item.width, depth, height: item.kind === "door" ? item.height ?? Math.min(2100, kitchen.room.height - 100) : kitchen.room.height, position };
   });
   for (const [index, cabinet] of kitchen.cabinets.entries()) {
+    if (cabinet.type !== "wall" && Math.abs(cabinet.position.y) > EPS)
+      issues.push({ code: "floor", ids: [cabinet.id], message: "Доод болон өндөр шүүгээг шалан дээр байрлуулна уу.", severity: "error" });
+    if (cabinet.type === "wall" && cabinet.position.y <= EPS)
+      issues.push({ code: "floor", ids: [cabinet.id], message: "Дээд шүүгээний шалнаас дээших өндрийг тохируулна уу.", severity: "error" });
+    if (cabinet.corner && !walls.some(back => touchesWall(cabinet, back) && walls.some(side => {
+      if (Math.abs(dot(back.inward, side.inward)) > EPS) return false;
+      const { tangent, length } = wallFrame(side);
+      const corners = cabinetCorners(cabinet);
+      const distances = corners.map(p => dot(sub(p, side.start), side.inward));
+      const along = corners.map(p => dot(sub(p, side.start), tangent));
+      return Math.abs(Math.min(...distances)) <= 2 && Math.min(Math.max(...along), length) - Math.max(Math.min(...along), 0) > EPS;
+    })))
+      issues.push({ code: "corner", ids: [cabinet.id], message: "Булангийн шүүгээг хоёр хана нийлэх буланд байрлуулна уу.", severity: "error" });
     for (const obstacle of obstacles) if (cabinetsOverlap(cabinet, obstacle))
       issues.push({ code: "overlap", ids: [cabinet.id, obstacle.id], message: obstacle.kind === "door" ? "Шүүгээ хаалганы нээгдэх зайг хааж байна." : "Шүүгээ баганатай давхцаж байна.", severity: "error" });
     const invalidAppliance = applianceIssue(cabinet);

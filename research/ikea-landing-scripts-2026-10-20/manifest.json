@@ -1,0 +1,2811 @@
+{
+  "capture_path": "C:\\Users\\my tech\\Downloads\\tavilgamn\\research\\ikea-landing-2026-10-20.json",
+  "capture_sha256": "72032fe94dc3ede2c20743712900ec25e5539e9b6c64307b600c15ce5cd26e7e",
+  "capture_kind": "browser-scenario",
+  "source_evidence_id": "ev_c82506f5761ca04bf71ccf205dcf94eae33c1a4de5cac96c35057c6636f25b72",
+  "capture_completeness": {
+    "status": "incomplete",
+    "equality_eligible": false,
+    "missing_sections": [
+      "events"
+    ],
+    "truncated_sections": []
+  },
+  "output_directory": "C:\\Users\\my tech\\Downloads\\tavilgamn\\research\\ikea-landing-scripts-2026-10-20",
+  "analysis_input": {
+    "input_path": "C:\\Users\\my tech\\Downloads\\tavilgamn\\research\\ikea-landing-scripts-2026-10-20\\files",
+    "format": "directory"
+  },
+  "scripts": [
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-4",
+        "request_sequence": 5,
+        "response_sequence": 106,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/experiment-fragment/scripts/kickstart-L4ZW5VIT.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/experiment-fragment/scripts/kickstart-L4ZW5VIT.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "637085cc7d052b3b5c9ada2d0cb9029bc29d19b08d64b817bca2ffef2b1e92c3",
+        "bytes": 322,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-5",
+        "request_sequence": 6,
+        "response_sequence": 126,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/experiment-fragment/scripts/index-SPEL7CBO.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-7",
+        "request_sequence": 8,
+        "response_sequence": 108,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/cookieconsent/scripts/cookieconsent-onetrust-js.js?v=mudtqw57",
+      "content": {
+        "state": "exported",
+        "relative_path": "isolated/source-3-994a9f823b005f543628caa0ff9c19e88721e1b53d36d44bc9c7b8f938f26e0d.js",
+        "layout": "isolated",
+        "layout_reason": "URL query, fragment, or credentials cannot select a canonical local module.",
+        "sha256": "bbd5d152cfebc919d88d8af3f75547cfc512f65b8bebc4c82c7986a490d89839",
+        "bytes": 7428,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-10",
+        "request_sequence": 11,
+        "response_sequence": 110,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/nudge/vendor.preact.chunk.Don6TFqJ.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/nudge/vendor.preact.chunk.Don6TFqJ.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "7fd2a068faa00f4a0337d2254451aa2e80c1e3e76e4b2f7fc9dfb71eb0086aed",
+        "bytes": 24586,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-13",
+        "request_sequence": 14,
+        "response_sequence": 15,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/in-clude/in-clude.min.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/in-clude/in-clude.min.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "8b646c80327e8969fa9198f4a8e70982d6ff58ab0acc5681f51d6d9ca274d1fb",
+        "bytes": 8116,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-14",
+        "request_sequence": 18,
+        "response_sequence": 155,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/preact-CyNEoCgL.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/preact-CyNEoCgL.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "77c8d607e67fcaf0f450630232dff49979c2d4b8aec7c3f426773485d83be3cd",
+        "bytes": 24695,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-15",
+        "request_sequence": 19,
+        "response_sequence": 157,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/Header-Dcd4EJDT.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-16",
+        "request_sequence": 20,
+        "response_sequence": 184,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/experiments-BbM8CxDN.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/experiments-BbM8CxDN.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "346b2929b4f918a5163bb5be34f4f01cf5bae226186b36f723f67f6ee6f42e83",
+        "bytes": 1811,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-17",
+        "request_sequence": 21,
+        "response_sequence": 192,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/fragments-D-DzSofc.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/fragments-D-DzSofc.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "cd6df44e3a5a56120b372c0a2dd5794546b1a06eabf05f7c5ed08837e92c7bfd",
+        "bytes": 7091,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-18",
+        "request_sequence": 22,
+        "response_sequence": 295,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/utils-DZTybWfu.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-19",
+        "request_sequence": 23,
+        "response_sequence": 247,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/main-CbF5lEbf.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-20",
+        "request_sequence": 24,
+        "response_sequence": 208,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/_commonjsHelpers-CqkleIqs.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-21",
+        "request_sequence": 25,
+        "response_sequence": 229,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/analytics-C2_7wxzD.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-22",
+        "request_sequence": 26,
+        "response_sequence": 244,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/stores-Ca-OtM7N.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-23",
+        "request_sequence": 27,
+        "response_sequence": 217,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/preload-helper-C3afcOe8.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-24",
+        "request_sequence": 28,
+        "response_sequence": 283,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/theme-DwqTjZys.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-25",
+        "request_sequence": 29,
+        "response_sequence": 220,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-DpntpFfJ.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-26",
+        "request_sequence": 30,
+        "response_sequence": 188,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-B_xQFO1R.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-B_xQFO1R.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "ba773cf75ec502a3c4cc4b97264985241fdee1fce43199d63aee0716dd0421ff",
+        "bytes": 2177,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-27",
+        "request_sequence": 31,
+        "response_sequence": 253,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/renderPaths-dtj-2F7l.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-28",
+        "request_sequence": 32,
+        "response_sequence": 151,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-CDwLao_E.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-CDwLao_E.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "94ced883046ba571d32aa24781523fc184fbd40bd441da4d8f040ce5ac863bbf",
+        "bytes": 722,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-29",
+        "request_sequence": 33,
+        "response_sequence": 286,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-R_5Hlymk.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-30",
+        "request_sequence": 34,
+        "response_sequence": 205,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/preact-Ljv1PC7l.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-31",
+        "request_sequence": 35,
+        "response_sequence": 232,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-BH5SiGA1.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-32",
+        "request_sequence": 36,
+        "response_sequence": 289,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-CNNPBMPl.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-33",
+        "request_sequence": 37,
+        "response_sequence": 202,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-xabcz8hC.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-34",
+        "request_sequence": 38,
+        "response_sequence": 336,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/Sheets-DlsNg-rc.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/Sheets-DlsNg-rc.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "1070cd7d0fcacc951ab5196d410b24f802478e8bbd870e60b04a26852a730dab",
+        "bytes": 15482,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-35",
+        "request_sequence": 39,
+        "response_sequence": 280,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/chevron-right-lhj5pdtR.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-36",
+        "request_sequence": 40,
+        "response_sequence": 153,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/link-out-DEaiS4G8.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/link-out-DEaiS4G8.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "66a500616aac237af86ff89483cd0c2c5b98f17f4adc4873b39b249b8be1f1d0",
+        "bytes": 784,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-37",
+        "request_sequence": 41,
+        "response_sequence": 277,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/feedback-sad-5i7mx8k9.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-38",
+        "request_sequence": 42,
+        "response_sequence": 333,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/cross-small-CbO9W1ZS.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/cross-small-CbO9W1ZS.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "53be85fd23bcf51464e256e7f4e9492f1671599822c01c07e881c43575a5e28e",
+        "bytes": 338,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-39",
+        "request_sequence": 43,
+        "response_sequence": 298,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/Footer-BRvjiZCr.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-40",
+        "request_sequence": 44,
+        "response_sequence": 368,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-Czqzsyx2.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-Czqzsyx2.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "076b283c720af932e7d1aa3abbe9d64594a6aced5d98e8fdc08e5f81ad9ae631",
+        "bytes": 20812,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-41",
+        "request_sequence": 45,
+        "response_sequence": 196,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/chevron-left-9ruQ-QXi.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-42",
+        "request_sequence": 46,
+        "response_sequence": 274,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/Icon-D0y2LWjH.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-43",
+        "request_sequence": 47,
+        "response_sequence": 226,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/information-circle-DhVX1vZU.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-44",
+        "request_sequence": 48,
+        "response_sequence": 186,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/dom-CJAzQv3h.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/dom-CJAzQv3h.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a58fe8863d2d5185572afc5f110ddd2d2e1a97485988e33f70de8d7eb9f72979",
+        "bytes": 354,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-45",
+        "request_sequence": 49,
+        "response_sequence": 358,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/StorePicker-C7itxoLf.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/StorePicker-C7itxoLf.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "b19ec47400ada58c60ed6a32f72faa9785a757813c0fc32ccc2d62206a26a884",
+        "bytes": 5109,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-46",
+        "request_sequence": 50,
+        "response_sequence": 356,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-fYT4M2dR.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/index-fYT4M2dR.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "0c229fa79fce2f6552d46e17c8840d2373d08838960b89c7045e2b7e6a57aba0",
+        "bytes": 2886,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-47",
+        "request_sequence": 51,
+        "response_sequence": 199,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/index-W3W6Fb8r.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-58",
+        "request_sequence": 62,
+        "response_sequence": 256,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/preact-BrGjQMqm.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-59",
+        "request_sequence": 63,
+        "response_sequence": 401,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/store-picker-modal.component-O1OuSYgR.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-60",
+        "request_sequence": 64,
+        "response_sequence": 304,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/route.utils-cF-yrc3n.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-61",
+        "request_sequence": 65,
+        "response_sequence": 370,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/translation-context-Dy0UDaW9.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/translation-context-Dy0UDaW9.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "73238f838556ee10c6b93bed7d4aaaed88015834e462bea07b413702cda5be57",
+        "bytes": 17949,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-62",
+        "request_sequence": 66,
+        "response_sequence": 238,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-BVFGK6Re.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-63",
+        "request_sequence": 67,
+        "response_sequence": 235,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-6ke7f_ug.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-64",
+        "request_sequence": 68,
+        "response_sequence": 372,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-BdCQqCCx.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-BdCQqCCx.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "da7aea1e4dfc62d1600b098da2221a653ee08c5c776e56f55c6575c67cb73a08",
+        "bytes": 5482,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-65",
+        "request_sequence": 69,
+        "response_sequence": 268,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-07mW0Ywx.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-66",
+        "request_sequence": 70,
+        "response_sequence": 366,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-Duk5zhlB.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-Duk5zhlB.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a822b7d2ba5d8091c51049bc9f9dadd16313624117d12f6aa045413fc26a0072",
+        "bytes": 946,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-67",
+        "request_sequence": 71,
+        "response_sequence": 265,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/sales-item-api-BEmPhgLO.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-68",
+        "request_sequence": 72,
+        "response_sequence": 362,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-CJGNz493.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/index-CJGNz493.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a19f1bc770f439608d134071ca3cd4a1367a57ade99af4ecda8d917e274b509d",
+        "bytes": 5352,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-69",
+        "request_sequence": 73,
+        "response_sequence": 350,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/checkmark-circle-B4QwF3mg.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/checkmark-circle-B4QwF3mg.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "6b90aa5c62cf57f3bebe9e0ee4fbdfcdd5685c13e11e5f6770abf93073564c61",
+        "bytes": 361,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-70",
+        "request_sequence": 74,
+        "response_sequence": 352,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/information-circle-DbmBn1b9.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/information-circle-DbmBn1b9.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "feef96e48f8b5e1dc123d3c0d7814d65ea35d0a4cb04b0aab2f709e53eb41663",
+        "bytes": 398,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-71",
+        "request_sequence": 75,
+        "response_sequence": 374,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/renderPaths-DsomnUJD.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-72",
+        "request_sequence": 76,
+        "response_sequence": 223,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/image-B5KIpB9K.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-73",
+        "request_sequence": 77,
+        "response_sequence": 241,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-nVT6TQQ3.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-74",
+        "request_sequence": 78,
+        "response_sequence": 211,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/index-BQlrOOvq.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-75",
+        "request_sequence": 79,
+        "response_sequence": 250,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/information-circle-569p37Et.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-76",
+        "request_sequence": 80,
+        "response_sequence": 190,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/expt-store-Cpljy5Z5.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/expt-store-Cpljy5Z5.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c1a3b9de78d968ec5565be2a6644d0c9dde8ed7dcc57053f5793c0818c4de2fc",
+        "bytes": 2190,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-77",
+        "request_sequence": 81,
+        "response_sequence": 354,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/customer-item-availabilities-api-DD6T_AiT.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/customer-item-availabilities-api-DD6T_AiT.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "31fa9adf49a3dcfc5a2ddb6542f0d3661ea09497861dc5ea11b08189a4d6dde3",
+        "bytes": 1183,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-78",
+        "request_sequence": 82,
+        "response_sequence": 364,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/root-CtqXo7BE.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/root-CtqXo7BE.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "8c1df2f8ae7f3a4a55cf05595ce71f3a775abaeae716e45c6a9f46c2c13c3b41",
+        "bytes": 13237,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-80",
+        "request_sequence": 84,
+        "response_sequence": 360,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/root-CvUi6HiL.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/root-CvUi6HiL.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "74f5720aef4827a12d392ba525df1493c853e0d7f8627991ff43a393ddbc8063",
+        "bytes": 10296,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-82",
+        "request_sequence": 86,
+        "response_sequence": 262,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/webpack-runtime-526ea877b960d908c43f.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-83",
+        "request_sequence": 87,
+        "response_sequence": 339,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/framework-a782a58bd4f29bb2ad17.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-84",
+        "request_sequence": 88,
+        "response_sequence": 380,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/c0d53ec4-7928475049ce39075dfd.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-85",
+        "request_sequence": 89,
+        "response_sequence": 450,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/app-1f0c2a2e6bb7361da9e3.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-86",
+        "request_sequence": 90,
+        "response_sequence": 404,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/Footer-BKLJjiMz.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-87",
+        "request_sequence": 91,
+        "response_sequence": 377,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/renderPaths-SbPNwCwS.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-89",
+        "request_sequence": 113,
+        "response_sequence": 310,
+        "status": 200
+      },
+      "url": "https://cdn.cookielaw.org/scripttemplates/otSDKStub.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-92",
+        "request_sequence": 129,
+        "response_sequence": 292,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/instantpage-CyzbhCwV.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-93",
+        "request_sequence": 130,
+        "response_sequence": 448,
+        "status": 200
+      },
+      "url": "https://accounts.ikea.com/resources/cie-utils/cie-utils-fragment.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/bf3d408cbfb6dab9f5bd474183952c799c9dc75db75692d5bffe45639af8fce1/resources/cie-utils/cie-utils-fragment.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "12ba87290f18e6463aa4a3581c6159a31cdb80d54a95064db4ab34981b50306b",
+        "bytes": 20960,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-94",
+        "request_sequence": 131,
+        "response_sequence": 395,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/token-service/token-service-CqBvbyE5.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-95",
+        "request_sequence": 132,
+        "response_sequence": 386,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/analytics/scripts/incognito.324fe339.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-96",
+        "request_sequence": 133,
+        "response_sequence": 413,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/search/v2/box.AyFEogBg.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-97",
+        "request_sequence": 134,
+        "response_sequence": 301,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/runtime.ce1298a5.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-98",
+        "request_sequence": 135,
+        "response_sequence": 271,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/main.ce1298a5.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-100",
+        "request_sequence": 137,
+        "response_sequence": 392,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/content-rec/fragments/static/initer.d96b9c44.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-101",
+        "request_sequence": 138,
+        "response_sequence": 407,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/nudge/main.CjwWoFGV.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-102",
+        "request_sequence": 139,
+        "response_sequence": 259,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/gift-registry/agent/agent.Cp8a7kzo.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-103",
+        "request_sequence": 140,
+        "response_sequence": 410,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/loyalty/wlo-modal/assets/index-D4-5G0ii.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-104",
+        "request_sequence": 141,
+        "response_sequence": 398,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/favs-agent/agent/agent-list-agent-v1-84-0.syhM1Atz.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-105",
+        "request_sequence": 142,
+        "response_sequence": 307,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/shoppingcart/agent/agent-3-0-0.c3P_TgOy.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-106",
+        "request_sequence": 143,
+        "response_sequence": 330,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/ingka-isx-billie-widget/assets/index-BL0dXeJX.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-108",
+        "request_sequence": 145,
+        "response_sequence": 389,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/mt-script-loader.6b6caa3a.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-109",
+        "request_sequence": 146,
+        "response_sequence": 383,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/products/javascripts/price-package-scripts.db14ab02fcb8b7288e88.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-129",
+        "request_sequence": 482,
+        "response_sequence": 573,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/favs-agent/agent/agent-BQuORcPZ.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/favs-agent/agent/agent-BQuORcPZ.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "789d1aa2e618049cd166795e755cc3053a6c1c4b6e63635137609b319b92c742",
+        "bytes": 32112,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-130",
+        "request_sequence": 483,
+        "response_sequence": 506,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/ingka-isx-billie-widget/assets/rolldown-runtime-BMeI84Mc.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/ingka-isx-billie-widget/assets/rolldown-runtime-BMeI84Mc.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "94de4b316e732b3f170c313a8f904f3be58b37765bee4366e4d6d4410a8fb003",
+        "bytes": 1247,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-131",
+        "request_sequence": 484,
+        "response_sequence": 518,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/lower-funnel-fragments/global-store-picker.route-BqOBZdp8.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/lower-funnel-fragments/global-store-picker.route-BqOBZdp8.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "408cc8f37cb1717045c151e8b5d8a8ceedb434b7882995e86525d19dbf77b18a",
+        "bytes": 943,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-132",
+        "request_sequence": 485,
+        "response_sequence": 520,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/header.route-CZfIk1z3.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/header.route-CZfIk1z3.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "7b227eb0c62a2b466ae85845ff7742c537aa474003acfd8099c0f344ac3a4d51",
+        "bytes": 3119,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-133",
+        "request_sequence": 500,
+        "response_sequence": 547,
+        "status": 200
+      },
+      "url": "https://cdn.cookielaw.org/scripttemplates/202508.2.0/otBannerSdk.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-135",
+        "request_sequence": 509,
+        "response_sequence": 537,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec_vendors_ingka.6d0190f5.chunk.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-136",
+        "request_sequence": 510,
+        "response_sequence": 563,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec_vendors_preact.85f2942a.chunk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/rec_vendors_preact.85f2942a.chunk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "dd5beb8c58cc0a67f0e8589421e6a98342a3285cd9049a0e44d62f955a81d2b9",
+        "bytes": 26640,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-137",
+        "request_sequence": 511,
+        "response_sequence": 533,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec_non_initial_555.ee6068c1.chunk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/rec_non_initial_555.ee6068c1.chunk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "1206f19e29047df43c8b9cbd6db3fafe35f3d4efa7e881173805e92f2178c951",
+        "bytes": 28127,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-138",
+        "request_sequence": 512,
+        "response_sequence": 565,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec_non_initial_984.b06b20df.chunk.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-140",
+        "request_sequence": 514,
+        "response_sequence": 531,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec-add-to-cart.5565f7f7.chunk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/rec-add-to-cart.5565f7f7.chunk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "471760b80b3dba8696519b534045a77e4f6bfa1ef731bb59b2a1aaa876b94367",
+        "bytes": 6766,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-142",
+        "request_sequence": 516,
+        "response_sequence": 535,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/recommendations/panels/rec-init-mount-panels.9f15e30b.chunk.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/recommendations/panels/rec-init-mount-panels.9f15e30b.chunk.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "27c5e2915332a06bba5de890d3a2e22f93462f3fef531e370e9588665e21d49c",
+        "bytes": 29096,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-143",
+        "request_sequence": 522,
+        "response_sequence": 567,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/footer.route-BvQ-fOuq.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/global/assets/dwf/nav/footer.route-BvQ-fOuq.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "328b9522315a094270ca0a200f7a9c36aa651c59b699a6210926d01c245b6c18",
+        "bytes": 3517,
+        "media_type": "text/javascript",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-146",
+        "request_sequence": 555,
+        "response_sequence": 587,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/4298c3a7cffb19d3560cc2876975371edadbb14c-0fa6125a6e5d2d368478.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-147",
+        "request_sequence": 556,
+        "response_sequence": 585,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/8867f0efac7dfed118754ed6c6e0fd7ba769b4cc-6bbf50bed0f88882a638.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/8867f0efac7dfed118754ed6c6e0fd7ba769b4cc-6bbf50bed0f88882a638.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c7ba4c550a58f78b63952da125cd86fbcb6299bd76887fd6d424e0fd5fe0a71d",
+        "bytes": 22295,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-148",
+        "request_sequence": 557,
+        "response_sequence": 583,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/f7dcb5c0b68809897027bc4c75c7df4e5105bd7c-2226b1bcc01e20711f53.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/f7dcb5c0b68809897027bc4c75c7df4e5105bd7c-2226b1bcc01e20711f53.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "30aca6703677b55fd0de6ba4b1daeb9ab04b8b4ed5c090bedb2e118886780fd1",
+        "bytes": 14631,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-149",
+        "request_sequence": 558,
+        "response_sequence": 630,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/d2684d9dc18b481214b359085076eafd29c84b7e-aa7054c896b962fab6dd.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/d2684d9dc18b481214b359085076eafd29c84b7e-aa7054c896b962fab6dd.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "648d9ea1ee3d711d93a2f02cb7b5bfb50aabb25f3db0a05f09d41334edfc4e23",
+        "bytes": 13037,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-150",
+        "request_sequence": 559,
+        "response_sequence": 626,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/component---src-pages-index-tsx-cbc873a66ef0db7b5954.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/component---src-pages-index-tsx-cbc873a66ef0db7b5954.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "34d5eb4850c736c715187e763c5109d747a847116c277e64b7a8960a961361b1",
+        "bytes": 1482,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-153",
+        "request_sequence": 569,
+        "response_sequence": 632,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/shoppingcart/agent/index-D4r_Mge-.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/shoppingcart/agent/index-D4r_Mge-.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "0f169c6470de05160f2a61fa270538d4b3bd341094e66a982cf2046550287d06",
+        "bytes": 8555,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-154",
+        "request_sequence": 570,
+        "response_sequence": 628,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/shoppingcart/agent/_commonjsHelpers-CqkleIqs.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/shoppingcart/agent/_commonjsHelpers-CqkleIqs.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "84de5b1724808f6a399a33d5fa7887ba0f752bbb73fbb26cc100fbec111abf63",
+        "bytes": 170,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-158",
+        "request_sequence": 596,
+        "response_sequence": 680,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/sentry.8b98d30f.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/sentry.8b98d30f.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "6a97b3d50a27fa9ef1f469ea98a563440f9cdb1545ead69905015a43380588ae",
+        "bytes": 300,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-159",
+        "request_sequence": 597,
+        "response_sequence": 664,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/adform-local.92387887.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/adform-local.92387887.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "e1c476cdbc98230dad3b52560259da9f41d36bea8cde32ef51ed77e16e7f34cb",
+        "bytes": 6507,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-160",
+        "request_sequence": 598,
+        "response_sequence": 676,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/adform-us.7607a02d.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/adform-us.7607a02d.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "e85a97fadbbaa30f5cad2cd2cc34e11fafc648f97257af100de269db39ec8875",
+        "bytes": 8409,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-161",
+        "request_sequence": 599,
+        "response_sequence": 684,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/amazon.d1b43b6c.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-162",
+        "request_sequence": 600,
+        "response_sequence": 668,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/bing.e4df8a7a.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/bing.e4df8a7a.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "9fe392b5724b754cc5df92a124e44fcca39e172c918fcaf0f18fd814f94ba98b",
+        "bytes": 3472,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-163",
+        "request_sequence": 601,
+        "response_sequence": 674,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/claritas.a033bb0e.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/claritas.a033bb0e.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "3a8c50ab60aabd7c4188ecbb541b4faa27f675fd7f1ac7e0c5d04751fe70b1eb",
+        "bytes": 1091,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-164",
+        "request_sequence": 602,
+        "response_sequence": 705,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/google-tags.9021e541.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-165",
+        "request_sequence": 603,
+        "response_sequence": 647,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/jivox.c6a1c545.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/jivox.c6a1c545.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "53fb99d4c77a055441e2157912a6b51560d01887938300939a06bcee9ec98682",
+        "bytes": 3156,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-166",
+        "request_sequence": 604,
+        "response_sequence": 690,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/tradedesk.09dd98a1.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-167",
+        "request_sequence": 605,
+        "response_sequence": 682,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/yahoo-dot.341177ef.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/yahoo-dot.341177ef.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "47d0b71eaee49ca6ca717b35081c68c343211df92a0c614d828808a31fc67eec",
+        "bytes": 3244,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-168",
+        "request_sequence": 606,
+        "response_sequence": 672,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/reddit.2527b76b.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/reddit.2527b76b.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "cfbea665eb8efaebd2399b6e09ebdbd566bb87f1ece5ca5fe58180944b2203bc",
+        "bytes": 4183,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-169",
+        "request_sequence": 607,
+        "response_sequence": 699,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/meta-local.2f086a35.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-170",
+        "request_sequence": 608,
+        "response_sequence": 717,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/meta-ab.439c6d2e.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-171",
+        "request_sequence": 609,
+        "response_sequence": 708,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/tvsquared.47775549.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-172",
+        "request_sequence": 610,
+        "response_sequence": 660,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/flashtalking.651fd155.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/flashtalking.651fd155.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "a39f1491260778581c832a8ab021ea6e5f9048214e1fcc436d8415aa0b0fcaed",
+        "bytes": 1825,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-173",
+        "request_sequence": 611,
+        "response_sequence": 711,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/cloudflare-web-analytics.9f98e3fc.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-174",
+        "request_sequence": 612,
+        "response_sequence": 670,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/rakuten.3d5781b4.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/rakuten.3d5781b4.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "d5f9248a4c022a412efde5fd41f4078147e33e59e652be88f6175201b1d31684",
+        "bytes": 6748,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-175",
+        "request_sequence": 613,
+        "response_sequence": 714,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/meta-global.4dff1390.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-176",
+        "request_sequence": 614,
+        "response_sequence": 687,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/pinterest-global.c7638f3b.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-177",
+        "request_sequence": 615,
+        "response_sequence": 678,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/snapchat-global.ea36e91a.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/snapchat-global.ea36e91a.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "d7f7f50ca9d11756b41d65e9fed16b4f72d8a2cddea477e2a8851d79aa35959c",
+        "bytes": 6133,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-178",
+        "request_sequence": 616,
+        "response_sequence": 666,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/tiktok-global.aaad7d98.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/tiktok-global.aaad7d98.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "c5e444315db09695fe29bc436141c60108ceb6eca6ae3a2841a9b3a45402d3c4",
+        "bytes": 4215,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-179",
+        "request_sequence": 617,
+        "response_sequence": 662,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/teads-global.c703c2c6.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/marketing-tags/scripts/teads-global.c703c2c6.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "939bee9251621c4b92064e9a4b0c403f1d903d1c2308ff77f2b1e0bafa1994b5",
+        "bytes": 2112,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-180",
+        "request_sequence": 618,
+        "response_sequence": 693,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/ads-dm-global.586edea6.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-181",
+        "request_sequence": 619,
+        "response_sequence": 696,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/marketing-tags/scripts/floodlight-dm-global.f07439b1.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-182",
+        "request_sequence": 620,
+        "response_sequence": 702,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/global/assets/dwf/nav/VocFeedbackModal-nJbyQadU.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Network content exceeds the 16 concurrent-read budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-188",
+        "request_sequence": 642,
+        "response_sequence": 766,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/ext/optimizelyjs/s/united_states_web.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-189",
+        "request_sequence": 643,
+        "response_sequence": 764,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/analytics/scripts/ga-main.324fe339.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-193",
+        "request_sequence": 724,
+        "response_sequence": 843,
+        "status": 200
+      },
+      "url": "https://p.teads.tv/teads-fellow-8.5.0.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-194",
+        "request_sequence": 725,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=CR6808BC77UBVEOEFGAG&lib=ttq",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-195",
+        "request_sequence": 726,
+        "response_sequence": 841,
+        "status": 200
+      },
+      "url": "https://bat.bing.com/bat.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-196",
+        "request_sequence": 727,
+        "response_sequence": 818,
+        "status": 200
+      },
+      "url": "https://tag.rmp.rakuten.com/124128.ct.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-197",
+        "request_sequence": 728,
+        "response_sequence": 820,
+        "status": 200
+      },
+      "url": "https://www.redditstatic.com/ads/pixel.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-198",
+        "request_sequence": 729,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://s.yimg.com/wi/ytc.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-200",
+        "request_sequence": 731,
+        "response_sequence": 816,
+        "status": 200
+      },
+      "url": "https://js.adsrvr.org/up_loader.1.1.0.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-201",
+        "request_sequence": 732,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://www.ikea.com/us/en/gtaggtw/aw-17648757747/?l=gtwDataLayer",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-202",
+        "request_sequence": 733,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://www.ikea.com/us/en/gtaggtw/dc-15895561/?l=gtwDataLayer",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-203",
+        "request_sequence": 734,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://www.googletagmanager.com/gtag/js?id=DC-6739053&l=mtDataLayer",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-204",
+        "request_sequence": 735,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://www.ikea.com/us/en/gtaggtw/aw-1035699132/?l=gtwDataLayer",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-205",
+        "request_sequence": 736,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://collector-48219.us.tvsquared.com/tv2track.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-206",
+        "request_sequence": 737,
+        "response_sequence": 782,
+        "status": 200
+      },
+      "url": "https://static.cloudflareinsights.com/beacon.min.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/fc91647292e7535e5726ae96432e137961d9be824f6c8857dfff0413b2574982/beacon.min.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "637381256384554e1cc3309a62fb238a51b83e7f10b2a56d8ba15dbc73ca762e",
+        "bytes": 31853,
+        "media_type": "text/javascript;charset=UTF-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-207",
+        "request_sequence": 752,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://us.accounts.ikea.com/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-209",
+        "request_sequence": 756,
+        "response_sequence": 786,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/fb7d5399-496d3313c669bc03640c.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-210",
+        "request_sequence": 757,
+        "response_sequence": 780,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/6135cf6f-d3652d17d8d132cc9cce.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-211",
+        "request_sequence": 758,
+        "response_sequence": 788,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/bf06317352297aad4eacd7eddd2bdeb5833fe120-7d80c638b6921d3f3dba.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-212",
+        "request_sequence": 759,
+        "response_sequence": 778,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/1cd1d6c43331e04cdf87f9472299f7adbbbeb883-e5815c008a2c7e8f26b2.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/1cd1d6c43331e04cdf87f9472299f7adbbbeb883-e5815c008a2c7e8f26b2.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "31a1f88cbdd48d2004a787183f5368a7ca966561bf3a6af36865812137d64fc5",
+        "bytes": 44101,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-213",
+        "request_sequence": 760,
+        "response_sequence": 776,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/8de51afe8ad06b3c857cbb5b1977fd0d1f3d2e42-ef20f398deaf5aff9111.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/8de51afe8ad06b3c857cbb5b1977fd0d1f3d2e42-ef20f398deaf5aff9111.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "91ceec21edc211b492559343c96cea354f7a1b45a15ed2b3d3b3bbb159e85687",
+        "bytes": 24992,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-214",
+        "request_sequence": 761,
+        "response_sequence": 771,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/80e165c2f590ef4533bc1e989b89ca002bc83fd1-461b204543c1f7898855.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/80e165c2f590ef4533bc1e989b89ca002bc83fd1-461b204543c1f7898855.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "53596e41530cdd00b1b0ef532667a365365c9aa72b2061e424823106d1b0be7a",
+        "bytes": 54647,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-215",
+        "request_sequence": 762,
+        "response_sequence": 774,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/68da09307fd5d0139d52e395ab06059456e80c68-a591fe85fda2c43bddc5.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/68da09307fd5d0139d52e395ab06059456e80c68-a591fe85fda2c43bddc5.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "766eaa1cf6e3a2d76037b455b56abc107e7e86de98287a3ec9debd0bbd8386e2",
+        "bytes": 15099,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-216",
+        "request_sequence": 763,
+        "response_sequence": 784,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/65cf681db574c1fa56c9f838b572d61c5047371b-d0039fcd915a52523d88.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-217",
+        "request_sequence": 769,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://cdn-pci.optimizely.com/js/geo4.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-219",
+        "request_sequence": 801,
+        "response_sequence": 831,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/2975-b90fde56b81984e84e4f.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/2975-b90fde56b81984e84e4f.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "71c2bf4965ebcc29544a8f2890ff4f815bdfdca818f1b1b30704a022a371a96e",
+        "bytes": 7509,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-221",
+        "request_sequence": 805,
+        "response_sequence": 835,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/40852cc836382ae5985af1ec31175c26fcffba05-22f815494940b33e92d2.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-222",
+        "request_sequence": 806,
+        "response_sequence": 833,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/16d8457367c7d224baf74b83884205ca0b20acda-d99903fa4748c008e4e4.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-223",
+        "request_sequence": 807,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://www.ikea.com/us/en/home-design/c8f7fe3b0e41be846d5687592cf2018ff6e22687-0203cfe5b3a2b03f0443.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-224",
+        "request_sequence": 808,
+        "response_sequence": 837,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/24b1ad5b34354aaa0afb2a91e7187f23ed84c30e-1af91aef8c85b193724c.js",
+      "content": {
+        "state": "exported",
+        "relative_path": "origins/989303cdea04cea89a340a8dc88aa67842a9c699839a9b8ccede7f43bac3509a/us/en/home-design/24b1ad5b34354aaa0afb2a91e7187f23ed84c30e-1af91aef8c85b193724c.js",
+        "layout": "url-path",
+        "layout_reason": null,
+        "sha256": "42f492a39a55ba306fd78fbf0fc875a91d371b887137d0e27f979c3b32be4bf8",
+        "bytes": 15224,
+        "media_type": "text/javascript; charset=utf-8",
+        "redacted": false,
+        "representation": "playwright-response-body-bytes"
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-225",
+        "request_sequence": 809,
+        "response_sequence": 839,
+        "status": 200
+      },
+      "url": "https://www.ikea.com/us/en/home-design/6493-7d64e6f496a145b58347.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "body-read-failed",
+        "message": "Body exceeds the 64 KiB retained-content budget."
+      }
+    },
+    {
+      "source": {
+        "kind": "scenario-response",
+        "transaction_id": "request-230",
+        "request_sequence": 847,
+        "response_sequence": null,
+        "status": null
+      },
+      "url": "https://bat.bing.com/p/action/5320935.js",
+      "content": {
+        "state": "unavailable",
+        "reason": "response-content-not-retained",
+        "message": "No selected, completed script response bytes were retained for this request."
+      }
+    }
+  ],
+  "limitations": [
+    "Event sequence records provider receipt order; simultaneous browser causality is not inferred.",
+    "Network content is retained only when selected; Playwright response-body bytes are API results and are not guaranteed to match wire bytes.",
+    "Request bytes are limited to what Playwright exposes; not_exposed does not establish body absence or multipart file coverage.",
+    "Network content reads settle within 5 seconds each and the observer does not request bodies from unfinished responses.",
+    "Captured response-body bytes are the result of Playwright's Response.body() API. Playwright may satisfy that API with a credentialed follow-up load of the request URL when CDP has no body, so transaction and event links do not verify that retained bytes came from the original network transaction.",
+    "Playwright scenario events do not expose request initiator stacks; receipt order does not prove causality.",
+    "Storage values are hashed only after declared-secret redaction.",
+    "Some selected network content was unavailable; per-transaction content states retain the reason.",
+    "Network content exceeds the 16 concurrent-read budget.",
+    "Some network metadata was omitted because the aggregate browser event budget was reached; affected transactions are incomplete.",
+    "Browser event collection reached its resource budget; omitted events and descendant observations are unknown.",
+    "Only script bytes retained in this capture are exported. Sources are not refetched or executed, and a response or Debugger source does not prove execution.",
+    "Ordinary unambiguous URL paths preserve relative module layouts by origin, including case-distinct spellings. Query variants, exact path collisions, file/directory prefixes, inline sources, and unrepresentable paths are isolated. A case-distinct pair is isolated only when the destination filesystem cannot store both spellings; the record names that pair. Browser module relationships of isolated paths remain unknown.",
+    "Local JavaScript analysis does not implement browser import maps, root-relative URL resolution, remote URL loading, or browser runtime behavior. It may strip import queries and fragments; isolated variants are not canonical targets.",
+    "Source-map declarations are retained as metadata. No source maps or missing dependencies are fetched or reconstructed.",
+    "Scenario response bytes preserve the output of Playwright's Response.body() API; any source-body provenance caveat from the capture is retained in this manifest. Debugger sources are the exposed text encoded as UTF-8. Redacted bytes are exported exactly as retained, and may no longer parse as JavaScript."
+  ]
+}

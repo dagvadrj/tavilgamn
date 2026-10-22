@@ -1,0 +1,1 @@
+(function(){"use strict";const e={sentryProject:"4504016270131200",sentryKey:"4bc7564dccbf4b538379d0009720c74e",sentryClient:"cmp-tag-management",release:"1.0.0",sampleRate:.05,pathPatterns:[/\/[a-z0-9]{2}\/[a-z0-9]{2}\/marketing-tags\//]};function t(n=e){window?.ikea?.sentry?.register(n)}t(e)})();

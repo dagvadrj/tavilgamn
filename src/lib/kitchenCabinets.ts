@@ -50,7 +50,8 @@ export interface ModularCabinet {
   cornerSide?: "left" | "right";
   components?: CabinetComponent[];
 }
-export interface KitchenSpaceItem { id: string; kind: "door" | "window" | "column" | "water" | "power" | "vent"; x: number; z: number; width: number; depth: number; wall: "back" | "front" | "left" | "right" }
+export interface KitchenSpaceItem { id: string; kind: "door" | "window" | "column" | "water" | "power" | "vent"; x: number; z: number; width: number; depth: number; wall: "back" | "front" | "left" | "right";
+  height?: number; sillHeight?: number; swing?: "inward" | "outward" }
 export interface KitchenRoom { width: number; depth: number; height: number; outline?: RoomOutlinePoint[]; openFront?: boolean; items?: KitchenSpaceItem[]; wallColors?: Partial<Record<KitchenSpaceItem["wall"], string>> }
 export interface KitchenWall { id: string; sourceWall?: KitchenSpaceItem["wall"]; start: Point2; end: Point2; inward: Point2 }
 export interface CountertopSettings { thickness: number; frontOverhang: number; material: "laminate" | "granite" | "wood"; finish?: Finish; materialId?: string; color?: string }

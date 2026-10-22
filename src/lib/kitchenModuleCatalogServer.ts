@@ -6,13 +6,7 @@ import type {
 } from "./kitchenModuleCatalog";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { getKitchenGlbAssembly, kitchenPartKind } from "./kitchenGlbAssembly";
-import { kitchenAsset } from "./kitchenAssetCatalog";
-import { productFromRow, type FurnitureRow } from "./catalogServer";
-
-// Kitchen models are a separate schema domain. Furniture-only commerce fields
-// (for example made_to_order) must never leak into this table's read projection.
-export const KITCHEN_ASSET_FIELDS =
-  "id,product_id,name,category,description,base_price,image_url,thumbnail_path,glb_path,preview_glb_path,processing_status,scale,dimensions_w,dimensions_d,dimensions_h,colors,materials,default_color,in_stock,rating,review_count,badges,is_new,is_best_seller,store_ids,images,glb_validation,compare_at_price,promotion_label,promotion_ends_at,delivery_terms,specifications";
+import { validateCabinetGlb, type GlbInspection } from "./glbStandard";
 
 type Db = ReturnType<typeof getSupabaseAdmin>;
 const file = (path: unknown) =>
@@ -67,9 +61,8 @@ export async function readKitchenModuleCatalog(
         .in("id", modelIds)
     : { data: [], error: null };
   if (modelError) throw modelError;
-  const models = new Map(
-    (modelRows ?? []).map((row) => [row.id as string, row]),
-  );
+  const models = new Map((modelRows ?? []).map((row) => [row.id as string, row]));
+  const moduleSpecs = new Map((moduleRows ?? []).map(row => [row.id as string, row]));
   const variants = new Map<string, KitchenCatalogVariant[]>();
   for (const row of variantRows ?? []) {
     const model = models.get(row.furniture_model_id as string);
@@ -83,22 +76,22 @@ export async function readKitchenModuleCatalog(
     )
       continue;
     const assembly = getKitchenGlbAssembly(row.configuration);
-    if (assembly)
-      for (const slot of assembly.slots)
-        for (const option of slot.options) {
-          const part = models.get(option.modelId);
-          const ready =
-            part && !part.archived_at && part.processing_status === "ready";
-          option.glbFile = ready ? file(part.glb_path) : null;
-          option.glbUrl = ready
-            ? assetUrl(option.modelId, part.glb_path)
-            : null;
-          option.thumbnailUrl =
-            part && !part.archived_at
-              ? assetUrl(option.modelId, part.thumbnail_path)
-              : null;
-        }
+    const spec = moduleSpecs.get(row.module_id as string);
+    const report = model.glb_validation as GlbInspection | null;
+    const assetValidationIssues = report && spec ? (!report.dimensions || ![report.dimensions.widthMm, report.dimensions.heightMm, report.dimensions.depthMm].every(Number.isFinite)
+      ? ["3D файлын хэмжээсийн баталгаажуулалт дутуу байна."]
+      : validateCabinetGlb(report, { widthMm: Number(spec.width_mm), heightMm: Number(spec.height_mm), depthMm: Number(spec.depth_mm) }, report.assetRole)) : [];
+    if (assembly) for (const slot of assembly.slots) for (const option of slot.options) {
+      const part = models.get(option.modelId);
+      const ready = part && !part.archived_at && part.processing_status === "ready";
+      option.glbFile = ready ? file(part.glb_path) : null;
+      option.glbUrl = ready ? assetUrl(option.modelId, part.glb_path) : null;
+      option.thumbnailUrl = part && !part.archived_at ? assetUrl(option.modelId, part.thumbnail_path) : null;
+      if (part?.product_id) option.productId = String(part.product_id);
+    }
     const value: KitchenCatalogVariant = {
+      assetValidationIssues,
+      frontProjectionMm: report?.frontProjectionMm ?? 0,
       physicalSize: Boolean(model.glb_validation),
       furnitureModelId: model.id as string,
       productId: model.product_id as string,

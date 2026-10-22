@@ -34,9 +34,8 @@ export type KitchenGlbOption = {
   offsetMm?: KitchenPartVector;
   rotationDeg?: KitchenPartVector;
   /** Resolved by the catalog server, never accepted from an admin request. */
-  glbFile?: string | null;
-  glbUrl?: string | null;
-  thumbnailUrl?: string | null;
+  glbFile?: string | null; glbUrl?: string | null; thumbnailUrl?: string | null;
+  productId?: string;
 };
 export type KitchenGlbSlot = {
   id: string;
@@ -115,80 +114,28 @@ export function parseKitchenGlbAssembly(
     fail("Assembly version 1, хамгийн ихдээ 32 эд анги байна.");
   const slots = (raw.slots as unknown[]).map((entry): KitchenGlbSlot => {
     const slot = object(entry);
-    if (!(KITCHEN_PART_KINDS as readonly unknown[]).includes(slot.kind))
-      fail("Эд ангийн төрөл буруу байна.");
-    if (
-      !Array.isArray(slot.options) ||
-      !slot.options.length ||
-      slot.options.length > 40
-    )
-      fail("Эд анги бүр 1–40 GLB сонголттой байна.");
-    const options = (slot.options as unknown[]).map(
-      (entry): KitchenGlbOption => {
-        const option = object(entry);
-        if (typeof option.modelId !== "string" || !UUID.test(option.modelId))
-          fail("Эд ангийн GLB model ID буруу байна.");
-        const result: KitchenGlbOption = {
-          id: id(option.id),
-          label: label(option.label, "Сонголтын нэр"),
-          modelId: option.modelId as string,
-        };
-        for (const key of ["style", "color"] as const)
-          if (option[key] !== undefined)
-            result[key] = label(option[key], key, 80);
-        if (option.materialId !== undefined) {
-          if (
-            typeof option.materialId !== "string" ||
-            !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(option.materialId)
-          )
-            fail("Материалын code буруу байна.");
-          result.materialId = option.materialId as string;
-        }
-        if (option.sizeMm !== undefined) {
-          const size = object(option.sizeMm);
-          if (
-            ![size.width, size.height, size.depth].every(
-              (n) =>
-                typeof n === "number" &&
-                Number.isFinite(n) &&
-                n > 0 &&
-                n <= 10000,
-            )
-          )
-            fail("Эд ангийн хэмжээ 0–10000 мм байна.");
-          result.sizeMm = {
-            width: size.width as number,
-            height: size.height as number,
-            depth: size.depth as number,
-          };
-        }
-        if (option.offsetMm !== undefined)
-          result.offsetMm = vector(option.offsetMm, [0, 0, 0], 10000);
-        if (option.rotationDeg !== undefined)
-          result.rotationDeg = vector(option.rotationDeg, [0, 0, 0], 360);
-        if (hydrated)
-          for (const key of ["glbFile", "glbUrl", "thumbnailUrl"] as const)
-            if (typeof option[key] === "string" || option[key] === null)
-              result[key] = option[key];
-        return result;
-      },
-    );
-    if (new Set(options.map((option) => option.id)).size !== options.length)
-      fail("Нэг эд ангийн сонголтын code давхардахгүй байна.");
-    const defaultOptionId =
-      slot.defaultOptionId === "" && slot.optional === true
-        ? ""
-        : id(slot.defaultOptionId);
-    if (
-      defaultOptionId &&
-      !options.some((option) => option.id === defaultOptionId)
-    )
-      fail("Үндсэн GLB сонголт олдсонгүй.");
-    if (
-      slot.hideNodes !== undefined &&
-      (!Array.isArray(slot.hideNodes) || slot.hideNodes.length > 32)
-    )
-      fail("Нуух node жагсаалт буруу байна.");
+    if (!(KITCHEN_PART_KINDS as readonly unknown[]).includes(slot.kind)) fail("Эд ангийн төрөл буруу байна.");
+    if (!Array.isArray(slot.options) || !slot.options.length || slot.options.length > 40) fail("Эд анги бүр 1–40 GLB сонголттой байна.");
+    const options = (slot.options as unknown[]).map((entry): KitchenGlbOption => {
+      const option = object(entry);
+      if (typeof option.modelId !== "string" || !UUID.test(option.modelId)) fail("Эд ангийн GLB model ID буруу байна.");
+      const result: KitchenGlbOption = { id: id(option.id), label: label(option.label, "Сонголтын нэр"), modelId: option.modelId as string };
+      for (const key of ["style", "color"] as const) if (option[key] !== undefined) result[key] = label(option[key], key, 80);
+      if (option.sizeMm !== undefined) {
+        const size = object(option.sizeMm);
+        if (![size.width, size.height, size.depth].every(n => typeof n === "number" && Number.isFinite(n) && n > 0 && n <= 10000)) fail("Эд ангийн хэмжээ 0–10000 мм байна.");
+        result.sizeMm = { width: size.width as number, height: size.height as number, depth: size.depth as number };
+      }
+      if (option.offsetMm !== undefined) result.offsetMm = vector(option.offsetMm, [0, 0, 0], 10000);
+      if (option.rotationDeg !== undefined) result.rotationDeg = vector(option.rotationDeg, [0, 0, 0], 360);
+      if (hydrated) for (const key of ["glbFile", "glbUrl", "thumbnailUrl"] as const) if (typeof option[key] === "string" || option[key] === null) result[key] = option[key];
+      if (hydrated && typeof option.productId === "string") result.productId = option.productId;
+      return result;
+    });
+    if (new Set(options.map(option => option.id)).size !== options.length) fail("Нэг эд ангийн сонголтын code давхардахгүй байна.");
+    const defaultOptionId = slot.defaultOptionId === "" && slot.optional === true ? "" : id(slot.defaultOptionId);
+    if (defaultOptionId && !options.some(option => option.id === defaultOptionId)) fail("Үндсэн GLB сонголт олдсонгүй.");
+    if (slot.hideNodes !== undefined && (!Array.isArray(slot.hideNodes) || slot.hideNodes.length > 32)) fail("Нуух node жагсаалт буруу байна.");
     const result: KitchenGlbSlot = {
       id: id(slot.id),
       label: label(slot.label, "Эд ангийн нэр"),

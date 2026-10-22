@@ -8,12 +8,13 @@ const { KitchenCabinetGLB } = loadSource('src/three/KitchenCabinetGLB.tsx', {
   './GLBFurnitureMesh': { GLBFurnitureMesh: 'uploaded-model' },
 });
 
-test('unlinked plans use only the existing appliance renderer, never cabinet fronts', () => {
+test('unlinked cabinets do not generate substitute wooden furniture', () => {
   for (const type of ['base', 'wall', 'tall']) {
     const cabinet = createCabinet(type, type, 800);
-    const result = KitchenCabinetGLB({ cabinet });
-    assert.equal(result.type.name, 'KitchenApplianceBody');
-    assert.equal(result.type(result.props), null);
+    const result = KitchenCabinetGLB({ cabinet, open: true });
+    assert.equal(result.type.name, 'MissingKitchenModel');
+    assert.equal(result.type(result.props).props.userData.deliveryReady,false);
+    assert.equal(result.props.cabinet, cabinet);
   }
 });
 
@@ -31,7 +32,7 @@ test('linked cabinets continue using their uploaded model at planned dimensions'
 
 const { applyKitchenCatalogVariants } = loadSource('src/lib/kitchenModuleCatalog.ts');
 const { createUnifiedKitchen } = loadSource('src/lib/kitchenAssembly.ts');
-test('initial layout reuses ready boxes at planned dimensions and keeps appliance choices', () => {
+test('initial layout never assigns a different-sized catalog SKU to planned boxes', () => {
   const modules = [
     { id: 'doors', cabinetType: 'base', active: true, widthMm: 800, heightMm: 740, depthMm: 598,
       variants: [{ furnitureModelId: 'box', opening: 'doors', active: true, isDefault: true, glbFile: 'box.glb', configuration: {} }] },
@@ -44,15 +45,16 @@ test('initial layout reuses ready boxes at planned dimensions and keeps applianc
     assert.deepEqual(cabinet.position, original.cabinets[index].position);
     for (const field of ['width', 'height', 'depth', 'opening']) assert.equal(cabinet[field], original.cabinets[index][field]);
     if (cabinet.opening === 'refrigerator') assert.equal(cabinet.variantId, undefined);
-    else assert.equal(cabinet.variantId, ['oven', 'hob'].includes(cabinet.opening) ? 'oven' : 'box');
+    else assert.equal(cabinet.variantId, undefined, 'unavailable dimensions and roles remain unassigned');
   });
   assert.equal(applyKitchenCatalogVariants(result, modules), result, 'resolved IDs survive reload');
 });
-test('adapted uploaded boxes scale to the plan while exact models keep physical size', () => {
+test('different catalog dimensions are rejected at render time, including stale explicit selections', () => {
   const cabinet = createCabinet('base', 'fit', 600);
   const variant = { furnitureModelId: 'model', glbFile: 'box.glb', physicalSize: true, configuration: {}, nominalSizeMm: { width: 800, height: 740, depth: 598 } };
   const tree = KitchenCabinetGLB({ cabinet, variant });
-  const model = React.Children.toArray(tree.props.children).find(child => child.type === 'uploaded-model');
-  assert.equal(model.props.preservePhysicalSize, false);
-  assert.equal(model.props.w, .6);
+  assert.equal(tree.type.name, 'MissingKitchenModel');
+  const exact = KitchenCabinetGLB({ cabinet, variant: {...variant, nominalSizeMm: {width:600,height:840,depth:600}} });
+  const model = React.Children.toArray(exact.props.children).find(child => child.type === 'uploaded-model');
+  assert.equal(model.props.preservePhysicalSize, true);
 });

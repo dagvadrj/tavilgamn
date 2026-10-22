@@ -10,6 +10,9 @@ import { cabinetLabel, type CabinetPose, type ModularCabinet } from "@/lib/kitch
 import { similarKitchenVariants, type KitchenCatalogModule, type KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
 import { getKitchenGlbAssembly, resolveKitchenPartOption } from "@/lib/kitchenGlbAssembly";
 import { prefetchModel } from "@/lib/modelPrefetch";
+import type { Product } from "@/lib/types";
+import Link from "next/link";
+import { formatPrice } from "@/lib/format";
 import "./kitchen-selection.css";
 
 type PanelMode = "overview" | "modify" | "replace" | "position";
@@ -19,6 +22,7 @@ export type KitchenSelectionPanelProps = {
   cabinet: ModularCabinet;
   variant?: KitchenCatalogVariant;
   modules: KitchenCatalogModule[];
+  products?: Product[];
   onChangeSelections: (selections: Record<string, string>) => void;
   onReplace: (module: KitchenCatalogModule, variant: KitchenCatalogVariant) => void;
   onPositionChange: (position: CabinetPose) => void;
@@ -67,7 +71,7 @@ function PositionField({ label, value, unit, onCommit, disabled, min }: {
 
 /** A product action bar sits above the left detail drawer. */
 export function KitchenSelectionPanel({
-  cabinet, variant, modules, onChangeSelections, onReplace, onPositionChange,
+  cabinet, variant, modules, products = [], onChangeSelections, onReplace, onPositionChange,
   onClose, onDuplicate, onRemove, onZoom, onToggleOpen,
   isOpen = false, disabled = false, initialMode = "overview",
 }: KitchenSelectionPanelProps) {
@@ -80,6 +84,7 @@ export function KitchenSelectionPanel({
   const selectedSlot = slots.find(slot => slot.id === slotId);
   const selections = cabinet.partSelections ?? {};
   const name = variant?.modelName || cabinetLabel(cabinet);
+  const product = products.find(p => p.id === variant?.productId);
   const hasMotion = slots.some(slot => Boolean(slot.motion)) || Boolean(assembly?.openAnimation) ||
     (typeof variant?.configuration.openAnimation === "string" && Boolean(variant.configuration.openAnimation.trim()));
   const alternatives = useMemo(() => similarKitchenVariants(modules, cabinet, Number.MAX_SAFE_INTEGER), [modules, cabinet]);
@@ -126,6 +131,8 @@ export function KitchenSelectionPanel({
         <ProductImage key={variant?.thumbnailUrl} url={variant?.thumbnailUrl} name={name} />
         <div><span className="ksp-product-code">{variant?.variantCode || cabinetLabel(cabinet)}</span><h3>{name}</h3>
           <p>{cabinet.width} × {cabinet.depth} × {cabinet.height} мм <span>Ө × Г × Өн</span></p>
+          {variant && <p>{product && product.basePrice > 0 ? formatPrice(product.basePrice) : "Үнэ тодруулах"} · {variant.variantCode}</p>}
+          {product && <Link href={`/product/${product.id}`} target="_blank" rel="noopener noreferrer">Бүтээгдэхүүн ↗</Link>}
         </div>
       </div>
       <div className="ksp-actions" role="group" aria-label="Тавилгын үйлдлүүд">
@@ -145,6 +152,7 @@ export function KitchenSelectionPanel({
     </header>
 
     <div className="ksp-scroll">
+      {!variant?.glbFile && <p className="ksp-action-hint" role="status">Энэ хэмжээ, төрлийн 3D загвар бэлэн биш. Солих цэснээс каталогийн бэлэн бүтээгдэхүүн сонгоорой.</p>}
       {!hasMotion && view === "overview" && <p className="ksp-action-hint">Энэ загвар нээх хөдөлгөөнгүй.</p>}
       {(view === "overview" || view === "modify") && <>
         <div className="ksp-section-heading"><h3>{view === "modify" ? "Хэсэг бүрийг өөрчлөх" : "Тавилгын хэсгүүд"}</h3>{slots.length > 0 && <span>{slots.length}</span>}</div>

@@ -9,12 +9,11 @@ import {
 } from "@/lib/furnitureAttachment";
 import type { RoomPlacementHintSource } from "@/three/RoomPlacementHints";
 import { FurnitureAttachmentControls } from "@/features/room-planner/components/FurnitureAttachmentControls";
-import {
-  createRoomBuilderDraft,
-  resizeRoomBuilder,
-} from "@/lib/roomBuilderDraft";
+import { RoomProductAlternatives } from "@/features/room-planner/components/RoomProductAlternatives";
+import { createRoomBuilderDraft, resizeRoomBuilder } from "@/lib/roomBuilderDraft";
 import { furnishRoom, suggestedFurniture } from "@/lib/roomFurnishing";
 import "./room-planner-enhancements.css";
+import "@/features/planner/components/planner-catalog-upgrades.css";
 import {
   RoomSurfacePopover,
   type SurfaceSelection,
@@ -165,8 +164,7 @@ import "@/features/planner/components/planner-geometry.css";
 import "@/features/room-planner/components/room-planner-simple.css";
 import "@/features/room-planner/components/room-panel-theme.css";
 import "@/features/planner/components/planner-tools.css";
-import "@/features/planner/components/planner-responsive.css";
-import { PlannerViewport } from "@/features/planner/components/PlannerViewport";
+import "@/features/room-planner/styles/studio-refresh.css";
 import { RoomProductCard } from "@/features/room-planner/components/RoomProductCard";
 import { type DbModelInfo, getDbModel } from "@/lib/modelRegistry";
 
@@ -209,6 +207,8 @@ export function RoomPlanner() {
 
 function RoomPlannerEditor() {
   const [tourRequest, setTourRequest] = useState(0);
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
   useEffect(() => {
     const preserveRoom = () => {
       const state = useDesigns.getState();
@@ -403,6 +403,12 @@ function RoomPlannerEditor() {
     },
     [setCatalogOpen, setInspector, setPropertiesOpen, setShowStartHint],
   );
+  useEffect(() => {
+    if (!selected) return;
+    setRoomDetailsTab("selection");
+    setEnvironmentTab("room");
+    setRightOpen(true);
+  }, [selected, setEnvironmentTab, setRightOpen]);
   const dbModels = useMemo(
     () =>
       catalog.products
@@ -1292,32 +1298,11 @@ function RoomPlannerEditor() {
     setSelected(copy.instanceId);
   };
   const save = () => {
-    try {
-      endEdit();
-      saveCurrent(saveName.trim() || current.name.trim() || "Миний өрөө");
-      const storageName = useDesigns.persist.getOptions().name;
-      if (!storageName) throw new Error("Local storage is unavailable");
-      const stored = JSON.parse(
-        window.localStorage.getItem(storageName) ?? "null",
-      );
-      if (
-        !stored?.state?.designs?.some(
-          (design: RoomDesign) =>
-            design.id === current.id &&
-            design.updatedAt === useDesigns.getState().current?.updatedAt,
-        )
-      ) {
-        throw new Error("Local design persistence failed");
-      }
-      setSaveName("");
-      setNotice(
-        "Загварыг энэ төхөөрөмж дээр хадгаллаа. Өөр төхөөрөмжид автоматаар шилжихгүй.",
-      );
-    } catch {
-      setNotice(
-        "Энэ төхөөрөмж дээр хадгалж чадсангүй. Browser-ийн хадгалах зай, зөвшөөрлийг шалгаад дахин оролдоно уу.",
-      );
-    }
+    endEdit();
+    saveCurrent(saveName.trim() || current.name.trim() || "Миний өрөө");
+    setSavedAt(new Date().toLocaleTimeString("mn-MN", { hour: "2-digit", minute: "2-digit" }));
+    setSaveName("");
+    setNotice("Загварыг энэ төхөөрөмж дээр хадгаллаа.");
   };
   const nudge = (x: number, z: number) => {
     if (selectedPiece)
@@ -1484,6 +1469,9 @@ function RoomPlannerEditor() {
   };
   const selectWall = (wall: RoomWall) => {
     setSelectedWall(wall);
+    setRoomDetailsTab("room");
+    setEnvironmentTab("room");
+    setRightOpen(true);
     setSelected(null);
     setSelectedOpening(null);
   };
@@ -1610,13 +1598,7 @@ function RoomPlannerEditor() {
           <span>tavilga.mn</span>
         </Link>
         <label className="room-project-name">
-          <span
-            role="status"
-            title={storageStatus?.detail}
-            data-save-kind={storageStatus?.kind}
-          >
-            {storageStatus?.label ?? "Өрөөний төлөвлөгч"}
-          </span>
+          <span>{savedAt ? `Энэ төхөөрөмж дээр хадгалсан · ${savedAt}` : "Өрөөний төлөвлөгч"}</span>
           <input
             aria-label="Төслийн нэр"
             value={current.name}
@@ -1653,6 +1635,7 @@ function RoomPlannerEditor() {
             type="button"
             title="Хадгалах (Ctrl+S)"
             aria-label="Загвар хадгалах"
+            className="room-save-primary"
             data-planner-tour="room-save"
             onClick={save}
           >
@@ -2066,6 +2049,8 @@ function RoomPlannerEditor() {
           />
         )}
         <RoomPlannerControls
+          onFurniture={() => { setKitchenOnly(false); setLeftOpen(!leftOpen || kitchenOnly); }}
+          catalogOpen={leftOpen}
           view={roomView}
           onView={(next) => {
             setLocked(false);
@@ -2333,7 +2318,7 @@ function RoomPlannerEditor() {
           )}
         </div>
 
-        {showStartHint &&
+        {!welcomeDismissed && (showStartHint || (current.pieces.length === 0 && !leftOpen && !rightOpen && !summaryOpen)) &&
           !placementTemplate &&
           !selected &&
           !selectedOpening && (
@@ -2342,40 +2327,29 @@ function RoomPlannerEditor() {
                 type="button"
                 className="room-welcome-dismiss"
                 aria-label="Эхлэх зөвлөмжийг хаах"
-                onClick={() => setShowStartHint(false)}
+                onClick={() => { setShowStartHint(false); setWelcomeDismissed(true); }}
               >
                 <X size={17} />
               </button>
               <span className="room-welcome-eyebrow">
                 ӨӨРИЙНХӨӨ ӨРӨӨГ БҮТЭЭЕ
               </span>
-              <strong>Тохижуулахад 3 алхам</strong>
-              <ol>
-                <li>
-                  <span>1</span>
-                  <div>
-                    <b>Өрөөний хэмжээгээ оруул</b>
-                    <p>“Өрөө засах” хэсэгт урт, өргөнөө тохируулна.</p>
-                  </div>
-                </li>
-                <li>
-                  <span>2</span>
-                  <div>
-                    <b>Тавилгаа нэм</b>
-                    <p>Тавилга дээр дарахад өрөөнд шууд нэмэгдэнэ.</p>
-                  </div>
-                </li>
-                <li>
-                  <span>3</span>
-                  <div>
-                    <b>Чирж байрлуулаад хадгал</b>
-                    <p>Тавилгаа сонгоод эргүүлж, өнгийг нь өөрчилж болно.</p>
-                  </div>
-                </li>
-              </ol>
+              <strong>Өрөөгөө тохижуулж эхэлье</strong>
+              <p className="room-welcome-intro">Тавилга нэмээд чирж байрлуулаарай. Сонгосон тавилгынхаа өнгө, материал, байрлалыг самбараас тохируулна.</p>
               <button
                 type="button"
                 className="room-welcome-start"
+                onClick={() => {
+                  setShowStartHint(false);
+                  setKitchenOnly(false);
+                  setLeftOpen(true);
+                }}
+              >
+                <Plus size={18} /> Тавилга нэмэх
+              </button>
+              <button
+                type="button"
+                className="room-welcome-skip"
                 onClick={() => {
                   setShowStartHint(false);
                   setRoomDetailsTab("room");
@@ -2383,17 +2357,7 @@ function RoomPlannerEditor() {
                   setRightOpen(true);
                 }}
               >
-                Өрөөний хэмжээ оруулах <ArrowUpRight size={18} />
-              </button>
-              <button
-                type="button"
-                className="room-welcome-skip"
-                onClick={() => {
-                  setShowStartHint(false);
-                  setLeftOpen(true);
-                }}
-              >
-                Шууд тавилга нэмэх
+                Өрөөний хэмжээ тохируулах
               </button>
             </div>
           )}
@@ -2568,6 +2532,7 @@ function RoomPlannerEditor() {
                 setPlacementTemplate(null);
                 setRoomDetailsTab("selection");
                 setEnvironmentTab("room");
+                setRightOpen(true);
               }
             }}
             selectedWall={selectedWall}
@@ -3086,6 +3051,17 @@ function RoomPlannerEditor() {
                     </p>
                   </div>
                 </div>
+                <div className="room-selection-size" aria-label="Тавилгын хэмжээ">
+                  {Object.entries(dimsFor(selectedPiece)).map(([axis, value]) => <span key={axis}><small>{axis === "w" ? "Өргөн" : axis === "d" ? "Гүн" : "Өндөр"}</small><strong>{formatMeasurement(value)}</strong></span>)}
+                </div>
+                <div className="room-selection-actions">
+                  <button type="button" onClick={rotateSelected}><RotateCw size={16}/> Эргүүлэх</button>
+                  <button type="button" onClick={duplicateSelected}><Copy size={16}/> Хувилах</button>
+                  <button type="button" onClick={removeSelected}><Trash2 size={16}/> Устгах</button>
+                </div>
+                <RoomProductAlternatives key={selectedPiece.instanceId} piece={selectedPiece} product={selectedProduct} products={catalog.products}
+                  pieces={current.pieces} room={current} roomId={current.activeRoomId ?? `${current.id}-room-1`} context={placement}
+                  onReplace={updatePieces} onNotice={setNotice} />
                 {showDimensions && measurements.length > 0 && (
                   <section
                     className="planner-measure-details"

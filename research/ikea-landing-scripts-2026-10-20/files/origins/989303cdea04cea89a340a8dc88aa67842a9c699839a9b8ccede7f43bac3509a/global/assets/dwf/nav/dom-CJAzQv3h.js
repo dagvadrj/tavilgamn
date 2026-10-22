@@ -1,0 +1,1 @@
+const a=(r,e,t)=>{const n=document.createElement(r);return e&&(Array.isArray(e)?n.classList.add(...e):n.classList.add(e)),n},i=(r,e)=>{r?.parentElement&&[...r.parentElement.children].forEach(t=>{t!==r&&t.tagName!=="SCRIPT"&&t.tagName!=="NOSCRIPT"&&t.tagName!=="LINK"&&t.id!=="onetrust-consent-sdk"&&t.toggleAttribute("inert",e)})};export{a as c,i as t};

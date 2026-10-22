@@ -322,7 +322,7 @@ export function RoomCanvas({
         )}
         <color
           attach="background"
-          args={[solar.night ? ROOM_NIGHT_BACKDROP : ROOM_DAY_BACKDROP]}
+          args={[solar.night ? "#252c38" : "#F3F4F6"]}
         />
         <RoomLighting
           windowDaylight={false}
@@ -558,12 +558,12 @@ export function RoomCanvas({
             updatingLayout={isDraggingPiece}
             // The floor surface is y=0. A receiver below it is fully occluded.
             position={[centerX, 0.003, centerZ]}
-            opacity={0.45}
+            opacity={0.5}
             scale={Math.max(spanX, spanZ) * 1.15}
             resolution={512}
             blur={2}
             far={1.8}
-            color="#514b43"
+            color="#4b5260"
           />
         )}
         {!interior && view === "perspective" && (
@@ -1055,7 +1055,7 @@ export function DraggablePiece({
             colorWrite={false}
           />
 
-          <Edges color="#0058A3" lineWidth={2} threshold={15} />
+          <Edges color="#1463df" lineWidth={1.5} threshold={15} />
         </mesh>
       )}
       {invalid && (

@@ -1,48 +1,319 @@
 .kitchen-suggestions {
-  padding: 24px;
+  padding: clamp(16px, 3vw, 36px);
   overflow: auto;
-  background: #f6f5f0;
+  background: #f3f4f6;
+  color: #17212b;
   flex: 1;
+}
+
+.suggestion-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.suggestion-heading h1 {
+  font-size: clamp(23px, 3vw, 32px);
+  font-weight: 700;
+  margin: 8px 0 12px;
+}
+
+.suggestion-heading p:not(.suggestion-eyebrow), .suggestion-preferences > p {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.7;
+  max-width: 760px;
+}
+
+.suggestion-eyebrow {
+  color: #1463df;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+
+.kitchen-suggestions button, .suggestion-preview-dialog button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--site-line);
+  border-radius: 12px;
+  background: white;
+  color: #17212b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.kitchen-suggestions button:hover:not(:disabled), .suggestion-preview-dialog button:hover:not(:disabled) {
+  background: #eef4ff;
+  border-color: #b9d2fc;
+}
+
+.kitchen-suggestions button:disabled, .suggestion-preview-dialog button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.kitchen-suggestions :is(button, input):focus-visible, .suggestion-preview-dialog button:focus-visible {
+  outline: 3px solid #1463df;
+  outline-offset: 3px;
+}
+
+.suggestion-preferences {
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: white;
+}
+
+.suggestion-preferences h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.suggestion-goals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.suggestion-goals button[aria-pressed="true"] {
+  background: #eef4ff;
+  border-color: #b9d2fc;
+  color: #1463df;
+}
+
+.suggestion-lock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  min-height: 44px;
+  font-size: 13px;
+}
+
+.suggestion-lock input {
+  width: 18px;
+  height: 18px;
+  accent-color: #1463df;
+}
+
+.suggestion-result-count {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 20px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.suggestion-result-count svg {
+  flex-shrink: 0;
+  color: #1463df;
+}
+
+.suggestion-explanation, .suggestion-footnote {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #64748b;
 }
 
 .kitchen-suggestion-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr));
+  gap: 20px;
   margin: 24px 0;
 }
 
 .kitchen-suggestion-grid article {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 20px;
   background: white;
-  border: 1px solid #deded5;
-  border-radius: 12px;
-  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px #17212b05;
 }
 
-.kitchen-suggestion-grid h2 {
+.suggestion-card-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.suggestion-card-heading h2 {
   font-size: 17px;
+  font-weight: 700;
 }
 
-.kitchen-suggestion-grid svg {
-  width: 100%;
-  height: 220px;
+.suggestion-card-heading p {
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 3px;
 }
 
-.kitchen-suggestions button {
-  padding: 10px 16px;
-  border: 1px solid var(--site-line);
+.suggestion-number {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  background: #eef4ff;
+  border-radius: 10px;
+  color: #1463df;
+  font-weight: 700;
+}
+
+.suggestion-recommended {
+  margin-left: auto;
+  padding: 5px 8px;
+  background: #eef4ff;
   border-radius: 8px;
-  background: white;
+  color: #1463df;
+  font-size: 10px;
 }
 
-.kitchen-suggestions button:disabled {
-  opacity: .5;
+.suggestion-plan {
+  margin-block: 16px;
+  padding: 12px;
+  border: 1px solid #eef0f3;
+  border-radius: 12px;
+  background: #fafbfd;
 }
 
-.kitchen-suggestions footer {
+.suggestion-plan > svg {
+  width: 100%;
+  height: 230px;
+}
+
+.suggestion-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.suggestion-metrics > div {
+  padding: 12px;
+  border-radius: 12px;
+  background: #f6f7f9;
+}
+
+.suggestion-metrics dt {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.suggestion-metrics dd {
+  margin-block: 5px;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.suggestion-metrics small, .suggestion-service {
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.suggestion-warnings {
+  padding-left: 18px;
+  margin-block: 12px;
+  list-style: disc;
+  font-size: 12px;
+  color: #925b13;
+}
+
+.suggestion-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 16px;
+  margin-top: auto;
+}
+
+.suggestion-card-actions button {
+  flex: 1;
+}
+
+.kitchen-suggestions .suggestion-primary, .suggestion-preview-dialog .suggestion-primary {
+  background: #1463df;
+  border-color: #1463df;
+  color: white;
+}
+
+.kitchen-suggestions .suggestion-primary:hover:not(:disabled), .suggestion-preview-dialog .suggestion-primary:hover:not(:disabled) {
+  background: #1051bb;
+  color: white;
+}
+
+.kitchen-suggestions > footer {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  margin-top: 20px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.suggestion-error {
+  padding: 16px;
+  margin-top: 16px;
+  border-radius: 12px;
+  background: #fff1f0;
+  color: #b42318;
+}
+
+.suggestion-preview-dialog {
+  width: min(1100px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  background: white;
+  color: #17212b;
+  overflow: auto;
+}
+
+.suggestion-preview-dialog::backdrop {
+  background: #17212b80;
+}
+
+.suggestion-preview-dialog header, .suggestion-preview-dialog footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.suggestion-preview-dialog header h2 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.suggestion-preview-dialog :is(small, footer p) {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.suggestion-preview-scene {
+  height: min(62dvh, 600px);
+  min-height: 260px;
+  background: #f3f4f6;
 }
 
 .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout:not(.kitchen-simple-workflow)[data-workflow-stage]:not([data-workflow-stage="design"]) {
@@ -56,4 +327,29 @@
 
 .kp-shell.kitchen-ikea-layout[data-workflow-stage="finish"] .kp-review-layer {
   inset: 52px 0 0;
+}
+
+@media (max-width: 600px) {
+  .suggestion-heading {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .suggestion-preferences, .kitchen-suggestion-grid article {
+    padding: 16px;
+  }
+  .suggestion-plan > svg {
+    height: 190px;
+  }
+  .suggestion-recommended {
+    margin-left: 46px;
+  }
+  .suggestion-preview-dialog footer button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kitchen-suggestions button {
+    transition: none;
+  }
 }

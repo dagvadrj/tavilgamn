@@ -124,6 +124,8 @@ export function ProjectReport({
                   <td>
                     {i.label}
                     <small>{i.dimensions}</small>
+                    {i.variantCode && <small>{i.variantCode}</small>}
+                    {i.productId && <small>Бүтээгдэхүүн: {i.productId}</small>}
                   </td>
                   <td>
                     {i.quantity} {i.unit}

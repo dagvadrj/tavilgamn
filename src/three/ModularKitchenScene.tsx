@@ -11,6 +11,8 @@ import {
 import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Edges, OrbitControls } from "@react-three/drei";
 import { useCanvasPerformance } from "./canvasPerformance";
+import { CameraMotionPreview } from "./CameraMotionPreview";
+import { RoomMotionResolution } from "./RoomMotionQuality";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
 import { PlannerMotionShadows, RoomMotionResolution } from "./RoomMotionQuality";
@@ -18,6 +20,8 @@ import {
   Plane,
   Object3D,
   Vector3,
+  PCFSoftShadowMap,
+  type BufferGeometry,
   type Group,
   type PerspectiveCamera,
 } from "three";
@@ -28,7 +32,8 @@ import {
 } from "@/lib/kitchenCabinets";
 import { placementIssues } from "@/lib/kitchenPlacement";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
-import type { KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
+import { kitchenVariantMatchesRole, type KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
+import { KitchenTops } from "./KitchenTops";
 import { KitchenCabinetGLB } from "./KitchenCabinetGLB";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { KitchenExtraMesh } from "./KitchenExtraMesh";
@@ -67,7 +72,10 @@ export interface ModularSceneProps {
 }
 function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
   const { camera, size } = useThree();
+  const fitted = useRef(false);
   useEffect(() => {
+    if (fitted.current) return;
+    fitted.current = true;
     const perspective = camera as PerspectiveCamera;
     perspective.fov = PLANNER_CAMERA.fov;
     perspective.near = 0.1;
@@ -87,6 +95,106 @@ function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
     camera.updateProjectionMatrix();
   }, [camera, focus, size.width, size.height]);
   return null;
+}
+function KitchenRoomWall({
+  wall,
+  room,
+}: {
+  wall: KitchenWall;
+  room: KitchenRoom;
+}) {
+  const group = useRef<Group>(null);
+  const x = (wall.start.x + wall.end.x) / 2000;
+  const z = (wall.start.z + wall.end.z) / 2000;
+  const { solids, openings } = kitchenWallPanels(wall, room);
+  useFrame(({ camera }) => {
+    if (!group.current) return;
+    const outside =
+      (camera.position.x - x) * wall.inward.x +
+        (camera.position.z - z) * wall.inward.z <
+      -0.06;
+    group.current.traverse((object) => {
+      if (object.type !== "Mesh") return;
+      const mesh = object as Mesh<BufferGeometry, MeshStandardMaterial>;
+      mesh.material.opacity =
+        (outside ? 0.065 : 1) * (mesh.userData.surfaceOpacity ?? 1);
+      mesh.material.depthWrite = !outside && !mesh.userData.surfaceOpacity;
+      mesh.castShadow = !outside && !mesh.userData.surfaceOpacity;
+    });
+  });
+  return (
+    <group
+      ref={group}
+      position={[x - wall.inward.x * 0.06, 0, z - wall.inward.z * 0.06]}
+      rotation={[0, Math.atan2(wall.inward.x, wall.inward.z), 0]}
+    >
+      {solids.map((panel, index) => (
+        <mesh
+          key={index}
+          position={[panel.x, panel.y, 0]}
+          raycast={() => {}}
+          receiveShadow
+          castShadow
+        >
+          <boxGeometry args={[panel.width, panel.height, 0.12]} />
+          <meshStandardMaterial
+            color={
+              room.wallColors?.[
+                (wall.sourceWall ?? wall.id) as keyof NonNullable<
+                  KitchenRoom["wallColors"]
+                >
+              ] ?? "#f1eee8"
+            }
+            roughness={0.92}
+            transparent
+          />
+        </mesh>
+      ))}
+      {openings.map((opening) => (
+        <group key={opening.id}>
+          {opening.kind === "window" && (
+            <mesh
+              position={[opening.x, (opening.bottom + opening.top) / 2, 0]}
+              raycast={() => {}}
+              userData={{ surfaceOpacity: 0.25 }}
+            >
+              <boxGeometry
+                args={[opening.width, opening.top - opening.bottom, 0.015]}
+              />
+              <meshStandardMaterial
+                color="#b8dcee"
+                transparent
+                opacity={0.25}
+                roughness={0.1}
+              />
+            </mesh>
+          )}
+          {[-1, 1].map((side) => (
+            <mesh
+              key={side}
+              position={[
+                opening.x + (side * opening.width) / 2,
+                (opening.bottom + opening.top) / 2,
+                0,
+              ]}
+              raycast={() => {}}
+            >
+              <boxGeometry args={[0.035, opening.top - opening.bottom, 0.15]} />
+              <meshStandardMaterial color="#ffffff" transparent />
+            </mesh>
+          ))}
+          {[opening.bottom, opening.top]
+            .filter((y) => y > 0)
+            .map((y) => (
+              <mesh key={y} position={[opening.x, y, 0]} raycast={() => {}}>
+                <boxGeometry args={[opening.width, 0.035, 0.15]} />
+                <meshStandardMaterial color="#ffffff" transparent />
+              </mesh>
+            ))}
+        </group>
+      ))}
+    </group>
+  );
 }
 type CaptureTarget = {
   setPointerCapture: (id: number) => void;
@@ -258,26 +366,16 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
       <PlannerMotionShadows updatingLayout={dragActive || Boolean(props.open)} revision={kitchen} />
       <CanvasDiagnostics scene="modular-kitchen" />
       {!props.interior && <CameraFit focus={focus} />}
-      <color attach="background" args={[ROOM_DAY_BACKDROP]} />
-      <PlannerEnvironment daylight={lighting.solar.daylight} />
-      <ambientLight
-        color={lighting.ambientColor}
-        intensity={lighting.ambientIntensity}
-      />
-      <hemisphereLight
-        args={[
-          lighting.skyColor,
-          lighting.groundColor,
-          lighting.hemisphereIntensity,
-        ]}
-      />
-      <primitive object={sunlightTarget} />
+      <color attach="background" args={["#f3f4f6"]} />
+      <ambientLight intensity={0.5} />
+      <hemisphereLight args={["#f7f9ff", "#b9a991", 0.85]} />
+      <directionalLight position={[-3, 4, -2]} intensity={0.45} color="#dfe9ff" />
       <directionalLight
         castShadow
-        position={[width / 2 + 3, roomHeight + 5, depth / 2 + 4]}
-        target={sunlightTarget}
-        color={lighting.sunColor}
-        intensity={lighting.sunlightIntensity}
+        position={[2, 7, 4]}
+        intensity={1.8}
+        color="#fff4e6"
+        shadow-radius={4}
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-left={-shadowExtent}
@@ -292,6 +390,10 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
         <OrbitControls
           makeDefault
           enabled={!dragActive}
+          enableDamping
+          dampingFactor={0.08}
+          rotateSpeed={0.65}
+          zoomSpeed={0.8}
           enablePan
           screenSpacePanning
           zoomToCursor
@@ -382,19 +484,30 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
                 cabinet={cabinet}
                 selected={selectedId === cabinet.id}
                 materialDefinitions={props.materialDefinitions}
-                variant={
-                  cabinet.variantId
-                    ? props.variantModels?.[cabinet.variantId]
-                    : undefined
-                }
-                open={Boolean(props.open && selectedId === cabinet.id)}
-              />
-              {Boolean(
-                props.variantModels?.[cabinet.variantId ?? ""]?.glbFile,
-              ) &&
-                (selectedId === cabinet.id || invalid.has(cabinet.id)) && (
-                  <mesh
-                    userData={{ exportExclude: true }}
+                variant={cabinet.variantId ? props.variantModels?.[cabinet.variantId] : undefined}
+                open={Boolean(props.open && selectedId === cabinet.id)} />
+              {(selectedId === cabinet.id || invalid.has(cabinet.id)) && (
+                <mesh
+                  userData={{ exportExclude: true }}
+                  raycast={() => {}}
+                  position={[0, cabinet.height / 2000, 0]}
+                >
+                  <boxGeometry
+                    args={[
+                      cabinet.width / 1000 + 0.003,
+                      cabinet.height / 1000 + 0.003,
+                      cabinet.depth / 1000 + 0.003,
+                    ]}
+                  />
+                  <meshBasicMaterial
+                    transparent
+                    opacity={0}
+                    colorWrite={false}
+                    depthWrite={false}
+                  />
+                  <Edges
+                    color={invalid.has(cabinet.id) ? "#d62828" : "#0078d4"}
+                    linewidth={2}
                     raycast={() => {}}
                     position={[0, cabinet.height / 2000, 0]}
                   >
@@ -420,6 +533,8 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
             </group>
           );
         })}
+        <KitchenTops kitchen={kitchen} materialDefinitions={props.materialDefinitions}
+          catalogApplianceIds={kitchen.cabinets.filter(c => props.variantModels?.[c.variantId ?? ""]?.glbFile && kitchenVariantMatchesRole(props.variantModels[c.variantId ?? ""], c)).map(c => c.id)} />
         {(kitchen.extras ?? []).map((extra) => (
           <group
             key={extra.id}
@@ -479,12 +594,9 @@ export function ModularKitchenScene(props: ModularSceneProps) {
         shadows={performance.shadows}
         dpr={performance.dpr}
         frameloop="demand"
-        gl={{ preserveDrawingBuffer: true, alpha: true }}
-        onCreated={({ gl }) => {
-          gl.setClearAlpha(0);
-          configurePlannerRenderer(gl);
-        }}
-        camera={{ position: [4, 5, 6], fov: PLANNER_CAMERA.fov }}
+        gl={{ preserveDrawingBuffer: true }}
+        onCreated={({ gl }) => { gl.shadowMap.type = PCFSoftShadowMap; }}
+        camera={{ position: [4, 5, 6], fov: 45 }}
         onPointerMissed={() => props.onDeselect?.()}
         fallback={
           <p className="kp-viewer-message">
@@ -492,7 +604,11 @@ export function ModularKitchenScene(props: ModularSceneProps) {
           </p>
         }
       >
-        <Scene {...props} dpr={performance.dpr} />
+        <CanvasDiagnostics scene="modular-kitchen" />
+        <CameraMotionPreview>
+          <RoomMotionResolution dpr={performance.dpr} />
+          <Scene {...props} />
+        </CameraMotionPreview>
       </Canvas>
     </SceneBoundary>
   );

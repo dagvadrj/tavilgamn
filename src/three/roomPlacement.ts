@@ -23,6 +23,7 @@ import {
   isInsideRoom,
   isPlacementValid,
   type PlacementRoom,
+  roomOpeningZones,
 } from "./collision";
 
 const EPS = 0.00001;
@@ -249,7 +250,11 @@ export function roomPlacementContext(
     }
   const room: PlacementRoom = {
     ...active,
-    allowFurnitureOverlap: true,
+    openingZones: floors.flatMap(f => {
+      const shared = connectionGeometry(f.r, rooms, design.connections ?? []);
+      return roomOpeningZones({ ...f.r, openings: [...shared.visibleOpenings, ...shared.openings] }).map(zone => ({ ...zone,
+        rect: { ...zone.rect, cx: zone.rect.cx + f.dx, cz: zone.rect.cz + f.dz } }));
+    }),
     heightZones,
     skirting,
     placementGeometry: {

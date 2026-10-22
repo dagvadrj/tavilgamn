@@ -1,0 +1,849 @@
+Browser tab: 2, Title: "IKEA Kreativ", URL: "https://www.ikea.com/us/en/home-design/room/?roomType=generic#efed45c8-86d2-4b20-98f3-a2b3f4fd03b4/9677faab-69c1-48d6-84d5-09b252b1e547".
+1 AXWebArea IKEA Kreativ, URL: ikea.com/us/en/home-design/room/
+	2 container
+		3 container Accessibility
+		4 pop up button Change language or country/region, current language is English
+		5 link Description: Shop new arrivals, Value: ikea.com/us/en/new/new-products/
+		6 pop up button Enter ZIP code
+		7 pop up button Select store
+		8 link Description: IKEA Home, Value: ikea.com/us/en/
+		9 container Open the navigation menu
+			10 pop up button (collapsed) Products, ID: section-products, Secondary Actions: Expand
+			11 pop up button (collapsed) Rooms, ID: section-rooms, Secondary Actions: Expand
+			12 pop up button (collapsed) Deals, ID: section-deals, Secondary Actions: Expand
+			13 pop up button (collapsed) Design & ideas, ID: section-ideas, Secondary Actions: Expand
+			14 pop up button (collapsed) Services, ID: section-services, Secondary Actions: Expand
+		15 container
+			16 container
+				17 combo box (collapsed, settable) Description: Search by product, ID: ikea-search-input, Secondary Actions: Expand
+		18 container Shopping links
+			19 content list
+				20 link Description: Hej! Log in or sign up, Value: ikea.com/us/en/profile/login/
+				21 link Description: Favorites, Value: ikea.com/us/en/favorites/
+				22 link Description: Shopping bag, Value: ikea.com/us/en/shoppingcart/
+		23 container Description: Floating action buttons, ID: hnf-floating-container
+		24 container DesktopDesignPage
+			25 link ikea.com/us/en/home-design/
+			26 heading Value: 1, This application allows users to design ultra-wide images with 3D items from the IKEA furniture range. The current experience may be difficult to use for those with visual impairments or low vision.
+				27 text This application allows users to design ultra-wide images with 3D items from the IKEA furniture range. The current experience may be difficult to use for those with visual impairments or low vision.
+			28 container
+				29 container Skiplinks for navigation
+					30 button Skip to design, ID: skipLinkId-NAVIGATION
+					31 button Skip to header
+				32 text field (settable) Description: Untitled Design, ID: design-name-input
+				33 button Book an appointment
+				34 button Shopping bag
+				35 button Share this design
+				36 button Save options
+				37 text $ 258 . 97
+				38 button $258.97 Open Summary
+					39 text Summary
+				40 button Cancel
+				41 container
+					42 container
+						43 button Close
+						44 text Item options
+						848 heading TARVA, Value: 3
+							849 text TARVA
+						850 text Bed frame, white stained/Luröy, Queen
+						851 checkbox Description: Favorite, Value: 0
+						852 text $ 199.00
+						853 image Rating: 3.9 out of 5 stars
+						854 text ( 784 )
+						855 link Description: Show More Details, Value: ikea.com/us/en/p/tarva-bed-frame-white-stained-luroey-s59553956/
+						856 button Add to bag
+						857 container Description: Images for TARVA Bed frame, white stained/Luröy, Queen, ID: :r1i:
+							858 pop up button Image for TARVA 1
+								859 container Image for TARVA 1
+									860 image Image for TARVA 1
+							861 tab group Images for TARVA Bed frame, white stained/Luröy, Queen, ID: :r1h:
+								862 tab (selected, settable, boolean) Image for TARVA 1, Value: 1, ID: :r1h:_0
+								863 tab (selectable, settable, boolean) Image for TARVA 2, Value: 0, ID: :r1h:_1
+								864 tab (selectable, settable, boolean) Image for TARVA 3, Value: 0, ID: :r1h:_2
+								865 tab (selectable, settable, boolean) Image for TARVA 4, Value: 0, ID: :r1h:_3
+								866 tab (selectable, settable, boolean) Image for TARVA 5, Value: 0, ID: :r1h:_4
+								867 tab (selectable, settable, boolean) Image for TARVA 6, Value: 0, ID: :r1h:_5
+								868 tab (selectable, settable, boolean) Image for TARVA 7, Value: 0, ID: :r1h:_6
+						869 text How to get it
+						870 container Check availability options
+							871 button Delivery: Delivery availability unknown
+							872 button Pick up: Pick up availability unknown
+								873 text Pick up
+								874 text Pick up availability unknown
+							875 button Store purchase: Stock availability unknown
+						881 container
+							882 heading Color, Value: 3
+								883 text Color
+							884 text White Stained
+							885 Select color variant
+								886 radio button Description: pine, Value: 0
+								887 radio button Description: white stained, Value: 1
+							888 button Slatted Bed Base Luröy
+								889 heading Slatted Bed Base, Value: 3
+									890 text Slatted Bed Base
+								891 text Luröy
+							892 button Size Queen
+								893 heading Size, Value: 3
+									894 text Size
+								895 text Queen
+						91 container SWAP_TITLE
+							92 tab group Description: Replace with similar, ID: :r16:
+								93 tab (selected, settable, boolean) Swap with similar, ID: :r16:_SWAP, Value: 1
+Swap with similar
+								94 tab (selectable, settable, boolean) Goes well with, Value: 0, ID: :r16:_GOES_WELL_WITH
+							95 container Swap with similar
+								896 content list
+									897 container
+										898 button Swap products
+											899 image TARVA
+										900 text TARVA Bed frame, pine, Queen $134.00
+										901 content list Availability options
+											902 text Delivery availability unknown
+											903 text Stock availability unknown
+									904 container
+										905 button Swap products
+											906 image TARVA
+										907 text TARVA Bed frame, pine/Luröy, Twin $149.00
+										908 content list Availability options
+											909 text Delivery availability unknown
+											910 text Stock availability unknown
+									911 container
+										912 button Swap products
+											913 image TARVA
+										914 text TARVA Bed frame, pine, Twin $119.00
+										915 content list Availability options
+											916 text Delivery availability unknown
+											917 text Stock availability unknown
+									918 container
+										919 button Swap products
+											920 image TARVA
+										921 text TARVA Bed frame, pine, Full/Double $124.00
+										922 content list Availability options
+											923 text Delivery availability unknown
+											924 text Stock availability unknown
+									925 container
+										926 button Swap products
+											927 image MALM
+										928 text MALM Bed frame, white, King $339.00
+										929 content list Availability options
+											930 text Delivery availability unknown
+											931 text Stock availability unknown
+									932 container
+										933 button Swap products
+											934 image MALM
+										935 text MALM Bed frame, white, Full $229.00
+										936 content list Availability options
+											937 text Delivery availability unknown
+											938 text Stock availability unknown
+									939 container
+										940 button Swap products
+											941 image MALM
+										942 text MALM Bed frame, white, Twin $219.00
+										943 content list Availability options
+											944 text Delivery availability unknown
+											945 text Stock availability unknown
+									946 container
+										947 button Swap products
+											948 image MALM
+										949 text MALM Bed frame, white, Queen $234.00
+										950 content list Availability options
+											951 text Delivery availability unknown
+											952 text Stock availability unknown
+									953 container
+										954 button Swap products
+											955 image MALM
+										956 text MALM Bed frame, white, Queen $249.00
+										957 content list Availability options
+											958 text Delivery availability unknown
+											959 text Stock availability unknown
+									960 container
+										961 button Swap products
+											962 image MALM
+										963 text MALM Bed frame, white/Lönset, Queen $369.00
+										964 content list Availability options
+											965 text Delivery availability unknown
+											966 text Stock availability unknown
+									967 container
+										968 button Swap products
+											969 image MALM
+										970 text MALM Bed frame, white/Lönset, Full $329.00
+										971 content list Availability options
+											972 text Delivery availability unknown
+											973 text Stock availability unknown
+									974 container
+										975 button Swap products
+											976 image MALM
+										977 text MALM Bed frame, white/Luröy, King $399.00
+										978 content list Availability options
+											979 text Delivery availability unknown
+											980 text Stock availability unknown
+									981 container
+										982 button Swap products
+											983 image MALM
+										984 text MALM Bed frame, white/Lönset, Twin $299.00
+										985 content list Availability options
+											986 text Delivery availability unknown
+											987 text Stock availability unknown
+									988 container
+										989 button Swap products
+											990 image MALM
+										991 text MALM Bed frame, white, King $324.00
+										992 content list Availability options
+											993 text Delivery availability unknown
+											994 text Stock availability unknown
+									995 container
+										996 button Swap products
+											997 image MALM
+										998 text MALM Bed frame, white/Luröy, Queen $299.00
+										999 content list Availability options
+											1000 text Delivery availability unknown
+											1001 text Stock availability unknown
+									1002 container
+										1003 button Swap products
+											1004 image MALM
+										1005 text MALM Bed frame, white/Lönset, King $479.00
+										1006 content list Availability options
+											1007 text Delivery availability unknown
+											1008 text Stock availability unknown
+									1009 container
+										1010 button Swap products
+											1011 image MALM
+										1012 text MALM Bed frame, white, Full/Double $214.00
+										1013 content list Availability options
+											1014 text Delivery availability unknown
+											1015 text Stock availability unknown
+									1016 container
+										1017 button Swap products
+											1018 image MALM
+										1019 text MALM Bed frame, white/Luröy, Full $269.00
+										1020 content list Availability options
+											1021 text Delivery availability unknown
+											1022 text Stock availability unknown
+									1023 container
+										1024 button Swap products
+											1025 image MALM
+										1026 text MALM Bed frame, white/Luröy, Twin $249.00
+										1027 content list Availability options
+											1028 text Delivery availability unknown
+											1029 text Stock availability unknown
+									1030 container
+										1031 button Swap products
+											1032 image NEIDEN
+										1033 text NEIDEN Bed frame, pine/Luröy, Full $109.00
+										1034 content list Availability options
+											1035 text Delivery availability unknown
+											1036 text Stock availability unknown
+									1037 container
+										1038 button Swap products
+											1039 image NEIDEN
+										1040 text NEIDEN Bed frame, pine, Twin $59.00
+										1041 content list Availability options
+											1042 text Delivery availability unknown
+											1043 text Stock availability unknown
+									1044 container
+										1045 button Swap products
+											1046 image NEIDEN
+										1047 text NEIDEN Bed frame, pine, Full $69.00
+										1048 content list Availability options
+											1049 text Delivery availability unknown
+											1050 text Stock availability unknown
+									1051 container
+										1052 button Swap products
+											1053 image NEIDEN
+										1054 text NEIDEN Bed frame, pine/Luröy, Twin $89.00
+										1055 content list Availability options
+											1056 text Delivery availability unknown
+											1057 text Stock availability unknown
+									1058 container
+										1059 button Swap products
+											1060 image SONGESAND
+										1061 text SONGESAND Bed frame, brown/Luröy, Full/Double $269.00
+										1062 content list Availability options
+											1063 text Delivery availability unknown
+											1064 text Stock availability unknown
+									1065 container
+										1066 button Swap products
+											1067 image SONGESAND
+										1068 text SONGESAND Bed frame, brown, Full/Double $214.00
+										1069 content list Availability options
+											1070 text Delivery availability unknown
+											1071 text Stock availability unknown
+									1072 container
+										1073 button Swap products
+											1074 image SONGESAND
+										1075 text SONGESAND Bed frame, brown/Luröy, Queen $249.00
+										1076 content list Availability options
+											1077 text Delivery availability unknown
+											1078 text Stock availability unknown
+									1079 container
+										1080 button Swap products
+											1081 image SONGESAND
+										1082 text SONGESAND Bed frame, brown, Queen $184.00
+										1083 content list Availability options
+											1084 text Delivery availability unknown
+											1085 text Stock availability unknown
+									1086 container
+										1087 button Swap products
+											1088 image SONGESAND
+										1089 text SONGESAND Bed frame, brown, Full/Double $229.00
+										1090 content list Availability options
+											1091 text Delivery availability unknown
+											1092 text Stock availability unknown
+									1093 container
+										1094 button Swap products
+											1095 image SONGESAND
+										1096 text SONGESAND Bed frame, brown/Lönset, Full/Double $329.00
+										1097 content list Availability options
+											1098 text Delivery availability unknown
+											1099 text Stock availability unknown
+									1100 container
+										1101 button Swap products
+											1102 image SONGESAND
+										1103 text SONGESAND Bed frame, brown, Queen $199.00
+										1104 content list Availability options
+											1105 text Delivery availability unknown
+											1106 text Stock availability unknown
+									1107 container
+										1108 button Swap products
+											1109 image SONGESAND
+										1110 text SONGESAND Bed frame, brown/Lönset, Queen $319.00
+										1111 content list Availability options
+											1112 text Delivery availability unknown
+											1113 text Stock availability unknown
+									1114 container
+										1115 button Swap products
+											1116 image SONGESAND
+										1117 text SONGESAND Bed frame, brown/Luröy, Twin $199.00
+										1118 content list Availability options
+											1119 text Delivery availability unknown
+											1120 text Stock availability unknown
+									1121 container
+										1122 button Swap products
+											1123 image SONGESAND
+										1124 text SONGESAND Bed frame, brown, Twin $169.00
+										1125 content list Availability options
+											1126 text Delivery availability unknown
+											1127 text Stock availability unknown
+									1128 container
+										1129 button Swap products
+											1130 image BRIMNES
+										1131 text BRIMNES Bed frame with storage, black/Luröy, Full $369.00
+										1132 content list Availability options
+											1133 text Delivery availability unknown
+											1134 text Stock availability unknown
+									1135 container
+										1136 button Swap products
+											1137 image BRIMNES
+										1138 text BRIMNES Bed frame with storage, black, Full/Double $314.00
+										1139 content list Availability options
+											1140 text Delivery availability unknown
+											1141 text Stock availability unknown
+									1142 container
+										1143 button Swap products
+											1144 image BRIMNES
+										1145 text BRIMNES Bed frame with storage & headboard, black, Queen $499.00
+										1146 content list Availability options
+											1147 text Delivery availability unknown
+											1148 text Stock availability unknown
+									1149 container
+										1150 button Swap products
+											1151 image BRIMNES
+										1152 text BRIMNES Bed frame with storage, black, Queen $334.00
+										1153 content list Availability options
+											1154 text Delivery availability unknown
+											1155 text Stock availability unknown
+									1156 container
+										1157 button Swap products
+											1158 image BRIMNES
+										1159 text BRIMNES Bed frame with storage & headboard, black/Luröy, King $679.00
+										1160 content list Availability options
+											1161 text Delivery availability unknown
+											1162 text Stock availability unknown
+									1163 container
+										1164 button Swap products
+											1165 image BRIMNES
+										1166 text BRIMNES Bed frame with storage & headboard, black, King $619.00
+										1167 content list Availability options
+											1168 text Delivery availability unknown
+											1169 text Stock availability unknown
+									1170 container
+										1171 button Swap products
+											1172 image BRIMNES
+										1173 text BRIMNES Bed frame with storage & headboard, black/Luröy, Queen $549.00
+										1174 content list Availability options
+											1175 text Delivery availability unknown
+											1176 text Stock availability unknown
+									1177 container
+										1178 button Swap products
+											1179 image BRIMNES
+										1180 text BRIMNES Bed frame with storage, white, Full $329.00
+										1181 content list Availability options
+											1182 text Delivery availability unknown
+											1183 text Stock availability unknown
+									1184 container
+										1185 button Swap products
+											1186 image BRIMNES
+										1187 text BRIMNES Bed frame with storage & headboard, white, Queen $499.00
+										1188 content list Availability options
+											1189 text Delivery availability unknown
+											1190 text Stock availability unknown
+									1191 container
+										1192 button Swap products
+											1193 image BRIMNES
+										1194 text BRIMNES Bed frame with storage, white/Luröy, Full $369.00
+										1195 content list Availability options
+											1196 text Delivery availability unknown
+											1197 text Stock availability unknown
+									1198 container
+										1199 button Swap products
+											1200 image BRIMNES
+										1201 text BRIMNES Bed frame with storage & headboard, white/Lönset, Queen $619.00
+										1202 content list Availability options
+											1203 text Delivery availability unknown
+											1204 text Stock availability unknown
+									1205 container
+										1206 button Swap products
+											1207 image BRIMNES
+										1208 text BRIMNES Bed frame with storage & headboard, black/Luröy, Full $499.00
+										1209 content list Availability options
+											1210 text Delivery availability unknown
+											1211 text Stock availability unknown
+									1212 container
+										1213 button Swap products
+											1214 image BRIMNES
+										1215 text BRIMNES Bed frame with storage, black, King $439.00
+										1216 content list Availability options
+											1217 text Delivery availability unknown
+											1218 text Stock availability unknown
+									1219 container
+										1220 button Swap products
+											1221 image BRIMNES
+										1222 text BRIMNES Bed frame with storage & headboard, black/Lönset, King $759.00
+										1223 content list Availability options
+											1224 text Delivery availability unknown
+											1225 text Stock availability unknown
+									1226 container
+										1227 button Swap products
+											1228 image BRIMNES
+										1229 text BRIMNES Bed frame with storage & headboard, black/Lönset, Queen $619.00
+										1230 content list Availability options
+											1231 text Delivery availability unknown
+											1232 text Stock availability unknown
+									1233 container
+										1234 button Swap products
+											1235 image BRIMNES
+										1236 text BRIMNES Bed frame with storage, black/Lönset, Queen $469.00
+										1237 content list Availability options
+											1238 text Delivery availability unknown
+											1239 text Stock availability unknown
+									1240 container
+										1241 button Swap products
+											1242 image BRIMNES
+										1243 text BRIMNES Bed frame with storage, black/Luröy, Queen $399.00
+										1244 content list Availability options
+											1245 text Delivery availability unknown
+											1246 text Stock availability unknown
+									1247 container
+										1248 button Swap products
+											1249 image BRIMNES
+										1250 text BRIMNES Bed frame with storage, black/Lönset, Full $429.00
+										1251 content list Availability options
+											1252 text Delivery availability unknown
+											1253 text Stock availability unknown
+									1254 container
+										1255 button Swap products
+											1256 image BRIMNES
+										1257 text BRIMNES Bed frame with storage, black, King $424.00
+										1258 content list Availability options
+											1259 text Delivery availability unknown
+											1260 text Stock availability unknown
+									1261 container
+										1262 button Swap products
+											1263 image BRIMNES
+										1264 text BRIMNES Bed frame with storage, black/Lönset, King $579.00
+										1265 content list Availability options
+											1266 text Delivery availability unknown
+											1267 text Stock availability unknown
+									1268 container
+										1269 button Swap products
+											1270 image BRIMNES
+										1271 text BRIMNES Bed frame with storage, black, Full $329.00
+										1272 content list Availability options
+											1273 text Delivery availability unknown
+											1274 text Stock availability unknown
+									1275 container
+										1276 button Swap products
+											1277 image BRIMNES
+										1278 text BRIMNES Bed frame with storage, black/Luröy, King $499.00
+										1279 content list Availability options
+											1280 text Delivery availability unknown
+											1281 text Stock availability unknown
+									1282 container
+										1283 button Swap products
+											1284 image BRIMNES
+										1285 text BRIMNES Bed frame with storage & headboard, black, Full $459.00
+										1286 content list Availability options
+											1287 text Delivery availability unknown
+											1288 text Stock availability unknown
+									1289 container
+										1290 button Swap products
+											1291 image BRIMNES
+										1292 text BRIMNES Bed frame with storage, black, Queen $349.00
+										1293 content list Availability options
+											1294 text Delivery availability unknown
+											1295 text Stock availability unknown
+									1296 container
+										1297 button Swap products
+											1298 image BRIMNES
+										1299 text BRIMNES Bed frame with storage & headboard, black/Lönset, Full $559.00
+										1300 content list Availability options
+											1301 text Delivery availability unknown
+											1302 text Stock availability unknown
+									1303 container
+										1304 button Swap products
+											1305 image BRIMNES
+										1306 text BRIMNES Bed frame with storage, white, Queen $334.00
+										1307 content list Availability options
+											1308 text Delivery availability unknown
+											1309 text Stock availability unknown
+									1310 container
+										1311 button Swap products
+											1312 image BRIMNES
+										1313 text BRIMNES Bed frame with storage, white, King $439.00
+										1314 content list Availability options
+											1315 text Delivery availability unknown
+											1316 text Stock availability unknown
+									1317 container
+										1318 button Swap products
+											1319 image BRIMNES
+										1320 text BRIMNES Bed frame with storage, white/Lönset, Full $429.00
+										1321 content list Availability options
+											1322 text Delivery availability unknown
+											1323 text Stock availability unknown
+									1324 container
+										1325 button Swap products
+											1326 image BRIMNES
+										1327 text BRIMNES Bed frame with storage, white/Luröy, Queen $399.00
+										1328 content list Availability options
+											1329 text Delivery availability unknown
+											1330 text Stock availability unknown
+									1331 container
+										1332 button Swap products
+											1333 image BRIMNES
+										1334 text BRIMNES Bed frame with storage, white/Lönset, King $579.00
+										1335 content list Availability options
+											1336 text Delivery availability unknown
+											1337 text Stock availability unknown
+									1338 container
+										1339 button Swap products
+											1340 image BRIMNES
+										1341 text BRIMNES Bed frame with storage, white/Luröy, King $499.00
+										1342 content list Availability options
+											1343 text Delivery availability unknown
+											1344 text Stock availability unknown
+									1345 container
+										1346 button Swap products
+											1347 image BRIMNES
+										1348 text BRIMNES Bed frame with storage, white/Lönset, Queen $469.00
+										1349 content list Availability options
+											1350 text Delivery availability unknown
+											1351 text Stock availability unknown
+									1352 container
+										1353 button Swap products
+											1354 image BRIMNES
+										1355 text BRIMNES Bed frame with storage & headboard, white/Lönset, Full $559.00
+										1356 content list Availability options
+											1357 text Delivery availability unknown
+											1358 text Stock availability unknown
+									1359 container
+										1360 button Swap products
+											1361 image BRIMNES
+										1362 text BRIMNES Bed frame with storage & headboard, white, Full $459.00
+										1363 content list Availability options
+											1364 text Delivery availability unknown
+											1365 text Stock availability unknown
+									1366 container
+										1367 button Swap products
+											1368 image BRIMNES
+										1369 text BRIMNES Bed frame with storage, white, Full/Double $314.00
+										1370 content list Availability options
+											1371 text Delivery availability unknown
+											1372 text Stock availability unknown
+									1373 container
+										1374 button Swap products
+											1375 image BRIMNES
+										1376 text BRIMNES Bed frame with storage, white, Queen $349.00
+										1377 content list Availability options
+											1378 text Delivery availability unknown
+											1379 text Stock availability unknown
+									1380 container
+										1381 button Swap products
+											1382 image BRIMNES
+										1383 text BRIMNES Bed frame with storage & headboard, white/Lönset, King $759.00
+										1384 content list Availability options
+											1385 text Delivery availability unknown
+											1386 text Stock availability unknown
+									1387 container
+										1388 button Swap products
+											1389 image BRIMNES
+										1390 text BRIMNES Bed frame with storage & headboard, white/Luröy, Queen $549.00
+										1391 content list Availability options
+											1392 text Delivery availability unknown
+											1393 text Stock availability unknown
+									1394 container
+										1395 button Swap products
+											1396 image BRIMNES
+										1397 text BRIMNES Bed frame with storage & headboard, white/Luröy, King $679.00
+										1398 content list Availability options
+											1399 text Delivery availability unknown
+											1400 text Stock availability unknown
+									1401 container
+										1402 button Swap products
+											1403 image BRIMNES
+										1404 text BRIMNES Bed frame with storage & headboard, white/Luröy, Full $499.00
+										1405 content list Availability options
+											1406 text Delivery availability unknown
+											1407 text Stock availability unknown
+									1408 container
+										1409 button Swap products
+											1410 image BRIMNES
+										1411 text BRIMNES Bed frame with storage & headboard, white, King $619.00
+										1412 content list Availability options
+											1413 text Delivery availability unknown
+											1414 text Stock availability unknown
+									1415 container
+										1416 button Swap products
+											1417 image BRIMNES
+										1418 text BRIMNES Bed frame with storage, white, King $424.00
+										1419 content list Availability options
+											1420 text Delivery availability unknown
+											1421 text Stock availability unknown
+									1422 container
+										1423 button Swap products
+											1424 image MALM
+										1425 text MALM High bed frame/4 storage boxes, white, Queen $449.00
+										1426 content list Availability options
+											1427 text Delivery availability unknown
+											1428 text Stock availability unknown
+									1429 container
+										1430 button Swap products
+											1431 image MALM
+										1432 text MALM High bed frame/4 storage boxes, white/Lönset, King $679.00
+										1433 content list Availability options
+											1434 text Delivery availability unknown
+											1435 text Stock availability unknown
+									1436 container
+										1437 button Swap products
+											1438 image MALM
+										1439 text MALM High bed frame/2 storage boxes, white/Luröy, Full $369.00
+										1440 content list Availability options
+											1441 text Delivery availability unknown
+											1442 text Stock availability unknown
+									1443 container
+										1444 button Swap products
+											1445 image MALM
+										1446 text MALM High bed frame/2 storage boxes, white/Luröy, Queen $399.00
+										1447 content list Availability options
+											1448 text Delivery availability unknown
+											1449 text Stock availability unknown
+									1450 container
+										1451 button Swap products
+											1452 image MALM
+										1453 text MALM High bed frame/4 storage boxes, white/Lönset, Full $529.00
+										1454 content list Availability options
+											1455 text Delivery availability unknown
+											1456 text Stock availability unknown
+									1457 container
+										1458 button Swap products
+											1459 image MALM
+										1460 text MALM High bed frame/2 storage boxes, white/Luröy, Twin $349.00
+										1461 content list Availability options
+											1462 text Delivery availability unknown
+											1463 text Stock availability unknown
+									1464 container
+										1465 button Swap products
+											1466 image MALM
+										1467 text MALM High bed frame/2 storage boxes, white/Lönset, King $579.00
+										1468 content list Availability options
+											1469 text Delivery availability unknown
+											1470 text Stock availability unknown
+									1471 container
+										1472 button Swap products
+											1473 image MALM
+										1474 text MALM High bed frame/2 storage boxes, white/Lönset, Queen $469.00
+										1475 content list Availability options
+											1476 text Delivery availability unknown
+											1477 text Stock availability unknown
+									1478 container
+										1479 button Swap products
+											1480 image MALM
+										1481 text MALM High bed frame/4 storage boxes, white/Luröy, Queen $499.00
+										1482 content list Availability options
+											1483 text Delivery availability unknown
+											1484 text Stock availability unknown
+									1485 container
+										1486 button Swap products
+											1487 image MALM
+										1488 text MALM High bed frame/2 storage boxes, white, King $439.00
+										1489 content list Availability options
+											1490 text Delivery availability unknown
+											1491 text Stock availability unknown
+									1492 container
+										1493 button Swap products
+											1494 image MALM
+										1495 text MALM High bed frame/4 storage boxes, white/Lönset, Queen $569.00
+										1496 content list Availability options
+											1497 text Delivery availability unknown
+											1498 text Stock availability unknown
+									1499 container
+										1500 button Swap products
+											1501 image MALM
+										1502 text MALM High bed frame/2 storage boxes, white/Lönset, Full $429.00
+										1503 content list Availability options
+											1504 text Delivery availability unknown
+											1505 text Stock availability unknown
+									1506 container
+										1507 button Swap products
+											1508 image MALM
+										1509 text MALM High bed frame/4 storage boxes, white, King $539.00
+										1510 content list Availability options
+											1511 text Delivery availability unknown
+											1512 text Stock availability unknown
+									1513 container
+										1514 button Swap products
+											1515 image MALM
+										1516 text MALM High bed frame/4 storage boxes, white/Luröy, Full $469.00
+										1517 content list Availability options
+											1518 text Delivery availability unknown
+											1519 text Stock availability unknown
+									1520 container
+										1521 button Swap products
+											1522 image MALM
+										1523 text MALM High bed frame/4 storage boxes, white/Luröy, King $599.00
+										1524 content list Availability options
+											1525 text Delivery availability unknown
+											1526 text Stock availability unknown
+									1527 container
+										1528 button Swap products
+											1529 image MALM
+										1530 text MALM High bed frame/4 storage boxes, white, Full $429.00
+										1531 content list Availability options
+											1532 text Delivery availability unknown
+											1533 text Stock availability unknown
+									1534 container
+										1535 button Swap products
+											1536 image MALM
+										1537 text MALM High bed frame/2 storage boxes, white, Twin $319.00
+										1538 content list Availability options
+											1539 text Delivery availability unknown
+											1540 text Stock availability unknown
+									1541 container
+										1542 button Swap products
+											1543 image MALM
+										1544 text MALM High bed frame/2 storage boxes, white, Queen $349.00
+										1545 content list Availability options
+											1546 text Delivery availability unknown
+											1547 text Stock availability unknown
+									1548 container
+										1549 button Swap products
+											1550 image MALM
+										1551 text MALM High bed frame/2 storage boxes, white, Full $329.00
+										1552 content list Availability options
+											1553 text Delivery availability unknown
+											1554 text Stock availability unknown
+									1555 container
+										1556 button Swap products
+											1557 image MALM
+										1558 text MALM High bed frame/2 storage boxes, white/Lönset, Twin $399.00
+										1559 content list Availability options
+											1560 text Delivery availability unknown
+											1561 text Stock availability unknown
+									1562 container
+										1563 button Swap products
+											1564 image MALM
+										1565 text MALM High bed frame/2 storage boxes, white/Luröy, King $499.00
+										1566 content list Availability options
+											1567 text Delivery availability unknown
+											1568 text Stock availability unknown
+									1569 container
+										1570 button Swap products
+											1571 image MANDAL
+										1572 text MANDAL Bed frame with headboard, birch/white, 63x78 3/4 " $799.00
+										1573 content list Availability options
+											1574 text Delivery availability unknown
+											1575 text Stock availability unknown
+									1576 container
+										1577 button Swap products
+											1578 image MANDAL
+										1579 text MANDAL Bed frame with storage, birch/white, Queen $599.00
+										1580 content list Availability options
+											1581 text Delivery availability unknown
+											1582 text Stock availability unknown
+									1583 container
+										1584 button Swap products
+											1585 image MANDAL
+										1586 text MANDAL Bed frame with headboard, birch/white, 55 1/8x78 3/4 " $749.00
+										1587 content list Availability options
+											1588 text Delivery availability unknown
+											1589 text Stock availability unknown
+									1590 container
+										1591 button Swap products
+											1592 image MANDAL
+										1593 text MANDAL Bed frame with storage, birch/white, Full $549.00
+										1594 content list Availability options
+											1595 text Delivery availability unknown
+											1596 text Stock availability unknown
+							877 button Revert to original
+					797 button (expanded) Description: Auto hide, Secondary Actions: Collapse
+				798 container
+					799 container Skiplinks for design
+						800 button Skip to browse, ID: skipLinkId-DESIGN
+						801 button Skip to header
+						802 button Skip to navigation
+					803 image PreviewCanvas
+					804 container
+						878 text Click to access more options
+						879 text Click to access more options
+						880 text Click to access more options
+						1597 container
+							1598 button
+							1599 button
+							1600 button
+						1601 button Add to bag
+						1602 button Rotate product in place
+						1603 button Swap product with
+						1604 button Goes with product
+						1605 button Make copy
+						1606 button Remove product from design
+						1607 text Click to access more options
+						1608 text Click to access more options
+						1609 text Click to access more options
+						1610 text Click to access more options
+						1611 text Click to access more options
+				823 button (disabled) Zoom out
+				824 button Zoom in
+				825 pop up button (collapsed) Description: Beautify room, Secondary Actions: Expand
+				826 button Dollhouse
+				827 button Top view
+				828 button Side views
+				829 button Move to
+					830 text Move to
+				831 button
+				832 button :rf:
+				833 button Edit room
+				834 container
+					835 container How is your design experience?
+						836 button Cancel
+						837 container
+							838 heading How is your design experience?, Value: 2, ID: DesignSurvey-1
+								839 text How is your design experience?
+							840 text We’d love to hear what you think. Your answer won’t be shared with anyone outside of IKEA.
+							841 checkbox Description: Bad, Value: 0
+							842 text Bad
+							843 checkbox Description: Dissatisfied, Value: 0
+							844 checkbox Description: Neutral, Value: 0
+							845 checkbox Description: Satisfied, Value: 0
+							846 checkbox Description: Good, Value: 0
+							847 text Good
+
+The focused UI element is 1 AXWebArea IKEA Kreativ, URL: ikea.com/us/en/home-design/room/

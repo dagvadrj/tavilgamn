@@ -2,14 +2,15 @@ import { cabinetLabel, type ModularKitchen } from "./kitchenCabinets";
 import { cabinetCorners, fitCountertops } from "./kitchenPlacement";
 import { fitBacksplashes } from "./kitchenBacksplash";
 import { COMPONENT_LABELS, getComponents, getComponentSize } from "./kitchenComponents";
-import type { KitchenCatalogModule } from "./kitchenModuleCatalog";
+import { kitchenVariantFits, kitchenVariantFromModule, type KitchenCatalogModule } from "./kitchenModuleCatalog";
+import { getKitchenGlbAssembly, resolveKitchenPartOption, type KitchenGlbSlot } from "./kitchenGlbAssembly";
 import type { Product } from "./types";
-export type BomRow = { id:string; label:string; quantity:number; unit:string; dimensions:string; material:string; unitPrice:number|null; included:boolean };
+export type BomRow = { id:string; label:string; quantity:number; unit:string; dimensions:string; material:string; unitPrice:number|null; included:boolean; productId?: string; variantCode?: string; modelId?: string };
 export type KitchenBom = { items:BomRow[]; knownSubtotal:number; unpricedCount:number; complete:boolean };
 const dims=(w:number,h:number,d:number)=>`${Math.round(w*100)/100} × ${Math.round(h*100)/100} × ${Math.round(d*100)/100} мм`;
 const rounded=(n:number)=>Math.round(n*1000)/1000;
 export function buildKitchenBom(kitchen:ModularKitchen, modules:KitchenCatalogModule[], products:Product[]):KitchenBom {
-  const variants=new Map(modules.flatMap(m=>m.variants.map(v=>[v.furnitureModelId,v] as const)));
+  const variants=new Map(modules.filter(m => m.active).flatMap(m=>m.variants.filter(v => v.active).map(v=>[v.furnitureModelId,kitchenVariantFromModule(m,v)] as const)));
   const catalog=new Map(products.map(p=>[p.id,p]));
   const price=(p:Product|undefined,color?:string):number|null=>{
     if(!p||!Number.isFinite(p.basePrice)||p.basePrice<=0)return null;
@@ -18,10 +19,29 @@ export function buildKitchenBom(kitchen:ModularKitchen, modules:KitchenCatalogMo
   };
   const items:BomRow[]=[];
   for(const cabinet of kitchen.cabinets) {
-    const variant=variants.get(cabinet.variantId??""), product=catalog.get(variant?.productId??"");
+    const candidate=variants.get(cabinet.variantId??"");
+    const variant=kitchenVariantFits(candidate,cabinet)?candidate:undefined, product=catalog.get(variant?.productId??"");
     items.push({id:cabinet.id,label:variant?.modelName??cabinetLabel(cabinet),quantity:1,unit:"ш",dimensions:dims(cabinet.width,cabinet.height,cabinet.depth),
       material:`Фасад: ${cabinet.frontMaterialId??cabinet.finish??cabinet.material}; их бие: ${cabinet.carcassMaterialId??cabinet.finish??cabinet.material}`,
-      unitPrice:price(product,cabinet.color),included:false});
+      unitPrice:price(product,cabinet.color),included:false, productId: variant?.productId, variantCode: variant?.variantCode, modelId: variant?.furnitureModelId });
+    const assembly = getKitchenGlbAssembly(variant?.configuration);
+    if (assembly) {
+      const byId = new Map(assembly.slots.map(slot => [slot.id, slot]));
+      const visible = (slot: KitchenGlbSlot): boolean => Boolean(resolveKitchenPartOption(slot, cabinet.partSelections)) &&
+        (!slot.parentSlotId || visible(byId.get(slot.parentSlotId)!));
+      for (const slot of assembly.slots.filter(visible)) {
+        const option = resolveKitchenPartOption(slot, cabinet.partSelections)!;
+        const partProduct = catalog.get(option.productId ?? "");
+        const included = variant?.configuration.partsIncluded === true;
+        const separate = variant?.configuration.partsPricedSeparately === true;
+        items.push({ id: `${cabinet.id}/slot/${slot.id}`, label: `${slot.label} · ${option.label}`, quantity: 1, unit: "ш",
+          dimensions: option.sizeMm ? dims(option.sizeMm.width, option.sizeMm.height, option.sizeMm.depth) : "Каталогийн эд анги",
+          material: [option.style, option.color].filter(Boolean).join(" · ") || "Каталогийн сонголт",
+          productId: option.productId, modelId: option.modelId, included,
+          unitPrice: !included && separate ? price(partProduct) : null });
+      }
+      continue;
+    }
     for(const component of getComponents(cabinet).filter(c=>c.type!=="worktop")) {
       const size=getComponentSize(cabinet,component,kitchen);
       const quantity=component.type==="door-front" ? cabinet.doorCount : component.type==="drawer-front" ? cabinet.drawerCount : component.type==="handle" ? Math.max(1,cabinet.doorCount+cabinet.drawerCount) : 1;
@@ -44,7 +64,7 @@ function csvCell(value:string|number) {
   return `"${text.replace(/"/g,'""')}"`;
 }
 export function kitchenBomCsv(bom:KitchenBom) {
-  const rows=[['ID','Нэр','Тоо','Нэгж','Хэмжээ','Материал','Нэгж үнэ (MNT)','Тайлбар'],...bom.items.map(i=>[i.id,i.label,i.quantity,i.unit,i.dimensions,i.material,i.unitPrice??'',i.included?'Шүүгээний бүрэлдэхүүн, давхар үнэлэхгүй':i.unitPrice===null?'Үнэ шаардлагатай':'Каталогийн суурь үнэ'])];
+  const rows=[['ID','Нэр','Тоо','Нэгж','Хэмжээ','Материал','Нэгж үнэ (MNT)','Тайлбар','Product ID','Variant','Model ID'],...bom.items.map(i=>[i.id,i.label,i.quantity,i.unit,i.dimensions,i.material,i.unitPrice??'',i.included?'Шүүгээний бүрэлдэхүүн, давхар үнэлэхгүй':i.unitPrice===null?'Үнэ шаардлагатай':'Каталогийн суурь үнэ',i.productId??'',i.variantCode??'',i.modelId??''])];
   return '\ufeff'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');
 }
 export const escapeReportText=(value:string)=>value.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]!));

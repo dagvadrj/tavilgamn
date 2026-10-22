@@ -1,0 +1,1 @@
+const t=[{tag:"path",att:{d:"M15.5 11c-.8284 0-1.5-.6716-1.5-1.5S14.6716 8 15.5 8s1.5.6716 1.5 1.5-.6716 1.5-1.5 1.5zM13 15.25l-3-4.5L6.5 16h11L15 12.25l-2 3z"}},{tag:"path",att:{"fill-rule":"evenodd","clip-rule":"evenodd",d:"M3 4v16h18V4H3zm2 14V6h14v12H5z"}}];export{t as p};

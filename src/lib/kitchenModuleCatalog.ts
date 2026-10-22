@@ -16,6 +16,10 @@ export const KITCHEN_OPENINGS = [
 export type KitchenOpening = (typeof KITCHEN_OPENINGS)[number];
 
 export type KitchenCatalogVariant = {
+  assetValidationIssues?: string[];
+  frontProjectionMm?: number;
+  mount?: "floor" | "wall" | "floor-wall" | "corner";
+  cabinetType?: "base" | "wall" | "tall" | "corner" | "appliance";
   physicalSize?: boolean;
   nominalSizeMm?: { width: number; height: number; depth: number };
   furnitureModelId: string;
@@ -85,26 +89,42 @@ type CabinetMatch = {
   corner?: boolean;
 };
 
-export function matchingKitchenVariants(
-  modules: KitchenCatalogModule[],
-  cabinet: CabinetMatch,
-) {
+/** Validate saved assets again at render time, including legacy corner assignments. */
+export function kitchenVariantMatchesRole(variant: KitchenCatalogVariant | undefined, cabinet: Pick<CabinetMatch, "type" | "corner" | "opening">) {
+  if (!variant) return false;
+  if (variant.cabinetType && variant.cabinetType !== (cabinet.corner ? "corner" : cabinet.type)) return false;
+  if (variant.opening && variant.opening !== (cabinet.opening ?? "doors")) return false;
+  if (variant.mount && variant.mount !== (cabinet.corner ? "corner" : cabinet.type === "wall" ? "wall" : "floor") &&
+    !(variant.mount === "floor-wall" && cabinet.type !== "wall")) return false;
+  if (cabinet.corner && variant.nominalSizeMm && (variant.nominalSizeMm.depth <= 450) !== (cabinet.type === "wall")) return false;
+  return true;
+}
+
+/** Catalog dimensions are a physical contract. Never stretch a different SKU. */
+export function kitchenVariantFits(variant: KitchenCatalogVariant | undefined, cabinet: CabinetMatch) {
+  if (!variant?.glbFile || variant.active === false || (variant.processingStatus && variant.processingStatus !== "ready")) return false;
+  if (variant?.assetValidationIssues?.length) return false;
+  if (!kitchenVariantMatchesRole(variant, cabinet)) return false;
+  const size = variant?.nominalSizeMm;
+  return !size || [size.width === cabinet.width, size.height === cabinet.height, size.depth === cabinet.depth].every(Boolean);
+}
+
+export function kitchenVariantFromModule(module: KitchenCatalogModule, variant: KitchenCatalogVariant): KitchenCatalogVariant {
+  return { ...variant, cabinetType: module.cabinetType,
+    mount: variant.mount ?? (module.cabinetType === "wall" ? "wall" : module.cabinetType === "corner" ? "corner" : "floor"),
+    nominalSizeMm: { width: module.widthMm, height: module.heightMm, depth: module.depthMm } };
+}
+
+const readyVariant = (variant: KitchenCatalogVariant) => variant.active && Boolean(variant.glbFile) &&
+  !variant.assetValidationIssues?.length && (!variant.processingStatus || variant.processingStatus === "ready");
+
+export function matchingKitchenVariants(modules: KitchenCatalogModule[], cabinet: CabinetMatch) {
   const cabinetType = cabinet.corner ? "corner" : cabinet.type;
   const opening = cabinet.opening ?? "doors";
   return modules
-    .filter(
-      (module) =>
-        module.active &&
-        module.cabinetType === cabinetType &&
-        module.widthMm === cabinet.width &&
-        module.heightMm === cabinet.height &&
-        module.depthMm === cabinet.depth,
-    )
-    .flatMap((module) => module.variants)
-    .filter(
-      (variant) =>
-        variant.active && !!variant.glbFile && variant.opening === opening,
-    );
+    .filter((module) => module.active && module.cabinetType === cabinetType && module.widthMm === cabinet.width && module.heightMm === cabinet.height && module.depthMm === cabinet.depth)
+    .flatMap((module) => module.variants.map(variant => kitchenVariantFromModule(module, variant)))
+    .filter((variant) => readyVariant(variant) && variant.opening === opening && kitchenVariantFits(variant, cabinet));
 }
 
 /** Nearby catalog products for the selected cabinet, ordered by compatibility. */
@@ -116,76 +136,30 @@ export function similarKitchenVariants(
   const cabinetType = cabinet.corner ? "corner" : cabinet.type;
   const opening = cabinet.opening ?? "doors";
   return modules
-    .filter((module) => module.active && module.cabinetType === cabinetType)
-    .flatMap((module) =>
-      module.variants
-        .filter((variant) => variant.active && !!variant.glbFile)
-        .map((variant) => ({
-          module,
-          variant,
-          score:
-            (variant.opening === opening ? 0 : 10_000) +
-            Math.abs(module.widthMm - cabinet.width) * 4 +
-            Math.abs(module.heightMm - cabinet.height) * 2 +
-            Math.abs(module.depthMm - cabinet.depth) * 2 +
-            (variant.furnitureModelId === cabinet.variantId ? -20_000 : 0) +
-            variant.sortOrder,
-        })),
-    )
-    .sort(
-      (a, b) =>
-        a.score - b.score ||
-        a.variant.modelName.localeCompare(b.variant.modelName),
-    )
+    .filter((module) => module.active && module.cabinetType === cabinetType &&
+      (!cabinet.corner || (module.depthMm <= 450) === (cabinet.type === "wall")))
+    .flatMap((module) => module.variants
+      .filter((variant) => readyVariant(variant) && kitchenVariantMatchesRole(kitchenVariantFromModule(module, variant), { ...cabinet, opening: variant.opening }))
+      .map((variant) => ({
+        module,
+        variant,
+        score:
+          (variant.opening === opening ? 0 : 10_000) +
+          Math.abs(module.widthMm - cabinet.width) * 4 +
+          Math.abs(module.heightMm - cabinet.height) * 2 +
+          Math.abs(module.depthMm - cabinet.depth) * 2 +
+          (variant.furnitureModelId === cabinet.variantId ? -20_000 : 0) +
+          variant.sortOrder,
+      })))
+    .sort((a, b) => a.score - b.score || a.variant.modelName.localeCompare(b.variant.modelName))
     .slice(0, Math.max(0, limit));
 }
 
-/** Reuse published boxes at the planned size, preserving an explicit ready choice. */
-export function preferredKitchenVariant(
-  modules: KitchenCatalogModule[],
-  cabinet: CabinetMatch,
-) {
-  const ready = modules
-    .filter((module) => module.active)
-    .flatMap((module) =>
-      module.variants
-        .filter((variant) => variant.active && variant.glbFile)
-        .map((variant) => ({ module, variant })),
-    );
-  const selected = ready.find(
-    ({ variant }) => variant.furnitureModelId === cabinet.variantId,
-  );
-  if (selected) return selected.variant;
+/** Preserve a compatible SKU or select an exact published size. */
+export function preferredKitchenVariant(modules: KitchenCatalogModule[], cabinet: CabinetMatch) {
   const exact = matchingKitchenVariants(modules, cabinet);
-  if (exact.length)
-    return exact.find((variant) => variant.isDefault) ?? exact[0];
-  const opening = cabinet.opening ?? "doors";
-  if (opening === "refrigerator") return undefined;
-  const candidates = ready.filter(({ module, variant }) => {
-    const appliance = ["oven", "hob"].includes(opening);
-    if (appliance) return ["oven", "hob"].includes(variant.opening);
-    return (
-      variant.opening === opening ||
-      variant.opening === "doors" ||
-      variant.opening === "open"
-    );
-  });
-  candidates.sort((a, b) => {
-    const score = ({ module, variant }: typeof a) =>
-      (module.cabinetType === (cabinet.corner ? "corner" : cabinet.type)
-        ? 0
-        : 10000) +
-      (variant.opening === opening ? 0 : 1000) +
-      Math.abs(module.widthMm - cabinet.width) * 4 +
-      Math.abs(module.heightMm - cabinet.height) * 2 +
-      Math.abs(module.depthMm - cabinet.depth) * 2 +
-      (variant.isDefault ? 0 : 1);
-    return (
-      score(a) - score(b) ||
-      a.variant.furnitureModelId.localeCompare(b.variant.furnitureModelId)
-    );
-  });
-  return candidates[0]?.variant;
+  if (cabinet.variantId && !modules.some(m => m.variants.some(v => v.furnitureModelId === cabinet.variantId))) return undefined;
+  return exact.find(variant => variant.furnitureModelId === cabinet.variantId) ?? exact.find(variant => variant.isDefault) ?? exact[0];
 }
 
 export function applyKitchenCatalogVariants<
@@ -195,6 +169,8 @@ export function applyKitchenCatalogVariants<
   let changed = false;
   const cabinets = kitchen.cabinets.map((cabinet) => {
     const preferred = preferredKitchenVariant(modules, cabinet);
+    // A missing saved SKU stays identifiable and unavailable; never silently sell another SKU.
+    if (!preferred && cabinet.variantId && !modules.some(m => m.variants.some(v => v.furnitureModelId === cabinet.variantId))) return cabinet;
     if (preferred?.furnitureModelId === cabinet.variantId) return cabinet;
     changed = true;
     const {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Armchair } from "lucide-react";
+import { Armchair, Plus } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
 import { stockLabel } from "@/lib/inventory";
@@ -44,6 +44,7 @@ export function RoomProductCard({
         <p className="font-medium">{product.name}</p>
         <p className="room-product-price">{formatPrice(product.basePrice)}</p>
         <p className="room-product-stock">{stockLabel(product)}</p>
+        {!unavailable && <span className="room-product-add"><Plus size={14}/> Өрөөнд нэмэх</span>}
         {unavailable && <p className="room-product-unavailable">{reason}</p>}
       </div>
     </button>

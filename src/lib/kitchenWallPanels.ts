@@ -22,8 +22,9 @@ export function kitchenWallPanels(wall: KitchenWall, room: KitchenRoom) {
       x:
         (i.x / 1000 - cx) * Math.cos(angle) -
         (i.z / 1000 - cz) * Math.sin(angle),
-      bottom: i.kind === "door" ? 0 : 0.9,
-      top: Math.min(i.kind === "door" ? 2.1 : 2, height - 0.1),
+      bottom: i.kind === "door" ? 0 : (i.sillHeight ?? 900) / 1000,
+      top: i.height === undefined ? Math.min(i.kind === "door" ? 2.1 : 2, height - 0.1) :
+        ((i.kind === "door" ? 0 : i.sillHeight ?? 900) + i.height) / 1000,
     }))
     .sort((a, b) => a.x - b.x);
   const solids: { x: number; y: number; width: number; height: number }[] = [];
