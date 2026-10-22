@@ -8,16 +8,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Edges, OrbitControls } from "@react-three/drei";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CameraMotionPreview } from "./CameraMotionPreview";
-import { RoomMotionResolution } from "./RoomMotionQuality";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
-import { CameraMotionPreview } from "./CameraMotionPreview";
 import { PlannerMotionShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import {
   Plane,
+  Mesh,
+  MeshStandardMaterial,
   Object3D,
   Vector3,
   PCFSoftShadowMap,
@@ -29,7 +29,10 @@ import {
   type CabinetPose,
   type ModularCabinet,
   type ModularKitchen,
+  type KitchenWall,
+  type KitchenRoom,
 } from "@/lib/kitchenCabinets";
+import { kitchenWallPanels } from "@/lib/kitchenWallPanels";
 import { placementIssues } from "@/lib/kitchenPlacement";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import { kitchenVariantMatchesRole, type KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
@@ -390,9 +393,6 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
         <OrbitControls
           makeDefault
           enabled={!dragActive}
-          enableDamping
-          dampingFactor={0.08}
-          rotateSpeed={0.65}
           zoomSpeed={0.8}
           enablePan
           screenSpacePanning
@@ -509,25 +509,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
                     color={invalid.has(cabinet.id) ? "#d62828" : "#0078d4"}
                     linewidth={2}
                     raycast={() => {}}
-                    position={[0, cabinet.height / 2000, 0]}
-                  >
-                    <boxGeometry
-                      args={[
-                        cabinet.width / 1000 + 0.003,
-                        cabinet.height / 1000 + 0.003,
-                        cabinet.depth / 1000 + 0.003,
-                      ]}
-                    />
-                    <meshBasicMaterial
-                      transparent
-                      opacity={0}
-                      depthWrite={false}
-                    />
-                    <Edges
-                      color={invalid.has(cabinet.id) ? "#d62828" : "#0078d4"}
-                      linewidth={2}
-                      raycast={() => {}}
-                    />
+                  />
                   </mesh>
                 )}
             </group>
@@ -607,7 +589,7 @@ export function ModularKitchenScene(props: ModularSceneProps) {
         <CanvasDiagnostics scene="modular-kitchen" />
         <CameraMotionPreview>
           <RoomMotionResolution dpr={performance.dpr} />
-          <Scene {...props} />
+          <Scene {...props} dpr={performance.dpr} />
         </CameraMotionPreview>
       </Canvas>
     </SceneBoundary>

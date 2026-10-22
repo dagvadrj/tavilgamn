@@ -8,6 +8,9 @@ export type PageData = {
     paymentLabels: string[];
     homepageProductIds?: string[];
     homepageJourneyProducts?: { bedProductId?: string | null; wardrobeProductId?: string | null };
+    homepageHero?: import("./homepagePresentation").HomepageHero;
+    homepageMaterialSwatches?: { id: string; name: string; color: string }[];
+    homepageStatistics?: import("./homepagePresentation").HomepageStatistics;
   };
   stores: { directory: Store[]; productCounts: Record<string, number> };
   store: { store: Store; products: Product[] };

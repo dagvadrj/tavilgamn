@@ -7,6 +7,10 @@ import type {
 import { getSupabaseAdmin } from "./supabase/admin";
 import { getKitchenGlbAssembly, kitchenPartKind } from "./kitchenGlbAssembly";
 import { validateCabinetGlb, type GlbInspection } from "./glbStandard";
+import { kitchenAsset } from "./kitchenAssetCatalog";
+import { productFromRow, type FurnitureRow } from "./catalogServer";
+
+export const KITCHEN_ASSET_FIELDS = "id,product_id,name,category,description,base_price,image_url,thumbnail_path,glb_path,preview_glb_path,processing_status,scale,dimensions_w,dimensions_d,dimensions_h,colors,materials,default_color,in_stock,rating,review_count,badges,is_new,is_best_seller,store_ids,images,glb_validation,compare_at_price,promotion_label,promotion_ends_at,delivery_terms,specifications";
 
 type Db = ReturnType<typeof getSupabaseAdmin>;
 const file = (path: unknown) =>

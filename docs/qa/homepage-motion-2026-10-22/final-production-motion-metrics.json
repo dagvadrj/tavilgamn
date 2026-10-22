@@ -1,0 +1,57 @@
+{
+  "models": [],
+  "canvas": [
+    {
+      "scene": "marketing-demo",
+      "frames": 70,
+      "durationMs": 1050,
+      "renderFps": 67,
+      "activeFps": 66,
+      "motionP95Ms": 20.3,
+      "motionWorstMs": 20.8,
+      "motionSlowFrames": 0,
+      "drawCalls": 9,
+      "triangles": 136,
+      "geometries": 7,
+      "textures": 0,
+      "dpr": 1,
+      "heapMiB": null,
+      "loop": "demand"
+    },
+    {
+      "scene": "marketing-demo",
+      "frames": 66,
+      "durationMs": 949,
+      "renderFps": 70,
+      "activeFps": 68,
+      "motionP95Ms": 20,
+      "motionWorstMs": 20.1,
+      "motionSlowFrames": 0,
+      "drawCalls": 9,
+      "triangles": 136,
+      "geometries": 7,
+      "textures": 0,
+      "dpr": 1,
+      "heapMiB": null,
+      "loop": "demand"
+    },
+    {
+      "scene": "marketing-demo",
+      "frames": 58,
+      "durationMs": 865,
+      "renderFps": 67,
+      "activeFps": 66,
+      "motionP95Ms": 24.7,
+      "motionWorstMs": 25,
+      "motionSlowFrames": 0,
+      "drawCalls": 9,
+      "triangles": 136,
+      "geometries": 7,
+      "textures": 0,
+      "dpr": 1,
+      "heapMiB": null,
+      "loop": "demand"
+    }
+  ],
+  "longTasks": []
+}

@@ -1,4 +1,5 @@
 "use client";
+import { startPlannerNavigation } from "@/lib/plannerNavigation";
 import "@/features/planner/components/planner-catalog-upgrades.css";
 import { KitchenSuggestionWizard } from "./KitchenSuggestionWizard";
 import { KitchenSetupSteps } from "@/features/kitchen-planner/components/KitchenSetupSteps";

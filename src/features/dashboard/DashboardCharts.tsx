@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { ChartPath, ChartRect } from "./ChartMotion";
 
 export type ChartDatum = {
   label: string;
@@ -107,14 +108,14 @@ export function DashboardBarChart({
             ))}
             {mode === "line" && (
               <>
-                <path
+                <ChartPath
                   className="v14-chart-area"
                   d={`${line} L${x(values.length - 1)},190 L${x(0)},190 Z`}
                   fill={`url(#${id}-fill)`}
                 />
-                <path className="v14-chart-line" d={line} />
+                <ChartPath className="v14-chart-line" d={line} />
                 {secondaryLabel && (
-                  <path
+                  <ChartPath
                     className="v14-chart-line v14-chart-line-secondary"
                     d={values
                       .map(
@@ -157,7 +158,7 @@ export function DashboardBarChart({
                   />
                   {mode === "bar" ? (
                     <>
-                      <rect
+                      <ChartRect
                         className="v14-bar-primary"
                         x={x(index) - Math.min(18, step * 0.28)}
                         y={190 - height(item.primary)}
@@ -166,7 +167,7 @@ export function DashboardBarChart({
                         rx="5"
                       />
                       {item.secondary > 0 && (
-                        <rect
+                        <ChartRect
                           className="v14-bar-secondary"
                           x={x(index) - Math.min(18, step * 0.28)}
                           y={190 - height(item.primary + item.secondary)}

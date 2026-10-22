@@ -2,7 +2,7 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Box } from "lucide-react";
+import { Box, Search } from "lucide-react";
 import { PlannerModelCard } from "@/features/planner/components/PlannerModelCard";
 import type {
   KitchenCatalogModule,

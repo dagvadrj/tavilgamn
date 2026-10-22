@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { animate } from "framer-motion";
+import { useMotionActivity } from "@/features/motion/useMotionActivity";
 import { DashboardBarChart } from "@/features/dashboard/DashboardCharts";
 import { CheckCircle2, Clock3, ArrowUpRight, Package } from "lucide-react";
 import {
@@ -92,6 +94,7 @@ export function AnimatedNumber({
   value: string | number;
   money?: boolean;
 }) {
+  const activity = useMotionActivity<HTMLSpanElement>();
   const ref = useRef<HTMLSpanElement>(null),
     previous = useRef(0);
   const label = Number.isSafeInteger(Number(value))
@@ -103,30 +106,24 @@ export function AnimatedNumber({
     if (!node) return;
     if (
       !Number.isSafeInteger(target) ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      activity.reduced
     ) {
       node.textContent = label;
       previous.current = target;
       return;
     }
-    const from = Number.isSafeInteger(previous.current)
+    if (!activity.active) return;
+    const from = Number.isFinite(previous.current)
         ? previous.current
         : target,
-      start = performance.now();
-    let frame = 0;
-    const tick = (time: number) => {
-      const t = Math.min(1, (time - start) / 650);
-      node.textContent = Math.round(
-        from + (target - from) * (1 - Math.pow(1 - t, 3)),
-      ).toLocaleString("mn-MN");
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    previous.current = target;
-    return () => cancelAnimationFrame(frame);
-  }, [value, label]);
+      controls = animate(from, target, { duration: 0.65, ease: "easeOut", onUpdate: next => {
+        previous.current = next;
+        node.textContent = Math.round(next).toLocaleString("mn-MN");
+      }, onComplete: () => { previous.current = target; } });
+    return () => controls.stop();
+  }, [value, label, activity.active, activity.reduced]);
   return (
-    <span aria-label={label + (money ? " ₮" : "")}>
+    <span ref={activity.ref} aria-label={label + (money ? " ₮" : "")}>
       <span ref={ref} aria-hidden="true">
         {label}
       </span>

@@ -1,24 +1,36 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
 import type { HomepageSettings } from "@/lib/homepageSettings";
+import {
+  DEFAULT_HOMEPAGE_HERO,
+  parseHomepageHero,
+  type HomepageHero,
+} from "@/lib/homepagePresentation";
+import { ProductPhoto } from "@/features/home-motion/ProductPhoto";
 
-type Result = HomepageSettings & {
-  products: { id: string; name: string; image: string; category: string }[];
-};
+type Result = HomepageSettings;
+const FIELDS: { key: keyof HomepageHero; label: string; max: number }[] = [
+  { key: "title", label: "Үндсэн гарчиг", max: 120 },
+  { key: "description", label: "Тайлбар", max: 320 },
+  {
+    key: "image",
+    label: "Зураг (HTTPS эсвэл / зам, хоосон бол каталогийн зураг)",
+    max: 1000,
+  },
+  { key: "primaryLabel", label: "Үндсэн товчны нэр", max: 45 },
+  { key: "primaryHref", label: "Үндсэн товчны холбоос", max: 240 },
+  { key: "secondaryLabel", label: "Хоёр дахь товчны нэр", max: 45 },
+  { key: "secondaryHref", label: "Хоёр дахь товчны холбоос", max: 240 },
+];
 
 export function AdminHomepageSettings() {
   const owner = useAuth((state) => state.user?.id);
   const [result, setResult] = useState<Result | null>(null);
-  const [selection, setSelection] = useState<string[]>([]);
-  const [journey, setJourney] = useState<{
-    bedProductId: string | null;
-    wardrobeProductId: string | null;
-  }>({ bedProductId: null, wardrobeProductId: null });
+  const [hero, setHero] = useState<HomepageHero>({ ...DEFAULT_HOMEPAGE_HERO });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -35,11 +47,7 @@ export function AdminHomepageSettings() {
         if (!response.ok) throw new Error(data.error);
         if (!controller.signal.aborted) {
           setResult(data);
-          setSelection(data.productIds);
-          setJourney({
-            bedProductId: data.bedProductId ?? null,
-            wardrobeProductId: data.wardrobeProductId ?? null,
-          });
+          setHero(data.hero ?? { ...DEFAULT_HOMEPAGE_HERO });
         }
       })
       .catch((error) => {
@@ -51,8 +59,16 @@ export function AdminHomepageSettings() {
     return () => controller.abort();
   }, [owner, attempt]);
 
-  async function save() {
+  async function save(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (!result || !owner || busy) return;
+    const parsed = parseHomepageHero(hero);
+    if (!parsed) {
+      setError(
+        "Гарчиг, тайлбар, товчны нэр болон холбоосыг шалгана уу. Холбоос нь /catalog, /planner, /kitchen зэрэг сайтын доторх зам байна.",
+      );
+      return;
+    }
     setBusy(true);
     setError("");
     setSaved(false);
@@ -63,16 +79,17 @@ export function AdminHomepageSettings() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            productIds: selection,
-            version: result.version,
-            ...journey,
+            ...result,
+            hero: parsed,
+            products: undefined,
           }),
         },
         owner,
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      setResult({ ...result, ...data });
+      setResult(data);
+      setHero(data.hero);
       setSaved(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Хадгалж чадсангүй.");
@@ -89,11 +106,11 @@ export function AdminHomepageSettings() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 id="homepage-settings-title" className="text-xl font-semibold">
-            Нүүр хуудасны 3D аялал
+            Нүүр хуудасны hero
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-ui-muted">
-            Зочны өрөөний буйдан, унтлагын өрөөний ор, шкафыг сонгоно. Үндсэн
-            буйдан каталогт боломжгүй бол нөөц буйданг харуулна.
+            Платформыг танилцуулах гарчиг, зураг, товчнууд. Тоон үзүүлэлтүүд
+            каталог болон идэвхтэй дэлгүүрүүдээс автоматаар шинэчлэгдэнэ.
           </p>
         </div>
         <Link
@@ -119,170 +136,81 @@ export function AdminHomepageSettings() {
         </div>
       )}
       {!result && !error && (
-        <p role="status" className="py-6">
-          3D загваруудыг ачаалж байна…
-        </p>
+        <div
+          role="status"
+          aria-label="Hero тохиргоог ачаалж байна"
+          className="mt-6 grid gap-5 md:grid-cols-2"
+        >
+          {FIELDS.map((field) => (
+            <div key={field.key} className="grid gap-2">
+              <span className="h-3 w-28 rounded bg-ui-surface" />
+              <span className="h-12 rounded border border-ui-line bg-ui-surface" />
+            </div>
+          ))}
+        </div>
       )}
       {result && (
-        <>
-          <div className="mt-6 grid gap-5 md:grid-cols-2">
-            {[0, 1].map((index) => {
-              const product = result.products.find(
-                (item) => item.id === selection[index],
-              );
-              return (
-                <div
-                  className="min-w-0 overflow-hidden rounded-xl border border-ui-line p-4"
-                  key={index}
-                >
-                  <label className="grid gap-2 text-sm font-medium">
-                    {index === 0 ? "Үндсэн буйдан" : "Нөөц буйдан"}
-                    <select
-                      value={selection[index] ?? ""}
-                      className="input min-h-12 w-full"
-                      disabled={busy}
-                      onChange={(event) => {
-                        setSelection((current) =>
-                          current.map((id, i) =>
-                            i === index ? event.target.value : id,
-                          ),
-                        );
-                        setSaved(false);
-                      }}
-                    >
-                      {!product && (
-                        <option value={selection[index] ?? ""}>
-                          Одоогийн загвар боломжгүй — дахин сонгоно уу
-                        </option>
-                      )}
-                      {result.products
-                        .filter((item) => item.category === "sofa")
-                        .map((item) => (
-                          <option
-                            key={item.id}
-                            value={item.id}
-                            disabled={selection[1 - index] === item.id}
-                          >
-                            {item.name}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
-                  {product && (
-                    <div className="mt-4 flex items-center gap-4">
-                      {product.image && (
-                        <Image
-                          src={product.image}
-                          alt={product.name}
-                          width={100}
-                          height={80}
-                          className="h-20 w-24 rounded-lg object-cover"
-                          unoptimized
-                        />
-                      )}
-                      <Link
-                        href={`/product/${product.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="min-h-11 text-sm underline"
-                      >
-                        Бүтээгдэхүүнийг үзэх ↗
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-5 grid gap-5 md:grid-cols-2">
-            {(
-              [
-                {
-                  key: "bedProductId",
-                  category: "bed",
-                  label: "Унтлагын өрөө / Ор",
-                },
-                {
-                  key: "wardrobeProductId",
-                  category: "wardrobe",
-                  label: "Хувцасны хэсэг / Шкаф",
-                },
-              ] as const
-            ).map((slot) => (
+        <form onSubmit={(event) => void save(event)} className="mt-6">
+          <div className="grid gap-5 md:grid-cols-2">
+            {FIELDS.map((field) => (
               <label
-                key={slot.key}
-                className="grid gap-2 rounded-xl border border-ui-line p-4 text-sm font-medium"
+                key={field.key}
+                className={`grid gap-2 text-sm font-medium ${field.key === "description" ? "md:col-span-2" : ""}`}
               >
-                {slot.label}
-                <select
-                  className="input min-h-12 w-full"
-                  value={journey[slot.key] ?? ""}
-                  disabled={busy}
-                  onChange={(event) => {
-                    setJourney((current) => ({
-                      ...current,
-                      [slot.key]: event.target.value || null,
-                    }));
-                    setSaved(false);
-                  }}
-                >
-                  <option value="">Интерьерийн загвар ашиглах</option>
-                  {journey[slot.key] &&
-                    !result.products.some(
-                      (p) => p.id === journey[slot.key],
-                    ) && (
-                      <option value={journey[slot.key]!}>
-                        Одоогийн бүтээгдэхүүн боломжгүй — дахин сонгоно уу
-                      </option>
-                    )}
-                  {result.products
-                    .filter((item) => item.category === slot.category)
-                    .map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                </select>
-                <span className="text-xs font-normal text-ui-muted">
-                  Бэлэн GLB бүтээгдэхүүн сонгоогүй бол интерьерийн загвар
-                  харагдана. Интерьерийн загварт худалдааны үнэ оноохгүй.
-                </span>
-                {journey[slot.key] && (
-                  <Link
-                    href={`/product/${journey[slot.key]}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="min-h-11 content-center text-xs underline"
-                  >
-                    Сонгосон 3D загварыг шалгах ↗
-                  </Link>
+                {field.label}
+                {field.key === "description" ? (
+                  <textarea
+                    className="input min-h-24 w-full"
+                    value={hero[field.key]}
+                    maxLength={field.max}
+                    required
+                    disabled={busy}
+                    onChange={(event) => {
+                      setHero((current) => ({
+                        ...current,
+                        [field.key]: event.target.value,
+                      }));
+                      setSaved(false);
+                    }}
+                  />
+                ) : (
+                  <input
+                    className="input min-h-12 w-full"
+                    value={hero[field.key]}
+                    maxLength={field.max}
+                    required={field.key !== "image"}
+                    disabled={busy}
+                    onChange={(event) => {
+                      setHero((current) => ({
+                        ...current,
+                        [field.key]: event.target.value,
+                      }));
+                      setSaved(false);
+                    }}
+                  />
                 )}
               </label>
             ))}
           </div>
-          <div className="mt-5 flex flex-wrap items-center gap-4">
-            <button
-              type="button"
-              className="btn-primary"
-              disabled={
-                busy ||
-                selection.length !== 2 ||
-                selection[0] === selection[1] ||
-                selection.some(
-                  (id) => !result.products.some((product) => product.id === id),
-                )
-              }
-              onClick={() => void save()}
-            >
-              {busy ? "Хадгалж байна…" : "Нүүр хуудасны сонголтыг хадгалах"}
+          {hero.image && parseHomepageHero(hero) && (
+            <div className="mt-5 max-w-xs">
+              <ProductPhoto
+                src={hero.image}
+                alt="Hero зургийн урьдчилсан харагдац"
+              />
+            </div>
+          )}
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <button type="submit" className="btn-primary" disabled={busy}>
+              {busy ? "Хадгалж байна…" : "Hero тохиргоог хадгалах"}
             </button>
             {saved && (
-              <p role="status" className="text-sm text-ui-ink">
+              <p role="status" className="text-sm">
                 Хадгаллаа. Нүүр хуудсыг шинэчилж үзээрэй.
               </p>
             )}
           </div>
-        </>
+        </form>
       )}
     </section>
   );

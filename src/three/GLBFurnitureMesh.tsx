@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Edges } from "@react-three/drei";
+import { useKitchenOpenAnimation } from "./useKitchenOpenAnimation";
 import { SceneHtml as Html } from "./SceneHtml";
 import * as THREE from "three";
 import {

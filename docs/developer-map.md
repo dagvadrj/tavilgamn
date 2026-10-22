@@ -2,6 +2,14 @@
 
 Нэг хэрэглэгчийн үйлдэл UI → state → API → database гэсэн хэд хэдэн түвшин дамжина. Зөвхөн өнгө, хэмжээ өөрчлөхөд бүх түвшнийг засах шаардлагагүй. Харин шинэ хадгалагдах талбар нэмбэл форм, validation, API, өгөгдлийн сан, тест хамт өөрчлөгдөх нь хэвийн.
 
+## Homepage motion
+
+- `src/features/home-motion/`: шинэ hero, bento, нийтийн тоон үзүүлэлт, Room/Kitchen demo. Хуучин `home-interior` 3D аялал homepage дээр ачаалагдахгүй.
+- `src/features/motion/ModelDemo.tsx`: зураг эхэлж үзүүлэх, дэлгэцэд орсны дараа GLB ачаалах, retry. `ModelDemoCanvas.tsx`: бодит mesh ба demand render.
+- `src/lib/demoMotion.ts`: GLB хөдөлгөөний хурд, зогсолт, тасалж шилжих үндсэн тохиргоо. `MotionCursor.tsx`: demo cursor-ийн зам, easing.
+- `src/lib/homepagePresentation.ts`: hero-ийн default утга, холбоосын validation, нийтийн статистик. Админы hero форм `AdminHomepageSettings.tsx`.
+- `src/features/planner/components/PlannerTourPreview.tsx`: planner болон homepage-ийн нийтлэг бодит GLB заавар; хэрэглэгчийн загварыг өөрчлөхгүй.
+
 ## Өнгө, товч, input
 
 - `src/app/ui-theme.css`: нийтлэг өнгө, `--site-button-height`, `--site-input-height`, radius.

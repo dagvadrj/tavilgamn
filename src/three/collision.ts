@@ -15,6 +15,7 @@ import { fitCountertops, cabinetAxes } from "@/lib/kitchenPlacement";
 import { openingWorldTransform } from "@/lib/roomOpenings";
 
 export type PlacementRoom = RoomShape & {
+  allowFurnitureOverlap?: boolean;
   openingZones?: OpeningZone[];
   placementGeometry?: Pick<
     RoomGeometry,
