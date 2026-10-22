@@ -1,0 +1,35 @@
+{
+  "license": "https://polyhaven.com/license",
+  "assets": [
+    {
+      "file": "potted_plant_04.glb",
+      "source": "https://polyhaven.com/a/potted_plant_04",
+      "license": "CC0-1.0"
+    },
+    {
+      "file": "neutral-pillows.glb",
+      "source": "https://polyhaven.com/a/throw_pillows_01",
+      "license": "CC0-1.0"
+    },
+    {
+      "file": "plaster-normal.webp",
+      "source": "https://polyhaven.com/a/plastered_wall_04",
+      "license": "CC0-1.0"
+    },
+    {
+      "file": "linen-normal.webp",
+      "source": "https://polyhaven.com/a/fabric_pattern_07",
+      "license": "CC0-1.0"
+    },
+    {
+      "file": "linen-roughness.webp",
+      "source": "https://polyhaven.com/a/fabric_pattern_07",
+      "license": "CC0-1.0"
+    },
+    {
+      "file": "daylight-1k.hdr",
+      "source": "https://polyhaven.com/a/lebombo",
+      "license": "CC0-1.0"
+    }
+  ]
+}

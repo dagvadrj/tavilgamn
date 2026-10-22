@@ -2,10 +2,17 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { RoomPlannerSignIn } from "@/features/room-planner/components/RoomPlannerSignIn";
 import { trackProduct3d } from "@/lib/productEngagement";
-import { duplicateFurniturePlacement, moveAttachedFurniture, resolveFurnitureAttachments } from "@/lib/furnitureAttachment";
+import {
+  duplicateFurniturePlacement,
+  moveAttachedFurniture,
+  resolveFurnitureAttachments,
+} from "@/lib/furnitureAttachment";
 import type { RoomPlacementHintSource } from "@/three/RoomPlacementHints";
 import { FurnitureAttachmentControls } from "@/features/room-planner/components/FurnitureAttachmentControls";
-import { createRoomBuilderDraft, resizeRoomBuilder } from "@/lib/roomBuilderDraft";
+import {
+  createRoomBuilderDraft,
+  resizeRoomBuilder,
+} from "@/lib/roomBuilderDraft";
 import { furnishRoom, suggestedFurniture } from "@/lib/roomFurnishing";
 import "./room-planner-enhancements.css";
 import {
@@ -13,7 +20,10 @@ import {
   type SurfaceSelection,
 } from "./RoomSurfacePopover";
 import { RoomMeasureInput } from "@/features/room-planner/components/RoomMeasureInput";
-import { RoomMeasureUnit, useRoomMeasureUnit } from "@/features/room-planner/components/RoomMeasureUnit";
+import {
+  RoomMeasureUnit,
+  useRoomMeasureUnit,
+} from "@/features/room-planner/components/RoomMeasureUnit";
 import { OpeningQuickEditor } from "@/features/room-planner/components/OpeningQuickEditor";
 import { RoomWallPlan } from "./RoomWallPlan";
 import { configureAddedRoom } from "@/lib/addRoomOptions";
@@ -31,19 +41,33 @@ import {
 } from "@/features/room-planner/components/PlannerPanels";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RoomPlannerStart } from "@/features/room-planner/components/RoomPlannerStart";
+import {
+  PlannerCatalogToolbar,
+  sortPlannerCatalog,
+  type PlannerCatalogSort,
+} from "@/features/planner/components/PlannerCatalogToolbar";
 import { RoomCatalogFilters } from "@/features/room-planner/components/RoomCatalogFilters";
 import { RoomPlacementHelp } from "@/features/room-planner/components/RoomPlacementHelp";
 import { useRoomSaveStatus } from "@/features/room-planner/hooks/useRoomSaveStatus";
 import { roomPlacementWarnings } from "@/lib/roomPlacementWarnings";
-import { RoomTemplateAdminControls, useRoomTemplateAdmin } from "@/features/room-planner/components/RoomTemplateAdmin";
+import {
+  RoomTemplateAdminControls,
+  useRoomTemplateAdmin,
+} from "@/features/room-planner/components/RoomTemplateAdmin";
 import { authFetch } from "@/lib/authFetch";
-import { downloadKitchenFile, kitchenExportFilename } from "@/three/kitchenExport";
+import {
+  downloadKitchenFile,
+  kitchenExportFilename,
+} from "@/three/kitchenExport";
 import { PlannerTour } from "@/features/planner/components/PlannerTour";
 import {
   RoomPlannerControls,
   type RoomView,
 } from "@/features/room-planner/components/RoomPlannerControls";
-import { roomPlannerCatalog, type RoomCatalogScope } from "@/lib/roomCatalogPolicy";
+import {
+  roomPlannerCatalog,
+  type RoomCatalogScope,
+} from "@/lib/roomCatalogPolicy";
 import { PlannerModelCard } from "@/features/planner/components/PlannerModelCard";
 import type { CameraAction, CameraRequest } from "@/lib/plannerCamera";
 import Image from "next/image";
@@ -66,7 +90,6 @@ import {
   Undo2,
   Redo2,
   Ruler,
-  Search,
   Download,
   Check,
   Move,
@@ -128,10 +151,7 @@ import { RoomTourControls } from "./RoomTourControls";
 import { interiorCamera } from "@/lib/roomInteriorCamera";
 import { tourPointValid } from "@/three/roomCameraPlacement";
 import { syncDesignRooms } from "@/lib/roomDesign";
-import {
-  isPlacementValid,
-  dimsFor,
-} from "@/three/collision";
+import { isPlacementValid, dimsFor } from "@/three/collision";
 import {
   getFurnitureMeasurements,
   formatMeasurement,
@@ -176,7 +196,14 @@ export function RoomPlanner() {
   useEffect(() => {
     void initialize();
   }, [initialize]);
-  if (!initialized) return <PageSkeleton variant="planner" layout="room-start" label="Өмнөх өрөөг сэргээж байна…"/>;
+  if (!initialized)
+    return (
+      <PageSkeleton
+        variant="planner"
+        layout="room-start"
+        label="Өмнөх өрөөг сэргээж байна…"
+      />
+    );
   return <RoomPlannerEditor key={user?.id ?? "guest"} />;
 }
 
@@ -245,12 +272,17 @@ function RoomPlannerEditor() {
   }, []);
   const templateAdmin = useRoomTemplateAdmin(loadTemplate);
   const glbExporter = useRef<(() => Promise<Blob>) | null>(null);
-  const exportReady = useCallback((exporter: (() => Promise<Blob>) | null) => { glbExporter.current = exporter; }, []);
+  const exportReady = useCallback((exporter: (() => Promise<Blob>) | null) => {
+    glbExporter.current = exporter;
+  }, []);
   const previewCapture = useRef<(() => string | null) | null>(null);
   const placementHints = useRef<RoomPlacementHintSource | null>(null);
-  const placementHintsReady = useCallback((source: RoomPlacementHintSource | null) => {
-    placementHints.current = source;
-  }, []);
+  const placementHintsReady = useCallback(
+    (source: RoomPlacementHintSource | null) => {
+      placementHints.current = source;
+    },
+    [],
+  );
   const previewReady = useCallback((capture: (() => string | null) | null) => {
     previewCapture.current = capture;
   }, []);
@@ -275,11 +307,12 @@ function RoomPlannerEditor() {
   const [recommendationsOpen, setRecommendationsOpen] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.has("kitchen") && params.get("setup") !== "1") setRoomStartOpen(false);
+    if (params.has("kitchen") && params.get("setup") !== "1")
+      setRoomStartOpen(false);
   }, []);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [roomMapOpen, setRoomMapOpen] = useState(false);
-  const measureUnit = useRoomMeasureUnit(state => state.unit);
+  const measureUnit = useRoomMeasureUnit((state) => state.unit);
   const measureFactor = measureUnit === "мм" ? 1000 : 100;
   const [roomView, setRoomView] = useState<RoomView>("dollhouse");
   const {
@@ -394,7 +427,12 @@ function RoomPlannerEditor() {
       setView("plan");
       setRoomView("top");
     }
-    if (action === "front" || action === "back" || action === "left" || action === "right") {
+    if (
+      action === "front" ||
+      action === "back" ||
+      action === "left" ||
+      action === "right"
+    ) {
       setView("perspective");
       setRoomView(action);
     }
@@ -580,22 +618,82 @@ function RoomPlannerEditor() {
   };
 
   const activeRoomType = current?.roomType ?? "living";
-  const scopedCatalog = useMemo(() => roomPlannerCatalog(
-    catalog.products.filter(p => !p.model), dbModels,
-    { roomType: activeRoomType, scope: catalogScope, category: paletteCat, query, format: catalogFormat },
-  ), [catalog.products, dbModels, activeRoomType, catalogScope, paletteCat, query, catalogFormat]);
-  const paletteItems = scopedCatalog.photos;
-  const dbPaletteItems = scopedCatalog.models;
+  const scopedCatalog = useMemo(
+    () =>
+      roomPlannerCatalog(
+        catalog.products.filter((p) => !p.model),
+        dbModels,
+        {
+          roomType: activeRoomType,
+          scope: catalogScope,
+          category: paletteCat,
+          query,
+          format: catalogFormat,
+        },
+      ),
+    [
+      catalog.products,
+      dbModels,
+      activeRoomType,
+      catalogScope,
+      paletteCat,
+      query,
+      catalogFormat,
+    ],
+  );
+  const [catalogSort, setCatalogSort] = useState<PlannerCatalogSort>("default");
+  const paletteItems = useMemo(
+    () =>
+      sortPlannerCatalog(
+        scopedCatalog.photos,
+        catalogSort,
+        (item) => item.name,
+      ),
+    [scopedCatalog.photos, catalogSort],
+  );
+  const dbPaletteItems = useMemo(
+    () =>
+      sortPlannerCatalog(
+        scopedCatalog.models,
+        catalogSort,
+        (item) => item.name,
+      ),
+    [scopedCatalog.models, catalogSort],
+  );
+  const catalogEntries = useMemo(
+    () =>
+      sortPlannerCatalog(
+        [
+          ...(catalogFormat === "glb"
+            ? []
+            : paletteItems.map((item) => ({ kind: "photo" as const, item }))),
+          ...(catalogFormat === "photo"
+            ? []
+            : dbPaletteItems.map((item) => ({ kind: "model" as const, item }))),
+        ],
+        catalogSort,
+        (entry) => entry.item.name,
+      ),
+    [paletteItems, dbPaletteItems, catalogFormat, catalogSort],
+  );
   useEffect(() => {
-    if (scopedCatalog.category !== paletteCat) setPaletteCat(scopedCatalog.category);
+    if (scopedCatalog.category !== paletteCat)
+      setPaletteCat(scopedCatalog.category);
   }, [scopedCatalog.category, paletteCat, setPaletteCat]);
   const placement = useMemo(
     () => (current ? roomPlacementContext(current) : null),
     [current],
   );
-  const activePlacement = useMemo(() => placement ? {
-    ...placement, room: { ...placement.room, placementGeometry: undefined },
-  } : undefined, [placement]);
+  const activePlacement = useMemo(
+    () =>
+      placement
+        ? {
+            ...placement,
+            room: { ...placement.room, placementGeometry: undefined },
+          }
+        : undefined,
+    [placement],
+  );
   const libraryReturnHandled = useRef(false);
   const authReturnHandled = useRef(false);
   useEffect(() => {
@@ -605,11 +703,23 @@ function RoomPlannerEditor() {
     authReturnHandled.current = true;
     const state = useDesigns.getState();
     if (state.current?.id === id) setRoomStartOpen(false);
-    else if (state.designs.some(design => design.id === id)) { state.loadDesign(id); setRoomStartOpen(false); }
-    else { setRoomStartOpen(true); setNotice("Энэ загвар энэ хэрэглэгчийн төхөөрөмжийн хадгалалтад олдсонгүй."); }
+    else if (state.designs.some((design) => design.id === id)) {
+      state.loadDesign(id);
+      setRoomStartOpen(false);
+    } else {
+      setRoomStartOpen(true);
+      setNotice(
+        "Энэ загвар энэ хэрэглэгчийн төхөөрөмжийн хадгалалтад олдсонгүй.",
+      );
+    }
   }, [setNotice]);
   useEffect(() => {
-    if (!current || libraryReturnHandled.current || new URLSearchParams(window.location.search).get("library") !== "mine") return;
+    if (
+      !current ||
+      libraryReturnHandled.current ||
+      new URLSearchParams(window.location.search).get("library") !== "mine"
+    )
+      return;
     libraryReturnHandled.current = true;
     setRoomStartOpen(false);
     setKitchenOnly(true);
@@ -617,109 +727,221 @@ function RoomPlannerEditor() {
   }, [current, setLeftOpen]);
   const handledShowroom = useRef<string | null>(null);
   const [showroomProduct, setShowroomProduct] = useState<string | null>(null);
-  useEffect(() => { setShowroomProduct(new URLSearchParams(window.location.search).get("product")); }, []);
   useEffect(() => {
-    if (!showroomProduct || roomStartOpen || !current || !catalog.ready || catalog.loading || handledShowroom.current === showroomProduct) return;
-    const product = catalog.products.find(p => p.id === showroomProduct);
+    setShowroomProduct(
+      new URLSearchParams(window.location.search).get("product"),
+    );
+  }, []);
+  useEffect(() => {
+    if (
+      !showroomProduct ||
+      roomStartOpen ||
+      !current ||
+      !catalog.ready ||
+      catalog.loading ||
+      handledShowroom.current === showroomProduct
+    )
+      return;
+    const product = catalog.products.find((p) => p.id === showroomProduct);
     handledShowroom.current = showroomProduct;
-    if (!product?.model) { setNotice("QR-ийн барааны 3D загвар одоогоор ашиглах боломжгүй байна."); return; }
-    const result = useDesigns.getState().placeFurniture({ instanceId: `p_${crypto.randomUUID()}`, productId: product.id, x: 0, z: 0, rotation: 0, color: product.defaultColor, material: product.materials[0]?.id ?? "wood", placement: product.placement, details: { name: product.name, dimensions: { ...product.dimensions }, image: product.image, category: product.category } });
-    if (result.piece) { rememberFurniture(result.piece); setSelected(result.piece.instanceId); setCatalogOpen(false); setLeftOpen(false); trackProduct3d(product.id, "placement"); setNotice(`${product.name}-г таны өрөөнд байрлууллаа. Чирж байрлалыг нь тохируулаарай.`); }
-    else setNotice(result.error ?? "Өрөөнд багтах сул зай алга. Өрөөний хэмжээгээ шалгаад бараагаа каталогоос дахин сонгоорой.");
-    const url = new URL(window.location.href); url.searchParams.delete("product"); url.searchParams.delete("source"); window.history.replaceState(window.history.state, "", url);
-  }, [showroomProduct, roomStartOpen, current, catalog.ready, catalog.loading, catalog.products, rememberFurniture, setSelected, setCatalogOpen, setLeftOpen, setNotice]);
-  const placementWarnings = useMemo(() => current ? roomPlacementWarnings(current, catalog.products) : [], [current, catalog.products]);
-  const storageStatus = useRoomSaveStatus(current, designs, useDesigns.persist?.getOptions().name);
-  if (templateAdmin.loading || templateAdmin.error) return <main className="container-page py-10"><p role={templateAdmin.error ? "alert" : "status"}>{templateAdmin.error || "Бэлэн өрөөг нээж байна…"}</p><Link href="/admin?tab=rooms">Өрөөний сан руу буцах</Link></main>;
+    if (!product?.model) {
+      setNotice("QR-ийн барааны 3D загвар одоогоор ашиглах боломжгүй байна.");
+      return;
+    }
+    const result = useDesigns
+      .getState()
+      .placeFurniture({
+        instanceId: `p_${crypto.randomUUID()}`,
+        productId: product.id,
+        x: 0,
+        z: 0,
+        rotation: 0,
+        color: product.defaultColor,
+        material: product.materials[0]?.id ?? "wood",
+        placement: product.placement,
+        details: {
+          name: product.name,
+          dimensions: { ...product.dimensions },
+          image: product.image,
+          category: product.category,
+        },
+      });
+    if (result.piece) {
+      rememberFurniture(result.piece);
+      setSelected(result.piece.instanceId);
+      setCatalogOpen(false);
+      setLeftOpen(false);
+      trackProduct3d(product.id, "placement");
+      setNotice(
+        `${product.name}-г таны өрөөнд байрлууллаа. Чирж байрлалыг нь тохируулаарай.`,
+      );
+    } else
+      setNotice(
+        result.error ??
+          "Өрөөнд багтах сул зай алга. Өрөөний хэмжээгээ шалгаад бараагаа каталогоос дахин сонгоорой.",
+      );
+    const url = new URL(window.location.href);
+    url.searchParams.delete("product");
+    url.searchParams.delete("source");
+    window.history.replaceState(window.history.state, "", url);
+  }, [
+    showroomProduct,
+    roomStartOpen,
+    current,
+    catalog.ready,
+    catalog.loading,
+    catalog.products,
+    rememberFurniture,
+    setSelected,
+    setCatalogOpen,
+    setLeftOpen,
+    setNotice,
+  ]);
+  const placementWarnings = useMemo(
+    () => (current ? roomPlacementWarnings(current, catalog.products) : []),
+    [current, catalog.products],
+  );
+  const storageStatus = useRoomSaveStatus(
+    current,
+    designs,
+    useDesigns.persist?.getOptions().name,
+  );
+  if (templateAdmin.loading || templateAdmin.error)
+    return (
+      <main className="container-page py-10">
+        <p role={templateAdmin.error ? "alert" : "status"}>
+          {templateAdmin.error || "Бэлэн өрөөг нээж байна…"}
+        </p>
+        <Link href="/admin?tab=rooms">Өрөөний сан руу буцах</Link>
+      </main>
+    );
   if (roomStartOpen || !current || !placement) {
     shortcuts.current = {};
     return (
       <>
-      {showroomProduct && <p className="container-page py-3 text-sm" role="status">QR-аар сонгосон бараа: <strong>{catalog.products.find(p => p.id === showroomProduct)?.name ?? "Ачаалж байна…"}</strong>. Гэрийнхээ хэмжээг оруулаарай. Өрөө байгуулахад барааг автоматаар байрлуулна.</p>}
-      <RoomPlannerStart
-        onTemplate={loadTemplate}
-        draft={current}
-        designs={designs}
-        onDelete={deleteDesign}
-        onOpen={id => { loadDesign(id); setRoomStartOpen(false); }}
-        onResume={() => setRoomStartOpen(false)}
-        onStart={(type, dimensions, options) => {
-          if (
-            options?.furnishing === "preset" &&
-            !suggestedFurniture(type, catalog.products).length
-          )
-            throw new Error(
-              "Энэ төрлийн өрөөний 3D тавилга каталогт хараахан бэлэн болоогүй. Хоосон өрөө эсвэл Миний тавилга сонгоно уу.",
-            );
-          if (options?.furnishing === "mine" && !options.furnitureIds?.length)
-            throw new Error("Миний тавилгын сангаас тавилгаа сонгоно уу.");
-          const prepared = options
-            ? configureAddedRoom(
-                { ...newDesignRoom(type, []), ...dimensions },
-                options,
-              )
-            : null;
-          // Keep the previous draft available before starting a different room.
-          if (useDesigns.getState().current) saveCurrent();
-          createNew("80", `${ROOM_TYPES[type].label} загвар`, type, dimensions, prepared ? createRoomBuilderDraft(prepared) : undefined);
-          if (options) {
-            const configured = prepared!;
-            const result = furnishRoom(
-              configured,
-              type,
-              options,
-              catalog.products,
-              furniture ?? [],
-              useDesigns.getState().current?.activeRoomId,
-            );
-            updateRoom({
-              wallFeatures: configured.wallFeatures,
-              openings: configured.openings,
-              pieces: result.pieces,
-            });
-            result.pieces.forEach((piece) => rememberFurniture(piece));
-            setRecommendationsOpen((options.furnishing ?? "empty") !== "empty");
-            if (result.skipped.length)
-              setNotice(
-                `Багтаагүй тавилга: ${result.skipped.join(", ")}. Тавилгын санд хадгалагдсан хэвээр.`,
+        {showroomProduct && (
+          <p className="container-page py-3 text-sm" role="status">
+            QR-аар сонгосон бараа:{" "}
+            <strong>
+              {catalog.products.find((p) => p.id === showroomProduct)?.name ??
+                "Ачаалж байна…"}
+            </strong>
+            . Гэрийнхээ хэмжээг оруулаарай. Өрөө байгуулахад барааг автоматаар
+            байрлуулна.
+          </p>
+        )}
+        <RoomPlannerStart
+          onTemplate={loadTemplate}
+          draft={current}
+          designs={designs}
+          onDelete={deleteDesign}
+          onOpen={(id) => {
+            loadDesign(id);
+            setRoomStartOpen(false);
+          }}
+          onResume={() => setRoomStartOpen(false)}
+          onStart={(type, dimensions, options) => {
+            if (
+              options?.furnishing === "preset" &&
+              !suggestedFurniture(type, catalog.products).length
+            )
+              throw new Error(
+                "Энэ төрлийн өрөөний 3D тавилга каталогт хараахан бэлэн болоогүй. Хоосон өрөө эсвэл Миний тавилга сонгоно уу.",
               );
-          }
-          setRoomStartOpen(false);
-          setShowStartHint(false);
-          setCatalogOpen(false);
-          setPropertiesOpen(false);
-          setSummaryOpen(false);
-          setKitchenOnly(type === "kitchen");
-          setLeftOpen(type === "kitchen");
-        }}
-      />
+            if (options?.furnishing === "mine" && !options.furnitureIds?.length)
+              throw new Error("Миний тавилгын сангаас тавилгаа сонгоно уу.");
+            const prepared = options
+              ? configureAddedRoom(
+                  { ...newDesignRoom(type, []), ...dimensions },
+                  options,
+                )
+              : null;
+            // Keep the previous draft available before starting a different room.
+            if (useDesigns.getState().current) saveCurrent();
+            createNew(
+              "80",
+              `${ROOM_TYPES[type].label} загвар`,
+              type,
+              dimensions,
+              prepared ? createRoomBuilderDraft(prepared) : undefined,
+            );
+            if (options) {
+              const configured = prepared!;
+              const result = furnishRoom(
+                configured,
+                type,
+                options,
+                catalog.products,
+                furniture ?? [],
+                useDesigns.getState().current?.activeRoomId,
+              );
+              updateRoom({
+                wallFeatures: configured.wallFeatures,
+                openings: configured.openings,
+                pieces: result.pieces,
+              });
+              result.pieces.forEach((piece) => rememberFurniture(piece));
+              setRecommendationsOpen(
+                (options.furnishing ?? "empty") !== "empty",
+              );
+              if (result.skipped.length)
+                setNotice(
+                  `Багтаагүй тавилга: ${result.skipped.join(", ")}. Тавилгын санд хадгалагдсан хэвээр.`,
+                );
+            }
+            setRoomStartOpen(false);
+            setShowStartHint(false);
+            setCatalogOpen(false);
+            setPropertiesOpen(false);
+            setSummaryOpen(false);
+            setKitchenOnly(type === "kitchen");
+            setLeftOpen(type === "kitchen");
+          }}
+        />
       </>
     );
   }
 
   const placeNewPiece = (piece: PlacedFurniture) => {
     const latest = useDesigns.getState().current;
-    if (!latest || latest.id !== current.id) { setNotice("Өрөө өөрчлөгдсөн байна. Тавилгаа дахин сонгоно уу."); return; }
+    if (!latest || latest.id !== current.id) {
+      setNotice("Өрөө өөрчлөгдсөн байна. Тавилгаа дахин сонгоно уу.");
+      return;
+    }
     const source = placementHints.current;
     let hints;
     // The SVG plan has its own framing; never use a paused/hidden 3D camera for it.
-    if (roomView !== "top" && source?.designId === latest.id && source.roomId === (latest.activeRoomId ?? `${latest.id}-room-1`)) {
-      try { hints = source.read(latest); } catch { /* Camera unavailable: deterministic local fallback. */ }
+    if (
+      roomView !== "top" &&
+      source?.designId === latest.id &&
+      source.roomId === (latest.activeRoomId ?? `${latest.id}-room-1`)
+    ) {
+      try {
+        hints = source.read(latest);
+      } catch {
+        /* Camera unavailable: deterministic local fallback. */
+      }
     }
     const result = useDesigns.getState().placeFurniture(piece, hints);
-    if (!result.piece) { setNotice(result.error ?? "Тавилга байрлуулж чадсангүй."); return; }
+    if (!result.piece) {
+      setNotice(result.error ?? "Тавилга байрлуулж чадсангүй.");
+      return;
+    }
     rememberFurniture(result.piece);
-    if (!piece.modelId && !piece.kitchen) trackProduct3d(piece.productId, "placement");
+    if (!piece.modelId && !piece.kitchen)
+      trackProduct3d(piece.productId, "placement");
     setSelected(result.piece.instanceId);
     setSelectedOpening(null);
     setSelectedWall(null);
     setPlacementTemplate(null);
     setLeftOpen(false);
-    setNotice(result.piece.attachment?.kind === "wall"
-      ? "Тавилгыг хананд бэхэллээ. Ханын дагуу болон дээш, доош чирж зөөнө."
-      : result.piece.attachment?.kind === "surface"
-        ? "Тавилгыг тулгуур дээр байрлууллаа. Чирж байрлалыг нь тохируулаарай."
-        : "Тавилгыг сул зайд байрлууллаа. Чирж зөөх эсвэл Эргүүлэх товчоор чиглэлийг нь өөрчилнө.");
+    setNotice(
+      result.piece.attachment?.kind === "wall"
+        ? "Тавилгыг хананд бэхэллээ. Ханын дагуу болон дээш, доош чирж зөөнө."
+        : result.piece.attachment?.kind === "surface"
+          ? "Тавилгыг тулгуур дээр байрлууллаа. Чирж байрлалыг нь тохируулаарай."
+          : "Тавилгыг сул зайд байрлууллаа. Чирж зөөх эсвэл Эргүүлэх товчоор чиглэлийг нь өөрчилнө.",
+    );
   };
   const addPiece = (productId: string) => {
     const product = getProduct(productId);
@@ -773,24 +995,56 @@ function RoomPlannerEditor() {
     placeNewPiece(piece);
   };
 
-  const onMove = (id: string, x: number, z: number, pose?: Partial<Pick<PlacedFurniture, "elevation" | "rotation" | "attachment">>) => {
+  const onMove = (
+    id: string,
+    x: number,
+    z: number,
+    pose?: Partial<
+      Pick<PlacedFurniture, "elevation" | "rotation" | "attachment">
+    >,
+  ) => {
     try {
-      updatePieces(current.pieces.map(p=>p.instanceId===id ? pose ? {...p,x,z,...pose} : moveAttachedFurniture(p,x,z,current,current.activeRoomId??`${current.id}-room-1`,current.pieces) : p));
-    }catch(reason){setNotice((reason as Error).message);}
+      updatePieces(
+        current.pieces.map((p) =>
+          p.instanceId === id
+            ? pose
+              ? { ...p, x, z, ...pose }
+              : moveAttachedFurniture(
+                  p,
+                  x,
+                  z,
+                  current,
+                  current.activeRoomId ?? `${current.id}-room-1`,
+                  current.pieces,
+                )
+            : p,
+        ),
+      );
+    } catch (reason) {
+      setNotice((reason as Error).message);
+    }
   };
 
   const rotateSelected = () => {
     if (!selected) return;
     const piece = current.pieces.find((p) => p.instanceId === selected);
     if (!piece) return;
-    if (piece.attachment && piece.attachment.kind !== "floor") { setNotice("Бэхэлгээний тохиргооноос ханын байрлал эсвэл тулгуур гадаргууг өөрчилнө үү."); return; }
+    if (piece.attachment && piece.attachment.kind !== "floor") {
+      setNotice(
+        "Бэхэлгээний тохиргооноос ханын байрлал эсвэл тулгуур гадаргууг өөрчилнө үү.",
+      );
+      return;
+    }
     const rotated: PlacedFurniture = {
       ...piece,
       rotation: (piece.rotation + Math.PI / 2) % (Math.PI * 2),
     };
-    if (rotated.attachment?.kind === "floor") rotated.attachment = { ...rotated.attachment, yaw: rotated.rotation };
+    if (rotated.attachment?.kind === "floor")
+      rotated.attachment = { ...rotated.attachment, yaw: rotated.rotation };
     if (!isPlacementValid(rotated, placement.pieces, placement.room)) {
-      setNotice("Эргүүлэхэд өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.");
+      setNotice(
+        "Эргүүлэхэд өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.",
+      );
       return;
     }
 
@@ -810,9 +1064,20 @@ function RoomPlannerEditor() {
       return;
     }
     if (!selected) return;
-    const removed=new Set([selected]);
-    for(let changed=true;changed;){changed=false;for(const p of current.pieces)if(p.attachment?.kind==="surface"&&removed.has(p.attachment.parentInstanceId)&&!removed.has(p.instanceId)){removed.add(p.instanceId);changed=true;}}
-    updatePieces(current.pieces.filter(p=>!removed.has(p.instanceId)));
+    const removed = new Set([selected]);
+    for (let changed = true; changed;) {
+      changed = false;
+      for (const p of current.pieces)
+        if (
+          p.attachment?.kind === "surface" &&
+          removed.has(p.attachment.parentInstanceId) &&
+          !removed.has(p.instanceId)
+        ) {
+          removed.add(p.instanceId);
+          changed = true;
+        }
+    }
+    updatePieces(current.pieces.filter((p) => !removed.has(p.instanceId)));
     setSelected(null);
   };
 
@@ -929,7 +1194,7 @@ function RoomPlannerEditor() {
         unitPrice: getPiecePrice(piece),
         qty: 1,
         stockQuantity: product.stockQuantity,
-      madeToOrder: product.madeToOrder,
+        madeToOrder: product.madeToOrder,
       });
       added += count;
       if (!count) skipped++;
@@ -986,11 +1251,22 @@ function RoomPlannerEditor() {
     patch: Partial<Pick<PlacedFurniture, "x" | "z" | "rotation">>,
   ) => {
     if (!selectedPiece) return;
-    if (selectedPiece.attachment && selectedPiece.attachment.kind !== "floor") { setNotice("Бэхэлгээний тохиргоог ашиглах эсвэл тавилгыг чирж зөөнө үү."); return; }
+    if (selectedPiece.attachment && selectedPiece.attachment.kind !== "floor") {
+      setNotice("Бэхэлгээний тохиргоог ашиглах эсвэл тавилгыг чирж зөөнө үү.");
+      return;
+    }
     const candidate = { ...selectedPiece, ...patch };
-    if (candidate.attachment?.kind === "floor") candidate.attachment = { ...candidate.attachment, x: candidate.x, z: candidate.z, yaw: candidate.rotation };
+    if (candidate.attachment?.kind === "floor")
+      candidate.attachment = {
+        ...candidate.attachment,
+        x: candidate.x,
+        z: candidate.z,
+        yaw: candidate.rotation,
+      };
     if (!isPlacementValid(candidate, placement.pieces, placement.room)) {
-      setNotice("Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.");
+      setNotice(
+        "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.",
+      );
       return;
     }
     updatePieces(
@@ -1002,7 +1278,8 @@ function RoomPlannerEditor() {
   const duplicateSelected = () => {
     if (!selectedPiece) return;
     const copy = duplicateFurniturePlacement(
-      selectedPiece, `p_${crypto.randomUUID()}`,
+      selectedPiece,
+      `p_${crypto.randomUUID()}`,
       placement.pieces,
       placement.room,
       current.activeRoomId ?? `${current.id}-room-1`,
@@ -1020,14 +1297,26 @@ function RoomPlannerEditor() {
       saveCurrent(saveName.trim() || current.name.trim() || "Миний өрөө");
       const storageName = useDesigns.persist.getOptions().name;
       if (!storageName) throw new Error("Local storage is unavailable");
-      const stored = JSON.parse(window.localStorage.getItem(storageName) ?? "null");
-      if (!stored?.state?.designs?.some((design: RoomDesign) => design.id === current.id && design.updatedAt === useDesigns.getState().current?.updatedAt)) {
+      const stored = JSON.parse(
+        window.localStorage.getItem(storageName) ?? "null",
+      );
+      if (
+        !stored?.state?.designs?.some(
+          (design: RoomDesign) =>
+            design.id === current.id &&
+            design.updatedAt === useDesigns.getState().current?.updatedAt,
+        )
+      ) {
         throw new Error("Local design persistence failed");
       }
       setSaveName("");
-      setNotice("Загварыг энэ төхөөрөмж дээр хадгаллаа. Өөр төхөөрөмжид автоматаар шилжихгүй.");
+      setNotice(
+        "Загварыг энэ төхөөрөмж дээр хадгаллаа. Өөр төхөөрөмжид автоматаар шилжихгүй.",
+      );
     } catch {
-      setNotice("Энэ төхөөрөмж дээр хадгалж чадсангүй. Browser-ийн хадгалах зай, зөвшөөрлийг шалгаад дахин оролдоно уу.");
+      setNotice(
+        "Энэ төхөөрөмж дээр хадгалж чадсангүй. Browser-ийн хадгалах зай, зөвшөөрлийг шалгаад дахин оролдоно уу.",
+      );
     }
   };
   const nudge = (x: number, z: number) => {
@@ -1090,9 +1379,17 @@ function RoomPlannerEditor() {
     // latest room, including its already shifted contents, as one store write.
     const latest = useDesigns.getState().current;
     if (!latest) return "Өрөөг дахин нээнэ үү.";
-    if(latest.outline && (!shape.outline || shape.outline===latest.outline) && (shape.width!==latest.width || shape.depth!==latest.depth)) {
-      const resized=resizeRoomBuilder(createRoomBuilderDraft(latest),shape.width,shape.depth);
-      shape={...shape,outline:resized.outline};
+    if (
+      latest.outline &&
+      (!shape.outline || shape.outline === latest.outline) &&
+      (shape.width !== latest.width || shape.depth !== latest.depth)
+    ) {
+      const resized = resizeRoomBuilder(
+        createRoomBuilderDraft(latest),
+        shape.width,
+        shape.depth,
+      );
+      shape = { ...shape, outline: resized.outline };
     }
     const shifted =
       contentShift && (contentShift.x !== 0 || contentShift.z !== 0);
@@ -1114,7 +1411,15 @@ function RoomPlannerEditor() {
             })),
           }
         : latest.lighting;
-    try { pieces = resolveFurnitureAttachments(pieces, { ...latest, ...shape }, latest.activeRoomId ?? `${latest.id}-room-1`); } catch(reason) { return (reason as Error).message; }
+    try {
+      pieces = resolveFurnitureAttachments(
+        pieces,
+        { ...latest, ...shape },
+        latest.activeRoomId ?? `${latest.id}-room-1`,
+      );
+    } catch (reason) {
+      return (reason as Error).message;
+    }
     const next = {
       ...latest,
       ...shape,
@@ -1150,10 +1455,17 @@ function RoomPlannerEditor() {
     )
       return "Хана, товойлт эсвэл багана тавилгатай давхцаж байна. Эхлээд тавилгын байрлалыг өөрчилнө үү.";
     if (
-      nextDesign.lighting?.fixtures.some((fixture) => !fixtureFitsCeiling(nextDesign, fixture))
+      nextDesign.lighting?.fixtures.some(
+        (fixture) => !fixtureFitsCeiling(nextDesign, fixture),
+      )
     )
       return "Таазны гэрэл шинэ өрөөний гадна үлдэж байна. Эхлээд гэрлийн байрлалыг өөрчилнө үү.";
-    updateRoom({ ...shape, openings: next.openings, pieces, lighting: nextDesign.lighting });
+    updateRoom({
+      ...shape,
+      openings: next.openings,
+      pieces,
+      lighting: nextDesign.lighting,
+    });
     setActivePreset(null);
     setLocalFile(null);
     setLocalUrl(null);
@@ -1241,31 +1553,70 @@ function RoomPlannerEditor() {
         "room-planner-layout planner-workspace planner-studio planner-reference room-simple relative overflow-hidden",
         (leftOpen || rightOpen || summaryOpen) && "room-panel-open",
         expanded && "planner-expanded",
-          templateAdmin.isAdmin && "room-admin-mode",
+        templateAdmin.isAdmin && "room-admin-mode",
       )}
     >
       <PlannerTour kind="room" request={tourRequest} />
       <PlannerViewport />
-      {templateAdmin.isAdmin && <RoomTemplateAdminControls key={current.id} design={current} initial={templateAdmin.loaded?.designId === current.id ? templateAdmin.loaded.template : undefined} customInterior={!!localUrl || !!activePreset} catalogReady={catalog.ready && !catalog.loading && !catalog.error} onCapture={() => previewCapture.current?.() ?? null} onExport={async () => {
-        if (!catalog.ready || catalog.loading || catalog.error) throw new Error("Тавилгын сан ачаалж дууссаны дараа GLB татна уу.");
-        if (!glbExporter.current || !kitchenUser) throw new Error("3D өрөө бэлэн болсны дараа дахин оролдоно уу.");
-        const response = await authFetch("/api/admin/room-templates/export", { method: "POST" }, kitchenUser.id);
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
-        if (useDesigns.getState().current?.id !== current.id) throw new Error("Өрөө өөрчлөгдсөн байна. Дахин татна уу.");
-        const exporter = glbExporter.current;
-        if (!exporter) throw new Error("Өрөө өөрчлөгдсөн байна. Дахин оролдоно уу.");
-        const blob = await exporter();
-        if (useAuth.getState().user?.id !== kitchenUser.id || useDesigns.getState().current?.id !== current.id) throw new Error("Хэрэглэгч эсвэл өрөө өөрчлөгдсөн байна. Дахин татна уу.");
-        downloadKitchenFile(blob, kitchenExportFilename(current.name, "glb"));
-      }} />}
+      {templateAdmin.isAdmin && (
+        <RoomTemplateAdminControls
+          key={current.id}
+          design={current}
+          initial={
+            templateAdmin.loaded?.designId === current.id
+              ? templateAdmin.loaded.template
+              : undefined
+          }
+          customInterior={!!localUrl || !!activePreset}
+          catalogReady={catalog.ready && !catalog.loading && !catalog.error}
+          onCapture={() => previewCapture.current?.() ?? null}
+          onExport={async () => {
+            if (!catalog.ready || catalog.loading || catalog.error)
+              throw new Error(
+                "Тавилгын сан ачаалж дууссаны дараа GLB татна уу.",
+              );
+            if (!glbExporter.current || !kitchenUser)
+              throw new Error("3D өрөө бэлэн болсны дараа дахин оролдоно уу.");
+            const response = await authFetch(
+              "/api/admin/room-templates/export",
+              { method: "POST" },
+              kitchenUser.id,
+            );
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error);
+            if (useDesigns.getState().current?.id !== current.id)
+              throw new Error("Өрөө өөрчлөгдсөн байна. Дахин татна уу.");
+            const exporter = glbExporter.current;
+            if (!exporter)
+              throw new Error("Өрөө өөрчлөгдсөн байна. Дахин оролдоно уу.");
+            const blob = await exporter();
+            if (
+              useAuth.getState().user?.id !== kitchenUser.id ||
+              useDesigns.getState().current?.id !== current.id
+            )
+              throw new Error(
+                "Хэрэглэгч эсвэл өрөө өөрчлөгдсөн байна. Дахин татна уу.",
+              );
+            downloadKitchenFile(
+              blob,
+              kitchenExportFilename(current.name, "glb"),
+            );
+          }}
+        />
+      )}
       <header className="studio-header room-studio-header">
         <Link href="/" className="studio-brand" aria-label="Tavilga.mn нүүр">
           <House size={19} />
           <span>tavilga.mn</span>
         </Link>
         <label className="room-project-name">
-          <span role="status" title={storageStatus?.detail} data-save-kind={storageStatus?.kind}>{storageStatus?.label ?? "Өрөөний төлөвлөгч"}</span>
+          <span
+            role="status"
+            title={storageStatus?.detail}
+            data-save-kind={storageStatus?.kind}
+          >
+            {storageStatus?.label ?? "Өрөөний төлөвлөгч"}
+          </span>
           <input
             aria-label="Төслийн нэр"
             value={current.name}
@@ -1344,9 +1695,25 @@ function RoomPlannerEditor() {
         onClose={() => setLeftOpen(false)}
         title={kitchenOnly ? "Гарнитур нэмэх" : "Тавилга нэмэх"}
       >
-        <div className="planner-inspector-tabs" role="group" aria-label="Тавилгын сангийн хэсэг">
-          <button type="button" aria-pressed={!kitchenOnly} onClick={() => setKitchenOnly(false)}>Каталог</button>
-          <button type="button" aria-pressed={kitchenOnly} onClick={() => setKitchenOnly(true)}>Миний гарнитур</button>
+        <div
+          className="planner-inspector-tabs"
+          role="group"
+          aria-label="Тавилгын сангийн хэсэг"
+        >
+          <button
+            type="button"
+            aria-pressed={!kitchenOnly}
+            onClick={() => setKitchenOnly(false)}
+          >
+            Каталог
+          </button>
+          <button
+            type="button"
+            aria-pressed={kitchenOnly}
+            onClick={() => setKitchenOnly(true)}
+          >
+            Миний гарнитур
+          </button>
         </div>
         {!kitchenOnly && (
           <div className="border-b border-ui-line p-4">
@@ -1360,26 +1727,50 @@ function RoomPlannerEditor() {
               <ChefHat size={20} />
               <span>
                 <strong>Гал тогоо төлөвлөх</strong>
-
               </span>
               <ChevronRight size={18} />
             </Link>
-            <label className="planner-search">
-              <Search size={17} />
-              <input
-                aria-label="Тавилга нэрээр хайх"
-                placeholder="Тавилга хайх…"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
-            <RoomCatalogFilters
-              categories={scopedCatalog.categories} category={scopedCatalog.category} onCategory={setPaletteCat}
-              scope={catalogScope} onScope={setCatalogScope} format={catalogFormat} onFormat={setCatalogFormat}
-              roomName={ROOM_TYPES[activeRoomType].label} query={query}
-              count={(catalogFormat !== "glb" ? paletteItems.length : 0) + (catalogFormat !== "photo" ? dbPaletteItems.length : 0)}
-              onReset={() => { setCatalogScope("all"); setPaletteCat("all"); setQuery(""); setCatalogFormat("all"); }}
+            <PlannerCatalogToolbar
+              query={query}
+              onQuery={setQuery}
+              label="Тавилга нэрээр хайх"
+              placeholder="Тавилга хайх…"
+              sort={catalogSort}
+              onSort={setCatalogSort}
+              filterCount={
+                Number(catalogScope !== "all") +
+                Number(scopedCatalog.category !== "all") +
+                Number(catalogFormat !== "all")
+              }
+              filters={
+                <RoomCatalogFilters
+                  categories={scopedCatalog.categories}
+                  category={scopedCatalog.category}
+                  onCategory={setPaletteCat}
+                  scope={catalogScope}
+                  onScope={setCatalogScope}
+                  format={catalogFormat}
+                  onFormat={setCatalogFormat}
+                  roomName={ROOM_TYPES[activeRoomType].label}
+                  query={query}
+                  count={
+                    (catalogFormat !== "glb" ? paletteItems.length : 0) +
+                    (catalogFormat !== "photo" ? dbPaletteItems.length : 0)
+                  }
+                  onReset={() => {
+                    setCatalogScope("all");
+                    setPaletteCat("all");
+                    setQuery("");
+                    setCatalogFormat("all");
+                  }}
+                />
+              }
             />
+            <p className="room-catalog-compact-count" role="status">
+              {(catalogFormat !== "glb" ? paletteItems.length : 0) +
+                (catalogFormat !== "photo" ? dbPaletteItems.length : 0)}{" "}
+              тавилга
+            </p>
           </div>
         )}
         <div className="studio-catalog-scroll flex-1 overflow-y-auto p-3">
@@ -1403,27 +1794,32 @@ function RoomPlannerEditor() {
               </Link>
             </div>
           )}
-          {kitchenOnly && <section className="planner-kitchen-library" aria-label="Миний хадгалсан гарнитурууд">
-            <SavedKitchenList
-              placement={activePlacement}
-              onPlace={(saved: SavedKitchen) => {
-                const result = useDesigns.getState().placeKitchen(saved);
-                const piece = result.piece;
-                if (!piece) {
-                  setNotice(result.error ?? result.message);
-                  return;
-                }
-                setSelected(piece.instanceId);
-                setLeftOpen(false);
-                setActivePreset(null);
-                setLocalFile(null);
-                setLocalUrl(null);
-                setNotice(
-                  `Гарнитурыг бодит хэмжээгээр байрлууллаа. ${result.message}`,
-                );
-              }}
-            />
-          </section>}
+          {kitchenOnly && (
+            <section
+              className="planner-kitchen-library"
+              aria-label="Миний хадгалсан гарнитурууд"
+            >
+              <SavedKitchenList
+                placement={activePlacement}
+                onPlace={(saved: SavedKitchen) => {
+                  const result = useDesigns.getState().placeKitchen(saved);
+                  const piece = result.piece;
+                  if (!piece) {
+                    setNotice(result.error ?? result.message);
+                    return;
+                  }
+                  setSelected(piece.instanceId);
+                  setLeftOpen(false);
+                  setActivePreset(null);
+                  setLocalFile(null);
+                  setLocalUrl(null);
+                  setNotice(
+                    `Гарнитурыг бодит хэмжээгээр байрлууллаа. ${result.message}`,
+                  );
+                }}
+              />
+            </section>
+          )}
           {!kitchenOnly && (
             <>
               {(catalog.loading || !catalog.ready || catalog.error) && (
@@ -1449,8 +1845,14 @@ function RoomPlannerEditor() {
                           : query.trim()
                             ? "Энэ хүрээнд хайлтад тохирох тавилга олдсонгүй."
                             : "Энэ өрөө, ангилалд боломжтой тавилга одоогоор алга."}
-                      {((catalogFormat === "glb" && paletteItems.length > 0) || (catalogFormat === "photo" && dbPaletteItems.length > 0)) && (
-                        <button type="button" className="planner-secondary-button" onClick={() => setCatalogFormat("all")}>
+                      {((catalogFormat === "glb" && paletteItems.length > 0) ||
+                        (catalogFormat === "photo" &&
+                          dbPaletteItems.length > 0)) && (
+                        <button
+                          type="button"
+                          className="planner-secondary-button"
+                          onClick={() => setCatalogFormat("all")}
+                        >
                           Энэ сонголтын бүх тавилга
                         </button>
                       )}
@@ -1468,42 +1870,46 @@ function RoomPlannerEditor() {
                       </button>
                     </p>
                   )}
-                {catalogFormat !== "glb" &&
-                  paletteItems.map((p) => (
+                {catalogEntries.map((entry) =>
+                  entry.kind === "photo" ? (
                     <RoomProductCard
-                      key={p.id}
-                      product={p}
-                      onAdd={() => addPiece(p.id)}
+                      key={entry.item.id}
+                      product={entry.item}
+                      onAdd={() => addPiece(entry.item.id)}
                     />
-                  ))}
-                {catalogFormat !== "photo" &&
-                  dbPaletteItems.map((m) => (
-                    <PlannerModelCard
-                      key={m.id}
-                      name={m.name}
-                      image={
-                        m.thumbnailFile
-                          ? `/api/models/files/${m.fileModelId ?? m.id}/${m.thumbnailFile}`
-                          : null
-                      }
-                      dimensions={`${Math.round(m.dimensionsW * 1000)} × ${Math.round(m.dimensionsD * 1000)} × ${Math.round(m.dimensionsH * 1000)} мм`}
-                      detail={
-                        m.basePrice > 0
-                          ? formatPrice(m.basePrice)
-                          : stockLabel(m)
-                      }
-                      file={m.glbFile}
-                      onAdd={() => addModelPiece(m)}
-                      onPrefetch={() =>
-                        void prefetchModel(
-                          modelDeliveryUrl(
-                            m.fileModelId ?? m.id,
-                            m.glbFile,
-                          ),
-                        )
-                      }
-                    />
-                  ))}
+                  ) : (
+                    (() => {
+                      const m = entry.item;
+                      return (
+                        <PlannerModelCard
+                          key={m.id}
+                          name={m.name}
+                          image={
+                            m.thumbnailFile
+                              ? `/api/models/files/${m.fileModelId ?? m.id}/${m.thumbnailFile}`
+                              : null
+                          }
+                          dimensions={`${Math.round(m.dimensionsW * 1000)} × ${Math.round(m.dimensionsD * 1000)} × ${Math.round(m.dimensionsH * 1000)} мм`}
+                          detail={
+                            m.basePrice > 0
+                              ? formatPrice(m.basePrice)
+                              : stockLabel(m)
+                          }
+                          file={m.glbFile}
+                          onAdd={() => addModelPiece(m)}
+                          onPrefetch={() =>
+                            void prefetchModel(
+                              modelDeliveryUrl(
+                                m.fileModelId ?? m.id,
+                                m.glbFile,
+                              ),
+                            )
+                          }
+                        />
+                      );
+                    })()
+                  ),
+                )}
               </div>
             </>
           )}
@@ -1511,7 +1917,10 @@ function RoomPlannerEditor() {
       </Drawer>
 
       {/* CENTER: canvas */}
-      <div className="planner-stage relative h-full" data-planner-tour="room-stage">
+      <div
+        className="planner-stage relative h-full"
+        data-planner-tour="room-stage"
+      >
         <div className="room-stage-actions">
           <button
             type="button"
@@ -1564,9 +1973,13 @@ function RoomPlannerEditor() {
               <Redo2 size={18} />
             </button>
           </div>
-          <RoomPlacementHelp warnings={placementWarnings}
-            onHelp={() => { setShowStartHint(false); setTourRequest(value => value + 1); }}
-            onSelect={item => {
+          <RoomPlacementHelp
+            warnings={placementWarnings}
+            onHelp={() => {
+              setShowStartHint(false);
+              setTourRequest((value) => value + 1);
+            }}
+            onSelect={(item) => {
               endEdit();
               selectRoom(item.roomId);
               setSelected(item.id);
@@ -1575,8 +1988,13 @@ function RoomPlannerEditor() {
               setCameraPlacement(false);
               setRoomView("dollhouse");
               setView("perspective");
-              setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: "focus", targetId: item.id }));
-            }} />
+              setCameraRequest((previous) => ({
+                id: (previous?.id ?? 0) + 1,
+                action: "focus",
+                targetId: item.id,
+              }));
+            }}
+          />
         </div>
         {recommendationsOpen && (
           <aside className="room-furniture-suggestions">
@@ -1662,8 +2080,7 @@ function RoomPlannerEditor() {
             if (next !== "interior")
               setCameraRequest((previous) => ({
                 id: (previous?.id ?? 0) + 1,
-                action:
-                  next === "dollhouse" ? "fit" : next,
+                action: next === "dollhouse" ? "fit" : next,
               }));
           }}
           cameraPlacement={cameraPlacement}
@@ -1722,7 +2139,10 @@ function RoomPlannerEditor() {
             setEnvironmentTab("surfaces");
             setRightOpen(true);
           }}
-          onHelp={() => { setShowStartHint(false); setTourRequest(value => value + 1); }}
+          onHelp={() => {
+            setShowStartHint(false);
+            setTourRequest((value) => value + 1);
+          }}
           dimensions={showDimensions}
           onDimensions={() => setShowDimensions((value) => !value)}
           grid={gridEnabled}
@@ -1809,10 +2229,26 @@ function RoomPlannerEditor() {
 
         {/* right-side selection actions */}
         <div className="planner-selection-toolbar">
-          {selectedOpening && current.openings?.find(o => o.id === selectedOpening) && <details className="room-opening-context" open key={selectedOpening}>
-<summary>Хаалга, цонх засах</summary>
-<OpeningQuickEditor room={current} opening={current.openings.find(o => o.id === selectedOpening)!} onChange={changeOpening} onRemove={removeSelected} beginEdit={beginEdit} endEdit={endEdit} />
-</details>}
+          {selectedOpening &&
+            current.openings?.find((o) => o.id === selectedOpening) && (
+              <details
+                className="room-opening-context"
+                open
+                key={selectedOpening}
+              >
+                <summary>Хаалга, цонх засах</summary>
+                <OpeningQuickEditor
+                  room={current}
+                  opening={current.openings.find(
+                    (o) => o.id === selectedOpening,
+                  )!}
+                  onChange={changeOpening}
+                  onRemove={removeSelected}
+                  beginEdit={beginEdit}
+                  endEdit={endEdit}
+                />
+              </details>
+            )}
           {selectedOpening && (
             <>
               <button
@@ -1852,10 +2288,15 @@ function RoomPlannerEditor() {
                 onClick={() => {
                   setLocked(false);
                   setCameraPlacement(false);
-                  setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: "focus", targetId: selected }));
+                  setCameraRequest((previous) => ({
+                    id: (previous?.id ?? 0) + 1,
+                    action: "focus",
+                    targetId: selected,
+                  }));
                 }}
               >
-                <Focus size={16} /><span>Ойртуулж харах</span>
+                <Focus size={16} />
+                <span>Ойртуулж харах</span>
               </button>
               <button
                 onClick={duplicateSelected}
@@ -2005,13 +2446,37 @@ function RoomPlannerEditor() {
                 const piece = current.pieces.find((p) => p.instanceId === id);
                 if (!piece) return null;
                 try {
-                  const candidate = moveAttachedFurniture(piece, x, z, current, current.activeRoomId ?? `${current.id}-room-1`, current.pieces);
-                  const pieces = resolveFurnitureAttachments(current.pieces.map(p => p.instanceId === id ? candidate : p), current, current.activeRoomId ?? `${current.id}-room-1`);
-                  const combined = placement.pieces.map(p => pieces.find(next => next.instanceId === p.instanceId) ?? p);
-                  if (!pieces.every(p => isPlacementValid(p, combined, placement.room))) return "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.";
+                  const candidate = moveAttachedFurniture(
+                    piece,
+                    x,
+                    z,
+                    current,
+                    current.activeRoomId ?? `${current.id}-room-1`,
+                    current.pieces,
+                  );
+                  const pieces = resolveFurnitureAttachments(
+                    current.pieces.map((p) =>
+                      p.instanceId === id ? candidate : p,
+                    ),
+                    current,
+                    current.activeRoomId ?? `${current.id}-room-1`,
+                  );
+                  const combined = placement.pieces.map(
+                    (p) =>
+                      pieces.find((next) => next.instanceId === p.instanceId) ??
+                      p,
+                  );
+                  if (
+                    !pieces.every((p) =>
+                      isPlacementValid(p, combined, placement.room),
+                    )
+                  )
+                    return "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.";
                   updatePieces(pieces);
                   return null;
-                } catch (reason) { return (reason as Error).message; }
+                } catch (reason) {
+                  return (reason as Error).message;
+                }
               }}
             />
             {selected && (
@@ -2043,8 +2508,9 @@ function RoomPlannerEditor() {
           style={
             planReady
               ? { opacity: 0, pointerEvents: "none" }
-              : roomView === "top" ? { pointerEvents: "none" }
-              : undefined
+              : roomView === "top"
+                ? { pointerEvents: "none" }
+                : undefined
           }
         >
           <RoomCanvas
@@ -2409,7 +2875,9 @@ function RoomPlannerEditor() {
                 </button>
               </div>
               <p className="planner-storage-note">
-                {storageStatus?.label}<br/>{storageStatus?.detail}
+                {storageStatus?.label}
+                <br />
+                {storageStatus?.detail}
               </p>
             </div>
           </div>
@@ -2545,8 +3013,8 @@ function RoomPlannerEditor() {
                   <strong>Ханын хэлбэр, багана тохируулах</strong>
                   <small>
                     {Number((current.width * measureFactor).toFixed(1))} ×{" "}
-                    {Number((current.depth * measureFactor).toFixed(1))} {measureUnit} ·{" "}
-                    {geometry.area.toFixed(2)} м²
+                    {Number((current.depth * measureFactor).toFixed(1))}{" "}
+                    {measureUnit} · {geometry.area.toFixed(2)} м²
                   </small>
                   <small>
                     Ханын хэсэг {current.wallFeatures?.length ?? 0} · Багана{" "}
@@ -2638,13 +3106,33 @@ function RoomPlannerEditor() {
                     </p>
                   </section>
                 )}
-                <FurnitureAttachmentControls piece={selectedPiece} pieces={current.pieces} room={current} roomId={current.activeRoomId ?? `${current.id}-room-1`} onChange={candidate => {
-                  try {
-                    const pieces=resolveFurnitureAttachments(current.pieces.map(p=>p.instanceId===candidate.instanceId?candidate:p),current,current.activeRoomId??`${current.id}-room-1`);
-                    if(!pieces.every(p=>isPlacementValid(p,pieces,placement.room)))return "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.";
-                    updatePieces(pieces);return null;
-                  }catch(reason){return (reason as Error).message;}
-                }} />
+                <FurnitureAttachmentControls
+                  piece={selectedPiece}
+                  pieces={current.pieces}
+                  room={current}
+                  roomId={current.activeRoomId ?? `${current.id}-room-1`}
+                  onChange={(candidate) => {
+                    try {
+                      const pieces = resolveFurnitureAttachments(
+                        current.pieces.map((p) =>
+                          p.instanceId === candidate.instanceId ? candidate : p,
+                        ),
+                        current,
+                        current.activeRoomId ?? `${current.id}-room-1`,
+                      );
+                      if (
+                        !pieces.every((p) =>
+                          isPlacementValid(p, pieces, placement.room),
+                        )
+                      )
+                        return "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.";
+                      updatePieces(pieces);
+                      return null;
+                    } catch (reason) {
+                      return (reason as Error).message;
+                    }
+                  }}
+                />
                 <div className="planner-transform">
                   <p className="label">Байрлал · өрөөний төвөөс</p>
                   <div className="planner-fields">
@@ -2747,7 +3235,15 @@ function RoomPlannerEditor() {
                           aria-label={color.name}
                           aria-pressed={selectedPiece.color === color.id}
                           onClick={() => {
-                            if (selectedPiece.color !== color.id && !selectedPiece.modelId) trackProduct3d(selectedPiece.productId, "color", color.id);
+                            if (
+                              selectedPiece.color !== color.id &&
+                              !selectedPiece.modelId
+                            )
+                              trackProduct3d(
+                                selectedPiece.productId,
+                                "color",
+                                color.id,
+                              );
                             updatePieces(
                               current.pieces.map((piece) =>
                                 piece.instanceId === selectedPiece.instanceId
@@ -2775,7 +3271,15 @@ function RoomPlannerEditor() {
                           key={material.id}
                           type="button"
                           onClick={() => {
-                            if (selectedPiece.material !== material.id && !selectedPiece.modelId) trackProduct3d(selectedPiece.productId, "material", material.id);
+                            if (
+                              selectedPiece.material !== material.id &&
+                              !selectedPiece.modelId
+                            )
+                              trackProduct3d(
+                                selectedPiece.productId,
+                                "material",
+                                material.id,
+                              );
                             updatePieces(
                               current.pieces.map((piece) =>
                                 piece.instanceId === selectedPiece.instanceId

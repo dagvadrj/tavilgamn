@@ -214,6 +214,8 @@ export type Database = Omit<Generated, "public"> & {
         Row: {
           id: number;
           product_ids: string[];
+          bed_product_id: string | null;
+          wardrobe_product_id: string | null;
           version: number;
           updated_at: string;
           updated_by: string | null;
@@ -221,6 +223,8 @@ export type Database = Omit<Generated, "public"> & {
         Insert: {
           id: number;
           product_ids: string[];
+          bed_product_id?: string | null;
+          wardrobe_product_id?: string | null;
           version?: number;
           updated_at?: string;
           updated_by?: string | null;
@@ -228,6 +232,8 @@ export type Database = Omit<Generated, "public"> & {
         Update: {
           id?: number;
           product_ids?: string[];
+          bed_product_id?: string | null;
+          wardrobe_product_id?: string | null;
           version?: number;
           updated_at?: string;
           updated_by?: string | null;

@@ -93,7 +93,7 @@ test("public page GET preserves counts, hides unavailable products and reports m
   });
   const get = (page, id = "") => GET(new Request(`http://localhost/api/page-data/${page}?id=${id}`), { params: Promise.resolve({ page }) });
   assert.deepEqual(await (await get("stores")).json(), { directory: [store], productCounts: { store: 12 } });
-  assert.deepEqual(await (await get("home")).json(), { catalog: [product], stores: [store], paymentLabels: ["Bank"], homepageProductIds });
+  assert.deepEqual(await (await get("home")).json(), { catalog: [product], stores: [store], paymentLabels: ["Bank"], homepageProductIds, homepageJourneyProducts: {} });
   assert.equal((await get("product", "chair")).status, 200);
   product.stockQuantity = 0;
   assert.equal((await get("product", "chair")).status, 404);

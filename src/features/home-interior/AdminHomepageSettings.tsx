@@ -8,13 +8,17 @@ import { useAuth } from "@/store/auth";
 import type { HomepageSettings } from "@/lib/homepageSettings";
 
 type Result = HomepageSettings & {
-  products: { id: string; name: string; image: string }[];
+  products: { id: string; name: string; image: string; category: string }[];
 };
 
 export function AdminHomepageSettings() {
   const owner = useAuth((state) => state.user?.id);
   const [result, setResult] = useState<Result | null>(null);
   const [selection, setSelection] = useState<string[]>([]);
+  const [journey, setJourney] = useState<{
+    bedProductId: string | null;
+    wardrobeProductId: string | null;
+  }>({ bedProductId: null, wardrobeProductId: null });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -32,6 +36,10 @@ export function AdminHomepageSettings() {
         if (!controller.signal.aborted) {
           setResult(data);
           setSelection(data.productIds);
+          setJourney({
+            bedProductId: data.bedProductId ?? null,
+            wardrobeProductId: data.wardrobeProductId ?? null,
+          });
         }
       })
       .catch((error) => {
@@ -57,6 +65,7 @@ export function AdminHomepageSettings() {
           body: JSON.stringify({
             productIds: selection,
             version: result.version,
+            ...journey,
           }),
         },
         owner,
@@ -80,11 +89,11 @@ export function AdminHomepageSettings() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 id="homepage-settings-title" className="text-xl font-semibold">
-            Нүүр хуудасны 3D буйдан
+            Нүүр хуудасны 3D аялал
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-ui-muted">
-            Эхний буйдан Скандинав, Дулаан загварт; хоёр дахь нь Модерн, Минимал
-            загварт харагдана. Хадгалсан сонголт бүх хэрэглэгчид үйлчилнэ.
+            Зочны өрөөний буйдан, унтлагын өрөөний ор, шкафыг сонгоно. Үндсэн
+            буйдан каталогт боломжгүй бол нөөц буйданг харуулна.
           </p>
         </div>
         <Link
@@ -127,9 +136,7 @@ export function AdminHomepageSettings() {
                   key={index}
                 >
                   <label className="grid gap-2 text-sm font-medium">
-                    {index === 0
-                      ? "Эхний өрөө / Скандинав, Дулаан"
-                      : "Хоёр дахь сонголт / Модерн, Минимал"}
+                    {index === 0 ? "Үндсэн буйдан" : "Нөөц буйдан"}
                     <select
                       value={selection[index] ?? ""}
                       className="input min-h-12 w-full"
@@ -148,15 +155,17 @@ export function AdminHomepageSettings() {
                           Одоогийн загвар боломжгүй — дахин сонгоно уу
                         </option>
                       )}
-                      {result.products.map((item) => (
-                        <option
-                          key={item.id}
-                          value={item.id}
-                          disabled={selection[1 - index] === item.id}
-                        >
-                          {item.name}
-                        </option>
-                      ))}
+                      {result.products
+                        .filter((item) => item.category === "sofa")
+                        .map((item) => (
+                          <option
+                            key={item.id}
+                            value={item.id}
+                            disabled={selection[1 - index] === item.id}
+                          >
+                            {item.name}
+                          </option>
+                        ))}
                     </select>
                   </label>
                   {product && (
@@ -184,6 +193,72 @@ export function AdminHomepageSettings() {
                 </div>
               );
             })}
+          </div>
+          <div className="mt-5 grid gap-5 md:grid-cols-2">
+            {(
+              [
+                {
+                  key: "bedProductId",
+                  category: "bed",
+                  label: "Унтлагын өрөө / Ор",
+                },
+                {
+                  key: "wardrobeProductId",
+                  category: "wardrobe",
+                  label: "Хувцасны хэсэг / Шкаф",
+                },
+              ] as const
+            ).map((slot) => (
+              <label
+                key={slot.key}
+                className="grid gap-2 rounded-xl border border-ui-line p-4 text-sm font-medium"
+              >
+                {slot.label}
+                <select
+                  className="input min-h-12 w-full"
+                  value={journey[slot.key] ?? ""}
+                  disabled={busy}
+                  onChange={(event) => {
+                    setJourney((current) => ({
+                      ...current,
+                      [slot.key]: event.target.value || null,
+                    }));
+                    setSaved(false);
+                  }}
+                >
+                  <option value="">Интерьерийн загвар ашиглах</option>
+                  {journey[slot.key] &&
+                    !result.products.some(
+                      (p) => p.id === journey[slot.key],
+                    ) && (
+                      <option value={journey[slot.key]!}>
+                        Одоогийн бүтээгдэхүүн боломжгүй — дахин сонгоно уу
+                      </option>
+                    )}
+                  {result.products
+                    .filter((item) => item.category === slot.category)
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                </select>
+                <span className="text-xs font-normal text-ui-muted">
+                  Бэлэн GLB бүтээгдэхүүн сонгоогүй бол интерьерийн загвар
+                  харагдана. Интерьерийн загварт худалдааны үнэ оноохгүй.
+                </span>
+                {journey[slot.key] && (
+                  <Link
+                    href={`/product/${journey[slot.key]}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="min-h-11 content-center text-xs underline"
+                  >
+                    Сонгосон 3D загварыг шалгах ↗
+                  </Link>
+                )}
+              </label>
+            ))}
           </div>
           <div className="mt-5 flex flex-wrap items-center gap-4">
             <button

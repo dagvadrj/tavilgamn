@@ -23,8 +23,17 @@ export async function GET(request: NextRequest) {
       {
         ...settings,
         products: catalog
-          .filter((product) => product.category === "sofa" && product.model)
-          .map(({ id, name, image }) => ({ id, name, image })),
+          .filter(
+            (product) =>
+              ["sofa", "bed", "wardrobe"].includes(product.category) &&
+              product.model,
+          )
+          .map(({ id, name, image, category }) => ({
+            id,
+            name,
+            image,
+            category,
+          })),
       },
       { headers: privateHeaders },
     );
@@ -59,12 +68,30 @@ export async function PUT(request: NextRequest) {
         "Сонгосон буйдан нийтэд харагдах 3D загвартай байх ёстой.",
         422,
       );
+    for (const [id, category] of [
+      [settings.bedProductId, "bed"],
+      [settings.wardrobeProductId, "wardrobe"],
+    ] as const) {
+      if (!id) continue;
+      const product = await readProduct(id);
+      if (!product?.model || product.category !== category)
+        return fail(
+          "Өрөөний сонголт нийтэд харагдах, зөв ангиллын 3D бүтээгдэхүүн байх ёстой.",
+          422,
+        );
+    }
     const row = {
       id: 1,
       product_ids: settings.productIds,
       version: settings.version + 1,
       updated_at: new Date().toISOString(),
       updated_by: auth.userId,
+      ...(settings.bedProductId !== undefined
+        ? { bed_product_id: settings.bedProductId }
+        : {}),
+      ...(settings.wardrobeProductId !== undefined
+        ? { wardrobe_product_id: settings.wardrobeProductId }
+        : {}),
     };
     const db = getSupabaseAdmin();
     const result =
@@ -88,7 +115,7 @@ export async function PUT(request: NextRequest) {
       );
     if (result.error) throw result.error;
     return NextResponse.json(
-      { productIds: settings.productIds, version: result.data!.version },
+      { ...settings, version: result.data!.version },
       { headers: privateHeaders },
     );
   } catch {

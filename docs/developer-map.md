@@ -41,6 +41,9 @@
 - `src/app/(planner)/planner/page.tsx`, `kitchen/page.tsx`: URL entry.
 - `src/components/RoomPlanner.tsx`, `KitchenPlanner.tsx`, `ModularKitchenPlanner.tsx`: planner-уудын үндсэн урсгал.
 - `src/features/room-planner/`, `src/features/kitchen-planner/`, `src/features/planner/`: тухайн editor-ийн component, style, shared UI.
+- `src/features/planner/components/PlannerCatalogToolbar.tsx` ба `planner-catalog-toolbar.css`: Room/Kitchen-ийн **шүүлтүүр → хайлт → эрэмбэ** гэсэн нэг мөр удирдлага. Нийтлэг input/touch хэмжээ, дэлгэгдэх шүүлтүүр, нэрээр эрэмбэлэхийг энд өөрчилнө.
+- `src/lib/kitchenFlow.ts`, `src/features/kitchen-planner/components/KitchenPlannerHeader.tsx`: гал тогооны дөрвөн үндсэн шат; хуучин draft-ийн setup/suggestions шатыг хэвээр уншина.
+- `src/features/kitchen-planner/components/KitchenWorkflowReview.tsx`: урьдчилсан үнэ болон хэмжилтийн дараагийн алхмын дэлгэц. `kitchen-simple-workflow.css` нь энэ workflow-ийн үндсэн responsive layout; шинэ дүрмийг хуучин долоон шатны CSS-д тарааж нэмэхгүй.
 - `src/store/`: browser state; API/DB-ийн эрх шалгалтыг орлохгүй.
 - `src/app/api/`: server endpoint, authentication, validation.
 - `src/lib/`: дахин ашиглах business logic, types, server helpers.

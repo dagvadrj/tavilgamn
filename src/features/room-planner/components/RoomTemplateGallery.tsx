@@ -221,7 +221,7 @@ export function RoomTemplateGallery({
         </div>
         <div className="room-custom-copy">
           <h2>Гал тогоогоо төлөвлөе</h2>
-          <p>Хэмжээ, төхөөрөмж, 2D план, гарнитурын зохиомжоо 7 алхмаар тохируулаарай.</p>
+          <p>Өрөөгөө хэмжиж, тавилгаа сонгоод урьдчилсан үнэ, хэмжилтийн дараагийн алхмаа хараарай.</p>
           <span className="room-kitchen-steps">Хэмжих → Байрлуулах → Дуусгах</span>
           <button type="button" disabled={opening !== null} onClick={onKitchen}>
             Гал тогоо төлөвлөх <ArrowRight size={18} />

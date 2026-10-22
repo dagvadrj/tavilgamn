@@ -4,16 +4,9 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { PlannerLink as Link } from "@/components/PlannerLink";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ArrowDown,
-  ArrowRight,
-  ArrowUpRight,
-  Check,
-  MoveUpRight,
-  Pause,
-  Play,
-} from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, Pause, Play } from "lucide-react";
 import type { PageData } from "@/lib/pageData";
+import type { Product } from "@/lib/types";
 import { FeaturedMerchants } from "@/components/FeaturedMerchants";
 import {
   HOME_PRODUCT_IDS,
@@ -21,10 +14,22 @@ import {
   clamp01,
   storyPose,
   type StoryMotion,
+  STORY_SCROLL_SCREENS,
 } from "./homeStory";
 import "./interior-home.css";
 
 const InteriorScene = dynamic(() => import("./InteriorScene"), { ssr: false });
+export function resolveJourneyProduct(
+  catalog: Product[],
+  category: string,
+  id?: string | null,
+) {
+  return id
+    ? catalog.find(
+        (item) => item.model && item.category === category && item.id === id,
+      )
+    : undefined;
+}
 const CHAPTERS = [
   {
     label: "01 / ТӨСӨӨЛ",
@@ -32,19 +37,19 @@ const CHAPTERS = [
     text: "Танд таалагдсан тавилга. Таны төсөөлсөн орон зай. Хоёрыг хамтдаа бүтээе.",
   },
   {
-    label: "02 / ӨӨР ОРЧИН",
-    title: "Өөр өрөө.\nӨөр боломж.",
-    text: "Тавилга орчноо хэрхэн өөрчилдгийг хараарай.",
+    label: "02 / ӨРӨӨНӨӨС ӨРӨӨНД",
+    title: "Гэр дотуур\nхамтдаа алхъя.",
+    text: "Нэг хаалганы цаана таны амрах орон зай хүлээж байна.",
   },
   {
-    label: "03 / БАЙРЛУУЛ",
-    title: "Яг энд.\nЯг тохирно.",
-    text: "Өнгө, хэмжээ, мэдрэмжийг нэг дороос төсөөл.",
+    label: "03 / АМРАХ ОРОН ЗАЙ",
+    title: "Тайван өглөө\nэндээс эхэлнэ.",
+    text: "Ор байрандаа бууж, унтлагын өрөө таны өмнө бүрдэнэ.",
   },
   {
-    label: "04 / ӨӨРИЙНХӨӨРӨӨ",
-    title: "Таны гэрийн\nшинэ эхлэл.",
-    text: "Доороос загвараа сонгоод энэ өрөөнд байрлуулж үзээрэй.",
+    label: "04 / БҮХ ЗҮЙЛ БАЙРАНДАА",
+    title: "Зай бүр\nөөрийн учиртай.",
+    text: "Шкаф байрандаа тогтоно. Харин сонголт таных.",
   },
 ];
 const ROOM_IDEAS = [
@@ -72,35 +77,44 @@ export function InteriorHome({
   catalog,
   stores,
   homepageProductIds,
+  homepageJourneyProducts,
   dataError = false,
 }: PageData["home"] & { dataError?: boolean }) {
   const experience = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
-  const designs = useRef<HTMLDivElement>(null);
   const motion = useRef<StoryMotion>({
     progress: 0,
     pointer: { x: 0, y: 0 },
     swap: -1,
     visible: true,
   });
-  const mobilePreview = useRef(false);
   const [phase, setPhase] = useState(0);
-  const [selected, setSelected] = useState(0);
-  const [applied, setApplied] = useState(0);
-  const [busy, setBusy] = useState(false);
   const [systemReduced, setSystemReduced] = useState(false);
   const [paused, setPaused] = useState(false);
   const [status, setStatus] = useState("loading");
-  const [request, setRequest] = useState<{
-    index: number;
-    revision: number;
-  } | null>(null);
+  const [bedStatus, setBedStatus] = useState("preview");
+  const [wardrobeStatus, setWardrobeStatus] = useState("preview");
   const reportStatus = useCallback((next: string) => setStatus(next), []);
-  const reduced = systemReduced || paused;
-  const theme = INTERIOR_STYLES[applied];
+  const reduced = systemReduced;
+  const theme = INTERIOR_STYLES[0];
   const ids = homepageProductIds ?? HOME_PRODUCT_IDS;
   const sofas = ids.map((id) => catalog.find((product) => product.id === id));
-  const product = sofas[theme.product];
+  const sofaProduct = sofas.find((product) => product?.model);
+  // A catalog category alone is not a curated showcase selection.
+  const bedProduct = resolveJourneyProduct(
+    catalog,
+    "bed",
+    homepageJourneyProducts?.bedProductId,
+  );
+  const wardrobeProduct = resolveJourneyProduct(
+    catalog,
+    "wardrobe",
+    homepageJourneyProducts?.wardrobeProductId,
+  );
+  const product =
+    phase < 2 ? sofaProduct : phase === 2 ? bedProduct : wardrobeProduct;
+  const activeStatus =
+    phase < 2 ? status : phase === 2 ? bedStatus : wardrobeStatus;
 
   useEffect(() => {
     const header = document.querySelector<HTMLElement>(".store-header");
@@ -131,22 +145,18 @@ export function InteriorHome({
     let frame = 0;
     const update = () => {
       frame = 0;
+      if (paused) return;
       const node = experience.current;
       if (!node) return;
       const height = stage.current?.clientHeight || window.innerHeight;
       const headerHeight =
         parseFloat(node.style.getPropertyValue("--home-header-height")) || 0;
       const progress = clamp01(
-        (headerHeight - node.getBoundingClientRect().top) / (height * 1.4),
+        (headerHeight - node.getBoundingClientRect().top) /
+          (height * STORY_SCROLL_SCREENS),
       );
       // The journey follows the scroll in both directions; below it the sofa rests.
-      const preview = mobilePreview.current && window.matchMedia("(max-width: 767px)").matches;
-      motion.current.progress = reduced || preview ? 1 : progress;
-      if (!reduced && !preview && progress < 0.98 && motion.current.swap >= 0) {
-        setRequest(null);
-        setBusy(false);
-        motion.current.swap = -1;
-      }
+      motion.current.progress = reduced ? 1 : progress;
       setPhase(storyPose(motion.current.progress).phase);
       motion.current.invalidate?.();
     };
@@ -167,41 +177,23 @@ export function InteriorHome({
       window.removeEventListener("scroll", queue);
       window.removeEventListener("resize", queue);
     };
-  }, [reduced]);
-  useEffect(() => {
-    if (!request) return;
-    const state = motion.current;
-    let frame = 0;
-    const start = performance.now();
-    let changed = false;
-    setBusy(true);
-    const animate = (now: number) => {
-      const progress = reduced ? 1 : clamp01((now - start) / 1800);
-      motion.current.swap = progress;
-      if (progress >= 0.5 && !changed) {
-        changed = true;
-        setApplied(request.index);
-      }
-      motion.current.invalidate?.();
-      if (progress < 1) frame = requestAnimationFrame(animate);
-      else {
-        motion.current.swap = -1;
-        setBusy(false);
-      }
-    };
-    frame = requestAnimationFrame(animate);
-    return () => {
-      cancelAnimationFrame(frame);
-      state.swap = -1;
-    };
-  }, [request, reduced]);
-  const skip = () => {
-    motion.current.progress = 1;
-    motion.current.snap = true;
-    setPhase(3);
-    motion.current.invalidate?.();
-    designs.current?.scrollIntoView({ behavior: "instant", block: "start" });
-    designs.current?.focus({ preventScroll: true });
+  }, [reduced, paused]);
+  const advance = () => {
+    if (!experience.current || !stage.current) return;
+    const next = [0.3, 0.55, 0.86, 1][phase];
+    const header =
+      parseFloat(
+        experience.current.style.getPropertyValue("--home-header-height"),
+      ) || 0;
+    const top =
+      window.scrollY + experience.current.getBoundingClientRect().top - header;
+    window.scrollTo({
+      top:
+        top +
+        stage.current.clientHeight *
+          (reduced ? 1 : STORY_SCROLL_SCREENS * next + (phase === 3 ? 1 : 0)),
+      behavior: reduced ? "instant" : "smooth",
+    });
   };
   const chapter = CHAPTERS[phase];
   const unavailable =
@@ -212,24 +204,11 @@ export function InteriorHome({
       <section
         className="interior-experience"
         ref={experience}
-        aria-label="Тавилга, хоёр өрөөний 3D аялал"
+        aria-label="Зочны өрөө, унтлагын өрөөний холбоотой 3D аялал"
       >
         <div
-          className="interior-sticky"
+          className={`interior-sticky${phase > 0 ? " is-travelling" : ""}`}
           ref={stage}
-          onPointerMove={(event) => {
-            if (event.pointerType !== "mouse" || reduced || phase === 3) return;
-            const rect = event.currentTarget.getBoundingClientRect();
-            motion.current.pointer = {
-              x: ((event.clientX - rect.left) / rect.width) * 2 - 1,
-              y: ((event.clientY - rect.top) / rect.height) * 2 - 1,
-            };
-            motion.current.invalidate?.();
-          }}
-          onPointerLeave={() => {
-            motion.current.pointer = { x: 0, y: 0 };
-            motion.current.invalidate?.();
-          }}
         >
           <div className="interior-scene-backup">
             <Image
@@ -240,13 +219,26 @@ export function InteriorHome({
               sizes="100vw"
             />
           </div>
-          <div className="interior-canvas" aria-label="Өрөөний тавилгатай танилцах 3D харагдац">
+          <div
+            className="interior-canvas"
+            data-scene-status={activeStatus}
+            aria-label="Өрөөний тавилгатай танилцах 3D харагдац"
+          >
             <InteriorScene
               motion={motion}
               theme={theme}
-              product={product}
+              product={sofaProduct}
+              bedProduct={bedProduct}
+              wardrobeProduct={wardrobeProduct}
+              ready={{
+                sofa: status === "ready",
+                bed: bedStatus === "ready",
+                wardrobe: wardrobeStatus === "ready",
+              }}
               reduced={reduced}
               onStatus={reportStatus}
+              onBedStatus={setBedStatus}
+              onWardrobeStatus={setWardrobeStatus}
             />
           </div>
           <div className="interior-stage-shade" />
@@ -265,9 +257,9 @@ export function InteriorHome({
                 <button
                   className="interior-text-button"
                   type="button"
-                  onClick={skip}
+                  onClick={advance}
                 >
-                  Орчинд туршиж харах <ArrowRight size={16} />
+                  3D аялал эхлүүлэх <ArrowRight size={16} />
                 </button>
                 <Link className="interior-text-button" href="/planner">
                   Өөрийн өрөөг төлөвлөх <ArrowUpRight size={16} />
@@ -285,7 +277,11 @@ export function InteriorHome({
                   ? "Хөдөлгөөн үргэлжлүүлэх"
                   : "Хөдөлгөөн зогсоож өрөөг харах"
               }
-              onClick={() => setPaused((value) => !value)}
+              onClick={() => {
+                motion.current.paused = !paused;
+                setPaused(!paused);
+                motion.current.invalidate?.();
+              }}
             >
               {paused ? <Play size={15} /> : <Pause size={15} />}
             </button>
@@ -293,21 +289,34 @@ export function InteriorHome({
           <div className="interior-stage-bottom">
             <button
               type="button"
-              onClick={skip}
+              onClick={advance}
               className="interior-scroll-hint"
             >
               <ArrowDown size={17} />{" "}
-              {phase === 3 ? "Загвараа сонгох" : "Доош гүйлгээд төсөөл"}
+              {phase === 3 ? "Цааш үзэх" : "Доош гүйлгээд төсөөл"}
             </button>
             <span className="interior-model-caption">
-              {`${theme.name} зочны өрөө`}
+              {phase < 2
+                ? `${theme.name} зочны өрөө`
+                : phase === 2
+                  ? "Унтлагын өрөө"
+                  : "Хувцасны хэсэг"}
               <small>
-                {product && !unavailable && status === "ready"
+                {product && !unavailable && activeStatus === "ready"
                   ? `${product.name}${product.basePrice > 0 ? ` · ${product.basePrice.toLocaleString("mn-MN")} ₮-өөс` : ""}`
                   : "Интерьерийн санаа · Өөрийн тавилгаа сонгоорой"}
               </small>
-              <Link href={product ? `/product/${product.id}` : "/catalog?room=living"}>
-                {product ? "Онцлох буйданг үзэх" : "Зочны өрөөний тавилга"} <ArrowUpRight size={12} />
+              <Link
+                href={
+                  product && activeStatus === "ready"
+                    ? `/product/${product.id}`
+                    : `/catalog?room=${phase < 2 ? "living" : "bedroom"}`
+                }
+              >
+                {product && activeStatus === "ready"
+                  ? "Бүтээгдэхүүнийг үзэх"
+                  : "Тавилга сонгох"}{" "}
+                <ArrowUpRight size={12} />
               </Link>
             </span>
             <div
@@ -321,107 +330,6 @@ export function InteriorHome({
           </div>
         </div>
         <div className="interior-runway" aria-hidden="true" />
-        <div
-          className="interior-designs"
-          id="home-designs"
-          ref={designs}
-          tabIndex={-1}
-        >
-          <div className="interior-design-panel">
-            <span className="interior-eyebrow">ТАНЫ ӨРӨӨ. ТАНЫ ӨНГӨ.</span>
-            <h2>
-              Нэг өрөө.
-              <br />
-              Дөрвөн мэдрэмж.
-            </h2>
-            <p>Өөрт ойр хэв маягаа сонго. Бусдыг нь хамтдаа төсөөлъе.</p>
-            <div
-              className="interior-style-grid"
-              role="group"
-              aria-label="Интерьерийн хэв маяг"
-            >
-              {INTERIOR_STYLES.map((style, index) => (
-                <button
-                  key={style.id}
-                  type="button"
-                  className={`interior-style-card${selected === index ? " is-selected" : ""}`}
-                  aria-pressed={selected === index}
-                  disabled={busy}
-                  onClick={() => setSelected(index)}
-                >
-                  <span
-                    className="interior-mini-room"
-                    style={{ background: style.wall }}
-                    aria-hidden="true"
-                  >
-                    <i style={{ background: style.floor }} />
-                    <b style={{ background: style.sofa }} />
-                    <em style={{ background: style.rug }} />
-                  </span>
-                  <span className="interior-style-title">
-                    {style.name}
-                    {selected === index && <Check size={14} />}
-                  </span>
-                  <span className="interior-swatches" aria-hidden="true">
-                    {[style.wall, style.floor, style.rug, style.accent].map(
-                      (color) => (
-                        <i key={color} style={{ background: color }} />
-                      ),
-                    )}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <p className="interior-selection-note">
-              {INTERIOR_STYLES[selected].note}
-            </p>
-            <button
-              type="button"
-              className="interior-button interior-place-button"
-              disabled={busy}
-              onClick={() => {
-                mobilePreview.current = true;
-                motion.current.progress = 1;
-                setPhase(3);
-                if (
-                  window.matchMedia("(max-width: 767px)").matches &&
-                  experience.current &&
-                  stage.current
-                ) {
-                  window.scrollTo({
-                    top:
-                      window.scrollY +
-                      experience.current.getBoundingClientRect().top,
-                    behavior: reduced ? "instant" : "smooth",
-                  });
-                }
-                setRequest((value) => ({
-                  index: selected,
-                  revision: (value?.revision ?? 0) + 1,
-                }));
-              }}
-            >
-              {busy ? "Өрөөг шинэчилж байна…" : "Энэ орчинд туршиж харах"}
-              <MoveUpRight size={18} />
-            </button>
-            <span className="interior-live-status" role="status">
-              {busy
-                ? ""
-                : `${theme.name} загвар${product ? ` · ${product.name}` : ""}`}
-            </span>
-            <Link href="/planner" className="interior-text-button">
-              Өөрийн өрөөг төлөвлөх <ArrowUpRight size={16} />
-            </Link>
-            {product && (
-              <Link
-                href={`/product/${product.id}`}
-                className="interior-product-link"
-              >
-                Буйдангийн үнэ, дэлгэрэнгүй <ArrowRight size={14} />
-              </Link>
-            )}
-          </div>
-        </div>
       </section>
       <div className="interior-editorial">
         <section
@@ -439,7 +347,10 @@ export function InteriorHome({
               Тавилга хайж буй хүмүүст бүтээгдэхүүн, интерьерийн санаагаа
               хүргээрэй.
             </p>
-            <Link className="interior-text-button" href="/?topic=advertising#contact">
+            <Link
+              className="interior-text-button"
+              href="/?topic=advertising#contact"
+            >
               Сурталчилгааны талаар холбогдох <ArrowUpRight size={16} />
             </Link>
           </div>

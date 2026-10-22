@@ -7,6 +7,7 @@ export type PageData = {
     stores: Store[];
     paymentLabels: string[];
     homepageProductIds?: string[];
+    homepageJourneyProducts?: { bedProductId?: string | null; wardrobeProductId?: string | null };
   };
   stores: { directory: Store[]; productCounts: Record<string, number> };
   store: { store: Store; products: Product[] };

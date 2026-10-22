@@ -31,30 +31,23 @@ test("scrolling back from the settled room replays the journey and restores the 
   let cleanup;
   try {
     cleanup = effects[2]();
-    const motion = refs[3].current;
+    const motion = refs[2].current;
     const scroll = position => { top = position; listeners.get("scroll")(); frame(); };
     assert.equal(motion.progress, 0);
-    scroll(-1044);
+    scroll(76-800*story.STORY_SCROLL_SCREENS);
     assert.equal(motion.progress, 1);
-    scroll(-1800);
+    scroll(-5000);
     assert.equal(motion.progress, 1, "further downward scroll keeps the sofa planted");
-    scroll(-484);
+    scroll(76-400*story.STORY_SCROLL_SCREENS);
     assert.equal(motion.progress, .5, "reverse scroll must not retain the maximum progress");
-    motion.swap = .2;
     scroll(76);
     assert.equal(motion.progress, 0);
-    assert.equal(motion.swap, -1, "leaving the placement area cancels a running replacement");
-    assert.equal(story.storyPose(motion.progress, 0).sofaY, story.SOFA_GROUND_Y);
+    assert.ok(story.storyPose(motion.progress, 0).sofaY>story.SOFA_GROUND_Y);
     assert.deepEqual(story.storyPose(motion.progress, 0), story.storyPose(motion.progress, 1));
-    scroll(-1044);
+    scroll(76-800*story.STORY_SCROLL_SCREENS);
     assert.equal(story.storyPose(motion.progress).landed, true, "a second downward journey still lands");
-    refs[4].current = true;
-    window.matchMedia = () => ({ matches: true });
     scroll(76);
-    assert.equal(motion.progress, 1, "mobile preview remains settled when scrolling back to the scene");
-    window.matchMedia = () => ({ matches: false });
-    scroll(76);
-    assert.equal(motion.progress, 0, "returning to desktop restores the reversible journey");
+    assert.equal(motion.progress, 0, "returning to the top restores the reversible journey");
   } finally {
     cleanup?.();
     for (const [key, value] of Object.entries(previous)) {
@@ -63,24 +56,26 @@ test("scrolling back from the settled room replays the journey and restores the 
   }
 });
 
-test("sofa starts on the rug, completes one turn and travels continuously to the grounded lower room", () => {
-  assert.equal(story.storyPose(0).rotation, 0);
-  assert.equal(story.storyPose(.3).rotation, Math.PI * 2);
-  assert.equal(Math.abs(story.storyPose(.3).cameraY), 0);
-  assert.equal(story.storyPose(.62).cameraY, story.LOWER_ROOM_Y);
+test("camera walks through the doorway while furniture lands independently and stays on one floor", () => {
+  assert.ok(story.storyPose(0).sofaY>1);
+  assert.equal(story.storyPose(.2).sofaY,story.SOFA_GROUND_Y);
+  assert.ok(story.storyPose(.48).bedY>.8);
+  assert.equal(story.storyPose(.7).bedY,story.JOURNEY_PLACEMENTS.bed.position[1]);
+  assert.equal(story.storyPose(.79).wardrobeVisible,false);
   for (const progress of [1, 1.5, 100]) {
     const pose = story.storyPose(progress, 1000);
-    assert.equal(pose.sofaY, story.LOWER_ROOM_Y + .055);
-    assert.equal(pose.rotation, Math.PI * 2);
+    assert.equal(pose.sofaY, story.SOFA_GROUND_Y);
+    assert.equal(pose.wardrobeY,story.JOURNEY_PLACEMENTS.wardrobe.position[1]);
     assert.equal(pose.landed, true);
     assert.deepEqual(pose, story.storyPose(progress, 1));
   }
-  assert.equal(story.storyPose(0).sofaY, story.SOFA_GROUND_Y);
   for (let p = 0; p <= 1; p += .001) {
     const pose = story.storyPose(p), next = story.storyPose(Math.min(1, p + .001));
-    assert.ok(pose.sofaY >= story.LOWER_ROOM_Y + story.SOFA_GROUND_Y - 1e-9);
-    assert.ok(pose.sofaY <= story.SOFA_GROUND_Y + 1e-9);
-    assert.ok(Math.abs(pose.sofaY - next.sofaY) < .04, 'scroll must never teleport the model between rooms');
+    assert.ok(pose.eye[1]>=1.3&&pose.eye[1]<=1.6,'camera remains at human eye level');
+    assert.ok(pose.eye.every((v,i)=>Math.abs(v-next.eye[i])<.08),'no teleporting');
+    if(Math.abs(pose.eye[2]+3.5)<.15)assert.ok(pose.eye[0]>1.6&&pose.eye[0]<2.9,'camera crosses the actual doorway');
+    if(p>.2)assert.equal(pose.sofaY,story.SOFA_GROUND_Y,'sofa stays in the living room');
+    if(p>.7)assert.equal(pose.bedY,story.JOURNEY_PLACEMENTS.bed.position[1],'bed stays put during wardrobe reveal');
   }
 });
 
@@ -100,16 +95,16 @@ test("hero sleeps at rest and renders only until pointer or scroll motion settle
   const camera = new THREE.PerspectiveCamera(46, 16 / 9, .1, 60);
   const { default: InteriorScene } = loadSource('src/features/home-interior/InteriorScene.tsx', {
     react: { ...React, useMemo: fn => fn(), useRef: value => ({ current: value }), useEffect() {} },
-    '@react-three/fiber': { Canvas: 'canvas', useThree: () => ({ camera, invalidate: () => invalidations++, size: { width: 1280, height: 720 } }), useFrame: fn => { tick = fn; } },
+    '@react-three/fiber': { Canvas: 'canvas', useThree: () => ({ camera, gl:{shadowMap:{}}, invalidate: () => invalidations++, size: { width: 1280, height: 720 } }), useFrame: fn => { tick = fn; } },
     './roomMaterials': { useRoomMaterials: () => ({}) },
   });
   const motion = { current: { progress: 0, pointer: { x: 0, y: 0 }, swap: -1, visible: true } };
   const props = { motion, theme: story.INTERIOR_STYLES[0], reduced: false, onStatus() {} };
-  const scene = InteriorScene(props).props.children.props.children;
+  const scene = React.Children.toArray(InteriorScene(props).props.children.props.children).find(node=>node.type.name==='Scene');
   scene.type(scene.props);
   const frame = () => tick({ clock: { elapsedTime: 100 } }, 1 / 60);
   frame(); assert.equal(invalidations, 0, 'a grounded idle hero must not run a permanent RAF');
-  motion.current.pointer.x = .5; frame(); assert.ok(invalidations > 0);
+  motion.current.progress = .1; frame(); assert.ok(invalidations > 0);
   for (let i = 0; i < 180; i++) frame();
   const afterPointer = invalidations; for (let i = 0; i < 30; i++) frame(); assert.equal(invalidations, afterPointer);
   motion.current.progress = .45; frame(); assert.ok(invalidations > afterPointer);
@@ -132,7 +127,9 @@ test("public homepage renders editorial content and controls without waiting for
     "next/link": { default: ({ href, children, ...props }) => React.createElement("a", { href, ...props }, children) },
   });
   const html = renderToStaticMarkup(React.createElement(InteriorHome, { catalog: [], stores: [], paymentLabels: [], dataError: true }));
-  for (const text of ["Гэр гэдэг", "Скандинав", "Модерн", "Дулаан", "Минимал", "Тохижуулалтын санаа", "Дэлгүүр бүртгүүлэх хүсэлт", "Энэ орчинд туршиж харах"]) assert.ok(html.includes(text), text);
+  for (const text of ["Гэр гэдэг", "Скандинав", "Тохижуулалтын санаа", "Дэлгүүр бүртгүүлэх хүсэлт", "3D аялал эхлүүлэх"]) assert.ok(html.includes(text), text);
+  assert.equal(html.includes("Дөрвөн мэдрэмж"), false);
+  assert.equal(html.includes("interior-design-panel"), false);
   for (const text of ["62 мянга", "98%", "Долоон жилийн", "240+"]) assert.ok(!html.includes(text), text);
   assert.ok(html.includes('href="/catalog"'));
   assert.ok(html.includes('href="/planner"'));
@@ -184,17 +181,19 @@ test("admin navigation requires both a signed-in user and the admin role", () =>
 
 test("homepage admin mutation rejects unauthenticated, malformed and non-sofa choices and detects stale writes", async () => {
   let allowed = false, writes = 0, validProduct = true, conflict = false;
+  const rows = [], roleId = '11111111-1111-4111-8111-111111111111';
+  let roleCategory = 'bed', roleModel = true;
   const db = { from(name) {
     assert.equal(name, "homepage_scene_settings");
     return {
-      insert(row) { writes++; return { select() { return { single: async () => ({ data: { version: row.version }, error: conflict ? { code: "23505" } : null }) }; } }; },
-      update(row) { writes++; return { eq() { return this; }, select() { return { maybeSingle: async () => ({ data: conflict ? null : { version: row.version }, error: null }) }; } }; },
+      insert(row) { writes++; rows.push(row); return { select() { return { single: async () => ({ data: { version: row.version }, error: conflict ? { code: "23505" } : null }) }; } }; },
+      update(row) { writes++; rows.push(row); return { eq() { return this; }, select() { return { maybeSingle: async () => ({ data: conflict ? null : { version: row.version }, error: null }) }; } }; },
     };
   } };
   const route = loadSource("src/app/api/admin/homepage/route.ts", {
     "@/lib/supabase/requireAdmin": { requireAdmin: async () => allowed ? { userId: "admin", error: null } : { error: new Response("Denied", { status: 401 }) } },
     "@/lib/supabase/admin": { getSupabaseAdmin: () => db },
-    "@/lib/catalogServer": { readProduct: async () => ({ category: validProduct ? "sofa" : "bed", model: { id: "model" } }) },
+    "@/lib/catalogServer": { readProduct: async id => id === roleId ? {category:roleCategory,model:roleModel?{id:'model'}:undefined} : ({ category: validProduct ? "sofa" : "bed", model: { id: "model" } }) },
     "@/lib/homepageSettingsServer": { readHomepageSettings: async () => ({ productIds: [...story.HOME_PRODUCT_IDS], version: 0 }) },
     "@/lib/publicCatalog": { readCachedProducts: async () => [] },
   });
@@ -210,7 +209,48 @@ test("homepage admin mutation rejects unauthenticated, malformed and non-sofa ch
   assert.equal(writes, 0);
   validProduct = true;
   assert.equal((await route.PUT(request(body))).status, 200);
+  assert.equal(Object.hasOwn(rows.at(-1),'bed_product_id'),false,'legacy writes preserve an existing bed selection');
+  assert.equal((await route.PUT(request({...body,bedProductId:roleId}))).status,200);
+  assert.equal(rows.at(-1).bed_product_id,roleId);
+  roleCategory='wardrobe';
+  assert.equal((await route.PUT(request({...body,bedProductId:roleId}))).status,422);
+  roleModel=false;
+  assert.equal((await route.PUT(request({...body,wardrobeProductId:roleId}))).status,422);
+  roleModel=true;
+  assert.equal((await route.PUT(request({...body,wardrobeProductId:roleId,bedProductId:null}))).status,200);
+  assert.equal(rows.at(-1).bed_product_id,null,'explicit null clears a role selection');
+  assert.equal(rows.at(-1).wardrobe_product_id,roleId);
   conflict = true;
   assert.equal((await route.PUT(request(body))).status, 409);
   assert.equal((await route.PUT(request({ ...body, version: 4 }))).status, 409);
+});
+
+
+test("journey furniture uses only explicit, public, correctly categorized models", () => {
+  const {resolveJourneyProduct} = loadSource("src/features/home-interior/InteriorHome.tsx", {"next/dynamic": {default: () => () => null}});
+  const bed = {id:"bed",category:"bed",model:{id:"model"}}, wardrobe={id:"wardrobe",category:"wardrobe",model:{id:"model"}};
+  const catalog=[bed,wardrobe,{id:"unavailable",category:"bed"}];
+  assert.equal(resolveJourneyProduct(catalog,"wardrobe",null),undefined,"unconfigured slots remain authored interior demos");
+  assert.equal(resolveJourneyProduct(catalog,"bed","bed"),bed);
+  assert.equal(resolveJourneyProduct(catalog,"wardrobe","wardrobe"),wardrobe);
+  assert.equal(resolveJourneyProduct(catalog,"bed","wardrobe"),undefined);
+  assert.equal(resolveJourneyProduct(catalog,"bed","unavailable"),undefined);
+  assert.equal(resolveJourneyProduct(catalog,"bed","deleted"),undefined);
+});
+
+test("self-hosted interior props fit a mobile geometry and download budget", async () => {
+  const fs=require('node:fs');
+  const {NodeIO}=await import('@gltf-transform/core'),{ALL_EXTENSIONS}=await import('@gltf-transform/extensions');
+  const io=new NodeIO().registerExtensions(ALL_EXTENSIONS);
+  const manifest=JSON.parse(fs.readFileSync('public/interior/sources.json','utf8'));
+  let bytes=0;
+  for(const asset of manifest.assets){
+    const file='public/interior/'+asset.file;bytes+=fs.statSync(file).size;
+    assert.equal(asset.license,'CC0-1.0');
+    if(!asset.file.endsWith('.glb'))continue;
+    const doc=await io.read(file);
+    const triangles=doc.getRoot().listMeshes().flatMap(m=>m.listPrimitives()).reduce((n,p)=>n+(p.getIndices()?.getCount()??p.getAttribute('POSITION').getCount())/3,0);
+    assert.ok(triangles<12000,asset.file+' has '+triangles+' triangles');
+  }
+  assert.ok(bytes<4*1024*1024,'shared room assets must remain below 4 MiB');
 });

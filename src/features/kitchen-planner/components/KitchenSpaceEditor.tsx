@@ -235,8 +235,8 @@ export function KitchenSpaceEditor({
         <div className="kroom-config-body">
           <header className="kroom-intro">
             <div>
-              <small>АЛХАМ 4 / 7</small>
-              <span>CAD Ноорог</span>
+              <small>АЛХАМ 1 / 4</small>
+              <span>Өрөөний план</span>
             </div>
             <h1>Өрөөг хэмжих</h1>
             <p>

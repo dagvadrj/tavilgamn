@@ -42,7 +42,7 @@ test("both planners retain lazy 3D scenes and only open room inspectors reserve 
 
 test("kitchen opens directly with optional setup and keeps product editing on the left", () => {
   const entry = source("src/components/KitchenPlanner.tsx");
-  assert.match(entry, /params.get\("setup"\) === "1"/);
+  assert.doesNotMatch(entry, /<KitchenSuggestionWizard/);
   assert.match(entry, /<ModularKitchenPlanner/);
   assert.match(entry, /queryString=\{query\}/);
   const kitchen = source("src/components/ModularKitchenPlanner.tsx");

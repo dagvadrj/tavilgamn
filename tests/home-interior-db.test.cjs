@@ -7,7 +7,7 @@ test("homepage choices are server-only and reject empty, duplicate, null or extr
   const db = new PGlite();
   t.after(() => db.close());
   await db.exec("create role anon; create role authenticated; create role service_role bypassrls; create schema auth; create table auth.users (id uuid primary key);");
-  for (const file of ["20261014122058_homepage_scene_settings.sql", "20261014122337_homepage_scene_bounds.sql"]) await db.exec(readFileSync(`supabase/migrations/${file}`, "utf8"));
+  for (const file of ["20261014122058_homepage_scene_settings.sql", "20261014122337_homepage_scene_bounds.sql", "20261022090000_homepage_journey_products.sql"]) await db.exec(readFileSync(`supabase/migrations/${file}`, "utf8"));
   const ids = ["2b9cdc29-650f-4574-83ee-c3b6092d6ef8", "0f05288c-7957-4c08-8c1b-d7e1e650c712"];
   for (const role of ["anon", "authenticated"]) {
     await db.exec(`set role ${role}`);
@@ -20,5 +20,7 @@ test("homepage choices are server-only and reject empty, duplicate, null or extr
   for (const invalid of [[], [ids[0]], [ids[0], ids[0]], [ids[0], null], [...ids, ids[0]]]) await assert.rejects(db.query("insert into public.homepage_scene_settings (product_ids) values ($1)", [invalid]), /check constraint/);
   await db.query("insert into public.homepage_scene_settings (product_ids) values ($1)", [ids]);
   assert.deepEqual((await db.query("select product_ids, version from public.homepage_scene_settings")).rows, [{ product_ids: ids, version: 1 }]);
+  await db.query("update public.homepage_scene_settings set bed_product_id=$1, wardrobe_product_id=$2", ids);
+  assert.deepEqual((await db.query("select bed_product_id,wardrobe_product_id from public.homepage_scene_settings")).rows,[{bed_product_id:ids[0],wardrobe_product_id:ids[1]}]);
   await assert.rejects(db.query("delete from public.homepage_scene_settings"), /permission denied/);
 });
