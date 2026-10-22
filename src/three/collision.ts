@@ -350,11 +350,13 @@ export function findFreePlacement(
   piece: PlacedFurniture,
   others: PlacedFurniture[],
   room: PlacementRoom,
+  options: { bounds?: Bounds; accept?: (piece: PlacedFurniture) => boolean } = {},
 ): PlacedFurniture | null {
-  if (isPlacementValid(piece, others, room)) return piece;
+  const valid = (candidate: PlacedFurniture) => isPlacementValid(candidate, others, room) && (!options.accept || options.accept(candidate));
+  if (valid(piece)) return piece;
   let bounds;
   try {
-    bounds = placementGeometry(room).bounds;
+    bounds = options.bounds ?? placementGeometry(room).bounds;
   } catch {
     return null;
   }
@@ -377,6 +379,17 @@ export function findFreePlacement(
     bounds.minZ + hz,
     bounds.maxZ - hz,
   ]);
+  // Include obstacle edges so narrow free gaps are not missed by the grid.
+  const nearby = others.filter(other => other.instanceId !== piece.instanceId).flatMap(pieceRects)
+    .sort((a,b) => (a.cx-piece.x)**2+(a.cz-piece.z)**2-((b.cx-piece.x)**2+(b.cz-piece.z)**2)).slice(0,24);
+  for (const rect of nearby) {
+      const c = Math.abs(Math.cos(rect.rot)), s = Math.abs(Math.sin(rect.rot));
+      const ox = (rect.w * c + rect.d * s) / 2, oz = (rect.w * s + rect.d * c) / 2;
+      for (const x of [rect.cx - ox - hx - .01, rect.cx + ox + hx + .01])
+        if (x >= bounds.minX && x <= bounds.maxX) xs.add(x);
+      for (const z of [rect.cz - oz - hz - .01, rect.cz + oz + hz + .01])
+        if (z >= bounds.minZ && z <= bounds.maxZ) zs.add(z);
+  }
   for (const wall of placementGeometry(room).segments) {
     if (wall.nx) xs.add(wall.a.x + wall.nx * hx);
     if (wall.nz) zs.add(wall.a.z + wall.nz * hz);
@@ -392,7 +405,7 @@ export function findFreePlacement(
   );
   for (const position of positions) {
     const candidate = { ...piece, ...position };
-    if (isPlacementValid(candidate, others, room)) return candidate;
+    if (valid(candidate)) return candidate;
   }
   return null;
 }

@@ -503,7 +503,7 @@ export function RoomPlacementMap({
                 y1={105 + (contact.a.z - cz) * scale}
                 x2={200 + (contact.b.x - cx) * scale}
                 y2={105 + (contact.b.z - cz) * scale}
-                stroke={c.kind === "open" ? "#21a077" : "#0876c2"}
+                stroke="var(--site-accent)"
                 strokeWidth="5"
                 strokeDasharray={c.kind === "open" ? "5 3" : undefined}
                 role="button"

@@ -40,10 +40,13 @@
 }
 
 .site-ui.shop-shell :is(.btn-primary, .btn-secondary, .market-cta, .product-add-cart) {
+  min-height: var(--site-button-height);
+  padding: 12px 24px;
   border-color: var(--site-primary);
-  border-radius: 999px;
+  border-radius: var(--site-button-radius);
   background: var(--site-primary);
   color: #fff;
+  font-weight: var(--site-button-weight);
 }
 
 .site-ui.shop-shell :is(.btn-primary, .btn-secondary, .market-cta, .product-add-cart):hover:not(:disabled) {

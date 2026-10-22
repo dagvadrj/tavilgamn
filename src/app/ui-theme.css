@@ -1,14 +1,39 @@
-/* Shared visual vocabulary; scoped to the storefront and the two planner workspaces. */
+/* One room-planner palette for every route, including dialogs and loading screens. */
+
+:root {
+  --site-ink-rgb: 38 56 72;
+  --site-muted-rgb: 99 113 130;
+  --site-line-rgb: 224 229 234;
+  --site-accent-rgb: 8 118 194;
+  --site-ink: rgb(var(--site-ink-rgb));
+  --site-muted: rgb(var(--site-muted-rgb));
+  --site-line: rgb(var(--site-line-rgb));
+  --site-accent: rgb(var(--site-accent-rgb));
+  --site-primary: #075eaa;
+  --site-primary-hover: #004d91;
+  --site-selected: #eaf5ff;
+  --site-bg: #f8fafc;
+  --site-surface: #fff;
+  --site-hover: #f1f5f9;
+  --site-success: var(--site-primary);
+  --site-danger: #b91c1c;
+  --site-radius: 16px;
+  --site-control-radius: 12px;
+  --site-button-radius: 999px;
+  --site-button-height: 48px;
+  --site-button-weight: 700;
+  --site-shadow: 0 3px 16px #20212408;
+}
 
 .shop-shell,
 .planner-reference {
-  --ui-ink: #171717;
-  --ui-muted: #71717a;
-  --ui-line: #e4e4e7;
-  --ui-surface: #fff;
-  --ui-background: #fafafa;
-  --ui-primary: #171717;
-  --ui-accent: #2563eb;
-  --ui-selected: #eff6ff;
-  --ui-radius: 14px;
+  --ui-ink: var(--site-ink);
+  --ui-muted: var(--site-muted);
+  --ui-line: var(--site-line);
+  --ui-surface: var(--site-surface);
+  --ui-background: var(--site-bg);
+  --ui-primary: var(--site-primary);
+  --ui-accent: var(--site-accent);
+  --ui-selected: var(--site-selected);
+  --ui-radius: var(--site-radius);
 }

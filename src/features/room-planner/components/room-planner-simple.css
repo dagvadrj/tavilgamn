@@ -98,16 +98,17 @@
 }
 
 .room-simple .studio-file-actions .room-summary-button {
+  min-height: var(--site-button-height);
   min-width: 102px;
-  background: #075eaa;
+  background: var(--site-primary);
   color: white;
   gap: 12px;
   padding-inline: 20px;
-  font-weight: 650;
+  font-weight: var(--site-button-weight);
 }
 
 .room-simple .studio-file-actions .room-summary-button:hover {
-  background: #004d91;
+  background: var(--site-primary-hover);
 }
 
 .room-stage-actions {
@@ -138,9 +139,9 @@
   align-items: center;
   gap: 10px;
   padding: 13px 20px;
-  min-height: 48px;
+  min-height: var(--site-button-height);
   font-size: 14px;
-  font-weight: 650;
+  font-weight: var(--site-button-weight);
 }
 
 .room-kitchen-button {
@@ -1017,7 +1018,7 @@
 .room-kitchen-intro h2 {
   font-size: 20px;
   font-weight: 700;
-  color: #24342c;
+  color: var(--site-ink);
 }
 
 .room-kitchen-intro p {

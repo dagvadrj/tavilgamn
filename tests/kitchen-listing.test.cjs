@@ -299,9 +299,13 @@ test("public tag search returns only public search fields", async () => {
     sourceKitchenId: "private-id",
     renderJobs: ["private-prompt"],
   };
+  let unavailable = false;
   const route = loadSource("src/app/api/kitchen-designs/search/route.ts", {
     "@/lib/kitchenMarketplaceServer": {
-      readPublishedKitchenDesigns: async () => [source],
+      readPublishedKitchenDesigns: async () => {
+        if (unavailable) throw new Error("private database detail");
+        return [source];
+      },
     },
   });
   const result = await route.GET(
@@ -317,14 +321,19 @@ test("public tag search returns only public search fields", async () => {
     "thumbnailUrl",
     "title",
   ]);
-  assert.equal(
-    (
-      await route.GET(
-        new NextRequest(
-          "http://localhost/api/kitchen-designs/search?q=" + "a".repeat(121),
-        ),
-      )
-    ).status,
-    400,
-  );
+  const invalid = await route.GET(new NextRequest(
+    "http://localhost/api/kitchen-designs/search?q=" + "a".repeat(121),
+  ));
+  assert.equal(invalid.status, 400);
+  assert.equal((await invalid.json()).code, "BAD_REQUEST");
+  assert.equal(invalid.headers.get("cache-control"), "private, no-store");
+  unavailable = true;
+  const failure = await route.GET(new NextRequest(
+    "http://localhost/api/kitchen-designs/search?q=custom-tag",
+  ));
+  assert.equal(failure.status, 503);
+  assert.equal(failure.headers.get("cache-control"), "private, no-store");
+  const error = await failure.json();
+  assert.equal(error.code, "SERVICE_UNAVAILABLE");
+  assert.ok(!JSON.stringify(error).includes("private database detail"));
 });

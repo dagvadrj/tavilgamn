@@ -424,7 +424,7 @@
   max-height: 340px;
   object-fit: contain;
   border-radius: 12px;
-  background: #eaece8;
+  background: var(--site-hover);
   margin-bottom: 20px;
 }
 
@@ -842,8 +842,8 @@
   white-space: nowrap;
   padding: 7px 10px;
   border-radius: 20px;
-  background: #edf4e5;
-  color: #355531;
+  background: var(--site-selected);
+  color: var(--site-ink);
   font-size: 10px;
 }
 
@@ -851,7 +851,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #355531;
+  background: var(--site-primary);
 }
 
 .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow .kp-top-actions {
@@ -872,9 +872,9 @@
 }
 
 .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow .kp-top-actions .kitchen-review-button {
-  background: #d7edb8;
-  color: #0a2218;
-  border-color: #d7edb8;
+  background: var(--site-selected);
+  color: var(--site-ink);
+  border-color: var(--site-line);
 }
 
 .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow[data-room-setup="true"] .km-layout-menu, .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow[data-room-setup="true"] .kitchen-editor-stages button:last-child {

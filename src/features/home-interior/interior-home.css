@@ -205,7 +205,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #353c3033;
+  background: #26384833;
 }
 
 .interior-home .interior-chapter-dots .active {
@@ -233,7 +233,7 @@
   border: 1px solid var(--site-line, #e0e5ea);
   border-radius: 12px;
   background: #fffffff5;
-  box-shadow: 0 25px 80px #292d2112;
+  box-shadow: 0 25px 80px #26384812;
   backdrop-filter: blur(18px);
   pointer-events: auto;
 }
@@ -298,7 +298,7 @@
   right: 20%;
   top: 34%;
   height: 39%;
-  border: 1px solid #353c301a;
+  border: 1px solid #2638481a;
   border-radius: 9px 9px 3px 3px;
   box-shadow: 3px 7px 8px var(--site-line, #e0e5ea), inset 0 -9px 0 #0000000d;
 }
@@ -331,7 +331,7 @@
 .interior-home .interior-swatches i {
   width: 12px;
   height: 12px;
-  border: 1px solid #353c3012;
+  border: 1px solid #26384812;
   border-radius: 50%;
 }
 

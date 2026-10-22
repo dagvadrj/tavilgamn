@@ -38,6 +38,8 @@ import { isPlacementValid, snapToWall } from "./collision";
 import type { Measurement } from "@/lib/furnitureMeasurements";
 import { KitchenAssemblyMesh } from "./KitchenAssemblyMesh";
 import { dimsFor } from "./collision";
+import { furnitureDragPlane } from "./furnitureDragPlane";
+import { RoomPlacementHints, type RoomPlacementHintSource } from "./RoomPlacementHints";
 import { furnitureCameraBounds } from "./roomFurnitureCamera";
 import { RoomDimensions } from "./RoomDimensions";
 import { FurnitureMeasurements } from "./FurnitureMeasurements";
@@ -76,6 +78,7 @@ const ROOM_CAMERA = {
 };
 
 interface RoomCanvasProps {
+  onPlacementHintsReady?: (source: RoomPlacementHintSource | null) => void;
   paused?: boolean;
   onPreview?: (id: string, image: string) => void;
   onPreviewReady?: (capture: (() => void) | null) => void;
@@ -132,6 +135,7 @@ interface RoomCanvasProps {
 }
 
 export function RoomCanvas({
+  onPlacementHintsReady,
   paused = false,
   onPreview,
   onPreviewReady,
@@ -267,6 +271,7 @@ export function RoomCanvas({
       }}
     >
       <CameraMotionPreview interactionActive={isDraggingPiece || isLooking}>
+        {onPlacementHintsReady && <RoomPlacementHints designId={design.id} roomId={design.activeRoomId ?? `${design.id}-room-1`} onReady={onPlacementHintsReady} />}
         <RoomMotionResolution dpr={performance.dpr} />
         <CanvasDiagnostics scene="room" />
         <RoomPreviewCapture
@@ -466,7 +471,7 @@ export function RoomCanvas({
                     >
                       <button
                         type="button"
-                        className="rounded-full border-2 border-white bg-[#293C32] px-3 py-2 text-white shadow-lg"
+                        className="rounded-full border-2 border-white bg-ui-accent px-3 py-2 text-white shadow-lg"
                         aria-label={`${room.name}: дотроос харах`}
                         title={`${room.name}: дотроос харах`}
                         onClick={() => onVisitRoom?.(room.id)}
@@ -562,6 +567,7 @@ export function RoomCanvas({
             snapEnabled={snapEnabled}
             gridEnabled={gridEnabled}
             measureMode={showDimensions || interior || cameraPlacement}
+            plan={view === "plan"}
             onEditStart={onEditStart}
             onEditEnd={onEditEnd}
             kitchenMaterials={kitchenMaterials}
@@ -685,7 +691,7 @@ function RoomCaption({
           {onVisit && (
             <button
               type="button"
-              className="rounded-full border-2 border-white bg-[#293C32] p-2 text-white shadow-lg"
+              className="rounded-full border-2 border-white bg-ui-accent p-2 text-white shadow-lg"
               aria-label={`${name}: дотроос харах`}
               title={`${name}: дотроос харах`}
               onClick={onVisit}
@@ -717,7 +723,7 @@ function FloorGrid({ width, depth }: { width: number; depth: number }) {
     />
   );
 }
-function DraggablePiece({
+export function DraggablePiece({
   piece,
   allPieces,
   roomDims,
@@ -728,6 +734,7 @@ function DraggablePiece({
   snapEnabled,
   gridEnabled,
   measureMode,
+  plan = false,
   onEditStart,
   onEditEnd,
   kitchenMaterials,
@@ -749,6 +756,7 @@ function DraggablePiece({
   snapEnabled: boolean;
   gridEnabled: boolean;
   measureMode: boolean;
+  plan?: boolean;
   onEditStart?: () => void;
   onEditEnd?: () => void;
   kitchenMaterials: Record<string, KitchenMaterialDefinition>;
@@ -785,6 +793,7 @@ function DraggablePiece({
     if (!dragging) return;
 
     const finishDrag = (event?: Event) => {
+      if (event && "pointerId" in event && dragCapture.current && event.pointerId !== dragCapture.current.pointerId) return;
       const before = dragBefore.current;
       dragBefore.current = null;
       if (before && event && event.type !== "pointerup")
@@ -809,12 +818,17 @@ function DraggablePiece({
     window.addEventListener("pointerup", finishDrag);
     window.addEventListener("pointercancel", finishDrag);
     window.addEventListener("blur", finishDrag);
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); finishDrag(event); } };
+    window.addEventListener("keydown", escape);
+    window.addEventListener("lostpointercapture", finishDrag);
     gl.domElement.addEventListener(SCENE_NAVIGATION_START, finishDrag);
 
     return () => {
       window.removeEventListener("pointerup", finishDrag);
       window.removeEventListener("pointercancel", finishDrag);
       window.removeEventListener("blur", finishDrag);
+      window.removeEventListener("keydown", escape);
+      window.removeEventListener("lostpointercapture", finishDrag);
       gl.domElement.removeEventListener(SCENE_NAVIGATION_START, finishDrag);
       onDragChange(false);
       onEditEnd?.();
@@ -841,20 +855,8 @@ function DraggablePiece({
     const x = ((clientX - rect.left) / rect.width) * 2 - 1;
     const y = -((clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
-    const attachment = piece.attachment;
-    const wall =
-      attachment?.kind === "wall"
-        ? getRoomGeometry(roomDims).segments.find(
-            (s) => furnitureWallId(s) === attachment.segmentId,
-          )
-        : undefined;
-    const planeNormal = wall
-      ? new THREE.Vector3(wall.nx, 0, wall.nz)
-      : new THREE.Vector3(0, 1, 0);
-    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(
-      planeNormal,
-      new THREE.Vector3(piece.x, planeY, piece.z),
-    );
+    const plane = furnitureDragPlane(piece, roomDims, plan);
+    if (!plane) return null;
     const point = new THREE.Vector3();
     return raycaster.ray.intersectPlane(plane, point);
   };
@@ -862,7 +864,7 @@ function DraggablePiece({
   return (
     <group
       ref={groupRef}
-      position={[piece.x, 0, piece.z]}
+      position={[piece.x, planeY, piece.z]}
       rotation={[0, piece.rotation, 0]}
       onClick={(event) => event.stopPropagation()}
       onPointerOver={(event) => {
@@ -908,6 +910,7 @@ function DraggablePiece({
       }}
       onPointerMove={(e) => {
         if (!dragging || measureMode) return;
+        if (dragCapture.current?.pointerId !== e.pointerId) return;
         const p = intersectFloor(e.clientX, e.clientY);
         if (!p) return;
         let candidate: PlacedFurniture = {
@@ -1016,7 +1019,9 @@ function DraggablePiece({
       }}
       onPointerUp={(event) => {
         if (!dragging) return;
+        if (dragCapture.current?.pointerId !== event.pointerId) return;
         dragBefore.current = null;
+        dragCapture.current = null;
         setDragging(false);
         onDragChange(false);
         onEditEnd?.();

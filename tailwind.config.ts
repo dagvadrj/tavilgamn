@@ -20,7 +20,7 @@ const config: Config = {
         bone: "#FFFFFF",
         ink: "#111111",
         clay: "#C58348",
-        sage: "#4D654E",
+        sage: "rgb(var(--site-accent-rgb) / <alpha-value>)",
         mocha: "#222222",
         cream: "#F5F5F7",
         terracotta: "#C58348",
@@ -44,9 +44,9 @@ const config: Config = {
           tint: "#EFF6FF",
         },
         room: {
-          DEFAULT: "#4D654E",
-          hover: "#3D523E",
-          tint: "#F0F4F0",
+          DEFAULT: "var(--site-primary)",
+          hover: "var(--site-primary-hover)",
+          tint: "var(--site-selected)",
         },
       },
       fontFamily: {

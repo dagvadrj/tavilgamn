@@ -72,8 +72,8 @@
 }
 
 .shop-shell .finance-green {
-  background: #dcf3e7;
-  color: #047857;
+  background: var(--site-selected);
+  color: var(--site-ink);
 }
 
 .shop-shell .finance-violet {

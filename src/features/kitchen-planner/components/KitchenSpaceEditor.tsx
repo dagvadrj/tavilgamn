@@ -606,7 +606,7 @@ export function KitchenSpaceEditor({
               stroke="#303039"
               strokeWidth={2}
             />
-            <path d="M20 10H80" stroke="#42634f" strokeWidth={5} />
+            <path d="M20 10H80" stroke="var(--site-accent)" strokeWidth={5} />
             {!room.openFront && (
               <path d="M20 56H80" stroke="#303039" strokeWidth={2} />
             )}

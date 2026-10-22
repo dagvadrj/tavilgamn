@@ -1,5 +1,6 @@
 "use client";
-import { findInitialFurniturePlacement, moveAttachedFurniture, resolveFurnitureAttachments } from "@/lib/furnitureAttachment";
+import { duplicateFurniturePlacement, moveAttachedFurniture, resolveFurnitureAttachments } from "@/lib/furnitureAttachment";
+import type { RoomPlacementHintSource } from "@/three/RoomPlacementHints";
 import { FurnitureAttachmentControls } from "@/features/room-planner/components/FurnitureAttachmentControls";
 import { RoomProductAlternatives } from "@/features/room-planner/components/RoomProductAlternatives";
 import { createRoomBuilderDraft, resizeRoomBuilder } from "@/lib/roomBuilderDraft";
@@ -123,7 +124,6 @@ import { tourPointValid } from "@/three/roomCameraPlacement";
 import { syncDesignRooms } from "@/lib/roomDesign";
 import {
   isPlacementValid,
-  findFreePlacement,
   dimsFor,
 } from "@/three/collision";
 import {
@@ -234,6 +234,10 @@ function RoomPlannerEditor() {
   );
   const [roomStartOpen, setRoomStartOpen] = useState(true);
   const previewCapture = useRef<(() => void) | null>(null);
+  const placementHints = useRef<RoomPlacementHintSource | null>(null);
+  const placementHintsReady = useCallback((source: RoomPlacementHintSource | null) => {
+    placementHints.current = source;
+  }, []);
   const previewReady = useCallback((capture: (() => void) | null) => {
     previewCapture.current = capture;
   }, []);
@@ -645,6 +649,29 @@ function RoomPlannerEditor() {
     );
   }
 
+  const placeNewPiece = (piece: PlacedFurniture) => {
+    const latest = useDesigns.getState().current;
+    if (!latest || latest.id !== current.id) { setNotice("Өрөө өөрчлөгдсөн байна. Тавилгаа дахин сонгоно уу."); return; }
+    const source = placementHints.current;
+    let hints;
+    // The SVG plan has its own framing; never use a paused/hidden 3D camera for it.
+    if (roomView !== "top" && source?.designId === latest.id && source.roomId === (latest.activeRoomId ?? `${latest.id}-room-1`)) {
+      try { hints = source.read(latest); } catch { /* Camera unavailable: deterministic local fallback. */ }
+    }
+    const result = useDesigns.getState().placeFurniture(piece, hints);
+    if (!result.piece) { setNotice(result.error ?? "Тавилга байрлуулж чадсангүй."); return; }
+    rememberFurniture(result.piece);
+    setSelected(result.piece.instanceId);
+    setSelectedOpening(null);
+    setSelectedWall(null);
+    setPlacementTemplate(null);
+    setLeftOpen(false);
+    setNotice(result.piece.attachment?.kind === "wall"
+      ? "Тавилгыг хананд бэхэллээ. Ханын дагуу болон дээш, доош чирж зөөнө."
+      : result.piece.attachment?.kind === "surface"
+        ? "Тавилгыг тулгуур дээр байрлууллаа. Чирж байрлалыг нь тохируулаарай."
+        : "Тавилгыг сул зайд байрлууллаа. Чирж зөөх эсвэл Эргүүлэх товчоор чиглэлийг нь өөрчилнө.");
+  };
   const addPiece = (productId: string) => {
     const product = getProduct(productId);
     if (!product) return;
@@ -660,7 +687,7 @@ function RoomPlannerEditor() {
       z: 0,
       rotation: 0,
       color: product.defaultColor,
-      material: product.materials[0].id,
+      material: product.materials[0]?.id ?? "wood",
       details: {
         name: product.name,
         dimensions: { ...product.dimensions },
@@ -668,23 +695,7 @@ function RoomPlannerEditor() {
         category: product.category,
       },
     };
-    const placed = findInitialFurniturePlacement(piece, placement.pieces, placement.room, current.activeRoomId ?? `${current.id}-room-1`);
-    if (!placed) {
-      setNotice(
-        "Тавилга байрлуулах сул зай хүрэлцэхгүй байна. Өрөөг томруулах эсвэл байрлалаа өөрчилнө үү.",
-      );
-      return;
-    }
-    updatePieces([...current.pieces, placed]);
-    rememberFurniture(placed);
-    setSelected(placed.instanceId);
-    setSelectedOpening(null);
-    setSelectedWall(null);
-    setPlacementTemplate(null);
-    setLeftOpen(false);
-    setNotice(
-      "Тавилгыг нэмлээ. Чирж байрлуулаад, Эргүүлэх товчоор чиглэлийг нь өөрчлөөрэй.",
-    );
+    placeNewPiece(piece);
   };
 
   const addModelPiece = (model: DbModelInfo) => {
@@ -710,21 +721,7 @@ function RoomPlannerEditor() {
         category: model.category,
       },
     };
-    const placed = findInitialFurniturePlacement(piece, placement.pieces, placement.room, current.activeRoomId ?? `${current.id}-room-1`);
-    if (!placed) {
-      setNotice("Энэ загварыг байрлуулах сул зай хүрэлцэхгүй байна.");
-      return;
-    }
-    updatePieces([...current.pieces, placed]);
-    rememberFurniture(placed);
-    setSelected(placed.instanceId);
-    setSelectedOpening(null);
-    setSelectedWall(null);
-    setPlacementTemplate(null);
-    setLeftOpen(false);
-    setNotice(
-      "Тавилгыг нэмлээ. Чирж байрлуулаад, Эргүүлэх товчоор чиглэлийг нь өөрчлөөрэй.",
-    );
+    placeNewPiece(piece);
   };
 
   const onMove = (id: string, x: number, z: number, pose?: Partial<Pick<PlacedFurniture, "elevation" | "rotation" | "attachment">>) => {
@@ -952,8 +949,8 @@ function RoomPlannerEditor() {
   };
   const duplicateSelected = () => {
     if (!selectedPiece) return;
-    const copy = findInitialFurniturePlacement(
-      { ...selectedPiece, instanceId: `p_${crypto.randomUUID()}`, attachment: undefined },
+    const copy = duplicateFurniturePlacement(
+      selectedPiece, `p_${crypto.randomUUID()}`,
       placement.pieces,
       placement.room,
       current.activeRoomId ?? `${current.id}-room-1`,
@@ -1274,7 +1271,7 @@ function RoomPlannerEditor() {
         title={kitchenOnly ? "Гарнитур нэмэх" : "Тавилга нэмэх"}
       >
         {!kitchenOnly && (
-          <div className="border-b border-[#293C32]/10 p-4">
+          <div className="border-b border-ui-line p-4">
             <div className="planner-panel-heading">
               <span>
                 <LayoutGrid size={18} /> Тавилгын сан
@@ -1782,7 +1779,7 @@ function RoomPlannerEditor() {
 
         {/* preset loading status */}
         {(activePreset || localFile) && (
-          <div className="absolute left-1/2 top-24 z-20 -translate-x-1/2 rounded-full border border-[#293C32]/10 bg-white/95 px-4 py-2 text-xs shadow-sm backdrop-blur md:top-16">
+          <div className="absolute left-1/2 top-24 z-20 -translate-x-1/2 rounded-full border border-ui-line bg-white/95 px-4 py-2 text-xs shadow-sm backdrop-blur md:top-16">
             {presetStatus === "loading" && "Загвар ачаалж байна…"}
             {presetStatus === "loaded" && "✓ Загвар амжилттай ачааллаа"}
             {presetStatus === "error" && (
@@ -1853,7 +1850,7 @@ function RoomPlannerEditor() {
               </button>
               <button
                 onClick={rotateSelected}
-                className="flex items-center gap-1.5 rounded-full bg-[#293C32] px-3 py-2 text-xs font-medium text-[#FFFFFF]"
+                className="flex items-center gap-1.5 rounded-full bg-ui-accent px-3 py-2 text-xs font-medium text-[#FFFFFF]"
               >
                 <RotateCw className="h-3 w-3" /> Эргүүлэх
               </button>
@@ -1969,16 +1966,14 @@ function RoomPlannerEditor() {
               onMovePiece={(id, x, z) => {
                 const piece = current.pieces.find((p) => p.instanceId === id);
                 if (!piece) return null;
-                if (
-                  !isPlacementValid(
-                    { ...piece, x, z },
-                    placement.pieces,
-                    placement.room,
-                  )
-                )
-                  return "Энэ байрлалд хана эсвэл өөр тавилга байна.";
-                onMove(id, x, z);
-                return null;
+                try {
+                  const candidate = moveAttachedFurniture(piece, x, z, current, current.activeRoomId ?? `${current.id}-room-1`, current.pieces);
+                  const pieces = resolveFurnitureAttachments(current.pieces.map(p => p.instanceId === id ? candidate : p), current, current.activeRoomId ?? `${current.id}-room-1`);
+                  const combined = placement.pieces.map(p => pieces.find(next => next.instanceId === p.instanceId) ?? p);
+                  if (!pieces.every(p => isPlacementValid(p, combined, placement.room))) return "Энэ байрлалд хана эсвэл өөр тавилга байна.";
+                  updatePieces(pieces);
+                  return null;
+                } catch (reason) { return (reason as Error).message; }
               }}
             />
             {selected && (
@@ -2017,6 +2012,7 @@ function RoomPlannerEditor() {
             paused={roomView === "top"}
             onPreview={savePreview}
             onPreviewReady={previewReady}
+            onPlacementHintsReady={placementHintsReady}
             key={current.id}
             design={current}
             interior={roomView === "interior"}
@@ -2344,7 +2340,7 @@ function RoomPlannerEditor() {
             </p>
           </div>
           <div hidden={roomDetailsTab !== "project"}>
-            <div className="border-b border-[#293C32]/10 p-4">
+            <div className="border-b border-ui-line p-4">
               <p className="label mb-2">Загвар</p>
               <input
                 aria-label="Загварын нэр"
@@ -2377,7 +2373,7 @@ function RoomPlannerEditor() {
             </div>
           </div>
           <div hidden={roomDetailsTab !== "room"}>
-            <div className="border-b border-[#293C32]/10 p-4">
+            <div className="border-b border-ui-line p-4">
               <div className="room-basic-dimensions">
                 <RoomMeasureUnit />
                 {(
@@ -2538,7 +2534,7 @@ function RoomPlannerEditor() {
           </div>
           <div hidden={roomDetailsTab !== "selection"}>
             {selectedPiece && selectedDetails ? (
-              <div className="border-b border-[#293C32]/10 p-4">
+              <div className="border-b border-ui-line p-4">
                 <p className="label mb-3">Сонгосон</p>
 
                 <div className="flex gap-3">
@@ -2574,7 +2570,7 @@ function RoomPlannerEditor() {
                         ? "Өөрийн гарнитур"
                         : stockLabel(selectedProduct ?? selectedDbModel ?? {})}
                     </p>
-                    <p className="font-mono text-xs text-[#6C726B]">
+                    <p className="font-mono text-xs text-ui-muted">
                       {selectedDetails.basePrice > 0
                         ? formatPrice(getPiecePrice(selectedPiece))
                         : "Үнэ тогтоогдоогүй"}
@@ -2733,7 +2729,7 @@ function RoomPlannerEditor() {
                           className={cn(
                             "h-7 w-7 rounded-full border-2",
                             selectedPiece.color === color.id
-                              ? "border-[#293C32]"
+                              ? "border-ui-line"
                               : "border-white",
                           )}
                           title={color.name}
@@ -2759,8 +2755,8 @@ function RoomPlannerEditor() {
                           className={cn(
                             "rounded-full border px-3 py-1.5 text-xs transition",
                             selectedPiece.material === material.id
-                              ? "border-[#293C32] bg-[#293C32] text-white"
-                              : "border-[#293C32]/15 bg-white text-[#6C726B] hover:border-[#293C32]/40",
+                              ? "border-ui-line bg-ui-accent text-white"
+                              : "border-ui-line bg-white text-ui-muted hover:border-ui-line",
                           )}
                         >
                           {material.name}
@@ -2773,7 +2769,7 @@ function RoomPlannerEditor() {
                 )}
               </div>
             ) : (
-              <div className="border-b border-[#293C32]/10 p-4 text-xs text-[#737D6C]">
+              <div className="border-b border-ui-line p-4 text-xs text-ui-muted">
                 Тавилга дээр дарж тохиргоог нь өөрчилнө үү.
               </div>
             )}
@@ -2834,7 +2830,7 @@ function RoomPlannerEditor() {
                       : "custom"
                   }
                   onChange={(e) => resizeRoom(e.target.value as RoomSize)}
-                  className="rounded-full border border-[#293C32]/10 bg-white/90 px-3 py-2 text-xs font-medium backdrop-blur"
+                  className="rounded-full border border-ui-line bg-white/90 px-3 py-2 text-xs font-medium backdrop-blur"
                 >
                   <option value="custom" disabled>
                     Өөрийн хэмжээ · {current.width} × {current.depth} м
@@ -2853,7 +2849,7 @@ function RoomPlannerEditor() {
                       "flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium backdrop-blur transition",
                       activePreset?.id === preset.id
                         ? "border-[#AD6547] bg-[#AD6547] text-[#FFFFFF]"
-                        : "border-[#293C32]/10 bg-white/90 text-[#6C726B]",
+                        : "border-ui-line bg-white/90 text-ui-muted",
                     )}
                     title="GLB загварыг ачаалах"
                   >
@@ -2866,7 +2862,7 @@ function RoomPlannerEditor() {
                     "flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium backdrop-blur transition",
                     localFile
                       ? "border-[#AD6547] bg-[#AD6547] text-[#FFFFFF]"
-                      : "border-[#293C32]/10 bg-white/90 text-[#6C726B]",
+                      : "border-ui-line bg-white/90 text-ui-muted",
                   )}
                   title="Компьютероосоо GLB файл сонгож турших"
                 >
@@ -2902,7 +2898,7 @@ function RoomPlannerEditor() {
                         )
                       }
                       title="Масштаб (scale)"
-                      className="w-16 rounded-full border border-[#293C32]/10 bg-white/90 px-2 py-2 text-center text-xs font-mono backdrop-blur"
+                      className="w-16 rounded-full border border-ui-line bg-white/90 px-2 py-2 text-center text-xs font-mono backdrop-blur"
                     />
                     <button
                       onClick={() => handleLocalGlbSelect(null)}
@@ -2953,7 +2949,7 @@ function RoomPlannerEditor() {
                 )}
               </div>
               {designs.length === 0 && (
-                <p className="rounded-lg bg-[#293C32]/5 p-4 text-xs text-[#6C726B]">
+                <p className="rounded-lg bg-ui-ink/5 p-4 text-xs text-ui-muted">
                   Анхны загвараа хадгалснаар хэд хэдэн байрлалыг харьцуулах
                   боломжтой.
                 </p>
@@ -2966,13 +2962,13 @@ function RoomPlannerEditor() {
                       "rounded-lg border bg-white p-3",
                       current.id === d.id
                         ? "border-[#AD6547]"
-                        : "border-[#293C32]/10 hover:border-[#293C32]/20",
+                        : "border-ui-line hover:border-ui-line",
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{d.name}</p>
-                        <p className="text-xs text-[#6C726B]">
+                        <p className="text-xs text-ui-muted">
                           {d.rooms?.length ?? 1} өрөө ·{" "}
                           {d.roomName ?? "Зочны өрөө"} ·{" "}
                           {getRoomGeometry(d).area.toFixed(1)} м²
@@ -2981,14 +2977,14 @@ function RoomPlannerEditor() {
                       <div className="flex flex-shrink-0 gap-1">
                         <button
                           onClick={() => loadDesign(d.id)}
-                          className="rounded-md p-1.5 hover:bg-[#293C32]/5"
+                          className="rounded-md p-1.5 hover:bg-ui-ink/5"
                           title="Нээх"
                         >
                           <Maximize className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => duplicateDesign(d.id)}
-                          className="rounded-md p-1.5 hover:bg-[#293C32]/5"
+                          className="rounded-md p-1.5 hover:bg-ui-ink/5"
                           title="Хуулах"
                         >
                           <Copy className="h-3.5 w-3.5" />
@@ -3016,7 +3012,7 @@ function RoomPlannerEditor() {
                         }
                         className="accent-[#AD6547]"
                       />
-                      <span className="text-xs text-[#6C726B]">
+                      <span className="text-xs text-ui-muted">
                         Харьцуулахаар сонгох
                       </span>
                     </div>
@@ -3025,7 +3021,7 @@ function RoomPlannerEditor() {
               </div>
             </div>
 
-            <div className="border-t border-[#293C32]/10 p-4">
+            <div className="border-t border-ui-line p-4">
               <button
                 onClick={() => {
                   endEdit();

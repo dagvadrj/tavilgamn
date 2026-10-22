@@ -7,10 +7,10 @@
 }
 
 .room-unit-choice select, .room-opening-quick-editor select {
-  border: 1px solid #d8e0d3;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   background: white;
-  color: #293c32;
+  color: var(--site-ink);
   padding: 7px;
   min-height: 36px;
 }
@@ -21,20 +21,20 @@
   width: 280px;
   max-width: calc(100vw - 24px);
   padding: 14px;
-  border: 1px solid #bdcfc0;
+  border: 1px solid var(--site-line);
   border-radius: 12px;
   background: white;
-  box-shadow: 0 8px 28px #263a3026;
+  box-shadow: 0 8px 28px #26384826;
   font-size: 12px;
 }
 
 .room-inline-measure button, .room-start-shapes button, .room-opening-quick-editor > button {
   min-height: 40px;
-  border: 1px solid #bdcfc0;
+  border: 1px solid var(--site-line);
   border-radius: 8px;
   padding: 8px 12px;
-  background: #f4f7f2;
-  color: #293c32;
+  background: var(--site-bg);
+  color: var(--site-ink);
 }
 
 .room-opening-quick-editor {
@@ -42,10 +42,10 @@
   gap: 8px;
   padding: 14px;
   margin: 12px 0;
-  border: 1px solid #d8e0d3;
+  border: 1px solid var(--site-line);
   border-radius: 12px;
   background: white;
-  color: #293c32;
+  color: var(--site-ink);
   font-size: 12px;
 }
 
@@ -85,7 +85,7 @@
   max-width: min(100%, calc(100vw - 28px));
   max-height: calc(100dvh - 220px);
   overflow: auto;
-  box-shadow: 0 8px 28px #263a3026;
+  box-shadow: 0 8px 28px #26384826;
 }
 
 .room-start-shapes {

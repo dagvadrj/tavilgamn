@@ -12,6 +12,7 @@ import {
   Hand,
   ImageIcon,
   Loader2,
+  RefreshCw,
   Ruler,
   ShoppingBag,
   Star,
@@ -65,6 +66,7 @@ export function ProductQuickView({
   const titleId = useId();
   const backdropPress = useRef(false);
   const [showModel, setShowModel] = useState(Boolean(product.model));
+  const [viewerAttempt, setViewerAttempt] = useState(0);
   const [viewerStatus, setViewerStatus] = useState<
     "loading" | "ready" | "error"
   >("loading");
@@ -135,6 +137,7 @@ export function ProductQuickView({
           {viewerActive ? (
             <div className="product-quick-canvas">
               <ProductViewer
+                key={`${product.id}:${viewerAttempt}`}
                 stockQuantity={product.stockQuantity}
                 showStockBadge={false}
                 model={product.model}
@@ -158,6 +161,15 @@ export function ProductQuickView({
               Зураг нэмэгдээгүй
             </span>
           )}
+          {product.model && (
+            <div className="product-quick-modes" role="group" aria-label="Бүтээгдэхүүн харах хэлбэр">
+              <button type="button" aria-pressed={showModel} onClick={() => {
+                if (!showModel) setViewerStatus("loading");
+                setShowModel(true);
+              }}><Box size={15} aria-hidden="true" />3D</button>
+              <button type="button" aria-pressed={!showModel} onClick={() => setShowModel(false)}><ImageIcon size={15} aria-hidden="true" />Зураг</button>
+            </div>
+          )}
           {viewerActive && (
             <p
               className={`product-quick-viewer-status${viewerStatus === "error" ? " is-error" : ""}`}
@@ -174,7 +186,13 @@ export function ProductQuickView({
                   3D загварыг ачаалж байна…
                 </>
               ) : viewerStatus === "error" ? (
-                "3D ачаалагдсангүй. Дахин ачаалах товчийг ашиглана уу."
+                <>
+                  3D ачаалагдсангүй.
+                  <button type="button" onClick={() => {
+                    setViewerStatus("loading");
+                    setViewerAttempt(attempt => attempt + 1);
+                  }}><RefreshCw size={14} aria-hidden="true" />Дахин ачаалах</button>
+                </>
               ) : (
                 <>
                   <Hand size={15} aria-hidden="true" />

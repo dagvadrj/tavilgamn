@@ -13,13 +13,16 @@ function harness(extra = {}) {
   const states=[],refs=[];let cursor=0,refCursor=0;
   const calls=[], props={initial:{width:5,depth:4,height:2.7,wallColor:'#123456'},onCancel:()=>calls.push('cancel'),onComplete:draft=>{calls.push(draft);return null;},...extra};
   const Canvas = () => null, OpeningEditor = () => null;
+  const WallPlan = () => null, DimensionSidebar = () => null;
   const { RoomBuilder } = loadSource('src/features/room-planner/components/RoomBuilder.tsx',{
     react:{...React,useState:initial=>{const i=cursor++;if(!(i in states)) states[i]=typeof initial==='function'?initial():initial;return[states[i],value=>{states[i]=typeof value==='function'?value(states[i]):value;}];},useRef:value=>refs[refCursor++]??(refs[refCursor-1]={current:value}),useEffect(){},useMemo:fn=>fn(),useCallback:fn=>fn},
     'next/dynamic':{default:()=>Canvas},
     './OpeningQuickEditor':{OpeningQuickEditor:OpeningEditor},
+    './RoomWallPlan':{RoomWallPlan:WallPlan},
+    './RoomDimensionSidebar':{RoomDimensionSidebar:DimensionSidebar},
   });
   const render=()=>{cursor=0;refCursor=0;return RoomBuilder(props);};
-  return {render,calls,Canvas,OpeningEditor};
+  return {render,calls,Canvas,OpeningEditor,WallPlan,DimensionSidebar};
 }
 const buttons=tree=>elements(tree,node=>node.type==='button');
 const next=tree=>buttons(tree).find(node=>node.props.className==='room-builder-next');
@@ -36,8 +39,10 @@ test('wizard exposes one heading, six choices and sequential steps; back retains
   assert.equal(byText(tree,'U хэлбэр').props['aria-pressed'],true);
   next(tree).props.onClick();tree=h.render();
   assert.ok(content(elements(tree,n=>n.type==='h2')[0]).includes('хэмжээгээ'));
-  const advanced=elements(tree,n=>n.type==='details');
-  assert.ok(advanced.length>=1);assert.ok(advanced.every(n=>!n.props.open));
+  assert.equal(elements(tree,n=>n.type==='details').length,0);
+  assert.equal(elements(tree,n=>n.type==='input'||n.type==='select').length,0);
+  assert.equal(elements(tree,n=>n.type===h.DimensionSidebar).length,1);
+  assert.equal(elements(tree,n=>n.type===h.WallPlan).length,1);
   byText(tree,'Буцах').props.onClick();tree=h.render();
   assert.equal(byText(tree,'U хэлбэр').props['aria-pressed'],true);
   assert.equal(h.calls.length,0);
@@ -45,11 +50,12 @@ test('wizard exposes one heading, six choices and sequential steps; back retains
 
 test('UI survives undo from the last wall of U shape and keeps the selected wall in range',()=>{
   const h=harness();let tree=h.render();byText(tree,'U хэлбэр').props.onClick();tree=h.render();next(tree).props.onClick();tree=h.render();
-  const wall=elements(tree,n=>n.type==='select'&&elements(n,o=>o.type==='option').length===8)[0];
-  wall.props.onChange({target:{value:'7'}});tree=h.render();
-  buttons(tree).find(n=>n.props['aria-label']==='Үйлдэл буцаах').props.onClick();tree=h.render();
-  const after=elements(tree,n=>n.type==='select'&&elements(n,o=>o.type==='option').length===4)[0];
-  assert.equal(after.props.value,3);
+  const wall=elements(tree,n=>n.type===h.WallPlan)[0];
+  wall.props.onSelect(7);tree=h.render();
+  elements(tree,n=>n.type===h.WallPlan)[0].props.onUndo();tree=h.render();
+  const after=elements(tree,n=>n.type===h.WallPlan)[0];
+  assert.equal(after.props.selected,3);
+  assert.equal(after.props.draft.outline.length,4);
 });
 
 test('finish reads the latest color even before rerender and an apply error permits retry',()=>{

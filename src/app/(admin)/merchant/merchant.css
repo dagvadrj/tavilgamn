@@ -700,9 +700,9 @@
   min-width: 80px;
   justify-content: center;
   padding: 5px 9px;
-  border: 1px solid #314737;
+  border: 1px solid var(--site-line);
   border-radius: 7px;
-  background: #15241a;
+  background: color-mix(in srgb, var(--dashboard-accent) 12%, var(--dashboard-surface));
   color: var(--dashboard-success);
   font-size: 10px;
 }
@@ -884,8 +884,8 @@
 }
 
 .merchant-success {
-  border-color: #314737;
-  background: #15241a;
+  border-color: var(--site-line);
+  background: color-mix(in srgb, var(--dashboard-accent) 12%, var(--dashboard-surface));
   color: var(--dashboard-success);
 }
 

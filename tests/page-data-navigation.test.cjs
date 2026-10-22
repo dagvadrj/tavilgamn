@@ -77,6 +77,7 @@ test("GET starts after the destination has a paint, cancels on navigation, and i
 test("public page GET preserves counts, hides unavailable products and reports missing/error responses", async () => {
   const product = { id: "chair", category: "chair", stockQuantity: 2, inStock: true };
   const store = { id: "store", name: "Store" };
+  const homepageProductIds = ["featured-sofa", "featured-chair"];
   let fail = false;
   const { GET } = loadSource("src/app/api/page-data/[page]/route.ts", {
     "@/lib/catalogServer": { readProduct: async id => id === "chair" ? product : undefined },
@@ -88,10 +89,11 @@ test("public page GET preserves counts, hides unavailable products and reports m
     },
     "@/lib/kitchenMarketplaceServer": { readPublishedKitchenDesigns: async () => [], readPublishedKitchenDesignBySlug: async () => null },
     "@/lib/paymentPresentationServer": { configuredPaymentLabels: () => ["Bank"] },
+    "@/lib/homepageSettingsServer": { readHomepageSettings: async () => ({ productIds: homepageProductIds, version: 3 }) },
   });
   const get = (page, id = "") => GET(new Request(`http://localhost/api/page-data/${page}?id=${id}`), { params: Promise.resolve({ page }) });
   assert.deepEqual(await (await get("stores")).json(), { directory: [store], productCounts: { store: 12 } });
-  assert.deepEqual(await (await get("home")).json(), { catalog: [product], stores: [store], paymentLabels: ["Bank"] });
+  assert.deepEqual(await (await get("home")).json(), { catalog: [product], stores: [store], paymentLabels: ["Bank"], homepageProductIds });
   assert.equal((await get("product", "chair")).status, 200);
   product.stockQuantity = 0;
   assert.equal((await get("product", "chair")).status, 404);

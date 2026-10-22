@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { apiErrorResponse } from "@/lib/api/errors";
 import { readPublishedKitchenDesigns } from "@/lib/kitchenMarketplaceServer";
 import { kitchenDesignMatchesSearch } from "@/lib/kitchenListingSuggestions";
 
@@ -7,7 +8,7 @@ export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("q")?.trim() ?? "";
   const headers = { "Cache-Control": "no-store" };
   if (query.length > 120)
-    return NextResponse.json(
+    return apiErrorResponse(
       { error: "Хайлтын үг хэт урт байна." },
       { status: 400, headers },
     );
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
       { headers },
     );
   } catch {
-    return NextResponse.json(
+    return apiErrorResponse(
       { error: "Гал тогооны хайлтыг ачаалж чадсангүй." },
       { status: 503, headers },
     );

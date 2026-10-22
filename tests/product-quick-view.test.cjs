@@ -97,7 +97,7 @@ test("quick view loads the actual selected model in place and releases the viewe
       useState(value) {
         const index = cursor++;
         if (!(index in values)) values[index] = value;
-        return [values[index], next => { values[index] = next; }];
+        return [values[index], next => { values[index] = typeof next === "function" ? next(values[index]) : next; }];
       },
     },
     "react-dom": { createPortal: element => element },
@@ -143,6 +143,11 @@ test("quick view loads the actual selected model in place and releases the viewe
     viewer.props.onError();
     nodes = render();
     assert.ok(nodes.some(node => node.props.className === "product-quick-viewer-status is-error"));
+    const failedViewer=nodes.find(node=>node.type===Viewer);
+    const retry=nodes.find(node=>node.type==='button' && React.Children.toArray(node.props.children).some(child=>child==='Дахин ачаалах'));
+    assert.ok(retry,'an error must offer an actual retry action');retry.props.onClick();nodes=render();
+    assert.notEqual(nodes.find(node=>node.type===Viewer).key,failedViewer.key,'retry remounts the failed loader');
+    assert.ok(!nodes.some(node=>node.props.className==='product-quick-viewer-status is-error'));
     const modes = nodes.find(node => node.props.className === "product-quick-modes");
     React.Children.toArray(modes.props.children)[1].props.onClick();
     nodes = render();

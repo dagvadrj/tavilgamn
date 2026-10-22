@@ -77,7 +77,7 @@ export function SavedKitchenList({
             pad = 100;
           return (
             <article key={item.id} className={account ? "account-card account-kitchen-card" : "rounded-xl border border-[#e4e4e7] bg-white p-3 text-[#171717]"}>
-              <div className={account ? "account-kitchen-preview" : "relative h-40 w-full overflow-hidden rounded-lg bg-[#f3f4ee]"}>
+              <div className={account ? "account-kitchen-preview" : "relative h-40 w-full overflow-hidden rounded-lg bg-ui-selected"}>
                 {item.thumbnailUrl ? (
                   <Image
                     src={item.thumbnailUrl}
@@ -100,7 +100,7 @@ export function SavedKitchenList({
                           .map((p) => `${p.x},${p.z}`)
                           .join(" ")}
                         fill={c.color}
-                        stroke="#576652"
+                        stroke="var(--site-muted)"
                         strokeWidth={1}
                         vectorEffect="non-scaling-stroke"
                         fillOpacity={c.type === "wall" ? 0.65 : 1}
@@ -120,7 +120,7 @@ export function SavedKitchenList({
                   {onPlace && (
                     <button
                       type="button"
-                      className="min-h-11 rounded-lg bg-[#293c32] px-3 text-white"
+                      className="min-h-11 rounded-lg bg-ui-accent px-3 text-white"
                       onClick={() => onPlace(item)}
                     >
                       Өрөөнд байрлуулах

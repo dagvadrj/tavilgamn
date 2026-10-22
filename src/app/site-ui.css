@@ -1,25 +1,6 @@
-/* Room planner visual language. Opt-in roots deliberately exclude the kitchen editor. */
+/* Layout primitives consume the shared room-planner palette. */
 
 .site-ui {
-  --site-ink-rgb: 38 56 72;
-  --site-muted-rgb: 99 113 130;
-  --site-line-rgb: 224 229 234;
-  --site-accent-rgb: 8 118 194;
-  --site-ink: rgb(var(--site-ink-rgb));
-  --site-muted: rgb(var(--site-muted-rgb));
-  --site-line: rgb(var(--site-line-rgb));
-  --site-accent: rgb(var(--site-accent-rgb));
-  --site-primary: #076bb5;
-  --site-primary-hover: #075eaa;
-  --site-selected: #eaf5ff;
-  --site-bg: #f8fafc;
-  --site-surface: #fff;
-  --site-hover: #f1f5f9;
-  --site-success: #15803d;
-  --site-danger: #b91c1c;
-  --site-radius: 16px;
-  --site-control-radius: 12px;
-  --site-shadow: 0 3px 16px #20212408;
   --font-market-body: var(--font-sans);
   --font-market-heading: var(--font-sans);
   --font-dashboard-body: var(--font-sans);
@@ -50,12 +31,12 @@
 }
 
 .site-ui :is(.btn-primary, .btn-secondary) {
-  min-height: 44px;
+  min-height: var(--site-button-height);
   border: 1px solid var(--site-primary);
-  border-radius: 999px;
+  border-radius: var(--site-button-radius);
   background: var(--site-primary);
   color: #fff;
-  font-weight: 600;
+  font-weight: var(--site-button-weight);
   box-shadow: none;
 }
 
@@ -65,11 +46,12 @@
 }
 
 .site-ui .btn-ghost {
-  min-height: 44px;
+  min-height: var(--site-button-height);
   border-color: var(--site-line);
-  border-radius: 999px;
+  border-radius: var(--site-button-radius);
   background: var(--site-surface);
   color: var(--site-ink);
+  font-weight: var(--site-button-weight);
 }
 
 .site-ui .btn-ghost:hover:not(:disabled) {

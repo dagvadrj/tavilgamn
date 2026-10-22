@@ -295,14 +295,14 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
-  min-height: 48px;
+  min-height: var(--site-button-height);
   padding: 12px 16px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--site-button-radius);
   background: var(--site-primary);
   color: #fff;
   font-size: 14px;
-  font-weight: 650;
+  font-weight: var(--site-button-weight);
   line-height: 1.6;
 }
 
