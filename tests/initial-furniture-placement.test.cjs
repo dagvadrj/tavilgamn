@@ -66,7 +66,9 @@ test('new furniture stays in the active room and wall hints cannot attach to an 
   const shelf=findInitialFurniturePlacement({...piece('shelf',.6,.3,.3),placement:{surfaces:['wall']}},[],context.room,'a',{walls:[{segmentId:furnitureWallId(east),along:2}]});
   assert.ok(shelf);assert.notEqual(shelf.attachment.segmentId,furnitureWallId(east));
   const full={...piece('filled',4,4,2),x:0,z:0};
-  assert.equal(findInitialFurniturePlacement(piece('no-spill'),[full],context.room,'a'),null,'do not silently add into the empty neighbouring room');
+  const overlapping=findInitialFurniturePlacement(piece('no-spill'),[full],context.room,'a');
+  assert.ok(overlapping,'occupied floor may be used when overlap is allowed');
+  assert.ok(isInsideRoom(overlapping,a),'do not silently add into the empty neighbouring room');
 });
 
 test('surface-only products require an authored support and failure guidance matches the domain',()=>{

@@ -1,4 +1,5 @@
 "use client";
+import { startPlannerNavigation } from "@/lib/plannerNavigation";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -224,6 +225,7 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack, initialPrefere
       setError("Сонголтыг хадгалж чадсангүй. Хөтчийн хадгалах эрхийг шалгаад дахин оролдоорой.");
       return;
     }
+    startPlannerNavigation(href);
     router.push(href);
   }
 

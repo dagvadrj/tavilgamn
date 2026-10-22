@@ -7,7 +7,7 @@ import { MAX_ITEM_QUANTITY, quantityLimit } from "@/lib/inventory";
 
 interface CartState {
   items: CartItem[];
-  add: (item: Omit<CartItem, "id" | "qty"> & { qty?: number; stockQuantity?: number | null }) => number;
+  add: (item: Omit<CartItem, "id" | "qty"> & { qty?: number; madeToOrder?: boolean; stockQuantity?: number | null }) => number;
   remove: (id: string) => void;
   setQty: (id: string, qty: number) => void;
   clear: () => void;
@@ -21,10 +21,10 @@ export const useCart = create<CartState>()(
       items: [],
       add: (item) => {
         if (!Number.isInteger(item.qty ?? 1) || (item.qty ?? 1) < 1) return 0;
-        const allowed = quantityLimit({ id: item.productId, stockQuantity: item.stockQuantity === undefined ? Number.MAX_SAFE_INTEGER : item.stockQuantity }, get().items, item);
+        const allowed = quantityLimit({ id: item.productId, madeToOrder: item.madeToOrder, stockQuantity: item.stockQuantity === undefined ? Number.MAX_SAFE_INTEGER : item.stockQuantity }, get().items, item);
         const amount = Math.min(item.qty ?? 1, allowed);
         if (amount < 1) return 0;
-        const { stockQuantity: _stock, ...cartItem } = item;
+        const { stockQuantity: _stock, madeToOrder: _policy, ...cartItem } = item;
         const existing = get().items.find(
           (i) =>
             i.productId === item.productId &&

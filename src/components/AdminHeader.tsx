@@ -1,8 +1,10 @@
 "use client";
+import type { ReactNode } from "react";
 
 import { Menu, MessageSquare, Package, Settings } from "lucide-react";
 
 export function AdminHeader({
+  navigation,
   userName,
   activeLabel,
   onProducts,
@@ -12,6 +14,7 @@ export function AdminHeader({
   menuOpen,
   onToggleMenu,
 }: {
+  navigation?: ReactNode;
   userName: string;
   activeLabel: string;
   onProducts: () => void;
@@ -42,6 +45,7 @@ export function AdminHeader({
         </div>
       </div>
 
+      {navigation}
       <div className="admin-topbar-actions dashboard-header-actions">
         {activeLabel === "Ерөнхий тойм" && (
           <span className="reference-period">30 хоног</span>

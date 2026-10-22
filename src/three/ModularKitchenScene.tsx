@@ -8,50 +8,44 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  Canvas,
-  useFrame,
-  useThree,
-  type ThreeEvent,
-} from "@react-three/fiber";
+import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Edges, OrbitControls } from "@react-three/drei";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CameraMotionPreview } from "./CameraMotionPreview";
 import { RoomMotionResolution } from "./RoomMotionQuality";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
+import { CameraMotionPreview } from "./CameraMotionPreview";
+import { PlannerMotionShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import {
   Plane,
-  Shape,
+  Object3D,
   Vector3,
   PCFSoftShadowMap,
   type BufferGeometry,
   type Group,
-  type Mesh,
-  type MeshStandardMaterial,
   type PerspectiveCamera,
 } from "three";
 import {
-  roomWalls,
   type CabinetPose,
-  type KitchenWall,
-  type KitchenRoom,
   type ModularCabinet,
   type ModularKitchen,
 } from "@/lib/kitchenCabinets";
 import { placementIssues } from "@/lib/kitchenPlacement";
-import { roomOutline } from "@/lib/kitchenRoomOutline";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import { kitchenVariantMatchesRole, type KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
 import { KitchenTops } from "./KitchenTops";
 import { KitchenCabinetGLB } from "./KitchenCabinetGLB";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
-import { DEFAULT_FLOOR_MATERIAL } from "@/lib/roomDesign";
-import { useRoomMaterial } from "./roomMaterials";
 import { KitchenExtraMesh } from "./KitchenExtraMesh";
 import { CameraNavigation } from "./CameraNavigation";
 import { KitchenInteriorView } from "./KitchenInteriorView";
-import { kitchenWallPanels } from "@/lib/kitchenWallPanels";
+import { KitchenRoomShell } from "./KitchenRoomShell";
+import { PlannerEnvironment } from "./PlannerEnvironment";
+import { configurePlannerRenderer } from "./plannerRenderer";
+import { plannerLighting } from "@/lib/plannerLighting";
+import { ROOM_DAY_BACKDROP } from "@/lib/roomLighting";
 import type { CameraRequest } from "@/lib/plannerCamera";
+import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 import { CursorNavigation } from "./CursorNavigationBinding";
 import {
   SCENE_NAVIGATION_START,
@@ -83,7 +77,7 @@ function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
     if (fitted.current) return;
     fitted.current = true;
     const perspective = camera as PerspectiveCamera;
-    perspective.fov = 45;
+    perspective.fov = PLANNER_CAMERA.fov;
     perspective.near = 0.1;
     perspective.zoom = 1;
     const target = new Vector3(
@@ -206,7 +200,7 @@ type CaptureTarget = {
   setPointerCapture: (id: number) => void;
   releasePointerCapture: (id: number) => void;
 };
-function Scene(props: ModularSceneProps) {
+function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
   const { capture: registerCapture, kitchen, selectedId, mode } = props;
   // Stable while dragging; layout selection remounts this view to frame the new layout.
   const focus = useRef({
@@ -353,35 +347,24 @@ function Scene(props: ModularSceneProps) {
   }
   const width = kitchen.room.width / 1000,
     depth = kitchen.room.depth / 1000;
-  const floorShape = useMemo(() => {
-    const shape = new Shape();
-    roomOutline(kitchen.room).forEach((p, i, points) => {
-      if (i === 0) shape.moveTo(p.x / 1000, -p.z / 1000);
-      const q = points[(i + 1) % points.length];
-      if (p.curve)
-        shape.quadraticCurveTo(
-          p.curve.x / 1000,
-          -p.curve.z / 1000,
-          q.x / 1000,
-          -q.z / 1000,
-        );
-      else shape.lineTo(q.x / 1000, -q.z / 1000);
-    });
-    shape.closePath();
-    return shape;
-  }, [kitchen.room]);
   const roomHeight = kitchen.room.height / 1000;
+  const lighting = plannerLighting();
+  const sunlightTarget = useMemo(() => {
+    const target = new Object3D();
+    target.position.set(width / 2, roomHeight / 3, depth / 2);
+    return target;
+  }, [width, depth, roomHeight]);
+  const shadowExtent = Math.max(3, Math.hypot(width, depth) / 2 + 0.5);
   const cameraTarget = props.cameraRequest?.targetId
-    ? kitchen.cabinets.find((cabinet) => cabinet.id === props.cameraRequest?.targetId)
+    ? kitchen.cabinets.find(
+        (cabinet) => cabinet.id === props.cameraRequest?.targetId,
+      )
     : undefined;
-  const floorMaterial = useRoomMaterial(
-    DEFAULT_FLOOR_MATERIAL,
-    width,
-    depth,
-    "#c9a37a",
-  );
   return (
-    <>
+    <CameraMotionPreview interactionActive={dragActive}>
+      <RoomMotionResolution dpr={props.dpr} />
+      <PlannerMotionShadows updatingLayout={dragActive || Boolean(props.open)} revision={kitchen} />
+      <CanvasDiagnostics scene="modular-kitchen" />
       {!props.interior && <CameraFit focus={focus} />}
       <color attach="background" args={["#f3f4f6"]} />
       <ambientLight intensity={0.5} />
@@ -395,11 +378,12 @@ function Scene(props: ModularSceneProps) {
         shadow-radius={4}
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-left={-8}
-        shadow-camera-right={8}
-        shadow-camera-top={8}
-        shadow-camera-bottom={-8}
-        shadow-normalBias={0.025}
+        shadow-camera-left={-shadowExtent}
+        shadow-camera-right={shadowExtent}
+        shadow-camera-top={shadowExtent}
+        shadow-camera-bottom={-shadowExtent}
+        shadow-camera-far={Math.max(20, shadowExtent * 4)}
+        shadow-normalBias={0.015}
         shadow-bias={-0.0001}
       />
       {!props.interior && (
@@ -413,6 +397,9 @@ function Scene(props: ModularSceneProps) {
           enablePan
           screenSpacePanning
           zoomToCursor
+          enableDamping
+          dampingFactor={PLANNER_CAMERA.dampingFactor}
+          rotateSpeed={PLANNER_CAMERA.rotateSpeed}
           target={[focus.centerX / 1000, focus.h / 2, focus.centerZ / 1000]}
           minDistance={1}
           maxDistance={Math.max(18, Math.hypot(width, depth, roomHeight) * 4)}
@@ -422,65 +409,34 @@ function Scene(props: ModularSceneProps) {
       {!props.interior && (
         <CameraNavigation
           leftDrag
+          enabled={!dragActive}
           request={props.cameraRequest}
-          bounds={cameraTarget ? {
-            width: cameraTarget.width / 1000,
-            depth: cameraTarget.depth / 1000,
-            height: cameraTarget.height / 1000,
-            centerX: cameraTarget.position.x / 1000,
-            centerZ: cameraTarget.position.z / 1000,
-            centerY: (cameraTarget.position.y + cameraTarget.height / 2) / 1000,
-          } : {
-            width,
-            depth,
-            height: roomHeight,
-            centerX: width / 2,
-            centerZ: depth / 2,
-          }}
+          bounds={
+            cameraTarget
+              ? {
+                  width: cameraTarget.width / 1000,
+                  depth: cameraTarget.depth / 1000,
+                  height: cameraTarget.height / 1000,
+                  centerX: cameraTarget.position.x / 1000,
+                  centerZ: cameraTarget.position.z / 1000,
+                  centerY:
+                    (cameraTarget.position.y + cameraTarget.height / 2) / 1000,
+                }
+              : {
+                  width,
+                  depth,
+                  height: roomHeight,
+                  centerX: width / 2,
+                  centerZ: depth / 2,
+                }
+          }
         />
       )}
-      {!props.interior && <CursorNavigation />}
+      {!props.interior && <CursorNavigation smoothZoom />}
       {props.interior && (
         <KitchenInteriorView kitchen={kitchen} request={props.cameraRequest} />
       )}
-      {kitchen.room.outline ? (
-        <mesh
-          position={[0, -0.08, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          receiveShadow
-        >
-          <extrudeGeometry
-            args={[
-              floorShape,
-              { depth: 0.08, bevelEnabled: false, curveSegments: 64 },
-            ]}
-          />
-          <meshStandardMaterial {...floorMaterial} />
-        </mesh>
-      ) : (
-        <mesh position={[width / 2, -0.04, depth / 2]} receiveShadow>
-          <boxGeometry args={[width, 0.08, depth]} />
-          <meshStandardMaterial {...floorMaterial} />
-        </mesh>
-      )}
-      {roomWalls(kitchen.room).map((wall) => (
-        <KitchenRoomWall key={wall.id} wall={wall} room={kitchen.room} />
-      ))}
-      {(kitchen.room.items ?? [])
-        .filter((item) => item.kind === "column")
-        .map((item) => (
-          <mesh
-            key={item.id}
-            position={[item.x / 1000, roomHeight / 2, item.z / 1000]}
-            castShadow
-            receiveShadow
-          >
-            <boxGeometry
-              args={[item.width / 1000, roomHeight, item.depth / 1000]}
-            />
-            <meshStandardMaterial color="#dedfd9" />
-          </mesh>
-        ))}
+      <KitchenRoomShell room={kitchen.room} interior={props.interior} />
       <group
         ref={props.exportRoot}
         name="Kitchen"
@@ -524,7 +480,9 @@ function Scene(props: ModularSceneProps) {
                 if (drag.current?.pointerId === event.pointerId) finish(true);
               }}
             >
-              <KitchenCabinetGLB cabinet={cabinet} selected={selectedId === cabinet.id}
+              <KitchenCabinetGLB
+                cabinet={cabinet}
+                selected={selectedId === cabinet.id}
                 materialDefinitions={props.materialDefinitions}
                 variant={cabinet.variantId ? props.variantModels?.[cabinet.variantId] : undefined}
                 open={Boolean(props.open && selectedId === cabinet.id)} />
@@ -551,9 +509,27 @@ function Scene(props: ModularSceneProps) {
                     color={invalid.has(cabinet.id) ? "#d62828" : "#0078d4"}
                     linewidth={2}
                     raycast={() => {}}
-                  />
-                </mesh>
-              )}
+                    position={[0, cabinet.height / 2000, 0]}
+                  >
+                    <boxGeometry
+                      args={[
+                        cabinet.width / 1000 + 0.003,
+                        cabinet.height / 1000 + 0.003,
+                        cabinet.depth / 1000 + 0.003,
+                      ]}
+                    />
+                    <meshBasicMaterial
+                      transparent
+                      opacity={0}
+                      depthWrite={false}
+                    />
+                    <Edges
+                      color={invalid.has(cabinet.id) ? "#d62828" : "#0078d4"}
+                      linewidth={2}
+                      raycast={() => {}}
+                    />
+                  </mesh>
+                )}
             </group>
           );
         })}
@@ -563,9 +539,23 @@ function Scene(props: ModularSceneProps) {
           <group
             key={extra.id}
             name={`Extra-${extra.id}`}
-            position={[extra.position.x / 1000, 0, extra.position.z / 1000]}
+            position={[
+              extra.position.x / 1000,
+              extra.position.y / 1000,
+              extra.position.z / 1000,
+            ]}
             rotation={[0, extra.position.rotation, 0]}
             onPointerDown={(event) => start(event, extra)}
+            onPointerMove={move}
+            onPointerUp={(event) => {
+              if (drag.current?.pointerId === event.pointerId) {
+                event.stopPropagation();
+                finish(false);
+              }
+            }}
+            onPointerCancel={(event) => {
+              if (drag.current?.pointerId === event.pointerId) finish(true);
+            }}
           >
             <KitchenExtraMesh
               extra={extra}
@@ -574,7 +564,7 @@ function Scene(props: ModularSceneProps) {
           </group>
         ))}
       </group>
-    </>
+    </CameraMotionPreview>
   );
 }
 class SceneBoundary extends Component<

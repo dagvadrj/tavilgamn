@@ -1,0 +1,120 @@
+.room-admin-tools {
+  position: relative;
+  z-index: 30;
+  flex-shrink: 0;
+  padding: 9px 18px;
+  border-bottom: 1px solid #dbe3eb;
+  background: #f2f7fc;
+  color: #1b3854;
+  font-size: 12px;
+}
+
+.planner-workspace.planner-reference.room-simple.room-admin-mode {
+  padding-top: calc(var(--reference-header) + 56px);
+}
+
+.room-simple > .room-admin-tools {
+  position: absolute;
+  top: var(--reference-header);
+  left: 0;
+  right: 0;
+  z-index: 45;
+  max-height: calc(100dvh - var(--reference-header) - 24px);
+  overflow: auto;
+}
+
+.room-admin-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.room-admin-bar > span {
+  margin-right: auto;
+  color: #617489;
+}
+
+.room-admin-tools button,.room-admin-bar a {
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid #ccd9e5;
+  border-radius: 999px;
+  font-weight: 700;
+  background: white;
+}
+
+.room-admin-tools button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.room-admin-form {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr 100px;
+  gap: 12px;
+  padding: 18px 0 8px;
+}
+
+.room-admin-form label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.room-admin-form :is(input,select) {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #ccd9e5;
+  border-radius: 9px;
+  color: #20354b;
+  background: white;
+}
+
+.room-admin-form > p,.room-admin-form > div {
+  grid-column: 1/-1;
+}
+
+.room-admin-form > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.room-admin-tools .room-admin-primary {
+  background: #075eaa;
+  border-color: #075eaa;
+  color: white;
+}
+
+.room-admin-tools > p {
+  margin: 9px 0 0;
+}
+
+.room-admin-error {
+  color: #a12d2d;
+}
+
+.room-admin-tools :is(button,input,select,a):focus-visible {
+  outline: 2px solid #075eaa;
+  outline-offset: 3px;
+}
+
+@media (max-width:760px) {
+  .room-admin-form {
+    grid-template-columns: 1fr 1fr;
+  }
+  .room-admin-tools {
+    padding: 9px 12px;
+  }
+  .room-admin-bar > span {
+    display: none;
+  }
+}
+
+@media (max-width:430px) {
+  .planner-workspace.planner-reference.room-simple.room-admin-mode {
+    padding-top: calc(var(--reference-header) + 100px);
+  }
+}

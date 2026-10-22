@@ -2,7 +2,7 @@
 
 import { RemotePage } from "@/components/RemotePage";
 import type { PageData } from "@/lib/pageData";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import {
   ArrowUpRight,
   Factory,

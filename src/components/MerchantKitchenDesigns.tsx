@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import {
   useDraftState,
   useDraftStatus,
@@ -7,7 +8,7 @@ import {
 import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
 
 import Image from "next/image";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import {
   useCallback,
   useEffect,
@@ -25,7 +26,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { authFetch } from "@/lib/authFetch";
+import { merchantRequest as request } from "@/features/merchant/merchantApi";
 import type {
   KitchenDesignSummary,
   KitchenRenderUsage,
@@ -53,18 +54,6 @@ type LoadResult = {
 };
 
 const splitList = kitchenListTokens;
-
-async function request<T>(
-  path: string,
-  owner: string,
-  init?: RequestInit,
-): Promise<T> {
-  const response = await authFetch(path, init, owner);
-  const data = await response.json().catch(() => null);
-  if (!response.ok || !data)
-    throw new Error(data?.error ?? "Мэдээллийг ачаалж чадсангүй.");
-  return data as T;
-}
 
 export function MerchantKitchenDesigns({
   owner,
@@ -373,7 +362,7 @@ export function MerchantKitchenDesigns({
   }
 
   if (!data && !error)
-    return <div className="merchant-load-state">Загваруудыг ачаалж байна…</div>;
+    return <PageSkeleton compact layout="list" />;
   return (
     <section className="space-y-5">
       <div className="merchant-page-heading">
@@ -434,11 +423,36 @@ export function MerchantKitchenDesigns({
                 onSubmit={createDraft}
                 className="km-listing"
               >
-                <div className="lg:col-span-2">
-                  <h2 className="font-semibold">Шинэ загвар нэмэх</h2>
-                  <p className="text-sm text-black/55">
-                    Хадгалсан загвараа сонгоод мэдээллээ бэлдээрэй.
-                  </p>
+                <div className="merchant-kitchen-form-heading">
+                  {" "}
+                  <div className="lg:col-span-2">
+                    <h2 className="font-semibold">Шинэ загвар нэмэх</h2>
+                    <p className="text-sm text-black/55">
+                      Хадгалсан загвараа сонгоод мэдээллээ бэлдээрэй.
+                    </p>
+                  </div>{" "}
+                  <div className="merchant-form-actions">
+                    <button
+                      type="submit"
+                      className="btn-primary w-fit"
+                      disabled={busy === "create" || !kitchens.length}
+                    >
+                      {busy === "create" ? (
+                        <LoaderCircle className="animate-spin" size={16} />
+                      ) : (
+                        <Upload size={16} />
+                      )}
+                      Загвар хадгалах
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost"
+                      disabled={!!busy}
+                      onClick={closeCreate}
+                    >
+                      Болих
+                    </button>
+                  </div>
                 </div>
                 <label className="km-source-picker label">
                   Хадгалсан төсөл
@@ -472,28 +486,6 @@ export function MerchantKitchenDesigns({
                   source={sourceKitchenId ? { sourceKitchenId } : null}
                   disabled={!!busy || draftStatus.loading}
                 />
-                <div className="km-list-actions">
-                  <button
-                    type="submit"
-                    className="btn-primary w-fit"
-                    disabled={busy === "create" || !kitchens.length}
-                  >
-                    {busy === "create" ? (
-                      <LoaderCircle className="animate-spin" size={16} />
-                    ) : (
-                      <Upload size={16} />
-                    )}
-                    Загвар хадгалах
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost"
-                    disabled={!!busy}
-                    onClick={closeCreate}
-                  >
-                    Болих
-                  </button>
-                </div>
               </form>
             </>
           )}

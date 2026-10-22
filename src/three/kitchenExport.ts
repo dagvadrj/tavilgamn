@@ -1,24 +1,75 @@
-import { Group, Mesh, Material, Texture, type Object3D } from "three";
+import {
+  Group,
+  Mesh,
+  Material,
+  Texture,
+  PropertyBinding,
+  type AnimationClip,
+  type Object3D,
+} from "three";
 
 /** Snapshot only the explicitly designated kitchen assembly, never the room scene. */
 export function snapshotKitchen(root: Group) {
-  if (!root.userData.kitchenExport) throw new Error("Гарнитурын 3D хэсэг бэлэн болоогүй байна.");
-  root.traverse(node => {
+  if (!root.userData.kitchenExport)
+    throw new Error("Гарнитурын 3D хэсэг бэлэн болоогүй байна.");
+  root.traverse((node) => {
     if (node.userData.deliveryPending && !node.userData.exportExclude) {
-      throw new Error("Бүрэн чанартай 3D загвар ачаалж байна. Түр хүлээгээд экспортоо дахин хийнэ үү.");
+      throw new Error(
+        "Бүрэн чанартай 3D загвар ачаалж байна. Түр хүлээгээд экспортоо дахин хийнэ үү.",
+      );
     }
   });
   root.updateWorldMatrix(true, true);
-  const copy = root.clone(true), remove: Object3D[] = [];
-  copy.traverse(node => {
+  const copy = root.clone(true),
+    remove: Object3D[] = [];
+  const originals: Object3D[] = [],
+    copies: Object3D[] = [];
+  root.traverse((node) => originals.push(node));
+  copy.traverse((node) => copies.push(node));
+  const clonedById = new Map(
+    originals.map((node, i) => [node.uuid, copies[i]]),
+  );
+  copy.traverse((node) => {
     // GLTFLoader uses plain Object3D nodes for authored connector sockets.
     // Preserve them and their child parts; omit rendering helpers and cameras.
-    if (node.userData.exportExclude || node.type === "PerspectiveCamera" || node.type === "OrthographicCamera" || node.type.endsWith("Light") || node.type === "Line" || node.type === "LineSegments" || node.type === "Points") remove.push(node);
+    if (
+      node.userData.exportExclude ||
+      node.type === "PerspectiveCamera" ||
+      node.type === "OrthographicCamera" ||
+      node.type.endsWith("Light") ||
+      node.type === "Line" ||
+      node.type === "LineSegments" ||
+      node.type === "Points"
+    )
+      remove.push(node);
   });
-  remove.forEach(node => node.removeFromParent());
-  const materials = new Map<Material, Material>(), textures = new Map<Texture, Texture>();
+  remove.forEach((node) => node.removeFromParent());
+  const included = new Set<string>();
+  copy.traverse((node) => included.add(node.uuid));
+  const animations: AnimationClip[] = [];
+  root.traverse((node) => {
+    for (const source of node.animations) {
+      const clip = source.clone();
+      clip.tracks = clip.tracks.flatMap((track) => {
+        const binding = PropertyBinding.parseTrackName(track.name);
+        const target = PropertyBinding.findNode(node, binding.nodeName);
+        const cloned = target && clonedById.get(target.uuid);
+        if (!cloned || !included.has(cloned.uuid)) return [];
+        track.name = binding.nodeName
+          ? track.name.replace(binding.nodeName, cloned.uuid)
+          : cloned.uuid + track.name;
+        return [track];
+      });
+      if (clip.tracks.length) {
+        clip.name = `${source.name}-${animations.length + 1}`;
+        animations.push(clip);
+      }
+    }
+  });
+  const materials = new Map<Material, Material>(),
+    textures = new Map<Texture, Texture>();
   let meshes = 0;
-  copy.traverse(node => {
+  copy.traverse((node) => {
     if (!(node instanceof Mesh)) return;
     meshes++;
     // Exports own their resources even if editing/removal continues during encoding.
@@ -26,40 +77,71 @@ export function snapshotKitchen(root: Group) {
     function cloneMaterial(original: Material) {
       let next = materials.get(original);
       if (!next) {
-        next = original.clone(); materials.set(original, next);
-        for (const [key, value] of Object.entries(next)) if (value instanceof Texture) {
-          let texture = textures.get(value);
-          if (!texture) { texture = value.clone(); textures.set(value, texture); }
-          (next as unknown as Record<string, unknown>)[key] = texture;
-        }
+        next = original.clone();
+        materials.set(original, next);
+        for (const [key, value] of Object.entries(next))
+          if (value instanceof Texture) {
+            let texture = textures.get(value);
+            if (!texture) {
+              texture = value.clone();
+              textures.set(value, texture);
+            }
+            (next as unknown as Record<string, unknown>)[key] = texture;
+          }
       }
       return next;
     }
-    node.material = Array.isArray(node.material) ? node.material.map(cloneMaterial) : cloneMaterial(node.material);
+    node.material = Array.isArray(node.material)
+      ? node.material.map(cloneMaterial)
+      : cloneMaterial(node.material);
   });
   if (!meshes) throw new Error("Экспортлох шүүгээ алга.");
   // The assembly coordinates are in meters; no fit-to-view scaling is applied.
   copy.updateMatrixWorld(true);
-  return { scene: copy, dispose() {
-    copy.traverse(node => { if (node instanceof Mesh) node.geometry.dispose(); });
-    materials.forEach(material => material.dispose()); textures.forEach(texture => texture.dispose());
-  } };
+  return {
+    scene: copy,
+    animations,
+    dispose() {
+      copy.traverse((node) => {
+        if (node instanceof Mesh) node.geometry.dispose();
+      });
+      materials.forEach((material) => material.dispose());
+      textures.forEach((texture) => texture.dispose());
+    },
+  };
 }
-export async function encodeKitchenGlb(root: Group): Promise<ArrayBuffer> {
+export async function encodeKitchenGlb(root: Group, includeAnimations = true): Promise<ArrayBuffer> {
   const snapshot = snapshotKitchen(root);
   try {
-    const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
-    const data = await new GLTFExporter().parseAsync(snapshot.scene, { binary: true, onlyVisible: true });
-    if (!(data instanceof ArrayBuffer)) throw new Error("GLB экспорт амжилтгүй боллоо.");
+    const { GLTFExporter } =
+      await import("three/examples/jsm/exporters/GLTFExporter.js");
+    const data = await new GLTFExporter().parseAsync(snapshot.scene, {
+      binary: true,
+      onlyVisible: true,
+      animations: includeAnimations ? snapshot.animations : [],
+    });
+    if (!(data instanceof ArrayBuffer))
+      throw new Error("GLB экспорт амжилтгүй боллоо.");
     return data;
-  } finally { snapshot.dispose(); }
+  } finally {
+    snapshot.dispose();
+  }
 }
 export function kitchenExportFilename(name: string, extension: "glb" | "skp") {
-  const safe = name.replace(/[\x00-\x1f<>:"/\\|?*]/g, "-").replace(/^[. ]+|[. ]+$/g, "").slice(0, 80) || "kitchen";
+  const safe =
+    name
+      .replace(/[\x00-\x1f<>:"/\\|?*]/g, "-")
+      .replace(/^[. ]+|[. ]+$/g, "")
+      .slice(0, 80) || "kitchen";
   return `${safe}.${extension}`;
 }
 export function downloadKitchenFile(data: Blob, filename: string) {
-  const url = URL.createObjectURL(data), anchor = document.createElement("a");
-  anchor.href = url; anchor.download = filename; document.body.appendChild(anchor); anchor.click(); anchor.remove();
+  const url = URL.createObjectURL(data),
+    anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }

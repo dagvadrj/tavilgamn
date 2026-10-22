@@ -3,6 +3,7 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useEffect, useRef, useState } from "react";
 import { usePlannerPanel } from "@/features/planner/components/usePlannerPanel";
+import { PlannerSheetGrip } from "@/features/planner/components/PlannerSheetGrip";
 import { X } from "lucide-react";
 import { cn, formatPrice } from "@/lib/format";
 import type { RoomDesign } from "@/lib/types";
@@ -27,7 +28,11 @@ export function Drawer({
   active?: boolean;
   children: React.ReactNode;
 }) {
-  const drawerRef = usePlannerPanel(active && open, onClose);
+  const drawerRef = usePlannerPanel(active && open, onClose, 1279, false);
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+  useEffect(() => {
+    if (!open || !active) setSheetExpanded(false);
+  }, [open, active]);
   if (!active) return null;
   return (
     <>
@@ -41,6 +46,7 @@ export function Drawer({
       <aside
         ref={drawerRef}
         aria-label={title}
+        data-sheet-expanded={sheetExpanded}
         className={cn(
           "planner-drawer fixed inset-y-0 z-[70] flex w-[88vw] max-w-[340px] flex-col bg-[#FAF9F6] shadow-2xl transition-transform duration-300 xl:relative xl:z-auto xl:w-auto xl:max-w-none xl:translate-x-0 xl:shadow-none",
           side === "left"
@@ -51,6 +57,11 @@ export function Drawer({
           !open && side === "right" && "translate-x-full xl:translate-x-0",
         )}
       >
+        <PlannerSheetGrip
+          expanded={sheetExpanded}
+          onExpand={setSheetExpanded}
+          onClose={onClose}
+        />
         <div className="planner-drawer-heading flex items-center justify-between border-b border-ui-line p-4 xl:hidden">
           <p className="text-lg text-ui-ink">{title}</p>
           <button
@@ -316,5 +327,11 @@ export function NumberControl({
 }
 
 export function PlannerSkeleton() {
-  return <PageSkeleton variant="planner" compact label="Өрөөний төлөвлөгчийг ачаалж байна…" />;
+  return (
+    <PageSkeleton layout="viewport"
+      variant="planner"
+      compact
+      label="Өрөөний төлөвлөгчийг ачаалж байна…"
+    />
+  );
 }

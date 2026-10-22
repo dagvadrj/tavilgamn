@@ -9,8 +9,12 @@ export type RoomMaterials = {
   wood?: THREE.Texture;
   woodNormal?: THREE.Texture;
   woodRoughness?: THREE.Texture;
+  slatWood?: THREE.Texture;
   plaster?: THREE.DataTexture;
   linen?: THREE.DataTexture;
+  wallNormal?: THREE.Texture;
+  linenNormal?: THREE.Texture;
+  linenRoughness?: THREE.Texture;
 };
 
 function surfaceTexture(woven: boolean) {
@@ -51,6 +55,30 @@ export function useRoomMaterials(): RoomMaterials {
     owned.push(plaster, linen);
     setMaterials({ plaster, linen });
     const loader = new THREE.TextureLoader();
+    for (const [key, file] of [
+      ["wallNormal", "plaster-normal.webp"],
+      ["linenNormal", "linen-normal.webp"],
+      ["linenRoughness", "linen-roughness.webp"],
+    ] as const) {
+      const texture = loader.load(
+        `/interior/${file}`,
+        () => {
+          if (active) {
+            setMaterials((previous) => ({ ...previous, [key]: texture }));
+            invalidate();
+          }
+        },
+        undefined,
+        () => {},
+      );
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(
+        key === "wallNormal" ? 3 : 4,
+        key === "wallNormal" ? 2 : 4,
+      );
+      texture.colorSpace = THREE.NoColorSpace;
+      owned.push(texture);
+    }
     const files = [
       ["wood", "color.webp"],
       ["woodNormal", "normal.png"],
@@ -61,15 +89,30 @@ export function useRoomMaterials(): RoomMaterials {
         `/textures/room/oak-natural-v1-${suffix}`,
         (loaded) => {
           if (!active) return;
-          setMaterials((previous) => ({ ...previous, [key]: loaded }));
+          let slatWood: THREE.Texture | undefined;
+          if (key === "wood") {
+            slatWood = loaded.clone();
+            slatWood.center.set(0.5, 0.35);
+            slatWood.rotation = 0;
+            // Crop one continuous board for the cabinet fronts.
+            // Floorboard seams must not appear across the cabinet fronts.
+            slatWood.repeat.set(0.8, 0.03);
+            slatWood.needsUpdate = true;
+            owned.push(slatWood);
+          }
+          setMaterials((previous) => ({
+            ...previous,
+            [key]: loaded,
+            ...(slatWood ? { slatWood } : {}),
+          }));
           invalidate();
         },
         undefined,
         () => {},
       );
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(2, 2);
-      texture.anisotropy = Math.min(4, gl.capabilities.getMaxAnisotropy());
+      texture.repeat.set(8.4 / 1.8, 6.4 / 1.4);
+      texture.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
       texture.colorSpace =
         key === "wood" ? THREE.SRGBColorSpace : THREE.NoColorSpace;
       owned.push(texture);
@@ -80,7 +123,7 @@ export function useRoomMaterials(): RoomMaterials {
     const previousEnvironment = scene.environment;
     const previousIntensity = scene.environmentIntensity;
     scene.environment = target.texture;
-    scene.environmentIntensity = 0.45;
+    scene.environmentIntensity = 0.55;
     environment.dispose();
     generator.dispose();
     invalidate();

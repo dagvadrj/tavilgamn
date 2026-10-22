@@ -1,7 +1,7 @@
 "use client";
 
 import { PageSkeleton } from "@/components/PageSkeleton";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -30,6 +30,7 @@ import { CatalogStatus } from "@/components/CatalogStatus";
 import { formatPrice } from "@/lib/format";
 import "./account.css";
 import { FurnitureLibrary } from "@/components/FurnitureLibrary";
+import { loginPathForDestination } from "@/lib/authRedirect";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -52,12 +53,12 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (initialized && !user) {
-      router.replace("/login");
+      router.replace(loginPathForDestination("/account" + window.location.hash));
     }
   }, [initialized, user, router]);
 
   if (!initialized || !user) {
-    return <PageSkeleton variant="dashboard" label="Хэрэглэгчийн мэдээллийг ачаалж байна…" />;
+    return <PageSkeleton layout="status" label="Хэрэглэгчийн мэдээллийг ачаалж байна…" />;
   }
   return (
     <div className="account-layout">
@@ -97,6 +98,7 @@ export default function AccountPage() {
               Миний дэлгүүр
             </Link>
           )}
+          {role === "customer" && <Link href="/merchant" className="account-nav-link"><Store className="h-4 w-4" />Дэлгүүрийн ажилтны самбар</Link>}
           {[
             { href: "#designs", label: "Хадгалсан загвар", icon: LayoutGrid },
             {
@@ -178,11 +180,12 @@ export default function AccountPage() {
           )}
           <div className="account-section-heading">
             <div>
-              <p className="account-eyebrow">Хадгалсан өрөөний загвар</p>
+              <p className="account-eyebrow">Энэ төхөөрөмж дээр хадгалсан өрөөний загвар</p>
               <h2>
                 Таны загварууд{" "}
                 <span className="account-count">{designs.length}</span>
               </h2>
+              <p className="mt-2 text-sm text-ui-muted">Өрөөний загварууд энэ browser-д хадгалагдана. Өөр төхөөрөмжид автоматаар шилжихгүй.</p>
             </div>
             <Link
               href="/planner"
@@ -233,7 +236,7 @@ export default function AccountPage() {
                     </div>
                     <div className="flex gap-2">
                       <Link
-                        href="/planner"
+                        href={`/planner?design=${encodeURIComponent(d.id)}`}
                         onClick={() => loadDesign(d.id)}
                         aria-label={`${d.name} загварыг нээх`}
                         className="account-icon-button"

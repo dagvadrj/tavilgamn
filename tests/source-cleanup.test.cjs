@@ -16,7 +16,7 @@ async function setup(assets, { referenced = false, concurrent = false, missing =
       update(value) { update = value; updates.push(value); return q; }, limit() { return q; },
       then(resolve) { const id = filters.find(f => f[0] === 'id')?.[1];
         if (update && !concurrent) Object.assign(assets.find(a => a.id === id), update);
-        return Promise.resolve({ data: table === 'furniture_models' ? referenced ? [{ id: model }] : []
+        return Promise.resolve({ data: table === 'model_records' ? referenced ? [{ id: model }] : []
           : update ? concurrent ? [] : [{ id }] : assets, error: null }).then(resolve);
       },
     }; return q;

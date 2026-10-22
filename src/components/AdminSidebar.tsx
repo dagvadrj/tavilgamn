@@ -12,9 +12,12 @@ import {
   Users,
   Store,
   CookingPot,
+  House,
   ArrowUpRight,
   CircleHelp,
   UserRound,
+  ShieldCheck,
+  FileText,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 
@@ -68,6 +71,20 @@ export const ADMIN_TABS = [
     icon: CookingPot,
   },
   {
+    id: "merchant-ops",
+    label: "Баталгаажуулалт, хэтэвч",
+    short: "Merchant хяналт",
+    icon: ShieldCheck,
+  },
+  {
+    id: "kitchen-library",
+    label: "Гал тогооны GLB сан",
+    short: "Kitchen GLB",
+    icon: CookingPot,
+  },
+  { id: "rooms", label: "Бэлэн өрөөнүүд", short: "Өрөөнүүд", icon: House },
+  { id: "contracts", label: "Merchant гэрээ", short: "Гэрээ", icon: FileText },
+  {
     id: "settings",
     label: "Самбарын тохиргоо",
     short: "Тохиргоо",
@@ -95,13 +112,27 @@ export function AdminSidebar({
     {
       label: "УДИРДЛАГА",
       tabs: ADMIN_TABS.filter((item) =>
-        ["dashboard", "merchants", "furniture", "orders"].includes(item.id),
+        [
+          "dashboard",
+          "merchants",
+          "merchant-ops",
+          "contracts",
+          "furniture",
+          "orders",
+        ].includes(item.id),
       ),
     },
     {
       label: "ХЭРЭГЛЭГЧ БА КОНТЕНТ",
       tabs: ADMIN_TABS.filter((item) =>
-        ["users", "messages", "models", "kitchens"].includes(item.id),
+        [
+          "users",
+          "messages",
+          "models",
+          "kitchens",
+          "kitchen-library",
+          "rooms",
+        ].includes(item.id),
       ),
     },
   ];
@@ -137,6 +168,7 @@ export function AdminSidebar({
                   key={item.id}
                   type="button"
                   title={item.label}
+                  aria-label={item.label}
                   aria-current={active === item.id ? "page" : undefined}
                   className="dashboard-nav-button"
                   onClick={() => onChange(item.id)}
@@ -177,7 +209,7 @@ export function AdminSidebar({
           <UserRound size={18} />
           Миний бүртгэл
         </button>
-        <Link href="/about#contact" className="dashboard-sidebar-link">
+        <Link href="/#contact" className="dashboard-sidebar-link">
           <CircleHelp size={18} />
           Тусламж, холбоо барих
         </Link>

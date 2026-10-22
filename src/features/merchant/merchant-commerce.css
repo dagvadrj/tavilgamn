@@ -1,0 +1,136 @@
+.dashboard-shell .merchant-commerce {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.dashboard-shell .merchant-commerce-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px;
+}
+
+.dashboard-shell .merchant-commerce-field,
+.dashboard-shell .merchant-commerce-toolbar label {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dashboard-shell .merchant-commerce .btn-primary,
+.dashboard-shell .merchant-commerce .btn-ghost {
+  min-height: 44px;
+  width: fit-content;
+}
+
+.dashboard-shell .merchant-commerce-table {
+  max-width: 100%;
+  overflow: auto;
+  max-height: 520px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 14px;
+}
+
+.dashboard-shell .merchant-commerce-table table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dashboard-shell .merchant-commerce-table th,
+.dashboard-shell .merchant-commerce-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--dashboard-border);
+  text-align: left;
+  overflow-wrap: anywhere;
+  max-width: 260px;
+}
+
+.dashboard-shell .merchant-commerce-table th {
+  position: sticky;
+  top: 0;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .merchant-commerce-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 14px;
+}
+
+.dashboard-shell .merchant-commerce-summary > div {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+}
+
+.dashboard-shell .merchant-commerce-summary strong {
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-shell .merchant-contract-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 60dvh;
+  overflow: auto;
+  padding: 22px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  line-height: 1.8;
+}
+
+.dashboard-shell .merchant-commerce-consent {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  line-height: 1.6;
+}
+
+.dashboard-shell .merchant-commerce-consent input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.dashboard-shell .merchant-commerce-history {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+
+.dashboard-shell .merchant-commerce-history li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--dashboard-border);
+}
+
+.dashboard-shell .merchant-contract-editor {
+  width: 100%;
+  min-height: 340px;
+  font: inherit;
+  line-height: 1.7;
+  resize: vertical;
+}
+
+@media (max-width: 600px) {
+  .dashboard-shell .merchant-commerce-toolbar > label {
+    flex: 1 1 140px;
+  }
+  .dashboard-shell .merchant-commerce-toolbar button {
+    flex: 1 1 auto;
+  }
+  .dashboard-shell .merchant-contract-body {
+    padding: 14px;
+  }
+}

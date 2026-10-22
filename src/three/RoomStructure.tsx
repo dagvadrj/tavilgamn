@@ -17,7 +17,7 @@ import {
 } from "@/lib/roomGeometry";
 import { sharedCutsForSegment, type SharedWallCut } from "@/lib/roomLayout";
 import { TrayCeiling } from "./TrayCeiling";
-import { fixtureMountHeight } from "@/lib/roomCeiling";
+import { fixtureMountHeight, automaticCeilingFixtures, RECESSED_FIXTURE_RADIUS, MAX_ROOM_LIGHT_SOURCES } from "@/lib/roomCeiling";
 import {
   ROOM_WALL_THICKNESS,
   ROOM_SKIRTING_DEPTH,
@@ -28,8 +28,10 @@ import {
 } from "@/lib/roomRendering";
 import { sunDirection, exteriorWindowBearing } from "@/lib/roomSunlight";
 import { solarLighting } from "@/lib/roomLighting";
+import { plannerLighting } from "@/lib/plannerLighting";
 import { openingWorldTransform } from "@/lib/roomOpenings";
 import { createWallGeometry, type WallCut, type WallEnds } from "./wallCsg";
+import { assignWallSurfaceGroups } from "./wallSurfaceGroups";
 import { useRoomMaterial } from "./roomMaterials";
 import { OpeningMesh } from "./OpeningMesh";
 import { animateToward } from "./demandAnimation";
@@ -37,6 +39,7 @@ import { isSceneNavigationGesture } from "./sceneNavigation";
 import { applyRoomCutaway, cutawayRaycast } from "./roomCutaway";
 import { roomFloorFinish } from "./roomFloorFinish";
 import { RoomDaylightFill } from "./RoomDaylightFill";
+import { useRoomPaintEnvironment } from "./useRoomPaintEnvironment";
 
 const WALL_THICKNESS = ROOM_WALL_THICKNESS;
 const noRaycast = () => {};
@@ -111,8 +114,9 @@ function normalizedPosition(
 
 function RoomWallMesh({
   segment,
+  paintEnvironment,
   ...props
-}: RoomStructureProps & { segment: RoomSegment }) {
+}: RoomStructureProps & { segment: RoomSegment; paintEnvironment?: THREE.Texture | null }) {
   const {
     design,
     view,
@@ -140,7 +144,7 @@ function RoomWallMesh({
     finish?.color ?? design.wallColor,
   );
   const meshRef =
-    useRef<THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>>(null);
+    useRef<THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[]>>(null);
   const cutawayRoot = useRef<THREE.Group>(null);
   const openingCuts = (design.openings ?? [])
     .filter((opening) => opening.segmentId ? opening.segmentId === segment.id : opening.wallId === id && base)
@@ -191,7 +195,7 @@ function RoomWallMesh({
   const cutKey = JSON.stringify(openingCuts);
   const wallGeometry = useMemo(
     () =>
-      createWallGeometry(
+      assignWallSurfaceGroups(createWallGeometry(
         segment.length,
         height,
         WALL_THICKNESS,
@@ -202,7 +206,7 @@ function RoomWallMesh({
           openStart,
           openEnd,
         },
-      ),
+      )),
     [
       segment.length,
       height,
@@ -264,7 +268,7 @@ function RoomWallMesh({
     const faded =
       !props.interior && (view === "plan" || outside || obscuresRoom);
     const animation = animateToward(
-      mesh.material.opacity,
+      (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material).opacity,
       faded ? 0 : 1,
       12,
       delta,
@@ -303,6 +307,7 @@ function RoomWallMesh({
       userData={{ previewWall: { nx: segment.nx, nz: segment.nz } }}>
       <mesh
         ref={meshRef}
+        name="room-wall"
         geometry={wallGeometry}
         position={[0, height / 2, -WALL_THICKNESS / 2]}
         receiveShadow
@@ -320,20 +325,23 @@ function RoomWallMesh({
           );
         }}
         raycast={function (
-          this: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>,
+          this: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[]>,
           raycaster,
           intersections,
         ) {
           const mesh = this;
-          if (mesh.material.opacity < 0.2 && !placementTemplate) return;
+          if ((Array.isArray(mesh.material) ? mesh.material[0] : mesh.material).opacity < 0.2 && !placementTemplate) return;
           THREE.Mesh.prototype.raycast.call(mesh, raycaster, intersections);
         }}
       >
         <meshStandardMaterial
+          attach="material-0"
           {...materialProps}
+          envMap={finish?.mode !== "wallpaper" ? paintEnvironment ?? null : null}
           emissive={selectedWall === id ? "#1677b8" : "#000000"}
           emissiveIntensity={selectedWall === id ? 0.09 : 0}
         />
+        <meshStandardMaterial attach="material-1" color="#e2dfd8" roughness={0.92} metalness={0} />
       </mesh>
       <group userData={{ cutawayDecoration: true }} raycast={cutawayRaycast}>
       {baseboardPieces.map((piece, index) => (
@@ -658,6 +666,7 @@ function OpeningDropTarget(props: RoomStructureProps) {
 
 export function RoomStructure(props: RoomStructureProps) {
   const { design, view } = props;
+  const paintEnvironment = useRoomPaintEnvironment(design);
   const geometry = getRoomGeometry(design);
   const height = design.height ?? 2.7;
   return (
@@ -683,6 +692,7 @@ export function RoomStructure(props: RoomStructureProps) {
               key={index}
               {...props}
               segment={segment}
+              paintEnvironment={paintEnvironment}
               wallEnds={{
                 ...wallMiterEnds(
                   design,
@@ -758,14 +768,18 @@ function CeilingLamp({
   span,
   on,
   shadows,
+  sourceIntensity,
 }: {
   fixture: CeilingFixture;
   height: number;
   span: number;
   on: boolean;
   shadows: boolean;
+  sourceIntensity?: number;
 }) {
   const target = useMemo(() => new THREE.Object3D(), []);
+  const housing = useRef<THREE.Group>(null);
+  useFrame(({ camera }) => { if (housing.current) housing.current.visible = camera.position.y < height + .02; });
   const invalidate = useThree((state) => state.invalidate);
   useEffect(() => {
     target.position.set(0, -height + 0.13, 0);
@@ -773,15 +787,17 @@ function CeilingLamp({
     invalidate();
   }, [height, target, invalidate]);
   const intensity = on ? fixture.intensity : 0,
+    lightPower = on ? sourceIntensity ?? fixture.intensity : 0,
     kind = fixture.kind ?? "flush",
     drop =
       kind === "pendant"
         ? Math.max(0.2, Math.min(1.2, fixture.pendantDrop ?? 0.6))
         : 0;
-  const radius = kind === "recessed" ? 0.08 : 0.19;
+  const radius = kind === "recessed" ? RECESSED_FIXTURE_RADIUS : 0.19;
   return (
     <group position={[fixture.x, height - 0.035, fixture.z]}>
       <primitive object={target} />
+      <group ref={housing}>
       {kind === "pendant" && (
         <mesh position={[0, -drop / 2, 0]} raycast={noRaycast}>
           <cylinderGeometry args={[0.004, 0.004, drop, 12]} />
@@ -855,13 +871,14 @@ function CeilingLamp({
           </mesh>
         </>
       )}
-      <spotLight
+      </group>
+      {sourceIntensity !== 0 && <><spotLight
         target={target}
         position={[0, -drop - 0.12, 0]}
-        intensity={intensity * 1.25}
+        intensity={lightPower * 1.25}
         color={fixture.color}
-        angle={kind === "recessed" ? 0.65 : 1.23}
-        penumbra={0.65}
+        angle={kind === "recessed" ? 0.95 : 1.23}
+        penumbra={0.85}
         distance={Math.max(span * 1.6, height * 2)}
         decay={2}
         castShadow={shadows && intensity > 0}
@@ -874,11 +891,11 @@ function CeilingLamp({
       />
       <pointLight
         position={[0, -drop - 0.15, 0]}
-        intensity={intensity * 0.18}
+        intensity={lightPower * 0.14}
         color={fixture.color}
         distance={span * 1.5}
         decay={2}
-      />
+      /></>}
     </group>
   );
 }
@@ -900,6 +917,7 @@ export function RoomLighting({
 }) {
   const lighting = design.lighting,
     solar = solarLighting(lighting);
+  const rig = plannerLighting(lighting);
   const target = useMemo(() => new THREE.Object3D(), []);
   const invalidate = useThree((state) => state.invalidate);
   const [centreX, centreZ] = centre;
@@ -909,6 +927,19 @@ export function RoomLighting({
     invalidate();
   }, [target, centreX, centreZ, invalidate]);
   const radius = Math.max(18, extent * 1.5);
+  const fixtures = useMemo(() => lighting?.fixtureLayout === "auto" || !lighting
+    ? automaticCeilingFixtures(design, design.activeRoomId ?? design.id)
+    : lighting.fixtures, [lighting, design]);
+  // Keep all small housings, but group automatic illumination to a bounded budget.
+  const powers = new Map<string, number>();
+  if ((!lighting || lighting.fixtureLayout === "auto") && fixtures.length > MAX_ROOM_LIGHT_SOURCES) {
+    const sources = Array.from({ length: MAX_ROOM_LIGHT_SOURCES }, (_, i) => fixtures[Math.floor((i + .5) * fixtures.length / MAX_ROOM_LIGHT_SOURCES)]);
+    for (const fixture of fixtures) {
+      const nearest = sources.reduce((a, b) => Math.hypot(fixture.x - a.x, fixture.z - a.z) <= Math.hypot(fixture.x - b.x, fixture.z - b.z) ? a : b);
+      powers.set(nearest.id, (powers.get(nearest.id) ?? 0) + fixture.intensity);
+    }
+  } else for (const fixture of fixtures) powers.set(fixture.id, fixture.intensity);
+  const shadowSource = fixtures.find(fixture => powers.has(fixture.id))?.id;
   const sun = sunDirection(
     lighting,
     includeSun ? exteriorWindowBearing(design) : 0,
@@ -919,21 +950,19 @@ export function RoomLighting({
         <>
           <primitive object={target} />
           <ambientLight
-            intensity={
-              (lighting?.ambient ?? 0.65) * (0.2 + 0.9 * solar.daylight)
-            }
-            color={solar.night ? "#a0b7db" : "#ffffff"}
+            intensity={rig.ambientIntensity}
+            color={rig.ambientColor}
           />
           <hemisphereLight
-            intensity={0.08 + 0.6 * solar.daylight}
-            color="#f1f6ff"
-            groundColor="#c6beb0"
+            intensity={rig.hemisphereIntensity}
+            color={rig.skyColor}
+            groundColor={rig.groundColor}
           />
           <directionalLight
             target={target}
             castShadow
-            color={solar.warm ? "#ffbf7d" : "#fff7e9"}
-            intensity={(lighting?.sunlight ?? 1.8) * solar.daylight}
+            color={rig.sunColor}
+            intensity={rig.sunlightIntensity}
             position={[
               centreX + sun.x * radius,
               sun.y * radius,
@@ -953,14 +982,15 @@ export function RoomLighting({
         </>
       )}
       {windowDaylight && <RoomDaylightFill design={design} daylight={solar.daylight} />}
-      {(lighting?.fixtures ?? []).map((fixture, index) => (
+      {fixtures.map((fixture) => (
         <CeilingLamp
           key={fixture.id}
           fixture={fixture}
           height={fixtureMountHeight(design, fixture)}
           span={Math.max(design.width, design.depth)}
           on={solar.lampsOn}
-          shadows={fixtureShadows && index === 0}
+          shadows={fixtureShadows && fixture.id === shadowSource}
+          sourceIntensity={powers.get(fixture.id) ?? 0}
         />
       ))}
     </>

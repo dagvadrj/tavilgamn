@@ -1,4 +1,6 @@
-import { readFile, stat } from "node:fs/promises";
+import { readFile, stat, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { existsSync } from "node:fs";
 
 import path from "node:path";
 
@@ -95,8 +97,17 @@ async function main() {
     ...process.env,
   };
 
-  if (values["ktx-bin"]) {
-    const ktxDirectory = path.resolve(values["ktx-bin"]);
+  const bundledKtx = path.join(ROOT, ".tools/ktx/bin");
+  const ktxBin =
+    values["ktx-bin"] ||
+    process.env.KTX_BIN ||
+    (existsSync(
+      path.join(bundledKtx, process.platform === "win32" ? "ktx.exe" : "ktx"),
+    )
+      ? bundledKtx
+      : null);
+  if (ktxBin) {
+    const ktxDirectory = path.resolve(ktxBin);
 
     const executable = path.join(
       ktxDirectory,
@@ -110,16 +121,28 @@ async function main() {
     env.CI = "true";
   }
 
-  await run(process.execPath, [CLI, "ktxdecompress", input, output], env);
+  const workspace = await mkdtemp(path.join(tmpdir(), "tavilgamn-standard-"));
+  try {
+    const texturesDecoded = path.join(workspace, "textures-decoded.glb");
+    await run(process.execPath, [CLI, "ktxdecompress", input, texturesDecoded], env);
+    await run(process.execPath, [CLI, "dequantize", texturesDecoded, output], env);
+  } finally {
+    if (path.dirname(workspace) !== path.resolve(tmpdir())) throw new Error("Unexpected standard export workspace");
+    await rm(workspace, { recursive: true, force: true });
+  }
 
   const outputBuffer = await readFile(output);
 
   const json = readGlbJson(outputBuffer);
 
-  const extensions = new Set(json.extensionsUsed ?? []);
+  const extensions = new Set([
+    ...(json.extensionsUsed ?? []),
+    ...(json.extensionsRequired ?? []),
+  ]);
 
   if (
     extensions.has("KHR_draco_mesh_compression") ||
+    extensions.has("KHR_mesh_quantization") ||
     extensions.has("EXT_meshopt_compression")
   ) {
     throw new Error("Geometry compression remains in standard GLB.");

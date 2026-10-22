@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { ArrowUpRight, Box, MapPin } from "lucide-react";
 import type { Product, Store } from "@/lib/types";
 import { hasProductPhoto } from "@/lib/homeMarketplace";

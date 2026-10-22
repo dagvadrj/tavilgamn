@@ -1,0 +1,155 @@
+.planner-catalog-controls {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 12px;
+}
+
+.room-catalog-compact-count {
+  margin-top: 8px;
+  color: #7c858a;
+  font-size: 11px;
+}
+
+.planner-catalog-toolbar {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  min-width: 0;
+  height: 46px;
+  border: 1px solid var(--site-line, #deded9);
+  border-radius: 12px;
+  background: var(--site-paper, #fff);
+}
+
+.planner-catalog-toolbar:focus-within {
+  border-color: var(--site-accent, #0865b1);
+  box-shadow: 0 0 0 2px #0865b114;
+}
+
+.planner-catalog-toolbar > .planner-catalog-filter,
+.planner-catalog-toolbar > .planner-catalog-sort {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--site-ink, #243649);
+  cursor: pointer;
+}
+
+.planner-catalog-filter[aria-expanded="true"] {
+  background: var(--site-selected, #eaf3fc);
+}
+
+.planner-catalog-toolbar .planner-catalog-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 30px;
+  margin: 0;
+  padding: 0 8px;
+  border-inline: 1px solid var(--site-line, #deded9);
+  color: #7c858a;
+}
+
+.planner-catalog-toolbar .planner-catalog-search input {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  color: var(--site-ink, #243649);
+  font-size: 16px;
+  box-shadow: none;
+}
+
+.planner-catalog-toolbar .planner-catalog-sort select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.planner-catalog-toolbar .planner-catalog-sort:focus-within,
+.planner-catalog-toolbar button:focus-visible {
+  outline: 2px solid var(--site-accent, #0865b1);
+  outline-offset: 2px;
+}
+
+.planner-filter-count {
+  position: absolute;
+  top: 3px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 20px;
+  color: #fff;
+  background: var(--site-accent, #0865b1);
+  font-size: 9px;
+}
+
+.planner-catalog-filter-panel {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid var(--site-line, #deded9);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.planner-catalog-filter-panel[hidden] {
+  display: none;
+}
+
+.planner-catalog-filter-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.planner-catalog-filter-panel > header button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: #f7f7f4;
+}
+
+.planner-catalog-filter-panel label {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.planner-catalog-filter-panel label select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--site-line, #deded9);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 16px;
+}

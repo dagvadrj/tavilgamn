@@ -2,6 +2,7 @@ import type { Category } from "./catalogCategories";
 import { CATEGORY_LABEL } from "./catalogCategories";
 import type { Product } from "./types";
 import { parsePlannerRoomTypes, parsePlannerPlacement } from "./placementMetadata";
+import { parseKitchenAsset } from "./kitchenAssetCatalog";
 
 export type SpecificationField = {
   key: string;
@@ -158,6 +159,7 @@ export function parseSpecifications(value: unknown): Record<string, string> {
   );
   allowed.add("plannerRoomTypes");
   allowed.add("plannerPlacement");
+    allowed.add("kitchenAsset");
   const entries = Object.entries(value);
   if (
     entries.some(
@@ -169,6 +171,7 @@ export function parseSpecifications(value: unknown): Record<string, string> {
   }
   if ("plannerRoomTypes" in value) parsePlannerRoomTypes((value as Record<string, string>).plannerRoomTypes);
   if ("plannerPlacement" in value) parsePlannerPlacement((value as Record<string, string>).plannerPlacement);
+    if ("kitchenAsset" in value) parseKitchenAsset(JSON.parse((value as Record<string,string>).kitchenAsset));
   return Object.fromEntries(
     entries
       .filter(([, text]) => (text as string).trim())

@@ -5,8 +5,11 @@ import "./ui-theme.css";
 import "./site-ui.css";
 import "./page-loading.css";
 import "./brand-loader.css";
+import "./responsive-controls.css";
 import { PerformanceDiagnosticsLoader } from "@/components/PerformanceDiagnosticsLoader";
 import { AuthBootstrap } from "@/components/AuthBootstrap";
+import { Suspense } from "react";
+import { PlannerNavigationFeedback } from "@/components/PlannerNavigationFeedback";
 
 const sans = Inter({
   subsets: ["latin"],
@@ -37,6 +40,7 @@ export default function RootLayout({
     <html lang="mn" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen flex flex-col">
         <AuthBootstrap />
+        <Suspense fallback={null}><PlannerNavigationFeedback /></Suspense>
         <a href="#main-content" className="skip-link">Үндсэн агуулга руу очих</a>
         {children}
         <PerformanceDiagnosticsLoader />

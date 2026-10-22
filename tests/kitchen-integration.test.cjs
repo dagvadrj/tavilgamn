@@ -525,11 +525,12 @@ test("kitchen admin upload pins the correct category and protects its R2 handoff
   assert.match(prepareRoute, /body\?\.modelId/);
   assert.match(prepareRoute, /if \(auth\.error\)/);
   assert.match(completeRoute, /if \(auth\.error\)/);
-  assert.match(completeRoute, /rpc\("queue_model_asset"/);
+  assert.match(completeRoute, /queue_kitchen_model_asset/);
+  assert.match(completeRoute, /queue_model_asset/);
   assert.match(completeRoute, /validateCabinetGlb/);
   assert.match(component, /GlbUploadPreview/);
   assert.doesNotMatch(completeRoute, /glb_path: sourcePath/);
-  assert.match(component, /Meshopt \+ KTX2 хувилбарыг боловсруулж байна/);
+  assert.match(component, /Боловсруулалт дууссаны дараа/);
   const catalog = fs.readFileSync(
     "src/lib/kitchenModuleCatalogServer.ts",
     "utf8",
@@ -552,7 +553,7 @@ test("kitchen admin upload pins the correct category and protects its R2 handoff
   );
   assert.match(component, /method: "DELETE"/);
   assert.match(moduleRoute, /export async function DELETE/);
-  assert.match(moduleRoute, /rpc\("set_model_archived"/);
+  assert.match(moduleRoute, /rpc\("set_kitchen_model_archived"/);
   assert.doesNotMatch(moduleRoute, /removeStoredModelFiles|\.delete\(/);
   assert.match(catalogServer, /linked\.get\(row\.id as string\)/);
 });
@@ -1235,7 +1236,7 @@ test("kitchen room preflight rotates exact fits and explains every blocked condi
   );
   assert.match(
     fs.readFileSync("src/components/RoomPlanner.tsx", "utf8"),
-    /assessKitchenRoomFit/,
+    /placeKitchen/,
   );
 });
 

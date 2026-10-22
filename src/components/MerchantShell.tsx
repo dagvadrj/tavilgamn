@@ -1,5 +1,10 @@
 "use client";
 
+import { DashboardNavigation } from "@/features/dashboard/DashboardNavigation";
+import { DashboardFormAssist } from "@/features/dashboard/DashboardFormAssist";
+import { MerchantBalanceChip } from "@/features/merchant/MerchantGrowth";
+import "@/features/dashboard/dashboard-v14.css";
+
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import {
   MerchantSidebar,
@@ -7,9 +12,12 @@ import {
   type MerchantTab,
 } from "./MerchantSidebar";
 import { MerchantHeader } from "./MerchantHeader";
+import { MerchantMotion } from "@/features/merchant/MerchantMotion";
+import "@/features/merchant/merchant-stats.css";
 import type { DashboardPreferences } from "@/features/dashboard/preferences";
 import "@/features/dashboard/merchant-theme.css";
 import "@/features/dashboard/merchant-inputs.css";
+import "@/features/merchant/merchant-workspace.css";
 
 export function MerchantShell({
   active,
@@ -21,6 +29,7 @@ export function MerchantShell({
   hasStore,
   preferences,
   children,
+  allowedTabs,
 }: {
   active: MerchantTab;
   onChange: (tab: MerchantTab) => void;
@@ -31,6 +40,7 @@ export function MerchantShell({
   hasStore: boolean;
   preferences?: DashboardPreferences;
   children: ReactNode;
+  allowedTabs?: MerchantTab[];
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
@@ -47,11 +57,12 @@ export function MerchantShell({
 
   return (
     <div
-      className="merchant-app-shell dashboard-shell dashboard-themed-shell"
+      className="merchant-app-shell dashboard-shell dashboard-themed-shell dashboard-v14"
       data-theme={preferences?.theme ?? "dark"}
       data-density={preferences?.density ?? "comfortable"}
       data-text-size={preferences?.textSize ?? "standard"}
     >
+      <DashboardFormAssist />
       <MerchantSidebar
         active={active}
         onChange={changeTab}
@@ -60,20 +71,38 @@ export function MerchantShell({
         storeName={storeName}
         open={sidebarOpen}
         onClose={closeSidebar}
+        allowedTabs={allowedTabs}
       />
 
       <div className="merchant-workspace dashboard-workspace">
         <MerchantHeader
-          userName={userName}
+          balances={
+            !allowedTabs && <MerchantBalanceChip
+              owner={owner}
+              enabled={hasStore}
+              onOpen={() => changeTab("wallet")}
+            />
+          }
+          navigation={
+            <DashboardNavigation
+              tabs={MERCHANT_TABS.filter((tab) =>
+                allowedTabs ? allowedTabs.includes(tab.id) : ["overview", "products", "orders", "delivery"].includes(tab.id),
+              ).map((tab) => ({
+                ...tab,
+                disabled: !hasStore && tab.id !== "overview",
+              }))}
+              active={active}
+              onChange={changeTab}
+            />
+          }
           storeName={storeName}
+          userName={userName}
+          onProfile={allowedTabs ? undefined : () => changeTab("profile")}
+          hideNotifications={!!allowedTabs}
           owner={owner}
-          onProducts={() => changeTab("products")}
+          onHome={() => changeTab(allowedTabs?.[0] ?? "overview")}
           onKitchens={onOpenKitchen}
-          onQuotes={() => changeTab("quotes")}
-          onSettings={() => changeTab("settings")}
-          onProfile={() => changeTab("profile")}
           activeLabel={activeLabel}
-          hasStore={hasStore}
           sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen((value) => !value)}
         />
@@ -86,6 +115,7 @@ export function MerchantShell({
           tabIndex={-1}
         >
           {children}
+          <MerchantMotion page={active} />
         </main>
       </div>
     </div>

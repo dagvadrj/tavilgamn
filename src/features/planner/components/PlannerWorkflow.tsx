@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { House, LayoutGrid, Paintbrush } from "lucide-react";
 
 export function PlannerSwitcher({ current }: { current: "room" | "kitchen" }) {

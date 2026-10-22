@@ -97,7 +97,7 @@ export function ProjectReport({
   }
   return (
     <section className="km-project-report" aria-label="BOM болон үнийн тооцоо">
-      <h2>Үйлдвэрлэлийн эд ангийн жагсаалт (BOM)</h2>
+      <h2>Тавилга, материалын урьдчилсан жагсаалт (BOM)</h2>
       <p>
         Үнэтэй бүтээгдэхүүний дэд дүн:{" "}
         <strong>{bom.knownSubtotal.toLocaleString("en-US")} ₮</strong>

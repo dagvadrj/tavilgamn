@@ -1,20 +1,52 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, Box } from "lucide-react";
+import { Box } from "lucide-react";
 import { PlannerModelCard } from "@/features/planner/components/PlannerModelCard";
-import type { KitchenCatalogModule, KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
+import type {
+  KitchenCatalogModule,
+  KitchenCatalogVariant,
+} from "@/lib/kitchenModuleCatalog";
 import { prefetchModel } from "@/lib/modelPrefetch";
 
-const TYPES = { base: "Доод", wall: "Дээд", tall: "Өндөр", corner: "Булан", appliance: "Төхөөрөмж" };
+import {
+  PlannerCatalogToolbar,
+  sortPlannerCatalog,
+  type PlannerCatalogSort,
+} from "@/features/planner/components/PlannerCatalogToolbar";
 
-export function KitchenModelLibrary({ modules, loading, error, retry, disabled, onAdd, category = "all", searchRequest = 0 }: {
-  category?: "all" | "appliances"; searchRequest?: number;
-  modules: KitchenCatalogModule[]; loading: boolean; error: boolean; retry: () => void;
-  disabled: boolean; onAdd: (module: KitchenCatalogModule, variant: KitchenCatalogVariant) => void;
+const TYPES = {
+  base: "Доод",
+  wall: "Дээд",
+  tall: "Өндөр",
+  corner: "Булан",
+  appliance: "Төхөөрөмж",
+};
+
+export function KitchenModelLibrary({
+  modules,
+  loading,
+  error,
+  retry,
+  disabled,
+  onAdd,
+  category = "all",
+  searchRequest = 0,
+}: {
+  category?: "all" | "appliances";
+  searchRequest?: number;
+  modules: KitchenCatalogModule[];
+  loading: boolean;
+  error: boolean;
+  retry: () => void;
+  disabled: boolean;
+  onAdd: (module: KitchenCatalogModule, variant: KitchenCatalogVariant) => void;
 }) {
   const searchRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { if (searchRequest) searchRef.current?.focus(); }, [searchRequest]);
+  useEffect(() => {
+    if (searchRequest) searchRef.current?.focus();
+  }, [searchRequest]);
   const [query, setQuery] = useState("");
   const [type, setType] = useState("all");
   const models = useMemo(() => modules.filter(module => module.active)

@@ -51,16 +51,17 @@
 
 .interior-home .interior-stage-shade {
   pointer-events: none;
-  background: linear-gradient(90deg, #ffffffed, #ffffff36 42%, transparent 65%), linear-gradient(0deg, #ffffffcc, transparent 16%);
+  background: linear-gradient(90deg, #211911e8, #21191180 27%, transparent 58%), linear-gradient(0deg, #21191180, transparent 20%);
 }
 
 .interior-home .interior-chapter {
   position: absolute;
   top: 22%;
   left: max(5vw, 24px);
-  width: min(450px, 38vw);
+  width: min(380px, 31vw);
   pointer-events: none;
   animation: interior-copy-in .55s ease both;
+  color: #fff5e9;
 }
 
 .interior-home .interior-chapter :is(a, button) {
@@ -75,9 +76,13 @@
   line-height: 1.7;
 }
 
+.interior-home .interior-chapter .interior-eyebrow {
+  color: #ead1b0;
+}
+
 .interior-home .interior-chapter h1 {
   margin: 22px 0;
-  font-size: clamp(36px, 4.6vw, 72px);
+  font-size: clamp(34px, 3.8vw, 60px);
   font-weight: 450;
   letter-spacing: -.065em;
   line-height: 1.12;
@@ -88,7 +93,21 @@
   max-width: 310px;
   font-size: 14px;
   line-height: 1.9;
-  color: var(--site-muted, #637182);
+  color: #e6d9c9;
+}
+
+.interior-home .is-travelling .interior-chapter {
+  top: 88px;
+  width: min(360px, 30vw);
+}
+
+.interior-home .is-travelling .interior-chapter h1 {
+  font-size: clamp(26px, 2.7vw, 40px);
+  margin: 14px 0;
+}
+
+.interior-home .is-travelling .interior-stage-shade {
+  background: linear-gradient(90deg, #2119118c, transparent 42%), linear-gradient(0deg, #21191155, transparent 22%);
 }
 
 .interior-home .interior-hero-actions {
@@ -96,6 +115,15 @@
   flex-wrap: wrap;
   gap: 10px 20px;
   margin-top: 28px;
+}
+
+.interior-home .interior-hero-actions .interior-text-button {
+  padding: 12px 18px;
+  border: 1px solid #d4d9dc;
+  border-radius: 999px;
+  background: #ffffffd9;
+  backdrop-filter: blur(8px);
+  color: var(--interior-ink);
 }
 
 .interior-home .interior-button {
@@ -142,6 +170,7 @@
 .interior-home .interior-stage-top > span {
   font-size: 9px;
   letter-spacing: .17em;
+  color: #fff3e5;
 }
 
 .interior-home .interior-stage-top button {
@@ -171,6 +200,7 @@
   gap: 12px;
   min-height: 44px;
   font-size: 11px;
+  color: #fff3e5;
 }
 
 .interior-home .interior-scroll-hint svg {
@@ -186,6 +216,86 @@
   text-align: right;
   font-size: 12px;
   font-weight: 550;
+  max-width: 340px;
+  padding: 12px 16px;
+  border: 1px solid #ffffffb3;
+  border-radius: 12px;
+  background: #ffffffde;
+  backdrop-filter: blur(8px);
+}
+
+.interior-home .interior-model-caption > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  color: var(--interior-accent);
+  font-size: 11px;
+}
+
+.interior-home .interior-hotspot {
+  position: relative;
+  pointer-events: auto;
+}
+
+.interior-home .interior-hotspot-trigger {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #ffffffd9;
+  border-radius: 50%;
+  background: #ffffffed;
+  color: #263848;
+  box-shadow: 0 2px 14px #26384830, 0 0 0 5px #ffffff24;
+  cursor: pointer;
+  transition: transform .18s, background .18s;
+}
+
+.interior-home .interior-hotspot[data-open="true"] .interior-hotspot-trigger {
+  background: #fff;
+  transform: scale(1.08);
+}
+
+.interior-home .interior-hotspot-card {
+  position: absolute;
+  bottom: calc(100% - 2px);
+  left: 50%;
+  transform: translateX(-70%);
+  display: grid;
+  gap: 8px;
+  width: 220px;
+  padding: 16px;
+  border: 1px solid #e1e3e3;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 30px #26384826;
+  text-align: left;
+  color: #263848;
+}
+
+.interior-home .interior-hotspot-card[hidden] {
+  display: none;
+}
+
+.interior-home .interior-hotspot-card strong {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.interior-home .interior-hotspot-card > span {
+  color: #637182;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.interior-home .interior-hotspot-card > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  font-size: 12px;
+  color: var(--interior-accent);
 }
 
 .interior-home .interior-model-caption small {
@@ -213,152 +323,7 @@
 }
 
 .interior-home .interior-runway {
-  height: calc((100svh - var(--home-header-height, 76px)) * 1.4);
-}
-
-.interior-home .interior-designs {
-  position: relative;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  min-height: 100svh;
-  padding: 55px 5vw;
-  pointer-events: none;
-  scroll-margin-top: 0;
-}
-
-.interior-home .interior-design-panel {
-  width: min(440px, 43vw);
-  padding: clamp(24px, 3vw, 40px);
-  border: 1px solid var(--site-line, #e0e5ea);
-  border-radius: 12px;
-  background: #fffffff5;
-  box-shadow: 0 25px 80px #26384812;
-  backdrop-filter: blur(18px);
-  pointer-events: auto;
-}
-
-.interior-home .interior-design-panel h2 {
-  margin: 12px 0;
-  font-size: clamp(28px, 3vw, 42px);
-  line-height: 1.15;
-  font-weight: 450;
-  letter-spacing: -.055em;
-}
-
-.interior-home .interior-design-panel > p {
-  font-size: 12px;
-  line-height: 1.8;
-  color: var(--site-muted, #637182);
-}
-
-.interior-home .interior-style-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 24px;
-}
-
-.interior-home .interior-style-card {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  padding: 7px;
-  border: 1px solid var(--site-line, #e0e5ea);
-  border-radius: var(--site-control-radius, 12px);
-  background: #fff;
-  text-align: left;
-}
-
-.interior-home .interior-style-card.is-selected {
-  border-color: var(--interior-accent);
-  box-shadow: 0 0 0 1px var(--interior-accent);
-  background: var(--site-selected, #eaf5ff);
-}
-
-.interior-home .interior-mini-room {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 72px;
-  overflow: hidden;
-  border-radius: 3px;
-}
-
-.interior-home .interior-mini-room i {
-  position: absolute;
-  inset: 55% 0 0;
-  transform: skewY(-8deg);
-}
-
-.interior-home .interior-mini-room b {
-  position: absolute;
-  z-index: 2;
-  left: 24%;
-  right: 20%;
-  top: 34%;
-  height: 39%;
-  border: 1px solid #2638481a;
-  border-radius: 9px 9px 3px 3px;
-  box-shadow: 3px 7px 8px var(--site-line, #e0e5ea), inset 0 -9px 0 #0000000d;
-}
-
-.interior-home .interior-mini-room em {
-  position: absolute;
-  left: 12%;
-  right: 14%;
-  bottom: 8%;
-  height: 30%;
-  transform: skewX(-25deg);
-}
-
-.interior-home .interior-style-title {
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
-  gap: 4px;
-  margin: 9px 0;
-  font-size: 12px;
-  font-weight: 550;
-}
-
-.interior-home .interior-swatches {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 4px;
-}
-
-.interior-home .interior-swatches i {
-  width: 12px;
-  height: 12px;
-  border: 1px solid #26384812;
-  border-radius: 50%;
-}
-
-.interior-home .interior-selection-note {
-  min-height: 22px;
-  margin: 16px 0 10px;
-}
-
-.interior-home .interior-place-button {
-  width: 100%;
-}
-
-.interior-home .interior-live-status {
-  display: block;
-  min-height: 28px;
-  padding-top: 8px;
-  font-size: 10px;
-  color: var(--site-muted, #637182);
-}
-
-.interior-home .interior-product-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  font-size: 11px;
-  color: var(--site-muted, #637182);
+  height: calc((100svh - var(--home-header-height, 76px)) * 4.8);
 }
 
 .interior-home .interior-editorial {
@@ -550,46 +515,6 @@
   color: var(--site-muted, #637182);
 }
 
-.interior-home .interior-stats {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 6vw;
-  padding-block: 60px 100px;
-}
-
-.interior-home .interior-stats h2 {
-  margin-top: 15px;
-  font-size: 32px;
-  font-weight: 450;
-  line-height: 1.2;
-  letter-spacing: -.05em;
-}
-
-.interior-home .interior-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 20px;
-  align-items: end;
-}
-
-.interior-home .interior-stats-grid > div {
-  display: grid;
-  gap: 12px;
-  padding-top: 22px;
-  border-top: 1px solid var(--site-line, #e0e5ea);
-}
-
-.interior-home .interior-stats-grid strong {
-  font-size: clamp(25px, 3.3vw, 45px);
-  font-weight: 450;
-  letter-spacing: -.06em;
-}
-
-.interior-home .interior-stats-grid span {
-  font-size: 11px;
-  color: var(--site-muted, #637182);
-}
-
 .interior-home .interior-merchant-cta {
   border-top: 1px solid var(--site-line, #e0e5ea);
   padding-block: 85px;
@@ -650,21 +575,20 @@
   }
 }
 
-@media (max-width: 1000px) {
-  .interior-home .interior-stats {
-    grid-template-columns: 1fr;
-  }
-  .interior-home .interior-design-panel {
-    width: 420px;
-  }
-}
-
 @media (max-width: 767px) {
+  .interior-home .interior-sticky {
+    position: sticky;
+    top: var(--home-header-height, 64px);
+    height: calc(100svh - var(--home-header-height, 64px));
+  }
+  .interior-home .interior-runway {
+    height: calc((100svh - var(--home-header-height, 64px)) * 4.8);
+  }
   .interior-home .interior-sticky {
     min-height: 0;
   }
   .interior-home .interior-stage-shade {
-    background: linear-gradient(180deg, #ffffffeb, #ffffff70 25%, transparent 48%, #ffffff66 88%);
+    background: linear-gradient(180deg, #211911ed, #21191180 25%, transparent 52%, #21191180 88%);
   }
   .interior-home .interior-stage-top {
     top: 12px;
@@ -703,6 +627,19 @@
   .interior-home .interior-chapter.is-landed h1 {
     font-size: 30px;
   }
+  .interior-home .is-travelling .interior-chapter {
+    top: 72px;
+    width: calc(100% - 48px);
+  }
+  .interior-home .is-travelling .interior-chapter h1 {
+    font-size: 28px;
+  }
+  .interior-home .is-travelling .interior-chapter p {
+    display: none;
+  }
+  .interior-home .is-travelling .interior-stage-shade {
+    background: linear-gradient(180deg, #211911a6, transparent 38%), linear-gradient(0deg, #21191166, transparent 25%);
+  }
   .interior-home .interior-stage-bottom {
     bottom: calc(84px + env(safe-area-inset-bottom));
     left: 20px;
@@ -724,25 +661,14 @@
     font-size: 10px;
     gap: 7px;
   }
-  .interior-home .interior-designs {
-    padding: 36svh 16px 100px;
-    align-items: flex-end;
-    min-height: 125svh;
-  }
   .interior-home .interior-design-panel {
     width: 100%;
     max-width: 430px;
     margin-inline: auto;
     padding: 24px;
   }
-  .interior-home .interior-design-panel h2 {
-    font-size: 32px;
-  }
   .interior-home .interior-mini-room {
     height: 56px;
-  }
-  .interior-home .interior-design-panel > .interior-eyebrow {
-    font-size: 9px;
   }
   .interior-home .interior-wrap {
     width: calc(100% - 40px);
@@ -779,17 +705,6 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
-  }
-  .interior-home .interior-stats {
-    gap: 30px;
-    padding-block: 10px 60px;
-  }
-  .interior-home .interior-stats-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 26px;
-  }
-  .interior-home .interior-stats-grid strong {
-    font-size: 38px;
   }
   .interior-home .interior-merchant-cta {
     padding-block: 60px;

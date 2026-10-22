@@ -29,6 +29,12 @@ import {
 const EPS = 0.00001;
 const inside = (x: number, z: number, b: Bounds) =>
   x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ;
+
+/** New additions belong entirely to the active room; drag may use an open seam. */
+export function activeRoomPlacementContext(design: RoomDesign) {
+  const context = roomPlacementContext(design);
+  return { ...context, room: { ...context.room, placementGeometry: undefined } };
+}
 /** Furniture stays in its owner's coordinates; collision checks span the open floor component. */
 export function roomPlacementContext(
   design: RoomDesign,
@@ -36,7 +42,7 @@ export function roomPlacementContext(
 ) {
   const rooms = design.rooms ?? [],
     active = rooms.find((r) => r.id === roomId);
-  if (!active) return { room: design as PlacementRoom, pieces: design.pieces };
+  if (!active) return { room: { ...design, allowFurnitureOverlap: true } as PlacementRoom, pieces: design.pieces };
   const connections = (design.connections ?? []).filter(
     (c) => c.kind === "open" && connectionContact(rooms, c),
   );

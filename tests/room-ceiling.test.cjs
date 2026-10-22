@@ -93,7 +93,7 @@ test('all lamp types render distinct housings at their actual ceiling mount heig
   assert.ok(parts.find(n=>n.type==='spotLight').props.intensity>0);
   if(kind==='linear')assert.deepEqual(parts.find(n=>n.type==='boxGeometry').props.args,[1,.045,.12]);
   else if(kind==='pendant')assert.ok(parts.some(n=>n.type==='cylinderGeometry'&&n.props.args[2]===.6));
-  else near(parts.find(n=>n.type==='cylinderGeometry').props.args[0],kind==='recessed'?.08:.19);
+  else near(parts.find(n=>n.type==='cylinderGeometry').props.args[0],kind==='recessed'?ceiling.RECESSED_FIXTURE_RADIUS:.19);
  }
 });
 test('centimetre input accepts incomplete typing and commits a complete value on blur',()=>{

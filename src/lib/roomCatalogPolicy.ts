@@ -21,6 +21,7 @@ type CatalogEntry = {
     stockQuantity?: number | null;
 };
 export function catalogEligible(item: Pick<CatalogEntry, "category" | "roomTypes">, type: RoomType, scope: RoomCatalogScope) {
+    if (item.category === "kitchen-cabinet") return false;
     return scope === "all" || (item.roomTypes?.length
         ? item.roomTypes.includes(type) : ROOM_CATALOG_CATEGORIES[type].includes(item.category));
 }

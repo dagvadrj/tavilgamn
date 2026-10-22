@@ -2,6 +2,7 @@ import { apiErrorResponse } from "@/lib/api/errors";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { kitchenPartKind } from "@/lib/kitchenGlbAssembly";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    const models = (data ?? []).filter(model => includeArchived || model.glb_path).map((model) => ({
+    const models = (data ?? []).filter(model => includeArchived || model.glb_path && !kitchenPartKind(model.specifications)).map((model) => ({
       id: model.id,
       archivedAt: model.archived_at,
       name: model.name,

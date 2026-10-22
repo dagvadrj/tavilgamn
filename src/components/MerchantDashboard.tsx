@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { useDraftState } from "@/hooks/useDashboardDraft";
@@ -13,16 +14,125 @@ import {
   merchantLocationPath,
   readMerchantLocation,
 } from "@/lib/merchantNavigation";
-import { MerchantOrders } from "@/components/MerchantOrders";
+const MerchantOrders = dynamic(
+  () => import("@/components/MerchantOrders").then((m) => m.MerchantOrders),
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
+);
 import { MerchantShell } from "@/components/MerchantShell";
 import type { MerchantTab } from "@/components/MerchantSidebar";
-import { MerchantKitchenDesigns } from "@/components/MerchantKitchenDesigns";
-import { MerchantKitchenDesignDetail } from "@/components/MerchantKitchenDesignDetail";
-import { MerchantKitchenQuotes } from "@/components/MerchantKitchenQuotes";
+const MerchantKitchenDesigns = dynamic(
+  () =>
+    import("@/components/MerchantKitchenDesigns").then(
+      (module) => module.MerchantKitchenDesigns,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
+);
+const MerchantKitchenDesignDetail = dynamic(
+  () =>
+    import("@/components/MerchantKitchenDesignDetail").then(
+      (module) => module.MerchantKitchenDesignDetail,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="document" compact /> },
+);
+const MerchantKitchenQuotes = dynamic(
+  () =>
+    import("@/components/MerchantKitchenQuotes").then(
+      (module) => module.MerchantKitchenQuotes,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
+);
 import { merchantRequest } from "@/features/merchant/merchantApi";
 import { MerchantOverview } from "@/features/merchant/MerchantOverview";
-import { StoreProfile } from "@/features/merchant/StoreProfile";
-import { MerchantProducts } from "@/features/merchant/MerchantProducts";
+const MerchantActivation = dynamic(
+  () =>
+    import("@/features/merchant/MerchantActivation").then(
+      (m) => m.MerchantActivation,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
+);
+const MerchantWallet = dynamic(
+  () =>
+    import("@/features/merchant/MerchantWallet").then((m) => m.MerchantWallet),
+  { loading: () => <PageSkeleton variant="dashboard" layout="metrics" compact /> },
+);
+const MerchantDeliveryBoard = dynamic(
+  () =>
+    import("@/features/merchant/MerchantDeliveryBoard").then(
+      (m) => m.MerchantDeliveryBoard,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="board" compact /> },
+);
+const MerchantBranches = dynamic(
+  () =>
+    import("@/features/merchant/MerchantOperations").then(
+      (m) => m.MerchantBranches,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
+);
+const MerchantStaff = dynamic(
+  () =>
+    import("@/features/merchant/MerchantOperations").then(
+      (m) => m.MerchantStaff,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
+);
+const MerchantFeedback = dynamic(
+  () =>
+    import("@/features/merchant/MerchantOperations").then(
+      (m) => m.MerchantFeedback,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
+);
+const MerchantAssistant = dynamic(
+  () =>
+    import("@/features/merchant/MerchantOperations").then(
+      (m) => m.MerchantAssistant,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="assistant-form" compact /> },
+);
+const MerchantTeamWorkspace = dynamic(
+  () =>
+    import("@/features/merchant/MerchantTeamWorkspace").then(
+      (m) => m.MerchantTeamWorkspace,
+    ),
+  {
+    loading: () => (
+      <PageSkeleton
+        variant="dashboard" layout="status"
+        compact
+        label="Ажилтны эрхийг шалгаж байна…"
+      />
+    ),
+  },
+);
+const StoreProfile = dynamic(
+  () =>
+    import("@/features/merchant/StoreProfile").then(
+      (module) => module.StoreProfile,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="store-profile" compact /> },
+);
+const MerchantProducts = dynamic(
+  () =>
+    import("@/features/merchant/MerchantProducts").then(
+      (module) => module.MerchantProducts,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
+);
+const MerchantReports = dynamic(
+  () =>
+    import("@/features/merchant/MerchantReports").then(
+      (m) => m.MerchantReports,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="report-form" compact /> },
+);
+const MerchantContracts = dynamic(
+  () =>
+    import("@/features/merchant/MerchantContracts").then(
+      (m) => m.MerchantContracts,
+    ),
+  { loading: () => <PageSkeleton variant="dashboard" layout="document" compact /> },
+);
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
 import { DashboardAccount } from "@/features/dashboard/DashboardAccount";
 import {
@@ -56,18 +166,34 @@ export function MerchantDashboard({
   }, [initialized, user, router]);
   if (!initialized || !user)
     return (
-      <main id="main-content"><PageSkeleton variant="dashboard" label="Дэлгүүрийн эрхийг шалгаж байна…" /></main>
+      <main id="main-content">
+        <PageSkeleton
+          variant="dashboard"
+          label="Дэлгүүрийн эрхийг шалгаж байна…"
+          layout="status"
+        />
+      </main>
     );
   if (role !== "merchant")
     return (
-      <main id="main-content" className="merchant-gate merchant-state">
-        <StoreIcon size={32} />
-        <h1>Худалдаа эрхлэгчийн хэсэг</h1>
-        <p>Дэлгүүр нээхийн тулд админаар merchant эрхээ идэвхжүүлнэ үү.</p>
-        <Link href={accountPathForRole(role)} className="btn-ghost">
-          Миний бүртгэл
-        </Link>
-      </main>
+      <MerchantTeamWorkspace
+        owner={user.id}
+        userName={user.name}
+        fallback={
+          <main id="main-content" className="merchant-gate merchant-state">
+            <StoreIcon size={32} />
+            <h1>Худалдаа эрхлэгчийн хэсэг</h1>
+            <p>Дэлгүүр нээхийн тулд админаар merchant эрхээ идэвхжүүлнэ үү.</p>
+            <p>
+              Ажилтан бол дэлгүүрийн эзэмшигчийн бүртгэсэн имэйлээр нэвтэрч,
+              имэйлээ баталгаажуулна уу.
+            </p>
+            <Link href={accountPathForRole(role)} className="btn-ghost">
+              Миний бүртгэл
+            </Link>
+          </main>
+        }
+      />
     );
   return (
     <MerchantWorkspace
@@ -99,6 +225,7 @@ function MerchantWorkspace({
     "overview",
   );
   const [createProduct, setCreateProduct] = useState(false);
+  const [customizing, setCustomizing] = useState(false);
   const { preferences, updatePreferences } = useDashboardPreferences(
     owner,
     "merchant",
@@ -168,7 +295,9 @@ function MerchantWorkspace({
 
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
     });
   };
 
@@ -188,6 +317,21 @@ function MerchantWorkspace({
       hasStore={Boolean(store)}
       preferences={preferences}
     >
+      {!loaded && error && tab === "overview" && (
+        <div className="merchant-load-state">
+          <p role="alert" className="merchant-error">
+            {error}
+          </p>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => setRefresh((value) => value + 1)}
+          >
+            <RefreshCw size={16} />
+            Дэлгүүрийн мэдээллийг дахин ачаалах
+          </button>
+        </div>
+      )}
       {tab === "settings" && !kitchenDesignId ? (
         <DashboardSettings
           role="merchant"
@@ -195,10 +339,18 @@ function MerchantWorkspace({
           onChange={updatePreferences}
           onStore={() => changeTab("store")}
           onProfile={() => changeTab("profile")}
+          onEditLayout={
+            store
+              ? () => {
+                  setCustomizing(true);
+                  changeTab("overview");
+                }
+              : undefined
+          }
         />
       ) : tab === "profile" && !kitchenDesignId ? (
         <DashboardAccount role="merchant" onStore={() => changeTab("store")} />
-      ) : !loaded ? (
+      ) : !loaded && (tab !== "overview" || Boolean(kitchenDesignId)) ? (
         error ? (
           <div className="merchant-load-state">
             <p role="alert" className="merchant-error">
@@ -215,7 +367,11 @@ function MerchantWorkspace({
             </button>
           </div>
         ) : (
-          <PageSkeleton variant="dashboard" compact label="Дэлгүүрийг ачаалж байна…" />
+          <PageSkeleton
+            variant="dashboard"
+            compact
+            label="Дэлгүүрийг ачаалж байна…"
+          />
         )
       ) : kitchenDesignId ? (
         store ? (
@@ -238,7 +394,12 @@ function MerchantWorkspace({
             <MerchantOverview
               owner={owner}
               store={store}
+              storePending={!loaded}
+              onDelivery={() => changeTab("delivery")}
+              onGrowth={(section) => changeTab(section)}
               mode={preferences.overview}
+              customizing={customizing}
+              onCustomize={setCustomizing}
               onProducts={() => changeTab("products")}
               onStore={() => changeTab("store")}
               onAddProduct={() => {
@@ -250,6 +411,20 @@ function MerchantWorkspace({
             />
           )}
 
+          {tab === "activation" && store && (
+            <MerchantActivation
+              owner={owner}
+              onStore={() => changeTab("store")}
+            />
+          )}
+          {tab === "wallet" && store && (
+            <MerchantWallet
+              owner={owner}
+              onSetup={() => changeTab("activation")}
+            />
+          )}
+          {tab === "reports" && store && <MerchantReports owner={owner} />}
+          {tab === "contracts" && store && <MerchantContracts owner={owner} />}
           {tab === "store" && (
             <StoreProfile
               key={owner}
@@ -270,7 +445,22 @@ function MerchantWorkspace({
           )}
 
           {!store &&
-            ["products", "orders", "quotes", "kitchens"].includes(tab) && (
+            [
+              "products",
+              "orders",
+              "delivery",
+              "quotes",
+              "kitchens",
+              "activation",
+              "wallet",
+              "reports",
+              "contracts",
+              "branches",
+              "staff",
+              "reviews",
+              "assistant",
+              "returns",
+            ].includes(tab) && (
               <MerchantOverview
                 owner={owner}
                 store={null}
@@ -279,7 +469,22 @@ function MerchantWorkspace({
               />
             )}
 
-          {tab === "orders" && store && <MerchantOrders owner={owner} />}
+          {tab === "orders" && store && (
+            <MerchantOrders
+              owner={owner}
+              onDelivery={() => changeTab("delivery")}
+            />
+          )}
+          {tab === "delivery" && store && (
+            <MerchantDeliveryBoard key={owner} owner={owner} />
+          )}
+          {tab === "branches" && store && <MerchantBranches owner={owner} />}
+          {tab === "staff" && store && <MerchantStaff owner={owner} />}
+          {tab === "reviews" && store && <MerchantFeedback owner={owner} />}
+          {tab === "returns" && store && (
+            <MerchantFeedback owner={owner} cases />
+          )}
+          {tab === "assistant" && store && <MerchantAssistant owner={owner} />}
           {tab === "quotes" && store && <MerchantKitchenQuotes owner={owner} />}
 
           {tab === "kitchens" && store && (

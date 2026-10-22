@@ -26,7 +26,7 @@ export async function cleanupAbandonedSources(db, r2, bucket, { now = Date.now()
         if (!key || !["pending", "retired"].includes(asset.state) || asset.sha256 || asset.validation ||
           !(Date.parse(asset.created_at) < now - RETENTION_MS)) { result.skipped++; continue; }
         const referenced = async () => {
-          const { data, error: referenceError } = await db.from("furniture_models").select("id")
+          const { data, error: referenceError } = await db.from("model_records").select("id")
             .eq("source_glb_path", asset.storage_path).limit(1);
           if (referenceError) throw referenceError;
           return Boolean(data?.length);

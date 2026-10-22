@@ -198,8 +198,9 @@ function generatePixels(definition: RoomMaterialDefinition): MaterialPixels {
           // Painted walls have fine roller grain, not large plaster clouds.
           // Keep tint neutral and the highlight broad, including at grazing angles.
           shade = fine * 0.004 + grainNoise * 0.002;
-          height += fine * 0.01 + grainNoise * 0.003;
-          rough += fine * 0.012;
+          const roller = noise(u, v, 96, 96, seed + 17) - 0.5;
+          height += fine * 0.22 + roller * 0.12 + grainNoise * 0.015;
+          rough += fine * 0.045 + roller * 0.02;
         } else {
           shade = (cloud * 0.065 + fine * 0.04 + grainNoise * 0.028) * (plaster ? 1 : 0.15);
           height += (cloud * 0.18 + fine * 0.15 + grainNoise * 0.06) * (plaster ? 1 : 0.1);
@@ -278,7 +279,7 @@ export function useRoomMaterial(
       return;
     }
     const pixels = generatePixels(definition);
-    const anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    const anisotropy = Math.min(16, gl.capabilities.getMaxAnisotropy());
     const next: RoomTextureSet = {
       materialId: definition.id,
       map: makeTexture(pixels.albedo, pixels.size, true, anisotropy),
@@ -329,7 +330,7 @@ export function useRoomMaterial(
     normalMap: textures.normalMap,
     roughnessMap: textures.roughnessMap,
     normalScale: textures.normalScale,
-    color: definition.tintColor ? color : "#ffffff",
+    color: definition.tintColor ? color : definition.textureTint ?? "#ffffff",
     roughness: 1,
     metalness: 0,
     envMapIntensity: definition.envMapIntensity ?? 1,

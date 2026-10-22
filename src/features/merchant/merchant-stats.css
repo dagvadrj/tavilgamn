@@ -1,0 +1,509 @@
+.merchant-app-shell .merchant-stats-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--dashboard-border);
+}
+
+.merchant-app-shell .merchant-stats-tabs button {
+  flex-shrink: 0;
+  min-height: 42px;
+  padding: 10px 18px;
+  border-radius: 24px;
+  color: var(--dashboard-muted);
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.merchant-app-shell .merchant-stats-tabs button[aria-pressed="true"] {
+  color: var(--dashboard-on-accent);
+  background: var(--dashboard-accent);
+}
+
+.dashboard-layout .merchant-app-shell .merchant-compact-store {
+  padding: 12px 18px;
+}
+
+.dashboard-layout .merchant-app-shell .merchant-compact-store .reference-store-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  font-size: 15px;
+}
+
+.dashboard-layout .merchant-app-shell .merchant-compact-store h2 {
+  font-size: 14px;
+}
+
+.dashboard-layout .merchant-app-shell .merchant-compact-store p {
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+.merchant-app-shell .merchant-stat-panel {
+  min-width: 0;
+  padding: 24px;
+  margin-block: 24px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 24px;
+  background: var(--dashboard-surface);
+}
+
+.merchant-app-shell .merchant-stat-panel > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.merchant-app-shell .merchant-stat-panel h2 {
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.merchant-app-shell .merchant-stat-panel header p,
+.merchant-app-shell .merchant-progress-caption {
+  margin-top: 6px;
+  color: var(--dashboard-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.merchant-app-shell .merchant-date-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--dashboard-muted);
+  font-size: 12px;
+}
+
+.merchant-app-shell .merchant-date-strip {
+  display: flex;
+  gap: 8px;
+  padding-block: 12px;
+  overflow-x: auto;
+}
+
+.merchant-app-shell .merchant-date-strip button {
+  display: grid;
+  flex-shrink: 0;
+  gap: 6px;
+  min-width: 100px;
+  padding: 12px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 14px;
+  text-align: left;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.merchant-app-shell .merchant-date-strip button[aria-pressed="true"] {
+  border-color: var(--dashboard-accent);
+  background: color-mix(in srgb, var(--dashboard-accent) 8%, var(--dashboard-surface));
+}
+
+.merchant-app-shell .merchant-date-strip small {
+  color: var(--dashboard-muted);
+  font-size: 11px;
+}
+
+.merchant-app-shell .merchant-day-totals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.merchant-app-shell .merchant-day-totals > div {
+  position: relative;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 18px;
+  background: var(--dashboard-bg);
+}
+
+.merchant-app-shell .merchant-day-totals > div > span {
+  color: var(--dashboard-muted);
+  font-size: 11px;
+}
+
+.merchant-app-shell .merchant-day-totals strong {
+  display: block;
+  margin-top: 14px;
+  font-size: clamp(18px, 1.8vw, 26px);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.merchant-app-shell .merchant-day-spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 40px;
+  margin-top: 10px;
+}
+
+.merchant-app-shell .merchant-day-spark i {
+  width: 16%;
+  border-radius: 3px;
+  background: var(--dashboard-accent);
+  transition: height 600ms ease;
+}
+
+.merchant-app-shell .merchant-progress-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-block: 18px;
+}
+
+.merchant-app-shell .merchant-progress-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 24px;
+  background: var(--dashboard-bg);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.merchant-app-shell .merchant-progress-card:hover {
+  border-color: var(--dashboard-accent);
+  box-shadow: 0 8px 24px #0000000a;
+}
+
+.merchant-app-shell .merchant-progress-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.merchant-app-shell .merchant-progress-identity > span:first-child {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--dashboard-accent) 14%, var(--dashboard-surface));
+  color: var(--dashboard-accent);
+  font-weight: 650;
+}
+
+.merchant-app-shell .merchant-progress-identity > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.merchant-app-shell .merchant-progress-identity small,
+.merchant-app-shell .merchant-order-meter small {
+  display: block;
+  margin-top: 5px;
+  color: var(--dashboard-muted);
+  font-size: 11px;
+}
+
+.merchant-app-shell .merchant-stage-tag {
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: var(--dashboard-surface);
+  color: var(--dashboard-accent);
+  font-size: 10px;
+}
+
+.merchant-app-shell .merchant-progress-card h3 {
+  margin-block: 18px;
+  font-size: 17px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+
+.merchant-app-shell .merchant-order-meter {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 20px;
+  background: var(--dashboard-surface);
+}
+
+.merchant-app-shell .merchant-progress-ring {
+  position: relative;
+  display: grid;
+  width: 64px;
+  height: 64px;
+  place-items: center;
+  font-size: 13px;
+}
+
+.merchant-app-shell .merchant-progress-ring svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+  fill: none;
+  stroke: var(--dashboard-elevated);
+  stroke-width: 4;
+}
+
+.merchant-app-shell .merchant-progress-ring circle:last-child {
+  stroke: var(--dashboard-accent);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 650ms ease;
+  animation: merchant-ring-fill 650ms ease;
+}
+
+.merchant-app-shell .merchant-progress-track {
+  height: 5px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--dashboard-elevated);
+}
+
+.merchant-app-shell .merchant-progress-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--dashboard-accent);
+  transition: width 650ms ease;
+}
+
+.merchant-app-shell .merchant-progress-card footer,
+.merchant-app-shell .merchant-progress-footer,
+.merchant-app-shell .merchant-progress-footer > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.merchant-app-shell .merchant-progress-card footer {
+  margin-top: 18px;
+  font-size: 11px;
+}
+
+.merchant-app-shell .merchant-progress-card footer > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--dashboard-muted);
+}
+
+.merchant-app-shell .merchant-progress-footer {
+  color: var(--dashboard-muted);
+  font-size: 11px;
+}
+
+.merchant-app-shell .merchant-progress-footer button {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 9px;
+  color: var(--dashboard-ink);
+}
+
+.merchant-app-shell .merchant-progress-empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: var(--dashboard-muted);
+}
+
+.merchant-app-shell .merchant-stat-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+  gap: 24px;
+}
+
+.merchant-app-shell .merchant-stat-grid > section {
+  margin-top: 0;
+}
+
+.merchant-app-shell .merchant-chart-total {
+  display: grid;
+  gap: 8px;
+  font-size: 30px;
+  font-weight: 650;
+}
+
+.merchant-app-shell .merchant-chart-total small {
+  color: var(--dashboard-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.merchant-app-shell .merchant-sales-chart {
+  width: 100%;
+  overflow: visible;
+  margin-top: 20px;
+}
+
+.merchant-app-shell .merchant-sales-chart line {
+  stroke: var(--dashboard-border);
+  stroke-dasharray: 3 5;
+}
+
+.merchant-app-shell .merchant-sales-chart path {
+  fill: none;
+  stroke: var(--dashboard-accent);
+  stroke-width: 2.5;
+  stroke-dasharray: 1800;
+  animation: merchant-chart-draw 1000ms ease;
+}
+
+.merchant-app-shell .merchant-sales-chart .merchant-chart-gross {
+  stroke: var(--dashboard-muted);
+  stroke-dasharray: 6 6;
+}
+
+.merchant-app-shell .merchant-sales-chart circle {
+  fill: var(--dashboard-accent);
+}
+
+.merchant-app-shell .merchant-sales-chart text {
+  fill: var(--dashboard-muted);
+  font-size: 11px;
+}
+
+.merchant-app-shell .merchant-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  color: var(--dashboard-muted);
+  font-size: 11px;
+}
+
+.merchant-app-shell .merchant-aging-bars {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+  min-height: 210px;
+  margin-block: 30px;
+}
+
+.merchant-app-shell .merchant-aging-bars > div {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.merchant-app-shell .merchant-aging-bars i {
+  border-radius: 12px;
+  background: var(--dashboard-accent);
+  transition: height 650ms ease;
+}
+
+.merchant-app-shell .merchant-aging-bars span {
+  color: var(--dashboard-muted);
+  font-size: 10px;
+}
+
+.merchant-app-shell .merchant-stat-skeleton {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  min-height: 36px;
+  padding-block: 8px;
+}
+
+.merchant-app-shell .merchant-stat-skeleton i {
+  display: block;
+  width: 100%;
+  height: 26px;
+  border-radius: 9px;
+  background: linear-gradient(100deg, var(--dashboard-elevated) 20%, var(--dashboard-border) 45%, var(--dashboard-elevated) 70%);
+  background-size: 240% 100%;
+  animation: merchant-stat-shimmer 1.5s ease-in-out infinite;
+}
+
+.merchant-app-shell .merchant-stat-skeleton i:nth-child(2n) {
+  width: 75%;
+}
+
+.merchant-app-shell .merchant-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 400ms ease, transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.merchant-app-shell .merchant-reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes merchant-stat-shimmer {
+  to {
+    background-position: -140% 0;
+  }
+}
+
+@keyframes merchant-ring-fill {
+  from {
+    stroke-dashoffset: 100;
+  }
+}
+
+@keyframes merchant-chart-draw {
+  from {
+    stroke-dashoffset: 1800;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (max-width: 1200px) {
+  .merchant-app-shell .merchant-progress-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .merchant-app-shell .merchant-day-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .merchant-app-shell .merchant-stat-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 639px) {
+  .merchant-app-shell .merchant-progress-cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .merchant-app-shell .merchant-stat-panel {
+    padding: 18px 14px;
+    border-radius: 20px;
+  }
+  .merchant-app-shell .merchant-day-totals {
+    gap: 10px;
+  }
+  .merchant-app-shell .merchant-day-totals > div {
+    padding: 14px;
+  }
+  .merchant-app-shell .merchant-day-totals strong {
+    font-size: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .merchant-app-shell .merchant-reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .merchant-app-shell .merchant-sales-chart path,
+  .merchant-app-shell .merchant-progress-ring circle,
+  .merchant-app-shell .merchant-stat-skeleton i {
+    animation: none;
+  }
+}

@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import { AlertTriangle, CheckCircle2, Ruler } from "lucide-react";
 import { useMemo } from "react";
 import type { ModularKitchen } from "@/lib/kitchenCabinets";
 import { assessKitchenRoomFit } from "@/lib/kitchenRoomFit";
 import { useDesigns } from "@/store/designs";
+import { activeRoomPlacementContext } from "@/three/roomPlacement";
 
 export function KitchenRoomFitStatus({
   kitchen,
@@ -18,11 +19,14 @@ export function KitchenRoomFitStatus({
   const fit = useMemo(
     () =>
       room
-        ? assessKitchenRoomFit(
+        ? (() => {
+          const context = activeRoomPlacementContext(room);
+          return assessKitchenRoomFit(
             { id: "fit-preview", name, design: kitchen },
-            room.pieces,
-            room,
-          )
+            context.pieces,
+            context.room,
+          );
+        })()
         : null,
     [kitchen, name, room],
   );

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     if (!/^[0-9a-f-]{36}$/i.test(modelId) || !sourcePath.startsWith(prefix) || !/^[0-9a-f-]{36}\.glb$/i.test(sourcePath.slice(prefix.length))) throw new GlbStandardError("Source GLB зам буруу байна.");
     const db = getSupabaseAdmin();
     const [{ data: model, error: modelError }, { data: intent, error: intentError }] = await Promise.all([
-      db.from("furniture_models").select("id,category,dimensions_w,dimensions_h,dimensions_d,archived_at,cabinet_module_id,specifications").eq("id", modelId).maybeSingle(),
+      db.from("model_records").select("id,category,dimensions_w,dimensions_h,dimensions_d,archived_at,cabinet_module_id,specifications").eq("id", modelId).maybeSingle(),
       db.from("model_assets").select("id,byte_size,state,version_id").eq("model_id", modelId).eq("storage_path", sourcePath).eq("role", "source").eq("created_by", auth.userId).maybeSingle(),
     ]);
     if (modelError) throw modelError; if (intentError) throw intentError;
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     if (errors.length) throw new GlbStandardError(errors.join(" "));
     if (model.category === "kitchen-cabinet" && !partKind && !model.cabinet_module_id) throw new GlbStandardError("Kitchen model-ийн canonical module-ийг эхлээд сонгоно уу.");
     const sha256 = createHash("sha256").update(bytes).digest("hex");
-    const { data: jobId, error } = await db.rpc("queue_model_asset", {
+    const { data: jobId, error } = await db.rpc(model.category === "kitchen-cabinet" ? "queue_kitchen_model_asset" : "queue_model_asset", {
       p_actor: auth.userId, p_model: modelId, p_path: sourcePath, p_sha256: sha256,
       p_validation: toJson({ ...report, frontConfirmed: true, validatedAt: new Date().toISOString() }),
     });

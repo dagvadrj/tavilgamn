@@ -39,6 +39,8 @@ const ROOT = path.resolve(
 // Bounded end-to-end verification: never claim another model's queued job.
 const VERIFY_MODEL_ID = process.env.MODEL_WORKER_VERIFY_MODEL_ID;
 if (VERIFY_MODEL_ID && !isUuid(VERIFY_MODEL_ID)) throw new Error("Invalid verification model UUID");
+const VERIFY_EXPORT_ID = process.env.MODEL_WORKER_VERIFY_EXPORT_ID;
+if (VERIFY_EXPORT_ID && (!isUuid(VERIFY_EXPORT_ID) || VERIFY_MODEL_ID)) throw new Error("Invalid verification export UUID or conflicting verification modes");
 function isTransientNetworkError(error) {
   const message = error instanceof Error ? error.message : String(error);
 
@@ -74,6 +76,10 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY, {
     autoRefreshToken: false,
   },
 });
+
+const MODEL_TABLES = ["furniture_models", "kitchen_models"];
+let modelTable = "furniture_models";
+let nextDomain = 0;
 
 const r2 = new S3Client({
   region: "auto",
@@ -153,44 +159,41 @@ async function run(executable, args) {
   });
 }
 
-async function claimJob() {
-  if (VERIFY_MODEL_ID) {
-    const { data: pending, error: readError } = await db.from("furniture_models").select("*")
-      .eq("id", VERIFY_MODEL_ID).eq("processing_status", "queued").is("archived_at", null).maybeSingle();
-    if (readError) throw readError;
-    if (!pending) return null;
-    const { data: claimed, error: claimError } = await db.from("furniture_models")
-      .update({ processing_status: "processing", processing_updated_at: new Date().toISOString() })
-      .eq("id", pending.id).eq("processing_job_id", pending.processing_job_id)
-      .eq("processing_status", "queued").is("archived_at", null).select("*").maybeSingle();
-    if (claimError) throw claimError;
-    return claimed;
+async function claimDomainJob(kind, verificationId) {
+  const status = kind === "export" ? "export_status" : "processing_status";
+  const jobField = kind === "export" ? "export_job_id" : "processing_job_id";
+  for (let offset = 0; offset < MODEL_TABLES.length; offset++) {
+    const table = MODEL_TABLES[(nextDomain + offset) % MODEL_TABLES.length];
+    let claimed;
+    if (verificationId) {
+      const { data: pending, error } = await db.from(table).select("*")
+        .eq("id", verificationId).eq(status, "queued").is("archived_at", null).maybeSingle();
+      if (error) throw error;
+      if (!pending) continue;
+      if (kind === "export" && pending.processing_status !== "ready") continue;
+      let query = db.from(table).update({ [status]: "processing", [kind === "export" ? "export_updated_at" : "processing_updated_at"]: new Date().toISOString() })
+        .eq("id", pending.id).eq(jobField, pending[jobField]).eq(status, "queued").is("archived_at", null);
+      if (kind === "export") query = query.eq("processing_job_id", pending.processing_job_id);
+      const result = await query.select("*").maybeSingle();
+      if (result.error) throw result.error;
+      claimed = result.data;
+    } else {
+      const prefix = table === "kitchen_models" ? "kitchen" : "furniture";
+      const rpc = kind === "export" ? `claim_${prefix}_model_export_job` : `claim_${prefix}_model_job`;
+      const { data, error } = await db.rpc(rpc);
+      if (error) throw new Error(`Could not claim ${prefix} ${kind} job: ${error.message}`);
+      claimed = data?.[0];
+    }
+    if (claimed) {
+      modelTable = table;
+      nextDomain = (MODEL_TABLES.indexOf(table) + 1) % MODEL_TABLES.length;
+      return claimed;
+    }
   }
-  const { data, error } = await db.rpc("claim_furniture_model_job");
-
-  if (error) {
-    throw new Error(`Could not claim model job: ${error.message}`);
-  }
-
-  if (!Array.isArray(data) || data.length === 0) {
-    return null;
-  }
-
-  return data[0];
+  return null;
 }
-async function claimExportJob() {
-  const { data, error } = await db.rpc("claim_furniture_model_export_job");
-
-  if (error) {
-    throw new Error(`Could not claim export job: ${error.message}`);
-  }
-
-  if (!Array.isArray(data) || !data.length) {
-    return null;
-  }
-
-  return data[0];
-}
+async function claimJob() { return claimDomainJob("processing", VERIFY_MODEL_ID); }
+async function claimExportJob() { return claimDomainJob("export", VERIFY_EXPORT_ID); }
 
 async function downloadSource(key, destination) {
   const response = await r2.send(
@@ -285,7 +288,7 @@ async function cleanupPublishedSource(modelId, jobId, sourcePath) {
     const sourceKey = sourceKeyFromPath(sourcePath, modelId, jobId);
     await deleteR2Key(sourceKey, false);
     const { error } = await db
-      .from("furniture_models")
+      .from(modelTable)
       .update({ source_glb_path: null })
       .eq("id", modelId)
       .eq("processing_job_id", jobId)
@@ -302,14 +305,15 @@ async function cleanupPublishedSource(modelId, jobId, sourcePath) {
 
 async function cleanupOneReadySource() {
   const { data, error } = await db
-    .from("furniture_models")
-    .select("id,processing_job_id,source_glb_path,glb_path")
+    .from("model_records")
+    .select("id,category,processing_job_id,source_glb_path,glb_path")
     .eq("processing_status", "ready")
     .not("source_glb_path", "is", null)
     .limit(1);
   if (error) throw error;
   const model = data?.[0];
   if (!model) return false;
+  modelTable = model.category === "kitchen-cabinet" ? "kitchen_models" : "furniture_models";
   if (
     !isUuid(model.id) ||
     !isUuid(model.processing_job_id) ||
@@ -456,7 +460,7 @@ async function processJob(model) {
 
     publishAttempted = true;
     const { data: updated, error: updateError } = await db
-      .from("furniture_models")
+      .from(modelTable)
       .update({
         ...deliveryPublishFields(deliveryPath),
 
@@ -519,7 +523,7 @@ async function processJob(model) {
     // Шинэ job энэ хооронд орж ирсэн бол
     // түүний status-ийг error болгож болохгүй.
     await db
-      .from("furniture_models")
+      .from(modelTable)
       .update({
         processing_status: "error",
 
@@ -554,14 +558,14 @@ async function main() {
 
   while (true) {
     try {
-      if (!VERIFY_MODEL_ID && Date.now() - lastSourceSweep >= 60_000) {
+      if (!VERIFY_MODEL_ID && !VERIFY_EXPORT_ID && Date.now() - lastSourceSweep >= 60_000) {
         lastSourceSweep = Date.now();
         try {
           const cleanup = await cleanupAbandonedSources(db, r2, R2_BUCKET_NAME, { apply: true });
           if (cleanup.deleted || cleanup.failed) console.log("[worker] abandoned sources", cleanup);
         } catch (error) { console.error("[worker] source sweep failed", error); }
       }
-      const job = await claimJob();
+      const job = VERIFY_EXPORT_ID ? null : await claimJob();
 
       if (job) {
         backoff = POLL_INTERVAL;
@@ -585,13 +589,16 @@ async function main() {
 
         try {
           await processExportJob(exportJob);
-        } catch {
+        } catch (error) {
+          if (VERIFY_EXPORT_ID) throw error;
           // processExportJob DB status-ээ өөрөө шинэчилнэ.
         }
 
+        if (VERIFY_EXPORT_ID) { r2.destroy(); return; }
         continue;
       }
 
+      if (VERIFY_EXPORT_ID) throw new Error("Verification export is not queued; no other jobs were touched");
       if (await cleanupOneReadySource()) {
         backoff = POLL_INTERVAL;
         continue;
@@ -601,7 +608,7 @@ async function main() {
 
       await sleep(POLL_INTERVAL);
     } catch (error) {
-      if (VERIFY_MODEL_ID) throw error;
+      if (VERIFY_MODEL_ID || VERIFY_EXPORT_ID) throw error;
       if (isTransientNetworkError(error)) {
         console.warn(
           `[worker] Supabase түр холбогдохгүй байна. ` +
@@ -687,7 +694,7 @@ async function processExportJob(model) {
     uploaded = true;
 
     const { data: updated, error: updateError } = await db
-      .from("furniture_models")
+      .from(modelTable)
       .update({
         standard_glb_path: standardPath,
 
@@ -727,7 +734,7 @@ async function processExportJob(model) {
     const message = error instanceof Error ? error.message : String(error);
 
     await db
-      .from("furniture_models")
+      .from(modelTable)
       .update({
         export_status: "error",
 

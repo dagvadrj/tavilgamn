@@ -28,6 +28,7 @@ function harness(role = "merchant") {
     getState: () => auth,
   });
   const mocks = {
+    "@/features/merchant/useMerchantResource": { useMerchantResource: () => ({data:null,loading:false,error:null,refresh(){}}) },
     react: {
       ...React,
       useEffect() {},
@@ -81,7 +82,7 @@ function harness(role = "merchant") {
   };
 }
 
-test("merchant portal guards customer and administrator before mounting private workspace", () => {
+test("merchant portal checks scoped membership before mounting a non-owner workspace", () => {
   for (const role of ["customer", "admin"]) {
     const h = harness(role);
     const { MerchantDashboard } = loadSource(
@@ -89,7 +90,8 @@ test("merchant portal guards customer and administrator before mounting private 
       h.mocks,
     );
     const html = renderToStaticMarkup(MerchantDashboard());
-    assert.match(html, /merchant эрхээ идэвхжүүлнэ/);
+    assert.match(html, /Ажилтны эрхийг шалгаж байна/);
+    assert.doesNotMatch(html, /Хэтэвч, кредит|Цэвэр орлого/);
     assert.equal(h.requests.length, 0);
   }
   const h = harness();
@@ -140,15 +142,13 @@ function renderOrder(h, value, onUpdated) {
   return card.type({ ...card.props, ...(onUpdated ? { onUpdated } : {}) });
 }
 
-test("merchant order actions advance only the next paid fulfillment step", async () => {
-  for (const [current, next] of [
-    ["pending", "processing"],
-    ["processing", "shipped"],
-    ["shipped", "delivered"],
-  ]) {
+test("merchant orders may start preparation; dispatch and completion use the delivery board", async () => {
+  for (const current of ["pending", "processing", "shipped", "delivered"]) {
     const h = harness();
     const tree = renderOrder(h, order(current));
     const action = find(tree, (node) => node.type === "button");
+    assert.ok(find(tree, node => node.props.href === "/merchant?tab=delivery"));
+    if (current !== "pending") { assert.equal(action, undefined); assert.equal(h.requests.length, 0); continue; }
     assert.ok(action);
     await action.props.onClick();
     assert.equal(h.requests.length, 1);
@@ -156,7 +156,7 @@ test("merchant order actions advance only the next paid fulfillment step", async
     assert.equal(h.requests[0].owner, "owner");
     assert.deepEqual(JSON.parse(h.requests[0].init.body), {
       id: order(current).id,
-      status: next,
+      status: "processing",
       expectedStatus: current,
     });
   }
@@ -277,12 +277,9 @@ test("editing merchant product preserves all variants and stock version", async 
   );
   const workspace = MerchantDashboard();
   h.reset([{ id: "store-1", name: "Дэлгүүр" }, true, null, 0, "products"]);
-  const workspaceTree = workspace.type(workspace.props);
-  const list = find(
-    workspaceTree,
-    (node) =>
-      typeof node.type === "function" && node.type.name === "MerchantProducts",
-  );
+  workspace.type(workspace.props);
+  const { MerchantProducts } = loadSource("src/features/merchant/MerchantProducts.tsx", h.mocks);
+  const list = { type: MerchantProducts, props: { owner: "owner" } };
   const product = {
     id: "p-1",
     name: "Сандал",
@@ -306,7 +303,7 @@ test("editing merchant product preserves all variants and stock version", async 
     inStock: true,
     dimensions: { w: 0.6, d: 0.5, h: 0.8 },
   };
-  h.reset([[], false, null, 0, "", { product, create: false }, false]);
+  h.reset([null, "", { product, create: false }, false, false, null, null]);
   const editor = list.type(list.props);
   h.reset();
   const form = editor.type({ ...editor.props, onSave() {} });
@@ -333,11 +330,17 @@ test("merchant settings remain available during a store API failure", () => {
   assert.equal(find(tree, (node) => node.props.role === "alert"), undefined);
 });
 
+test("overview starts its independent blocks before the store request completes",()=>{
+ const h=harness();const {MerchantDashboard}=loadSource("src/components/MerchantDashboard.tsx",h.mocks);const workspace=MerchantDashboard();
+ h.reset([null,false,null,0,"overview"]);const tree=workspace.type(workspace.props);
+ const overview=find(tree,node=>typeof node.type==='function'&&node.type.name==='MerchantOverview');assert.ok(overview);assert.equal(overview.props.storePending,true);assert.equal(overview.props.store,null);
+});
+
 test("store-less merchant deep links show a setup action instead of an empty workspace", () => {
   const h = harness();
   const { MerchantDashboard } = loadSource("src/components/MerchantDashboard.tsx", h.mocks);
   const workspace = MerchantDashboard();
-  for (const tab of ["products", "orders", "quotes", "kitchens"]) {
+  for (const tab of ["products", "orders", "delivery", "quotes", "kitchens"]) {
     h.reset([null, true, null, 0, tab]);
     const tree = workspace.type(workspace.props);
     const setup = find(tree, (node) => typeof node.type === "function" && node.type.name === "MerchantOverview");

@@ -123,9 +123,12 @@ test("camera interpolation is time-based, interrupted/replaced cleanly, and redu
   c.position.set(5, 4, 5); c.lookAt(controls.target);
   const from = camera.cameraPose(c, controls.target), to = { ...from, position: new THREE.Vector3(0, 8, .001), up: new THREE.Vector3(0, 0, -1), fov: 35 };
   camera.beginCameraTransition(c, from, to); assert.deepEqual(c.position.toArray(), from.position.toArray());
-  assert.equal(camera.advanceCameraTransition(c, controls, .2), true); assert.notDeepEqual(c.position.toArray(), to.position.toArray());
+  for (let frame = 0; frame < 12; frame++) assert.equal(camera.advanceCameraTransition(c, controls, 1 / 60), true);
+  assert.notDeepEqual(c.position.toArray(), to.position.toArray());
   const intermediate = c.position.clone(); camera.cancelCameraTransition(c); assert.equal(camera.advanceCameraTransition(c, controls, 1), false); assert.deepEqual(c.position.toArray(), intermediate.toArray());
-  camera.beginCameraTransition(c, camera.cameraPose(c, controls.target), to); camera.advanceCameraTransition(c, controls, 10);
+  camera.beginCameraTransition(c, camera.cameraPose(c, controls.target), to);
+  // Real frames advance animation; one large delta represents an idle gap.
+  for (let frame = 0; frame < 180; frame++) camera.advanceCameraTransition(c, controls, 1 / 60);
   assert.ok(c.position.distanceTo(to.position) < 1e-6); assert.equal(c.fov, 35);
   const shifted = { ...from, position: from.position.clone().addScalar(1) };
   camera.beginCameraTransition(c, to, shifted, true); assert.deepEqual(c.position.toArray(), shifted.position.toArray());

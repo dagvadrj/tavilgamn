@@ -5,13 +5,11 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import {
   OrbitControls,
   Grid,
-  Environment,
-  Lightformer,
   MapControls,
-  Html,
   Edges,
   useCursor,
 } from "@react-three/drei";
+import { SceneHtml as Html } from "./SceneHtml";
 import type {
   RoomDesign,
   PlacedFurniture,
@@ -29,6 +27,8 @@ import { roomLabelOpacity, solarLighting } from "@/lib/roomLighting";
 import { animateToward } from "./demandAnimation";
 import { getRoomGeometry } from "@/lib/roomGeometry";
 import { RoomStructure, RoomLighting } from "./RoomStructure";
+import { PlannerEnvironment } from "./PlannerEnvironment";
+import { configurePlannerRenderer } from "./plannerRenderer";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import { InteriorModel } from "./InteriorModel";
 import { getProduct } from "@/store/catalog";
@@ -50,13 +50,16 @@ import {
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
 import { CameraMotionPreview } from "./CameraMotionPreview";
-import { RoomContactShadows, RoomMotionResolution } from "./RoomMotionQuality";
+import { ROOM_DAY_BACKDROP, ROOM_NIGHT_BACKDROP } from "@/lib/roomLighting";
+import { RoomExportBridge } from "./RoomExportBridge";
+import { PlannerMotionShadows, RoomContactShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import { roomTourCamera } from "./roomCameraPlacement";
 import { RoomStreetView, CameraPointPlacement } from "./RoomStreetView";
 import { RoomPreviewCapture } from "./RoomPreviewCapture";
 import { RoomCameraRig } from "./RoomCameraRig";
 import { CameraNavigation } from "./CameraNavigation";
 import type { CameraRequest } from "@/lib/plannerCamera";
+import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 import { CursorNavigation } from "./CursorNavigationBinding";
 import { Camera } from "lucide-react";
 import {
@@ -72,16 +75,18 @@ import {
 // The camera and WebGL renderer survive room selection; the rig owns their pose.
 const ROOM_CAMERA = {
   position: [6, 5, 6] as [number, number, number],
-  fov: 40,
+  fov: PLANNER_CAMERA.fov,
   near: 0.1,
   far: 300,
 };
 
 interface RoomCanvasProps {
+  onViewSettled?: (view: "plan" | "perspective") => void;
+  onExportReady?: (exporter: (() => Promise<Blob>) | null) => void;
   onPlacementHintsReady?: (source: RoomPlacementHintSource | null) => void;
   paused?: boolean;
   onPreview?: (id: string, image: string) => void;
-  onPreviewReady?: (capture: (() => void) | null) => void;
+  onPreviewReady?: (capture: (() => string | null) | null) => void;
   onSurfaceDoubleClick?: (
     surface: "wall" | "floor" | "ceiling",
     wall: RoomWall | undefined,
@@ -135,6 +140,8 @@ interface RoomCanvasProps {
 }
 
 export function RoomCanvas({
+  onViewSettled,
+  onExportReady,
   onPlacementHintsReady,
   paused = false,
   onPreview,
@@ -258,10 +265,7 @@ export function RoomCanvas({
       }}
       onCreated={({ gl }) => {
         gl.setClearAlpha(0);
-        gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1;
-        gl.shadowMap.type = THREE.PCFSoftShadowMap;
-        gl.outputColorSpace = THREE.SRGBColorSpace;
+        configurePlannerRenderer(gl);
       }}
       camera={ROOM_CAMERA}
       className="!h-full !w-full"
@@ -271,8 +275,10 @@ export function RoomCanvas({
       }}
     >
       <CameraMotionPreview interactionActive={isDraggingPiece || isLooking}>
+        {onExportReady && <RoomExportBridge onReady={onExportReady} />}
         {onPlacementHintsReady && <RoomPlacementHints designId={design.id} roomId={design.activeRoomId ?? `${design.id}-room-1`} onReady={onPlacementHintsReady} />}
         <RoomMotionResolution dpr={performance.dpr} />
+        <PlannerMotionShadows updatingLayout={isDraggingPiece} revision={design.updatedAt} />
         <CanvasDiagnostics scene="room" />
         <RoomPreviewCapture
           designId={design.id}
@@ -325,42 +331,12 @@ export function RoomCanvas({
             ...design,
             lighting: customInterior
               ? design.lighting
-              : { ...design.lighting!, fixtures: [] },
+              : { ...design.lighting!, fixtureLayout: "manual", fixtures: [] },
           }}
           extent={Math.max(spanX, spanZ) * 0.8 + 4}
           centre={[centerX, centerZ]}
         />
-        <Environment
-          resolution={128}
-          frames={1}
-          environmentIntensity={0.08 + 0.92 * solar.daylight}
-        >
-          {/* Separate broad reflection highlights from the darker diffuse fill. */}
-          <color attach="background" args={["#777d85"]} />
-          <Lightformer
-            form="rect"
-            intensity={1.4}
-            color="#ffffff"
-            scale={[8, 6, 1]}
-            position={[0, 5, -8]}
-          />
-          <Lightformer
-            form="rect"
-            intensity={0.65}
-            color="#ffffff"
-            scale={[6, 6, 1]}
-            position={[-6, 3, 0]}
-            rotation={[0, Math.PI / 2, 0]}
-          />
-          <Lightformer
-            form="rect"
-            intensity={2}
-            color="#ffffff"
-            scale={[5, 7, 1]}
-            position={[0, 10, 0]}
-            rotation={[Math.PI / 2, 0, 0]}
-          />
-        </Environment>
+        <PlannerEnvironment daylight={solar.daylight} />
         {!customInterior && view === "perspective" && (
           <mesh
             position={[centerX, -0.091, centerZ]}
@@ -371,13 +347,14 @@ export function RoomCanvas({
             <planeGeometry
               args={[Math.max(60, spanX * 4), Math.max(60, spanZ * 4)]}
             />
-            <meshStandardMaterial
-              color={solar.night ? "#252c38" : "#eeece7"}
-              roughness={1}
+            <meshBasicMaterial
+              color={solar.night ? ROOM_NIGHT_BACKDROP : ROOM_DAY_BACKDROP}
+              toneMapped={false}
             />
           </mesh>
         )}
         {customInterior ? (
+          <group userData={{ roomExport: true }}>
           <InteriorModel
             basePath={customInterior.basePath}
             glbName={customInterior.glb}
@@ -385,6 +362,7 @@ export function RoomCanvas({
             onError={customInterior.onError}
             onLoaded={customInterior.onLoaded}
           />
+          </group>
         ) : rooms.length ? (
           <>
             {rooms.map((room) => {
@@ -406,6 +384,7 @@ export function RoomCanvas({
               return (
                 <group
                   key={room.id}
+                  userData={{ roomExport: true }}
                   position={[p.x - origin.x, 0, p.z - origin.z]}
                 >
                   <RoomStructure
@@ -495,7 +474,7 @@ export function RoomCanvas({
             })}
           </>
         ) : (
-          <>
+          <group userData={{ roomExport: true }}>
             <RoomStructure
               onSurfaceDoubleClick={onSurfaceDoubleClick}
               interior={interior}
@@ -519,7 +498,7 @@ export function RoomCanvas({
               includeSun={false}
               fixtureShadows={performance.shadows}
             />
-          </>
+          </group>
         )}
 
         {!customInterior && gridEnabled && (
@@ -554,7 +533,7 @@ export function RoomCanvas({
           <FurnitureMeasurements measurements={measurements} view={view} />
         )}
 
-        {design.pieces.map((piece) => (
+        <group userData={{ roomExport: true }}>{design.pieces.map((piece) => (
           <DraggablePiece
             key={piece.instanceId}
             piece={piece}
@@ -572,7 +551,7 @@ export function RoomCanvas({
             onEditEnd={onEditEnd}
             kitchenMaterials={kitchenMaterials}
           />
-        ))}
+        ))}</group>
 
         {view === "perspective" && performance.contactShadows && (
           <RoomContactShadows
@@ -597,7 +576,8 @@ export function RoomCanvas({
             enableZoom
             zoomToCursor
             enableDamping
-            dampingFactor={0.08}
+            dampingFactor={PLANNER_CAMERA.dampingFactor}
+            rotateSpeed={PLANNER_CAMERA.rotateSpeed}
             minDistance={0.8}
             maxDistance={Math.max(100, Math.max(spanX, spanZ) * 50)}
             minPolarAngle={0.025}
@@ -621,6 +601,7 @@ export function RoomCanvas({
         )}
         {!interior && (
           <CameraNavigation
+            onRest={() => onViewSettled?.(view)}
             enabled={!locked && !isDraggingPiece}
             request={cameraRequest?.targetId && !cameraTarget ? undefined : cameraRequest}
             plan={view === "plan"}
@@ -635,6 +616,9 @@ export function RoomCanvas({
         )}
         {!interior && (
           <CursorNavigation
+            smoothZoom
+            // A second finger must be able to cancel an object drag. The
+            // controls' enabled flag already prevents wheel zoom during a drag.
             enabled={!locked && !interior && !cameraPlacement}
             plan={view === "plan"}
           />
@@ -989,7 +973,11 @@ export function DraggablePiece({
           };
         if (snapEnabled && !attachment)
           candidate = snapToWall(candidate, roomDims);
-        let ok = isPlacementValid(candidate, allPieces, roomDims);
+        if (candidate.attachment?.kind === "floor") candidate = {
+          ...candidate, attachment: { ...candidate.attachment, x: candidate.x, z: candidate.z, yaw: candidate.rotation },
+        };
+        const boundary = { ...roomDims, allowFurnitureOverlap: true };
+        let ok = isPlacementValid(candidate, allPieces, boundary);
         if (ok && allPieces.some((p) => p.attachment?.kind === "surface"))
           try {
             const owned = (
@@ -1005,7 +993,7 @@ export function DraggablePiece({
             const combined = allPieces.map(
               (p) => resolved.find((r) => r.instanceId === p.instanceId) ?? p,
             );
-            ok = resolved.every((p) => isPlacementValid(p, combined, roomDims));
+            ok = resolved.every((p) => isPlacementValid(p, combined, boundary));
           } catch {
             ok = false;
           }

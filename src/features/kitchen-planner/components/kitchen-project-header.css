@@ -1,0 +1,83 @@
+.kitchen-mobile-stage {
+  display: none;
+}
+
+.kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout {
+  & .kitchen-project-menu > summary[aria-label] {
+    width: auto;
+    max-width: 160px;
+    padding-inline: 8px;
+    gap: 6px;
+  }
+  & .kitchen-project-menu > summary > .kitchen-project-visible-name {
+    display: grid;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 120px;
+    font-size: 12px;
+  }
+  & .kitchen-project-visible-name strong, & .kitchen-project-visible-name small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  & .kitchen-project-visible-name small {
+    font-size: 9px;
+    font-weight: 400;
+    color: #627180;
+  }
+  & .kitchen-project-visible-name small[data-save-kind="error"] {
+    color: #a33922;
+  }
+  & .kitchen-project-menu > label > small {
+    display: block;
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #627180;
+  }
+  & .kitchen-project-menu > summary[aria-label] > svg {
+    display: block;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout:has(.kitchen-mobile-stage) {
+    grid-template-rows: 96px 78px minmax(0, 1fr);
+    & .kitchen-masthead {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 4px 12px;
+      gap: 4px;
+    }
+    & .kitchen-masthead > .kitchen-workflow-tabs {
+      display: none;
+    }
+    & .kitchen-masthead > .kitchen-project-tools {
+      width: 100%;
+      justify-content: flex-end;
+      order: 0;
+    }
+    & .kitchen-project-menu {
+      margin-right: auto;
+    }
+    & .kitchen-project-menu > label {
+      left: 0;
+      right: auto;
+      max-width: calc(100vw - 24px);
+    }
+    & .kitchen-mobile-stage {
+      display: block;
+      order: 1;
+      width: 100%;
+      height: 40px;
+      border: 1px solid #dce2e8;
+      border-radius: 10px;
+      padding: 6px 10px;
+      background: #fff;
+      font-size: 13px;
+    }
+  }
+}

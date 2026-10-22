@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { RoomLighting, RoomCeiling } from "@/lib/types";
 import { DEFAULT_ROOM_LIGHTING } from "@/lib/roomDesign";
 import { RoomLightingTimeControls } from "./RoomLightingTimeControls";
@@ -31,6 +31,31 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
   const dock = useRef<HTMLElement>(null);
   const lightMenu = useRef<HTMLDetailsElement>(null);
   const sideMenu = useRef<HTMLDetailsElement>(null);
+  const positionLights = useCallback(() => {
+    const menu = lightMenu.current;
+    if (!menu?.open) return;
+    const anchor = menu.querySelector("summary")!.getBoundingClientRect();
+    const right = Math.max(12, anchor.left - 12);
+    const width = Math.min(320, Math.max(0, right - 12));
+    menu.style.setProperty("--room-light-menu-left", `${Math.max(12, right - width)}px`);
+    menu.style.setProperty("--room-light-menu-width", `${width}px`);
+  }, []);
+  const positionMenu = useCallback((menu: HTMLDetailsElement) => {
+    if (!menu.open || !dock.current) return;
+    const anchor = menu.querySelector("summary")!.getBoundingClientRect();
+    const bar = dock.current.getBoundingClientRect();
+    const width = Math.min(280, window.innerWidth - 24);
+    menu.style.setProperty("--room-menu-left", `${Math.max(12, Math.min(anchor.right - width, window.innerWidth - width - 12))}px`);
+    menu.style.setProperty("--room-menu-bottom", `${window.innerHeight - bar.top + 10}px`);
+    menu.style.setProperty("--room-menu-height", `${Math.max(80, bar.top - 24)}px`);
+  }, []);
+  const toggleMenu = (menu: HTMLDetailsElement) => {
+    if (!menu.open) return;
+    dock.current?.querySelectorAll<HTMLDetailsElement>("details[open]").forEach(other => {
+      if (other !== menu) other.open = false;
+    });
+    positionMenu(menu);
+  };
   const closeLights = () => { if (lightMenu.current) { lightMenu.current.open = false; lightMenu.current.querySelector("summary")?.focus(); } endLightingEdit?.(); };
   useEffect(() => {
     const dismiss = (event: PointerEvent | KeyboardEvent) => {
@@ -46,11 +71,23 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
     };
     document.addEventListener("pointerdown", dismiss);
     document.addEventListener("keydown", dismiss);
+    const reposition = () => {
+      dock.current?.querySelectorAll<HTMLDetailsElement>("details[open]").forEach(positionMenu);
+      positionLights();
+    };
+    const observer = new ResizeObserver(reposition);
+    const bar = dock.current;
+    if (bar) observer.observe(bar);
+    window.addEventListener("resize", reposition);
+    bar?.addEventListener("scroll", reposition);
     return () => {
       document.removeEventListener("pointerdown", dismiss);
       document.removeEventListener("keydown", dismiss);
+      observer.disconnect();
+      window.removeEventListener("resize", reposition);
+      bar?.removeEventListener("scroll", reposition);
     };
-  }, []);
+  }, [positionMenu, positionLights]);
   return <>
     <nav className="room-tools-rail" aria-label="Үндсэн хэрэгслүүд">
       <button type="button" aria-expanded={catalogOpen} onClick={onFurniture}><Plus size={20}/><span>Тавилга</span></button>
@@ -63,7 +100,7 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
       <button type="button" aria-label="Холдуулах" title="Холдуулах" disabled={locked} onClick={() => onZoom("zoom-out")}><Minus size={22}/></button>
     </div>
     <div className="room-scene-light-anchor">
-        <details className="room-scene-lighting" ref={lightMenu} onToggle={event => { if (!event.currentTarget.open) endLightingEdit?.(); }}>
+        <details className="room-scene-lighting" ref={lightMenu} onToggle={event => { if (event.currentTarget.open) positionLights(); else endLightingEdit?.(); }}>
           <summary aria-label="Гэрлийн тохиргоо" title="Гэрэлтүүлэг"><Lightbulb size={21}/></summary>
           <div className="room-lighting-popup" role="dialog" aria-label="Гэрлийн тохиргоо">
             <div className="room-lighting-popup-header"><strong><Lightbulb size={18}/> Гэрэлтүүлэг</strong><button type="button" aria-label="Гэрлийн тохиргоог хаах" onClick={closeLights}><X size={16}/></button></div>
@@ -72,6 +109,10 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
           </div>
         </details>
     </div>
+    {(locked || snap) && <div className="room-navigation-status" role="group" aria-label="Идэвхтэй удирдлага">
+        {locked && <button type="button" onClick={onLock}><Lock size={14}/> Камер түгжээтэй · Тайлах</button>}
+        {snap && <button type="button" aria-pressed={snap} onClick={onSnap}><Magnet size={14}/> Хананд тааруулах · Унтраах</button>}
+    </div>}
     <nav className="room-view-dock" ref={dock} aria-label="Өрөө харах, засах">
       <div className="room-view-options" role="group" aria-label="Харах өнцөг" data-planner-tour="room-view">
         <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>3D</span></button>

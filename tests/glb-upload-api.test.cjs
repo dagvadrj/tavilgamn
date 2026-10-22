@@ -12,7 +12,7 @@ function setup(options={}) {
   const bytes=Buffer.from(options.bytes??fixture()); let sends=0,queued=0,lastArgs;
   const model={id:modelId,category:'kitchen-cabinet',dimensions_w:.7,dimensions_h:.84,dimensions_d:.6,archived_at:null,cabinet_module_id:version,...options.model};
   const intent=options.intent===null?null:{id:version,byte_size:bytes.length,state:'pending',version_id:version,...options.intent};
-  const db={from(table) { const q={select(){return q},eq(){return q},async maybeSingle(){return {data:table==='model_assets'?intent:model,error:null}}}; return q; },async rpc(name,args) {assert.equal(name,'queue_model_asset');queued++;lastArgs=args;return {data:version,error:null}}};
+  const db={from(table) { const q={select(){return q},eq(){return q},async maybeSingle(){return {data:table==='model_assets'?intent:model,error:null}}}; return q; },async rpc(name,args) {assert.equal(name,model.category==='kitchen-cabinet'?'queue_kitchen_model_asset':'queue_model_asset');queued++;lastArgs=args;return {data:version,error:null}}};
   class Command { constructor(input){this.input=input} }
   class Head extends Command {} class Get extends Command {}
   const route=loadSource('src/app/api/admin/models/upload-complete/route.ts',{

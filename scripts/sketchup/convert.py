@@ -74,18 +74,20 @@ def srgb(linear):
     return max(0, min(255, round(255 * (12.92*linear if linear <= .0031308 else 1.055*linear**(1/2.4)-.055))))
 
 class GLB:
-    def __init__(self, data):
-        if len(data) > 4*1024*1024 or len(data) < 28 or struct.unpack_from('<III', data) != (0x46546c67, 2, len(data)): raise ValueError('Invalid GLB')
+    def __init__(self, data, product=False):
+        # Larger single-product conversion is local CLI only; HTTP retains its 4 MiB budget.
+        if len(data) > (64 if product else 4)*1024*1024 or len(data) < 28 or struct.unpack_from('<III', data) != (0x46546c67, 2, len(data)): raise ValueError('Invalid GLB')
         length, kind = struct.unpack_from('<II', data, 12)
         if kind != 0x4e4f534a or length > 1024*1024 or length+28 > len(data): raise ValueError('Invalid JSON chunk')
         self.json = json.loads(data[20:20+length]); bin_length, kind = struct.unpack_from('<II', data, 20+length)
         if kind != 0x004e4942 or 28+length+bin_length != len(data): raise ValueError('Invalid BIN chunk')
         self.bin = data[28+length:]
+        self.max_accessor_count = 1500000 if product else 600000
         j = self.json
         if any(item.get('uri') for item in j.get('buffers', []) + j.get('images', [])): raise ValueError('External resources are not accepted')
         if j.get('animations') or j.get('skins') or j.get('extensionsRequired'): raise ValueError('Only uncompressed static kitchen exports are accepted')
         if len(j.get('nodes', [])) > 5000 or len(j.get('meshes', [])) > 2000 or len(j.get('materials', [])) > 2000 or len(j.get('images', [])) > 512: raise ValueError('Too many objects')
-        if not any(n.get('extras', {}).get('kitchenExport') is True for n in j.get('nodes', [])): raise ValueError('Kitchen export marker missing')
+        if not product and not any(n.get('extras', {}).get('kitchenExport') is True for n in j.get('nodes', [])): raise ValueError('Kitchen export marker missing')
         self.cache = {}
     def view(self, index):
         v = self.json['bufferViews'][index]; start = v.get('byteOffset', 0); length = v['byteLength']
@@ -98,13 +100,13 @@ class GLB:
         formats = {5121: 'B', 5123: 'H', 5125: 'I', 5126: 'f'}; sizes = {'SCALAR': 1, 'VEC2': 2, 'VEC3': 3}
         fmt = '<'+formats[a['componentType']]*sizes[a['type']]; width = struct.calcsize(fmt)
         data = self.view(a['bufferView']); stride = self.json['bufferViews'][a['bufferView']].get('byteStride', width); offset = a.get('byteOffset', 0); count = a['count']
-        if not isinstance(count, int) or not 0 < count <= 600000 or offset < 0 or stride < width or offset+(count-1)*stride+width > len(data): raise ValueError('Invalid accessor range')
+        if not isinstance(count, int) or not 0 < count <= self.max_accessor_count or offset < 0 or stride < width or offset+(count-1)*stride+width > len(data): raise ValueError('Invalid accessor range')
         values = [struct.unpack_from(fmt, data, offset+i*stride) for i in range(count)]
         if not all(math.isfinite(n) for row in values for n in row): raise ValueError('Non-finite geometry')
         self.cache[index] = values; return values
 
-def convert(source, destination, sdk):
-    glb = GLB(Path(source).read_bytes()); j = glb.json; api = API(sdk)
+def convert(source, destination, sdk, product=False):
+    glb = GLB(Path(source).read_bytes(), product=product); j = glb.json; api = API(sdk)
     model = api.create('SUModelCreate'); counters = {'meshes': 0, 'triangles': 0, 'textures': 0, 'faces': 0}
     try:
         with tempfile.TemporaryDirectory(prefix='kitchen-skp-') as folder:
@@ -155,7 +157,7 @@ def convert(source, destination, sdk):
                         indices = [v[0] for v in glb.accessor(primitive['indices'])] if 'indices' in primitive else list(range(len(positions)))
                         if len(indices) % 3 or not all(isinstance(i, int) and 0 <= i < len(positions) for i in indices): raise ValueError('Invalid triangles')
                         counters['triangles'] += len(indices)//3; counters['meshes'] += 1
-                        if counters['triangles'] > 200000: raise ValueError('Too many triangles')
+                        if counters['triangles'] > (500000 if product else 200000): raise ValueError('Too many triangles')
                         uv = glb.accessor(primitive['attributes']['TEXCOORD_0']) if 'TEXCOORD_0' in primitive['attributes'] else None
                         normals = glb.accessor(primitive['attributes']['NORMAL']) if 'NORMAL' in primitive['attributes'] else None
                         if (uv and len(uv) != len(positions)) or (normals and len(normals) != len(positions)): raise ValueError('Mismatched attributes')
@@ -204,6 +206,7 @@ def convert(source, destination, sdk):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(); parser.add_argument('input'); parser.add_argument('output'); parser.add_argument('--sdk', default=os.environ.get('SKETCHUP_API_PATH'))
+    parser.add_argument('--product', action='store_true', help='Local single-product conversion: max 64 MiB, 500,000 triangles; static uncompressed GLB required')
     args = parser.parse_args()
     if not args.sdk: parser.error('Set SKETCHUP_API_PATH to your licensed SDK library')
-    print(json.dumps(convert(args.input, args.output, args.sdk)))
+    print(json.dumps(convert(args.input, args.output, args.sdk, product=args.product)))

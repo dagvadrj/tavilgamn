@@ -13,6 +13,16 @@ import {
   Settings,
   CircleHelp,
   UserRound,
+  Truck,
+  Wallet,
+  ShieldCheck,
+  FileText,
+  BarChart3,
+  MapPin,
+  Users,
+  MessageSquare,
+  Bot,
+  Undo2,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 import type { MerchantLocationTab } from "@/lib/merchantNavigation";
@@ -25,8 +35,18 @@ export const MERCHANT_TABS: {
   icon: typeof LayoutDashboard;
 }[] = [
   { id: "overview", label: "Ерөнхий тойм", icon: LayoutDashboard },
+  { id: "activation", label: "Дэлгүүр идэвхжүүлэх", icon: ShieldCheck },
+  { id: "wallet", label: "Хэтэвч, кредит", icon: Wallet },
+  { id: "reports", label: "Тайлан татах", icon: BarChart3 },
+  { id: "contracts", label: "Платформын гэрээ", icon: FileText },
   { id: "products", label: "Бүтээгдэхүүн", icon: Package },
   { id: "orders", label: "Захиалгууд", icon: ShoppingBag },
+  { id: "delivery", label: "Хүргэлт", icon: Truck },
+  { id: "branches", label: "Салбар, агуулах", icon: MapPin },
+  { id: "staff", label: "Ажилтны эрх", icon: Users },
+  { id: "reviews", label: "Сэтгэгдэл хянах", icon: MessageSquare },
+  { id: "assistant", label: "AI туслах / FAQ", icon: Bot },
+  { id: "returns", label: "Буцаалт, гомдол", icon: Undo2 },
   { id: "kitchens", label: "Гал тогооны загвар", icon: CookingPot },
   { id: "quotes", label: "Үнийн хүсэлтүүд", icon: MessageSquareQuote },
   { id: "store", label: "Дэлгүүрийн мэдээлэл", icon: Store },
@@ -42,6 +62,7 @@ export function MerchantSidebar({
   userName,
   open,
   onClose,
+  allowedTabs,
 }: {
   active: MerchantTab;
   onChange: (tab: MerchantTab) => void;
@@ -50,17 +71,35 @@ export function MerchantSidebar({
   userName: string;
   open: boolean;
   onClose: () => void;
+  allowedTabs?: MerchantTab[];
 }) {
   const renderItem = (item: (typeof MERCHANT_TABS)[number]) => {
+    if (allowedTabs && !allowedTabs.includes(item.id)) return null;
     const Icon = item.icon;
     const disabled =
       !hasStore &&
-      ["products", "orders", "kitchens", "quotes"].includes(item.id);
+      [
+        "products",
+        "orders",
+        "delivery",
+        "kitchens",
+        "quotes",
+        "activation",
+        "wallet",
+        "reports",
+        "contracts",
+        "branches",
+        "staff",
+        "reviews",
+        "assistant",
+        "returns",
+      ].includes(item.id);
     return (
       <button
         key={item.id}
         type="button"
         disabled={disabled}
+        aria-label={item.label}
         title={
           disabled ? "Эхлээд дэлгүүрийн мэдээллээ бүртгэнэ үү" : item.label
         }
@@ -103,11 +142,29 @@ export function MerchantSidebar({
       >
         <div className="dashboard-nav-group">
           <p className="dashboard-nav-label">ДЭЛГҮҮР</p>
-          {MERCHANT_TABS.slice(0, 3).map(renderItem)}
+          {MERCHANT_TABS.filter((item) =>
+            [
+              "overview",
+              "activation",
+              "wallet",
+              "reports",
+              "contracts",
+              "products",
+              "orders",
+              "delivery",
+              "branches",
+              "staff",
+              "reviews",
+              "assistant",
+              "returns",
+            ].includes(item.id),
+          ).map(renderItem)}
         </div>
         <div className="dashboard-nav-group">
           <p className="dashboard-nav-label">ГАЛ ТОГООНЫ MARKETPLACE</p>
-          {MERCHANT_TABS.slice(3, 5).map(renderItem)}
+          {MERCHANT_TABS.filter((item) =>
+            ["kitchens", "quotes"].includes(item.id),
+          ).map(renderItem)}
         </div>
       </nav>
 
@@ -120,7 +177,7 @@ export function MerchantSidebar({
         {MERCHANT_TABS.filter((item) =>
           ["store", "settings", "profile"].includes(item.id),
         ).map(renderItem)}
-        <Link href="/about#contact" className="dashboard-sidebar-link">
+        <Link href="/#contact" className="dashboard-sidebar-link">
           <CircleHelp size={18} />
           Тусламж
         </Link>

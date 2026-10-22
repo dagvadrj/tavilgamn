@@ -1,25 +1,39 @@
 "use client";
 import Image from "next/image";
-import Link from "next/link";
-import { useEffect } from "react";
+import { PlannerLink as Link } from "@/components/PlannerLink";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/store/auth";
 import { useKitchens } from "@/store/kitchens";
 import { kitchenEnvelope, type SavedKitchen } from "@/lib/kitchenAssembly";
 import { cabinetCorners } from "@/lib/kitchenPlacement";
 import { Trash2, ArrowUpRight, Pencil } from "lucide-react";
+import { assessKitchenRoomFit } from "@/lib/kitchenRoomFit";
+import type { PlacementRoom } from "@/three/collision";
+import type { PlacedFurniture } from "@/lib/types";
+import { prepareRoomAuthReturn } from "@/store/designs";
+import { loginPathForDestination } from "@/lib/authRedirect";
 
 export function SavedKitchenList({
   onPlace,
   variant = "planner",
+  placement,
+  returnPath = "/planner?library=mine",
 }: {
   onPlace?: (kitchen: SavedKitchen) => void;
   variant?: "planner" | "account";
+  placement?: { room: PlacementRoom; pieces: PlacedFurniture[] };
+  returnPath?: string;
 }) {
   const account = variant === "account";
   const user = useAuth((s) => s.user),
     initialized = useAuth((s) => s.initialized);
   const { owner, items, loading, loaded, error, refresh, remove } =
     useKitchens();
+  const [failedThumbnail, setFailedThumbnail] = useState<string[]>([]);
+  const [signInError, setSignInError] = useState("");
+  const fits = useMemo(() => new Map(owner === user?.id && placement ? items.map(item => [item.id,
+    assessKitchenRoomFit(item, placement.pieces, placement.room, `fit-${item.id}`),
+  ]) : []), [items, owner, user?.id, placement]);
   useEffect(() => {
     if (owner && owner === user?.id && !loaded && !loading && !error)
       void refresh();
@@ -35,11 +49,22 @@ export function SavedKitchenList({
       <p className="py-4 text-sm">
         <Link
           className="underline"
-          href="/login?next=%2Faccount%23kitchen-garniture"
+          href={`/login?next=${encodeURIComponent(account ? "/account#kitchen-garniture" : returnPath)}`}
+          onClick={event => {
+            if (account || !returnPath.startsWith("/planner") || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            try {
+              setSignInError("");
+              const destination = new URL(prepareRoomAuthReturn(), window.location.origin);
+              destination.searchParams.set("library", "mine");
+              window.location.assign(loginPathForDestination(destination.pathname + destination.search));
+            } catch (reason) { setSignInError(reason instanceof Error ? reason.message : "Загварыг хадгалж чадсангүй."); }
+          }}
         >
           Нэвтэрч
         </Link>{" "}
         хадгалсан гарнитураа харна уу.
+        {signInError && <span role="alert" className="block text-sm text-red-700">{signInError}</span>}
       </p>
     );
   return (
@@ -61,7 +86,8 @@ export function SavedKitchenList({
           </button>
         </p>
       )}
-      {loaded && !items.length && (
+      {owner !== user.id && <p role="status" className="py-4 text-sm">Гарнитурын санг бэлдэж байна…</p>}
+      {owner === user.id && loaded && !loading && !error && !items.length && (
         <div className={account ? "account-empty col-span-full" : "py-4 text-sm text-[#52525b]"}>
           <p>
           Хадгалсан гарнитур алга.{" "}
@@ -75,16 +101,19 @@ export function SavedKitchenList({
         items.map((item) => {
           const bounds = kitchenEnvelope(item.design),
             pad = 100;
+          const fit = fits.get(item.id);
+          const fitId = `kitchen-fit-${item.id}`;
           return (
             <article key={item.id} className={account ? "account-card account-kitchen-card" : "rounded-xl border border-[#e4e4e7] bg-white p-3 text-[#171717]"}>
               <div className={account ? "account-kitchen-preview" : "relative h-40 w-full overflow-hidden rounded-lg bg-ui-selected"}>
-                {item.thumbnailUrl ? (
+                {item.thumbnailUrl && !failedThumbnail.includes(item.thumbnailUrl) ? (
                   <Image
                     src={item.thumbnailUrl}
                     alt={`${item.name} 3D зураг`}
                     fill
                     sizes={account ? "(max-width: 700px) calc(100vw - 32px), (max-width: 900px) 60vw, 440px" : "300px"}
                     className="object-contain"
+                    onError={() => setFailedThumbnail(previous => [...previous, item.thumbnailUrl!])}
                   />
                 ) : (
                   <svg
@@ -116,11 +145,17 @@ export function SavedKitchenList({
                   {Math.round(bounds.h * 1000)} мм
                 </p>
                 <p className="mt-1 text-xs text-[#68686f]">{item.design.cabinets.length} шүүгээ</p>
+                {fit && <p id={fitId} className={`mt-3 text-xs ${fit.placement ? "text-ui-muted" : "text-red-700"}`}>
+                  {fit.placement ? "Өрөөнд багтана. " : "Тохируулах шаардлагатай. "}{fit.message}
+                </p>}
                 <div className={account ? "account-kitchen-actions" : "mt-2 flex flex-wrap gap-3 text-sm"}>
                   {onPlace && (
                     <button
                       type="button"
-                      className="min-h-11 rounded-lg bg-ui-accent px-3 text-white"
+                      className="min-h-11 rounded-lg bg-ui-accent px-3 text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!!fit && !fit.placement}
+                      aria-describedby={fit ? fitId : undefined}
+                      title={fit && !fit.placement ? fit.message : undefined}
                       onClick={() => onPlace(item)}
                     >
                       Өрөөнд байрлуулах

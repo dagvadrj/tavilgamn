@@ -6,6 +6,7 @@ import {
   clearDashboardDraft,
 } from "@/hooks/useDashboardDraft";
 import { DashboardDraftNotice } from "@/components/DashboardDraftNotice";
+import { DashboardFormSection } from "@/features/dashboard/DashboardFormSection";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -361,6 +362,10 @@ export function ProductEditor({
         Жагсаалт руу буцах
       </button>
       <h2>{create ? "Шинэ бүтээгдэхүүн" : "Бүтээгдэхүүн засах"}</h2>
+      <p className="dashboard-form-hint">
+        Нэр, ангилал, үнэ, нөөц, үндсэн зураг, хэмжээг бөглөнө. Үзүүлэлт, 3D
+        болон бусад сонголтыг хэрэгтэй үедээ нээнэ.
+      </p>
 
       <DashboardDraftNotice
         scope={draftScope}
@@ -401,7 +406,9 @@ export function ProductEditor({
                 setCabinetModuleId("");
               }}
             >
-              {CATEGORIES.map((category) => (
+              {CATEGORIES.filter(
+                (category) => category.id !== "kitchen-cabinet",
+              ).map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
@@ -409,24 +416,64 @@ export function ProductEditor({
             </select>
           </label>
 
-          <fieldset className="rounded-xl border border-ink/10 p-3 sm:col-span-2" aria-describedby="product-room-help">
+          <fieldset
+            className="rounded-xl border border-ink/10 p-3 sm:col-span-2"
+            aria-describedby="product-room-help"
+          >
             <legend className="px-1 text-sm font-medium">Тохирох өрөө</legend>
-            <p id="product-room-help" className="mb-3 text-xs text-ink/60">Нэг барааг олон өрөөнд сонгож болно. Өрөөний planner-т энэ сонголтоор харагдана.</p>
+            <p id="product-room-help" className="mb-3 text-xs text-ink/60">
+              Нэг барааг олон өрөөнд сонгож болно. Өрөөний planner-т энэ
+              сонголтоор харагдана.
+            </p>
             <div className="grid gap-3 sm:grid-cols-3">
-              {(Object.keys(ROOM_TYPES) as RoomType[]).map(type => <label key={type} className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={draft.roomTypes?.includes(type) ?? false} onChange={event => {
-                  const checked = event.target.checked;
-                  setDraft(current => ({ ...current, roomTypes: checked ? [...new Set([...(current.roomTypes ?? []), type])] : (current.roomTypes ?? []).filter(room => room !== type) }));
-                  setFieldErrors(current => ({ ...current, roomTypes: undefined }));
-                }} />
-                {ROOM_TYPES[type].label}
-              </label>)}
+              {(Object.keys(ROOM_TYPES) as RoomType[]).map((type) => (
+                <label key={type} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={draft.roomTypes?.includes(type) ?? false}
+                    onChange={(event) => {
+                      const checked = event.target.checked;
+                      setDraft((current) => ({
+                        ...current,
+                        roomTypes: checked
+                          ? [...new Set([...(current.roomTypes ?? []), type])]
+                          : (current.roomTypes ?? []).filter(
+                              (room) => room !== type,
+                            ),
+                      }));
+                      setFieldErrors((current) => ({
+                        ...current,
+                        roomTypes: undefined,
+                      }));
+                    }}
+                  />
+                  {ROOM_TYPES[type].label}
+                </label>
+              ))}
             </div>
-            {!create && !draft.roomTypes?.length && <p className="mt-2 text-xs text-ink/60">Өрөө заагаагүй тул барааны ангиллаар санал болгоно.</p>}
-            {fieldErrors.roomTypes && <p role="alert" className="mt-2 text-xs text-red-600">{fieldErrors.roomTypes}</p>}
+            {!create && !draft.roomTypes?.length && (
+              <p className="mt-2 text-xs text-ink/60">
+                Өрөө заагаагүй тул барааны ангиллаар санал болгоно.
+              </p>
+            )}
+            {fieldErrors.roomTypes && (
+              <p role="alert" className="mt-2 text-xs text-red-600">
+                {fieldErrors.roomTypes}
+              </p>
+            )}
           </fieldset>
 
-          <ProductPlacementFields value={draft.placement} onChange={placement => field("placement", placement)} />
+          <DashboardFormSection
+            title="Өрөөнд байрлуулах тохиргоо"
+            description="Шал, хана, өндөр болон тулгуур гадаргуу."
+            optional
+            className="sm:col-span-2"
+          >
+            <ProductPlacementFields
+              value={draft.placement}
+              onChange={(placement) => field("placement", placement)}
+            />
+          </DashboardFormSection>
 
           <label className="text-sm">
             Үндсэн үнэ (₮)
@@ -575,13 +622,7 @@ export function ProductEditor({
           </div>
         )}
 
-        <section
-          className="product-editor-section"
-          aria-labelledby="product-specifications-editor-heading"
-        >
-          <h3 id="product-specifications-editor-heading">
-            Бүтээгдэхүүний үзүүлэлт
-          </h3>
+        <DashboardFormSection title="Бүтээгдэхүүний үзүүлэлт" optional>
           <p>
             Ангилалд тохирох үзүүлэлтүүд. Мэдэхгүй мэдээллээ хоосон үлдээнэ.
             Өнгө, материал болон хэмжээсийг үндсэн талбаруудаас авна.
@@ -605,13 +646,13 @@ export function ProductEditor({
               </label>
             ))}
           </div>
-        </section>
+        </DashboardFormSection>
 
-        <section
-          className="product-editor-section space-y-2"
-          aria-labelledby="product-model-heading"
+        <DashboardFormSection
+          title="3D загвар"
+          optional
+          defaultOpen={Boolean(glbFile)}
         >
-          <h3 id="product-model-heading">3D загвар</h3>
           <p>
             GLB файлаа энд сонгоно. Бүтээгдэхүүн болон 3D загвар “Хадгалах” үед
             хамт бүртгэгдэнэ. 3D файл заавал оруулах шаардлагагүй.
@@ -703,13 +744,13 @@ export function ProductEditor({
               Сонгосон 3D файлыг хасах
             </button>
           )}
-        </section>
+        </DashboardFormSection>
         <section
           className="product-editor-section"
           aria-labelledby="product-dimensions-heading"
         >
           <h3 id="product-dimensions-heading">Хэмжээс</h3>
-          <p>Бүх хэмжээсийг метрээр оруулна.</p>
+          <p>Бодит хэмжээг миллиметрээр оруулна. Жишээ: 60 см = 600 мм.</p>
           <div className="product-dimensions">
             {(
               [
@@ -733,7 +774,7 @@ export function ProductEditor({
               <div key={key}>
                 <div className="product-dimension-label">
                   <label htmlFor={"product-dimension-" + key}>
-                    {label} (м)
+                    {label} (мм)
                   </label>
                   <DimensionHelp label={label}>{help}</DimensionHelp>
                 </div>
@@ -742,15 +783,19 @@ export function ProductEditor({
                   className="input"
                   required
                   type="number"
-                  min="0.001"
-                  max="100"
-                  step="any"
-                  value={draft.dimensions[key]}
+                  min="1"
+                  max="100000"
+                  step="1"
+                  value={
+                    Number.isFinite(draft.dimensions[key])
+                      ? Math.round(draft.dimensions[key] * 1000)
+                      : ""
+                  }
                   aria-invalid={!!fieldErrors[key]}
                   onChange={(event) => {
                     field("dimensions", {
                       ...draft.dimensions,
-                      [key]: event.target.valueAsNumber,
+                      [key]: event.target.valueAsNumber / 1000,
                     });
                     setGlbPreview(null);
                     setFieldErrors((current) => ({
@@ -798,222 +843,235 @@ export function ProductEditor({
           ))}
         </div>
 
-        <fieldset className="space-y-2">
-          <legend className="mb-2 text-sm">Өнгө ба нэмэлт үнэ (₮)</legend>
+        <DashboardFormSection title="Өнгө ба нэмэлт үнэ (₮)" optional>
+          <fieldset className="space-y-2">
+            <legend className="mb-2 text-sm">Өнгө ба нэмэлт үнэ (₮)</legend>
 
-          {draft.colors.map((color, index) => (
-            <div key={color.id} className="flex flex-wrap items-center gap-2">
-              <input
-                aria-label="Үндсэн өнгө"
-                type="radio"
-                name={`default-${draft.id}`}
-                checked={draft.defaultColor === color.id}
-                onChange={() => field("defaultColor", color.id)}
-              />
-
-              <input
-                aria-label="Өнгөний нэр"
-                className="input !w-40"
-                required
-                maxLength={200}
-                value={color.name}
-                onChange={(event) =>
-                  field(
-                    "colors",
-                    draft.colors.map((item, currentIndex) =>
-                      currentIndex === index
-                        ? { ...item, name: event.target.value }
-                        : item,
-                    ),
-                  )
-                }
-              />
-
-              <input
-                aria-label="Өнгө"
-                type="color"
-                value={color.hex}
-                onChange={(event) =>
-                  field(
-                    "colors",
-                    draft.colors.map((item, currentIndex) =>
-                      currentIndex === index
-                        ? { ...item, hex: event.target.value }
-                        : item,
-                    ),
-                  )
-                }
-              />
-
-              <input
-                aria-label="Өнгөний нэмэлт үнэ"
-                className="input !w-32"
-                type="number"
-                required
-                step="1"
-                value={color.priceDelta ?? 0}
-                onChange={(event) =>
-                  field(
-                    "colors",
-                    draft.colors.map((item, currentIndex) =>
-                      currentIndex === index
-                        ? {
-                            ...item,
-                            priceDelta: event.target.valueAsNumber,
-                          }
-                        : item,
-                    ),
-                  )
-                }
-              />
-
-              <button
-                type="button"
-                className="text-sm underline disabled:opacity-40"
-                disabled={draft.colors.length === 1}
-                onClick={() => {
-                  const colors = draft.colors.filter(
-                    (_, currentIndex) => currentIndex !== index,
-                  );
-
-                  setDraft((current) => ({
-                    ...current,
-                    colors,
-                    defaultColor:
-                      current.defaultColor === color.id
-                        ? colors[0].id
-                        : current.defaultColor,
-                  }));
-                }}
-              >
-                Хасах
-              </button>
-            </div>
-          ))}
-
-          <button
-            type="button"
-            className="text-sm underline"
-            onClick={() =>
-              field("colors", [
-                ...draft.colors,
-                {
-                  id: crypto.randomUUID(),
-                  name: "Шинэ өнгө",
-                  hex: "#C9A37A",
-                  priceDelta: 0,
-                },
-              ])
-            }
-          >
-            Өнгө нэмэх
-          </button>
-          {fieldErrors.colors && (
-            <p className="text-xs text-red-600">{fieldErrors.colors}</p>
-          )}
-        </fieldset>
-
-        <fieldset className="space-y-2">
-          <legend className="mb-2 text-sm">Материал ба нэмэлт үнэ (₮)</legend>
-
-          {(Object.entries(materialNames) as [Material, string][]).map(
-            ([id, name]) => {
-              const selected = draft.materials.find(
-                (material) => material.id === id,
-              );
-
-              return (
-                <div key={id} className="flex items-center gap-3">
-                  <label className="flex w-32 gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={!!selected}
-                      onChange={(event) =>
-                        field(
-                          "materials",
-                          event.target.checked
-                            ? [...draft.materials, { id, name, priceDelta: 0 }]
-                            : draft.materials.filter(
-                                (material) => material.id !== id,
-                              ),
-                        )
-                      }
-                    />
-                    {name}
-                  </label>
-
-                  {selected && (
-                    <input
-                      aria-label={`${name} нэмэлт үнэ`}
-                      className="input !w-40"
-                      required
-                      type="number"
-                      step="1"
-                      value={selected.priceDelta}
-                      onChange={(event) =>
-                        field(
-                          "materials",
-                          draft.materials.map((material) =>
-                            material.id === id
-                              ? {
-                                  ...material,
-                                  priceDelta: event.target.valueAsNumber,
-                                }
-                              : material,
-                          ),
-                        )
-                      }
-                    />
-                  )}
-                </div>
-              );
-            },
-          )}
-          {fieldErrors.materials && (
-            <p className="text-xs text-red-600">{fieldErrors.materials}</p>
-          )}
-        </fieldset>
-
-        <fieldset className="admin-field-section">
-          <legend>Харагдах дэлгүүрүүд</legend>
-          <p className="text-xs text-ui-accent">
-            Дэлгүүрүүдийг чагталж сонгоорой. Сонгоогүй бараа нийт каталогт
-            харагдана.
-          </p>
-          {storesError && (
-            <p role="alert">
-              Дэлгүүрүүдийг ачаалж чадсангүй.{" "}
-              <button
-                type="button"
-                className="underline"
-                onClick={() => setStoresRefresh((value) => value + 1)}
-              >
-                Дахин оролдох
-              </button>
-            </p>
-          )}
-          <div className="admin-store-checkboxes">
-            {stores.map((store) => (
-              <label key={store.id}>
+            {draft.colors.map((color, index) => (
+              <div key={color.id} className="flex flex-wrap items-center gap-2">
                 <input
-                  type="checkbox"
-                  checked={(draft.storeIds ?? []).includes(store.id)}
+                  aria-label="Үндсэн өнгө"
+                  type="radio"
+                  name={`default-${draft.id}`}
+                  checked={draft.defaultColor === color.id}
+                  onChange={() => field("defaultColor", color.id)}
+                />
+
+                <input
+                  aria-label="Өнгөний нэр"
+                  className="input !w-40"
+                  required
+                  maxLength={200}
+                  value={color.name}
                   onChange={(event) =>
                     field(
-                      "storeIds",
-                      event.target.checked
-                        ? [...(draft.storeIds ?? []), store.id]
-                        : (draft.storeIds ?? []).filter(
-                            (id) => id !== store.id,
-                          ),
+                      "colors",
+                      draft.colors.map((item, currentIndex) =>
+                        currentIndex === index
+                          ? { ...item, name: event.target.value }
+                          : item,
+                      ),
                     )
                   }
                 />
-                {store.name}
-              </label>
+
+                <input
+                  aria-label="Өнгө"
+                  type="color"
+                  value={color.hex}
+                  onChange={(event) =>
+                    field(
+                      "colors",
+                      draft.colors.map((item, currentIndex) =>
+                        currentIndex === index
+                          ? { ...item, hex: event.target.value }
+                          : item,
+                      ),
+                    )
+                  }
+                />
+
+                <input
+                  aria-label="Өнгөний нэмэлт үнэ"
+                  className="input !w-32"
+                  type="number"
+                  required
+                  step="1"
+                  value={color.priceDelta ?? 0}
+                  onChange={(event) =>
+                    field(
+                      "colors",
+                      draft.colors.map((item, currentIndex) =>
+                        currentIndex === index
+                          ? {
+                              ...item,
+                              priceDelta: event.target.valueAsNumber,
+                            }
+                          : item,
+                      ),
+                    )
+                  }
+                />
+
+                <button
+                  type="button"
+                  className="text-sm underline disabled:opacity-40"
+                  disabled={draft.colors.length === 1}
+                  onClick={() => {
+                    const colors = draft.colors.filter(
+                      (_, currentIndex) => currentIndex !== index,
+                    );
+
+                    setDraft((current) => ({
+                      ...current,
+                      colors,
+                      defaultColor:
+                        current.defaultColor === color.id
+                          ? colors[0].id
+                          : current.defaultColor,
+                    }));
+                  }}
+                >
+                  Хасах
+                </button>
+              </div>
             ))}
-          </div>
-        </fieldset>
+
+            <button
+              type="button"
+              className="text-sm underline"
+              onClick={() =>
+                field("colors", [
+                  ...draft.colors,
+                  {
+                    id: crypto.randomUUID(),
+                    name: "Шинэ өнгө",
+                    hex: "#C9A37A",
+                    priceDelta: 0,
+                  },
+                ])
+              }
+            >
+              Өнгө нэмэх
+            </button>
+            {fieldErrors.colors && (
+              <p role="alert" className="text-xs text-red-600">
+                {fieldErrors.colors}
+              </p>
+            )}
+          </fieldset>
+        </DashboardFormSection>
+
+        <DashboardFormSection title="Материал ба нэмэлт үнэ (₮)" optional>
+          <fieldset className="space-y-2">
+            <legend className="mb-2 text-sm">Материал ба нэмэлт үнэ (₮)</legend>
+
+            {(Object.entries(materialNames) as [Material, string][]).map(
+              ([id, name]) => {
+                const selected = draft.materials.find(
+                  (material) => material.id === id,
+                );
+
+                return (
+                  <div key={id} className="flex items-center gap-3">
+                    <label className="flex w-32 gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={!!selected}
+                        onChange={(event) =>
+                          field(
+                            "materials",
+                            event.target.checked
+                              ? [
+                                  ...draft.materials,
+                                  { id, name, priceDelta: 0 },
+                                ]
+                              : draft.materials.filter(
+                                  (material) => material.id !== id,
+                                ),
+                          )
+                        }
+                      />
+                      {name}
+                    </label>
+
+                    {selected && (
+                      <input
+                        aria-label={`${name} нэмэлт үнэ`}
+                        className="input !w-40"
+                        required
+                        type="number"
+                        step="1"
+                        value={selected.priceDelta}
+                        onChange={(event) =>
+                          field(
+                            "materials",
+                            draft.materials.map((material) =>
+                              material.id === id
+                                ? {
+                                    ...material,
+                                    priceDelta: event.target.valueAsNumber,
+                                  }
+                                : material,
+                            ),
+                          )
+                        }
+                      />
+                    )}
+                  </div>
+                );
+              },
+            )}
+            {fieldErrors.materials && (
+              <p role="alert" className="text-xs text-red-600">
+                {fieldErrors.materials}
+              </p>
+            )}
+          </fieldset>
+        </DashboardFormSection>
+
+        <DashboardFormSection title="Харагдах дэлгүүрүүд" optional>
+          <fieldset className="space-y-2">
+            <legend>Харагдах дэлгүүрүүд</legend>
+            <p className="text-xs text-ui-accent">
+              Дэлгүүрүүдийг чагталж сонгоорой. Сонгоогүй бараа нийт каталогт
+              харагдана.
+            </p>
+            {storesError && (
+              <p role="alert">
+                Дэлгүүрүүдийг ачаалж чадсангүй.{" "}
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={() => setStoresRefresh((value) => value + 1)}
+                >
+                  Дахин оролдох
+                </button>
+              </p>
+            )}
+            <div className="admin-store-checkboxes">
+              {stores.map((store) => (
+                <label key={store.id}>
+                  <input
+                    type="checkbox"
+                    checked={(draft.storeIds ?? []).includes(store.id)}
+                    onChange={(event) =>
+                      field(
+                        "storeIds",
+                        event.target.checked
+                          ? [...(draft.storeIds ?? []), store.id]
+                          : (draft.storeIds ?? []).filter(
+                              (id) => id !== store.id,
+                            ),
+                      )
+                    }
+                  />
+                  {store.name}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </DashboardFormSection>
       </fieldset>
 
       {error && (

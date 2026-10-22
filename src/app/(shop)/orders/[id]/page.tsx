@@ -35,6 +35,7 @@ import {
 } from "@/lib/payments";
 import { formatDateTime, formatPrice, cn } from "@/lib/format";
 import { CustomerOrderActions, OrderFulfillmentSummary } from "@/components/CommerceOrderActions";
+import { CustomerStoreFeedback } from "@/components/StoreFeedback";
 import { cancellationBlocksPayment, type CommerceOrderDetails } from "@/lib/commerceOperations";
 
 const ORDER_FLOW: { status: OrderStatus; label: string }[] = [
@@ -178,7 +179,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
   }
 
   if (!initialized) {
-    return <PageSkeleton variant="detail" />;
+    return <PageSkeleton variant="detail" layout="order" />;
   }
 
   if (!userId) {
@@ -200,7 +201,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
   }
 
   if (loading && !current) {
-    return <PageSkeleton variant="detail" label="Захиалгын мэдээлэл ачаалж байна…" />;
+    return <PageSkeleton variant="detail" layout="order" label="Захиалгын мэдээлэл ачаалж байна…" />;
   }
 
   if (!current) {
@@ -334,6 +335,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
       <div className="mt-5 space-y-3">
         <OrderFulfillmentSummary order={order} />
         <CustomerOrderActions key={order.id} order={order} paid={payment?.state === "paid"} onUpdated={load} />
+        <CustomerStoreFeedback key={`feedback:${order.id}`} orderId={order.id} />
         {payment?.requires_review && <p role="status" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">Төлбөр бүртгэгдсэн боловч тулгах шалгалт шаардлагатай. Дахин төлбөр бүү хийгээрэй; админтай холбоо барина уу.</p>}
       </div>
       {error && (
@@ -586,7 +588,7 @@ export default function OrderPage({ params }: { params: Promise<{ id: string }> 
                       Нэхэмжлэхийн хариуг дэлгүүрээр шалгуулах шаардлагатай.
                     </p>
                     <Link
-                      href="/about#contact"
+                      href="/#contact"
                       className="mt-3 inline-block underline"
                     >
                       Холбоо барих

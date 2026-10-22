@@ -1,0 +1,95 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const {readFileSync} = require('node:fs');
+const {PGlite} = require('@electric-sql/pglite');
+const alice='11111111-1111-4111-8111-111111111111',bob='22222222-2222-4222-8222-222222222222',admin='33333333-3333-4333-8333-333333333333';
+const key = n => `aaaaaaaa-aaaa-4aaa-8aaa-${String(n).padStart(12,'0')}`;
+
+test('merchant growth validates ownership, immutable finance, payout reservation, private documents and bounded real analytics', async t => {
+  const db=new PGlite();t.after(()=>db.close());
+  await db.exec(`create role anon;create role authenticated;create role service_role;
+  create table profiles(id uuid primary key,role text);
+  create table merchant_stores(id text primary key,owner_id uuid,active boolean,name text);
+  create table furniture_models(product_id text primary key,store_ids jsonb,glb_path text,archived_at timestamptz);
+  create table orders(id uuid primary key,status text);
+  create table merchant_order_fulfillments(order_id uuid,store_id text,owner_id uuid,delivery_stage text,created_at timestamptz,updated_at timestamptz,items jsonb,subtotal bigint,merchant_net bigint);
+  create table order_payments(order_id uuid,state text); create table order_cancellations(order_id uuid,status text);
+  create schema storage;create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+  create table storage.objects(bucket_id text,name text);
+  create function merchant_delivery_store(actor uuid) returns text language plpgsql as $$declare sid text;begin select s.id into sid from public.merchant_stores s join public.profiles p on p.id=s.owner_id where s.owner_id=actor and s.active and p.role='merchant' for share;if sid is null then raise insufficient_privilege;end if;return sid;end$$;
+  insert into profiles values('${alice}','merchant'),('${bob}','merchant'),('${admin}','admin');
+  insert into merchant_stores values('alice','${alice}',true,'Alice'),('bob','${bob}',true,'Bob');
+  insert into furniture_models values('sofa','["alice"]','models/sofa.glb',null),('chair','["alice"]',null,null),('other','["bob"]','models/other.glb',null);`);
+  await db.exec(readFileSync('supabase/migrations/20261019103133_merchant_growth_workspace.sql','utf8'));
+  const call=async(sql,args=[])=>(await db.query(sql,args)).rows[0]?.data;
+  const read=()=>call('select read_merchant_growth($1) data',[alice]);
+  const save=(action,data)=>call('select save_merchant_growth($1,$2,$3) data',[alice,action,JSON.stringify(data)]);
+  const review=(action,data,actor=admin)=>call('select admin_merchant_growth($1,$2,$3) data',[actor,action,JSON.stringify(data)]);
+  const wallet=(kind,amount,request)=>call('select merchant_wallet_action($1,$2,$3,$4) data',[alice,kind,amount,request]);
+  const initial=await read();assert.equal(initial.wallet.available,'0');assert.equal(initial.productCount,2);assert.equal(initial.modelCount,1);
+  await assert.rejects(call('select read_merchant_growth($1) data',[admin]),{code:'42501'});
+  await assert.rejects(review('settings',{},alice),{code:'42501'});
+  await assert.rejects(save('slug',{slug:'bob'}),{code:'23505'});
+  await save('slug',{slug:'nqc'});
+  assert.equal((await call("select resolve_merchant_store_link('nqc') data")).storeId,'alice');
+  assert.equal((await call("select resolve_merchant_store_link('nqc') data")).verified,false);
+  await assert.rejects(call('select save_merchant_growth($1,$2,$3) data',[bob,'slug','{"slug":"nqc"}']),{code:'23505'});
+  await assert.rejects(save('certificate',{legalName:'Alice LLC',registrationNo:'1234567',path:'missing'}),{code:'22023'});
+  const certificate=`${alice}/alice/certificate/real.pdf`;
+  await db.query("insert into storage.objects values('merchant-private',$1)",[certificate]);
+  await save('certificate',{legalName:'Alice LLC',registrationNo:'1234567',path:certificate});
+  await save('bank',{bankName:'Bank',account:'MN1234567890',holder:'Alice LLC'});
+  await assert.rejects(wallet('withdrawal',1,key(1)),{code:'P0021'});
+  await review('verification',{storeId:'alice',status:'approved',version:1});
+  await review('bank',{storeId:'alice',status:'approved',version:1});
+  assert.equal((await call("select resolve_merchant_store_link('nqc') data")).verified,true);
+  await assert.rejects(review('verification',{storeId:'alice',status:'rejected',version:1}),{code:'P0003'});
+  for(let n=1;n<=6;n++) {
+    await db.query('insert into orders values($1,$2)',[key(20+n),n===4?'cancelled':'delivered']);
+    await db.query(`insert into merchant_order_fulfillments values($1,$2,$3,$4,now()-interval '1 hour',now(),$5,1000,950)`,[key(20+n),n===6?'bob':'alice',n===6?bob:alice,n===2?'shipped':'completed',JSON.stringify([{productId:n===1?'sofa':'chair',name:n===1?'Sofa':'Chair',qty:n===1?2:1,unitPrice:n===1?500:1000,lineTotal:1000}])]);
+    if(n!==3)await db.query("insert into order_payments values($1,'paid')",[key(20+n)]);
+  }
+  await db.query("insert into order_cancellations values($1,'requested')",[key(25)]);
+  assert.equal((await read()).wallet.earned,'950'); // only paid + completed + owned + not cancelled/held
+  const withdrawal=await wallet('withdrawal',600,key(1));assert.equal(withdrawal.wallet.available,'350');assert.equal(withdrawal.wallet.reserved,'600');
+  assert.equal((await wallet('withdrawal',600,key(1))).wallet.available,'350');
+  await assert.rejects(wallet('withdrawal',351,key(2)),{code:'P0022'});
+  const transaction=withdrawal.transactions[0];
+  await assert.rejects(review('withdrawal',{storeId:'alice',id:transaction.id,status:'paid',reference:'paid-123'}),{code:'22023'});
+  await assert.rejects(db.query('update merchant_wallet_transactions set amount=1 where id=$1',[transaction.id]),{code:'42501'});
+  await review('withdrawal',{storeId:'alice',id:transaction.id,status:'rejected',note:'Wrong account'});
+  assert.equal((await read()).wallet.available,'950');
+  await assert.rejects(review('withdrawal',{storeId:'alice',id:transaction.id,status:'paid',reference:'paid-123',transferConfirmed:true}),{code:'P0003'});
+  await review('settings',{price:100,background:1,render:5,model:20});
+  await review('grant',{storeId:'alice',credits:5,reference:'Welcome campaign',requestKey:key(3)});
+  await review('grant',{storeId:'alice',credits:5,reference:'Welcome campaign',requestKey:key(3)});
+  assert.equal((await read()).wallet.credits,'5');
+  const purchase=await wallet('credits',3,key(4));assert.equal(purchase.wallet.available,'650');assert.equal(purchase.wallet.credits,'8');
+  assert.equal((await wallet('credits',3,key(4))).wallet.credits,'8');
+  await assert.rejects(db.query('update merchant_credit_entries set delta=100'),{code:'42501'});
+  await wallet('withdrawal',600,key(5));
+  const latest=(await read()).transactions.find(item=>item.request_key===key(5));
+  await review('withdrawal',{storeId:'alice',id:latest.id,status:'paid',reference:'bank-transfer-123',transferConfirmed:true});
+  assert.equal((await read()).wallet.available,'50');assert.equal((await read()).wallet.reserved,'0');
+  await save('bank',{bankName:'Other Bank',account:'MN2345678901',holder:'Alice LLC'});
+  await assert.rejects(wallet('withdrawal',1,key(6)),{code:'P0021'});
+  await assert.rejects(review('bank',{storeId:'alice',status:'approved',version:1}),{code:'P0003'});
+  const modelPath=`${alice}/alice/model/source.glb`;
+  await db.query("insert into storage.objects values('merchant-private',$1)",[modelPath]);
+  await assert.rejects(save('model',{productId:'other',path:modelPath,name:'source.glb'}),{code:'42501'});
+  await save('model',{productId:'chair',path:modelPath,name:'source.glb'});
+  assert.equal((await read()).modelSubmissions.length,1);
+  for(const days of [7,30,90]) {
+    const insights=await call('select merchant_growth_insights($1,$2) data',[alice,days]);
+    assert.equal(insights.series.length,days);assert.equal(insights.gross,'3000');assert.equal(insights.net,'2850');
+    assert.equal(insights.topRevenue.length,2);assert.equal(insights.topQuantity[0].quantity,'2');
+    assert.equal(insights.orders,'3'); // requested cancellations are held in wallet, but not yet cancelled sales
+  }
+  await assert.rejects(call('select merchant_growth_insights($1,15) data',[alice]),{code:'22023'});
+  const acl=(await db.query("select has_function_privilege('authenticated','merchant_wallet_action(uuid,text,bigint,uuid)','execute') access,has_table_privilege('anon','merchant_growth_profiles','select') public_read")).rows[0];
+  assert.equal(acl.access,false);assert.equal(acl.public_read,false);
+  const publicStore=JSON.stringify(await call("select resolve_merchant_store_link('nqc') data"));
+  assert.ok(!publicStore.includes('MN123')&&!publicStore.includes('certificate')&&!publicStore.includes('registration'));
+  await db.exec("update merchant_stores set active=false where id='alice'");
+  await assert.rejects(read(),{code:'42501'});assert.equal(await call("select resolve_merchant_store_link('nqc') data"),null);
+});

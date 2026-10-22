@@ -22,7 +22,7 @@ export async function GET(
 
     const { data, error } =
       await getSupabaseAdmin()
-        .from("furniture_models")
+        .from("model_records")
         .select(
           `
             id,

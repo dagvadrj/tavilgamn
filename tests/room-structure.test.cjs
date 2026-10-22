@@ -120,6 +120,7 @@ test('walls use opaque depth writes inside and switch safely during camera fades
     '@react-three/fiber': { useFrame: fn => { frame = fn; } },
     './roomMaterials': { useRoomMaterial: () => ({}) },
     './OpeningMesh': { OpeningMesh: () => null },
+    './useRoomPaintEnvironment': { useRoomPaintEnvironment: () => null },
   });
   const nodes = tree => !tree || typeof tree !== 'object' ? [] : [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)];
   const tree = RoomStructure({ design: { width: 5, depth: 4, height: 2.7 }, view: 'perspective' });
@@ -168,6 +169,7 @@ test('an inactive room wall fades when it obstructs the selected neighbouring ro
     '@react-three/fiber': { useFrame: fn => { frame = fn; } },
     './roomMaterials': { useRoomMaterial: () => ({}) },
     './OpeningMesh': { OpeningMesh: () => null },
+    './useRoomPaintEnvironment': { useRoomPaintEnvironment: () => null },
   });
   const nodes = tree => !tree || typeof tree !== 'object' ? [] : [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)];
   const tree = RoomStructure({ design: { width: 5, depth: 4, height: 2.7 }, view: 'perspective', readOnly: true, wallFocus: [0, 0] });

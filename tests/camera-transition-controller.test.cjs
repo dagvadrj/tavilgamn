@@ -65,6 +65,27 @@ test('30/60/120 Hz transitions have the same pose at equal elapsed time and exac
   for(const pose of poses.slice(1)) { near(pose.position,poses[0].position); near(pose.target,poses[0].target); assert.ok(Math.abs(pose.zoom-poses[0].zoom)<1e-10); }
 });
 
+test('waking an on-demand canvas after idle does not consume the whole new camera animation', () => {
+  const { camera, controls } = fixture();
+  try {
+    const from = transition.cameraPose(camera, controls.target), to = destination(camera, controls.target);
+    transition.beginCameraTransition(camera, from, to, false, controls);
+    assert.equal(transition.advanceCameraTransition(camera, controls, 12), true);
+    near(camera.position, from.position);
+    transition.advanceCameraTransition(camera, controls, 1 / 60);
+    assert.ok(camera.position.distanceTo(from.position) > 0);
+    assert.ok(camera.position.distanceTo(to.position) > 1);
+    for (let i = 0; i < 180; i++) transition.advanceCameraTransition(camera, controls, 1 / 60);
+    near(camera.position, to.position);
+
+    transition.beginCameraTransition(camera, transition.cameraPose(camera, controls.target), from, false, controls);
+    transition.advanceCameraTransition(camera, controls, 1 / 60);
+    assert.equal(transition.advanceCameraTransition(camera, controls, 12), true, 'a background-tab gap must not snap a running transition either');
+    transition.advanceCameraTransition(camera, controls, Infinity);
+    near(camera.position, from.position);
+  } finally { controls.dispose(); }
+});
+
 test('replacement starts at the visible pose; room-origin shifts move both endpoints without mutating callers', () => {
   const {camera,controls} = fixture();
   try {
@@ -83,16 +104,19 @@ test('replacement starts at the visible pose; room-origin shifts move both endpo
   } finally { controls.dispose(); }
 });
 
-test('furniture focus frames rotated/elevated dimensions in portrait view while retaining the orbit direction', () => {
+test('furniture focus frames rotated/elevated dimensions in portrait view while retaining horizontal heading', () => {
   const piece={instanceId:'shelf',productId:'unregistered',x:2,z:-3,rotation:Math.PI/2,elevation:1.4,details:{dimensions:{w:2,d:.4,h:.8}}};
   const bounds=furnitureCameraBounds(piece);
   assert.ok(Math.abs(bounds.width-.4)<1e-8);assert.ok(Math.abs(bounds.depth-2)<1e-8);assert.ok(Math.abs(bounds.centerY-1.8)<1e-8);
   const {camera,controls}=fixture();
   try {
     camera.aspect=.45;camera.zoom=2;
-    const direction=camera.position.clone().sub(controls.target).normalize();
+    const direction=camera.position.clone().sub(controls.target);direction.y=0;direction.normalize();
     navigateCamera(camera,controls,'focus',bounds,.45);
-    near(controls.target,new THREE.Vector3(2,1.8,-3));near(camera.position.clone().sub(controls.target).normalize(),direction);assert.equal(camera.zoom,1);
+    near(controls.target,new THREE.Vector3(2,1.8,-3));
+    const offset=camera.position.clone().sub(controls.target);
+    assert.ok(Math.abs(Math.atan2(offset.y,Math.hypot(offset.x,offset.z))-25*Math.PI/180)<1e-8);
+    offset.y=0;near(offset.normalize(),direction);assert.equal(camera.zoom,1);
     for(const x of [-1,1])for(const y of [-1,1])for(const z of [-1,1]) {
       const screen=new THREE.Vector3(bounds.centerX+x*bounds.width/2,bounds.centerY+y*bounds.height/2,bounds.centerZ+z*bounds.depth/2).project(camera);
       assert.ok(Math.abs(screen.x)<1&&Math.abs(screen.y)<1&&screen.z<1);
@@ -127,15 +151,17 @@ test('pending navigation is interrupted before RAF and stale requests never repl
   const state={camera,controls,gl:{domElement:surface},size:{width:800,height:600},invalidate(){}};
   const {CameraNavigation}=loadSource('src/three/CameraNavigation.tsx',{react:h.react,'@react-three/fiber':{useThree:()=>state},'@/lib/cameraTransition':transition});
   const bounds={width:5,depth:4,height:2.7,centerX:0,centerZ:0};
-  let request={id:1,action:'front'},enabled=true;
-  const render=()=>h.render(()=>CameraNavigation({request,bounds,enabled}));
+  let request={id:1,action:'front'},enabled=true,rests=0;
+  const render=()=>h.render(()=>CameraNavigation({request,bounds,enabled,onRest:()=>rests++}));
   const flush=()=>{const work=[...frames.values()];frames.clear();work.forEach(fn=>fn());};
   try {
-    const before=camera.position.clone();render();assert.equal(frames.size,1);
+    const before=camera.position.clone();const pending=render();assert.equal(frames.size,1);
+    pending.props.onRest();assert.equal(rests,0,'a scheduled navigation must not report a settled view before its first frame');
     surface.emit('wheel',{deltaY:0,preventDefault(){},stopPropagation(){}});flush();near(camera.position,before);
     state.size={width:600,height:600};render();assert.equal(frames.size,0);
     request={id:2,action:'left'};render();request={id:3,action:'right'};render();assert.equal(frames.size,1);flush();
     transition.advanceCameraTransition(camera,controls,Infinity);assert.ok(camera.position.x>controls.target.x);
+    render().props.onRest();assert.equal(rests,1);
     request={id:4,action:'right'};render();assert.equal(frames.size,1);flush();
     transition.advanceCameraTransition(camera,controls,.1);const at=camera.position.clone();
     enabled=false;render();assert.equal(transition.advanceCameraTransition(camera,controls,1),false);near(camera.position,at);

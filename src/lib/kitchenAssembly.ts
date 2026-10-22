@@ -121,7 +121,7 @@ export function kitchenEnvelope(kitchen: ModularKitchen) {
     maxZ = Math.max(...points.map((p) => p.z));
   const h = Math.max(
     ...kitchen.cabinets.map((c) => c.position.y + c.height),
-    ...(kitchen.extras ?? []).map((e) => e.height),
+    ...(kitchen.extras ?? []).map((e) => e.position.y + e.height),
     ...tops.map((t) => t.position.y + t.thickness),
     ...kitchen.cabinets
       .filter(hasCooktop)

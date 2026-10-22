@@ -18,6 +18,10 @@ export type CanvasMetric = {
   motionP95Ms?: number | null;
   motionWorstMs?: number | null;
   motionSlowFrames?: number;
+  shadowAutoUpdate?: boolean;
+  cameraPosition?: [number, number, number];
+  cameraTarget?: [number, number, number];
+  cameraFov?: number;
 };
 
 export function performanceDiagnosticsEnabled() {

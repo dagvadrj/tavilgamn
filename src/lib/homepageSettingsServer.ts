@@ -8,11 +8,16 @@ import {
 export async function readHomepageSettings(): Promise<HomepageSettings> {
   const { data, error } = await getSupabaseAdmin()
     .from("homepage_scene_settings")
-    .select("product_ids,version")
+    .select("product_ids,version,bed_product_id,wardrobe_product_id")
     .eq("id", 1)
     .maybeSingle();
   if (error) throw error;
   return data
-    ? { productIds: data.product_ids, version: data.version }
+    ? {
+        productIds: data.product_ids,
+        version: data.version,
+        bedProductId: data.bed_product_id,
+        wardrobeProductId: data.wardrobe_product_id,
+      }
     : defaultHomepageSettings();
 }

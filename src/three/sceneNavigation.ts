@@ -1,5 +1,7 @@
 import { MathUtils, Plane, Raycaster, Vector2, Vector3, type PerspectiveCamera } from "three";
 import type { OrbitControls } from "three-stdlib";
+import { applyCameraPose, beginCameraTransition, cameraPose, cameraTransitionDestination, cancelCameraTransition } from "@/lib/cameraTransition";
+import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 
 export const SCENE_NAVIGATION_START = "scene-navigation-start";
 const gestures = new WeakSet<HTMLElement>();
@@ -39,7 +41,10 @@ export function pinchCamera(camera: PerspectiveCamera, controls: OrbitControls, 
 
 /** Native wheel-to-cursor plus a two-finger pinch/pan anchored to the fingers. */
 export function bindCursorNavigation(controls: OrbitControls, element: HTMLElement,
-  allowed: () => boolean = () => true, plan = false) {
+  allowed: () => boolean = () => true, plan = false,
+  smooth?: { invalidate: () => void; reducedMotion: () => boolean }) {
+  const camera = controls.object as PerspectiveCamera;
+  const owner = Symbol("pinch-zoom");
   const document = element.ownerDocument;
   const previous = { zoomToCursor: controls.zoomToCursor, two: controls.touches.TWO };
   const points = new Map<number, Point>();
@@ -86,14 +91,23 @@ export function bindCursorNavigation(controls: OrbitControls, element: HTMLEleme
     const after = pair();
     const scale = controls.enableZoom && before.distance > 1 && after.distance > 1
       ? Math.pow(before.distance / after.distance, controls.zoomSpeed) : 1;
-    pinchCamera(controls.object as PerspectiveCamera, controls, element, before.midpoint,
+    const from = cameraPose(camera, controls.target);
+    const destination = smooth && cameraTransitionDestination(camera, owner);
+    if (destination) applyCameraPose(camera, destination, controls);
+    pinchCamera(camera, controls, element, before.midpoint,
       controls.enablePan ? after.midpoint : before.midpoint, scale, plan);
+    if (smooth) {
+      beginCameraTransition(camera, from, cameraPose(camera, controls.target), smooth.reducedMotion(), controls,
+        { owner, duration: PLANNER_CAMERA.transitionSeconds });
+      smooth.invalidate();
+    }
   };
   const up = (event: PointerEvent) => {
     points.delete(event.pointerId);
     if (!points.size) finish();
   };
   const cancel = () => {
+    if (cameraTransitionDestination(camera, owner)) cancelCameraTransition(camera);
     // Clear the native controls' pointer bookkeeping as well (e.g. on blur).
     for (const pointerId of [...points.keys()]) {
       element.dispatchEvent(Object.assign(new Event("pointercancel"), { pointerId, pointerType: "touch" }));

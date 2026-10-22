@@ -58,7 +58,7 @@ test('wood gets a satin reflection response while carpet and unknown finishes re
   const normal=new THREE.Texture(),scale=new THREE.Vector2(.32,.32);
   for(const id of ['parquet-oak','laminate-ash']){
     const finish=roomFloorFinish(id,{roughness:1,normalMap:normal,normalScale:scale});
-    assert.equal(finish.roughness,.74);assert.equal(finish.clearcoat,.28);assert.equal(finish.clearcoatNormalMap,normal);assert.equal(finish.clearcoatNormalScale,scale);assert.equal(finish.metalness,0);
+    assert.equal(finish.roughness,.68);assert.equal(finish.clearcoat,.18);assert.equal(finish.clearcoatNormalMap,normal);assert.equal(finish.clearcoatNormalScale,scale);assert.equal(finish.metalness,0);
   }
   for(const id of ['carpet-sand',undefined]){
     const finish=roomFloorFinish(id,{roughness:.97,normalMap:normal});

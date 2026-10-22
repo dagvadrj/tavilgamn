@@ -1,4 +1,5 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useEffect, useMemo, useState } from "react";
 import {
   useDraftState,
@@ -250,10 +251,7 @@ function MerchantPanel({ owner }: { owner: string }) {
         </label>
       </div>
       {loading ? (
-        <div className="admin-loading" role="status">
-          <RefreshCw size={20} className="animate-spin" />
-          Merchant мэдээллийг ачаалж байна…
-        </div>
+        <PageSkeleton compact layout="rows" />
       ) : error ? (
         <p className="admin-error" role="alert">
           {error}

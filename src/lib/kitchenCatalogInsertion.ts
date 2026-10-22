@@ -24,10 +24,27 @@ export function cabinetFromCatalog(
     depth: module.depthMm,
     variantId: variant.furnitureModelId,
     doorCount: variant.doorCount === 2 && module.widthMm >= 600 ? 2 : 1,
-    drawerCount: variant.opening === "drawers" ? Math.max(1, Math.min(4, variant.drawerCount || 3)) : 0,
+    drawerCount:
+      variant.opening === "drawers"
+        ? Math.max(1, Math.min(4, variant.drawerCount || 3))
+        : 0,
     fitToCeiling: false,
-    corner: module.cabinetType === "corner",
-    cornerSide: module.cabinetType === "corner" ? "right" : undefined,
-    position: { ...cabinet.position, x: module.widthMm / 2, z: module.depthMm / 2 },
+    corner:
+      module.cabinetType === "corner" || module.code.startsWith("CORNER-WALL-"),
+    cornerSide:
+      module.cabinetType === "corner" || module.code.startsWith("CORNER-WALL-")
+        ? "right"
+        : undefined,
+    autoElevation: module.code.startsWith("FRIDGE-WALL-")
+      ? false
+      : cabinet.autoElevation,
+    position: {
+      ...cabinet.position,
+      ...(module.code.startsWith("FRIDGE-WALL-")
+        ? { y: Math.max(0, ceilingHeight - module.heightMm) }
+        : {}),
+      x: module.widthMm / 2,
+      z: module.depthMm / 2,
+    },
   };
 }

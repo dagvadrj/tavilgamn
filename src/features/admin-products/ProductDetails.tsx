@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { ArrowLeft, Box, RefreshCw } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
+import { merchantRequest } from "@/features/merchant/merchantApi";
 import { formatPrice } from "@/lib/format";
 import { stockLabel } from "@/lib/inventory";
 import { productSpecificationRows } from "@/lib/productSpecifications";
@@ -65,15 +66,17 @@ export function ProductDetails({
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    void authFetch(
+    void (scope === "merchant" ? merchantRequest<Details>(endpoint, owner, { signal: controller.signal }) : authFetch(
       endpoint,
       { signal: controller.signal, cache: "no-store" },
       owner,
-    )
-      .then(async (response) => {
+    ).then(async (response) => {
         const data = await response.json();
         if (!response.ok)
           throw new Error(data?.error ?? "Дэлгэрэнгүй мэдээлэл ачаалсангүй.");
+        return data as Details;
+    }))
+      .then((data) => {
         if (controller.signal.aborted) return;
         setDetails(data);
         setSelectedId((current) =>
@@ -99,7 +102,7 @@ export function ProductDetails({
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [endpoint, owner, refresh]);
+  }, [endpoint, owner, refresh, scope]);
   const selected = details?.versions.find(
     (version) => version.id === selectedId,
   );

@@ -28,10 +28,11 @@ test('partial joins and columns retain exact unoccupied floor cells',()=>{
   const columnCtx=roomPlacementContext(design([a,c],[connection(a,c)]));
   assert.equal(collision.isPlacementValid(piece(),[],columnCtx.room),false);
 });
-test('collision uses neighbour coordinates and per-room ceiling heights',()=>{
+test('open-room placement permits neighbour furniture overlap but keeps per-room ceiling heights',()=>{
   const a=room('a'),b={...room('b',4),height:3.5,pieces:[piece('other',-1.2)]};
   const ctx=roomPlacementContext(design([a,b],[connection(a,b)]));
-  assert.equal(collision.isPlacementValid(piece(),ctx.pieces,ctx.room),false);
+  assert.equal(collision.isPlacementValid(piece(),ctx.pieces,ctx.room),true);
+  assert.equal(collision.furnitureOverlaps(piece(),ctx.pieces[0]),true);
   assert.equal(collision.isPlacementValid(piece('tall',4),[],ctx.room),true);
   assert.equal(collision.isPlacementValid(piece('tall',2),[],ctx.room),false);
   const copy=collision.findFreePlacement({...piece(),instanceId:'copy'},ctx.pieces,ctx.room);

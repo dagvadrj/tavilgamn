@@ -1,6 +1,7 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
-import { useEffect, useState } from "react";
+import { useMerchantResource } from "@/features/merchant/useMerchantResource";
 
 import {
   BadgeDollarSign,
@@ -11,9 +12,6 @@ import {
   ShoppingBag,
   TriangleAlert,
 } from "lucide-react";
-
-import { authFetch } from "@/lib/authFetch";
-import { useAuth } from "@/store/auth";
 
 export type MerchantAnalyticsData = {
   periodStart: string;
@@ -50,80 +48,14 @@ function count(value: string) {
 }
 
 export function useMerchantAnalytics(owner: string, enabled = true) {
-  const [analytics, setAnalytics] = useState<MerchantAnalyticsData | null>(
-    null,
-  );
-
-  const [loading, setLoading] = useState(true);
-
-  const [error, setError] = useState<string | null>(null);
-
-  const [refresh, setRefresh] = useState(0);
-
-  useEffect(() => {
-    if (!enabled) {
-      setLoading(false);
-      setAnalytics(null);
-      return;
-    }
-    const controller = new AbortController();
-
-    let active = true;
-
-    setLoading(true);
-    setError(null);
-
-    authFetch(
-      "/api/merchant/analytics",
-      {
-        signal: controller.signal,
-      },
-      owner,
-    )
-      .then(async (response) => {
-        const data = await response.json().catch(() => null);
-
-        if (!response.ok) {
-          throw new Error(data?.error ?? "Dashboard ачаалсангүй.");
-        }
-
-        return data;
-      })
-      .then((data) => {
-        if (
-          !active ||
-          useAuth.getState().user?.id !== owner ||
-          useAuth.getState().role !== "merchant"
-        ) {
-          return;
-        }
-
-        setAnalytics(data.analytics ?? null);
-      })
-      .catch((reason) => {
-        if (!active) return;
-
-        setError(
-          reason instanceof Error ? reason.message : "Dashboard ачаалсангүй.",
-        );
-      })
-      .finally(() => {
-        if (active) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [owner, refresh, enabled]);
-
+  const result = useMerchantResource<{
+    analytics: MerchantAnalyticsData | null;
+  }>(owner, "/api/merchant/analytics", enabled, 60000);
   return {
-    analytics,
-    loading,
-    error,
-    refresh: () => setRefresh((value) => value + 1),
+    analytics: result.data?.analytics ?? null,
+    loading: result.loading,
+    error: result.error,
+    refresh: result.refresh,
   };
 }
 
@@ -131,9 +63,7 @@ export function MerchantAnalytics({ owner }: { owner: string }) {
   const { analytics, loading, error, refresh } = useMerchantAnalytics(owner);
   if (loading) {
     return (
-      <div className="merchant-state" role="status">
-        Dashboard ачаалж байна…
-      </div>
+      <PageSkeleton compact layout="metrics" />
     );
   }
 

@@ -4,6 +4,30 @@ import { polygonContainsPolygon } from "./roomPolygon";
 
 export const CEILING_FIXTURE_TYPES: Array<{id:CeilingFixtureKind;name:string}>=[{id:"flush",name:"Плафон"},{id:"recessed",name:"Суулгадаг спот"},{id:"pendant",name:"Унждаг гэрэл"},{id:"linear",name:"Шугаман гэрэл"}];
 export const DEFAULT_ROOM_CEILING: RoomCeiling={kind:"flat",drop:.15,borderWidth:.3,coveEnabled:false,coveColor:"#ffe3b3",coveIntensity:20};
+export const RECESSED_FIXTURE_RADIUS = .055;
+export const MAX_ROOM_FIXTURES = 16;
+export const MAX_ROOM_LIGHT_SOURCES = 6;
+
+/** Even spacing clipped by the entire polygon, recesses and column footprints. */
+export function automaticCeilingFixtures(room: RoomShape, roomId: string): CeilingFixture[] {
+  const geometry = getRoomGeometry(room), b = geometry.bounds;
+  const width = b.maxX - b.minX, depth = b.maxZ - b.minZ;
+  let nx = Math.max(1, Math.ceil(width / 2.6)), nz = Math.max(1, Math.ceil(depth / 2.6));
+  while (nx * nz > MAX_ROOM_FIXTURES) {
+    if (nx > 1 && (nx >= nz || nz === 1)) nx--; else nz--;
+  }
+  const fixtures: CeilingFixture[] = [];
+  for (let z = 0; z < nz; z++) for (let x = 0; x < nx; x++) {
+    const fixture: CeilingFixture = { id: `downlight-${roomId}-${x}-${z}`, kind: "recessed", x: b.minX + width * (x + .5) / nx, z: b.minZ + depth * (z + .5) / nz, intensity: 10, color: "#fff1db" };
+    if (fixtureFitsCeiling(room, fixture)) fixtures.push(fixture);
+  }
+  if (!fixtures.length) for (let z = 0; z < 20 && !fixtures.length; z++) for (let x = 0; x < 20; x++) {
+    const candidate: CeilingFixture = { id: `downlight-${roomId}-fallback`, kind: "recessed", x: b.minX + width * (x + .5) / 20, z: b.minZ + depth * (z + .5) / 20, intensity: 10, color: "#fff1db" };
+    if (fixtureFitsCeiling(room, candidate)) { fixtures.push(candidate); break; }
+  }
+  const intensity = Math.max(4, Math.min(18, geometry.area * 2.2 / Math.max(1, fixtures.length)));
+  return fixtures.map(fixture => ({ ...fixture, intensity }));
+}
 const clamp=(value:number|undefined,fallback:number,min:number,max:number)=>Math.max(min,Math.min(max,Number.isFinite(value)?value!:fallback));
 export function normalizeRoomCeiling(value?:RoomCeiling,room?:Pick<RoomShape,"width"|"depth">):RoomCeiling{
   return {kind:value?.kind==="tray"?"tray":"flat",drop:clamp(value?.drop,.15,.08,.4),borderWidth:clamp(value?.borderWidth,.3,.15,Math.min(.8,room?Math.min(room.width,room.depth)/2-.1:.8)),coveEnabled:value?.coveEnabled===true,coveColor:/^#[0-9a-f]{6}$/i.test(value?.coveColor??"")?value!.coveColor:"#ffe3b3",coveIntensity:clamp(value?.coveIntensity,20,0,40)};
@@ -34,7 +58,7 @@ export function ceilingPlan(room:RoomShape&{ceiling?:RoomCeiling}){
 export function ceilingHeightAt(room:RoomShape&{ceiling?:RoomCeiling},x:number,z:number){const p=ceilingPlan(room);return (room.height??2.7)-(p.slabs.some(s=>x>=s.minX-.000001&&x<=s.maxX+.000001&&z>=s.minZ-.000001&&z<=s.maxZ+.000001)?p.config.drop:0);}
 
 export function ceilingFixtureBounds(fixture:CeilingFixture):Bounds{
-  const kind=fixture.kind??"flush",halfX=kind==="linear"?.5:kind==="pendant"?.22:kind==="recessed"?.08:.19,halfZ=kind==="linear"?.06:halfX;
+  const kind=fixture.kind??"flush",halfX=kind==="linear"?.5:kind==="pendant"?.22:kind==="recessed"?RECESSED_FIXTURE_RADIUS:.19,halfZ=kind==="linear"?.06:halfX;
   return {minX:fixture.x-halfX,maxX:fixture.x+halfX,minZ:fixture.z-halfZ,maxZ:fixture.z+halfZ};
 }
 export function fixtureFitsCeiling(room:RoomShape,fixture:CeilingFixture){

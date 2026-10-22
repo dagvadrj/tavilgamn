@@ -150,6 +150,71 @@
   line-height: 1.6;
 }
 
+.kroom-paint fieldset {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.kroom-paint label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.kroom-paint select, .kroom-paint input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--paper-card);
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.kroom-paint input[type="color"] {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.kroom-paint input[aria-invalid="true"] {
+  border-color: #b54c3b;
+}
+
+.kroom-paint-inputs {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.kroom-paint small {
+  color: var(--grain-text);
+  line-height: 1.6;
+  font-size: 11px;
+}
+
+.kroom-paint button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: 9px;
+  background: var(--ink);
+  color: var(--paper-card);
+  font-size: 12px;
+}
+
+.kroom-paint fieldset:disabled {
+  opacity: .55;
+}
+
 .kroom-shapes {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -774,6 +839,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .kroom-workspace-heading small {
@@ -810,6 +876,7 @@
   background: var(--paper-card);
   overflow-x: auto;
   flex-shrink: 0;
+  min-height: 54px;
 }
 
 .kroom-canvas-first .kroom-view-controls button {
@@ -829,6 +896,11 @@
 
 .kroom-canvas-first .kroom-view-controls button:hover {
   background: var(--sand);
+}
+
+.kroom-canvas-first .kroom-view-controls .kroom-paint-open {
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .kroom-canvas-first .kroom-plan-card {

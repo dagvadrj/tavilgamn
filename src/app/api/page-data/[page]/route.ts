@@ -48,6 +48,7 @@ export async function GET(
           stores,
           paymentLabels: configuredPaymentLabels(),
           homepageProductIds: scene.productIds,
+          homepageJourneyProducts: { bedProductId: scene.bedProductId, wardrobeProductId: scene.wardrobeProductId },
         });
       }
       case "stores": {

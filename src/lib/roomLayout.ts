@@ -25,6 +25,26 @@ export function positionedRooms(rooms: DesignRoom[]): DesignRoom[] {
   }
   return placed;
 }
+
+/** Prefer a free shared wall of the selected room when adding another room. */
+export function placeAdjacentRoom(room: DesignRoom, rooms: DesignRoom[], preferredId?: string): DesignRoom {
+  const local = getRoomGeometry(room).bounds;
+  const ordered = [...rooms].sort((a, b) => Number(b.id === preferredId) - Number(a.id === preferredId));
+  for (const neighbor of ordered) {
+    const b = roomWorldBounds(neighbor), centerX = (b.minX + b.maxX) / 2, centerZ = (b.minZ + b.maxZ) / 2;
+    const positions = [
+      { x: b.maxX - local.minX, z: centerZ - (local.minZ + local.maxZ) / 2 },
+      { x: b.minX - local.maxX, z: centerZ - (local.minZ + local.maxZ) / 2 },
+      { x: centerX - (local.minX + local.maxX) / 2, z: b.maxZ - local.minZ },
+      { x: centerX - (local.minX + local.maxX) / 2, z: b.minZ - local.maxZ },
+    ];
+    for (const position of positions) {
+      const candidate = { ...room, position };
+      if (!rooms.some(other => roomsOverlap(candidate, other)) && roomContacts(candidate, neighbor).length) return candidate;
+    }
+  }
+  return positionedRooms([...rooms, { ...room, position: undefined }]).at(-1)!;
+}
 function occupied(room: DesignRoom, x: number, z: number) {
   const p = roomPosition(room), g = getRoomGeometry(room), b = g.bounds;
   x -= p.x; z -= p.z;

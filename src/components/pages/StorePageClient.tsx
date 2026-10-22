@@ -4,20 +4,31 @@ import { RemotePage } from "@/components/RemotePage";
 import type { PageData } from "@/lib/pageData";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, BadgeCheck } from "lucide-react";
 import { ProductCard } from "@/components/ProductCard";
 import { STORE_TYPES } from "@/lib/storeTypes";
 import { CATEGORY_LABEL } from "@/lib/products";
+import { StoreAssistant } from "@/components/StoreFeedback";
 
-export function StorePageClient({ id }: { id: string }) {
+export function StorePageClient({
+  id,
+  verified = false,
+}: {
+  id: string;
+  verified?: boolean;
+}) {
   return (
     <RemotePage page="store" id={id} variant="catalog">
-      {(data) => <StoreContent {...data} />}
+      {(data) => <StoreContent {...data} verified={verified} />}
     </RemotePage>
   );
 }
 
-export function StoreContent({ store, products }: PageData["store"]) {
+export function StoreContent({
+  store,
+  products,
+  verified = false,
+}: PageData["store"] & { verified?: boolean }) {
   const initials = store.name
     .split(" ")
     .map((w) => w[0])
@@ -55,6 +66,11 @@ export function StoreContent({ store, products }: PageData["store"]) {
           </div>
           <div>
             <h1 className="ui-title">{store.name}</h1>
+            {verified && (
+              <span className="inline-flex items-center gap-1.5 text-sm text-ui-accent">
+                <BadgeCheck size={16} /> Verified Merchant
+              </span>
+            )}
             <Link
               href={`/stores?type=${store.storeType}`}
               className="mt-2 inline-block text-xs font-medium text-ui-accent underline underline-offset-4"
@@ -88,6 +104,7 @@ export function StoreContent({ store, products }: PageData["store"]) {
         </div>
       </div>
 
+      <StoreAssistant storeId={store.id} />
       <p className="ui-eyebrow mb-6">
         {products.length > 0
           ? `${products.length} бүтээгдэхүүн`

@@ -1,0 +1,280 @@
+.merchant-ops {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.merchant-ops .reference-heading {
+  margin-bottom: 0;
+}
+
+.merchant-ops h1 {
+  font-size: clamp(22px, 3vw, 30px);
+}
+
+.merchant-ops h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.merchant-ops h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.merchant-ops p {
+  color: var(--dashboard-muted, #a6a4ad);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.ops-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--dashboard-muted, #a6a4ad);
+}
+
+.ops-card, .ops-empty, .ops-add-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--dashboard-border, #34323b);
+  border-radius: 16px;
+  background: var(--dashboard-surface, #202026);
+}
+
+.ops-card > span, .ops-card > small {
+  color: var(--dashboard-muted, #a6a4ad);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.ops-branch-list, .ops-permissions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ops-card-list {
+  display: grid;
+  gap: 16px;
+}
+
+.ops-add-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 100px;
+}
+
+.merchant-ops .input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+}
+
+.ops-form {
+  display: grid;
+  gap: 16px;
+}
+
+.ops-form fieldset {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.ops-form label, .ops-search label, .ops-filter, .ops-stock-row label {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.ops-form textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.ops-form small {
+  color: var(--dashboard-muted, #a6a4ad);
+}
+
+.ops-form .ops-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ops-check input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.ops-actions, .ops-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.ops-pager {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.ops-search {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.ops-search label {
+  flex: 1;
+  min-width: 0;
+}
+
+.ops-stock-list {
+  display: grid;
+  gap: 12px;
+}
+
+.ops-stock-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 42%);
+  align-items: center;
+  gap: 20px;
+  border-top: 1px solid var(--dashboard-border, #34323b);
+  padding: 18px 0;
+}
+
+.ops-stock-row fieldset {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.ops-stock-row fieldset button {
+  grid-column: 1 / -1;
+}
+
+.ops-stock-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.ops-stock-tags span {
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #8881;
+}
+
+.ops-filter {
+  max-width: 320px;
+}
+
+.ops-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.ops-photos img {
+  width: 100px;
+  height: 100px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.ops-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ops-faq {
+  border-top: 1px solid var(--dashboard-border, #34323b);
+  padding-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.ops-faq-preview {
+  padding: 16px;
+  border-radius: 12px;
+  background: #8881;
+}
+
+.ops-empty {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.ops-success {
+  padding: 12px;
+  border-radius: 10px;
+  background: #24835d20;
+  color: #69cba3;
+}
+
+.ops-risk {
+  padding: 18px;
+  border: 1px solid var(--dashboard-border, #34323b);
+  border-radius: 14px;
+  margin: 18px 0;
+}
+
+.ops-risk > p {
+  margin: 0;
+}
+
+.ops-risk > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ops-risk article {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.ops-risk strong {
+  font-size: 23px;
+}
+
+.ops-risk small {
+  font-size: 13px;
+  color: var(--dashboard-muted, #a6a4ad);
+}
+
+@media (max-width: 700px) {
+  .ops-branch-list, .ops-permissions {
+    grid-template-columns: 1fr;
+  }
+  .ops-card {
+    padding: 16px;
+  }
+  .ops-stock-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .ops-risk > div {
+    grid-template-columns: 1fr;
+  }
+  .merchant-ops .input {
+    font-size: 16px;
+  }
+}

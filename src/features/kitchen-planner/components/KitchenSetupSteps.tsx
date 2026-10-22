@@ -15,7 +15,7 @@ export function KitchenSetupSteps({ stage, kitchen, disabled, message, onChange,
   return <section className="kitchen-setup-steps planner-entry-theme">
     <div className="kitchen-setup-card">
       <CookingPot size={32} />
-      <p>{stage === 'room' ? '1 / 7' : '2 / 7'}</p>
+      <p>Өрөө · 1 / 4</p>
       <h1>{stage === 'room' ? 'Гал тогоогоо төлөвлөх' : 'Өрөөний хэмжээ'}</h1>
       <p>{'Алхам солиход таны сонголт, тавилгын байрлал хадгалагдана.'}</p>
       {stage === 'room' ? <div className="kitchen-setup-room-choice"><CookingPot size={24} /><strong>{'Гал тогоо'}</strong><span>{kitchen.room.width} × {kitchen.room.depth} мм</span></div> : <div className="kitchen-setup-fields">

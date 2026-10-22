@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { instantiateRoomTemplate } from "@/lib/roomTemplates";
 import type {
   RoomDesign,
   RoomSize,
@@ -26,8 +27,11 @@ import {
   roomContacts,
   roomsOverlap,
   snapRoomPosition,
+  placeAdjacentRoom,
 } from "@/lib/roomLayout";
-import { layoutFurnitureIssue, roomPlacementContext } from "@/three/roomPlacement";
+import { activeRoomPlacementContext, layoutFurnitureIssue, roomPlacementContext } from "@/three/roomPlacement";
+import { assessKitchenRoomFit } from "@/lib/kitchenRoomFit";
+import type { KitchenSnapshot } from "@/lib/kitchenAssembly";
 import {
   movedFurnitureId,
   reassignFurnitureRooms,
@@ -45,6 +49,7 @@ export const ROOM_DIMENSIONS: Record<RoomSize, { w: number; d: number }> = {
 };
 
 interface DesignState {
+  importTemplate: (design: RoomDesign) => void;
   furniture: SavedFurniture[];
   rememberFurniture: (piece: PlacedFurniture, quantity?: number) => void;
   removeFurniture: (id: string) => void;
@@ -85,6 +90,7 @@ interface DesignState {
   duplicateDesign: (id: string) => void;
   updatePieces: (pieces: PlacedFurniture[]) => void;
   placeFurniture: (piece: PlacedFurniture, hints?: InitialPlacementHints) => { piece: PlacedFurniture | null; error: string | null };
+  placeKitchen: (saved: KitchenSnapshot) => { piece: PlacedFurniture | null; error: string | null; message: string };
   updateRoom: (
     patch: Partial<
       Pick<
@@ -150,6 +156,12 @@ const blankDesign = (
 export const useDesigns = create<DesignState>()(
   persist(
     (set, get) => ({
+      importTemplate: (source) => {
+        const copy = instantiateRoomTemplate(source);
+        get().endEdit();
+        get().saveCurrent();
+        set(state => ({ current: copy, designs: [...state.designs, copy], past: [], future: [], transaction: null }));
+      },
       designs: [],
       furniture: [],
       rememberFurniture: (piece, quantity) => {
@@ -328,12 +340,11 @@ export const useDesigns = create<DesignState>()(
         if (!current) return;
         const synced = cloneDesign(current);
         const blank = newDesignRoom(type, synced.rooms!);
-        const room = positionedRooms([
-          ...synced.rooms!,
-          options ? configureAddedRoom(blank, options) : blank,
-        ]).at(-1)!;
+        const room = placeAdjacentRoom(options ? configureAddedRoom(blank, options) : blank, synced.rooms!, synced.activeRoomId);
+        const allRooms = [...synced.rooms!, room];
+        const connections = [...(synced.connections ?? []), ...synced.rooms!.flatMap(other => roomContacts(room, other).map(contact => defaultConnection(contact, allRooms)))];
         const next = activateDesignRoom(
-          { ...synced, rooms: [...synced.rooms!, room] },
+          { ...synced, rooms: allRooms, connections },
           room.id,
         );
         set({
@@ -546,16 +557,33 @@ export const useDesigns = create<DesignState>()(
           return failure("Өрөө эсвэл тавилгын бэхэлгээний мэдээлэл тохирохгүй байна. Өрөөний тохиргоогоо шалгана уу.");
         }
       },
+      placeKitchen: (saved) => {
+        const current = get().current;
+        const failure = (error: string) => ({ piece: null, error, message: error });
+        if (!current) return failure("Эхлээд өрөөгөө сонгоно уу.");
+        if (get().transaction) return failure("Одоогийн засвараа дуусгаад дахин байрлуулна уу.");
+        const context = activeRoomPlacementContext(current);
+        const fit = assessKitchenRoomFit(saved, context.pieces, context.room, `p_${crypto.randomUUID()}`);
+        if (!fit.placement) return failure(fit.message);
+        get().updatePieces([...current.pieces, fit.placement]);
+        const piece = get().current?.pieces.find(item => item.instanceId === fit.placement!.instanceId);
+        return piece ? { piece, error: null, message: fit.message }
+          : failure("Өрөөний байрлал өөрчлөгдсөн байна. Гарнитураа дахин сонгоно уу.");
+      },
       updatePieces: (pieces) => {
         const c = get().current;
         if (!c) return;
         try { pieces = resolveFurnitureAttachments(pieces, c, c.activeRoomId ?? `${c.id}-room-1`); } catch { return; }
         if (JSON.stringify(c.pieces) === JSON.stringify(pieces)) return;
         const next = cloneDesign({ ...c, pieces, updatedAt: Date.now() });
-        if (pieces.some(p => p.attachment)) {
-          const context=roomPlacementContext(next);
-          if(pieces.some(p=>p.attachment&&!isPlacementValid(p,context.pieces,context.room)))return;
-        }
+        const context = roomPlacementContext(next);
+        // Validate changed footprints, including unbound floor pieces. Existing
+        // legacy errors must not prevent fixing or deleting a different item.
+        if (pieces.some(piece => {
+          const previous = c.pieces.find(p => p.instanceId === piece.instanceId);
+          return JSON.stringify(previous) !== JSON.stringify(piece)
+            && !isPlacementValid(piece, context.pieces, context.room);
+        })) return;
         set({
           current: get().transaction
             ? next
@@ -593,6 +621,8 @@ export const useDesigns = create<DesignState>()(
             return;
         }
         const compatiblePatch = { ...patch };
+        if (patch.lighting?.fixtures && patch.lighting.fixtureLayout === undefined)
+          compatiblePatch.lighting = { ...patch.lighting, fixtureLayout: "manual" };
         try {
           const pieces = resolveFurnitureAttachments(patch.pieces ?? c.pieces, { ...c, ...patch }, c.activeRoomId ?? `${c.id}-room-1`);
           if (JSON.stringify(pieces) !== JSON.stringify(c.pieces) || patch.pieces) compatiblePatch.pieces = pieces;
@@ -690,6 +720,19 @@ export function setDesignOwner(userId: string | null) {
     current = null;
   }
 
+  let handoff: RoomDesign | null = null;
+  if (userId) {
+    try {
+      const pending = JSON.parse(window.sessionStorage.getItem("casa-room-auth-handoff") ?? "null");
+      if (pending?.source === "guest" && Number.isFinite(pending.createdAt) && Date.now() - pending.createdAt >= 0 && Date.now() - pending.createdAt < 86400000 && /^d_[a-f0-9-]{36}$/i.test(pending.design?.id)) {
+        handoff = cloneDesign(pending.design);
+        // Never overwrite a project already belonging to the signed-in account.
+        if (designs.some(design => design.id === handoff!.id)) handoff = null;
+        if (handoff) { designs = [...designs, handoff]; current = handoff; }
+      }
+    } catch { /* A missing or invalid handoff must not affect the account library. */ }
+  }
+
   useDesigns.persist.setOptions({ name: storageName });
   useDesigns.setState({
     designs,
@@ -699,4 +742,27 @@ export function setDesignOwner(userId: string | null) {
     future: [],
     transaction: null,
   });
+  if (handoff) {
+    const stored = JSON.parse(window.localStorage.getItem(storageName) ?? "null");
+    if (stored?.state?.current?.id === handoff.id) window.sessionStorage.removeItem("casa-room-auth-handoff");
+  }
+}
+
+/** Explicitly carry only the open guest project through this tab's sign-in. */
+export function prepareRoomAuthReturn(): string {
+  const store = useDesigns.getState();
+  store.endEdit();
+  store.saveCurrent();
+  const current = useDesigns.getState().current;
+  if (!current) return "/planner";
+  let id = current.id;
+  if (useDesigns.persist.getOptions().name === "casa-designs-guest") {
+    // A separate identity keeps existing account projects and the guest original intact.
+    const design = cloneDesign({ ...current, id: createDesignId() });
+    const pending = JSON.stringify({ source: "guest", createdAt: Date.now(), design });
+    window.sessionStorage.setItem("casa-room-auth-handoff", pending);
+    if (window.sessionStorage.getItem("casa-room-auth-handoff") !== pending) throw new Error("Нэвтрэхийн өмнө загварыг хадгалж чадсангүй. Browser-ийн хадгалалтын зөвшөөрлийг шалгана уу.");
+    id = design.id;
+  }
+  return `/planner?design=${encodeURIComponent(id)}`;
 }

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Tailwind UI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#09090b',
+                        card: '#18181b',
+                        border: '#27272a',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#09090b] text-zinc-100 font-sans antialiased flex h-screen overflow-hidden">
+
+    <!-- 1. SIDEBAR -->
+    <aside class="w-64 border-r border-[#27272a] bg-[#09090b] flex flex-col justify-between hidden md:flex">
+        <div>
+            <!-- Brand / Logo -->
+            <div class="h-16 flex items-center px-6 border-b border-[#27272a]">
+                <div class="flex items-center gap-2">
+                    <div class="h-7 w-7 rounded-md bg-white text-black flex items-center justify-center font-bold text-sm">S</div>
+                    <div>
+                        <h1 class="text-xs font-semibold leading-tight">ShadcnBlocks</h1>
+                        <p class="text-[10px] text-zinc-400">Next.js + shadcn/ui</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <div class="p-4 space-y-6 overflow-y-auto">
+                <div>
+                    <p class="px-2 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">General</p>
+                    <nav class="space-y-1">
+                        <a href="#" class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md bg-zinc-800 text-white">
+                            <span>📊</span> Dashboard
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                            <span>📁</span> Tasks
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                            <span>👥</span> Users
+                        </a>
+                    </nav>
+                </div>
+
+                <div>
+                    <p class="px-2 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">Pages</p>
+                    <nav class="space-y-1">
+                        <a href="#" class="flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                            <span class="flex items-center gap-3">🔒 Auth</span>
+                            <span class="text-[10px]">›</span>
+                        </a>
+                        <a href="#" class="flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                            <span class="flex items-center gap-3">⚠️ Errors</span>
+                            <span class="text-[10px]">›</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <div>
+                    <p class="px-2 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2">Settings</p>
+                    <nav class="space-y-1">
+                        <a href="#" class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                            <span>⚙️</span> General
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                            <span>👤</span> Profile
+                        </a>
+                        <a href="#" class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200">
+                            <span>💳</span> Billing
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Footer Profile -->
+        <div class="p-4 border-t border-[#27272a] flex items-center gap-3">
+            <div class="h-8 w-8 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-semibold text-xs border border-indigo-500/30">AU</div>
+            <div class="overflow-hidden">
+                <p class="text-xs font-medium truncate">ausrodev</p>
+                <p class="text-[10px] text-zinc-500 truncate">rob@shadcnblocks.com</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 2. MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <!-- Top Header -->
+        <header class="h-16 border-b border-[#27272a] bg-[#09090b] px-6 flex items-center justify-between">
+            <div class="flex items-center gap-4 w-96">
+                <div class="relative w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-500 text-xs">🔍</span>
+                    <input type="text" placeholder="Search..." class="w-full h-9 bg-zinc-900 border border-[#27272a] rounded-lg pl-9 pr-12 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-[10px] text-zinc-500 bg-zinc-800/50 my-1.5 px-1.5 rounded border border-zinc-700">⌘K</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button class="flex items-center gap-2 h-9 px-3 bg-zinc-900 hover:bg-zinc-800 border border-[#27272a] rounded-lg text-xs font-medium transition">
+                    <span>⬇</span> Download
+                </button>
+                <button class="flex items-center gap-2 h-9 px-3 bg-zinc-900 hover:bg-zinc-800 border border-[#27272a] rounded-lg text-xs font-medium text-zinc-300 transition">
+                    <span>📅</span> Pick a date
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Viewport -->
+        <main class="flex-1 overflow-y-auto p-8 space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold tracking-tight">Dashboard</h2>
+                <div class="flex bg-zinc-900 p-1 rounded-lg border border-[#27272a] text-xs">
+                    <button class="px-3 py-1.5 bg-zinc-800 text-white rounded-md font-medium shadow-sm">Overview</button>
+                    <button class="px-3 py-1.5 text-zinc-400 hover:text-zinc-200">Analytics</button>
+                    <button class="px-3 py-1.5 text-zinc-400 hover:text-zinc-200">Reports</button>
+                </div>
+            </div>
+
+            <!-- Top Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Stat Card 1 -->
+                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5 space-y-2">
+                    <div class="flex items-center justify-between text-xs text-zinc-400">
+                        <span>New Subscriptions</span>
+                        <span>ℹ️</span>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <h3 class="text-2xl font-bold">4,682</h3>
+                        <span class="text-xs font-medium text-emerald-400">+15.54%</span>
+                    </div>
+                    <p class="text-[10px] text-zinc-500">Since last week</p>
+                </div>
+
+                <!-- Stat Card 2 -->
+                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5 space-y-2">
+                    <div class="flex items-center justify-between text-xs text-zinc-400">
+                        <span>New Orders</span>
+                        <span>ℹ️</span>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <h3 class="text-2xl font-bold">1,226</h3>
+                        <span class="text-xs font-medium text-rose-400">-40.2%</span>
+                    </div>
+                    <p class="text-[10px] text-zinc-500">Since last week</p>
+                </div>
+
+                <!-- Stat Card 3 -->
+                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5 space-y-2">
+                    <div class="flex items-center justify-between text-xs text-zinc-400">
+                        <span>Avg Order Revenue</span>
+                        <span>ℹ️</span>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <h3 class="text-2xl font-bold">1,080</h3>
+                        <span class="text-xs font-medium text-emerald-400">+10.8%</span>
+                    </div>
+                    <p class="text-[10px] text-zinc-500">Details</p>
+                </div>
+
+                <!-- Stat Card 4 -->
+                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5 space-y-2">
+                    <div class="flex items-center justify-between text-xs text-zinc-400">
+                        <span>Total Revenue</span>
+                    </div>
+                    <div class="flex items-baseline justify-between">
+                        <h3 class="text-2xl font-bold">$15,231.89</h3>
+                    </div>
+                    <p class="text-[10px] text-zinc-500">+20.1% from last month</p>
+                </div>
+            </div>
+
+            <!-- Bottom Section Grid (Table + Analytics) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Left: Payments Table -->
+                <div class="lg:col-span-2 bg-[#18181b] border border-[#27272a] rounded-xl p-6 space-y-4">
+                    <div>
+                        <h3 class="text-sm font-semibold">Payments</h3>
+                        <p class="text-xs text-zinc-400">Manage your payments.</p>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4">
+                        <input type="text" placeholder="Filter emails..." class="h-9 w-64 bg-zinc-900 border border-[#27272a] rounded-lg px-3 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none">
+                        <button class="h-9 px-3 bg-zinc-900 border border-[#27272a] rounded-lg text-xs font-medium text-zinc-300">Columns ▾</button>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="border-b border-[#27272a] text-zinc-400">
+                                <tr>
+                                    <th class="py-3 px-2 w-8"><input type="checkbox" class="rounded bg-zinc-900 border-zinc-700"></th>
+                                    <th class="py-3 px-4 font-medium">Status</th>
+                                    <th class="py-3 px-4 font-medium">Email ↕</th>
+                                    <th class="py-3 px-4 font-medium text-right">Amount</th>
+                                    <th class="py-3 px-2"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#27272a]/50 text-zinc-300">
+                                <tr>
+                                    <td class="py-3 px-2"><input type="checkbox" class="rounded bg-zinc-900 border-zinc-700"></td>
+                                    <td class="py-3 px-4 text-emerald-400 font-medium">Success</td>
+                                    <td class="py-3 px-4">kam88@yahoo.com</td>
+                                    <td class="py-3 px-4 text-right font-medium">$316.00</td>
+                                    <td class="py-3 px-2 text-zinc-500 text-center">···</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-2"><input type="checkbox" class="rounded bg-zinc-900 border-zinc-700"></td>
+                                    <td class="py-3 px-4 text-emerald-400 font-medium">Success</td>
+                                    <td class="py-3 px-4">abe45@gmail.com</td>
+                                    <td class="py-3 px-4 text-right font-medium">$242.00</td>
+                                    <td class="py-3 px-2 text-zinc-500 text-center">···</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-2"><input type="checkbox" class="rounded bg-zinc-900 border-zinc-700"></td>
+                                    <td class="py-3 px-4 text-amber-400 font-medium">Processing</td>
+                                    <td class="py-3 px-4">monserrat44@gmail.com</td>
+                                    <td class="py-3 px-4 text-right font-medium">$837.00</td>
+                                    <td class="py-3 px-2 text-zinc-500 text-center">···</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-2"><input type="checkbox" class="rounded bg-zinc-900 border-zinc-700"></td>
+                                    <td class="py-3 px-4 text-rose-400 font-medium">Failed</td>
+                                    <td class="py-3 px-4">carmella@hotmail.com</td>
+                                    <td class="py-3 px-4 text-right font-medium">$721.00</td>
+                                    <td class="py-3 px-2 text-zinc-500 text-center">···</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Right: Team Members Card -->
+                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-6 space-y-4">
+                    <div>
+                        <h3 class="text-sm font-semibold">Team Members</h3>
+                        <p class="text-xs text-zinc-400">Invite your team members to collaborate.</p>
+                    </div>
+
+                    <div class="space-y-4 pt-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center font-bold text-xs text-white">DK</div>
+                                <div>
+                                    <p class="text-xs font-medium">Dale Komen</p>
+                                    <p class="text-[10px] text-zinc-500">dale@example.com</p>
+                                </div>
+                            </div>
+                            <span class="text-xs bg-zinc-900 border border-[#27272a] px-2.5 py-1 rounded-md text-zinc-300">Member ▾</span>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center font-bold text-xs text-white">SD</div>
+                                <div>
+                                    <p class="text-xs font-medium">Sofia Davis</p>
+                                    <p class="text-[10px] text-zinc-500">sofia@example.com</p>
+                                </div>
+                            </div>
+                            <span class="text-xs bg-zinc-900 border border-[#27272a] px-2.5 py-1 rounded-md text-zinc-300">Owner ▾</span>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="h-8 w-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-xs text-white">JL</div>
+                                <div>
+                                    <p class="text-xs font-medium">Jackson Lee</p>
+                                    <p class="text-[10px] text-zinc-500">p@example.com</p>
+                                </div>
+                            </div>
+                            <span class="text-xs bg-zinc-900 border border-[#27272a] px-2.5 py-1 rounded-md text-zinc-300">Member ▾</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

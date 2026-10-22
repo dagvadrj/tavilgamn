@@ -1,0 +1,142 @@
+.room-placement-help {
+  position: relative;
+  margin-left: auto;
+}
+
+.room-placement-help .room-help-button {
+  position: relative;
+  margin: 0;
+}
+
+.room-warning-count {
+  position: absolute;
+  top: -3px;
+  right: -4px;
+  min-width: 20px;
+  padding: 2px 4px;
+  border-radius: 12px;
+  background: #9a4d06;
+  color: #fff;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.room-placement-popup {
+  position: absolute;
+  z-index: 60;
+  top: 52px;
+  right: 0;
+  width: min(350px, calc(100vw - 32px));
+  max-height: min(520px, calc(100dvh - 210px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+  border: 1px solid #dce2e8;
+  border-radius: 16px;
+  background: #fff;
+  color: #263847;
+  font-size: 13px;
+  line-height: 1.6;
+  box-shadow: 0 8px 28px #17222d18;
+}
+
+.room-placement-popup-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.room-placement-popup-heading button {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.room-placement-popup p {
+  margin-block: 10px;
+}
+
+.room-placement-popup ul {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.room-placement-popup li {
+  padding-block: 10px;
+  border-top: 1px solid #e8ebef;
+}
+
+.room-placement-popup li button, .room-placement-guide {
+  display: block;
+  min-height: 44px;
+  text-align: left;
+  color: #075eaa;
+}
+
+.room-placement-popup small {
+  color: #627180;
+}
+
+.room-placement-guide {
+  margin-top: 12px;
+  font-weight: 650;
+}
+
+.room-navigation-instructions {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid #e8ebef;
+}
+
+.room-touch-instructions {
+  display: none;
+}
+
+.room-project-name > span[role="status"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.room-project-name > span[data-save-kind="error"] {
+  color: #a33922;
+}
+
+@media (pointer: coarse) {
+  .room-touch-instructions {
+    display: block;
+  }
+  .room-mouse-instructions {
+    display: none;
+  }
+}
+
+.room-navigation-status {
+  position: absolute;
+  bottom: calc(100% + 52px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  display: grid;
+  gap: 4px;
+  width: max-content;
+  max-width: calc(100vw - 100px);
+}
+
+.room-navigation-status button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #dce2e8;
+  border-radius: 12px;
+  background: #fff;
+  color: #263847;
+  font-size: 11px;
+}

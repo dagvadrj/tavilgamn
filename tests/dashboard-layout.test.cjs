@@ -30,7 +30,10 @@ test("admin and merchant keep public URLs but no longer inherit storefront chrom
   const admin = read("src/components/AdminDashboard.tsx");
   assert.match(admin, /<main\s+id="main-content"/);
   assert.match(admin, /<AdminShell\b/);
-  assert.match(read("src/components/AdminShell.tsx"), /<main\s+id="main-content"/);
+  assert.match(
+    read("src/components/AdminShell.tsx"),
+    /<main\s+id="main-content"/,
+  );
   assert.ok(fs.existsSync("src/app/(admin)/admin/page.tsx"));
   assert.ok(fs.existsSync("src/app/(admin)/merchant/page.tsx"));
   assert.equal(fs.existsSync("src/app/(shop)/merchant/page.tsx"), false);
@@ -57,6 +60,10 @@ test("full admin sidebar preserves every operation and marks only the selected d
       "messages",
       "models",
       "kitchens",
+      "merchant-ops",
+      "kitchen-library",
+      "rooms",
+      "contracts",
       "settings",
       "profile",
     ],
@@ -86,7 +93,22 @@ test("merchant sidebar keeps all operations and settings and disables private st
   );
   assert.deepEqual(
     MERCHANT_TABS.map((tab) => tab.id),
-    ["overview", "products", "orders", "kitchens", "quotes", "store", "settings", "profile"],
+    [
+      "overview",
+      "activation",
+      "wallet",
+      "reports",
+      "contracts",
+      "products",
+      "orders",
+      "delivery",
+      "branches", "staff", "reviews", "assistant", "returns",
+      "kitchens",
+      "quotes",
+      "store",
+      "settings",
+      "profile",
+    ],
   );
   const props = {
     active: "overview",
@@ -102,7 +124,7 @@ test("merchant sidebar keeps all operations and settings and disables private st
   );
   for (const tab of MERCHANT_TABS)
     assert.ok(locked.includes(tab.label), `Missing ${tab.label}`);
-  assert.equal((locked.match(/disabled=""/g) ?? []).length, 4);
+  assert.equal((locked.match(/disabled=""/g) ?? []).length, 14);
   assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 1);
   const unlocked = desktopMarkup(
     renderToStaticMarkup(
@@ -137,11 +159,11 @@ test("headers do not advertise an inactive keyboard shortcut or a dummy message 
   assert.doesNotMatch(admin, /⌘\s*K|<kbd>/);
   assert.doesNotMatch(merchant, /⌘\s*K|<kbd>/);
   assert.doesNotMatch(admin, /admin-header-notification/);
-  assert.match(merchant, /onQuotes/);
+  assert.match(merchant, /Хуудасны зам/);
   assert.match(merchant, /<MerchantNotifications\b/);
 });
 
-test("merchant header actions are real callbacks, linked to the mobile dialog, and store-gated", () => {
+test("merchant breadcrumb replaces the large header and retains mobile navigation and notifications", () => {
   const calls = [];
   const { MerchantHeader } = loadSource("src/components/MerchantHeader.tsx");
   const tree = MerchantHeader({
@@ -151,8 +173,7 @@ test("merchant header actions are real callbacks, linked to the mobile dialog, a
     activeLabel: "Ерөнхий тойм",
     hasStore: false,
     sidebarOpen: false,
-    onProducts: () => calls.push("products"),
-    onQuotes: () => calls.push("quotes"),
+    onHome: () => calls.push("overview"),
     onKitchens() {},
     onProfile: () => calls.push("profile"),
     onToggleSidebar: () => calls.push("menu"),
@@ -163,12 +184,18 @@ test("merchant header actions are real callbacks, linked to the mobile dialog, a
   const menu = buttons.find((button) => button.props["aria-controls"]);
   assert.equal(menu.props["aria-controls"], "merchant-dashboard-navigation");
   assert.equal(menu.props["aria-expanded"], false);
-  const quotes = buttons.find(
-    (button) => button.props["aria-label"] === "Үнийн хүсэлтүүд",
+  const home = buttons.find(
+    (button) => button.props["aria-label"] === "Дэлгүүрийн ерөнхий тойм",
   );
-  assert.equal(quotes.props.disabled, true);
-  quotes.props.onClick();
-  assert.deepEqual(calls, ["quotes"]);
+  home.props.onClick();
+  menu.props.onClick();
+  assert.deepEqual(calls, ["overview", "menu"]);
+  assert.equal(elements(tree, (node) => node.type === "header").length, 0);
+  assert.equal(
+    elements(tree, (node) => node.props["aria-current"] === "page")[0].props
+      .children,
+    "Ерөнхий тойм",
+  );
 });
 
 test("admin header navigation has working callbacks and exposes matching dialog state", () => {

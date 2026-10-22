@@ -35,13 +35,14 @@ test("both planners retain lazy 3D scenes and only open room inspectors reserve 
   assert.doesNotMatch(kitchen, /<PlannerRail/);
   assert.match(room, /active=\{inspector === "catalog" && leftOpen\}/);
   assert.match(room, /active=\{inspector === "environment" && rightOpen\}/);
-  assert.match(room, /aria-label="Тавилгын ангилал"/);
+  assert.match(room, /<RoomCatalogFilters/);
+  assert.match(source("src/features/room-planner/components/RoomCatalogFilters.tsx"), /aria-label="Тавилгын ангилал"/);
   assert.match(source("src/features/room-planner/components/PlannerPanels.tsx"), /if \(!active\) return null/);
 });
 
 test("kitchen opens directly with optional setup and keeps product editing on the left", () => {
   const entry = source("src/components/KitchenPlanner.tsx");
-  assert.match(entry, /params.get\("setup"\) === "1"/);
+  assert.doesNotMatch(entry, /<KitchenSuggestionWizard/);
   assert.match(entry, /<ModularKitchenPlanner/);
   assert.match(entry, /queryString=\{query\}/);
   const kitchen = source("src/components/ModularKitchenPlanner.tsx");

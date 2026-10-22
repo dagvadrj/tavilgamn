@@ -1,9 +1,12 @@
 "use client";
+import { startPlannerNavigation } from "@/lib/plannerNavigation";
+import { RoomPlannerSignIn } from "./RoomPlannerSignIn";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { RoomBuilder } from "./RoomBuilder";
+import { RoomTemplateGallery } from "./RoomTemplateGallery";
 import { createRoomBuilderDraft } from "@/lib/roomBuilderDraft";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/store/auth";
@@ -11,18 +14,12 @@ import { KITCHEN_FLOW_STAGES, saveKitchenFlowDraft, type KitchenFlowStage } from
 import { createSuggestedKitchen, DEFAULT_KITCHEN_SUGGESTION } from "@/lib/kitchenSuggestions";
 import { KitchenSuggestionWizard } from "@/components/KitchenSuggestionWizard";
 import {
-  Armchair,
   ArrowLeft,
   ArrowRight,
-  Bath,
-  BedDouble,
   Check,
-  ChefHat,
   House,
-  Monitor,
   PencilRuler,
   Ruler,
-  Shapes,
 } from "lucide-react";
 import { RoomMeasureUnit, useRoomMeasureUnit } from "./RoomMeasureUnit";
 import { OpeningQuickEditor } from "./OpeningQuickEditor";
@@ -43,45 +40,6 @@ import "@/features/planner/components/planner-entry-theme.css";
 import { RoomFurnishingPicker } from "@/components/RoomFurnishingPicker";
 import type { AddRoomOptions } from "@/lib/addRoomOptions";
 
-const ROOM_CHOICES = [
-  {
-    type: "living",
-    Icon: Armchair,
-    description: "Буйдан, ширээ, зурагтын хэсэг",
-    tone: "sand",
-  },
-  {
-    type: "bedroom",
-    Icon: BedDouble,
-    description: "Ор, хувцасны шүүгээ, амрах орчин",
-    tone: "rose",
-  },
-  {
-    type: "kitchen",
-    Icon: ChefHat,
-    description: "Гарнитур, хоол хийх ба идэх хэсэг",
-    tone: "sage",
-  },
-  {
-    type: "office",
-    Icon: Monitor,
-    description: "Ажлын ширээ, сандал, номын тавиур",
-    tone: "blue",
-  },
-  {
-    type: "bathroom",
-    Icon: Bath,
-    description: "Угаалгын өрөөний зайгаа төлөвлөх",
-    tone: "aqua",
-  },
-  {
-    type: "other",
-    Icon: Shapes,
-    description: "Өөр зориулалттай өрөөг тохижуулах",
-    tone: "lilac",
-  },
-] as const;
-
 export function RoomPlannerStart({
   onStart,
   draft,
@@ -89,6 +47,7 @@ export function RoomPlannerStart({
   designs = [],
   onOpen,
   onDelete,
+  onTemplate,
 }: {
   onStart: (
     type: RoomType,
@@ -109,9 +68,11 @@ export function RoomPlannerStart({
   designs?: { id: string; name: string; width: number; depth: number }[];
   onOpen?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onTemplate: (design: import("@/lib/types").RoomDesign) => void;
 }) {
   const kitchenRouter = useRouter();
   const kitchenUser = useAuth(state => state.user);
+  const isAdmin = useAuth(state => state.role === "admin");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const deleteControl = (id: string, name: string) => onDelete && (deleteId === id
     ? <div className="room-start-delete-confirm"><span>Энэ өрөөг устгах уу?</span><button type="button" onClick={() => { onDelete(id); setDeleteId(null); }}>Тийм, устгах</button><button type="button" onClick={() => setDeleteId(null)}>Болих</button></div>
@@ -173,10 +134,26 @@ export function RoomPlannerStart({
     try {
       const design = createSuggestedKitchen(kitchenPreferences, dimensions);
       const href = saveKitchenFlowDraft(localStorage, { userId: kitchenUser?.id, draftId: crypto.randomUUID(), design, preferences: kitchenPreferences, stage });
+      startPlannerNavigation(href);
       kitchenRouter.push(href);
     } catch(reason) { setError((reason as Error).message); }
   }
   function chooseType(type: RoomType) {
+    if (type === "kitchen") {
+      try {
+        const { width, depth } = ROOM_TYPES.kitchen;
+        const design = createSuggestedKitchen(DEFAULT_KITCHEN_SUGGESTION, { width, depth, height: 2.7 });
+        const href = saveKitchenFlowDraft(localStorage, {
+          userId: kitchenUser?.id, draftId: crypto.randomUUID(), design,
+          preferences: DEFAULT_KITCHEN_SUGGESTION, stage: "room",
+        });
+        startPlannerNavigation(href);
+        kitchenRouter.push(href);
+      } catch (reason) {
+        setError(reason instanceof Error ? reason.message : "Гал тогооны төлөвлөгчийг нээж чадсангүй.");
+      }
+      return;
+    }
     const next = ROOM_TYPES[type];
     setRoomType(type);
     setChoice(suggestedRoomIndex(type));
@@ -185,7 +162,7 @@ export function RoomPlannerStart({
     setHeight("270");
     setError("");
     setStep(2);
-    if (type !== "kitchen") setBuilderOpen(true);
+    setBuilderOpen(true);
   }
   if (builderOpen) return <RoomBuilder initial={createRoomBuilderDraft(dimensions)} onCancel={() => { setBuilderOpen(false); setStep(1); }} onComplete={draft => { try { onStart(roomType, draft, { ...draft, name:room.label, door:false, window:false, doorWall:"south", windowWall:"north", furnishing:"empty" }); return null; } catch(reason) { return (reason as Error).message; } }} />;
   if (kitchenSetup)
@@ -199,12 +176,13 @@ export function RoomPlannerStart({
       />
     );
   return (
-    <section className="room-start planner-entry-theme" aria-label="Өрөөний төлөвлөгчийг эхлүүлэх">
-      <header className="room-start-header">
+    <section className="room-start planner-entry-theme" data-planner-ready="room" aria-label="Өрөөний төлөвлөгчийг эхлүүлэх">
+      <header className="room-start-header flex-wrap">
         <Link href="/" className="room-start-brand">
           <House size={22} /> tavilga.mn
         </Link>
         <span>3D өрөөний төлөвлөгч</span>
+        {step === 1 && <RoomPlannerSignIn />}
         <Link href="/">
           Нүүр рүү буцах <ArrowRight size={16} />
         </Link>
@@ -220,10 +198,11 @@ export function RoomPlannerStart({
                 {draft.previewImage ? <Image unoptimized width={240} height={160} src={draft.previewImage} alt={draft.name} /> : <PencilRuler size={36} strokeWidth={1.4} />}
               </div>
               <div className="room-start-resume-copy">
-                <span className="room-start-resume-tag">{"ХАДГАЛСАН АЖИЛ"}</span>
+                <span className="room-start-resume-tag">{"ЭНЭ ТӨХӨӨРӨМЖ ДЭЭРХ АЖЛЫН ЯВЦ"}</span>
                 <h2>{"Өмнөх ажлаа үргэлжлүүлэх"}</h2>
                 <strong>{draft.name}</strong>
                 <p>{draft.roomName ?? "Өрөө"} <span>·</span> {roomSetupNumber(getRoomGeometry(draft).area)} м²</p>
+                <small>Өөр төхөөрөмжид автоматаар шилжихгүй.</small>
               </div>
               <div className="room-start-resume-actions">
                 <button className="room-start-resume-button" type="button" onClick={onResume}>{"Үргэлжлүүлэх"}<ArrowRight size={18} /></button>
@@ -235,32 +214,15 @@ export function RoomPlannerStart({
             <div className="room-start-heading">
               <p>ӨӨРИЙНХӨӨ ОРЧНЫГ БҮТЭЭЕ</p>
               <h1 ref={title} tabIndex={-1}>
-                Ямар өрөө тохижуулах вэ?
+                Өөрийн орчныг бүтээе
               </h1>
               <span>
-                Өрөөний төрлөө сонгоод хэлбэр, хэмжээ болон дотор заслаа дарааллаар нь тохируулаарай.
+                Өрөөгөө шинээр байгуулах эсвэл бэлэн зохиомжоос эхлээрэй.
               </span>
             </div>
-            <div className="room-type-grid">
-              {ROOM_CHOICES.map(({ type, Icon, description, tone }) => (
-                <button
-                  type="button"
-                  key={type}
-                  className="room-type-card"
-                  onClick={() => chooseType(type)}
-                >
-                  <span className={`room-type-visual room-tone-${tone}`}>
-                    <Icon size={46} strokeWidth={1.4} />
-                    <span className="room-type-floor" />
-                  </span>
-                  <span className="room-type-copy">
-                    <strong>{ROOM_TYPES[type].label}</strong>
-                    <small>{description}</small>
-                  </span>
-                  <ArrowRight size={18} />
-                </button>
-              ))}
-            </div>
+            {isAdmin && <Link href="/admin?tab=rooms" className="room-template-admin-link">Бэлэн өрөөний санг удирдах →</Link>}
+            <RoomTemplateGallery onBuild={chooseType} onKitchen={() => chooseType("kitchen")} onTemplate={onTemplate} />
+            {error && <p className="room-size-error" role="alert">{error}</p>}
           </>
         ) : (
           <>

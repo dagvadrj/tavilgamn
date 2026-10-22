@@ -151,6 +151,7 @@ export function ProductCard({
       material: selection.material.id,
       unitPrice: selection.unitPrice,
       stockQuantity: product.stockQuantity,
+      madeToOrder: product.madeToOrder,
     });
     setCartMessage(
       added ? "Сагсанд нэмэгдлээ" : "Сагс дахь тоо үлдэгдлийн хязгаарт хүрсэн",

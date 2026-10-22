@@ -1,5 +1,7 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 
+import { KitchenCommercePanel } from "./KitchenCommercePanel";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -83,12 +85,7 @@ export function KitchenQuoteHistory() {
 
   if (loading)
     return (
-      <div
-        className="account-card p-8 text-sm text-[#68686f]"
-        role="status"
-      >
-        Үнийн хүсэлтүүдийг ачаалж байна…
-      </div>
+      <PageSkeleton compact layout="rows" />
     );
   if (error)
     return (
@@ -172,6 +169,7 @@ export function KitchenQuoteHistory() {
               {quote.merchantNote}
             </p>
           ) : null}
+          {user && <KitchenCommercePanel actor={user.id} quoteId={quote.id}/>}
         </article>
       ))}
       <nav

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Box, Loader2, X } from "lucide-react";
-import Link from "next/link";
+import { PlannerLink as Link } from "@/components/PlannerLink";
 import type { Group } from "three";
 let modelViewerPromise: Promise<void> | null = null;
 

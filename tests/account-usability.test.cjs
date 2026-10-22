@@ -89,19 +89,19 @@ test("sign-in and sign-up return translated provider errors to their forms", asy
   assert.match((await useAuth.getState().signUp("Тест", "test@example.com", "password")).error, /Энэ имэйлээр бүртгэл үүссэн/);
 });
 
-test("contact details use mail and phone links without placeholder email", () => {
+test("contact details use mail and phone links without placeholder email", async () => {
   const { phoneHref } = loadSource("src/lib/siteContact.ts");
   assert.equal(phoneHref("+976 8844 2741"), "tel:+97688442741");
-  const render = email => {
-    const Page = loadSource("src/app/(shop)/about/page.tsx", {
-      "next/image": { default: () => null },
+  const render = async email => {
+    const { Footer } = loadSource("src/components/Footer.tsx", {
       "@/lib/siteContact": { SITE_CONTACT: { email, phone: "+976 8844 2741" }, phoneHref },
-      "@/components/ContactForm": { ContactForm: () => null },
-    }).default;
-    return renderToStaticMarkup(React.createElement(Page));
+      "@/components/FooterContact": { FooterContact: () => null },
+      "@/lib/paymentPresentationServer": { configuredPaymentLabels: () => [] },
+    });
+    return renderToStaticMarkup(React.createElement(Footer));
   };
-  assert.match(render("support@fixture.test"), /href="mailto:support@fixture.test"/);
-  const html = render("");
+  assert.match(await render("support@fixture.test"), /href="mailto:support@fixture.test"/);
+  const html = await render("");
   assert.ok(!html.includes("mailto:") && !html.includes("tavilga.mn@example.com"));
   assert.match(html, /href="tel:\+97688442741"/);
 });

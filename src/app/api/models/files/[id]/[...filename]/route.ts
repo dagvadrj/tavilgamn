@@ -18,7 +18,7 @@ export async function GET(
   }
   try {
     const db = getSupabaseAdmin();
-    const { data, error } = await db.from("furniture_models")
+    const { data, error } = await db.from("model_records")
       .select("glb_path,preview_glb_path,thumbnail_path,processing_status").eq("id", routeParams.id).maybeSingle();
     if (error) throw error;
     let path = [

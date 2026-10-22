@@ -283,6 +283,7 @@ export async function readMerchantKitchenDesigns(
   actor: string,
   db = getSupabaseAdmin(),
   designId?: string,
+  includeHistory = true,
 ) {
   const { data: store, error: storeError } = await db
     .from("merchant_stores")
@@ -338,7 +339,7 @@ export async function readMerchantKitchenDesigns(
       designs,
       (versionRows ?? []) as VersionRow[],
       new Map([[store.id, store.name]]),
-      true,
+      includeHistory,
     ),
   };
 }

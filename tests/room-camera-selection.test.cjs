@@ -64,6 +64,7 @@ test('catalog add callbacks use live state and scoped camera hints; top view and
   const product={...model,id:'product',model:{id:'item',file:'delivery.glb'},dimensions:{w:.6,d:.5,h:.7},defaultColor:'oak',materials:[{id:'wood'}]};
   const h=hooks(),{RoomPlanner}=loadSource('src/components/RoomPlanner.tsx',{
    react:h.react,'next/dynamic':{default:()=> 'room-canvas'},'next/image':{default:'image'},'next/link':{default:'link'},
+   '@/lib/authFetch':{authFetch:()=>{throw Error('Unexpected authenticated request');}},
    '@/features/room-planner/components/RoomMeasureUnit':{useRoomMeasureUnit:select=>select({unit:'см'})},
    '@/store/designs':{...loadSource('src/store/designs.ts'),useDesigns:Object.assign(()=>store.getState(),{getState:store.getState})},
    '@/store/catalog':{getProduct:()=>product,useCatalog:()=>({products:[product],ready:true,loading:false})},
@@ -100,6 +101,7 @@ test('real planner map and scene selection keep one canvas key, current view and
   const {RoomPlanner}=loadSource('src/components/RoomPlanner.tsx',{
    '@/features/room-planner/components/RoomMeasureUnit':{useRoomMeasureUnit:select=>select({unit:'см'})},
    react:h.react,'next/dynamic':{default:()=> 'room-canvas'},'next/image':{default:'image'},'next/link':{default:'link'},
+   '@/lib/authFetch':{authFetch:()=>{throw Error('Unexpected authenticated request');}},
    '@/store/designs':{...loadSource('src/store/designs.ts'),useDesigns:Object.assign(()=>store.getState(),{getState:store.getState})},
    '@/store/catalog':{getProduct:()=>undefined,useCatalog:()=>({products:[],ready:true,loading:false})},
    '@/store/kitchens':{useKitchens:()=>({items:[]})},'@/store/auth':{useAuth:select=>{const state={user:null,initialized:true,initialize:async()=>{}};return select?select(state):state;}},'@/store/cart':{useCart:select=>select({add:()=>{}})},
@@ -111,13 +113,17 @@ test('real planner map and scene selection keep one canvas key, current view and
    './RoomTourControls':{RoomTourControls:'tour-controls'},
   });
   const render=()=>h.render(()=>{const shell=RoomPlanner();return typeof shell.type==='function'?shell.type(shell.props):shell;}),find=(t,type)=>nodes(t).find(n=>n.type===type);
-  find(render(),'room-start').props.onResume();let tree=render();find(tree,'room-controls').props.onView('top');tree=render();const canvas=find(tree,'room-canvas');assert.equal(canvas.props.view,'plan');
+  find(render(),'room-start').props.onResume();let tree=render();find(tree,'room-controls').props.onView('top');tree=render();let canvas=find(tree,'room-canvas');assert.equal(canvas.props.view,'plan');
+  assert.equal(canvas.props.paused,false,'the 3D camera must finish its transition before the SVG plan replaces it');
+  assert.equal(nodes(tree).some(n=>n.props.className==='room-plan-workspace'),false);
+  canvas.props.onViewSettled('plan');tree=render();canvas=find(tree,'room-canvas');assert.equal(canvas.props.paused,true);
   for(let i=0;i<8;i++){
    find(tree,'room-map').props.onSelect(i%2?a:b);tree=render();const next=find(tree,'room-canvas');assert.equal(next.key,canvas.key);assert.equal(next.props.resetKey,canvas.props.resetKey);assert.equal(next.props.view,'plan');assert.equal(next.props.design.activeRoomId,i%2?a:b);
    next.props.onSelectRoom(i%2?b:a);tree=render();assert.equal(find(tree,'room-canvas').key,canvas.key);assert.equal(find(tree,'room-canvas').props.view,'plan');
   }
   // Releasing furniture in the neighbour changes ownership while keeping selection/view.
   store.getState().selectRoom(a);assert.equal(store.getState().moveRoom(b,{x:4,z:0},false),null);
+  for(const connection of store.getState().current.connections ?? []) store.getState().updateConnection(connection.id,{kind:'open'});
   const bed={instanceId:'moving-bed',productId:'unknown-bed',x:0,z:0,rotation:0,color:'cream',material:'fabric'};
   store.getState().updatePieces([bed]);tree=render();let moving=find(tree,'room-canvas');moving.props.onSelect(bed.instanceId);tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.selected,bed.instanceId);
   const reset=moving.props.resetKey;moving.props.onEditStart();moving.props.onMove(bed.instanceId,4,0);tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,a);
@@ -151,6 +157,7 @@ test('real planner map and scene selection keep one canvas key, current view and
   const current=store.getState().current,wall=getRoomGeometry(current).segments.find(s=>s.nx>.9);
   const shelf=wallAttachedPiece({instanceId:'plan-shelf',productId:'plan-shelf',x:0,z:0,rotation:0,color:'oak',material:'wood',placement:{surfaces:['wall']},details:{name:'Shelf',dimensions:{w:.6,d:.3,h:.3}}},current,current.activeRoomId,furnitureWallId(wall),1,1.5);
   store.getState().updatePieces([shelf]);find(tree,'room-controls').props.onView('top');tree=render();
+  find(tree,'room-canvas').props.onViewSettled('plan');tree=render();
   const plan=nodes(tree).find(n=>n.type?.name==='RoomWallPlan');
   assert.equal(plan.props.onMovePiece(shelf.instanceId,shelf.x-.5,shelf.z+.3),null,'off-plane pointer input must be projected to the attached wall');
   const movedShelf=store.getState().current.pieces[0];assert.ok(Math.abs(movedShelf.z-shelf.z-.3)<1e-8);assert.equal(movedShelf.x,shelf.x);assert.equal(movedShelf.elevation,1.5);assert.equal(movedShelf.attachment.segmentId,shelf.attachment.segmentId);

@@ -53,6 +53,7 @@ export interface Product {
   /** footprint in meters for the room planner */
   dimensions: { w: number; d: number; h: number };
   inStock: boolean;
+  madeToOrder?: boolean;
   /** Available units shared by all variants; null means not counted yet. */
   stockQuantity?: number | null;
   isNew?: boolean;
@@ -168,6 +169,8 @@ export interface CeilingFixture {
   color: string;
 }
 export interface RoomLighting {
+  /** Automatic downlights follow the footprint until the fixtures are edited. */
+  fixtureLayout?: "auto" | "manual";
   mode: "day" | "evening";
   /** Local solar time, 0–24 hours. Shared by all rooms in a design. */
   timeOfDay?: number;

@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { KitchenCatalogModule } from "@/lib/kitchenModuleCatalog";
+import type { Product } from "@/lib/types";
 import { normalizeKitchenMaterials, type KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 
 export function useKitchenCatalog(active: boolean) {
   const [loading, setLoading] = useState(active);
   const [error, setError] = useState(false);
+  const [assets,setAssets]=useState<Product[]>([]);
   const [attempt, setAttempt] = useState(0);
   const [moduleCatalog, setModuleCatalog] = useState<KitchenCatalogModule[]>(
     [],
@@ -27,6 +29,7 @@ export function useKitchenCatalog(active: boolean) {
       )
       .then((result) => {
         setModuleCatalog(Array.isArray(result.modules) ? result.modules : []);
+        setAssets(Array.isArray(result.assets)?result.assets:[]);
         setMaterialCatalog(normalizeKitchenMaterials(result.materials));
       })
       .catch((error) => {
@@ -39,5 +42,5 @@ export function useKitchenCatalog(active: boolean) {
       });
     return () => controller.abort();
   }, [active, attempt]);
-  return { moduleCatalog, materialCatalog, loading, error, retry: () => setAttempt(value => value + 1) };
+  return { moduleCatalog, materialCatalog, assets, loading, error, retry: () => setAttempt(value => value + 1) };
 }

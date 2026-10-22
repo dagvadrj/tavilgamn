@@ -1,7 +1,10 @@
 "use client";
 
 import { OpeningEdgeDistance } from "@/features/room-planner/components/OpeningQuickEditor";
-import { RoomMeasureUnit, useRoomMeasureUnit } from "@/features/room-planner/components/RoomMeasureUnit";
+import {
+  RoomMeasureUnit,
+  useRoomMeasureUnit,
+} from "@/features/room-planner/components/RoomMeasureUnit";
 import { useState } from "react";
 import {
   Check,
@@ -25,6 +28,7 @@ import {
   CEILING_FIXTURE_TYPES,
   fixtureFitsCeiling,
   ceilingFixturesOverlap,
+  automaticCeilingFixtures,
 } from "@/lib/roomCeiling";
 import { exteriorWindowBearing } from "@/lib/roomSunlight";
 import { OpeningTemplatePreview } from "@/features/room-planner/components/OpeningTemplatePreview";
@@ -34,6 +38,7 @@ import { RoomLightingTimeControls } from "@/features/room-planner/components/Roo
 import { ROOM_WALLS, getRoomGeometry } from "@/lib/roomGeometry";
 import {
   OPENING_TEMPLATES,
+  PLANNER_OPENING_TEMPLATES,
   wallLength,
   windowLayout,
   openingMinimumWidth,
@@ -80,7 +85,7 @@ interface Props {
 
 const WALLS = Object.keys(ROOM_WALLS) as RoomWall[];
 const PAINT_COLORS = [
-  "#F7F4EE",
+  "#2B2B2B",
   "#EFE6D6",
   "#D6CFC1",
   "#A8B5A0",
@@ -185,7 +190,7 @@ function LightRange({
 }
 
 export function RoomEnvironmentPanel(props: Props) {
-  const unit = useRoomMeasureUnit(state => state.unit);
+  const unit = useRoomMeasureUnit((state) => state.unit);
   const measureFactor = unit === "мм" ? 1000 : 100;
   const {
     design,
@@ -217,7 +222,7 @@ export function RoomEnvironmentPanel(props: Props) {
   const opening = design.openings?.find((item) => item.id === selectedOpening);
   const lighting = design.lighting ?? DEFAULT_LIGHTING;
   const [newFixtureKind, setNewFixtureKind] =
-    useState<CeilingFixtureKind>("flush");
+    useState<CeilingFixtureKind>("recessed");
   const edit = { beginEdit, endEdit };
   const applyWall = (next: WallMaterial) => {
     const walls = { ...design.wallMaterials };
@@ -231,7 +236,13 @@ export function RoomEnvironmentPanel(props: Props) {
     });
   };
   const updateLighting = (patch: Partial<RoomLighting>) => {
-    const next = { ...lighting, ...patch };
+    const next = {
+      ...lighting,
+      ...patch,
+      fixtureLayout:
+        patch.fixtureLayout ??
+        (patch.fixtures ? "manual" : lighting.fixtureLayout),
+    };
     if (next.fixtures.some((f) => !fixtureFitsCeiling(design, f))) {
       onNotice(
         "Гэрлийн хэмжээ таазны дотор багтах ёстой. Байрлал эсвэл төрлийг өөрчилнө үү.",
@@ -492,7 +503,7 @@ export function RoomEnvironmentPanel(props: Props) {
           </div>
           <div className="room-control-section">
             <div className="room-opening-catalog">
-              {OPENING_TEMPLATES.map((template) => (
+              {PLANNER_OPENING_TEMPLATES.map((template) => (
                 <div
                   key={template.id}
                   className="room-opening-card"
@@ -663,7 +674,12 @@ export function RoomEnvironmentPanel(props: Props) {
                 />
               </div>
               <RoomMeasureUnit />
-              <OpeningEdgeDistance room={design} opening={opening} onChange={onUpdateOpening} {...edit} />
+              <OpeningEdgeDistance
+                room={design}
+                opening={opening}
+                onChange={onUpdateOpening}
+                {...edit}
+              />
               <LightRange
                 label="Ханын дагуух байрлал"
                 value={opening.position * 100}
@@ -780,7 +796,8 @@ export function RoomEnvironmentPanel(props: Props) {
                       <small>
                         {ROOM_WALLS[item.wallId]} ·{" "}
                         {Number((item.width * measureFactor).toFixed(1))} ×{" "}
-                        {Number((item.height * measureFactor).toFixed(1))} {unit}
+                        {Number((item.height * measureFactor).toFixed(1))}{" "}
+                        {unit}
                       </small>
                     </span>
                     <DoorOpen size={17} />
@@ -868,6 +885,26 @@ export function RoomEnvironmentPanel(props: Props) {
               <h4>Таазны гэрэл · {lighting.fixtures.length}</h4>
               <Lightbulb size={18} />
             </div>
+            <button
+              type="button"
+              className="room-secondary-action"
+              onClick={() =>
+                updateLighting({
+                  fixtureLayout: "auto",
+                  fixtures: automaticCeilingFixtures(
+                    design,
+                    design.activeRoomId ?? design.id,
+                  ),
+                })
+              }
+            >
+              Өрөөний хэмжээнд тааруулж байрлуулах
+            </button>
+            <p className="room-control-help">
+              {lighting.fixtureLayout === "auto"
+                ? "Жижиг спот гэрлийн тоо, байрлал өрөөний хэмжээг дагаж өөрчлөгдөнө."
+                : "Гэрлийн байрлалыг гараар тохируулж байна."}
+            </p>
             <label className="room-ceiling-number">
               <span>Нэмэх гэрлийн төрөл</span>
               <select

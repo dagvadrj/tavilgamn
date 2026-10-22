@@ -316,7 +316,7 @@
   background: #f3f4f6;
 }
 
-.kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout[data-workflow-stage]:not([data-workflow-stage="design"]) {
+.kp-shell.planner-reference.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout:not(.kitchen-simple-workflow)[data-workflow-stage]:not([data-workflow-stage="design"]) {
   grid-template-rows: 52px 0 minmax(0, 1fr);
 }
 

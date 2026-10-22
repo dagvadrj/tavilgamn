@@ -1,5 +1,9 @@
 "use client";
 
+import { DashboardNavigation } from "@/features/dashboard/DashboardNavigation";
+import { DashboardFormAssist } from "@/features/dashboard/DashboardFormAssist";
+import "@/features/dashboard/dashboard-v14.css";
+
 import { useCallback, useState, type ReactNode, type RefObject } from "react";
 import { AdminSidebar, ADMIN_TABS, type AdminTab } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
@@ -33,11 +37,12 @@ export function AdminShell({
     ADMIN_TABS.find((item) => item.id === active)?.label ?? ADMIN_TABS[0].label;
   return (
     <div
-      className="admin-shell dashboard-shell dashboard-themed-shell"
+      className="admin-shell dashboard-shell dashboard-themed-shell dashboard-v14"
       data-theme={preferences.theme}
       data-density={preferences.density}
       data-text-size={preferences.textSize}
     >
+      <DashboardFormAssist />
       <AdminSidebar
         active={active}
         onChange={changeTab}
@@ -47,6 +52,17 @@ export function AdminShell({
       />
       <div className="admin-workspace dashboard-workspace">
         <AdminHeader
+          navigation={
+            <DashboardNavigation
+              tabs={ADMIN_TABS.filter((tab) =>
+                ["dashboard", "merchants", "furniture", "orders"].includes(
+                  tab.id,
+                ),
+              )}
+              active={active}
+              onChange={changeTab}
+            />
+          }
           userName={userName}
           activeLabel={label}
           menuOpen={menuOpen}

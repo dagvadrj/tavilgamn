@@ -1,108 +1,86 @@
 "use client";
+import type { ReactNode } from "react";
 
-import { Menu, MessageSquareQuote, Package, Settings } from "lucide-react";
+import { ChevronRight, House, Menu } from "lucide-react";
 import { MerchantNotifications } from "./MerchantNotifications";
 
+/** A location trail replaces the dashboard's large header panel. */
 export function MerchantHeader({
+  navigation,
+  balances,
   userName,
+  onProfile,
   storeName,
   owner,
-  onProducts,
+  onHome,
   onKitchens,
-  onQuotes,
-  onSettings,
-  onProfile,
   activeLabel,
-  hasStore,
   sidebarOpen,
   onToggleSidebar,
+  hideNotifications,
 }: {
-  userName: string;
+  navigation?: ReactNode;
+  balances?: ReactNode;
+  userName?: string;
+  onProfile?: () => void;
   storeName: string;
   owner: string;
-  onProducts: () => void;
+  onHome: () => void;
   onKitchens: (designId?: string) => void;
-  onQuotes: () => void;
-  onSettings?: () => void;
-  onProfile: () => void;
   activeLabel: string;
-  hasStore: boolean;
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
+  hideNotifications?: boolean;
 }) {
-  const initial = userName.trim().slice(0, 1).toUpperCase() || "M";
-
   return (
-    <header className="merchant-topbar dashboard-topbar">
-      <div className="merchant-topbar-heading">
+    <div className="merchant-location-bar">
+      <button
+        type="button"
+        className="dashboard-menu-toggle"
+        aria-label={sidebarOpen ? "Дэлгүүрийн цэс хаах" : "Дэлгүүрийн цэс нээх"}
+        aria-controls="merchant-dashboard-navigation"
+        aria-expanded={sidebarOpen}
+        onClick={onToggleSidebar}
+      >
+        <Menu size={20} />
+      </button>
+      <nav className="merchant-breadcrumbs" aria-label="Хуудасны зам">
+        <ol>
+          <li>
+            <button
+              type="button"
+              onClick={onHome}
+              aria-label="Дэлгүүрийн ерөнхий тойм"
+            >
+              <House size={16} />
+              <span>{storeName}</span>
+            </button>
+          </li>
+          <li>
+            <ChevronRight size={14} aria-hidden="true" />
+            <span aria-current="page">{activeLabel}</span>
+          </li>
+        </ol>
+      </nav>
+      {navigation}
+      {balances}
+      {!hideNotifications && <MerchantNotifications owner={owner} onKitchens={onKitchens} />}
+      {onProfile && (
         <button
           type="button"
-          className="dashboard-menu-toggle"
-          aria-label={
-            sidebarOpen ? "Дэлгүүрийн цэс хаах" : "Дэлгүүрийн цэс нээх"
-          }
-          aria-controls="merchant-dashboard-navigation"
-          aria-expanded={sidebarOpen}
-          onClick={onToggleSidebar}
-        >
-          <Menu size={21} />
-        </button>
-        <div className="merchant-topbar-title dashboard-header-title">
-          <span>MERCHANT · {storeName}</span>
-          <strong>{activeLabel}</strong>
-        </div>
-      </div>
-
-      <div className="merchant-topbar-actions dashboard-header-actions">
-        <button
-          type="button"
-          className="merchant-header-search"
-          onClick={onProducts}
-          disabled={!hasStore}
-        >
-          <Package size={17} />
-          <span>Бүтээгдэхүүн</span>
-        </button>
-
-        <MerchantNotifications owner={owner} onKitchens={onKitchens} />
-
-        <button
-          type="button"
-          className="merchant-header-icon"
-          aria-label="Үнийн хүсэлтүүд"
-          title="Үнийн хүсэлтүүд"
-          onClick={onQuotes}
-          disabled={!hasStore}
-        >
-          <MessageSquareQuote size={19} strokeWidth={1.7} />
-        </button>
-
-        {onSettings && (
-          <button
-            type="button"
-            className="merchant-header-icon"
-            aria-label="Самбарын тохиргоо"
-            title="Самбарын тохиргоо"
-            onClick={onSettings}
-          >
-            <Settings size={19} />
-          </button>
-        )}
-
-        <button
-          type="button"
+          className="v14-profile"
           onClick={onProfile}
-          className="merchant-header-profile"
-          aria-label={`${userName} — миний бүртгэл`}
+          aria-label={`${userName ?? "Миний"} — бүртгэл`}
         >
-          <span className="merchant-header-avatar">{initial}</span>
-
-          <span className="merchant-header-user">
+          <span className="v14-profile-avatar">
+            {userName?.trim().slice(0, 1) || "M"}
+          </span>
+          <span>
             <strong>{userName}</strong>
-            <small>Худалдаа эрхлэгч</small>
+            <small>{storeName}</small>
           </span>
         </button>
-      </div>
-    </header>
+      )}
+    </div>
   );
 }

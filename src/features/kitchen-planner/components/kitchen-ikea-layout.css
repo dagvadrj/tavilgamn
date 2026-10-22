@@ -483,9 +483,16 @@
   & .kp-loading-strip {
     position: absolute;
     top: 130px;
-    left: 310px;
-    right: 0;
+    left: 16px;
+    right: 16px;
+    width: fit-content;
+    max-width: calc(100% - 32px);
+    transform: none;
     z-index: 15;
+  }
+  &:not([data-workflow-stage="design"]) > .kp-loading-strip {
+    top: auto;
+    bottom: 16px;
   }
   & .kitchen-catalog-backdrop,
   & .planner-inspector-backdrop {

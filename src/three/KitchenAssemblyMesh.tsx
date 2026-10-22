@@ -37,7 +37,7 @@ export function KitchenAssemblyMesh({ kitchen, centered = false, open = false, s
     <KitchenTops kitchen={kitchen} materialDefinitions={materialDefinitions}
       catalogApplianceIds={kitchen.cabinets.filter(c => { const v = c.variantId ? models[c.variantId] : preferredKitchenVariant(moduleCatalog, c); return kitchenVariantFits(v, c); }).map(c => c.id)} />
     {(kitchen.extras ?? []).map((extra) => <group key={extra.id} name={`Extra-${extra.id}`}
-      position={[extra.position.x / 1000, 0, extra.position.z / 1000]}
+      position={[extra.position.x / 1000, extra.position.y / 1000, extra.position.z / 1000]}
       rotation={[0, extra.position.rotation, 0]}>
       <KitchenExtraMesh extra={extra} />
     </group>)}

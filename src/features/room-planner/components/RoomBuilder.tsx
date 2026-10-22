@@ -21,7 +21,7 @@ import {
   reduceRoomBuilderHistory,
   type RoomBuilderAction,
 } from "@/lib/roomBuilderHistory";
-import { createOpening, OPENING_TEMPLATES } from "@/lib/roomOpenings";
+import { createOpening, PLANNER_OPENING_TEMPLATES as OPENING_TEMPLATES } from "@/lib/roomOpenings";
 import { FLOOR_MATERIALS } from "@/lib/roomMaterials";
 import { OpeningQuickEditor } from "./OpeningQuickEditor";
 import { RoomWallPlan } from "./RoomWallPlan";

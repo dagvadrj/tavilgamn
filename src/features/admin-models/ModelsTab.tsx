@@ -1,4 +1,5 @@
 "use client";
+import { DashboardFormSection } from "@/features/dashboard/DashboardFormSection";
 
 import {
   useDraftState,
@@ -808,39 +809,68 @@ export function ModelsTab({
 
               {/* — Хэмжээ — */}
               <section>
-                <p className="label mb-3">Хэмжээ (метрээр) болон масштаб</p>
+                <p className="label mb-3">Бодит хэмжээ · мм</p>
                 <div className="grid gap-4 sm:grid-cols-4">
                   <div>
-                    <label className="label mb-1 block">Өргөн (W)</label>
+                    <label className="label mb-1 block">Өргөн (мм)</label>
                     <input
                       type="number"
-                      step="any"
-                      value={dimW}
-                      onChange={(e) => setDimW(e.target.value)}
+                      min="1"
+                      max="100000"
+                      step="1"
+                      value={dimW === "" ? "" : Math.round(Number(dimW) * 1000)}
+                      onChange={(e) =>
+                        setDimW(
+                          e.target.value === ""
+                            ? ""
+                            : String(e.target.valueAsNumber / 1000),
+                        )
+                      }
                       className="input"
                     />
                   </div>
                   <div>
-                    <label className="label mb-1 block">Гүн (D)</label>
+                    <label className="label mb-1 block">Гүн (мм)</label>
                     <input
                       type="number"
-                      step="any"
-                      value={dimD}
-                      onChange={(e) => setDimD(e.target.value)}
+                      min="1"
+                      max="100000"
+                      step="1"
+                      value={dimD === "" ? "" : Math.round(Number(dimD) * 1000)}
+                      onChange={(e) =>
+                        setDimD(
+                          e.target.value === ""
+                            ? ""
+                            : String(e.target.valueAsNumber / 1000),
+                        )
+                      }
                       className="input"
                     />
                   </div>
                   <div>
-                    <label className="label mb-1 block">Өндөр (H)</label>
+                    <label className="label mb-1 block">Өндөр (мм)</label>
                     <input
                       type="number"
-                      step="any"
-                      value={dimH}
-                      onChange={(e) => setDimH(e.target.value)}
+                      min="1"
+                      max="100000"
+                      step="1"
+                      value={dimH === "" ? "" : Math.round(Number(dimH) * 1000)}
+                      onChange={(e) =>
+                        setDimH(
+                          e.target.value === ""
+                            ? ""
+                            : String(e.target.valueAsNumber / 1000),
+                        )
+                      }
                       className="input"
                     />
                   </div>
-                  <div>
+                  <DashboardFormSection
+                    title="Нарийвчилсан масштаб"
+                    description="Загварын нэгж буруу үед л өөрчилнө. Ердийн GLB-д 1 хэвээр үлдээнэ."
+                    optional
+                    className="sm:col-span-4"
+                  >
                     <label className="label mb-1 block">Scale</label>
                     <input
                       type="number"
@@ -850,12 +880,12 @@ export function ModelsTab({
                       className="input"
                     />
                     <p className="mt-1 text-xs text-ink/40">мм→м: 0.001</p>
-                  </div>
+                  </DashboardFormSection>
                 </div>
               </section>
 
               {/* — Өнгөнүүд — */}
-              <section>
+              <DashboardFormSection title="Өнгөний сонголтууд" optional>
                 <div className="mb-3 flex items-center justify-between">
                   <p className="label">Өнгөнүүд</p>
                   <button
@@ -906,10 +936,10 @@ export function ModelsTab({
                     </div>
                   ))}
                 </div>
-              </section>
+              </DashboardFormSection>
 
               {/* — Материалууд — */}
-              <section>
+              <DashboardFormSection title="Материалын сонголтууд" optional>
                 <p className="label mb-3">Материалууд</p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {MATERIAL_OPTIONS.map((opt) => {
@@ -946,7 +976,7 @@ export function ModelsTab({
                     );
                   })}
                 </div>
-              </section>
+              </DashboardFormSection>
 
               {/* — Файлууд — */}
               <section>
@@ -960,9 +990,12 @@ export function ModelsTab({
                       type="file"
                       accept=".glb,model/gltf-binary"
                       required={!glbFile}
-                      onChange={(event) =>
-                        setGlbFile(event.target.files?.[0] ?? null)
-                      }
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null;
+                        setGlbFile(file);
+                        if (file && !name.trim())
+                          setName(file.name.replace(/\.glb$/i, ""));
+                      }}
                       className="input !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-cream file:px-3 file:py-1 file:text-xs"
                     />
                     <p className="mt-1 text-xs text-ink/40">

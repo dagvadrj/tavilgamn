@@ -1,9 +1,16 @@
 "use client";
+import { PageSkeleton } from "@/components/PageSkeleton";
 import { useState } from "react";
 import Image from "next/image";
 import type { Product } from "@/lib/types";
 import { EXTRA_CATEGORIES, type KitchenExtra } from "@/lib/kitchenExtras";
 import { DimensionInput } from "./PlannerPanels";
+import {
+  assetGroup,
+  kitchenAsset,
+  KITCHEN_ASSET_GROUPS,
+  KITCHEN_ASSET_TYPES,
+} from "@/lib/kitchenAssetCatalog";
 export function ExtrasPanel({
   initialTab = "dining",
   products,
@@ -17,10 +24,10 @@ export function ExtrasPanel({
   onDelete,
   onDuplicate,
 }: {
-  initialTab?: "dining" | "extra";
+  initialTab?: "dining" | "extra" | "appliances";
   products: Product[];
   selected?: KitchenExtra;
-  room: { width: number; depth: number };
+  room: { width: number; depth: number; height: number };
   disabled: boolean;
   error: string | null;
   loading: boolean;
@@ -29,13 +36,19 @@ export function ExtrasPanel({
   onDelete: () => void;
   onDuplicate: () => void;
 }) {
-  const [tab, setTab] = useState<"dining" | "extra">(initialTab),
+  const [tab, setTab] = useState<string>(initialTab),
     [query, setQuery] = useState("");
   const options = products.filter(
     (p) =>
       Boolean(p.model) &&
       EXTRA_CATEGORIES.includes(p.category) &&
-      (p.category === "dining-table") === (tab === "dining") &&
+      (kitchenAsset(p.specifications)
+        ? tab === "extra"
+          ? ["extras", "water"].includes(
+              assetGroup(kitchenAsset(p.specifications)!),
+            )
+          : assetGroup(kitchenAsset(p.specifications)!) === tab
+        : tab === "dining" && ["dining-table", "chair"].includes(p.category)) &&
       p.name.toLowerCase().includes(query.toLowerCase()),
   );
   return (
@@ -49,6 +62,17 @@ export function ExtrasPanel({
           <p>
             {selected.width} × {selected.height} × {selected.depth} мм
           </p>
+          {selected.asset && (
+            <DimensionInput
+              label="Шалнаас өндөр (Y) · мм"
+              value={selected.position.y}
+              min={0}
+              max={room.height - selected.height}
+              onCommit={(y) =>
+                onChange({ ...selected, position: { ...selected.position, y } })
+              }
+            />
+          )}
           <DimensionInput
             label="Нэмэлт тавилгын X"
             value={selected.position.x}
@@ -127,26 +151,27 @@ export function ExtrasPanel({
         </fieldset>
       ) : (
         <>
-          <h2>Тавилгын каталог</h2>
+          <h2>Гал тогооны хэрэгслийн сан</h2>
+          <p>Гал тогоонд зориулж нэмсэн төхөөрөмж, гэрэл, тавилга.</p>
           <div
             className="studio-extras-tabs"
             role="group"
             aria-label="Нэмэлт каталогийн төрөл"
           >
-            <button
-              type="button"
-              aria-pressed={tab === "dining"}
-              onClick={() => setTab("dining")}
-            >
-              Хоолны ширээ
-            </button>
-            <button
-              type="button"
-              aria-pressed={tab === "extra"}
-              onClick={() => setTab("extra")}
-            >
-              Нэмэлт тавилга
-            </button>
+            {(["appliances", "water", "extras", "dining"] as const).map(
+              (id) => (
+                <button
+                  type="button"
+                  key={id}
+                  aria-pressed={
+                    tab === id || (tab === "extra" && id === "extras")
+                  }
+                  onClick={() => setTab(id)}
+                >
+                  {KITCHEN_ASSET_GROUPS[id]}
+                </button>
+              ),
+            )}
           </div>
           <label className="kp-field">
             Тавилга хайх{" "}
@@ -159,7 +184,7 @@ export function ExtrasPanel({
           {error ? (
             <p role="alert">{error}</p>
           ) : loading ? (
-            <p role="status">Каталог ачаалж байна…</p>
+            !options.length && <PageSkeleton compact layout="rows" label="Каталог ачаалж байна…" />
           ) : !options.length ? (
             <p>Энэ төрөлд 3D загвартай бүтээгдэхүүн олдсонгүй.</p>
           ) : null}
@@ -168,13 +193,33 @@ export function ExtrasPanel({
               <button
                 type="button"
                 key={product.id}
-                disabled={disabled}
+                disabled={
+                  disabled ||
+                  kitchenAsset(product.specifications)?.installation ===
+                    "integrated" ||
+                  kitchenAsset(product.specifications)?.placement === "cabinet"
+                }
                 aria-label={`Нэмэх: ${product.name}`}
                 onClick={() => onAdd(product)}
               >
                 <Image src={product.image} alt="" width={76} height={56} />
                 <span>
                   {product.name}
+                  {kitchenAsset(product.specifications) && (
+                    <small>
+                      {
+                        KITCHEN_ASSET_TYPES[
+                          kitchenAsset(product.specifications)!.type
+                        ].label
+                      }
+                      {kitchenAsset(product.specifications)!.installation ===
+                        "integrated" ||
+                      kitchenAsset(product.specifications)!.placement ===
+                        "cabinet"
+                        ? " · Шүүгээний эд ангиар сонгоно"
+                        : ""}
+                    </small>
+                  )}
                   <small>
                     {Math.round(product.dimensions.w * 1000)} ×{" "}
                     {Math.round(product.dimensions.d * 1000)} мм

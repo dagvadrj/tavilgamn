@@ -24,6 +24,8 @@ GLB-д шүүгээний их бие, ар, одоо дүрслэгдэж ба�
 
 Хөрвүүлэгч байхгүй үед SKP товч тайлбар харуулна. GLB файлыг .skp гэж нэрийг нь солиод өгөхгүй. Түр ашиглах боломж: SketchUp 2026-д **File → Import → GLTF Binary File (*.glb)**, дараа **File → Save As → .skp**. [SketchUp GLTF заавар](https://help.sketchup.com/en/sketchup/working-gltf-files).
 
+SketchUp-ийн File → Import жагсаалтад GLB байхгүй бол native SKP хөрвүүлэлт шаардлагатай. Blender-д нийцтэй Standard GLB нь SketchUp-ийн бүх хувилбарт шууд импортлогдоно гэсэн үг биш. Local CLI-д `--product` сонголттой: нэг бүтээгдэхүүний хөдөлгөөнгүй, шахалтгүй GLB-г суулгасан SketchUp SDK-аар хөрвүүлнэ (64 MiB / 500,000 triangle). HTTP серверийн 4 MiB / 200,000 triangle хязгаар өөрчлөгдөөгүй. Хөрвүүлэхийн өмнө quantized geometry-г float болгон задлах шаардлагатай.
+
 ### Windows хөрвүүлэгч бэлдэх
 
 Windows x64, Python 3.11+, SketchUp 2025+ C SDK library хэрэгтэй (энэ компьютерт байгаа 2026 library дээр шалгасан). SDK-г өөрийн эрх, лицензийн дагуу суулгана; DLL, SketchUp програмыг кодын ZIP-д тараагаагүй. [Албан ёсны SDK](https://extensions.sketchup.com/en/developer_center/sketchup_sdk).

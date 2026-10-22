@@ -144,4 +144,8 @@ test("PDP initial color selection feeds the same actual variant price into the f
   assert.ok(!requested3D.includes("Интерактив 3D загвар") && !requested3D.includes("3D загварыг ачаалж байна"));
   assert.match(requested3D, /<button[^>]*disabled=""[^>]*title="3D загвар хараахан бэлэн болоогүй"/);
   assert.ok(!requested3D.includes("3D-ээр үзэх"), "photo-only products cannot open a generated replacement model");
+  const withModel = renderToStaticMarkup(React.createElement(ProductCustomizer, {
+    product: { ...product, id: "product with space", model: { id: "model", file: "/test.glb" } },
+  }));
+  assert.match(withModel.match(/<a[^>]*class="pdp-room-link"[^>]*>/)?.[0] ?? '', /href="\/planner\?product=product%20with%20space"/);
 });

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { KitchenPlanner } from "@/components/KitchenPlanner";
+import { KitchenPlannerEntry } from "@/features/planner/components/PlannerEntry";
 
 export const metadata: Metadata = {
   title: "Гал тогооны гарнитур төлөвлөх — tavilga.mn",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function KitchenPage() {
-  return <KitchenPlanner />;
+  return <KitchenPlannerEntry />;
 }

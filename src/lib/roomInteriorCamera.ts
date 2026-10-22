@@ -1,5 +1,6 @@
 import type { RoomInteriorCamera, RoomShape } from "./types";
 import { getRoomGeometry } from "./roomGeometry";
+import { PLANNER_CAMERA } from "./plannerCameraProfile";
 
 export const DEFAULT_TOUR_FOV = 60;
 export const MIN_TOUR_FOV = 35;
@@ -105,5 +106,24 @@ export function lookAround(
     ...pose,
     yaw: pose.yaw - dx * 0.004,
     pitch: Math.max(-1.35, Math.min(1.35, pose.pitch - dy * 0.004)),
+  };
+}
+
+/** Time-based look smoothing: identical progress at equal time on 30/60/120 Hz displays. */
+export function dampInteriorLook(
+  current: RoomInteriorCamera,
+  target: RoomInteriorCamera,
+  delta: number,
+) {
+  const alpha = -Math.expm1(
+    -Math.max(0, Math.min(0.1, delta)) /
+      PLANNER_CAMERA.interiorSmoothingSeconds,
+  );
+  const approach = (value: number, goal: number) =>
+    Math.abs(goal - value) < 0.0001 ? goal : value + (goal - value) * alpha;
+  return {
+    ...current,
+    yaw: approach(current.yaw, target.yaw),
+    pitch: approach(current.pitch, target.pitch),
   };
 }

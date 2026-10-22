@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Edges, Html } from "@react-three/drei";
+import { Edges } from "@react-three/drei";
+import { SceneHtml as Html } from "./SceneHtml";
 import * as THREE from "three";
 import {
   kitchenCabinetSurface,
@@ -86,10 +87,10 @@ function applyTextureSet(
   material: THREE.MeshStandardMaterial,
   textures: KitchenMaterialTextureSet,
 ) {
-  if (textures.baseColor) material.map = textures.baseColor;
-  if (textures.normal) material.normalMap = textures.normal;
-  if (textures.roughness) material.roughnessMap = textures.roughness;
-  if (textures.metalness) material.metalnessMap = textures.metalness;
+  material.map = textures.baseColor ?? null;
+  material.normalMap = textures.normal ?? null;
+  material.roughnessMap = textures.roughness ?? null;
+  material.metalnessMap = textures.metalness ?? null;
 }
 export function GLBFurnitureMesh({
   modelId,
@@ -257,6 +258,7 @@ export function GLBFurnitureMesh({
           if (issue) throw new Error(issue);
         }
         const cloned = cloneModel(asset);
+        cloned.scene.animations = cloned.animations ?? [];
         if (trackFloorBand)
           registerModelFloorBand(
             modelId,
@@ -415,25 +417,12 @@ export function GLBFurnitureMesh({
 
   const ready = strictDimensions && display?.request !== request ? null : display;
   const currentDelivery = ready?.request === request;
-  useEffect(() => {
-    if (!ready) return;
-    const clip = ready.asset.animations?.find((animation) =>
+  const openingClip = ready?.asset.animations?.find((animation) =>
       openAnimation
         ? animation.name === openAnimation
         : /^(open|opening)$/i.test(animation.name),
     );
-    if (!clip) return;
-    const mixer = new THREE.AnimationMixer(ready.asset.scene);
-    const action = mixer.clipAction(clip);
-    action.setLoop(THREE.LoopOnce, 1);
-    action.clampWhenFinished = true;
-    action.play();
-    mixer.setTime(open ? clip.duration : 0);
-    return () => {
-      mixer.stopAllAction();
-      mixer.uncacheRoot(ready.asset.scene);
-    };
-  }, [ready, open, openAnimation]);
+  useKitchenOpenAnimation(ready?.asset.scene, openingClip, open);
   const size = ready?.asset.bounds.getSize(new THREE.Vector3());
   const origin = ready?.asset.bounds.getCenter(new THREE.Vector3());
   const valid = size && origin && Math.min(size.x, size.y, size.z) > 1e-9;

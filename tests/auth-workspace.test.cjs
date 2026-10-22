@@ -184,7 +184,7 @@ test("OAuth callback waits for auth initialization, preserves checkout, and hand
 
 test("dashboard headers and settings use profile callbacks without storefront account links", () => {
   let opens = 0;
-  for (const [file, component] of [["src/components/AdminHeader.tsx", "AdminHeader"], ["src/components/MerchantHeader.tsx", "MerchantHeader"]]) {
+  for (const [file, component] of [["src/components/AdminHeader.tsx", "AdminHeader"]]) {
     const Header = loadSource(file)[component];
     const tree = Header({ userName: "Test", storeName: "Store", onProfile: () => opens++, onSettings() {}, onProducts() {}, onMessages() {}, onQuotes() {}, onToggleSidebar() {}, onToggleMenu() {} });
     const profile = elements(tree, node => node.type === "button" && node.props["aria-label"]?.includes("миний бүртгэл"))[0];
@@ -192,5 +192,11 @@ test("dashboard headers and settings use profile callbacks without storefront ac
     profile.props.onClick();
     assert.equal(elements(tree, node => node.props.href === "/account").length, 0);
   }
+  const { MerchantSidebar } = loadSource("src/components/MerchantSidebar.tsx");
+  const sidebar = MerchantSidebar({ active: "overview", hasStore: true, userName: "Test", storeName: "Store", open: false, onClose() {}, onChange: tab => { if (tab === "profile") opens++; } });
+  const profile = elements(sidebar, node => node.type === "button" && node.props.children?.some?.(child => child?.props?.children === "Миний бүртгэл"))[0];
+  assert.ok(profile);
+  profile.props.onClick();
+  assert.equal(elements(sidebar, node => node.props.href === "/account").length, 0);
   assert.equal(opens, 2);
 });

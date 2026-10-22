@@ -1,5 +1,6 @@
 "use client";
-import { Html, Line } from "@react-three/drei";
+import { Line } from "@react-three/drei";
+import { SceneHtml as Html } from "./SceneHtml";
 import type { DesignRoom, RoomShape } from "@/lib/types";
 import { getRoomMeasurements, formatRoomMeasurement } from "@/lib/roomMeasurements";
 import type { MeasurementPoint } from "@/lib/furnitureMeasurements";

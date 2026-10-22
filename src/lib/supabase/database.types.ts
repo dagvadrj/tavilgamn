@@ -14,6 +14,31 @@ export type Database = {
   }
   public: {
     Tables: {
+      merchant_delivery_evidence: {
+        Row: { id: string; order_id: string; store_id: string; actor_id: string; storage_path: string | null; legacy: boolean; created_at: string }
+        Insert: { id?: string; order_id: string; store_id: string; actor_id: string; storage_path?: string | null; legacy?: boolean; created_at?: string }
+        Update: { storage_path?: string | null; actor_id?: string; created_at?: string }
+        Relationships: []
+      }
+      kitchen_quotation_documents: {
+        Row: { quote_id: string; items: Json; total: number; note: string; created_at: string }
+        Insert: { quote_id: string; items: Json; total: number; note?: string; created_at?: string }
+        Update: { items?: Json; total?: number; note?: string }
+        Relationships: []
+      }
+      kitchen_measurement_appointments: {
+        Row: { quote_id: string; store_id: string; engineer: string; starts_at: string; ends_at: string; status: string; version: number }
+        Insert: { quote_id: string; store_id: string; engineer: string; starts_at: string; ends_at: string; status?: string; version?: number }
+        Update: { engineer?: string; starts_at?: string; ends_at?: string; status?: string; version?: number }
+        Relationships: []
+      }
+      product_3d_events: {
+        Row: { id: string; session_id: string; product_id: string; kind: string; option_id: string; created_at: string }
+        Insert: { id: string; session_id: string; product_id: string; kind: string; option_id?: string; created_at?: string }
+        Update: { kind?: string; option_id?: string }
+        Relationships: []
+      }
+
       commerce_order_events: {
         Row: {
           actor_id: string | null
@@ -103,6 +128,7 @@ export type Database = {
       }
       furniture_models: {
         Row: {
+          made_to_order: boolean
           archived_at: string | null
           archived_by: string | null
           badges: Json
@@ -156,6 +182,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          made_to_order?: boolean
           archived_at?: string | null
           archived_by?: string | null
           badges?: Json
@@ -209,6 +236,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          made_to_order?: boolean
           archived_at?: string | null
           archived_by?: string | null
           badges?: Json
@@ -1025,6 +1053,7 @@ export type Database = {
       merchant_order_fulfillments: {
         Row: {
           commission_bps: number
+          assembly_team: boolean
           created_at: string
           items: Json
           merchant_net: number | null
@@ -1038,6 +1067,7 @@ export type Database = {
         }
         Insert: {
           commission_bps?: number
+          assembly_team?: boolean
           created_at?: string
           items: Json
           merchant_net?: number | null
@@ -1051,6 +1081,7 @@ export type Database = {
         }
         Update: {
           commission_bps?: number
+          assembly_team?: boolean
           created_at?: string
           items?: Json
           merchant_net?: number | null
@@ -1565,6 +1596,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      merchant_delivery_store: { Args: { p_actor: string }; Returns: string }
+      merchant_product_policy: { Args: { p_actor: string; p_product: string; p_enabled: boolean; p_expected: boolean }; Returns: undefined }
+      delivery_evidence_access: { Args: { p_actor: string; p_order: string }; Returns: string }
+      register_delivery_evidence: { Args: { p_actor: string; p_order: string; p_path: string }; Returns: undefined }
+      move_showroom_delivery: { Args: { p_actor: string; p_data: Json; p_staff?: boolean }; Returns: Json }
+      kitchen_commerce: { Args: { p_actor: string; p_quote: string; p_action: string; p_data?: Json }; Returns: Json }
+      record_product_3d_event: { Args: { p_id: string; p_session: string; p_product: string; p_kind: string; p_option?: string }; Returns: undefined }
+      merchant_3d_insights: { Args: { p_actor: string; p_days?: number }; Returns: Json }
+
       remove_kitchen_design_media: {
         Args: {
           p_actor: string

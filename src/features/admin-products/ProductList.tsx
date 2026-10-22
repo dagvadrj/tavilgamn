@@ -116,6 +116,7 @@ export function ProductList({
 
   const filtered = catalog.products.filter(
     (product) =>
+      product.category !== "kitchen-cabinet" &&
       (!storeId || product.storeIds?.includes(storeId)) &&
       (!category || product.category === category) &&
       (!stock ||
