@@ -59,6 +59,7 @@ import { RoomPreviewCapture } from "./RoomPreviewCapture";
 import { RoomCameraRig } from "./RoomCameraRig";
 import { CameraNavigation } from "./CameraNavigation";
 import type { CameraRequest } from "@/lib/plannerCamera";
+import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 import { CursorNavigation } from "./CursorNavigationBinding";
 import { Camera } from "lucide-react";
 import {
@@ -74,7 +75,7 @@ import {
 // The camera and WebGL renderer survive room selection; the rig owns their pose.
 const ROOM_CAMERA = {
   position: [6, 5, 6] as [number, number, number],
-  fov: 40,
+  fov: PLANNER_CAMERA.fov,
   near: 0.1,
   far: 300,
 };
@@ -575,8 +576,8 @@ export function RoomCanvas({
             enableZoom
             zoomToCursor
             enableDamping
-            dampingFactor={0.055}
-            rotateSpeed={0.75}
+            dampingFactor={PLANNER_CAMERA.dampingFactor}
+            rotateSpeed={PLANNER_CAMERA.rotateSpeed}
             minDistance={0.8}
             maxDistance={Math.max(100, Math.max(spanX, spanZ) * 50)}
             minPolarAngle={0.025}
@@ -616,7 +617,9 @@ export function RoomCanvas({
         {!interior && (
           <CursorNavigation
             smoothZoom
-            enabled={!locked && !isDraggingPiece && !interior && !cameraPlacement}
+            // A second finger must be able to cancel an object drag. The
+            // controls' enabled flag already prevents wheel zoom during a drag.
+            enabled={!locked && !interior && !cameraPlacement}
             plan={view === "plan"}
           />
         )}

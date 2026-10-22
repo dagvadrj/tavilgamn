@@ -56,6 +56,19 @@ test('camera commands never mutate input dimensions and stay finite with a zero 
   assert.ok(f.camera.position.toArray().every(Number.isFinite));
   assert.deepEqual(frozen,bounds);
 });
+test('product focus retains horizontal heading and uses a 25 degree elevation about the product centre',()=>{
+  for(const aspect of [.45,1.5]) {
+    const f=fixture(),heading=f.camera.position.clone().sub(f.controls.target);heading.y=0;heading.normalize();
+    const product={width:2,depth:.9,height:.8,centerX:-1.2,centerY:.4,centerZ:1};
+    navigateCamera(f.camera,f.controls,'focus',product,aspect);
+    assert.deepEqual(f.controls.target.toArray(),[-1.2,.4,1]);
+    const offset=f.camera.position.clone().sub(f.controls.target);
+    assert.ok(Math.abs(Math.atan2(offset.y,Math.hypot(offset.x,offset.z))-25*Math.PI/180)<1e-8);
+    offset.y=0;assert.ok(offset.normalize().distanceTo(heading)<1e-8);
+  }
+  const f=fixture();f.camera.position.copy(f.controls.target).add(new Vector3(0,5,0));f.apply('focus');
+  assert.ok(f.camera.position.toArray().every(Number.isFinite));
+});
 
 // Exercise the installed controls implementation without a browser/WebGL context.
 class Surface {

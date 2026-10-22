@@ -146,7 +146,9 @@ test('interior controller jumps once, ignores WASD, keeps FOV and restores canva
   const event = { pointerId: 1, button: 0, clientX: 20, clientY: 30, stopImmediatePropagation() {}, preventDefault() {} };
   listeners.get('pointerdown')(event); listeners.get('pointermove')({ ...event, clientX: 140, clientY: 80 }); listeners.get('pointerup')(event);
   assert.deepEqual(camera.position.toArray(), [.7, 1.6, -.6]); assert.notEqual(saved.yaw, .4);assert.deepEqual(looking,[true,false]);
-  listeners.get('wheel')({ ...event, deltaY: -100 }); assert.equal(camera.fov, tourVerticalFov(57,2));assert.equal(saved.fov,57);
+  listeners.get('wheel')({ ...event, deltaY: -100 });
+  const zoomed=THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(Math.PI/6)*Math.exp(-.15)));
+  assert.equal(camera.fov, tourVerticalFov(zoomed,2));assert.equal(saved.fov,zoomed);
   render({ pose: saved });
   tree=render({pose:{...saved,fov:48}});assert.equal(camera.fov,tourVerticalFov(48,2));
   const before=invalidations;

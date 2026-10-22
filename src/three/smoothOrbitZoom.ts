@@ -2,6 +2,7 @@ import { MathUtils, type PerspectiveCamera } from "three";
 import type { OrbitControls } from "three-stdlib";
 import { applyCameraPose, beginCameraTransition, cameraPose, cameraTransitionDestination, cancelCameraTransition } from "@/lib/cameraTransition";
 import { pinchCamera } from "./sceneNavigation";
+import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 
 /** Smooth wheel input shares the navigation controller's frame loop, with no idle RAF. */
 export function bindSmoothOrbitZoom(controls: OrbitControls, element: HTMLElement, {
@@ -32,7 +33,7 @@ export function bindSmoothOrbitZoom(controls: OrbitControls, element: HTMLElemen
       applyCameraPose(camera, base, controls);
       pinchCamera(camera, controls, element, point, point, scale, plan);
       const to = cameraPose(camera, controls.target);
-      beginCameraTransition(camera, from, to, reducedMotion(), controls, { owner, duration: .28 });
+      beginCameraTransition(camera, from, to, reducedMotion(), controls, { owner, duration: PLANNER_CAMERA.transitionSeconds });
     } finally {
       controls.dispatchEvent({ type: "end", target: controls });
       invalidate();

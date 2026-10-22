@@ -1,5 +1,6 @@
 import { MathUtils, MOUSE, PerspectiveCamera, Vector3 } from "three";
 import { applyCameraPose, cameraPose } from "./cameraTransition";
+import { PLANNER_CAMERA } from "./plannerCameraProfile";
 
 export type CameraAction = "zoom-in" | "zoom-out" | "fit" | "focus" | "top" | "front" | "back" | "left" | "right" |
   "rotate-left" | "rotate-right" | "pan-left" | "pan-right" | "pan-up" | "pan-down";
@@ -68,8 +69,14 @@ export function navigateCamera(camera: PerspectiveCamera, controls: NavigationCo
     const distance = top
       ? Math.max(bounds.depth + 1, (bounds.width + 1) / Math.max(.1, aspect)) / (2 * Math.tan(halfFov))
       : radius / Math.sin(Math.min(halfFov, horizontalFov)) * 1.12;
+    // Keep the user's horizontal heading, but bring the product down to a
+    // readable angle rather than retaining a steep whole-room overview.
+    const focusDirection = new Vector3(offset.x, 0, offset.z);
+    if (focusDirection.lengthSq() < 1e-12) focusDirection.set(0, 0, 1);
+    focusDirection.normalize().multiplyScalar(Math.cos(PLANNER_CAMERA.focusElevation));
+    focusDirection.y = Math.sin(PLANNER_CAMERA.focusElevation);
     const direction = top ? new Vector3(0, 1, .001)
-      : action === "focus" && offset.lengthSq() ? offset
+      : action === "focus" ? focusDirection
       : action === "front" ? new Vector3(0, .12, 1)
       : action === "back" ? new Vector3(0, .12, -1)
       : action === "left" ? new Vector3(-1, .12, 0)

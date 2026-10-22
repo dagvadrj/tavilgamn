@@ -1544,7 +1544,7 @@ export function ModularKitchenPlanner({
               initialMode={inspector === "materials" ? "modify" : "overview"}
               isOpen={open}
               onToggleOpen={() => { setOpen(value => !value); setWorkspaceView("3d"); setMode("orbit"); }}
-              onZoom={() => { setWorkspaceView("3d"); setMode("orbit"); setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: "fit", targetId: selected.id })); }}
+              onZoom={() => { setWorkspaceView("3d"); setMode("orbit"); setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: "focus", targetId: selected.id })); }}
               onChangeSelections={partSelections => updateCabinet({ partSelections })}
               onReplace={replaceWithCatalogVariant}
               onPositionChange={position => updateCabinet({ position })}

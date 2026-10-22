@@ -40,6 +40,7 @@ import { configurePlannerRenderer } from "./plannerRenderer";
 import { plannerLighting } from "@/lib/plannerLighting";
 import { ROOM_DAY_BACKDROP } from "@/lib/roomLighting";
 import type { CameraRequest } from "@/lib/plannerCamera";
+import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 import { CursorNavigation } from "./CursorNavigationBinding";
 import {
   SCENE_NAVIGATION_START,
@@ -68,7 +69,7 @@ function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
   const { camera, size } = useThree();
   useEffect(() => {
     const perspective = camera as PerspectiveCamera;
-    perspective.fov = 45;
+    perspective.fov = PLANNER_CAMERA.fov;
     perspective.near = 0.1;
     perspective.zoom = 1;
     const target = new Vector3(
@@ -294,6 +295,9 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
           enablePan
           screenSpacePanning
           zoomToCursor
+          enableDamping
+          dampingFactor={PLANNER_CAMERA.dampingFactor}
+          rotateSpeed={PLANNER_CAMERA.rotateSpeed}
           target={[focus.centerX / 1000, focus.h / 2, focus.centerZ / 1000]}
           minDistance={1}
           maxDistance={Math.max(18, Math.hypot(width, depth, roomHeight) * 4)}
@@ -303,6 +307,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
       {!props.interior && (
         <CameraNavigation
           leftDrag
+          enabled={!dragActive}
           request={props.cameraRequest}
           bounds={
             cameraTarget
@@ -325,7 +330,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
           }
         />
       )}
-      {!props.interior && <CursorNavigation />}
+      {!props.interior && <CursorNavigation smoothZoom />}
       {props.interior && (
         <KitchenInteriorView kitchen={kitchen} request={props.cameraRequest} />
       )}
@@ -479,7 +484,7 @@ export function ModularKitchenScene(props: ModularSceneProps) {
           gl.setClearAlpha(0);
           configurePlannerRenderer(gl);
         }}
-        camera={{ position: [4, 5, 6], fov: 45 }}
+        camera={{ position: [4, 5, 6], fov: PLANNER_CAMERA.fov }}
         onPointerMissed={() => props.onDeselect?.()}
         fallback={
           <p className="kp-viewer-message">

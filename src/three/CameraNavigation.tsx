@@ -3,7 +3,8 @@ import { useEffect, useRef } from "react";
 import { useThree } from "@react-three/fiber";
 import type { PerspectiveCamera } from "three";
 import { bindBlenderMouse, navigateCamera, type CameraBounds, type CameraRequest, type NavigationControls } from "@/lib/plannerCamera";
-import { beginCameraTransition, cameraPose, cancelCameraTransition } from "@/lib/cameraTransition";
+import { applyCameraPose, beginCameraTransition, cameraPose, cameraTransitionDestination, cancelCameraTransition } from "@/lib/cameraTransition";
+import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 import { CameraTransitionController } from "./CameraTransitionController";
 
 export function CameraNavigation({ request, bounds, plan = false, leftDrag = false, enabled = true, onRest }: {
@@ -12,6 +13,7 @@ export function CameraNavigation({ request, bounds, plan = false, leftDrag = fal
   const { camera, controls, gl, size, invalidate } = useThree();
   const handled = useRef<number | undefined>(undefined);
   const pending = useRef(false);
+  const zoomOwner = useRef(Symbol("button-zoom"));
   const { width, depth, height, centerX, centerY, centerZ } = bounds;
   useEffect(() => {
     if (!controls || !("mouseButtons" in controls)) return;
@@ -32,9 +34,14 @@ export function CameraNavigation({ request, bounds, plan = false, leftDrag = fal
       const perspective = camera as PerspectiveCamera;
       const orbit = controls as unknown as NavigationControls;
       const from = cameraPose(perspective, orbit.target);
+      if (request.action === "zoom-in" || request.action === "zoom-out") {
+        const destination = cameraTransitionDestination(perspective, zoomOwner.current);
+        if (destination) applyCameraPose(perspective, destination, orbit);
+      }
       navigateCamera(camera as PerspectiveCamera, controls as unknown as NavigationControls,
         request.action, { width, depth, height, centerX, centerY, centerZ }, size.width / Math.max(1, size.height), plan);
-      beginCameraTransition(perspective, from, cameraPose(perspective, orbit.target), window.matchMedia?.("(prefers-reduced-motion: reduce)").matches, orbit);
+      beginCameraTransition(perspective, from, cameraPose(perspective, orbit.target), window.matchMedia?.("(prefers-reduced-motion: reduce)").matches, orbit,
+        { owner: request.action === "zoom-in" || request.action === "zoom-out" ? zoomOwner.current : undefined, duration: PLANNER_CAMERA.transitionSeconds });
       handled.current = request.id;
       invalidate();
     });

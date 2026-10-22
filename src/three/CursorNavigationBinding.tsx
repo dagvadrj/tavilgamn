@@ -21,7 +21,8 @@ export function CursorNavigation({ enabled = true, plan = false, smoothZoom = fa
   useEffect(() => {
     if (!controls || !("target" in controls)) return;
     const orbit = controls as unknown as OrbitControls;
-    return bindCursorNavigation(orbit, orbit.domElement ?? gl.domElement, () => allowed.current, plan);
-  }, [controls, gl, plan]);
+    return bindCursorNavigation(orbit, orbit.domElement ?? gl.domElement, () => allowed.current, plan,
+      smoothZoom ? { invalidate, reducedMotion: () => !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches } : undefined);
+  }, [controls, gl, plan, invalidate, smoothZoom]);
   return null;
 }

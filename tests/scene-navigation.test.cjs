@@ -3,8 +3,8 @@ const assert = require("node:assert/strict");
 const { PerspectiveCamera, Vector2, Vector3, Plane, Raycaster } = require("three");
 const { OrbitControls, MapControls } = require("three-stdlib");
 const { loadSource } = require("./helpers/load-source.cjs");
-const { bindCursorNavigation, isSceneNavigationGesture, SCENE_NAVIGATION_START } = loadSource("src/three/sceneNavigation.ts");
 const transition = loadSource("src/lib/cameraTransition.ts");
+const { bindCursorNavigation, isSceneNavigationGesture, SCENE_NAVIGATION_START } = loadSource("src/three/sceneNavigation.ts", { '@/lib/cameraTransition': transition });
 const { bindSmoothOrbitZoom } = loadSource("src/three/smoothOrbitZoom.ts", { '@/lib/cameraTransition': transition });
 
 class Surface {
@@ -33,7 +33,7 @@ function fixture(plan = false, smooth = false, reducedMotion = false) {
   controls.target.set(0, plan ? 0 : 1, 0); controls.screenSpacePanning = true;
   controls.enableRotate = !plan; controls.enableDamping = true; controls.update();
   let allowed = true;
-  const cleanup = bindCursorNavigation(controls, element, () => allowed, plan);
+  const cleanup = bindCursorNavigation(controls, element, () => allowed, plan, smooth ? {invalidate(){},reducedMotion:()=>reducedMotion} : undefined);
   const stopSmooth = smooth ? bindSmoothOrbitZoom(controls, element, { invalidate() {}, allowed: () => allowed, reducedMotion: () => reducedMotion, plan }) : () => {};
   const interrupt = () => transition.cancelCameraTransition(camera);
   if (smooth) {
@@ -202,4 +202,21 @@ test("blur cancels both fingers so the next single-finger orbit has no stale nat
     f.down(3, 400, 300); f.move(3, 480, 360);
     assert.ok(f.camera.position.distanceTo(before) > .01);
   } finally { f.dispose(); }
+});
+
+for(const plan of [false,true])test(`${plan?'plan':'orbit'} smooth pinch accumulates input, retains its anchor and settles after release`,()=>{
+  const f=fixture(plan,true);
+  try{
+    const point=f.anchor(580,270),distance=f.controls.getDistance();
+    f.down(1,510,270);f.down(2,650,270);
+    f.move(1,470,270);f.move(2,690,270);
+    near(f.controls.getDistance(),distance);
+    for(let i=0;i<6;i++)transition.advanceCameraTransition(f.camera,f.controls,1/60);
+    assert.ok(f.controls.getDistance()<distance);
+    f.move(1,510,310);f.move(2,730,310);f.up(1);f.up(2);
+    for(let i=0;i<30;i++){f.controls.update();transition.advanceCameraTransition(f.camera,f.controls,1/60);}
+    near(f.controls.getDistance(),distance*140/220);
+    const projected=f.projected(point);near(projected[0],620);near(projected[1],310);
+    const final=f.camera.position.clone();for(let i=0;i<30;i++)f.controls.update();near(f.camera.position.distanceTo(final),0);
+  }finally{f.dispose();}
 });

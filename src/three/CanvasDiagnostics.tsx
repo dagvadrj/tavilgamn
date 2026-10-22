@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { performanceDiagnosticsEnabled, reportCanvasMetric, summarizeFrames, summarizeMotionFrames } from "@/lib/performanceDiagnostics";
 import { useCameraMotionPreview } from "./CameraMotionPreview";
+import type { PerspectiveCamera, Vector3 } from "three";
 
 export function CanvasDiagnostics({ scene }: { scene: string }) {
   const gl = useThree(state => state.gl);
@@ -45,6 +46,8 @@ export function CanvasDiagnostics({ scene }: { scene: string }) {
       const now = performance.now();
       const { frames, intervals, motionIntervals, cameraMotionFrames, motionTriangles } = sample.current;
       const memory = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory;
+      const state = get();
+      const controls = state.controls as unknown as { target?: Vector3 } | undefined;
       reportCanvasMetric({
         scene, frames, durationMs: Math.round(now - started),
         ...summarizeFrames(intervals, frames, now - started),
@@ -58,6 +61,9 @@ export function CanvasDiagnostics({ scene }: { scene: string }) {
         loop: get().frameloop,
         cameraMotionFrames, motionTriangles,
         shadowAutoUpdate: gl.shadowMap.autoUpdate,
+        cameraPosition: state.camera.position.toArray(),
+        cameraTarget: controls?.target?.toArray(),
+        cameraFov: (state.camera as PerspectiveCamera).fov,
       });
       started = now;
       sample.current = { frames: 0, intervals: [], motionIntervals: [], last: sample.current.last,

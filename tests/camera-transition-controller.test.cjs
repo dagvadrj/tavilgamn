@@ -104,16 +104,19 @@ test('replacement starts at the visible pose; room-origin shifts move both endpo
   } finally { controls.dispose(); }
 });
 
-test('furniture focus frames rotated/elevated dimensions in portrait view while retaining the orbit direction', () => {
+test('furniture focus frames rotated/elevated dimensions in portrait view while retaining horizontal heading', () => {
   const piece={instanceId:'shelf',productId:'unregistered',x:2,z:-3,rotation:Math.PI/2,elevation:1.4,details:{dimensions:{w:2,d:.4,h:.8}}};
   const bounds=furnitureCameraBounds(piece);
   assert.ok(Math.abs(bounds.width-.4)<1e-8);assert.ok(Math.abs(bounds.depth-2)<1e-8);assert.ok(Math.abs(bounds.centerY-1.8)<1e-8);
   const {camera,controls}=fixture();
   try {
     camera.aspect=.45;camera.zoom=2;
-    const direction=camera.position.clone().sub(controls.target).normalize();
+    const direction=camera.position.clone().sub(controls.target);direction.y=0;direction.normalize();
     navigateCamera(camera,controls,'focus',bounds,.45);
-    near(controls.target,new THREE.Vector3(2,1.8,-3));near(camera.position.clone().sub(controls.target).normalize(),direction);assert.equal(camera.zoom,1);
+    near(controls.target,new THREE.Vector3(2,1.8,-3));
+    const offset=camera.position.clone().sub(controls.target);
+    assert.ok(Math.abs(Math.atan2(offset.y,Math.hypot(offset.x,offset.z))-25*Math.PI/180)<1e-8);
+    offset.y=0;near(offset.normalize(),direction);assert.equal(camera.zoom,1);
     for(const x of [-1,1])for(const y of [-1,1])for(const z of [-1,1]) {
       const screen=new THREE.Vector3(bounds.centerX+x*bounds.width/2,bounds.centerY+y*bounds.height/2,bounds.centerZ+z*bounds.depth/2).project(camera);
       assert.ok(Math.abs(screen.x)<1&&Math.abs(screen.y)<1&&screen.z<1);
