@@ -12,8 +12,10 @@ import { getProduct } from "@/store/catalog";
 import { getDbModel } from "@/lib/modelRegistry";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import { fitCountertops, cabinetAxes } from "@/lib/kitchenPlacement";
+import { openingWorldTransform } from "@/lib/roomOpenings";
 
 export type PlacementRoom = RoomShape & {
+  openingZones?: OpeningZone[];
   placementGeometry?: Pick<
     RoomGeometry,
     "bounds" | "voids" | "segments" | "connected" | "simple"
@@ -21,6 +23,24 @@ export type PlacementRoom = RoomShape & {
   skirting?: Bounds[];
   heightZones?: Array<Bounds & { height: number }>;
 };
+export type OpeningZone = { id: string; kind: "door" | "window"; rect: Rect; bottom: number; top: number };
+
+/** Reserve inward door swing even when closed; windows only reserve their frame. */
+export function roomOpeningZones(room: RoomShape): OpeningZone[] {
+  return (room.openings ?? []).map(opening => {
+    const world = openingWorldTransform(room, opening);
+    const depth = opening.kind === "door" && opening.swing === "inward" ? opening.width : .06;
+    return { id: opening.id, kind: opening.kind, bottom: opening.sillHeight, top: opening.sillHeight + opening.height,
+      rect: { cx: world.x + Math.sin(world.rotation) * depth / 2, cz: world.z + Math.cos(world.rotation) * depth / 2,
+        w: opening.width, d: depth, rot: -world.rotation } };
+  });
+}
+
+export function furnitureOpeningConflicts(piece: PlacedFurniture, room: PlacementRoom) {
+  const bottom = piece.elevation ?? 0, top = bottom + dimsFor(piece).h;
+  return (room.openingZones ?? roomOpeningZones(room)).filter(zone => bottom < zone.top - 1e-6 && top > zone.bottom + 1e-6 &&
+    pieceRects(piece).some(rect => rectsOverlap(rect, zone.rect, true)));
+}
 const placementGeometry = (room: PlacementRoom) =>
   room.placementGeometry ?? getRoomGeometry(room);
 
@@ -283,6 +303,7 @@ export function isPlacementValid(
   if (!Number.isFinite(elevation) || elevation < 0 || ![candidate.x,candidate.z,candidate.rotation].every(Number.isFinite)) return false;
   if (!isInsideRoom(candidate, room) || hitsSkirting(candidate, room))
     return false;
+  if (furnitureOpeningConflicts(candidate, room).length) return false;
   if (
     !room.heightZones &&
     room.height !== undefined &&

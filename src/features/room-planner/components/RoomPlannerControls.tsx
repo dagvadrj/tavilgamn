@@ -11,10 +11,11 @@ const SIDE_VIEWS = [
   ["front", "Урдаас"], ["back", "Араас"], ["left", "Зүүнээс"], ["right", "Баруунаас"],
 ] as const;
 
-export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
+export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, onZoom, onRoom, onMaterials,
   onHelp, onWindows, onCameraPlace, cameraPlacement, dimensions, onDimensions, grid, onGrid, snap, onSnap, locked, onLock,
   expanded, onExpand, onRotate, lighting, ceiling, windowBearing, onLightingChange, onLightingSettings, beginLightingEdit, endLightingEdit,
 }: {
+  onFurniture?: () => void; catalogOpen?: boolean;
   windowBearing?: number; ceiling?: RoomCeiling; lighting?: RoomLighting; onLightingChange?: (patch: Partial<RoomLighting>) => void; onLightingSettings?: () => void;
   beginLightingEdit?: () => void; endLightingEdit?: () => void;
   view: RoomView; onView: (view: RoomView) => void;
@@ -51,6 +52,11 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
     };
   }, []);
   return <>
+    <nav className="room-tools-rail" aria-label="Үндсэн хэрэгслүүд">
+      <button type="button" aria-expanded={catalogOpen} onClick={onFurniture}><Plus size={20}/><span>Тавилга</span></button>
+      <button type="button" onClick={onRoom} data-planner-tour="room-size"><PencilRuler size={20}/><span>Өрөө</span></button>
+      <button type="button" onClick={onMaterials} data-planner-tour="room-material"><Paintbrush size={20}/><span>Материал</span></button>
+    </nav>
     <div className="room-zoom-controls" role="group" aria-label="Өрөөг ойртуулах, холдуулах">
       <button type="button" aria-label="Ойртуулах" title="Ойртуулах" disabled={locked} onClick={() => onZoom("zoom-in")}><Plus size={22}/></button>
       <button type="button" aria-label="Өрөөг бүтнээр харах" title="Өрөөг бүтнээр харах" disabled={locked} onClick={() => onZoom("fit")}><Focus size={19}/></button>
@@ -68,8 +74,8 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
     </div>
     <nav className="room-view-dock" ref={dock} aria-label="Өрөө харах, засах">
       <div className="room-view-options" role="group" aria-label="Харах өнцөг" data-planner-tour="room-view">
-        <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>Өрөөний харагдац</span></button>
-        <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>Дээрээс</span></button>
+        <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>3D</span></button>
+        <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>2D</span></button>
         <details className="room-dock-more room-side-views" ref={sideMenu}>
           <summary aria-label="Хажуугийн харагдац" data-active={SIDE_VIEWS.some(([side]) => side === view)}><Eye size={20}/><span>{SIDE_VIEWS.find(([side]) => side === view)?.[1] ?? "Хажуугаас"}</span><ChevronDown size={12}/></summary>
           <div className="room-dock-popover" role="group" aria-label="Харах талаа сонгох">
@@ -79,16 +85,14 @@ export function RoomPlannerControls({ view, onView, onZoom, onRoom, onMaterials,
             }}>{label}</button>)}
           </div>
         </details>
-        <button type="button" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span>Дотроос харах</span></button>
+        <button type="button" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span>Дотроос</span></button>
       </div>
       <div className="room-dock-edit">
-        <button type="button" onClick={onMaterials} data-planner-tour="room-material"><Paintbrush size={20}/><span>Өнгө</span></button>
-        <button type="button" aria-pressed={dimensions} onClick={onDimensions}><Ruler size={20}/><span>Хэмжээс</span></button>
-        <button type="button" onClick={onWindows}><PanelsTopLeft size={20}/><span>Цонх</span></button>
-        <button type="button" className="room-edit-button" onClick={onRoom} data-planner-tour="room-size"><PencilRuler size={20}/><span>Өрөө засах</span></button>
         <details className="room-dock-more">
           <summary aria-label="Нэмэлт удирдлага"><MoreHorizontal size={22}/><ChevronDown size={12}/></summary>
           <div className="room-dock-popover">
+            <button type="button" aria-pressed={dimensions} onClick={onDimensions}><Ruler size={17}/> Хэмжээс</button>
+            <button type="button" onClick={onWindows}><PanelsTopLeft size={17}/> Цонх</button>
             <button type="button" aria-pressed={cameraPlacement} onClick={onCameraPlace}><Camera size={17}/> Камер байрлуулах</button>
             <p>Харах өнцгийг эргүүлэх</p>
             <div className="room-dock-rotate">

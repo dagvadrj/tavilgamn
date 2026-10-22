@@ -144,40 +144,33 @@
     gap: 8px;
     padding: 8px 12px;
   }
-
   .kspace .kspace-tools {
     flex: 0 0 auto;
     flex-wrap: nowrap;
     width: 100%;
     overflow-x: auto;
   }
-
   .kspace .kspace-tools button {
     flex-shrink: 0;
     white-space: nowrap;
   }
-
   .kspace .kspace-continue {
     margin-left: 0;
     align-self: flex-end;
     padding: 8px 12px;
   }
-
   .kspace-map-toolbar {
     gap: 6px;
     padding: 8px;
   }
-
   .kspace-map-toolbar button {
     min-height: 44px;
     padding: 8px;
   }
-
   .kspace .kspace-workspace {
     flex-direction: column;
     overflow-y: auto;
   }
-
   .kspace .kspace-panel {
     position: static;
     inset: auto;
@@ -188,32 +181,26 @@
     padding: 14px;
     border-bottom: 1px solid #e2e8e4;
   }
-
   .kspace .kspace-room-summary {
     display: none;
   }
-
   .kspace-map-area {
     min-height: 360px;
     flex-shrink: 0;
   }
-
   .kspace .kspace-header {
     flex-wrap: wrap;
     gap: 12px;
     padding: 10px 12px;
   }
-
   .kspace .kspace-header nav {
     display: none;
   }
-
   .kspace .kspace-header > button {
     margin-left: auto;
     min-height: 44px;
     min-width: 44px;
   }
-
   .kspace .kspace-footer {
     flex-wrap: wrap;
     gap: 10px;

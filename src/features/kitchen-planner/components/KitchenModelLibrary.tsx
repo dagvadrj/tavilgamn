@@ -25,7 +25,7 @@ export function KitchenModelLibrary({ modules, loading, error, retry, disabled, 
     `${module.name} ${module.code} ${variant.modelName} ${variant.glbFile}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   return <section className="planner-model-library" data-inspector-section="catalog">
     <div className="planner-inspector-intro"><Box size={20}/><h2>3D загварын сан</h2>
-      <p>Зураг дээр дарж гарнитуртаа нэмээрэй. Хэмжээг өргөн × гүн × өндөр гэсэн дарааллаар харуулсан.</p>
+      <p>Доод, дээд, өндөр шүүгээг төрлөөр нь сонгоорой. Дээд шүүгээ хананд, доод шүүгээ шалан дээр байрлана.</p>
     </div>
     <label className="planner-search"><Search size={17}/><input ref={searchRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Шүүгээний нэрээр хайх…" aria-label="Шүүгээний загвар хайх"/></label>
     <div className="planner-filter-pills" aria-label="3D загварын төрөл">
@@ -39,8 +39,9 @@ export function KitchenModelLibrary({ modules, loading, error, retry, disabled, 
     {!loading && !error && models.length > 0 && <div className="kitchen-result-count"><span>{filtered.length} загвар</span>{(query || type !== "all") && <button type="button" onClick={() => { setQuery(""); setType("all"); }}>Шүүлтүүр арилгах</button>}</div>}
     <div className="planner-model-grid">{filtered.map(({ module, variant }) =>
       <PlannerModelCard key={variant.furnitureModelId} name={variant.modelName || module.name}
+        detail={variant.assetValidationIssues?.length ? "3D файлын хэмжээ, байрлалыг засах шаардлагатай" : `${TYPES[module.cabinetType]} · ${module.cabinetType === "wall" ? "Хананд, тавцангийн дээр" : module.cabinetType === "appliance" ? "Төхөөрөмж" : "Шалан дээр"}`}
         image={variant.thumbnailUrl} dimensions={`${module.widthMm} × ${module.depthMm} × ${module.heightMm} мм`}
-        file={variant.glbFile!} showFile={false} actionLabel="гарнитурт нэмэх" disabled={disabled} onAdd={() => onAdd(module, variant)}
+        file={variant.glbFile!} showFile={false} actionLabel="гарнитурт нэмэх" disabled={disabled || Boolean(variant.assetValidationIssues?.length)} onAdd={() => onAdd(module, variant)}
         onPrefetch={() => { const url = variant.previewGlbUrl ?? variant.glbUrl; if (url) void prefetchModel(url); }}/>
     )}</div>
   </section>;

@@ -3,13 +3,14 @@
 import { useMemo } from "react";
 import type { ModularKitchen } from "@/lib/kitchenCabinets";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
-import { preferredKitchenVariant, type KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
+import { kitchenVariantFits, kitchenVariantFromModule, preferredKitchenVariant, type KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import { useKitchenCatalog } from "@/features/kitchen-planner/hooks/useKitchenCatalog";
 import { KitchenCabinetGLB } from "./KitchenCabinetGLB";
+import { KitchenTops } from "./KitchenTops";
 import { KitchenExtraMesh } from "./KitchenExtraMesh";
 
-/** The editor, exported kitchen and room planner share the same published GLBs. */
+/** Editor and room preview share compatible assets, authored cabinets and fitted surfaces. */
 export function KitchenAssemblyMesh({ kitchen, centered = false, open = false, selectedId, variantModels, materialDefinitions }: {
   kitchen: ModularKitchen;
   centered?: boolean;
@@ -21,7 +22,7 @@ export function KitchenAssemblyMesh({ kitchen, centered = false, open = false, s
 }) {
   const { moduleCatalog } = useKitchenCatalog(!variantModels);
   const models = useMemo(() => variantModels ?? Object.fromEntries(
-    moduleCatalog.flatMap((module) => module.variants.map((variant) => [variant.furnitureModelId, { ...variant, nominalSizeMm: { width: module.widthMm, height: module.heightMm, depth: module.depthMm } }])),
+    moduleCatalog.filter(module => module.active).flatMap((module) => module.variants.filter(variant => variant.active).map((variant) => [variant.furnitureModelId, kitchenVariantFromModule(module, variant)])),
   ), [variantModels, moduleCatalog]);
   const bounds = kitchenEnvelope(kitchen);
   return <group position={centered ? [-bounds.centerX / 1000, 0, -bounds.centerZ / 1000] : [0, 0, 0]}>
@@ -33,6 +34,8 @@ export function KitchenAssemblyMesh({ kitchen, centered = false, open = false, s
         variant={cabinet.variantId ? models[cabinet.variantId] : preferredKitchenVariant(moduleCatalog, cabinet)}
         open={Boolean(open && cabinet.id === selectedId)} />
     </group>)}
+    <KitchenTops kitchen={kitchen} materialDefinitions={materialDefinitions}
+      catalogApplianceIds={kitchen.cabinets.filter(c => { const v = c.variantId ? models[c.variantId] : preferredKitchenVariant(moduleCatalog, c); return kitchenVariantFits(v, c); }).map(c => c.id)} />
     {(kitchen.extras ?? []).map((extra) => <group key={extra.id} name={`Extra-${extra.id}`}
       position={[extra.position.x / 1000, 0, extra.position.z / 1000]}
       rotation={[0, extra.position.rotation, 0]}>

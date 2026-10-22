@@ -20,6 +20,11 @@ export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFro
       item.width < 50 || item.width > 3000 || item.depth < 50 || item.depth > 3000) throw new Error("Өрөөний элементийн хэмжээ, байрлал буруу байна.");
     if (item.kind === "column" && (item.x < item.width / 2 || item.x + item.width / 2 > room.width || item.z < item.depth / 2 || item.z + item.depth / 2 > room.depth)) throw new Error("Багана өрөөний хилээс гарсан байна.");
     if (["door", "window"].includes(item.kind)) {
+      const sill = item.kind === "door" ? 0 : item.sillHeight ?? 900;
+      const openingHeight = item.height ?? Math.min(item.kind === "door" ? 2100 : 1100, room.height - 100 - sill);
+      if ((item.sillHeight !== undefined && (!Number.isFinite(item.sillHeight) || item.sillHeight < 0 || (item.kind === "door" && item.sillHeight !== 0))) ||
+        !Number.isFinite(openingHeight) || openingHeight < 300 || sill + openingHeight > room.height ||
+        (item.swing !== undefined && !["inward", "outward"].includes(item.swing))) throw new Error("Хаалга, цонхны өндөр, тавцангийн түвшин эсвэл нээлтийн чиглэл буруу байна.");
       const horizontal = ["back", "front"].includes(item.wall);
       const centre = horizontal ? item.x : item.z, extent = horizontal ? room.width : room.depth;
       if (outline) {
@@ -34,7 +39,9 @@ export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFro
     }
     ids.add(item.id);
     if(outline && item.kind==="column" && !roomContainsFootprint(room,[{x:item.x-item.width/2,z:item.z-item.depth/2},{x:item.x+item.width/2,z:item.z-item.depth/2},{x:item.x+item.width/2,z:item.z+item.depth/2},{x:item.x-item.width/2,z:item.z+item.depth/2}])) throw new Error("Багана өрөөний хүрээнээс гарсан байна.");
-    return { id: item.id, kind: item.kind, x: item.x, z: item.z, width: item.width, depth: item.depth, wall: item.wall };
+    return { id: item.id, kind: item.kind, x: item.x, z: item.z, width: item.width, depth: item.depth, wall: item.wall,
+      ...(item.height !== undefined ? { height: item.height } : {}), ...(item.sillHeight !== undefined ? { sillHeight: item.sillHeight } : {}),
+      ...(item.swing !== undefined ? { swing: item.swing } : {}) };
   });
   for (const [index, item] of items.entries()) {
     for (const other of items.slice(index + 1)) {

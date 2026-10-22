@@ -1,0 +1,9 @@
+const kickstartQueue = { pubsub: [], sentry: [], postalCode: [], store: [], prompt: [], toast: [] };
+  window.ikea = { nav: { ru: 'us', lc: 'en', domain: 'www.ikea.com', codeVersion: '045a3a4', themesEnabled: false, sentryEnabled: true, ipacak: 'TKspzaHPz1gfGQB', gmak: 'AIzaSyAijS6WcfUD_Zu1KoKYYiW8AmjqcO0o2rc'},
+    pubsub: { subscribe: (...args) => { const i = { method: "subscribe", args, cancelled: false }; kickstartQueue.pubsub.push(i); return { unsubscribe: () => { if (i.realUnsubscribe) { i.realUnsubscribe(); } else { i.cancelled = true; } } }; }, publish: (...args) => { return new Promise((resolve, reject) => { kickstartQueue.pubsub.push({ method: "publish", args, resolve, reject }); }); }, unsubscribe: (...args) => { kickstartQueue.pubsub.push({ method: "unsubscribe", args }); }, events: () => [] },
+    sentry: { register: ((...args) => { kickstartQueue.sentry.push({ method: "register", args }); }), store: ((...args) => { kickstartQueue.sentry.push({ method: "store", args }); }) },
+    postalCode: { get: (...args) => { return new Promise((resolve, reject) => { kickstartQueue.postalCode.push({ method: "get", args, resolve, reject }); }); }, set: (...args) => { return new Promise((resolve, reject) => { kickstartQueue.postalCode.push({ method: "set", args, resolve, reject }); }); }, clear: (...args) => { return new Promise((resolve, reject) => { kickstartQueue.postalCode.push({ method: "clear", args, resolve, reject }); }); }, validate: (...args) => { return new Promise((resolve, reject) => { kickstartQueue.postalCode.push({ method: "validate", args, resolve, reject }); }); } },
+    store: { get: () => { return new Promise((resolve, reject) => { kickstartQueue.store.push({ method: "get", args: [], resolve, reject }); }); } },
+    prompt: (...args) => { kickstartQueue.prompt.push({ args }); },
+    toast: (...args) => { kickstartQueue.toast.push({ args }); }
+  };

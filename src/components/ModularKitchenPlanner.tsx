@@ -1,4 +1,5 @@
 "use client";
+import "@/features/planner/components/planner-catalog-upgrades.css";
 import { KitchenSuggestionWizard } from "./KitchenSuggestionWizard";
 import { KitchenSetupSteps } from "@/features/kitchen-planner/components/KitchenSetupSteps";
 import { isKitchenFlowStage, kitchenPreferences, restoreKitchenPreferences, updateKitchenEquipment, type KitchenFlowStage, type KitchenSetupStage } from "@/lib/kitchenFlow";
@@ -67,6 +68,8 @@ import {
 import { type KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import {
   applyKitchenCatalogVariants,
+  kitchenVariantFromModule,
+  kitchenVariantFits,
   type KitchenCatalogModule,
   type KitchenCatalogVariant,
 } from "@/lib/kitchenModuleCatalog";
@@ -75,6 +78,7 @@ import {
   findCabinetSpace,
   fitCountertops,
   placementIssues,
+  placementIssueAction,
   proposeCabinetMove,
   resolveElevations,
   snapCabinet
@@ -110,6 +114,7 @@ import { KitchenQuoteRequest } from "./KitchenQuoteRequest";
 
 import "@/features/kitchen-planner/components/kitchen-glb-workspace.css";
 import "@/features/kitchen-planner/components/kitchen-ikea-layout.css";
+import "@/features/kitchen-planner/styles/kitchen-studio-polish.css";
 
 const FALLBACK_MATERIALS: KitchenMaterialDefinition[] = FINISHES.map(
   (finish) => ({
@@ -395,7 +400,7 @@ export function ModularKitchenPlanner({
     () =>
       Object.fromEntries(
         moduleCatalog.flatMap((module) =>
-          module.variants.map((variant) => [variant.furnitureModelId, { ...variant, nominalSizeMm: { width: module.widthMm, height: module.heightMm, depth: module.depthMm } }]),
+          module.active ? module.variants.filter(variant => variant.active).map((variant) => [variant.furnitureModelId, kitchenVariantFromModule(module, variant)]) : [],
         ),
       ),
     [moduleCatalog],
@@ -851,7 +856,7 @@ export function ModularKitchenPlanner({
       crypto.randomUUID(),
       design.room.height,
     );
-    if (!cabinet) return;
+    if (!cabinet) { setMessage("Энэ загварыг шүүгээ болгон байрлуулах боломжгүй. Тохирох төрлийн шүүгээ сонгоно уу."); return; }
     const issue = validateCabinet(cabinet);
     if (issue) {
       setMessage(issue);
@@ -896,6 +901,9 @@ export function ModularKitchenPlanner({
     variant: KitchenCatalogVariant,
   ) {
     if (!selected || busy) return;
+    if (module.cabinetType !== (selected.corner ? "corner" : selected.type)) {
+      setMessage("Тавилгын төрөл, бэхэлгээ тохирохгүй байна."); return;
+    }
     const { front } = cabinetAxes(selected.position.rotation);
     const depthShift = (module.depthMm - selected.depth) / 2;
     const replacement = withOpening(
@@ -944,7 +952,10 @@ export function ModularKitchenPlanner({
       setMessage(error);
       return;
     }
-    replaceCabinet(nextCabinet);
+    const next = resolveElevations({ ...design, cabinets: design.cabinets.map(c => c.id === selected.id ? nextCabinet : c) });
+    const conflict = placementIssues(next).find(issue => issue.severity === "error");
+    if (conflict) { setMessage(`${conflict.message} Өөр хэмжээ сонгох эсвэл эхлээд байрлалаа өөрчилнө үү.`); return; }
+    if (commit(next)) setSuccessMessage(`${variant.modelName || module.name} сонголоо.`);
   }
   return (
     <main
@@ -1089,7 +1100,7 @@ export function ModularKitchenPlanner({
           {message && <p className="kitchen-setup-error" role="alert">{message}</p>}
         </> : <KitchenSetupSteps stage={setupStage} kitchen={design} disabled={busy} message={message} onChange={commit} onStage={changeStage} />}
       </div>}
-      {suggestionsOpen && <KitchenDesignSuggestions kitchen={design} disabled={busy} onApply={commit} onBack={() => changeStage("design")} onFinish={() => changeStage("finish")} />}
+      {suggestionsOpen && <KitchenDesignSuggestions kitchen={design} modules={moduleCatalog} products={products.products} variantModels={variantModels} materialDefinitions={materialDefinitions} disabled={busy} onApply={commit} onBack={() => changeStage("design")} onFinish={() => changeStage("finish")} />}
       {spaceOpen && (
         <KitchenSpaceEditor
           kitchen={design}
@@ -1235,6 +1246,7 @@ export function ModularKitchenPlanner({
                 >
                   Урдаас
                 </button>
+                <button type="button" onClick={() => { setWorkspaceView("3d"); setCameraRequest(p => ({ id: (p?.id ?? 0) + 1, action: "right" })); }}>Хажуугаас</button>
                 <button
                   type="button"
                   aria-pressed={workspaceView === "interior"}
@@ -1384,10 +1396,10 @@ export function ModularKitchenPlanner({
                 <button type="button" onClick={() => setWorkspaceView("2d")}>2D план нээх</button>
               </details>
             )}
-            {!catalogLoading && !catalogError && sceneKitchen.cabinets.some(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")) && workspaceView !== "2d" && (
+            {!catalogLoading && !catalogError && sceneKitchen.cabinets.some(c => !kitchenVariantFits(variantModels[c.variantId ?? ""], c) && !["refrigerator", "hood", "oven"].includes(c.opening ?? "")) && workspaceView !== "2d" && (
               <div className="kitchen-missing-models" role="status">
-                {sceneKitchen.cabinets.filter(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")).length} шүүгээнд бэлэн 3D загвар сонгоно уу.
-                <button type="button" onClick={() => { const missing = sceneKitchen.cabinets.find(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")); if (missing) selectCabinet(missing.id); }}>Шүүгээ сонгож загвар солих</button>
+                {sceneKitchen.cabinets.filter(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")).length} шүүгээнд тохирох 3D загвар сонгоно уу. Байрлал нь 2D планд хадгалагдана.
+                <button type="button" onClick={() => { const missing = sceneKitchen.cabinets.find(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")); if (missing) selectCabinet(missing.id); }}>Тохирох 3D загвар сонгох</button>
               </div>
             )}
             <p className="kp-preview-hint" hidden={workspaceView === "2d"}>
@@ -1416,6 +1428,16 @@ export function ModularKitchenPlanner({
                 snapMessage ||
                 "Хананд болон залгаа шүүгээнд автоматаар таарна."}
             </p>
+            {issues.length > 0 && <ul className="kitchen-placement-actions" aria-label="Байрлалын асуудал засах">
+              {issues.slice(0, 6).map((issue, index) => {
+                const action = placementIssueAction(issue);
+                return <li key={`${issue.code}-${index}`}><span>{issue.message}</span>
+                  <button type="button" disabled={busy} onClick={() => {
+                    if (action.target === "room") { setSpaceOpen(true); return; }
+                    selectCabinet(issue.ids[0]); setInspector("selection"); setSettingsOpen(true);
+                  }}>{action.label}</button></li>;
+              })}
+            </ul>}
           </section>
           <section className="kp-panel kp-reference-panel">
             <div className="kp-section-heading">
@@ -1492,6 +1514,7 @@ export function ModularKitchenPlanner({
               onZoom={() => { setWorkspaceView("3d"); setMode("orbit"); setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: "fit", targetId: selected.id })); }}
               onChangeSelections={partSelections => updateCabinet({ partSelections })}
               onReplace={replaceWithCatalogVariant}
+              products={products.products}
               onPositionChange={position => updateCabinet({ position })}
               onDuplicate={duplicateCabinet}
               onRemove={() => { if (commit({ ...design, cabinets: design.cabinets.filter(c => c.id !== selected.id) })) { setSelectedId(null); setSettingsOpen(false); } }}

@@ -1,0 +1,1 @@
+(function(){"use strict";const e=document.createElement("script");e.type="module",e.src="https://static.cloudflareinsights.com/beacon.min.js",e.setAttribute("data-cf-beacon",'{"token": "0736eaee62664b7590531eda49b962d8"}'),document.head.appendChild(e)})();

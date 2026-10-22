@@ -1,0 +1,1 @@
+window.ikea=window.ikea||{};window.ikea.geo={"latitude":"47.90771","longitude":"106.88324","city":"Ulan Bator","region":"Ulaanbaatar","regionCode":"1"};

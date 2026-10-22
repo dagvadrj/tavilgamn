@@ -2,6 +2,7 @@ import "server-only";
 import type { KitchenCatalogModule, KitchenCatalogVariant, KitchenModelCandidate } from "./kitchenModuleCatalog";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { getKitchenGlbAssembly, kitchenPartKind } from "./kitchenGlbAssembly";
+import { validateCabinetGlb, type GlbInspection } from "./glbStandard";
 
 type Db = ReturnType<typeof getSupabaseAdmin>;
 const file = (path: unknown) => typeof path === "string" ? path.split("/").pop() ?? null : null;
@@ -27,20 +28,29 @@ export async function readKitchenModuleCatalog(options: { admin?: boolean } = {}
     : { data: [], error: null };
   if (modelError) throw modelError;
   const models = new Map((modelRows ?? []).map((row) => [row.id as string, row]));
+  const moduleSpecs = new Map((moduleRows ?? []).map(row => [row.id as string, row]));
   const variants = new Map<string, KitchenCatalogVariant[]>();
   for (const row of variantRows ?? []) {
     const model = models.get(row.furniture_model_id as string);
     const kitchenGlbPath = model?.processing_status === "ready" ? model?.glb_path : null;
     if (!model || model.archived_at || model.category !== "kitchen-cabinet" || (!options.admin && !kitchenGlbPath)) continue;
     const assembly = getKitchenGlbAssembly(row.configuration);
+    const spec = moduleSpecs.get(row.module_id as string);
+    const report = model.glb_validation as GlbInspection | null;
+    const assetValidationIssues = report && spec ? (!report.dimensions || ![report.dimensions.widthMm, report.dimensions.heightMm, report.dimensions.depthMm].every(Number.isFinite)
+      ? ["3D файлын хэмжээсийн баталгаажуулалт дутуу байна."]
+      : validateCabinetGlb(report, { widthMm: Number(spec.width_mm), heightMm: Number(spec.height_mm), depthMm: Number(spec.depth_mm) }, report.assetRole)) : [];
     if (assembly) for (const slot of assembly.slots) for (const option of slot.options) {
       const part = models.get(option.modelId);
       const ready = part && !part.archived_at && part.processing_status === "ready";
       option.glbFile = ready ? file(part.glb_path) : null;
       option.glbUrl = ready ? assetUrl(option.modelId, part.glb_path) : null;
       option.thumbnailUrl = part && !part.archived_at ? assetUrl(option.modelId, part.thumbnail_path) : null;
+      if (part?.product_id) option.productId = String(part.product_id);
     }
     const value: KitchenCatalogVariant = {
+      assetValidationIssues,
+      frontProjectionMm: report?.frontProjectionMm ?? 0,
       physicalSize: Boolean(model.glb_validation),
       furnitureModelId: model.id as string, productId: model.product_id as string, modelName: model.name as string,
       variantCode: row.variant_code as string, opening: row.opening as KitchenCatalogVariant["opening"],

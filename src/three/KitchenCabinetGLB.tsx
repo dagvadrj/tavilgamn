@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Html } from "@react-three/drei";
+import { Edges, Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { AnimationMixer, LoopOnce, type Group } from "three";
 import type { ModularCabinet } from "@/lib/kitchenCabinets";
-import type { KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
+import { kitchenVariantFits, type KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
 import { getKitchenGlbAssembly, resolveKitchenPartOption, type KitchenGlbAssembly, type KitchenGlbOption } from "@/lib/kitchenGlbAssembly";
-import { modelPlacement } from "@/lib/modelPlacement";
+import { modelPlacement, modelSizeIssue } from "@/lib/modelPlacement";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import { acquireModel, cloneModel, disposeModelClone, type LoadedModel } from "./modelLoader";
 import { composeKitchenGlb, setKitchenGlbOpen, type KitchenPartMotion } from "./kitchenGlbComposition";
@@ -61,6 +61,8 @@ function AssemblyModel({ cabinet, variant, assembly, open = false, selected = fa
           })),
         ]);
         if (cancelled || !frame) return;
+        const sizeIssue = modelSizeIssue(frame.bounds, { w: cabinet.width / 1000, h: cabinet.height / 1000, d: cabinet.depth / 1000 }, variant.frontProjectionMm);
+        if (sizeIssue) throw new Error(sizeIssue);
         const parts = new Map(entries.flatMap(([id, model]) => model ? [[id, model.scene] as const] : []));
         const placement = modelPlacement(frame.bounds, { w: cabinet.width / 1000, h: cabinet.height / 1000, d: cabinet.depth / 1000 }, true);
         const result = composeKitchenGlb(frame.scene, assembly, selections, parts, placement.position);
@@ -106,18 +108,31 @@ function AssemblyModel({ cabinet, variant, assembly, open = false, selected = fa
   </group>;
 }
 
-/** Render catalog models only; never invent replacement cabinet geometry. */
-export function KitchenCabinetGLB({ cabinet, variant, open = false, selected = false }: Props) {
+export function MissingKitchenModel({ cabinet, selected }: Props) {
+  return <group userData={{ deliveryPending: true, deliveryReady: false, missingCatalogModel: true }}>
+    <mesh position={[0, cabinet.height / 2000, 0]}>
+      <boxGeometry args={[cabinet.width / 1000, cabinet.height / 1000, cabinet.depth / 1000]} />
+      <meshBasicMaterial transparent opacity={0.035} depthWrite={false} color="#64748b" />
+      <Edges color={selected ? "#2563eb" : "#94a3b8"} />
+    </mesh>
+    {selected && <Html center position={[0, cabinet.height / 1000 + .06, 0]} zIndexRange={[8, 0]}>
+      <span role="status" className="whitespace-nowrap rounded-md bg-white/95 px-3 py-2 text-xs shadow-sm">Тохирох 3D загвар бэлэн биш · Солих цэснээс сонгоорой</span>
+    </Html>}
+  </group>;
+}
+
+/** Only render the model of the selected product at its catalog dimensions. */
+export function KitchenCabinetGLB({ cabinet, variant: candidate, open = false, selected = false }: Props) {
+  const variant = kitchenVariantFits(candidate, cabinet) ? candidate : undefined;
   const assembly = useMemo(() => getKitchenGlbAssembly(variant?.configuration), [variant?.configuration]);
-  if (!variant?.glbFile) return <KitchenApplianceBody cabinet={cabinet} open={open} />;
+  if (!variant?.glbFile) return ["hood", "oven", "refrigerator"].includes(cabinet.opening ?? "")
+    ? <KitchenApplianceBody cabinet={cabinet} open={open} /> : <MissingKitchenModel cabinet={cabinet} selected={selected} />;
   if (assembly) return <AssemblyModel cabinet={cabinet} variant={variant} assembly={assembly} open={open} selected={selected} />;
-  const nominal = variant.nominalSizeMm;
-  const fitPlannedSize = nominal && (nominal.width !== cabinet.width || nominal.height !== cabinet.height || nominal.depth !== cabinet.depth);
   return <group>
     {cabinet.opening === "hood" && <KitchenApplianceBody cabinet={cabinet} open={open} />}
     <GLBFurnitureMesh modelId={variant.furnitureModelId} basePath={`/api/models/files/${variant.furnitureModelId}`}
     glbFile={variant.glbFile} selected={selected} showLoadStatus={selected}
-    preservePhysicalSize={fitPlannedSize ? false : variant.physicalSize} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
+    preservePhysicalSize strictDimensions frontProjectionMm={variant.frontProjectionMm} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
     open={open} openAnimation={typeof variant.configuration.openAnimation === "string" ? variant.configuration.openAnimation : undefined} />
   </group>;
 }

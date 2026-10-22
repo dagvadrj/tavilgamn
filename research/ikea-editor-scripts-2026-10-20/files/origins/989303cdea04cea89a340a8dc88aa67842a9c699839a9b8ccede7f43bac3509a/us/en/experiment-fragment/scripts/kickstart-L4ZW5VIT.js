@@ -1,0 +1,1 @@
+"use strict";(()=>{var t=()=>window.ikea?.cookieConsent?.hasConsent?.(2)??!1;var e="ikea",s="exptSDK",i=[],c=(...n)=>new Promise((o,r)=>{if(n[1]?.waitForConsent===!1&&!t())return o({error:new Error("Consent is not OK"),success:!1});i.push([o,r,n])});window[e]=window[e]||{};window[e][s]=window[e][s]||{__q:i,init:c};})();

@@ -1,6 +1,15 @@
 type Point = { x: number; y: number; z: number };
 type Bounds = { min: Point; max: Point };
 type Size = { w: number; h: number; d: number };
+/** Compare decoded metre bounds before any scene scaling can conceal a mismatch. */
+export function modelSizeIssue(bounds: Bounds, footprint: Size, frontProjectionMm = 0): string | null {
+  const actual = [bounds.max.x - bounds.min.x, bounds.max.y - bounds.min.y, bounds.max.z - bounds.min.z];
+  const expected = [footprint.w, footprint.h, footprint.d + frontProjectionMm / 1000];
+  if (!Number.isFinite(frontProjectionMm) || frontProjectionMm < 0 || frontProjectionMm > 100 ||
+    actual.some((n, i) => !Number.isFinite(n) || n <= 0 || !Number.isFinite(expected[i]) || expected[i] <= 0 || Math.abs(n - expected[i]) > .0050001))
+    return "3D файлын бодит хэмжээ каталогийн бүтээгдэхүүнтэй тохирохгүй байна.";
+  return null;
+}
 /** Keep validated physical size and align the carcass back, including handle overhang. */
 export function modelPlacement(
   bounds: Bounds,

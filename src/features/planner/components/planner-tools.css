@@ -91,36 +91,29 @@
     padding: 8px;
     gap: 4px;
   }
-
   .planner-reference.kitchen-refined .kitchen-editor-stages button {
     padding: 6px 10px;
   }
-
   .planner-reference.kitchen-refined .km-view-tools {
     gap: 4px;
     padding: 4px;
   }
-
   .planner-reference.kitchen-refined .km-view-tools button {
     padding: 6px 8px;
   }
-
   .planner-reference.kitchen-refined .km-view-tools button span {
     font-size: 11px;
   }
-
   .planner-reference .kitchen-selection-dock {
     width: calc(100% - 24px);
     max-width: 420px;
     padding: 10px;
   }
-
   .planner-reference .kitchen-selection-dock > div {
     width: 100%;
     padding-bottom: 8px;
     border-bottom: 1px solid #dfe6e2;
   }
-
   .planner-reference .room-view-options {
     padding-right: 0;
     border-right: 0;

@@ -133,6 +133,22 @@ test("new furniture reserves its measured volume, remains selectable and exclude
   } finally { run.unmount(); }
 });
 
+test("strict catalog delivery rejects decoded size mismatches and never shows a previous SKU as its replacement", async () => {
+  const originalError = console.error; console.error = () => {};
+  let errors = 0;
+  const run = harness({ w: 1, h: 1, d: 1, strictDimensions: true, preservePhysicalSize: true, onError: () => errors++ });
+  try {
+    await run.flush(); run.resolve(0); await run.flush();
+    assert.ok(run.primitive()); assert.equal(run.tree.props.userData.deliveryReady, true);
+    run.updateProps({ glbFile: 'wrong-size.glb', w: 2 }); await run.flush();
+    assert.equal(run.primitive(), null);
+    run.resolve(1); await run.flush();
+    assert.equal(errors, 1); assert.equal(run.primitive(), null);
+    assert.equal(run.tree.props.userData.deliveryReady, false);
+    assert.ok(run.released.includes('/models/wrong-size.glb'));
+  } finally { run.unmount(); console.error = originalError; }
+});
+
 test("replacement keeps the last model at its original size until the current request is ready, ignoring stale completion", async () => {
   const run = harness({ previewGlbFile: undefined });
   try {

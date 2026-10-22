@@ -20,9 +20,11 @@ import {
 } from "./modelLoader";
 import { reportModelPerformance } from "@/lib/modelPerformance";
 import { registerModelFloorBand } from "./furnitureFloorBand";
-import { modelPlacement } from "@/lib/modelPlacement";
+import { modelPlacement, modelSizeIssue } from "@/lib/modelPlacement";
 
 export interface GLBFurnitureMeshProps {
+  strictDimensions?: boolean;
+  frontProjectionMm?: number;
   preservePhysicalSize?: boolean;
   /** Reflection fill for room lighting; leaves authored colour and texture factors intact. */
   environmentBoost?: number;
@@ -107,6 +109,8 @@ export function GLBFurnitureMesh({
   onReady,
   onError,
   preservePhysicalSize = false,
+  strictDimensions = false,
+  frontProjectionMm = 0,
   environmentBoost = 1,
   bakedOcclusionIntensity,
   trackFloorBand = false,
@@ -174,6 +178,8 @@ export function GLBFurnitureMesh({
       h,
       d,
       preservePhysicalSize,
+      strictDimensions,
+      frontProjectionMm,
     }),
     [
       enabled,
@@ -194,6 +200,8 @@ export function GLBFurnitureMesh({
       h,
       d,
       preservePhysicalSize,
+      strictDimensions,
+      frontProjectionMm,
     ],
   );
 
@@ -216,6 +224,8 @@ export function GLBFurnitureMesh({
       h,
       d,
       preservePhysicalSize,
+      strictDimensions,
+      frontProjectionMm,
     } = request;
     if (!enabled) return;
     let cancelled = false;
@@ -242,6 +252,10 @@ export function GLBFurnitureMesh({
           carcassTextureLease.promise,
         ]);
         if (cancelled) return;
+        if (strictDimensions) {
+          const issue = modelSizeIssue(asset.bounds, { w, h, d }, frontProjectionMm);
+          if (issue) throw new Error(issue);
+        }
         const cloned = cloneModel(asset);
         if (trackFloorBand)
           registerModelFloorBand(
@@ -399,7 +413,7 @@ export function GLBFurnitureMesh({
     };
   }, []);
 
-  const ready = display;
+  const ready = strictDimensions && display?.request !== request ? null : display;
   const currentDelivery = ready?.request === request;
   useEffect(() => {
     if (!ready) return;
@@ -465,7 +479,7 @@ export function GLBFurnitureMesh({
             opacity={0.22}
             depthWrite={false}
           />
-          <Edges color="#799bb9" lineWidth={1} />
+          <Edges color="#1463df" lineWidth={1} />
         </mesh>
       )}
       {showLoadStatus && enabled && (

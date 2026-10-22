@@ -1,0 +1,370 @@
+/* Scoped studio tokens keep the room editor independent of kitchen and shop. */
+
+.room-simple {
+  --room-accent: #1463df;
+  --room-ink: #17212b;
+  --room-muted: #64748b;
+  --room-border: #e5e7eb;
+  --room-surface: #ffffff;
+  color: var(--room-ink);
+}
+
+.planner-reference.room-simple {
+  background: #f3f4f6;
+}
+
+.planner-reference.room-simple.room-panel-open {
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.room-simple .planner-drawer {
+  background: var(--room-surface);
+  border-color: var(--room-border);
+}
+
+.room-simple .planner-drawer-heading {
+  color: var(--room-ink);
+  background: var(--room-surface);
+}
+
+.room-simple :is(button, summary, input, select) {
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.room-simple :is(button, summary, input, select):focus-visible {
+  outline: 3px solid var(--room-accent);
+  outline-offset: 3px;
+}
+
+.room-simple :is(input, select) {
+  accent-color: var(--room-accent);
+  border-radius: 10px;
+}
+
+.room-simple .studio-file-actions .room-save-primary {
+  background: var(--room-accent);
+  color: white;
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+.room-simple .studio-file-actions .room-save-primary:hover {
+  background: #1051bb;
+}
+
+.room-simple .studio-file-actions .room-summary-button {
+  background: #eef4ff;
+  color: var(--room-accent);
+  border-radius: 12px;
+}
+
+.room-tools-rail {
+  position: absolute;
+  top: 132px;
+  left: 20px;
+  z-index: 27;
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--room-border);
+  border-radius: 16px;
+  background: var(--room-surface);
+  box-shadow: 0 8px 24px #17212b0a;
+}
+
+.room-tools-rail button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 68px;
+  min-height: 62px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.room-tools-rail button:hover, .room-tools-rail button[aria-expanded="true"] {
+  background: #eef4ff;
+  color: var(--room-accent);
+}
+
+.room-simple .room-view-dock {
+  border: 1px solid var(--room-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px #17212b0d;
+}
+
+.room-simple .room-view-dock button[aria-pressed="true"] {
+  background: #eef4ff;
+  color: var(--room-accent);
+}
+
+.room-simple .room-dock-edit > button:first-child, .room-simple .room-dock-edit > .room-edit-button {
+  display: none;
+}
+
+.room-simple .room-view-dock button, .room-simple .room-dock-more > summary {
+  min-height: 44px;
+  border-radius: 10px;
+}
+
+.room-simple .room-welcome-card {
+  top: 100px;
+  left: 124px;
+  width: 310px;
+  border: 1px solid var(--room-border);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px #17212b0c;
+}
+
+.room-simple .room-welcome-card p, .room-simple .room-size-note, .room-simple .room-product-stock {
+  color: var(--room-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.room-simple .room-welcome-start {
+  background: var(--room-accent);
+  border-radius: 12px;
+  min-height: 44px;
+}
+
+.room-selection-size {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-block: 16px;
+}
+
+.room-selection-size > span {
+  display: grid;
+  gap: 6px;
+  padding: 10px 8px;
+  background: #f3f4f6;
+  border-radius: 10px;
+}
+
+.room-selection-size small {
+  color: var(--room-muted);
+  font-size: 11px;
+}
+
+.room-selection-size strong {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-selection-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.room-selection-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 4px;
+  min-height: 44px;
+  border: 1px solid var(--room-border);
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.room-selection-actions button:hover {
+  background: #eef4ff;
+  color: var(--room-accent);
+}
+
+.room-selection-actions button:last-child {
+  color: #b42318;
+}
+
+.room-simple .room-product-card {
+  border: 1px solid var(--room-border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--room-surface);
+}
+
+.room-simple .room-product-card:hover:not(:disabled) {
+  border-color: var(--room-accent);
+  box-shadow: 0 6px 20px #1463df12;
+}
+
+.room-simple .room-product-image {
+  background: #f6f7f9;
+}
+
+.room-product-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  margin-top: 8px;
+  border-radius: 10px;
+  background: #eef4ff;
+  color: var(--room-accent);
+  font-size: 12px;
+}
+
+.room-simple .planner-search {
+  border-radius: 12px;
+  min-height: 44px;
+  border-color: var(--room-border);
+}
+
+.room-simple .room-camera-guide {
+  color: #475569;
+  font-size: 12px;
+}
+
+@media (max-width: 959px) {
+  .planner-reference.room-simple.room-panel-open {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .planner-reference.room-simple > .planner-drawer {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: min(72dvh, 640px);
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+    box-shadow: 0 -12px 48px #17212b26;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .room-simple .planner-drawer-heading {
+    min-height: 56px;
+    border-bottom: 1px solid var(--room-border);
+  }
+  .room-simple .planner-drawer-body {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .room-simple .room-tools-rail {
+    top: auto;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    padding: 6px;
+  }
+  .room-tools-rail button {
+    width: 88px;
+    min-height: 52px;
+    gap: 3px;
+  }
+  .room-simple .room-view-dock, .room-simple.room-panel-open .room-view-dock {
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 2px;
+    border-radius: 16px;
+    width: max-content;
+    max-width: calc(100% - 24px);
+  }
+  .room-simple .room-dock-edit {
+    border-top: 0;
+    padding-top: 0;
+  }
+  .room-simple .room-dock-edit > button {
+    display: none;
+  }
+  .room-simple .room-welcome-card {
+    top: 84px;
+    left: 12px;
+    width: min(310px, calc(100% - 86px));
+    max-height: calc(100dvh - 330px);
+    overflow-y: auto;
+    padding: 16px;
+  }
+  .room-simple .planner-room-caption, .room-simple.room-panel-open .planner-room-caption {
+    bottom: calc(158px + env(safe-area-inset-bottom));
+  }
+  .room-simple .planner-notice {
+    bottom: calc(160px + env(safe-area-inset-bottom));
+    z-index: 80;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-simple :is(button, summary, input, select, aside) {
+    transition: none;
+    animation: none;
+  }
+}
+
+.room-simple .room-add-button {
+  display: none;
+}
+
+.room-simple .room-welcome-card ol {
+  display: none;
+}
+
+.room-simple .room-welcome-card > strong {
+  margin-bottom: 12px;
+}
+
+.room-simple .room-welcome-card .room-welcome-intro {
+  margin-bottom: 16px;
+}
+
+.room-simple .planner-model-card {
+  border: 1px solid var(--room-border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+}
+
+.room-simple .planner-model-card:hover:not(:disabled) {
+  border-color: var(--room-accent);
+  box-shadow: 0 6px 20px #1463df12;
+}
+
+.room-simple .planner-model-image {
+  background: #f6f7f9;
+}
+
+.room-simple .planner-model-add {
+  background: var(--room-accent);
+  color: white;
+}
+
+.room-simple .planner-model-info > strong {
+  color: var(--room-ink);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.room-simple .planner-model-info > span {
+  color: var(--room-muted);
+  font-size: 12px;
+}
+
+.room-simple .room-view-dock, .room-simple.room-panel-open .room-view-dock {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+.room-simple .room-dock-edit {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.room-simple.room-panel-open .planner-selection-toolbar {
+  display: none;
+}
+
+.room-simple .planner-transform input {
+  min-height: 44px;
+}

@@ -8,6 +8,7 @@ export type KitchenGlbOption = {
   offsetMm?: KitchenPartVector; rotationDeg?: KitchenPartVector;
   /** Resolved by the catalog server, never accepted from an admin request. */
   glbFile?: string | null; glbUrl?: string | null; thumbnailUrl?: string | null;
+  productId?: string;
 };
 export type KitchenGlbSlot = {
   id: string; label: string; kind: KitchenPartKind; parentSlotId?: string; anchorNode?: string;
@@ -49,6 +50,7 @@ export function parseKitchenGlbAssembly(value: unknown, hydrated = false): Kitch
       if (option.offsetMm !== undefined) result.offsetMm = vector(option.offsetMm, [0, 0, 0], 10000);
       if (option.rotationDeg !== undefined) result.rotationDeg = vector(option.rotationDeg, [0, 0, 0], 360);
       if (hydrated) for (const key of ["glbFile", "glbUrl", "thumbnailUrl"] as const) if (typeof option[key] === "string" || option[key] === null) result[key] = option[key];
+      if (hydrated && typeof option.productId === "string") result.productId = option.productId;
       return result;
     });
     if (new Set(options.map(option => option.id)).size !== options.length) fail("Нэг эд ангийн сонголтын code давхардахгүй байна.");
