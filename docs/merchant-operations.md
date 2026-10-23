@@ -45,3 +45,11 @@ Migrations: `20261020231636_merchant_operations_workspace.sql` and `202610202326
 - Measurement appointments use Ulaanbaatar time, 30–120 minute slots, optimistic versions, and serialized overlap checks per store/engineer. Customers confirm or decline proposals in their kitchen-quote history.
 - Products without a model expose a direct 3D modeling request using the existing admin request queue, current gallery images and physical dimensions. Gallery/measurement editing remains available before submission.
 - Migration: `20261021001252_merchant_showroom_fulfillment.sql`. New commerce tables and RPCs are service-only with RLS enabled. Placement analytics report distinct browser sessions and paid orders separately; they do not claim an attributed purchase conversion.
+
+## Merchant-specific agreement files
+
+Admin selects a merchant before uploading a PDF or DOCX (maximum 10 MB), saves a draft, then publishes it to that store. Each store has an independent draft and current version. Published files and acceptance evidence are immutable; earlier signed text agreements remain in the accepting store's history.
+
+Original files are kept in the private `merchant-contracts` bucket. Authenticated server routes authorize the admin selection or merchant owner before downloading, and verify the stored SHA-256 and byte length. New objects are never uploaded with upsert. A definitive rejected save can remove only that request's new object; ambiguous errors retain it. The browser does not create empty files when a download manager intercepts a request.
+
+Migration: `20261023011252_merchant_specific_contract_files.sql`. Verification: `tests/merchant-contract-files.test.cjs`, upgraded agreement coverage in `tests/merchant-commerce-db.test.cjs`, and desktop/mobile WebKit UI workflows using actual routes and isolated PGlite data. Live checks verified the private bucket, upload/download, denied public access, RPC access and client execution restrictions without creating business agreements.

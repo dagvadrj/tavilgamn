@@ -4,6 +4,33 @@
   min-width: 0;
 }
 
+.dashboard-shell .merchant-contract-selection {
+  max-width: 600px;
+}
+
+.dashboard-shell .merchant-contract-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .merchant-contract-file > div {
+  display: grid;
+  flex: 1 1 160px;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-shell .merchant-contract-file small {
+  color: var(--dashboard-muted);
+}
+
 .dashboard-shell .merchant-commerce-toolbar {
   display: flex;
   flex-wrap: wrap;

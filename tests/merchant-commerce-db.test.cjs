@@ -87,5 +87,47 @@ test('merchant imports are atomic/idempotent; scoped exports/reports and immutab
  await assert.rejects(db.query('select * from merchant_contract_acceptances'),{code:'42501'});
  await assert.rejects(db.query('select merchant_contracts($1)',[owner]),{code:'42501'});
  await assert.rejects(db.query('select merchant_product_export($1)',[owner]),{code:'42501'});
+ // Upgrade existing signed text agreements without changing their evidence.
+ {
+ await db.exec(`reset role; create schema storage; create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);`);
+ await db.exec(readFileSync('supabase/migrations/20261023011252_merchant_specific_contract_files.sql','utf8'));
+ await db.exec('set role service_role');
+ assert.equal((await merchantCall()).current,null,'legacy global terms are not presented as a personal agreement');
+ assert.equal((await merchantCall()).acceptances[0].contract.body,'Approved terms','legacy acceptance survives');
+ const attachment=()=>({path:`contracts/${randomUUID()}/${randomUUID()}.pdf`,name:'Монгол гэрээ.pdf',type:'application/pdf',size:100,sha256:'a'.repeat(64)});
+ const save=(storeId,file=attachment(),extra={})=>adminCall('save',{storeId,title:'Personal agreement',platformName:'Platform LLC',file,...extra});
+ await assert.rejects(save('shop',null),{code:'22023'});
+ let own=(await save('shop')).versions[0];
+ const otherDraft=(await save('other')).versions[0];
+ assert.notEqual(own.id,otherDraft.id,'each merchant has an independent draft');
+ await assert.rejects(adminCall('publish',{storeId:'other',id:own.id,revision:own.revision}),{code:'P0003'});
+ await assert.rejects(adminCall('file',{storeId:'other',id:own.id}),{code:'42501'});
+ assert.equal((await adminCall('file',{storeId:'shop',id:own.id})).contract.file_sha256,'a'.repeat(64));
+ const edited=(await save('shop',null,{id:own.id,revision:own.revision,title:'Edited'})).versions[0];
+ assert.equal(edited.file_path,own.file_path,'metadata edit preserves the saved original');
+ await assert.rejects(save('shop',attachment(),{id:own.id,revision:own.revision}),{code:'P0003'});
+ own=edited;
+ await adminCall('publish',{storeId:'shop',id:own.id,revision:own.revision});
+ assert.equal((await merchantCall()).current.id,own.id);
+ assert.equal((await merchantCall('read',{},other)).current,null);
+ await adminCall('publish',{storeId:'other',id:otherDraft.id,revision:otherDraft.revision});
+ assert.equal((await merchantCall()).current.id,own.id,'another merchant publication cannot replace this merchant agreement');
+ await assert.rejects(merchantCall('accept',{contractId:own.id,signerName:'Other',consent:true},other),{code:'P0003'});
+ const signed=await merchantCall('accept',{contractId:own.id,signerName:'Store Owner',consent:true});
+ assert.equal(signed.acceptances.length,2);
+ assert.ok(signed.acceptances.every(x=>x.acceptance.store_id==='shop'));
+ await assert.rejects(db.query('update merchant_contract_versions set file_name=$1 where id=$2',['forged.pdf',own.id]),{code:'22023'});
+ const replacement=(await save('shop')).versions[0];
+ await adminCall('publish',{storeId:'shop',id:replacement.id,revision:replacement.revision});
+ await assert.rejects(merchantCall('accept',{contractId:own.id,signerName:'Owner',consent:true}),{code:'P0003'});
+ assert.equal((await merchantCall('read',{},other)).current.id,otherDraft.id);
+ assert.equal((await merchantCall()).acceptances.find(x=>x.contract.id===own.id).contract.file_path,own.file_path);
+ assert.equal((await adminCall('read',{storeId:'other'})).acceptances.length,0);
+ await assert.rejects(save('shop',{...attachment(),size:10485761}),{code:'23514'});
+ await assert.rejects(adminCall('save',{storeId:'shop',title:'Wrong actor',platformName:'Platform',file:attachment()},customer),{code:'42501'});
+ await db.exec('reset role');
+ assert.equal((await call("select public from storage.buckets where id='merchant-contracts'")).public,false);
+ assert.equal((await call("select has_function_privilege('authenticated','public.merchant_contracts(uuid,text,jsonb)','execute') allowed")).allowed,false);
+ }
 });
 
