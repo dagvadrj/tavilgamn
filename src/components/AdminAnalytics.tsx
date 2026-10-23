@@ -21,6 +21,7 @@ import {
   DashboardDonut,
 } from "@/features/dashboard/DashboardCharts";
 import { OrderHistory } from "@/components/OrderHistory";
+import { AnimatedNumber } from "@/features/dashboard/AnimatedNumber";
 
 type TopMerchant = {
   id: string;
@@ -177,20 +178,23 @@ function AnalyticsPanel({ owner }: { owner: string }) {
             <Metric
               icon={TrendingUp}
               label="Нийт GMV (30 хоног)"
-              value={money(result.gmv)}
+              value={result.gmv}
+              money
               detail={count(result.paidOrders) + " төлөгдсөн захиалга"}
             />
             <Metric
               icon={BadgeDollarSign}
               label="Платформын цэвэр орлого"
-              value={money(result.platformRevenue)}
+              value={result.platformRevenue}
+              money
               detail="Төлөгдсөн захиалгын шимтгэл"
               featured
             />
             <Metric
               icon={CircleDollarSign}
               label="Merchant-д очих цэвэр дүн"
-              value={money(result.merchantNet)}
+              value={result.merchantNet}
+              money
               detail={
                 count(result.activeMerchants) +
                 " идэвхтэй дэлгүүр · " +
@@ -201,7 +205,8 @@ function AnalyticsPanel({ owner }: { owner: string }) {
             <Metric
               icon={Box}
               label="Нээлттэй 3D хүсэлт"
-              value={count(result.openModelRequests) + " хүсэлт"}
+              value={result.openModelRequests}
+              suffix=" хүсэлт"
               detail="Шийдвэрлэх шаардлагатай загварууд"
             />
           </div>
@@ -324,12 +329,16 @@ function Metric({
   value,
   detail,
   featured = false,
+  money = false,
+  suffix = "",
 }: {
   icon: LucideIcon;
   label: string;
   value: string;
   detail: string;
   featured?: boolean;
+  money?: boolean;
+  suffix?: string;
 }) {
   return (
     <article className={`reference-kpi ${featured ? "is-featured" : ""}`}>
@@ -337,7 +346,10 @@ function Metric({
         <span>{label}</span>
         <Icon size={18} />
       </div>
-      <strong>{value}</strong>
+      <strong>
+        <AnimatedNumber value={value} money={money} />
+        {suffix}
+      </strong>
       <small>{detail}</small>
     </article>
   );

@@ -430,10 +430,6 @@
   width: 75%;
 }
 
-.merchant-app-shell .merchant-animated-number {
-  font-variant-numeric: tabular-nums;
-}
-
 @keyframes merchant-stat-shimmer {
   to {
     background-position: -140% 0;

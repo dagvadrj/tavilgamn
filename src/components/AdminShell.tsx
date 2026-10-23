@@ -2,9 +2,16 @@
 
 import { DashboardNavigation } from "@/features/dashboard/DashboardNavigation";
 import { DashboardFormAssist } from "@/features/dashboard/DashboardFormAssist";
+import { DashboardMotion } from "@/features/dashboard/DashboardMotion";
 import "@/features/dashboard/dashboard-v14.css";
 
-import { useCallback, useState, type ReactNode, type RefObject } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { AdminSidebar, ADMIN_TABS, type AdminTab } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import type { DashboardPreferences } from "@/features/dashboard/preferences";
@@ -28,6 +35,8 @@ export function AdminShell({
   children: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const fallbackPanelRef = useRef<HTMLDivElement>(null);
+  const contentRef = panelRef ?? fallbackPanelRef;
   const closeMenu = useCallback(() => setMenuOpen(false), []);
   const changeTab = (tab: AdminTab) => {
     closeMenu();
@@ -75,11 +84,12 @@ export function AdminShell({
         <main
           id="main-content"
           className="admin-content dashboard-content"
-          ref={panelRef}
+          ref={contentRef}
           tabIndex={-1}
           aria-label={label}
         >
           {children}
+          <DashboardMotion page={active} rootRef={contentRef} />
         </main>
         <footer className="admin-footer">
           <span>© {new Date().getFullYear()} tavilga.mn</span>

@@ -6,7 +6,7 @@ import { useMotionActivity } from "@/features/motion/useMotionActivity";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-/** Only Merchant opts into the PDF-inspired first-view chart build. */
+/** Dashboard charts build once when they enter the viewport. */
 function useChartEntrance<T extends SVGElement>(
   activity: { ref: RefObject<T | null>; active: boolean; reduced: boolean },
   kind: "bar" | "line" | "ring",
@@ -17,7 +17,7 @@ function useChartEntrance<T extends SVGElement>(
   const { ref, active, reduced } = activity;
   useEffect(() => {
     const node = ref.current;
-    if (!node || !node.closest(".merchant-app-shell")) return;
+    if (!node || !node.closest(".dashboard-shell")) return;
     if (reduced) played.current = true;
     if (!active || played.current || typeof node.animate !== "function") return;
     played.current = true;

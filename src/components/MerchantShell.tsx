@@ -12,7 +12,7 @@ import {
   type MerchantTab,
 } from "./MerchantSidebar";
 import { MerchantHeader } from "./MerchantHeader";
-import { MerchantMotion } from "@/features/merchant/MerchantMotion";
+import { DashboardMotion } from "@/features/dashboard/DashboardMotion";
 import "@/features/merchant/merchant-stats.css";
 import type { DashboardPreferences } from "@/features/dashboard/preferences";
 import "@/features/dashboard/merchant-theme.css";
@@ -115,7 +115,7 @@ export function MerchantShell({
           tabIndex={-1}
         >
           {children}
-          <MerchantMotion page={active} rootRef={panelRef} />
+          <DashboardMotion page={active} rootRef={panelRef} />
         </main>
       </div>
     </div>
