@@ -631,18 +631,43 @@ export function ProductEditor({
             {specificationFields(draft.category).map((spec) => (
               <label key={spec.key}>
                 {spec.label}
-                <input
-                  className="input mt-1"
-                  maxLength={300}
-                  placeholder={spec.placeholder}
-                  value={draft.specifications?.[spec.key] ?? ""}
-                  onChange={(event) =>
-                    field("specifications", {
-                      ...draft.specifications,
-                      [spec.key]: event.target.value,
-                    })
-                  }
-                />
+                {spec.key === "convertible" ? (
+                  <select
+                    className="input mt-1"
+                    value={draft.specifications?.[spec.key] ?? ""}
+                    onChange={(event) =>
+                      field("specifications", {
+                        ...draft.specifications,
+                        [spec.key]: event.target.value,
+                      })
+                    }
+                  >
+                    <option value="">Тодорхойгүй</option>
+                    <option value="Тийм">Ор болдог</option>
+                    <option value="Үгүй">Ор болдоггүй</option>
+                    {draft.specifications?.[spec.key] &&
+                      !["Тийм", "Үгүй"].includes(
+                        draft.specifications[spec.key],
+                      ) && (
+                        <option value={draft.specifications[spec.key]}>
+                          {draft.specifications[spec.key]}
+                        </option>
+                      )}
+                  </select>
+                ) : (
+                  <input
+                    className="input mt-1"
+                    maxLength={300}
+                    placeholder={spec.placeholder}
+                    value={draft.specifications?.[spec.key] ?? ""}
+                    onChange={(event) =>
+                      field("specifications", {
+                        ...draft.specifications,
+                        [spec.key]: event.target.value,
+                      })
+                    }
+                  />
+                )}
               </label>
             ))}
           </div>

@@ -1,0 +1,272 @@
+/* Smoked glass, black instrument cards and quiet sage highlights. */
+
+.dashboard-layout .dashboard-v14.dashboard-themed-shell.dashboard-shell.dashboard-glass {
+  --dashboard-bg: #d0cdc7;
+  --dashboard-surface: #f7f7f183;
+  --dashboard-elevated: #ffffff70;
+  --dashboard-border: #ffffff82;
+  --dashboard-ink: #242622;
+  --dashboard-muted: #555850;
+  --dashboard-accent: #405432;
+  --dashboard-on-accent: #fff;
+  --dashboard-success: #23745d;
+  --dashboard-danger: #b42336;
+  --dashboard-warning: #856000;
+  --site-bg: var(--dashboard-bg);
+  --site-surface: var(--dashboard-surface);
+  --site-hover: var(--dashboard-elevated);
+  --site-line: var(--dashboard-border);
+  --site-ink: var(--dashboard-ink);
+  --site-muted: var(--dashboard-muted);
+  --site-accent: var(--dashboard-accent);
+  --site-primary: var(--dashboard-accent);
+  --site-primary-hover: #314127;
+  --site-success: var(--dashboard-success);
+  --site-ink-rgb: 36 38 34;
+  --site-muted-rgb: 85 88 80;
+  --site-line-rgb: 150 151 143;
+  --site-accent-rgb: 64 84 50;
+  --glass-shadow: 0 12px 32px #28271f0b, inset 0 1px 0 #ffffffa3, inset 0 -1px 0 #ffffff26;
+  --glass-panel: linear-gradient(135deg, #ffffff66, #ffffff10 50%, #ffffff38), var(--dashboard-surface);
+  --glass-control: linear-gradient(150deg, #ffffff70, #ffffff16);
+  --glass-field: #ffffff75;
+  --glass-chart: #50643c;
+  --glass-glow: #cadcab;
+  color-scheme: light;
+  background: radial-gradient(ellipse at 80% 8%, #f6f5ee 0, transparent 42%), radial-gradient(ellipse at 15% 38%, #aaa99c77, transparent 42%), linear-gradient(150deg, #d9d5d0, #c0c1b8 65%, #d7d4ce);
+  color: var(--dashboard-ink);
+}
+
+.dashboard-layout .dashboard-v14.dashboard-themed-shell.dashboard-shell.dashboard-glass[data-theme="dark"] {
+  --dashboard-bg: #080808;
+  --dashboard-surface: #232323ad;
+  --dashboard-elevated: #ffffff12;
+  --dashboard-border: #ffffff24;
+  --dashboard-ink: #f5f5f1;
+  --dashboard-muted: #b8bbb2;
+  --dashboard-accent: #d3e6b4;
+  --dashboard-on-accent: #182014;
+  --dashboard-success: #90d7bc;
+  --dashboard-danger: #ff9aab;
+  --dashboard-warning: #edcd8b;
+  --glass-shadow: 0 16px 36px #00000038, inset 0 1px 0 #ffffff15, inset 0 -1px 0 #ffffff05;
+  --glass-panel: linear-gradient(135deg, #ffffff0e, #ffffff00 45%, #ffffff04), var(--dashboard-surface);
+  --glass-control: linear-gradient(150deg, #ffffff14, #ffffff03);
+  --glass-field: #08080870;
+  --glass-chart: #cadcab;
+  --site-primary-hover: #e2efcd;
+  --site-ink-rgb: 245 245 241;
+  --site-muted-rgb: 184 187 178;
+  --site-line-rgb: 67 67 64;
+  --site-accent-rgb: 211 230 180;
+  color-scheme: dark;
+  background: radial-gradient(ellipse at 75% 0, #262626 0, transparent 48%), radial-gradient(ellipse at 18% 50%, #191b16 0, transparent 48%), var(--dashboard-bg);
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-workspace {
+  min-width: 0;
+  background: transparent;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-sidebar, .dashboard-topbar, .merchant-location-bar) {
+  background: var(--glass-panel);
+  backdrop-filter: blur(22px) saturate(85%);
+  -webkit-backdrop-filter: blur(22px) saturate(85%);
+  border-color: var(--dashboard-border);
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-content {
+  min-width: 0;
+  padding-top: 28px;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-panel, .reference-kpi, .reference-orders, .reference-table-card, .reference-inspector, .reference-store-banner, .merchant-stat-panel, .merchant-panel, .merchant-form-card, .admin-panel, .dashboard-panel, .dashboard-settings-panel, .dashboard-form-section, .merchant-contract-selection) {
+  min-width: 0;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 26px;
+  color: var(--dashboard-ink);
+  background: var(--glass-panel);
+  box-shadow: var(--glass-shadow);
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .reference-kpi.is-featured {
+  background: radial-gradient(ellipse at 100% 100%, #24291c, transparent 68%), #080908;
+  border-color: #ffffff22;
+  color: #fff;
+  box-shadow: 0 18px 36px #00000026, inset 0 1px 0 #ffffff1f;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-panel, .merchant-stat-panel, .merchant-panel, .merchant-form-card, .admin-panel, .dashboard-panel, .dashboard-settings-panel) {
+  padding: 24px;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-heading, .merchant-section-heading, .admin-page-heading, .admin-panel-heading, .merchant-commerce-toolbar) {
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(h1, h2, h3, label, p) {
+  overflow-wrap: anywhere;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  border-color: var(--dashboard-border);
+  border-radius: 10px;
+  color: var(--dashboard-ink);
+  background: var(--glass-field);
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(button, a, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--dashboard-accent);
+  outline-offset: 3px;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .merchant-commerce input[type="file"] {
+  width: 100%;
+  padding: 20px;
+  border: 1px dashed var(--dashboard-border);
+  white-space: normal;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass input::file-selector-button {
+  min-height: 40px;
+  margin-right: 12px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--dashboard-accent);
+  background: var(--dashboard-elevated);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.admin-table-wrap, .merchant-commerce-table, .reference-table-scroll) {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+/* Only the outer cards blur; nested controls keep their own crisp surface. */
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-kpi, .reference-panel, .merchant-stat-panel, .merchant-contract-selection, .reference-store-banner) {
+  backdrop-filter: blur(20px) saturate(85%);
+  -webkit-backdrop-filter: blur(20px) saturate(85%);
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-heading h1, .merchant-section-heading h2, .admin-page-heading h1) {
+  font-weight: 450;
+  letter-spacing: -0.9px;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .reference-kpi > strong {
+  font-size: clamp(24px, 2.2vw, 36px);
+  font-weight: 450;
+  letter-spacing: -1.1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-sidebar nav, .v14-navigation, .v14-profile, .merchant-stats-tabs, .reference-period, .v14-chart-toggle, .merchant-notification-toggle) {
+  border: 1px solid var(--dashboard-border);
+  background: var(--glass-control);
+  box-shadow: inset 0 1px 0 #ffffff20;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-topbar, .merchant-location-bar) {
+  border-bottom: 1px solid var(--dashboard-border);
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-sidebar {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-nav-button[aria-current="page"], .v14-navigation button[aria-current="page"]) {
+  background: var(--dashboard-ink);
+  color: var(--dashboard-bg);
+  box-shadow: 0 3px 12px #00000012;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-nav-button[aria-current="page"] .dashboard-nav-icon {
+  color: inherit;
+  background: transparent;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-kpi-label > svg, .dashboard-heading-icon, .admin-heading-icon) {
+  border: 1px solid var(--dashboard-border);
+  border-radius: 50%;
+  background: var(--glass-control);
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .reference-kpi.is-featured .reference-kpi-label > svg {
+  color: var(--glass-glow);
+  border-color: #ffffff1c;
+  background: #ffffff0e;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .v14-bar-primary {
+  fill: var(--chart-bar-fill, var(--glass-chart));
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .v14-legend-primary {
+  background: repeating-linear-gradient(125deg, var(--glass-chart) 0 2px, var(--dashboard-bg) 2px 4px);
+  border: 1px solid var(--glass-chart);
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .v14-donut-visual svg {
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--glass-glow) 15%, transparent));
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .reference-bar-track span {
+  background: linear-gradient(90deg, var(--dashboard-accent), var(--glass-glow));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--glass-glow) 20%, transparent);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-kpi, .reference-store-banner) {
+    transition: border-color 240ms ease, box-shadow 240ms ease;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-kpi, .reference-store-banner):hover {
+    border-color: color-mix(in srgb, var(--dashboard-accent) 36%, var(--dashboard-border));
+    box-shadow: var(--glass-shadow), 0 0 22px color-mix(in srgb, var(--glass-glow) 9%, transparent);
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-content {
+    padding: 20px 16px 40px;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-panel, .merchant-stat-panel, .merchant-panel, .merchant-form-card, .admin-panel, .dashboard-panel, .dashboard-settings-panel) {
+    padding: 18px;
+    border-radius: 22px;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(input, select, textarea) {
+    font-size: 16px;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .merchant-commerce-toolbar > button {
+    flex: 1 1 140px;
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .dashboard-layout .dashboard-v14.dashboard-themed-shell.dashboard-shell.dashboard-glass {
+    --dashboard-surface: #eeeee7;
+    --glass-panel: var(--dashboard-surface);
+    --glass-control: var(--dashboard-surface);
+    --glass-field: #fff;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-themed-shell.dashboard-shell.dashboard-glass[data-theme="dark"] {
+    --dashboard-surface: #202020;
+    --glass-panel: var(--dashboard-surface);
+    --glass-control: var(--dashboard-surface);
+    --glass-field: #101010;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-sidebar, .dashboard-topbar, .merchant-location-bar, .reference-kpi, .reference-panel, .merchant-stat-panel, .merchant-contract-selection, .reference-store-banner) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}

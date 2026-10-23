@@ -2,9 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, SlidersHorizontal, X, ChevronRight } from "lucide-react";
-import { CATEGORIES, CATEGORY_LABEL } from "@/lib/products";
+import { CATEGORY_LABEL } from "@/lib/products";
 import type { Category } from "@/lib/types";
-import { cn } from "@/lib/format";
+import { CategoryBrowser } from "./CategoryBrowser";
+import { useCatalog } from "@/store/catalog";
 import { CatalogProducts } from "./CatalogProducts";
 import { getRoomCatalogGroup } from "@/lib/catalogNavigation";
 
@@ -14,13 +15,17 @@ export function CatalogView({
   initialSort,
   initialRoom,
   initialOffers,
+  initialFacet = "",
 }: {
   initialCategory?: Category;
   initialQuery?: string;
   initialSort?: string;
   initialRoom?: string;
   initialOffers?: boolean;
+  initialFacet?: string;
 }) {
+  const catalog = useCatalog();
+  const [facet, setFacet] = useState(initialFacet);
   const room = getRoomCatalogGroup(initialRoom);
   const [query, setQuery] = useState(initialQuery ?? "");
   const [categories, setCategories] = useState<Set<Category>>(
@@ -30,6 +35,7 @@ export function CatalogView({
   const resetFilters = () => {
     setCategories(new Set());
     setQuery("");
+    setFacet("");
     setResetVersion((value) => value + 1);
   };
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -57,10 +63,11 @@ export function CatalogView({
   }, [initialQuery]);
 
   useEffect(() => {
+    setFacet(initialFacet);
     setCategories(
       new Set(initialCategory ? [initialCategory] : (room?.categories ?? [])),
     );
-  }, [initialCategory, room]);
+  }, [initialCategory, initialFacet, room]);
   const roomFilterActive =
     !initialCategory &&
     room &&
@@ -68,6 +75,7 @@ export function CatalogView({
     room.categories.every((category) => categories.has(category));
 
   const toggleCategory = (c: Category) => {
+    setFacet("");
     setCategories((current) => {
       const next = new Set(current);
       if (next.has(c)) next.delete(c);
@@ -86,6 +94,7 @@ export function CatalogView({
             onClick={() => {
               setCategories(new Set());
               setQuery("");
+              setFacet("");
             }}
             className="min-h-11 text-xs text-[#2563EB] underline underline-offset-4"
           >
@@ -97,43 +106,24 @@ export function CatalogView({
         <button
           type="button"
           aria-pressed={categories.size === 0}
-          onClick={() => setCategories(new Set())}
-          className={cn(
-            "min-h-11 rounded-lg px-3 text-left text-sm transition",
-            categories.size === 0
-              ? "bg-[#2563EB]/10 font-medium text-[#2563EB]"
-              : "text-[#68686F] hover:bg-[#F4F4F5]/60",
-          )}
+          onClick={() => {
+            setCategories(new Set());
+            setFacet("");
+          }}
+          className="category-all-button"
         >
           Бүх ангилал
         </button>
-        {CATEGORIES.map((category) => (
-          <button
-            key={category.id}
-            type="button"
-            aria-pressed={categories.has(category.id)}
-            onClick={() => toggleCategory(category.id)}
-            className={cn(
-              "flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm transition",
-              categories.has(category.id)
-                ? "bg-[#2563EB]/10 font-medium text-[#2563EB]"
-                : "text-[#68686F] hover:bg-[#F4F4F5]/60",
-            )}
-          >
-            <span
-              aria-hidden="true"
-              className={cn(
-                "grid h-4 w-4 shrink-0 place-items-center rounded border text-[10px]",
-                categories.has(category.id)
-                  ? "border-[#2563EB] bg-[#2563EB] text-white"
-                  : "border-[#111111]/25",
-              )}
-            >
-              {categories.has(category.id) ? "✓" : ""}
-            </span>
-            {category.name}
-          </button>
-        ))}
+        <CategoryBrowser
+          products={catalog.products}
+          ready={catalog.ready}
+          selected={[...categories]}
+          facet={facet}
+          onSelect={(category, nextFacet) => {
+            setCategories(new Set([category]));
+            setFacet(nextFacet);
+          }}
+        />
       </div>
     </>
   );
@@ -272,6 +262,7 @@ export function CatalogView({
             key={resetVersion}
             query={query}
             categories={[...categories]}
+            facet={facet}
             initialSort={initialSort}
             initialOffers={resetVersion === 0 && initialOffers}
             onReset={resetFilters}

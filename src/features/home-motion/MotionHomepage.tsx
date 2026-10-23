@@ -19,6 +19,9 @@ import {
 } from "lucide-react";
 import { PlannerLink as Link } from "@/components/PlannerLink";
 import { CATEGORIES } from "@/lib/products";
+import { HomeRecommendations } from "@/components/HomeRecommendations";
+import { hasAvailableStock } from "@/lib/inventory";
+import { hasProductPhoto } from "@/lib/homeMarketplace";
 import { DEFAULT_HOMEPAGE_HERO } from "@/lib/homepagePresentation";
 import type { PageData } from "@/lib/pageData";
 import { HeroDemo } from "./HeroDemo";
@@ -28,6 +31,7 @@ import { ProductPhoto } from "./ProductPhoto";
 import { useMotionActivity } from "@/features/motion/useMotionActivity";
 import { ModelDemo } from "@/features/motion/ModelDemo";
 import "./home-motion.css";
+import "./home-shopping.css";
 
 const reveal = { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0 } };
 
@@ -54,6 +58,7 @@ export function MotionHomepage({
     catalog.find((item) => item.category === "sofa" && item.model) ??
     catalog.find((item) => item.model);
   const bento = useMotionActivity<HTMLElement>();
+  const available = catalog.filter(hasAvailableStock).filter(hasProductPhoto);
   return (
     <MotionConfig reducedMotion="user">
       <LazyMotion features={domAnimation}>
@@ -118,6 +123,54 @@ export function MotionHomepage({
             </div>
           )}
           <HomeStatistics stats={stats} loading={loading} />
+          <section
+            className="home-shopping home-motion-wrap"
+            aria-labelledby="home-shopping-title"
+          >
+            <div className="home-section-heading">
+              <div>
+                <h2 id="home-shopping-title">Тавилгын сонголтууд</h2>
+                <p>Хэмжээ, үнэ, өнгөө нэг дор харьцуулаарай.</p>
+              </div>
+              <Link href="/catalog">
+                Бүгдийг үзэх <ArrowUpRight size={17} />
+              </Link>
+            </div>
+            <nav
+              className="home-shopping-categories"
+              aria-label="Тавилгаа ангиллаар сонгох"
+            >
+              {CATEGORIES.slice(0, 6).map((category) => (
+                <Link key={category.id} href={`/catalog/${category.id}`}>
+                  {category.name}
+                  <span>
+                    {loading
+                      ? "—"
+                      : catalog.filter(
+                          (item) =>
+                            item.category === category.id &&
+                            hasAvailableStock(item),
+                        ).length}
+                  </span>
+                </Link>
+              ))}
+            </nav>
+            {available.length > 0 ? (
+              <HomeRecommendations
+                products={available}
+                initialCount={8}
+                offerCheckedAt={Date.now()}
+              />
+            ) : (
+              <p className="home-shopping-status" role="status">
+                {loading
+                  ? "Тавилгуудыг ачаалж байна…"
+                  : error
+                    ? "Тавилгуудыг ачаалж чадсангүй. Дээрх дахин оролдох товчийг ашиглана уу."
+                    : "Шинэ тавилгууд удахгүй нэмэгдэнэ."}
+              </p>
+            )}
+          </section>
           <section
             ref={bento.ref}
             className="home-bento-section home-motion-wrap"

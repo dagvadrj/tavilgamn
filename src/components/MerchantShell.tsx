@@ -18,6 +18,7 @@ import type { DashboardPreferences } from "@/features/dashboard/preferences";
 import "@/features/dashboard/merchant-theme.css";
 import "@/features/dashboard/merchant-inputs.css";
 import "@/features/merchant/merchant-workspace.css";
+import "@/features/dashboard/dashboard-glass.css";
 
 export function MerchantShell({
   active,
@@ -57,7 +58,7 @@ export function MerchantShell({
 
   return (
     <div
-      className="merchant-app-shell dashboard-shell dashboard-themed-shell dashboard-v14"
+      className="merchant-app-shell dashboard-shell dashboard-themed-shell dashboard-v14 dashboard-glass"
       data-theme={preferences?.theme ?? "dark"}
       data-density={preferences?.density ?? "comfortable"}
       data-text-size={preferences?.textSize ?? "standard"}

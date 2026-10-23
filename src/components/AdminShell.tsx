@@ -18,6 +18,7 @@ import type { DashboardPreferences } from "@/features/dashboard/preferences";
 import "@/features/dashboard/merchant-theme.css";
 import "@/features/dashboard/merchant-inputs.css";
 import "@/features/dashboard/admin-theme.css";
+import "@/features/dashboard/dashboard-glass.css";
 
 export function AdminShell({
   active,
@@ -46,7 +47,7 @@ export function AdminShell({
     ADMIN_TABS.find((item) => item.id === active)?.label ?? ADMIN_TABS[0].label;
   return (
     <div
-      className="admin-shell dashboard-shell dashboard-themed-shell dashboard-v14"
+      className="admin-shell dashboard-shell dashboard-themed-shell dashboard-v14 dashboard-glass"
       data-theme={preferences.theme}
       data-density={preferences.density}
       data-text-size={preferences.textSize}

@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, type RefObject } from "react";
 
-const cards =
+const dashboardCards =
   ".reference-kpi, .merchant-stat-panel, .merchant-progress-card, .merchant-form-card, .merchant-panel, .dashboard-panel, .merchant-product, .reference-panel, .reference-store-banner, .km-design-row, .mk-card, .reference-orders, .reference-table-card, .reference-inspector, .admin-panel, .admin-model-request, .admin-model-request-stats > span, .dashboard-form-section, .product-editor-section";
-const headings =
+const dashboardHeadings =
   ".reference-heading > *, .merchant-section-heading > *, .admin-page-heading > *, .admin-model-request-heading > *";
 const excluded =
   ".merchant-sortable-card.is-editing, .merchant-sortable-overlay, .merchant-delivery-pipeline, [role=dialog]";
@@ -12,9 +12,13 @@ const excluded =
 export function DashboardMotion({
   page,
   rootRef,
+  cards = dashboardCards,
+  headings = dashboardHeadings,
 }: {
   page: string;
   rootRef: RefObject<HTMLElement | null>;
+  cards?: string;
+  headings?: string;
 }) {
   useEffect(() => {
     const root = rootRef.current;
@@ -163,6 +167,6 @@ export function DashboardMotion({
       document.removeEventListener("visibilitychange", onVisibility);
       preference.removeEventListener("change", onPreference);
     };
-  }, [page, rootRef]);
+  }, [page, rootRef, cards, headings]);
   return null;
 }
