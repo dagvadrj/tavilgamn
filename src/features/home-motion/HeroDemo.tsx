@@ -33,7 +33,7 @@ export function HeroDemo({
   loading?: boolean;
 }) {
   const [ready, setReady] = useState(false);
-  const demo = useDemoPlayback(3, 2800, ready);
+  const demo = useDemoPlayback(3, 3800, ready);
   const dimensions = product?.dimensions;
   const colors = product?.colors?.slice(0, 4) ?? [];
   return (
@@ -67,7 +67,7 @@ export function HeroDemo({
           <motion.span
             className="home-demo-dimension"
             animate={{ opacity: demo.step > 0 ? 1 : 0 }}
-            transition={{ duration: demo.reduced ? 0 : 0.3 }}
+            transition={{ duration: demo.reduced ? 0 : 0.45 }}
           >
             <Maximize2 size={13} />{" "}
             {dimensions
@@ -111,7 +111,7 @@ export function HeroDemo({
                 initial={{ opacity: 0, y: 7 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: demo.reduced ? 0 : 0.2 }}
+                transition={{ duration: demo.reduced ? 0 : 0.35 }}
               >
                 {demo.step < 2 ? (
                   <>

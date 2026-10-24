@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
-import { authFetch } from "@/lib/authFetch";
+import { readAdminResource } from "@/features/dashboard/useAdminResource";
 import { useAuth } from "@/store/auth";
 import { formatDateTime } from "@/lib/format";
 
@@ -18,9 +18,7 @@ export function AdminCommerceHealth({ owner }: { owner: string }) {
     setLoading(true); setError(null); setData(null);
     void (async () => {
       try {
-        const response = await authFetch("/api/admin/commerce", { signal: controller.signal }, owner);
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error ?? "Хяналтын мэдээлэл ачаалсангүй.");
+        const result = await readAdminResource<Health>(owner, "/api/admin/commerce", refresh > 0);
         if (active && useAuth.getState().user?.id === owner && useAuth.getState().role === "admin") setData(result);
       } catch (issue) { if (active) setError(issue instanceof Error ? issue.message : "Хяналтын мэдээлэл ачаалсангүй."); }
       finally { if (active) setLoading(false); }

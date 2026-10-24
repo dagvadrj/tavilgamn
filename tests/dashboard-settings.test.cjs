@@ -11,10 +11,10 @@ test("dashboard preferences tolerate stale or corrupt browser storage", () => {
     assert.deepEqual(parseDashboardPreferences(raw), DEFAULT_DASHBOARD_PREFERENCES);
   }
   assert.deepEqual(parseDashboardPreferences('{"density":"compact","textSize":"large","overview":"inventory"}'), {
-    theme: "light", density: "compact", textSize: "large", overview: "inventory",
+    theme: "dark", density: "compact", textSize: "large", overview: "inventory",
   });
   assert.equal(parseDashboardPreferences('{"theme":"light"}').theme, "light");
-  assert.equal(parseDashboardPreferences('{"theme":"invalid"}').theme, "light");
+  assert.equal(parseDashboardPreferences('{"theme":"invalid"}').theme, "dark");
   assert.equal(parseDashboardPreferences('{"theme":"dark"}').theme, "dark");
 });
 
@@ -42,7 +42,7 @@ test("preference updates persist across remounts, merge current values, and rema
     // An older mounted consumer must merge against the latest stored settings.
     assert.equal(first.updatePreferences({ textSize: "large" }), true);
     assert.deepEqual(useDashboardPreferences("owner-a", "merchant").preferences, {
-      theme: "light", density: "compact", textSize: "large", overview: "all",
+      theme: "dark", density: "compact", textSize: "large", overview: "all",
     });
     for (const [owner, role] of [["owner-b", "merchant"], ["owner-a", "admin"]]) {
       assert.deepEqual(useDashboardPreferences(owner, role).preferences, preferencesModule.DEFAULT_DASHBOARD_PREFERENCES);

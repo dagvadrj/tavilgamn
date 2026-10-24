@@ -53,11 +53,11 @@
   .home-motion .home-motion-wrap {
     width: calc(100% - 32px);
   }
-  .home-motion .home-hero {
+  .home-motion .home-hero-layout {
     padding-top: 32px;
     gap: 28px;
   }
-  .home-motion .home-hero h1 {
+  .home-motion .home-hero-layout h1 {
     font-size: clamp(32px, 8.6vw, 46px);
     letter-spacing: -1.4px;
   }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { useInView } from "framer-motion";
 
 const reducedMotionQuery = "(prefers-reduced-motion: reduce)";
 const subscribeReducedMotion = (notify: () => void) => {
@@ -15,13 +14,20 @@ const serverReducedMotion = () => false;
 /** A shared boundary for finite animation; background tabs never keep ticking. */
 export function useMotionActivity<T extends Element = HTMLDivElement>() {
   const ref = useRef<T>(null);
-  const visibilityRef = useRef<Element>(null);
-  // Observe the chart viewport: WebKit can miss intersections on SVG paths.
-  // Register this effect before useInView installs its observer.
+  const [inView, setInView] = useState(false);
   useEffect(() => {
-    visibilityRef.current = ref.current?.closest("svg") ?? ref.current;
+    // Observe the SVG viewport in WebKit and accept elements from preview
+    // iframes, which fail Framer's parent-window `instanceof Element` check.
+    const target = ref.current?.closest("svg") ?? ref.current;
+    if (!target) return;
+    const observer = new IntersectionObserver(
+      ([entry]) =>
+        setInView(entry.isIntersecting && entry.intersectionRatio >= 0.15),
+      { threshold: 0.15 },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
   }, []);
-  const inView = useInView(visibilityRef, { amount: 0.15 });
   const reduced = useSyncExternalStore(
     subscribeReducedMotion,
     readReducedMotion,

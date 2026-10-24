@@ -8,8 +8,6 @@ import { MerchantNotifications } from "./MerchantNotifications";
 export function MerchantHeader({
   navigation,
   balances,
-  userName,
-  onProfile,
   storeName,
   owner,
   onHome,
@@ -63,24 +61,11 @@ export function MerchantHeader({
         </ol>
       </nav>
       {navigation}
-      {balances}
-      {!hideNotifications && <MerchantNotifications owner={owner} onKitchens={onKitchens} />}
-      {onProfile && (
-        <button
-          type="button"
-          className="v14-profile"
-          onClick={onProfile}
-          aria-label={`${userName ?? "Миний"} — бүртгэл`}
-        >
-          <span className="v14-profile-avatar">
-            {userName?.trim().slice(0, 1) || "M"}
-          </span>
-          <span>
-            <strong>{userName}</strong>
-            <small>{storeName}</small>
-          </span>
-        </button>
-      )}
+      <div className="merchant-header-actions">
+        {balances}
+        {!hideNotifications && <MerchantNotifications owner={owner} onKitchens={onKitchens} />}
+      </div>
+
     </div>
   );
 }

@@ -32,7 +32,11 @@ const MerchantKitchenDesignDetail = dynamic(
     import("@/components/MerchantKitchenDesignDetail").then(
       (module) => module.MerchantKitchenDesignDetail,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" layout="document" compact /> },
+  {
+    loading: () => (
+      <PageSkeleton variant="dashboard" layout="document" compact />
+    ),
+  },
 );
 const MerchantKitchenQuotes = dynamic(
   () =>
@@ -53,14 +57,20 @@ const MerchantActivation = dynamic(
 const MerchantWallet = dynamic(
   () =>
     import("@/features/merchant/MerchantWallet").then((m) => m.MerchantWallet),
-  { loading: () => <PageSkeleton variant="dashboard" layout="metrics" compact /> },
+  {
+    loading: () => (
+      <PageSkeleton variant="dashboard" layout="metrics" compact />
+    ),
+  },
 );
 const MerchantDeliveryBoard = dynamic(
   () =>
     import("@/features/merchant/MerchantDeliveryBoard").then(
       (m) => m.MerchantDeliveryBoard,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" layout="board" compact /> },
+  {
+    loading: () => <PageSkeleton variant="dashboard" layout="board" compact />,
+  },
 );
 const MerchantBranches = dynamic(
   () =>
@@ -88,7 +98,11 @@ const MerchantAssistant = dynamic(
     import("@/features/merchant/MerchantOperations").then(
       (m) => m.MerchantAssistant,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" layout="assistant-form" compact /> },
+  {
+    loading: () => (
+      <PageSkeleton variant="dashboard" layout="assistant-form" compact />
+    ),
+  },
 );
 const MerchantTeamWorkspace = dynamic(
   () =>
@@ -98,7 +112,8 @@ const MerchantTeamWorkspace = dynamic(
   {
     loading: () => (
       <PageSkeleton
-        variant="dashboard" layout="status"
+        variant="dashboard"
+        layout="status"
         compact
         label="Ажилтны эрхийг шалгаж байна…"
       />
@@ -110,7 +125,11 @@ const StoreProfile = dynamic(
     import("@/features/merchant/StoreProfile").then(
       (module) => module.StoreProfile,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" layout="store-profile" compact /> },
+  {
+    loading: () => (
+      <PageSkeleton variant="dashboard" layout="store-profile" compact />
+    ),
+  },
 );
 const MerchantProducts = dynamic(
   () =>
@@ -124,14 +143,22 @@ const MerchantReports = dynamic(
     import("@/features/merchant/MerchantReports").then(
       (m) => m.MerchantReports,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" layout="report-form" compact /> },
+  {
+    loading: () => (
+      <PageSkeleton variant="dashboard" layout="report-form" compact />
+    ),
+  },
 );
 const MerchantContracts = dynamic(
   () =>
     import("@/features/merchant/MerchantContracts").then(
       (m) => m.MerchantContracts,
     ),
-  { loading: () => <PageSkeleton variant="dashboard" layout="document" compact /> },
+  {
+    loading: () => (
+      <PageSkeleton variant="dashboard" layout="document" compact />
+    ),
+  },
 );
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
 import { DashboardAccount } from "@/features/dashboard/DashboardAccount";
@@ -390,8 +417,10 @@ function MerchantWorkspace({
         )
       ) : (
         <>
-          {tab === "overview" && (
+          {["overview", "sales", "inventory", "progress"].includes(tab) && (
             <MerchantOverview
+              section={tab}
+              onSectionChange={(section) => changeTab(section as MerchantTab)}
               owner={owner}
               store={store}
               storePending={!loaded}

@@ -42,7 +42,7 @@ function useChartEntrance<T extends SVGElement>(
       frames = [{ opacity: 0 }, { opacity: 1 }];
     }
     const animation = node.animate(frames, {
-      duration: kind === "line" ? 1100 : 850,
+      duration: kind === "line" ? 1500 : 1150,
       delay: Math.min(delay, 300),
       easing: "cubic-bezier(0.16, 1, 0.3, 1)",
       fill: "backwards",
@@ -79,7 +79,7 @@ export function ChartRect({
         width: Number(width),
         height: Number(height),
       }}
-      transition={{ duration: activity.active ? 0.55 : 0, ease }}
+      transition={{ duration: activity.active ? 0.75 : 0, ease }}
     />
   );
 }
@@ -94,7 +94,7 @@ export function ChartPath({ d, ...props }: SVGProps<SVGPathElement>) {
       fill={props.fill}
       initial={false}
       animate={{ d }}
-      transition={{ duration: activity.active ? 0.55 : 0, ease }}
+      transition={{ duration: activity.active ? 0.75 : 0, ease }}
     />
   );
 }

@@ -78,16 +78,22 @@ export function MerchantShell({
       <div className="merchant-workspace dashboard-workspace">
         <MerchantHeader
           balances={
-            !allowedTabs && <MerchantBalanceChip
-              owner={owner}
-              enabled={hasStore}
-              onOpen={() => changeTab("wallet")}
-            />
+            !allowedTabs && (
+              <MerchantBalanceChip
+                owner={owner}
+                enabled={hasStore}
+                onOpen={() => changeTab("wallet")}
+              />
+            )
           }
           navigation={
             <DashboardNavigation
               tabs={MERCHANT_TABS.filter((tab) =>
-                allowedTabs ? allowedTabs.includes(tab.id) : ["overview", "products", "orders", "delivery"].includes(tab.id),
+                allowedTabs
+                  ? allowedTabs.includes(tab.id)
+                  : ["overview", "sales", "inventory", "progress"].includes(
+                      tab.id,
+                    ),
               ).map((tab) => ({
                 ...tab,
                 disabled: !hasStore && tab.id !== "overview",

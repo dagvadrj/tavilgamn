@@ -10,6 +10,7 @@ import {
 import { DashboardBarChart } from "@/features/dashboard/DashboardCharts";
 import { useMerchantResource } from "./useMerchantResource";
 import { StatSkeleton } from "./MerchantStats";
+import { groupInsightSeries, type InsightPeriod } from "./insightSeries";
 import "./merchant-growth.css";
 
 export function MerchantInsights({
@@ -23,13 +24,22 @@ export function MerchantInsights({
 }) {
   const [days, setDays] = useState(30),
     [metric, setMetric] = useState<"net" | "orders">("net");
+  const [period, setPeriod] = useState<InsightPeriod>("day");
   const result = useMerchantResource<MerchantInsightsData>(
     owner,
-    `/api/merchant/growth/insights?days=${days}`,
+    "/api/merchant/growth/insights?days=90",
     enabled,
     60000,
   );
   const data = result.data;
+  const series = data?.series.slice(-days) ?? [];
+  const grouped = groupInsightSeries(series, period);
+  const total = series
+    .reduce((sum, day) => sum + BigInt(day[metric]), 0n)
+    .toString();
+  const gross = series
+    .reduce((sum, day) => sum + BigInt(day.gross), 0n)
+    .toString();
   return (
     <div className="merchant-insights-workspace">
       <div className="merchant-stat-grid">
@@ -42,6 +52,24 @@ export function MerchantInsights({
             <TrendingUp size={18} />
           </header>
           <div className="merchant-insights-filters">
+            <div role="group" aria-label="Графикийн нэгж">
+              {(
+                [
+                  ["day", "Өдөр"],
+                  ["week", "Долоо хоног"],
+                  ["month", "Сар"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  type="button"
+                  key={value}
+                  aria-pressed={period === value}
+                  onClick={() => setPeriod(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <div role="group" aria-label="Статистикийн хугацаа">
               {[7, 30, 90].map((value) => (
                 <button
@@ -88,12 +116,11 @@ export function MerchantInsights({
               <div className="merchant-insights-summary">
                 <strong>
                   {metric === "net"
-                    ? growthMoney(data.net)
-                    : growthCount(data.orders) + " захиалга"}
+                    ? growthMoney(total)
+                    : growthCount(total) + " захиалга"}
                 </strong>
                 <small>
-                  Сүүлийн {data.days} хоног · Нийт борлуулалт{" "}
-                  {growthMoney(data.gross)}
+                  Сүүлийн {days} хоног · Нийт борлуулалт {growthMoney(gross)}
                 </small>
               </div>
               <DashboardBarChart
@@ -104,8 +131,12 @@ export function MerchantInsights({
                     ? value.toLocaleString("mn-MN") + " ₮"
                     : value.toLocaleString("mn-MN")
                 }
-                data={data.series.map((day) => ({
-                  label: day.date.slice(5).replace("-", "/"),
+                data={grouped.map((day) => ({
+                  label:
+                    period === "month"
+                      ? day.date
+                      : day.date.slice(5).replace("-", "/") +
+                        (period === "week" ? " ДХ" : ""),
                   primary: Number(day[metric]),
                   primaryDisplay:
                     metric === "net"
@@ -113,6 +144,15 @@ export function MerchantInsights({
                       : growthCount(day.orders),
                 }))}
               />
+              {period !== "day" && (
+                <p>
+                  Сонгосон {days} хоногийн дүнг{" "}
+                  {period === "week"
+                    ? "Даваа гарагаас эхлэх долоо хоногоор"
+                    : "хуанлийн сараар"}{" "}
+                  нэгтгэв. Захын хугацаа бүтэн бус байж болно.
+                </p>
+              )}
             </>
           )}
         </section>
@@ -120,13 +160,13 @@ export function MerchantInsights({
       </div>
       <div className="merchant-top-products">
         <TopProducts
-          title="Борлуулалтын дүнгээр тэргүүлэгч"
+          title="Борлуулалтын дүнгээр тэргүүлэгч · 90 хоног"
           products={data?.topRevenue}
           metric="revenue"
           error={Boolean(result.error)}
         />
         <TopProducts
-          title="Борлогдсон тоогоор тэргүүлэгч"
+          title="Борлогдсон тоогоор тэргүүлэгч · 90 хоног"
           products={data?.topQuantity}
           metric="quantity"
           error={Boolean(result.error)}

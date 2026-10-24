@@ -15,10 +15,22 @@ type Entry = {
   state: State<unknown>;
   listeners: Set<() => void>;
   controller?: AbortController;
+  pending?: Promise<void>;
   touched: number;
   generation: number;
+  transport: ResourceTransport;
+};
+type ResourceTransport = {
+  request: (path: string, owner: string, init: RequestInit) => Promise<unknown>;
+  isAuthorized: (owner: string) => boolean;
+};
+const merchantTransport: ResourceTransport = {
+  request: merchantRequest,
+  isAuthorized: isOwner,
 };
 const entries = new Map<string, Entry>();
+const FRESH_MS = 5 * 60 * 1000;
+const RETAIN_MS = 30 * 60 * 1000;
 const empty: State<never> = {
   data: null,
   loading: true,
@@ -26,7 +38,7 @@ const empty: State<never> = {
   updatedAt: 0,
 };
 const keyFor = (owner: string, path: string) => JSON.stringify([owner, path]);
-function entryFor(owner: string, path: string) {
+function entryFor(owner: string, path: string, transport: ResourceTransport) {
   const key = keyFor(owner, path);
   let entry = entries.get(key);
   if (!entry) {
@@ -34,7 +46,7 @@ function entryFor(owner: string, path: string) {
     for (const [oldKey, old] of entries)
       if (
         !old.listeners.size &&
-        (entries.size >= 40 || Date.now() - old.touched > 300000)
+        (entries.size >= 80 || Date.now() - old.touched > RETAIN_MS)
       ) {
         old.controller?.abort();
         entries.delete(oldKey);
@@ -46,6 +58,7 @@ function entryFor(owner: string, path: string) {
       listeners: new Set(),
       touched: Date.now(),
       generation: 0,
+      transport,
     };
     entries.set(key, entry);
   }
@@ -54,11 +67,29 @@ function entryFor(owner: string, path: string) {
 function emit(entry: Entry) {
   entry.listeners.forEach((listener) => listener());
 }
-async function load(entry: Entry, force = false) {
+function load(entry: Entry, force = false): Promise<void> {
+  if (entry.pending) return entry.pending;
   if (
-    !isOwner(entry.owner) ||
+    !entry.transport.isAuthorized(entry.owner) ||
+    (!force &&
+      entry.state.updatedAt > 0 &&
+      Date.now() - entry.state.updatedAt < FRESH_MS)
+  )
+    return Promise.resolve();
+  const pending = performLoad(entry, force);
+  entry.pending = pending;
+  void pending.finally(() => {
+    if (entry.pending === pending) entry.pending = undefined;
+  });
+  return pending;
+}
+async function performLoad(entry: Entry, force = false) {
+  if (
+    !entry.transport.isAuthorized(entry.owner) ||
     entry.controller ||
-    (!force && Date.now() - entry.state.updatedAt < 30000)
+    (!force &&
+      entry.state.updatedAt > 0 &&
+      Date.now() - entry.state.updatedAt < FRESH_MS)
   )
     return;
   const controller = new AbortController(),
@@ -80,13 +111,13 @@ async function load(entry: Entry, force = false) {
     emit(entry);
   }, 15000);
   try {
-    const data = await merchantRequest(entry.path, entry.owner, {
+    const data = await entry.transport.request(entry.path, entry.owner, {
       signal: controller.signal,
     });
     if (
       !controller.signal.aborted &&
       generation === entry.generation &&
-      isOwner(entry.owner)
+      entry.transport.isAuthorized(entry.owner)
     )
       entry.state = {
         data,
@@ -98,7 +129,7 @@ async function load(entry: Entry, force = false) {
     if (
       !controller.signal.aborted &&
       generation === entry.generation &&
-      isOwner(entry.owner)
+      entry.transport.isAuthorized(entry.owner)
     )
       entry.state = {
         ...entry.state,
@@ -120,6 +151,7 @@ export function invalidateMerchantResources(owner: string) {
     if (entry.owner === owner) {
       entry.controller?.abort();
       entry.controller = undefined;
+      entry.pending = undefined;
       entry.generation++;
       entry.state = { ...entry.state, updatedAt: 0 };
       emit(entry);
@@ -135,7 +167,34 @@ export function clearMerchantResources() {
   }
   entries.clear();
 }
+
+/** Imperative editors share the same cache, invalidation and identity checks as panels. */
+export async function readMerchantResource<T>(
+  owner: string,
+  path: string,
+  force = false,
+  transport: ResourceTransport = merchantTransport,
+): Promise<T> {
+  const entry = entryFor(owner, path, transport);
+  entry.touched = Date.now();
+  await load(entry, force);
+  if (
+    !entry.state.updatedAt &&
+    !entry.state.error &&
+    transport.isAuthorized(owner)
+  )
+    await load(entry);
+  if (!transport.isAuthorized(owner))
+    throw new Error("Нэвтрэлт өөрчлөгдсөн байна.");
+  if (entry.state.error) throw new Error(entry.state.error);
+  if (!entry.state.data) throw new Error("Мэдээллийг ачаалж чадсангүй.");
+  return entry.state.data as T;
+}
 if (typeof window !== "undefined") {
+  window.addEventListener("admin-data-changed", (event) => {
+    const owner = (event as CustomEvent<string>).detail;
+    if (owner) invalidateMerchantResources(owner);
+  });
   window.addEventListener("merchant-data-changed", (event) => {
     const owner = (event as CustomEvent<string>).detail;
     if (owner) invalidateMerchantResources(owner);
@@ -151,12 +210,14 @@ export function useMerchantResource<T>(
   path: string,
   enabled = true,
   interval = 0,
+  transport: ResourceTransport = merchantTransport,
 ) {
-  const entry = entryFor(owner, path);
+  const entry = entryFor(owner, path, transport);
   const subscribe = useCallback(
     (listener: () => void) => {
       if (!enabled) return () => {};
       entry.listeners.add(listener);
+      entry.touched = Date.now();
       void load(entry);
       return () => {
         entry.listeners.delete(listener);
@@ -166,7 +227,7 @@ export function useMerchantResource<T>(
   );
   const snapshot = useCallback(
     () =>
-      enabled && isOwner(owner)
+      enabled && entry.transport.isAuthorized(owner)
         ? (entry.state as State<T>)
         : (empty as State<T>),
     [entry, enabled, owner],
@@ -180,11 +241,19 @@ export function useMerchantResource<T>(
     if (!enabled) return;
     const refresh = () => {
       if (document.visibilityState === "visible" && navigator.onLine !== false)
-        void load(entry, true);
+        void load(entry);
     };
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
-    const timer = interval ? window.setInterval(refresh, interval) : null;
+    const timer = interval
+      ? window.setInterval(() => {
+          if (
+            document.visibilityState === "visible" &&
+            navigator.onLine !== false
+          )
+            void load(entry, true);
+        }, interval)
+      : null;
     return () => {
       window.removeEventListener("focus", refresh);
       document.removeEventListener("visibilitychange", refresh);

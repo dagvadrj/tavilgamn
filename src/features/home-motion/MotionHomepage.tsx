@@ -64,7 +64,7 @@ export function MotionHomepage({
       <LazyMotion features={domAnimation}>
         <div className="home-motion">
           <section
-            className="home-hero home-motion-wrap"
+            className="home-hero-layout home-motion-wrap"
             aria-labelledby="home-motion-title"
           >
             <div className="home-hero-copy">
@@ -72,32 +72,34 @@ export function MotionHomepage({
                 className="home-eyebrow"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.6 }}
               >
                 <span /> ТӨСӨӨЛЛӨӨС БОДИТ СОНГОЛТ РУУ
               </motion.p>
               <motion.h1
                 id="home-motion-title"
+                data-homepage-field="title"
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55 }}
+                transition={{ duration: 0.75 }}
               >
                 {hero.title}
               </motion.h1>
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.18, duration: 0.4 }}
+                transition={{ delay: 0.18, duration: 0.6 }}
               >
-                <p className="home-hero-description">{hero.description}</p>
+                <p className="home-hero-description" data-homepage-field="description">{hero.description}</p>
                 <div className="home-hero-actions">
-                  <Link href={hero.primaryHref} className="home-button">
+                  <Link href={hero.primaryHref} className="home-button" data-homepage-field="primaryLabel">
                     {hero.primaryLabel}
                     <ArrowUpRight size={18} />
                   </Link>
                   <Link
                     href={hero.secondaryHref}
                     className="home-button home-button-secondary"
+                    data-homepage-field="secondaryLabel"
                   >
                     {hero.secondaryLabel}
                     <ArrowRight size={18} />
@@ -196,7 +198,7 @@ export function MotionHomepage({
             >
               <motion.article
                 variants={reveal}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.6 }}
                 className="home-bento-kitchen"
                 data-paused={!bento.active}
               >
@@ -228,7 +230,7 @@ export function MotionHomepage({
               </motion.article>
               <motion.article
                 variants={reveal}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.6 }}
                 className="home-bento-materials"
                 data-paused={!bento.active}
               >
@@ -268,7 +270,7 @@ export function MotionHomepage({
               </motion.article>
               <motion.article
                 variants={reveal}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.6 }}
                 className="home-bento-catalog"
               >
                 <div className="home-tile-heading">
@@ -304,7 +306,7 @@ export function MotionHomepage({
               </motion.article>
               <motion.article
                 variants={reveal}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: 0.6 }}
                 className="home-bento-categories"
               >
                 <div className="home-tile-heading">

@@ -73,7 +73,7 @@ export function HomepageTour() {
 function TourPlayback({ kind }: { kind: PlannerTourKind }) {
   const steps = plannerTourSteps[kind];
   const [ready, setReady] = useState(false);
-  const demo = useDemoPlayback(steps.length, 4200, ready);
+  const demo = useDemoPlayback(steps.length, 5400, ready);
   const step = steps[demo.step];
   return (
     <div ref={demo.ref} className="home-tour-player">

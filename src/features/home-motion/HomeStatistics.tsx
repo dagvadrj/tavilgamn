@@ -32,7 +32,7 @@ export function HomeCount({
     }
     if (!activity.active) return;
     const controls = animate(current.current, value, {
-      duration: 0.85,
+      duration: 1.15,
       ease: "easeOut",
       onUpdate: (number) => {
         current.current = number;

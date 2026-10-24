@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { authFetch } from "@/lib/authFetch";
+import { readAdminResource } from "@/features/dashboard/useAdminResource";
 import { useAuth } from "@/store/auth";
 
 type Message = { id: string; name: string; email: string; message: string; created_at: string };
@@ -17,9 +17,7 @@ export function AdminMessages() {
     setBusy(true); setError("");
     void (async () => {
       try {
-        const response = await authFetch(`/api/admin/messages?page=${page}`, {}, owner);
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
+        const data = await readAdminResource<{messages: Message[]; hasMore: boolean}>(owner, `/api/admin/messages?page=${page}`, refresh > 0);
         if (active) setResult({owner, ...data});
       } catch { if (active) setError("Зурвасуудыг ачаалж чадсангүй. Дахин оролдоно уу."); }
       finally { if (active) setBusy(false); }

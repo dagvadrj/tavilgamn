@@ -14,7 +14,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
 import {
   DashboardBarChart,
@@ -22,6 +21,8 @@ import {
 } from "@/features/dashboard/DashboardCharts";
 import { OrderHistory } from "@/components/OrderHistory";
 import { AnimatedNumber } from "@/features/dashboard/AnimatedNumber";
+import { AdminTrends } from "@/features/dashboard/AdminTrends";
+import { readAdminResource } from "@/features/dashboard/useAdminResource";
 
 type TopMerchant = {
   id: string;
@@ -68,7 +69,7 @@ const dateLabel = (date: string) =>
     day: "numeric",
   });
 
-export function AdminAnalytics() {
+export function AdminAnalytics({ section = "dashboard" }: { section?: string } = {}) {
   const userId = useAuth((state) => state.user?.id);
 
   const role = useAuth((state) => state.role);
@@ -77,10 +78,10 @@ export function AdminAnalytics() {
     return null;
   }
 
-  return <AnalyticsPanel key={userId} owner={userId} />;
+  return <AnalyticsPanel key={userId} owner={userId} section={section} />;
 }
 
-function AnalyticsPanel({ owner }: { owner: string }) {
+function AnalyticsPanel({ owner, section }: { owner: string; section: string }) {
   const [result, setResult] = useState<Analytics | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -97,22 +98,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
     setLoading(true);
     setError(null);
 
-    authFetch(
-      "/api/admin/analytics",
-      {
-        signal: controller.signal,
-      },
-      owner,
-    )
-      .then(async (response) => {
-        const data = await response.json().catch(() => null);
-
-        if (!response.ok || !data) {
-          throw new Error(data?.error ?? "Аналитик ачаалсангүй.");
-        }
-
-        return data;
-      })
+    readAdminResource<Analytics>(owner, "/api/admin/analytics", refresh > 0)
       .then((data) => {
         if (
           !active ||
@@ -149,7 +135,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
           <span className="reference-eyebrow">
             MARKETPLACE · СҮҮЛИЙН 30 ХОНОГ
           </span>
-          <h1>Ерөнхий тойм</h1>
+          <h1>{section === "sales" ? "Борлуулалтын хандлага" : section === "merchant-stats" ? "Дэлгүүрийн статистик" : "Ерөнхий тойм"}</h1>
           <p>Нийт GMV, шимтгэл болон дэлгүүрүүдийн гүйцэтгэл.</p>
         </div>
         <button
@@ -162,6 +148,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
           Шинэчлэх
         </button>
       </div>
+      {section !== "merchant-stats" && <AdminTrends owner={owner} />}
       {loading ? (
         <PageSkeleton compact layout="metrics" />
       ) : error ? (
@@ -174,7 +161,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
             <CalendarDays size={14} />
             {dateLabel(result.periodStart)} — {dateLabel(result.asOf)}
           </div>
-          <div className="reference-kpis">
+          <div className="reference-kpis dashboard-compact-kpis">
             <Metric
               icon={TrendingUp}
               label="Нийт GMV (30 хоног)"
@@ -210,10 +197,10 @@ function AnalyticsPanel({ owner }: { owner: string }) {
               detail="Шийдвэрлэх шаардлагатай загварууд"
             />
           </div>
-          <RevenuePanels result={result} />
+          {section !== "sales" && <RevenuePanels result={result} />}
         </>
       ) : null}
-      <section className="reference-orders">
+      {section === "dashboard" && <section className="reference-orders">
         <div className="admin-panel-heading">
           <div>
             <h2>Захиалгын мэдээлэл</h2>
@@ -222,7 +209,7 @@ function AnalyticsPanel({ owner }: { owner: string }) {
           <Package size={21} />
         </div>
         <OrderHistory admin />
-      </section>
+      </section>}
     </section>
   );
 }

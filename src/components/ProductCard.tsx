@@ -261,7 +261,7 @@ export function ProductCard({
             className="product-add-cart"
             onClick={addToCart}
             disabled={!inStock || !selection}
-            aria-label={`${product.name} — сонгосон өнгөөр сагсанд нэмэх`}
+            aria-label={`${product.name} — сонгосон өнгөөр сагслах`}
             title={
               selection
                 ? `${selection.color.name} · ${selection.material.name}`

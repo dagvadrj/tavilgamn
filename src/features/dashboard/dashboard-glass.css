@@ -1,15 +1,15 @@
-/* Smoked glass, black instrument cards and quiet sage highlights. */
+/* Blue liquid glass: translucent panels over a layered, cool backdrop. */
 
 .dashboard-layout .dashboard-v14.dashboard-themed-shell.dashboard-shell.dashboard-glass {
-  --dashboard-bg: #d0cdc7;
-  --dashboard-surface: #f7f7f183;
+  --dashboard-bg: #f5f7fb;
+  --dashboard-surface: #ffffff9c;
   --dashboard-elevated: #ffffff70;
-  --dashboard-border: #ffffff82;
-  --dashboard-ink: #242622;
-  --dashboard-muted: #555850;
-  --dashboard-accent: #405432;
+  --dashboard-border: #ffffffb3;
+  --dashboard-ink: #172b4d;
+  --dashboard-muted: #607087;
+  --dashboard-accent: #075eaa;
   --dashboard-on-accent: #fff;
-  --dashboard-success: #23745d;
+  --dashboard-success: #075eaa;
   --dashboard-danger: #b42336;
   --dashboard-warning: #856000;
   --site-bg: var(--dashboard-bg);
@@ -20,47 +20,49 @@
   --site-muted: var(--dashboard-muted);
   --site-accent: var(--dashboard-accent);
   --site-primary: var(--dashboard-accent);
-  --site-primary-hover: #314127;
+  --site-primary-hover: #064d8b;
   --site-success: var(--dashboard-success);
-  --site-ink-rgb: 36 38 34;
-  --site-muted-rgb: 85 88 80;
-  --site-line-rgb: 150 151 143;
-  --site-accent-rgb: 64 84 50;
-  --glass-shadow: 0 12px 32px #28271f0b, inset 0 1px 0 #ffffffa3, inset 0 -1px 0 #ffffff26;
-  --glass-panel: linear-gradient(135deg, #ffffff66, #ffffff10 50%, #ffffff38), var(--dashboard-surface);
-  --glass-control: linear-gradient(150deg, #ffffff70, #ffffff16);
-  --glass-field: #ffffff75;
-  --glass-chart: #50643c;
-  --glass-glow: #cadcab;
+  --site-ink-rgb: 23 43 77;
+  --site-muted-rgb: 96 112 135;
+  --site-line-rgb: 220 229 239;
+  --site-accent-rgb: 7 94 170;
+  --glass-shadow: 0 12px 36px #173d7010, inset 0 1px 0 #ffffffd9, inset 0 -1px 0 #ffffff38;
+  --glass-panel: linear-gradient(135deg, #ffffff66, #ffffff08 55%, #ffffff30), var(--dashboard-surface);
+  --glass-control: linear-gradient(145deg, #ffffff8c, #ffffff26);
+  --glass-field: #ffffff80;
+  --glass-chart: #075eaa;
+  --glass-glow: #80baff;
   color-scheme: light;
-  background: radial-gradient(ellipse at 80% 8%, #f6f5ee 0, transparent 42%), radial-gradient(ellipse at 15% 38%, #aaa99c77, transparent 42%), linear-gradient(150deg, #d9d5d0, #c0c1b8 65%, #d7d4ce);
+  background: radial-gradient(ellipse at 12% 20%, #a9ccee80, transparent 48%), radial-gradient(ellipse at 85% 60%, #c8d7f280, transparent 45%), #e5edf6;
+  background-attachment: fixed;
   color: var(--dashboard-ink);
 }
 
 .dashboard-layout .dashboard-v14.dashboard-themed-shell.dashboard-shell.dashboard-glass[data-theme="dark"] {
-  --dashboard-bg: #080808;
-  --dashboard-surface: #232323ad;
-  --dashboard-elevated: #ffffff12;
-  --dashboard-border: #ffffff24;
-  --dashboard-ink: #f5f5f1;
-  --dashboard-muted: #b8bbb2;
-  --dashboard-accent: #d3e6b4;
-  --dashboard-on-accent: #182014;
-  --dashboard-success: #90d7bc;
+  --dashboard-bg: #080f1d;
+  --dashboard-surface: #14233a8c;
+  --dashboard-elevated: #8bbcff12;
+  --dashboard-border: #bbd9ff26;
+  --dashboard-ink: #edf4ff;
+  --dashboard-muted: #a8b8cc;
+  --dashboard-accent: #80baff;
+  --dashboard-on-accent: #102239;
+  --dashboard-success: #80baff;
   --dashboard-danger: #ff9aab;
   --dashboard-warning: #edcd8b;
-  --glass-shadow: 0 16px 36px #00000038, inset 0 1px 0 #ffffff15, inset 0 -1px 0 #ffffff05;
-  --glass-panel: linear-gradient(135deg, #ffffff0e, #ffffff00 45%, #ffffff04), var(--dashboard-surface);
-  --glass-control: linear-gradient(150deg, #ffffff14, #ffffff03);
-  --glass-field: #08080870;
-  --glass-chart: #cadcab;
-  --site-primary-hover: #e2efcd;
-  --site-ink-rgb: 245 245 241;
-  --site-muted-rgb: 184 187 178;
-  --site-line-rgb: 67 67 64;
-  --site-accent-rgb: 211 230 180;
+  --glass-shadow: 0 16px 44px #00000033, inset 0 1px 0 #dcecff20, inset 0 -1px 0 #7dacf50a;
+  --glass-panel: linear-gradient(135deg, #b7d9ff12, #ffffff02 48%, #8cbaff08), var(--dashboard-surface);
+  --glass-control: linear-gradient(145deg, #b7d9ff16, #ffffff04);
+  --glass-field: #070f2066;
+  --glass-chart: #80baff;
+  --site-primary-hover: #afd3ff;
+  --site-ink-rgb: 237 244 255;
+  --site-muted-rgb: 168 184 204;
+  --site-line-rgb: 64 88 120;
+  --site-accent-rgb: 128 186 255;
   color-scheme: dark;
-  background: radial-gradient(ellipse at 75% 0, #262626 0, transparent 48%), radial-gradient(ellipse at 18% 50%, #191b16 0, transparent 48%), var(--dashboard-bg);
+  background: radial-gradient(ellipse at 8% 10%, #124b805e, transparent 45%), radial-gradient(ellipse at 82% 38%, #294a8b40, transparent 46%), radial-gradient(ellipse at 45% 100%, #103b6140, transparent 55%), var(--dashboard-bg);
+  background-attachment: fixed;
 }
 
 .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-workspace {
@@ -80,20 +82,243 @@
   padding-top: 28px;
 }
 
-.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-panel, .reference-kpi, .reference-orders, .reference-table-card, .reference-inspector, .reference-store-banner, .merchant-stat-panel, .merchant-panel, .merchant-form-card, .admin-panel, .dashboard-panel, .dashboard-settings-panel, .dashboard-form-section, .merchant-contract-selection) {
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-panel, .reference-kpi, .reference-orders, .reference-table-card, .reference-inspector, .reference-store-banner, .merchant-stat-panel, .merchant-panel, .merchant-form-card, .admin-panel, .dashboard-panel, .dashboard-settings-panel, .dashboard-form-section, .merchant-contract-selection, .ops-card, .merchant-growth-panel) {
   min-width: 0;
   border: 1px solid var(--dashboard-border);
-  border-radius: 26px;
+  border-radius: 14px;
   color: var(--dashboard-ink);
   background: var(--glass-panel);
   box-shadow: var(--glass-shadow);
 }
 
 .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .reference-kpi.is-featured {
-  background: radial-gradient(ellipse at 100% 100%, #24291c, transparent 68%), #080908;
+  background: #075eaa;
   border-color: #ffffff22;
   color: #fff;
   box-shadow: 0 18px 36px #00000026, inset 0 1px 0 #ffffff1f;
+}
+
+/* Compact management workspace; the icon rail stays fixed while labels appear beside it. */
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-sidebar, .dashboard-drawer-content, .v14-navigation) {
+  scrollbar-width: none;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-sidebar, .dashboard-drawer-content, .v14-navigation)::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-content {
+  --merchant-input-height: 38px;
+  --merchant-input-size: 13px;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.ops-form, .merchant-form-card, .dashboard-form-section) {
+  width: 100%;
+  max-width: 900px;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .ops-form fieldset {
+  gap: 14px;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .ops-form fieldset > button {
+  justify-self: start;
+  width: auto;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .ops-form label {
+  gap: 6px;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .ops-assistant-form fieldset {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .ops-assistant-form fieldset > * {
+  grid-column: 1;
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .ops-assistant-form .ops-faq-preview {
+  grid-column: 2;
+  grid-row: 1 / span 5;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 12px;
+  background: var(--glass-field);
+}
+
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .ops-assistant-form .ops-faq-preview p {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--dashboard-elevated);
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-topbar, .merchant-location-bar) {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .v14-navigation {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-header-actions, .merchant-header-actions) {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-sidebar {
+    z-index: 40;
+    align-items: stretch;
+    width: 72px;
+    gap: 16px;
+    padding: 16px 10px;
+    overflow-x: hidden;
+    border-right: 1px solid var(--dashboard-border);
+    background: var(--glass-panel);
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-sidebar nav {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-sidebar .dashboard-nav-group {
+    gap: 2px;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-sidebar .dashboard-nav-button {
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 36px;
+    padding: 8px 16px;
+    margin: 0;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-sidebar .dashboard-brand {
+    padding-inline: 7px;
+    flex-shrink: 0;
+  }
+}
+
+.dashboard-nav-tooltip {
+  position: fixed;
+  z-index: 1000;
+  max-width: min(280px, calc(100vw - 100px));
+  transform: translateY(-50%);
+  padding: 8px 12px;
+  border: 1px solid #ffffff24;
+  border-radius: 7px;
+  background: #11151ef5;
+  color: #f5f7fc;
+  box-shadow: 0 6px 20px #0004;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+  animation: dashboard-tooltip-in 180ms ease-out;
+}
+
+@keyframes dashboard-tooltip-in {
+  from {
+    opacity: 0;
+    translate: -3px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.dashboard-time-trends {
+  margin-bottom: 24px;
+}
+
+.dashboard-trend-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.dashboard-trend-controls > div:first-child {
+  flex: 1 1 260px;
+}
+
+.dashboard-trend-controls h2 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.dashboard-trend-controls p, .dashboard-trend-note {
+  color: var(--dashboard-muted);
+  font-size: 12px;
+}
+
+.dashboard-compact-kpis .reference-kpi {
+  padding: 16px;
+}
+
+.dashboard-compact-kpis .reference-kpi-value {
+  font-size: 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-nav-tooltip {
+    animation: none;
+  }
+}
+
+.merchant-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-left: auto;
+}
+
+@media (max-width: 767px) {
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .merchant-balance-chip {
+    display: none;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .v14-navigation {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-radius: 12px;
+    overflow: visible;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .v14-navigation button {
+    min-width: 0;
+    padding: 8px 4px;
+    white-space: normal;
+    border-radius: 8px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .ops-assistant-form fieldset {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .ops-assistant-form .ops-faq-preview {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-content {
+    --merchant-input-height: 44px;
+    --merchant-input-size: 16px;
+  }
+  .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .merchant-breadcrumbs {
+    display: none;
+  }
 }
 
 .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-panel, .merchant-stat-panel, .merchant-panel, .merchant-form-card, .admin-panel, .dashboard-panel, .dashboard-settings-panel) {
@@ -151,9 +376,9 @@
 
 /* Only the outer cards blur; nested controls keep their own crisp surface. */
 
-.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-kpi, .reference-panel, .merchant-stat-panel, .merchant-contract-selection, .reference-store-banner) {
-  backdrop-filter: blur(20px) saturate(85%);
-  -webkit-backdrop-filter: blur(20px) saturate(85%);
+.dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-kpi, .reference-panel, .merchant-stat-panel, .merchant-contract-selection, .reference-store-banner, .ops-card, .merchant-growth-panel) {
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
 }
 
 .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-heading h1, .merchant-section-heading h2, .admin-page-heading h1) {
@@ -179,14 +404,14 @@
 }
 
 .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass .dashboard-sidebar {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: var(--glass-panel);
+  backdrop-filter: blur(28px) saturate(130%);
+  -webkit-backdrop-filter: blur(28px) saturate(130%);
 }
 
 .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-nav-button[aria-current="page"], .v14-navigation button[aria-current="page"]) {
-  background: var(--dashboard-ink);
-  color: var(--dashboard-bg);
+  background: var(--dashboard-accent);
+  color: var(--dashboard-on-accent);
   box-shadow: 0 3px 12px #00000012;
 }
 
@@ -241,7 +466,7 @@
   }
   .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.reference-panel, .merchant-stat-panel, .merchant-panel, .merchant-form-card, .admin-panel, .dashboard-panel, .dashboard-settings-panel) {
     padding: 18px;
-    border-radius: 22px;
+    border-radius: 14px;
   }
   .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(input, select, textarea) {
     font-size: 16px;
@@ -254,16 +479,16 @@
 
 @media (prefers-reduced-transparency: reduce) {
   .dashboard-layout .dashboard-v14.dashboard-themed-shell.dashboard-shell.dashboard-glass {
-    --dashboard-surface: #eeeee7;
+    --dashboard-surface: #fff;
     --glass-panel: var(--dashboard-surface);
-    --glass-control: var(--dashboard-surface);
-    --glass-field: #fff;
+    --glass-control: var(--dashboard-elevated);
+    --glass-field: var(--dashboard-surface);
   }
   .dashboard-layout .dashboard-v14.dashboard-themed-shell.dashboard-shell.dashboard-glass[data-theme="dark"] {
-    --dashboard-surface: #202020;
+    --dashboard-surface: #17263b;
     --glass-panel: var(--dashboard-surface);
-    --glass-control: var(--dashboard-surface);
-    --glass-field: #101010;
+    --glass-control: var(--dashboard-elevated);
+    --glass-field: var(--dashboard-surface);
   }
   .dashboard-layout .dashboard-v14.dashboard-shell.dashboard-glass :is(.dashboard-sidebar, .dashboard-topbar, .merchant-location-bar, .reference-kpi, .reference-panel, .merchant-stat-panel, .merchant-contract-selection, .reference-store-banner) {
     backdrop-filter: none;

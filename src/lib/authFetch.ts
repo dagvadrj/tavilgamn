@@ -32,5 +32,8 @@ export async function authFetch(
         detail: data.session.user.id,
       }),
     );
+  if (response.ok && init?.method && !["GET", "HEAD"].includes(init.method.toUpperCase()) && url.startsWith("/api/admin/") && typeof window !== "undefined") {
+    window.dispatchEvent?.(new CustomEvent("admin-data-changed", { detail: data.session.user.id }));
+  }
   return response;
 }

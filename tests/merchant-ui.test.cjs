@@ -126,6 +126,9 @@ const order = (status, paymentStatus = "paid") => ({
 });
 
 function renderOrder(h, value, onUpdated) {
+  h.mocks["@/features/merchant/useMerchantResource"] = {
+    useMerchantResource: () => ({ data: { orders: [value], hasMore: false }, loading: false, error: null, refresh() {} }),
+  };
   const { MerchantOrders } = loadSource(
     "src/components/MerchantOrders.tsx",
     h.mocks,

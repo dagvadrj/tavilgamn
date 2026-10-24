@@ -170,7 +170,7 @@ export function AdminDashboard({
       preferences={preferences}
       panelRef={panelRef}
     >
-      {currentTab === "dashboard" && <AdminAnalytics />}
+      {["dashboard", "sales", "merchant-stats"].includes(currentTab) && <AdminAnalytics section={currentTab} />}
       {currentTab === "merchant-ops" && <AdminMerchantGrowth />}
       {currentTab === "merchants" && <AdminMerchants />}
 
@@ -232,6 +232,7 @@ export function AdminDashboard({
       {currentTab === "contracts" && (
         <AdminMerchantContracts key={user.id} owner={user.id} />
       )}
+      {currentTab === "homepage" && <AdminHomepageSettings key={user.id} />}
       {currentTab === "settings" && (
         <>
           <DashboardSettings
@@ -240,7 +241,7 @@ export function AdminDashboard({
             onChange={updatePreferences}
             onProfile={() => selectTab("profile")}
           />
-          <AdminHomepageSettings key={user.id} />
+
         </>
       )}
       {currentTab === "profile" && (

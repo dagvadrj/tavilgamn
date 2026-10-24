@@ -73,7 +73,7 @@ export function DashboardMotion({
               { opacity: 1, transform: "translateY(0) scale(1)" },
             ],
             {
-              duration: heading ? 520 : 680,
+              duration: heading ? 680 : 880,
               delay: heading
                 ? Math.min(headingIndex++ * 70, 210)
                 : 100 + Math.min(cardIndex++ * 90, 360),

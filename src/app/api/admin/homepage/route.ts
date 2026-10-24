@@ -43,7 +43,24 @@ export async function PUT(request: NextRequest) {
       const current = await readHomepageSettings();
       if (current.version !== settings.version)
         return fail("Өөр админ шинэчилсэн байна. Дахин ачаална уу.", 409);
-      settings.productIds = current.productIds;
+      if ((body as Record<string, unknown>).updateFeatured === true) {
+        // Only changed selections need validating; retired fallback assets must not block text edits.
+        const changed = settings.productIds.filter(
+          (id, index) => id !== current.productIds[index],
+        );
+        const products = await Promise.all(
+          changed.map((id) => readProduct(id)),
+        );
+        if (
+          products.some(
+            (product) => !product?.model || product.category !== "sofa",
+          )
+        )
+          return fail(
+            "Онцлох бүтээгдэхүүн нийтэд харагдах 3D буйдан байх ёстой.",
+            422,
+          );
+      } else settings.productIds = current.productIds;
       settings.bedProductId = current.bedProductId;
       settings.wardrobeProductId = current.wardrobeProductId;
     } else {

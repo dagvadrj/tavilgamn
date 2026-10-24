@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
@@ -10,7 +10,9 @@ import {
   parseHomepageHero,
   type HomepageHero,
 } from "@/lib/homepagePresentation";
-import { ProductPhoto } from "@/features/home-motion/ProductPhoto";
+import { HomepagePreview } from "./HomepagePreview";
+import { readAdminResource } from "@/features/dashboard/useAdminResource";
+import "./homepage-editor.css";
 
 type Result = HomepageSettings;
 const FIELDS: { key: keyof HomepageHero; label: string; max: number }[] = [
@@ -35,18 +37,28 @@ export function AdminHomepageSettings() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [productIds, setProductIds] = useState<string[]>([]);
+  const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
+  const form = useRef<HTMLFormElement>(null);
+  const selectField = (field: string) => {
+    if (!FIELDS.some((item) => item.key === field)) return;
+    const input = form.current?.elements.namedItem(field);
+    if (input instanceof HTMLElement) {
+      input.focus({ preventScroll: true });
+      input.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  };
   useEffect(() => {
     if (!owner) return;
     const controller = new AbortController();
     setResult(null);
     setError("");
     setSaved(false);
-    void authFetch("/api/admin/homepage", { signal: controller.signal }, owner)
-      .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
+    void readAdminResource<Result>(owner, "/api/admin/homepage", attempt > 0)
+      .then((data) => {
         if (!controller.signal.aborted) {
           setResult(data);
+          setProductIds(data.productIds);
           setHero(data.hero ?? { ...DEFAULT_HOMEPAGE_HERO });
         }
       })
@@ -81,6 +93,9 @@ export function AdminHomepageSettings() {
           body: JSON.stringify({
             ...result,
             hero: parsed,
+            productIds,
+            updateFeatured:
+              JSON.stringify(productIds) !== JSON.stringify(result.productIds),
             products: undefined,
           }),
         },
@@ -90,6 +105,7 @@ export function AdminHomepageSettings() {
       if (!response.ok) throw new Error(data.error);
       setResult(data);
       setHero(data.hero);
+      setProductIds(data.productIds);
       setSaved(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Хадгалж чадсангүй.");
@@ -100,13 +116,13 @@ export function AdminHomepageSettings() {
 
   return (
     <section
-      className="dashboard-panel mt-8 p-6"
+      className="dashboard-panel homepage-editor"
       aria-labelledby="homepage-settings-title"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 id="homepage-settings-title" className="text-xl font-semibold">
-            Нүүр хуудасны hero
+            Нүүр хуудас засах
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-ui-muted">
             Платформыг танилцуулах гарчиг, зураг, товчнууд. Тоон үзүүлэлтүүд
@@ -150,67 +166,108 @@ export function AdminHomepageSettings() {
         </div>
       )}
       {result && (
-        <form onSubmit={(event) => void save(event)} className="mt-6">
-          <div className="grid gap-5 md:grid-cols-2">
-            {FIELDS.map((field) => (
-              <label
-                key={field.key}
-                className={`grid gap-2 text-sm font-medium ${field.key === "description" ? "md:col-span-2" : ""}`}
-              >
-                {field.label}
-                {field.key === "description" ? (
-                  <textarea
-                    className="input min-h-24 w-full"
-                    value={hero[field.key]}
-                    maxLength={field.max}
-                    required
-                    disabled={busy}
-                    onChange={(event) => {
-                      setHero((current) => ({
-                        ...current,
-                        [field.key]: event.target.value,
-                      }));
-                      setSaved(false);
-                    }}
-                  />
-                ) : (
-                  <input
-                    className="input min-h-12 w-full"
-                    value={hero[field.key]}
-                    maxLength={field.max}
-                    required={field.key !== "image"}
-                    disabled={busy}
-                    onChange={(event) => {
-                      setHero((current) => ({
-                        ...current,
-                        [field.key]: event.target.value,
-                      }));
-                      setSaved(false);
-                    }}
-                  />
-                )}
-              </label>
-            ))}
-          </div>
-          {hero.image && parseHomepageHero(hero) && (
-            <div className="mt-5 max-w-xs">
-              <ProductPhoto
-                src={hero.image}
-                alt="Hero зургийн урьдчилсан харагдац"
-              />
+        <div className="homepage-editor-workspace">
+          <form
+            ref={form}
+            onSubmit={(event) => void save(event)}
+            className="homepage-editor-form"
+          >
+            <div className="homepage-editor-fields">
+              {FIELDS.map((field) => (
+                <label key={field.key} className="homepage-editor-field">
+                  {field.label}
+                  {field.key === "description" ? (
+                    <textarea
+                      name={field.key}
+                      className="input"
+                      value={hero[field.key]}
+                      maxLength={field.max}
+                      required
+                      disabled={busy}
+                      onChange={(event) => {
+                        setHero((current) => ({
+                          ...current,
+                          [field.key]: event.target.value,
+                        }));
+                        setSaved(false);
+                      }}
+                    />
+                  ) : (
+                    <input
+                      name={field.key}
+                      className="input"
+                      value={hero[field.key]}
+                      maxLength={field.max}
+                      required={field.key !== "image"}
+                      disabled={busy}
+                      onChange={(event) => {
+                        setHero((current) => ({
+                          ...current,
+                          [field.key]: event.target.value,
+                        }));
+                        setSaved(false);
+                      }}
+                    />
+                  )}
+                </label>
+              ))}
             </div>
-          )}
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <button type="submit" className="btn-primary" disabled={busy}>
-              {busy ? "Хадгалж байна…" : "Hero тохиргоог хадгалах"}
-            </button>
-            {saved && (
-              <p role="status" className="text-sm">
-                Хадгаллаа. Нүүр хуудсыг шинэчилж үзээрэй.
-              </p>
-            )}
-          </div>
-        </form>
+            <label className="homepage-editor-field">
+              Онцлох 3D бүтээгдэхүүн
+              <select
+                className="input"
+                disabled={busy || !products.length}
+                value={productIds[0] ?? ""}
+                onChange={(event) => {
+                  const id = event.target.value;
+                  setProductIds((current) =>
+                    id === current[1] ? [id, current[0]] : [id, current[1]],
+                  );
+                  setSaved(false);
+                }}
+              >
+                {!products.some((p) => p.id === productIds[0]) && (
+                  <option value={productIds[0]}>Одоогийн сонголт</option>
+                )}
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <button type="submit" className="btn-primary" disabled={busy}>
+                {busy ? "Хадгалж байна…" : "Hero тохиргоог хадгалах"}
+              </button>
+              <button
+                type="button"
+                className="btn-ghost"
+                disabled={busy}
+                onClick={() => {
+                  setHero(result.hero ?? { ...DEFAULT_HOMEPAGE_HERO });
+                  setProductIds(result.productIds);
+                  setSaved(false);
+                  setError("");
+                }}
+              >
+                Өөрчлөлт буцаах
+              </button>
+              {saved && (
+                <p role="status" className="text-sm">
+                  Хадгаллаа. Нүүр хуудсыг шинэчилж үзээрэй.
+                </p>
+              )}
+            </div>
+          </form>
+          <HomepagePreview
+            owner={owner!}
+            hero={hero}
+            productIds={productIds}
+            onSelect={selectField}
+            onProducts={setProducts}
+          />
+        </div>
       )}
     </section>
   );

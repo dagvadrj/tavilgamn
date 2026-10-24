@@ -65,10 +65,10 @@ export function AdminShell({
           navigation={
             <DashboardNavigation
               tabs={ADMIN_TABS.filter((tab) =>
-                ["dashboard", "merchants", "furniture", "orders"].includes(
+                ["dashboard", "sales", "merchant-stats"].includes(
                   tab.id,
                 ),
-              )}
+              ).sort((a, b) => ["dashboard", "sales", "merchant-stats"].indexOf(a.id) - ["dashboard", "sales", "merchant-stats"].indexOf(b.id))}
               active={active}
               onChange={changeTab}
             />

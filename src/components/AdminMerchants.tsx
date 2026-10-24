@@ -16,6 +16,7 @@ import {
   Store,
   TrendingUp,
 } from "lucide-react";
+import { readAdminResource } from "@/features/dashboard/useAdminResource";
 import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
 import { STORE_TYPES } from "@/lib/storeTypes";
@@ -69,15 +70,7 @@ function MerchantPanel({ owner }: { owner: string }) {
     let active = true;
     setLoading(true);
     setError(null);
-    authFetch("/api/admin/merchants", { signal: controller.signal }, owner)
-      .then(async (response) => {
-        const data = await response.json().catch(() => null);
-        if (!response.ok)
-          throw new Error(
-            data?.error ?? "Merchant мэдээллийг ачаалж чадсангүй.",
-          );
-        return data;
-      })
+    readAdminResource<{merchants: MerchantOverview[]}>(owner, "/api/admin/merchants", refresh > 0)
       .then((data) => {
         if (
           active &&

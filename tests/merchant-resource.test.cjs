@@ -1,6 +1,34 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),React=require('react');
 const {loadSource}=require('./helpers/load-source.cjs');
 const flush=()=>new Promise(resolve=>setImmediate(resolve));
+
+test('revisiting after a minute uses cache; expiry and explicit refresh reload independently', async t => {
+ let now=1000000, requests=0, cleanup;
+ t.mock.method(Date,'now',()=>now);
+ const resource=loadSource('src/features/merchant/useMerchantResource.ts',{
+  react:{...React,useCallback:fn=>fn,useEffect(){},useSyncExternalStore(subscribe,snapshot){cleanup?.();cleanup=subscribe(()=>{});return snapshot();}},
+  './merchantApi':{isOwner:()=>true,merchantRequest:async()=>({revision:++requests})},
+ });
+ t.after(()=>{cleanup?.();resource.clearMerchantResources();});
+ const read=()=>resource.useMerchantResource('alice','/cached');
+ read();await flush();now+=60000;assert.equal(read().data.revision,1);assert.equal(requests,1);
+ read().refresh();await flush();assert.equal(read().data.revision,2);
+ now+=300001;read();await flush();assert.equal(read().data.revision,3);
+});
+
+test('staff operations use their verified identity without enabling merchant-only reads', async t => {
+ let actor='staff', requests=0;const cleanups=[];
+ const resource=loadSource('src/features/merchant/useMerchantResource.ts',{
+  react:{...React,useCallback:fn=>fn,useEffect(){},useSyncExternalStore(subscribe,snapshot){cleanups.push(subscribe(()=>{}));return snapshot();}},
+  './merchantApi':{isOwner:()=>false,merchantRequest:async()=>{throw Error('merchant read must remain blocked');}},
+ });
+ t.after(()=>{cleanups.forEach(fn=>fn());resource.clearMerchantResources();});
+ const transport={isAuthorized:owner=>owner===actor,request:async()=>{requests++;return {branches:[]};}};
+ resource.useMerchantResource('staff','/operations',true,0,transport);await flush();
+ assert.deepEqual(resource.useMerchantResource('staff','/operations',true,0,transport).data,{branches:[]});
+ actor='another';assert.equal(resource.useMerchantResource('staff','/operations',true,0,transport).data,null);assert.equal(requests,1);
+ assert.equal(resource.useMerchantResource('staff','/merchant-only').data,null);
+});
 test('independent resources reveal first response, deduplicate, cache revisits and isolate identities',async t=>{
  let actor='alice',currentKey='';const requests=[],cleanups=[],subscribed=new Set();
  const resource=loadSource('src/features/merchant/useMerchantResource.ts',{
