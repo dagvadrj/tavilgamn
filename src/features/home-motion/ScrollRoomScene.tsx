@@ -1,61 +1,84 @@
 ﻿"use client";
 import {
   Component,
+  Suspense,
   useEffect,
   useMemo,
   useRef,
+  useState,
   type ReactNode,
   type RefObject,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Environment } from "@react-three/drei";
 import * as THREE from "three";
+import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import type { Product } from "@/lib/types";
-import { SceneHtml } from "@/three/SceneHtml";
+import { PremiumRoomSet } from "./PremiumRoomSet";
+import { usePremiumRoomMaterials } from "./premiumRoomMaterials";
+import { roomPixelRatio, roomStageMask } from "./roomRenderBudget";
 import {
-  FurnitureProduct,
-  InteriorBed,
-  InteriorWardrobe,
-  Upholstered,
-} from "@/features/home-interior/JourneyFurniture";
-import { ApartmentRoom } from "@/features/home-interior/ApartmentRoom";
-import {
-  INTERIOR_STYLES,
-  JOURNEY_PLACEMENTS,
-} from "@/features/home-interior/homeStory";
-import { useRoomMaterials } from "@/features/home-interior/roomMaterials";
-import {
+  ROOM_GAP,
   scrollRoomPose,
+  roomFocusPose,
+  ROOM_ITEMS,
   type RoomMotion,
   type RoomFurniture,
 } from "./scrollRoomStory";
-
+RectAreaLightUniformsLib.init();
 type Props = {
   motion: RefObject<RoomMotion>;
   reduced: boolean;
   phase: number;
+  selected: RoomFurniture | null;
   sofa?: Product;
   bed?: Product;
   wardrobe?: Product;
+  colors: Partial<Record<RoomFurniture, string>>;
   onSelect: (item: RoomFurniture) => void;
   onReady: () => void;
   onError: () => void;
-  onSofaStatus: (value: string) => void;
-  onBedStatus: (value: string) => void;
-  onWardrobeStatus: (value: string) => void;
+  onSofaStatus: (s: string) => void;
+  onBedStatus: (s: string) => void;
+  onWardrobeStatus: (s: string) => void;
 };
 function Room(props: Props) {
   const { motion, reduced, onReady, onError } = props;
-  const { camera, gl, invalidate, size } = useThree();
-  const materials = useRoomMaterials();
-  const bed = useRef<THREE.Group>(null),
-    wardrobe = useRef<THREE.Group>(null);
-  const progress = useRef<number | null>(null),
-    target = useMemo(() => new THREE.Vector3(), []);
+  const camera = useThree((s) => s.camera);
+  const gl = useThree((s) => s.gl);
+  const invalidate = useThree((s) => s.invalidate);
+  const size = useThree((s) => s.size);
+  const setDpr = useThree((s) => s.setDpr);
+  const materials = usePremiumRoomMaterials();
+  const [roomMask, setRoomMask] = useState(() =>
+    roomStageMask(scrollRoomPose(motion.current.progress).travel),
+  );
+  const currentMask = useRef(roomMask);
+  const constrained = useMemo(() => {
+    const memory = (navigator as Navigator & { deviceMemory?: number })
+      .deviceMemory;
+    return (
+      (memory !== undefined && memory <= 4) ||
+      navigator.hardwareConcurrency <= 4
+    );
+  }, []);
+  const groups = useRef<(THREE.Group | null)[]>([]),
+    sun = useRef<THREE.DirectionalLight>(null);
+  const aim = useMemo(() => new THREE.Object3D(), []),
+    target = useMemo(() => new THREE.Vector3(), []),
+    desiredEye = useMemo(() => new THREE.Vector3(), []),
+    desiredTarget = useMemo(() => new THREE.Vector3(), []);
+  const progress = useRef<number | null>(null);
+  const initialized = useRef(false);
+  const shadowTravel = useRef<number | null>(null);
+  useEffect(() => {
+    invalidate();
+  }, [props.selected, invalidate]);
   useEffect(() => {
     const state = motion.current;
     state.invalidate = invalidate;
-    const lost = (event: Event) => {
-      event.preventDefault();
+    const lost = (e: Event) => {
+      e.preventDefault();
       onError();
     };
     gl.domElement.addEventListener("webglcontextlost", lost);
@@ -68,8 +91,18 @@ function Room(props: Props) {
   }, [gl, invalidate, motion, onReady, onError]);
   useEffect(() => {
     const c = camera as THREE.PerspectiveCamera;
-    c.fov = size.width < 700 ? 80 : 53;
-    c.filmOffset = size.width < 700 ? 0 : -3;
+    const aspect = size.width / size.height;
+    c.fov =
+      aspect < 1.4
+        ? Math.min(
+            72,
+            (2 *
+              Math.atan((Math.tan((21 * Math.PI) / 180) * 1.6) / aspect) *
+              180) /
+              Math.PI,
+          )
+        : 42;
+    c.filmOffset = 0;
     c.updateProjectionMatrix();
     invalidate();
   }, [camera, size.width, size.height, invalidate]);
@@ -86,110 +119,133 @@ function Room(props: Props) {
         : THREE.MathUtils.damp(
             progress.current,
             destination,
-            8,
-            Math.min(delta, 0.1),
+            6,
+            Math.min(delta, 0.25),
           );
     state.snap = false;
-    const changed =
-      progress.current === null || Math.abs(p - progress.current) > 0.00001;
     progress.current = Math.abs(p - destination) < 0.0001 ? destination : p;
     const pose = scrollRoomPose(progress.current);
-    camera.position.fromArray(pose.eye);
-    camera.lookAt(target.fromArray(pose.target));
-    if (bed.current) {
-      bed.current.position.y = pose.bedY;
-      bed.current.visible = pose.bedVisible;
+    const nextMask = roomStageMask(pose.travel);
+    if (nextMask !== currentMask.current) {
+      currentMask.current = nextMask;
+      setRoomMask(nextMask);
     }
-    if (wardrobe.current) {
-      wardrobe.current.position.y = pose.wardrobeY;
-      wardrobe.current.visible = pose.wardrobeVisible;
+    gl.domElement.dataset.roomTravel = pose.travel.toFixed(3);
+    const focus =
+      props.selected && ROOM_ITEMS[props.selected].room === pose.phase
+        ? roomFocusPose(props.selected, pose.rotations[pose.phase])
+        : pose;
+    desiredEye.fromArray(focus.eye);
+    desiredTarget.fromArray(focus.target);
+    const alpha =
+      reduced || !initialized.current
+        ? 1
+        : 1 - Math.exp(-5 * Math.min(delta, 0.25));
+    camera.position.lerp(desiredEye, alpha);
+    target.lerp(desiredTarget, alpha);
+    initialized.current = true;
+    const cameraMoving =
+      camera.position.distanceToSquared(desiredEye) > 0.000001 ||
+      target.distanceToSquared(desiredTarget) > 0.000001;
+    const moving = cameraMoving || progress.current !== destination;
+    const dpr = roomPixelRatio(
+      size.width,
+      size.height,
+      window.devicePixelRatio,
+      moving,
+      constrained || size.width < 768,
+    );
+    if (Math.abs(gl.getPixelRatio() - dpr) > 0.01) setDpr(dpr);
+    if (!cameraMoving) {
+      camera.position.copy(desiredEye);
+      target.copy(desiredTarget);
     }
-    if (changed) gl.shadowMap.needsUpdate = true;
-    if (!reduced && !state.paused && progress.current !== destination)
+    camera.lookAt(target);
+    gl.domElement.dataset.roomSettled = String(
+      progress.current === destination && !cameraMoving,
+    );
+    gl.domElement.dataset.roomFocus = props.selected || "";
+    gl.domElement.dataset.cameraPosition = camera.position
+      .toArray()
+      .map((n) => n.toFixed(3))
+      .join(",");
+    gl.domElement.dataset.renderFrame = String(gl.info.render.frame);
+    gl.domElement.dataset.drawCalls = String(gl.info.render.calls);
+    gl.domElement.dataset.triangles = String(gl.info.render.triangles);
+    gl.domElement.dataset.geometries = String(gl.info.memory.geometries);
+    gl.domElement.dataset.textures = String(gl.info.memory.textures);
+    gl.domElement.dataset.roomCount = String(
+      [0, 1, 2].filter((i) => roomMask & (1 << i)).length,
+    );
+    groups.current.forEach((g, i) => {
+      if (g) {
+        g.rotation.y = pose.rotations[i];
+        g.visible = Boolean(nextMask & (1 << i));
+      }
+    });
+    if (sun.current) {
+      sun.current.position.set(pose.travel * ROOM_GAP + 5, 6, 3);
+      aim.position.set(pose.travel * ROOM_GAP, 0, -2);
+      aim.updateMatrixWorld();
+    }
+    if (shadowTravel.current !== pose.travel) {
+      gl.shadowMap.needsUpdate = true;
+      shadowTravel.current = pose.travel;
+    }
+    if (
+      !reduced &&
+      (cameraMoving || (!state.paused && progress.current !== destination))
+    )
       invalidate();
   });
-  const label = (
-    item: RoomFurniture,
-    title: string,
-    at: [number, number, number],
-  ) => (
-    <SceneHtml position={at} center zIndexRange={[5, 4]}>
-      <button
-        className="scroll-room-hotspot"
-        onClick={() => props.onSelect(item)}
-      >
-        <span />
-        {title}
-      </button>
-    </SceneHtml>
-  );
   return (
     <>
-      <ApartmentRoom theme={INTERIOR_STYLES[0]} materials={materials} />
-      <group position={[...JOURNEY_PLACEMENTS.sofa.position]}>
-        <FurnitureProduct
-          product={props.sofa}
-          size={JOURNEY_PLACEMENTS.sofa.size}
-          onStatus={props.onSofaStatus}
-        >
-          <Upholstered
-            position={[0, 0.35, 0]}
-            size={[2.9, 0.45, 1.05]}
-            color="#899485"
-            materials={materials}
-          />
-          <Upholstered
-            position={[0, 0.78, -0.42]}
-            size={[2.9, 0.75, 0.32]}
-            color="#899485"
-            materials={materials}
-          />
-          {[-1.35, 1.35].map((x) => (
-            <Upholstered
-              key={x}
-              position={[x, 0.55, 0]}
-              size={[0.32, 0.7, 1.12]}
-              color="#899485"
-              materials={materials}
-            />
-          ))}
-          {[-0.86, 0, 0.86].map((x) => (
-            <Upholstered
-              key={x}
-              position={[x, 0.59, 0.04]}
-              size={[0.8, 0.15, 0.84]}
-              color="#a0a996"
-              materials={materials}
-            />
-          ))}
-        </FurnitureProduct>
-        {props.phase === 0 && label("sofa", "Буйдан", [0.5, 1.15, 0.2])}
-      </group>
-      <group ref={bed} position={[-0.65, 2.855, -9.35]} visible={false}>
-        <FurnitureProduct
-          product={props.bed}
-          size={JOURNEY_PLACEMENTS.bed.size}
-          onStatus={props.onBedStatus}
-        >
-          <InteriorBed materials={materials} />
-        </FurnitureProduct>
-      </group>
-      <group
-        ref={wardrobe}
-        position={[3.27, 2.82, -8.1]}
-        rotation={[0, -Math.PI / 2, 0]}
-        visible={false}
-      >
-        <FurnitureProduct
-          product={props.wardrobe}
-          size={JOURNEY_PLACEMENTS.wardrobe.size}
-          onStatus={props.onWardrobeStatus}
-        >
-          <InteriorWardrobe materials={materials} />
-        </FurnitureProduct>
-      </group>
-      {props.phase === 2 && label("bed", "Ор", [-0.4, 0.95, -8.6])}
-      {props.phase === 3 && label("wardrobe", "Шкаф", [2.9, 1.3, -8.1])}
+      <color attach="background" args={["#242019"]} />
+      <Environment
+        files="/interior/daylight-1k.hdr"
+        environmentIntensity={0.3}
+      />
+      <ambientLight intensity={0.13} color="#dac7af" />
+      <hemisphereLight args={["#d6e0ec", "#372b20", 0.3]} />
+      <primitive object={aim} />
+      <directionalLight
+        ref={sun}
+        target={aim}
+        position={[5, 6, 3]}
+        color="#fff0d4"
+        intensity={2.4}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+        shadow-camera-left={-7}
+        shadow-camera-right={7}
+        shadow-camera-top={7}
+        shadow-camera-bottom={-7}
+        shadow-camera-near={0.5}
+        shadow-camera-far={25}
+        shadow-normalBias={0.035}
+        shadow-bias={-0.00015}
+      />
+      {[0, 1, 2]
+        .filter((i) => roomMask & (1 << i))
+        .map((i) => (
+          <group
+            key={i}
+            ref={(g) => {
+              groups.current[i] = g;
+            }}
+            position={[i * ROOM_GAP, 0, 0]}
+            visible={i === props.phase}
+          >
+            <Suspense fallback={null}>
+              <PremiumRoomSet
+                {...props}
+                index={i}
+                active={i === props.phase}
+                materials={materials}
+              />
+            </Suspense>
+          </group>
+        ))}
     </>
   );
 }
@@ -214,18 +270,21 @@ export default function ScrollRoomScene(props: Props) {
       <Canvas
         frameloop="demand"
         shadows
-        dpr={[1, 1.5]}
-        camera={{ position: [1.9, 1.55, 3.2], fov: 53, near: 0.05, far: 60 }}
-        gl={{ antialias: true, alpha: false }}
+        dpr={1}
+        camera={{ position: [0.25, 1.85, 4.7], fov: 42, near: 0.1, far: 70 }}
+        gl={{ antialias: true, alpha: false, powerPreference: "low-power" }}
         fallback={<span>Таны хөтөч 3D дүрслэлийг дэмжихгүй байна.</span>}
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.ACESFilmicToneMapping;
-          gl.toneMappingExposure = 1.05;
+          gl.toneMappingExposure = 0.95;
+          gl.shadowMap.type = THREE.PCFSoftShadowMap;
           gl.shadowMap.autoUpdate = false;
           gl.shadowMap.needsUpdate = true;
         }}
       >
-        <Room {...props} />
+        <Suspense fallback={null}>
+          <Room {...props} />
+        </Suspense>
       </Canvas>
     </Boundary>
   );

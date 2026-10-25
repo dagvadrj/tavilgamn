@@ -9,29 +9,35 @@ import {
   DEFAULT_HOMEPAGE_HERO,
   type HomepageHero,
 } from "@/lib/homepagePresentation";
-import { ROOM_LABELS, type RoomFurniture } from "./scrollRoomStory";
+import {
+  ROOM_LABELS,
+  ROOM_ITEMS,
+  ROOM_FINISHES,
+  type RoomFurniture,
+} from "./scrollRoomStory";
 import { useScrollRoom } from "./useScrollRoom";
 import "./scroll-room.css";
 const Scene = dynamic(() => import("./ScrollRoomScene"), { ssr: false });
 const CHAPTERS = [
   {
-    title: "Ухаалаг интерьер шийдэл",
-    text: "Өрөөг өөрийн хурдаар нээгээрэй. Доош гүйлгэж буйдангийн детальд ойртоорой.",
-  },
-  {
-    title: "Нэг хаалганы цаана.\nӨөр нэг орон зай.",
-    text: "Камерын хамт зочны өрөөнөөс унтлагын өрөө рүү алхаарай.",
+    title: "Ухаалаг\nинтерьер шийдэл",
+    text: "Өөрийн орон зайдаа тохирсон чанартай тавилгыг хялбархан олоорой.",
+    href: "/catalog",
+    cta: "Тавилга үзэх",
   },
   {
     title: "Тайван амрах\nтаны орон зай.",
-    text: "Доош гүйлгэхэд ор ханын голд бууж, өрөөний зохион байгуулалт бүрдэнэ.",
+    text: "Өдөр бүрийн амралтыг илүү тав тухтай, дулаахан болгох тавилга.",
+    href: "/catalog/bed",
+    cta: "Ор үзэх",
   },
   {
-    title: "Зүйл бүр\nбайрандаа.",
-    text: "Шкаф хананд байрлана. Одоо өөрийн гэрийн зохион байгуулалтыг туршаарай.",
+    title: "Ажиллах тав\nтухтай орчин",
+    text: "Өдөр тутмын бүтээмжийг нэмэгдүүлэх тав тухтай, загварлаг шийдлүүд.",
+    href: "/catalog/office",
+    cta: "Тавилга үзэх",
   },
 ];
-const ITEM_LABELS = { sofa: "Буйдан", bed: "Ор", wardrobe: "Шкаф" };
 export function ScrollRoomHero({
   sofa,
   bed,
@@ -47,6 +53,9 @@ export function ScrollRoomHero({
 }) {
   const tour = useScrollRoom();
   const [selected, setSelected] = useState<RoomFurniture | null>(null);
+  const [colors, setColors] = useState<Partial<Record<RoomFurniture, string>>>(
+    {},
+  );
   const [ready, setReady] = useState(false),
     [failed, setFailed] = useState(false),
     [attempt, setAttempt] = useState(0);
@@ -56,29 +65,45 @@ export function ScrollRoomHero({
   const returnFocus = useRef<HTMLElement | null>(null),
     closeButton = useRef<HTMLButtonElement>(null);
   const onReady = useCallback(() => setReady(true), []);
+  useEffect(() => {
+    if (!tour.mounted) setReady(false);
+  }, [tour.mounted]);
   const onError = useCallback(() => {
     setFailed(true);
     setReady(false);
   }, []);
-  const select = useCallback((next: RoomFurniture) => {
+  const select = useCallback((item: RoomFurniture) => {
     returnFocus.current = document.activeElement as HTMLElement;
-    setSelected(next);
+    setSelected(item);
   }, []);
   const close = useCallback(() => {
     setSelected(null);
-    returnFocus.current?.focus({ preventScroll: true });
+    requestAnimationFrame(() =>
+      returnFocus.current?.focus({ preventScroll: true }),
+    );
   }, []);
   useEffect(() => {
     if (!selected) return;
     closeButton.current?.focus({ preventScroll: true });
-    const key = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   }, [selected, close]);
-  const products = { sofa, bed, wardrobe },
-    statuses = { sofa: sofaStatus, bed: bedStatus, wardrobe: wardrobeStatus };
+  useEffect(() => {
+    if (selected && ROOM_ITEMS[selected].room !== tour.phase) setSelected(null);
+  }, [tour.phase, selected]);
+  const products: Partial<Record<RoomFurniture, Product | undefined>> = {
+    sofa,
+    bed,
+    wardrobe,
+  };
+  const statuses: Partial<Record<RoomFurniture, string>> = {
+    sofa: sofaStatus,
+    bed: bedStatus,
+    wardrobe: wardrobeStatus,
+  };
   const product =
     selected && statuses[selected] === "ready" ? products[selected] : undefined;
   const chapter = CHAPTERS[tour.phase];
@@ -90,31 +115,36 @@ export function ScrollRoomHero({
     tour.phase === 0 && hero.description !== DEFAULT_HOMEPAGE_HERO.description
       ? hero.description
       : chapter.text;
-  const activeItem: RoomFurniture | null =
-    tour.phase === 0
-      ? "sofa"
-      : tour.phase === 2
-        ? "bed"
-        : tour.phase === 3
-          ? "wardrobe"
-          : null;
+  const activeItem: RoomFurniture =
+    tour.phase === 0 ? "sofa" : tour.phase === 1 ? "bed" : "desk";
+  const finish = selected ? ROOM_ITEMS[selected].finish : "fabric";
+  const displayReady =
+    tour.mounted &&
+    ready &&
+    (tour.phase !== 0 ||
+      !sofa?.model ||
+      sofaStatus === "ready" ||
+      sofaStatus === "error");
   return (
     <section
       ref={tour.root}
       className="scroll-room"
       data-reduced={tour.reduced}
       data-phase={tour.phase}
+      data-detail={!!selected}
+      data-sofa-status={sofaStatus}
+      data-ready={displayReady}
       aria-label="Өрөөгөөр аялах 3D үзүүлбэр"
     >
       <div ref={tour.stage} className="scroll-room-stage">
         <div
           className="scroll-room-scene"
-          aria-label="Өрөө хооронд аялах интерактив 3D орон зай"
+          aria-label="Зочны, унтлагын болон ажлын өрөөний 3D үзүүлбэр"
         >
-          {!ready && (
+          {!displayReady && (
             <Image
-              src={hero.image || "/rooms/living-room.webp"}
-              alt="Зочны өрөөний интерьер"
+              src={hero.image || "/interior/premium/living-poster.webp"}
+              alt="Дулаан гэрэлтүүлэгтэй зочны өрөө"
               fill
               priority
               sizes="100vw"
@@ -128,9 +158,11 @@ export function ScrollRoomHero({
               motion={tour.motion}
               reduced={tour.reduced}
               phase={tour.phase}
+              selected={selected}
               sofa={sofa}
               bed={bed}
               wardrobe={wardrobe}
+              colors={colors}
               onSelect={select}
               onReady={onReady}
               onError={onError}
@@ -142,8 +174,12 @@ export function ScrollRoomHero({
         </div>
         <div className="scroll-room-shade" aria-hidden="true" />
         <div className="scroll-room-tools">
-          <button onClick={tour.skip}>
-            Аяллыг алгасах <ArrowDown size={15} />
+          <button
+            onClick={tour.skip}
+            aria-label="Аяллыг алгасах"
+            title="Аяллыг алгасах"
+          >
+            <ArrowDown size={17} />
           </button>
           {!tour.reduced && (
             <button
@@ -153,17 +189,20 @@ export function ScrollRoomHero({
               }
               aria-pressed={tour.paused}
             >
-              {tour.paused ? <Play size={17} /> : <Pause size={17} />}
+              {tour.paused ? <Play size={16} /> : <Pause size={16} />}
             </button>
           )}
           <button
-            onClick={() => tour.choose(-1)}
+            onClick={() => {
+              setSelected(null);
+              tour.choose(-1);
+            }}
             aria-label="Аяллыг эхнээс үзэх"
           >
             <RotateCcw size={16} />
           </button>
         </div>
-        <div className="scroll-room-copy">
+        <div className="scroll-room-copy" key={tour.phase}>
           <h1
             id="home-motion-title"
             data-homepage-field={tour.phase === 0 ? "title" : undefined}
@@ -173,42 +212,35 @@ export function ScrollRoomHero({
           <p data-homepage-field={tour.phase === 0 ? "description" : undefined}>
             {description}
           </p>
-          {tour.phase === 0 && (
-            <div className="scroll-room-actions">
-              <button className="home-button" onClick={() => tour.choose(0)}>
-                Ойроос харах <ArrowRight size={17} />
+          <div className="scroll-room-actions">
+            {tour.phase === 0 && (
+              <button
+                className="home-button"
+                onClick={() => {
+                  tour.choose(-2);
+                  select("sofa");
+                }}
+              >
+                Ойроос харах
               </button>
-              <Link
-                className="home-button home-button-secondary"
-                href={hero.primaryHref}
-                data-homepage-field="primaryLabel"
-              >
-                {hero.primaryLabel}
-              </Link>
-            </div>
-          )}
-          {tour.phase === 3 && (
-            <div className="scroll-room-actions">
-              <Link className="home-button" href="/planner">
-                Туршиж үзэх <ArrowRight size={17} />
-              </Link>
-              <Link
-                className="home-button home-button-secondary"
-                href={hero.secondaryHref}
-                data-homepage-field="secondaryLabel"
-              >
-                {hero.secondaryLabel}
-              </Link>
-            </div>
-          )}
-          {activeItem && (
-            <button
-              className="scroll-room-product-link"
-              onClick={() => select(activeItem)}
+            )}
+            <Link
+              className={`home-button ${tour.phase < 2 ? "home-button-secondary" : ""}`}
+              href={tour.phase === 0 ? hero.primaryHref : chapter.href}
+              data-homepage-field={
+                tour.phase === 0 ? "primaryLabel" : undefined
+              }
             >
-              {ITEM_LABELS[activeItem]} · Дэлгэрэнгүй <ArrowRight size={15} />
-            </button>
-          )}
+              {tour.phase === 0 ? hero.primaryLabel : chapter.cta}
+            </Link>
+          </div>
+          <button
+            className="scroll-room-product-link"
+            onClick={() => select(activeItem)}
+          >
+            {ROOM_ITEMS[activeItem].label} · Материал харах{" "}
+            <ArrowRight size={14} />
+          </button>
         </div>
         {selected && (
           <aside
@@ -216,6 +248,8 @@ export function ScrollRoomHero({
             role="dialog"
             aria-modal="false"
             aria-labelledby="scroll-room-product-title"
+            data-finish={finish}
+            data-color={colors[selected] || "original"}
           >
             <button
               ref={closeButton}
@@ -223,54 +257,53 @@ export function ScrollRoomHero({
               onClick={close}
               aria-label="Мэдээллийг хаах"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
-            <span>{ITEM_LABELS[selected]}</span>
             <h2 id="scroll-room-product-title">
-              {product?.name || "Интерьерийн жишиг загвар"}
+              {ROOM_ITEMS[selected].label}
+              {product && product.basePrice > 0 ? (
+                <span> · {product.basePrice.toLocaleString("mn-MN")}₮</span>
+              ) : null}
             </h2>
-            {product ? (
-              <>
-                <p>{product.description}</p>
-                <dl>
-                  <dt>Хэмжээ · Ө × Г × Өн</dt>
-                  <dd>
-                    {[
-                      product.dimensions.w,
-                      product.dimensions.d,
-                      product.dimensions.h,
-                    ]
-                      .map((n) => Math.round(n * 100))
-                      .join(" × ")}{" "}
-                    см
-                  </dd>
-                  <dt>Материал</dt>
-                  <dd>
-                    {product.materials.map((m) => m.name).join(", ") ||
-                      "Бүтээгдэхүүний дэлгэрэнгүйгээс үзнэ үү"}
-                  </dd>
-                  <dt>Үнэ</dt>
-                  <dd>
-                    {product.basePrice > 0
-                      ? `${product.basePrice.toLocaleString("mn-MN")} ₮-өөс`
-                      : "Үнийн мэдээллийг дэлгэрэнгүйгээс үзнэ үү"}
-                  </dd>
-                </dl>
-                <Link className="home-button" href={`/product/${product.id}`}>
-                  Дэлгэрэнгүй үзэх <ArrowRight size={16} />
-                </Link>
-              </>
-            ) : (
-              <>
-                <p>
-                  Өрөөний зохион байгуулалтыг харуулах жишээ. Бодит
-                  бүтээгдэхүүний сонголтыг каталогоос үзээрэй.
-                </p>
-                <Link className="home-button" href={`/catalog/${selected}`}>
-                  Каталог үзэх <ArrowRight size={16} />
-                </Link>
-              </>
-            )}
+            <p>{product ? product.name : "Интерьерийн жишиг загвар"}</p>
+            <fieldset className="scroll-room-swatches">
+              <legend>Өнгөний урьдчилсан дүрслэл</legend>
+              {ROOM_FINISHES[finish].map((option) => (
+                <button
+                  key={option.color}
+                  type="button"
+                  aria-label={option.name}
+                  title={option.name}
+                  aria-pressed={colors[selected] === option.color}
+                  style={{
+                    backgroundColor: option.color,
+                    backgroundImage: `url(/interior/premium/${finish === "wood" ? "walnut" : "linen"}-color.webp)`,
+                  }}
+                  onClick={() =>
+                    setColors((prev) => ({ ...prev, [selected]: option.color }))
+                  }
+                />
+              ))}
+            </fieldset>
+            <div className="scroll-room-detail-actions">
+              <button
+                onClick={() =>
+                  setColors((prev) => ({ ...prev, [selected]: undefined }))
+                }
+              >
+                Эх өнгө
+              </button>
+              <Link
+                href={
+                  product
+                    ? `/product/${product.id}`
+                    : `/catalog/${ROOM_ITEMS[selected].category}`
+                }
+              >
+                {product ? "Бүтээгдэхүүн үзэх" : "Сонголтууд үзэх"}{" "}
+                <ArrowRight size={15} />
+              </Link>
+            </div>
           </aside>
         )}
         <div className="scroll-room-footer">
@@ -303,16 +336,16 @@ export function ScrollRoomHero({
                   Дахин ачаалах
                 </button>
               </>
-            ) : !ready ? (
+            ) : !displayReady ? (
               "3D өрөөг бэлдэж байна…"
             ) : loading ? (
               "Бүтээгдэхүүнүүдийг ачаалж байна…"
             ) : tour.reduced ? (
-              "Хөдөлгөөн багасгасан · Үе шатыг товчоор сонгоорой"
+              "Хөдөлгөөн багасгасан · Өрөөг товчоор сонгоорой"
             ) : tour.paused ? (
               "Аялал түр зогссон"
             ) : (
-              "Доош гүйлгэж үргэлжлүүлээрэй"
+              "Доош гүйлгэж өрөөг солиорой"
             )}
           </div>
         </div>

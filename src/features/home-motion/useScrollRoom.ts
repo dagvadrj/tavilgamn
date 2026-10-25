@@ -47,6 +47,22 @@ export function useScrollRoom() {
       lastY = window.scrollY,
       directionY = lastY,
       headerHeight = 0;
+    let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+    let visibleState: boolean | undefined;
+    const setVisible = (visible: boolean) => {
+      if (visibleState === visible) return;
+      visibleState = visible;
+      motion.current.visible = visible;
+      clearTimeout(releaseTimer);
+      if (visible) {
+        setMounted(true);
+        motion.current.invalidate?.();
+      } else {
+        // Keep quick reverse-scroll smooth, then release the WebGL context and
+        // owned scene resources if the visitor stays in the shopping sections.
+        releaseTimer = setTimeout(() => setMounted(false), 20_000);
+      }
+    };
     const showHeader = () => {
       header?.removeAttribute("data-room-hidden");
       if (header) header.inert = wasInert;
@@ -64,8 +80,17 @@ export function useScrollRoom() {
       frame = 0;
       const rect = node.getBoundingClientRect(),
         y = window.scrollY;
+      setVisible(
+        !document.hidden &&
+          rect.bottom > headerHeight + 2 &&
+          rect.top < window.innerHeight,
+      );
       const inside =
         rect.top < headerHeight - 8 && rect.bottom > window.innerHeight + 4;
+      header?.toggleAttribute(
+        "data-room-over",
+        rect.bottom > headerHeight && rect.top < window.innerHeight,
+      );
       if (
         !inside ||
         reduced ||
@@ -88,19 +113,19 @@ export function useScrollRoom() {
       if (!frame) frame = requestAnimationFrame(update);
     };
     const visibility = () => {
-      motion.current.visible =
+      const rect = node.getBoundingClientRect();
+      setVisible(
         !document.hidden &&
-        viewport.getBoundingClientRect().bottom > 0 &&
-        viewport.getBoundingClientRect().top < window.innerHeight;
-      if (motion.current.visible) motion.current.invalidate?.();
+          rect.bottom > headerHeight + 2 &&
+          rect.top < window.innerHeight,
+      );
     };
     const observer = new IntersectionObserver(
       ([entry]) => {
-        motion.current.visible = entry.isIntersecting && !document.hidden;
+        if (entry.isIntersecting) visibility();
+        else setVisible(false);
         if (entry.isIntersecting) {
-          setMounted(true);
           queue();
-          motion.current.invalidate?.();
         }
       },
       { rootMargin: "100px" },
@@ -118,16 +143,18 @@ export function useScrollRoom() {
       observer.disconnect();
       resize.disconnect();
       cancelAnimationFrame(frame);
+      clearTimeout(releaseTimer);
       window.removeEventListener("scroll", queue);
       window.removeEventListener("resize", measure);
       document.removeEventListener("visibilitychange", visibility);
       header?.removeEventListener("focusin", showHeader);
       showHeader();
       header?.removeAttribute("data-room-tour");
+      header?.removeAttribute("data-room-over");
     };
   }, [apply, paused, reduced]);
   const choose = (index: number) => {
-    const p = index === -1 ? 0 : ROOM_STEPS[index];
+    const p = index === -1 ? 0 : index === -2 ? 0.17 : ROOM_STEPS[index];
     if (p === undefined) return;
     setPaused(false);
     motion.current.paused = false;
