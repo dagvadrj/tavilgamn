@@ -54,6 +54,19 @@
   font-size: 11px;
 }
 
+.ksp-controller-title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  outline: none;
+}
+
 .ksp-header h2 {
   flex: 1;
   margin: 0;
@@ -612,6 +625,278 @@
   flex-shrink: 0;
   color: #909090;
   font-size: 10px;
+}
+
+.ksp-appearance {
+  padding: 0 16px 20px;
+}
+
+.ksp-top-picker {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+  font-size: 12px;
+}
+
+.ksp-top-picker select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: white;
+}
+
+.ksp-top-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ksp-surface-switch {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-top: 16px;
+  background: #f0f2f4;
+  border-radius: 8px;
+}
+
+.ksp-surface-switch button {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+}
+
+.ksp-surface-switch button[aria-pressed="true"] {
+  color: #175ca5;
+  background: white;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 10%);
+  font-weight: 600;
+}
+
+.ksp-material-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 4px 0 10px;
+}
+
+.ksp-material-groups button {
+  padding: 7px 10px;
+  border: 1px solid #dedede;
+  border-radius: 20px;
+  background: white;
+  font-size: 11px;
+}
+
+.ksp-material-groups button[aria-pressed="true"] {
+  color: white;
+  background: #175ca5;
+  border-color: #175ca5;
+}
+
+.ksp-reset-appearance,
+.ksp-surface-heading button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 0;
+  color: #606060;
+  background: none;
+  border: 0;
+  font-size: 11px;
+}
+
+.ksp-surface {
+  padding: 18px 0;
+  border-top: 1px solid #e7e7e7;
+}
+
+.ksp-surface-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ksp-surface h3,
+.ksp-surface h4 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.ksp-surface h4 {
+  margin: 18px 0 10px;
+  color: #666;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.ksp-surface-current {
+  margin: 3px 0 14px;
+  color: #777;
+  font-size: 11px;
+}
+
+.ksp-paint-swatches {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ksp-paint-swatches button {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  color: white;
+  border: 1px solid rgb(0 0 0 / 15%);
+  border-radius: 50%;
+}
+
+.ksp-paint-swatches button[aria-pressed="true"] {
+  outline: 2px solid #175ca5;
+  outline-offset: 2px;
+}
+
+.ksp-paint-swatches button:first-child {
+  color: #222;
+}
+
+.ksp-paint-custom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.ksp-paint-custom input[type="color"] {
+  flex-shrink: 0;
+  width: 38px;
+  height: 36px;
+  padding: 3px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.ksp-paint-custom input[type="text"] {
+  width: 0;
+  min-width: 0;
+  flex: 1;
+  padding: 9px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.ksp-paint-custom button {
+  min-height: 36px;
+  padding: 7px 12px;
+  color: white;
+  background: #175ca5;
+  border: 0;
+  border-radius: 4px;
+}
+
+.ksp-material-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  max-height: 300px;
+  padding: 3px;
+  overflow: auto;
+}
+
+.ksp-material-options button {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 5px;
+}
+
+.ksp-material-options button[aria-pressed="true"] {
+  border-color: #175ca5;
+  background: #f1f7fd;
+}
+
+.ksp-material-options button > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.ksp-material-swatch {
+  flex-shrink: 0;
+  width: 100%;
+  height: 65px;
+  background-position: center;
+  background-size: cover;
+  border: 1px solid rgb(0 0 0 / 10%);
+  border-radius: 3px;
+}
+
+.ksp-material-options button > svg {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 2px;
+  width: 20px;
+  height: 20px;
+  color: #175ca5;
+  background: white;
+  border-radius: 50%;
+}
+
+.ksp-material-library {
+  margin-top: 16px;
+}
+
+.ksp-material-library summary {
+  padding: 10px 0;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ksp-material-library summary > span {
+  padding: 2px 7px;
+  margin-left: 5px;
+  color: #666;
+  background: #f0f0ed;
+  border-radius: 10px;
+  font-size: 10px;
+}
+
+.ksp-material-search {
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.ksp-supplier-link {
+  display: block;
+  margin: 0 0 10px;
+  color: #175ca5;
+  font-size: 11px;
 }
 
 @media (max-width: 700px) {

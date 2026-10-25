@@ -22,9 +22,11 @@ import {
 import { useKitchenOpenAnimation } from "./useKitchenOpenAnimation";
 import { applyKitchenPartMaterial } from "./kitchenPartMaterial";
 import { acquireKitchenMaterialTextures } from "./kitchenMaterialTextures";
+import { configureModelTextureSampling } from "./modelTextureSampling";
 
 import { KitchenApplianceBody } from "./KitchenCabinetBody";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
+import { resolveKitchenPaintMaterial } from "@/lib/kitchenPaint";
 
 type Props = {
   cabinet: ModularCabinet;
@@ -49,15 +51,17 @@ function AssemblyModel({
   variant,
   assembly,
   materialDefinitions,
+  frontMaterial,
+  carcassMaterial,
   open = false,
   selected = false,
-}: Props & { variant: KitchenCatalogVariant; assembly: KitchenGlbAssembly }) {
+}: Props & { variant: KitchenCatalogVariant; assembly: KitchenGlbAssembly; frontMaterial?: KitchenMaterialDefinition; carcassMaterial?: KitchenMaterialDefinition }) {
   const { gl, invalidate } = useThree();
   const [display, setDisplay] = useState<AssemblyDisplay | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
   const selectionsKey = JSON.stringify(cabinet.partSelections ?? {});
-  const key = `${variant.furnitureModelId}:${variant.glbFile}:${JSON.stringify(assembly)}:${selectionsKey}:${JSON.stringify(materialDefinitions)}:${cabinet.width}:${cabinet.height}:${cabinet.depth}`;
+  const key = `${variant.furnitureModelId}:${variant.glbFile}:${JSON.stringify(assembly)}:${selectionsKey}:${JSON.stringify(materialDefinitions)}:${JSON.stringify([frontMaterial, carcassMaterial])}:${cabinet.width}:${cabinet.height}:${cabinet.depth}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +91,16 @@ function AssemblyModel({
     const visible = (item: (typeof selectedParts)[number]): boolean =>
       Boolean(item.option) &&
       (!item.slot.parentSlotId || visible(byId.get(item.slot.parentSlotId)!));
+    async function finish(model: LoadedModel, material: KitchenMaterialDefinition, target?: "front" | "carcass" | "cabinet") {
+      const lease = acquireKitchenMaterialTextures(material.texturePaths);
+      releases.push(lease.release);
+      const textures = await lease.promise;
+      if (cancelled) return;
+      if (Object.entries(material.texturePaths).some(([kind, value]) => value && !textures[kind as keyof typeof textures]))
+        throw new Error("Сонгосон материалын texture ачаалж чадсангүй.");
+      releases.push(applyKitchenPartMaterial(model.scene, material, textures, target));
+      configureModelTextureSampling(model.scene, gl);
+    }
     void (async () => {
       try {
         const [frame, entries] = await Promise.all([
@@ -99,31 +113,24 @@ function AssemblyModel({
                   `${slot.label}: сонгосон 3D файл бэлэн болоогүй байна.`,
                 );
               const model = await load(part.modelId, part.glbFile);
-              if (model && part.materialId) {
-                const material = materialDefinitions?.[part.materialId];
+              if (model) {
+                const override = ["door", "drawer-front"].includes(slot.kind) ? frontMaterial
+                  : ["frame", "shelf", "drawer", "cover-panel", "filler"].includes(slot.kind) ? carcassMaterial : undefined;
+                const material = override ?? (part.materialId ? materialDefinitions?.[part.materialId] : undefined);
+                if (!material && !part.materialId) return [slot.id, model] as const;
                 if (!material)
                   throw new Error(`${slot.label}: материал олдсонгүй.`);
-                const lease = acquireKitchenMaterialTextures(
-                  material.texturePaths,
-                );
-                releases.push(lease.release);
-                const textures = await lease.promise;
+                await finish(model, material, override ? "cabinet" : undefined);
                 if (cancelled) return [slot.id, null] as const;
-                if (
-                  Object.keys(material.texturePaths).some(
-                    (kind) => !textures[kind as keyof typeof textures],
-                  )
-                )
-                  throw new Error(`${slot.label}: texture ачаалж чадсангүй.`);
-                releases.push(
-                  applyKitchenPartMaterial(model.scene, material, textures),
-                );
               }
               return [slot.id, model] as const;
             }),
           ),
         ]);
         if (cancelled || !frame) return;
+        if (carcassMaterial) await finish(frame, carcassMaterial, "carcass");
+        if (frontMaterial) await finish(frame, frontMaterial, "front");
+        if (cancelled) return;
         const sizeIssue = modelSizeIssue(frame.bounds, { w: cabinet.width / 1000, h: cabinet.height / 1000, d: cabinet.depth / 1000 }, variant.frontProjectionMm);
         if (sizeIssue) throw new Error(sizeIssue);
         const parts = new Map(entries.flatMap(([id, model]) => model ? [[id, model.scene] as const] : []));
@@ -213,17 +220,22 @@ export function MissingKitchenModel({ cabinet, selected }: Props) {
 }
 
 /** Only render the model of the selected product at its catalog dimensions. */
-export function KitchenCabinetGLB({ cabinet, variant: candidate, open = false, selected = false }: Props) {
+export function KitchenCabinetGLB({ cabinet, variant: candidate, materialDefinitions, open = false, selected = false }: Props) {
   const variant = kitchenVariantFits(candidate, cabinet) ? candidate : undefined;
   const assembly = useMemo(() => getKitchenGlbAssembly(variant?.configuration), [variant?.configuration]);
+  const frontMaterial = useMemo(() => resolveKitchenPaintMaterial(cabinet.frontMaterialId, materialDefinitions), [cabinet.frontMaterialId, materialDefinitions]);
+  const carcassMaterial = useMemo(() => resolveKitchenPaintMaterial(cabinet.carcassMaterialId, materialDefinitions), [cabinet.carcassMaterialId, materialDefinitions]);
   if (!variant?.glbFile) return ["hood", "oven", "refrigerator"].includes(cabinet.opening ?? "")
     ? <KitchenApplianceBody cabinet={cabinet} open={open} /> : <MissingKitchenModel cabinet={cabinet} selected={selected} />;
-  if (assembly) return <AssemblyModel cabinet={cabinet} variant={variant} assembly={assembly} open={open} selected={selected} />;
+  if (assembly) return <AssemblyModel cabinet={cabinet} variant={variant} assembly={assembly} materialDefinitions={materialDefinitions} frontMaterial={frontMaterial} carcassMaterial={carcassMaterial} open={open} selected={selected} />;
   return <group>
     {cabinet.opening === "hood" && <KitchenApplianceBody cabinet={cabinet} open={open} />}
     <GLBFurnitureMesh modelId={variant.furnitureModelId} basePath={`/api/models/files/${variant.furnitureModelId}`}
     glbFile={variant.glbFile} selected={selected} showLoadStatus={selected}
-    preservePhysicalSize strictDimensions frontProjectionMm={variant.frontProjectionMm} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
-    open={open} openAnimation={typeof variant.configuration.openAnimation === "string" ? variant.configuration.openAnimation : undefined} />
+    frontMaterial={frontMaterial}
+    carcassMaterial={carcassMaterial}
+    preserveHierarchy preservePhysicalSize strictDimensions frontProjectionMm={variant.frontProjectionMm} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
+    open={open} cabinetOpening={variant.opening === "doors" || variant.opening === "drawers" ? variant.opening : undefined}
+    openAnimation={typeof variant.configuration.openAnimation === "string" ? variant.configuration.openAnimation : undefined} />
   </group>;
 }

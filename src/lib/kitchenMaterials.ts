@@ -47,6 +47,7 @@ const EXCLUDED_GLTF_SURFACES = [
   "tap",
 ];
 const FRONT_GLTF_SURFACES = ["front", "door", "drawer", "facade", "fasad"];
+const CARCASS_GLTF_SURFACES = ["carcass", "body", "shelf", "back", "bottom", "side", "taviur", "shanaa", "boxnii ar", "boxnii ul", "savh"];
 
 export function normalizeKitchenMaterials(value: unknown): KitchenMaterialDefinition[] {
   if (!Array.isArray(value)) return [];
@@ -136,10 +137,11 @@ export function parseKitchenMaterialState(value: unknown) {
 export type KitchenCabinetSurface = "front" | "carcass";
 
 /** Keep appliances, glass and hardware authored in the GLB; classify the remaining cabinet surfaces. */
-export function kitchenCabinetSurface(meshName: string, materialName: string): KitchenCabinetSurface | null {
+export function kitchenCabinetSurface(meshName: string, materialName: string, fallback: KitchenCabinetSurface | null = "carcass"): KitchenCabinetSurface | null {
   const name = `${meshName} ${materialName}`.toLocaleLowerCase();
   if (EXCLUDED_GLTF_SURFACES.some((token) => name.includes(token))) return null;
-  return FRONT_GLTF_SURFACES.some((token) => name.includes(token)) ? "front" : "carcass";
+  if (FRONT_GLTF_SURFACES.some((token) => name.includes(token))) return "front";
+  return CARCASS_GLTF_SURFACES.some((token) => name.includes(token)) ? "carcass" : fallback;
 }
 
 export function isKitchenMaterialTarget(meshName: string, materialName: string) {

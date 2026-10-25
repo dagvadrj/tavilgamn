@@ -1,0 +1,798 @@
+{
+  "source": "https://b2b-f.mn/mn",
+  "retrievedOn": "2026-10-22",
+  "materials": [
+    {
+      "id": "b2bf-f052-34c20d85c6",
+      "name": "B2B-F · F052 G5 Calais Travertine",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f052-34c20d85c6-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f052-st75-calais-travertine-wt"
+    },
+    {
+      "id": "b2bf-f205-3e9219ef4a",
+      "name": "B2B-F · F205 ST9 Anthracite Pietra Grigia",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f205-3e9219ef4a-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f205-st9-anthracite-pietra-grigia-splashback"
+    },
+    {
+      "id": "b2bf-f206-6b66c07acc",
+      "name": "B2B-F · F206 ST9 Black Pietra Grigia",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f206-6b66c07acc-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f206-st9-black-pietra-grigia-160202_f206_st9"
+    },
+    {
+      "id": "b2bf-f226-bb25b260dd",
+      "name": "B2B-F · F226 G1 Sand Beige Titanite",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f226-bb25b260dd-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f226-g1-sand-beige-titanite-wt"
+    },
+    {
+      "id": "b2bf-f228-d1e8a623de",
+      "name": "B2B-F · F228 G1 Anthracite Titanite",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f228-d1e8a623de-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f227-g1-anthracite-titanite-splashback"
+    },
+    {
+      "id": "b2bf-f235-28b060a71b",
+      "name": "B2B-F · F235 G6 Scivaro Slate",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f235-28b060a71b-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f235-g6-scivaro-slate-wt"
+    },
+    {
+      "id": "b2bf-f235-ade821a4a1",
+      "name": "B2B-F · F235 ST10 Scivaro Slate",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f235-ade821a4a1-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f235-st10-scivaro-slate-160100_f235_st10"
+    },
+    {
+      "id": "b2bf-f242-649c6c0d53",
+      "name": "B2B-F · F242 ST10 Anthracite Jura Slate",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f242-649c6c0d53-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f242-st10-anthracite-jura-slate-160202_f242_st10"
+    },
+    {
+      "id": "b2bf-f416-ab892e2d0d",
+      "name": "B2B-F · F416 ST10 Beige Textile",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f416-ab892e2d0d-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f416-st10-beige-textile-160100_f416_st10-ed7e"
+    },
+    {
+      "id": "b2bf-f417-b77af23bbd",
+      "name": "B2B-F · F417 ST10 Grey Textile",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f417-b77af23bbd-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f417-st10-grey-textile-160100_f417_st10"
+    },
+    {
+      "id": "b2bf-f500-f74aa6712a",
+      "name": "B2B-F · F500 ST20 Metallic Inox",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f500-f74aa6712a-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f500-st20-metallic-inox-160100_f500_st20-5edb"
+    },
+    {
+      "id": "b2bf-f527-5753aa6dbd",
+      "name": "B2B-F · F527 ST20 Golden Brushed Metal",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f527-5753aa6dbd-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f527-st20-golden-brushed-metal-160100_f527_st20-274e"
+    },
+    {
+      "id": "b2bf-f638-0d96a9bcb5",
+      "name": "B2B-F · F638 ST10 Chromix Silver",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f638-0d96a9bcb5-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f638-st16-chromix-silver-160100_f638_st16-7f6b"
+    },
+    {
+      "id": "b2bf-f638-f0df0bf736",
+      "name": "B2B-F · F638 ST16 Chromix Silver",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f638-f0df0bf736-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f638-st16-chromix-silver-160202_f638_st16"
+    },
+    {
+      "id": "b2bf-f685-d84a76cb82",
+      "name": "B2B-F · F685 ST10 Acapulco",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/f685-d84a76cb82-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/f685-st10-acapulco-160100_f685_st10-91c2"
+    },
+    {
+      "id": "b2bf-h050-01dac3d838",
+      "name": "B2B-F · H050 ST9 Natural Woodblocks",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h050-01dac3d838-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h050-st9-natural-woodblocks"
+    },
+    {
+      "id": "b2bf-h1180-8b2553db7c",
+      "name": "B2B-F · H1180 ST37 Natural Halifax Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1180-8b2553db7c-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h1180-st37-natural-halifax-oak-160202_h1180_st37"
+    },
+    {
+      "id": "b2bf-h1223-7c0ecbedb1",
+      "name": "B2B-F · H1223 ST19 Sevilla Ash",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1223-7c0ecbedb1-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h1223-st19-sevilla-ash-160100_h1223_st19-415d"
+    },
+    {
+      "id": "b2bf-h1227-f1b4502c9b",
+      "name": "B2B-F · H1227 TM12 Brown Abano Ash",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1227-f1b4502c9b-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h1227-tm12-brown-abano-ash-160100_h1227_tm12-d0da"
+    },
+    {
+      "id": "b2bf-h1228-385a5d1e6c",
+      "name": "B2B-F · H1228 TM12 Anthracite Abano Ash",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1228-385a5d1e6c-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h1228-tm12-anthracite-abano-ash-160100_h1228_tm12-55d1"
+    },
+    {
+      "id": "b2bf-h1303-c5a28c2e8c",
+      "name": "B2B-F · H1303 G2 Brown Belmont Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1303-c5a28c2e8c-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h1303-g2-brown-belmont-oak-wt"
+    },
+    {
+      "id": "b2bf-h1303-2ad75dfe36",
+      "name": "B2B-F · H1303 ST12 Brown Belmont Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1303-2ad75dfe36-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/160100_H1303_ST12"
+    },
+    {
+      "id": "b2bf-h1312-0bda24f84b",
+      "name": "B2B-F · H1312 ST10 Sand Beige Whiteriver Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1312-0bda24f84b-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h1312-st10-sand-beige-whiteriver-oak-160100_h1312_st10-0fa4"
+    },
+    {
+      "id": "b2bf-h1357-5bd4417890",
+      "name": "B2B-F · H1357 R6 Grey Beige Spree Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1357-5bd4417890-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h1357-r6-grey-beige-spree-oak-splashback"
+    },
+    {
+      "id": "b2bf-h1367-5b0f33facb",
+      "name": "B2B-F · H1367 ST40 Light Natural Casella Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1367-5b0f33facb-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/160100_h1367_st40_mdf"
+    },
+    {
+      "id": "b2bf-h1384-1db389db56",
+      "name": "B2B-F · H1384 ST40 White Casella Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1384-1db389db56-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h1384-st40-white-casella-oak-160100_h1384_st40-09b0"
+    },
+    {
+      "id": "b2bf-h1386-19ffccb4a5",
+      "name": "B2B-F · H1386 ST40 MDF Brown Casella Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1386-19ffccb4a5-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h1386-st40-brown-casella-oak-160100_h1386_st40_mdf"
+    },
+    {
+      "id": "b2bf-h1714-58ef28a6c5",
+      "name": "B2B-F · H1714 ST19 Lincoln Walnut",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h1714-58ef28a6c5-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h1714-st19-lincoln-walnut-160100_h1714_st19-12d2"
+    },
+    {
+      "id": "b2bf-h198-1224dbe033",
+      "name": "B2B-F · H198 ST10 Grey Vintage Wood",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h198-1224dbe033-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h198-st10-grey-vintage-wood-160202_h198_st10"
+    },
+    {
+      "id": "b2bf-h2033-2be85024d9",
+      "name": "B2B-F · H2033 ST10 Dark Hunton Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h2033-2be85024d9-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h2033-st10-dark-hunton-oak-160100_h2033_st10"
+    },
+    {
+      "id": "b2bf-h305-a32a8b3758",
+      "name": "B2B-F · H305 ST12 Natural Tonsberg Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h305-a32a8b3758-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h305-st12-natural-tonsberg-oak-160100_h305_st12-c5a8"
+    },
+    {
+      "id": "b2bf-h309-9f4fc70d7a",
+      "name": "B2B-F · H309 ST12 Brown Tonsberg Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h309-9f4fc70d7a-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h309-st12-brown-tonsberg-oak-160100_h309_st12-4a71"
+    },
+    {
+      "id": "b2bf-h3146-37d978ff24",
+      "name": "B2B-F · H3146 ST19 Beige Grey Lorenzo Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h3146-37d978ff24-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h3146-st19-beige-grey-lorenzo-oak-160100_h3146_st19-e221"
+    },
+    {
+      "id": "b2bf-h3158-eb901431a1",
+      "name": "B2B-F · H3158 ST19 Grey Vicenza Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h3158-eb901431a1-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h3158-st19-grey-vicenza-oak-160100_h3158_st19-cdd8"
+    },
+    {
+      "id": "b2bf-h3197-f55c4f2ab2",
+      "name": "B2B-F · H3197 ST19 Medium Grey Fineline",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h3197-f55c4f2ab2-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h3197-st19-medium-grey-fineline-160100_h3197_st19"
+    },
+    {
+      "id": "b2bf-h3303-cbca5e8cd8",
+      "name": "B2B-F · H3303 ST10 Natural Hamilton Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h3303-cbca5e8cd8-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h3303-st10-natural-hamilton-oak-160100_h3303_st10"
+    },
+    {
+      "id": "b2bf-h3349-8d6a6ed46d",
+      "name": "B2B-F · H3349 ST22 Kaisersberg Oak",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h3349-8d6a6ed46d-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h3349-st22-kaisersberg-oak-160302_h3349_st22"
+    },
+    {
+      "id": "b2bf-h3433-86b25655a1",
+      "name": "B2B-F · H3433 ST22 Polar Aland Pine",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h3433-86b25655a1-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h3433-st22-polar-aland-pine-160100_h3433_st22-6324"
+    },
+    {
+      "id": "b2bf-h3734-e3870f2971",
+      "name": "B2B-F · H3734 ST9 Natural Dijon Walnut",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h3734-e3870f2971-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h3734-st9-natural-dijon-walnut-160100_h3734_st9-608e"
+    },
+    {
+      "id": "b2bf-h3860-5a46cfce75",
+      "name": "B2B-F · H3860 ST9 Champagne Hard Maple",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/h3860-5a46cfce75-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/h3860-st9-champagne-hard-maple-160100_h3860_st9-99d6"
+    },
+    {
+      "id": "b2bf-u125-0361df7dd5",
+      "name": "B2B-F · U125 ST9 Sand yellow",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u125-0361df7dd5-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u125-st9-sand-yellow-160100_u125_st9-f68e"
+    },
+    {
+      "id": "b2bf-u201-32fbaa8e50",
+      "name": "B2B-F · U201 ST9 Pebble Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u201-32fbaa8e50-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u201-st9-pebble-grey-160100_u201_st9-3d9b"
+    },
+    {
+      "id": "b2bf-u340-f372993c27",
+      "name": "B2B-F · U340 ST9 Sorbet Orange",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u340-f372993c27-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u340-st9-sorbet-orange-160302_u340_st9"
+    },
+    {
+      "id": "b2bf-u599-0767f8a977",
+      "name": "B2B-F · U599 PM Indigo Blue",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u599-0767f8a977-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u599-pm-indigo-blue-160106_u599_pm"
+    },
+    {
+      "id": "b2bf-u599-29a7ac6b7b",
+      "name": "B2B-F · U599 ST9 Indigo Blue",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u599-29a7ac6b7b-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u599-st9-indigo-blue-160100_u599_st9-272a"
+    },
+    {
+      "id": "b2bf-u604-a4ce01a2b2",
+      "name": "B2B-F · U604 ST9 Reed Green",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u604-a4ce01a2b2-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u604-st9-reed-green-160100_u604_st9-d941"
+    },
+    {
+      "id": "b2bf-u626-8f34476dfd",
+      "name": "B2B-F · U626 ST9 Kiwi Green",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u626-8f34476dfd-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u626-st9-kiwi-green-160100_u626_st9-581b"
+    },
+    {
+      "id": "b2bf-u638-2d0b50cba0",
+      "name": "B2B-F · U638 ST9 Sage Green",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u638-2d0b50cba0-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u638-st9-sage-green-160100_u638_st9-edbf"
+    },
+    {
+      "id": "b2bf-u665-e93879635d",
+      "name": "B2B-F · U665 ST9 Stone Green",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u665-e93879635d-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u665-st9-stone-green-160100_u665_st9-2322"
+    },
+    {
+      "id": "b2bf-u702-5dbf7f26d0",
+      "name": "B2B-F · U702 G1 Cashmere Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u702-5dbf7f26d0-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u702-g1-cashmere-grey-splashback"
+    },
+    {
+      "id": "b2bf-u705-efac0bc577",
+      "name": "B2B-F · U705 ST9 Angora Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u705-efac0bc577-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/160103_c_u705_9"
+    },
+    {
+      "id": "b2bf-u727-83e0c2df68",
+      "name": "B2B-F · U727 PG Stone Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u727-83e0c2df68-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u727-pg-stone-grey-160106_u727_pg"
+    },
+    {
+      "id": "b2bf-u727-186c80abee",
+      "name": "B2B-F · U727 ST9 Stone Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u727-186c80abee-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u727-st9-stone-grey-160100_u727_st9-dc51"
+    },
+    {
+      "id": "b2bf-u732-49a15d9f13",
+      "name": "B2B-F · U732 PG Dust Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u732-49a15d9f13-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u732-pg-dust-grey-160106_u732_pg"
+    },
+    {
+      "id": "b2bf-u732-f5733d958f",
+      "name": "B2B-F · U732 PM Dust Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u732-f5733d958f-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u732-pm-dust-grey-160106_u732_pm"
+    },
+    {
+      "id": "b2bf-u732-fbd84e69a7",
+      "name": "B2B-F · U732 ST9 Dust Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u732-fbd84e69a7-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u732-st9-dust-grey-160100_u732_st9-a1f5"
+    },
+    {
+      "id": "b2bf-u740-98d0b07f6b",
+      "name": "B2B-F · U740 ST9 Dark Taupe",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u740-98d0b07f6b-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u740-st9-dark-taupe-160100_u740_st9-be80"
+    },
+    {
+      "id": "b2bf-u780-70f5a1a850",
+      "name": "B2B-F · U780 ST9 Monument Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u780-70f5a1a850-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u780-st9-monument-grey-160100_u780_st9-eebf"
+    },
+    {
+      "id": "b2bf-u960-aadfc31f45",
+      "name": "B2B-F · U960 ST9 Onyx Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u960-aadfc31f45-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u960-st9-onyx-grey-160100_u960_st9-e8b1"
+    },
+    {
+      "id": "b2bf-u961-22cf8128e1",
+      "name": "B2B-F · U961 PG Graphite Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u961-22cf8128e1-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u961-pg-graphite-grey-160106_u961_pg"
+    },
+    {
+      "id": "b2bf-u961-5561599887",
+      "name": "B2B-F · U961 PM Graphite Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u961-5561599887-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u961-pm-graphite-grey-160106_u961_pm"
+    },
+    {
+      "id": "b2bf-u963-228b189c31",
+      "name": "B2B-F · U963 ST9 Diamond Grey",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u963-228b189c31-design-2.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/160100_u963_st9_22mm"
+    },
+    {
+      "id": "b2bf-u999-e52f92ec81",
+      "name": "B2B-F · U999 ST7 Black",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/u999-e52f92ec81-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/u999-st7-black-160100_u999_st7-ea05"
+    },
+    {
+      "id": "b2bf-w1000-1156930c62",
+      "name": "B2B-F · W1000 G6 Premium White",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/w1000-1156930c62-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/w1000-g6-premium-white-splashback"
+    },
+    {
+      "id": "b2bf-w1100-d2601a84bc",
+      "name": "B2B-F · W1100 PG Alpine White",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/w1100-d2601a84bc-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/w1100-pg-alpine-white"
+    },
+    {
+      "id": "b2bf-w1100-cf2c0bd7dd",
+      "name": "B2B-F · W1100 PM Alpine White",
+      "surfaceKind": "general",
+      "baseColor": "#FFFFFF",
+      "roughness": 0.65,
+      "metalness": 0,
+      "texturePaths": {
+        "baseColor": "/materials/b2b-f/images/w1100-cf2c0bd7dd-design-1.webp"
+      },
+      "sourceUrl": "https://b2b-f.mn/mn/product/w1100-pm-alpine-white"
+    }
+  ]
+}

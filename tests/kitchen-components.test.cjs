@@ -141,7 +141,7 @@ test('saved component data rejects invalid categories, duplicate entries, incomp
 
 // Resolve the actual React mesh tree into Three objects; use real geometry, without WebGL.
 const { KitchenAssemblyMesh } = loadSource('tests/helpers/manufacturing-kitchen.tsx', {
-  react: { ...React, useMemo: fn => fn(), useEffect: () => {} },
+  react: { ...React, useMemo: fn => fn(), useEffect: () => {}, useState: () => [undefined, () => {}] },
   './kitchenTextures': { createKitchenTexture: () => null },
 });
 function scene(node, parent = new THREE.Group()) {

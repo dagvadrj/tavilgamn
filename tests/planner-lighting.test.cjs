@@ -115,7 +115,7 @@ test("daylight only adjusts environment strength while the one-shot IBL capture 
     "Drei's capture dependencies must remain unchanged",
   );
   assert.equal(day.props.frames, 1);
-  assert.equal(day.props.resolution, 128);
+  assert.equal(day.props.resolution, 256);
   assert.equal(day.props.files, undefined);
   assert.equal(day.props.preset, undefined);
   assert.equal(

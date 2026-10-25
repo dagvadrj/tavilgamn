@@ -368,3 +368,94 @@
 .room-simple .planner-transform input {
   min-height: 44px;
 }
+
+/* Keep the furniture visible while its compact action card is open. */
+
+@media (min-width: 1280px) {
+  .planner-workspace.planner-reference.planner-studio.room-simple {
+    --reference-header: 64px;
+    &.room-panel-open {
+      grid-template-columns: minmax(0, 1fr) 320px;
+    }
+    & .room-stage-actions {
+      top: 16px;
+      left: 20px;
+      right: 20px;
+    }
+    & .room-tools-rail {
+      top: 88px;
+      left: 20px;
+    }
+    & .planner-selection-toolbar:has(.planner-selection-name) {
+      top: 88px;
+      left: 120px;
+      right: auto;
+      bottom: auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 5px;
+      width: min(460px, calc(100% - 210px));
+      max-width: none;
+      padding: 10px;
+      border: 1px solid var(--room-border);
+      border-radius: 12px;
+      background: #fffffffa;
+      box-shadow: 0 4px 20px #17212b14;
+      transform: none;
+    }
+    & .planner-selection-toolbar:has(.planner-selection-name) > button {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      min-height: 52px;
+      padding: 7px 3px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      box-shadow: none;
+      color: var(--room-ink);
+      font-size: 11px;
+      line-height: 1.3;
+    }
+    & .planner-selection-toolbar > .planner-selection-name {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      justify-content: flex-start;
+      min-height: 32px;
+      max-width: none;
+      padding: 4px 6px 8px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+    & .planner-selection-toolbar:has(.planner-selection-name) > button:hover {
+      color: var(--room-accent);
+      background: #eef4ff;
+    }
+    & .planner-selection-toolbar:has(.planner-selection-name) > button:last-child:hover {
+      color: #b42318;
+      background: #fff1ef;
+    }
+    &.room-panel-open .planner-selection-toolbar {
+      display: none;
+    }
+    & .room-zoom-controls {
+      top: auto;
+      bottom: 104px;
+      right: 20px;
+      padding: 3px;
+      border: 1px solid var(--room-border);
+      border-radius: 12px;
+    }
+    & .room-zoom-controls button {
+      border-radius: 8px;
+    }
+    & .room-view-dock {
+      bottom: 20px;
+      padding: 5px;
+    }
+  }
+}

@@ -27,6 +27,9 @@ export function CameraNavigation({ request, bounds, plan = false, leftDrag = fal
       return;
     }
     if (!request || handled.current === request.id || !controls || !("target" in controls)) return;
+    // A focus click can reveal the hidden 3D canvas from the SVG plan. Wait
+    // for its measured viewport instead of consuming the request at zero width.
+    if (size.width < 1 || size.height < 1) return;
     // Apply after the view's camera rig/control swap has settled. Cancel stale work.
     pending.current = true;
     const frame = requestAnimationFrame(() => {

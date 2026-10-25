@@ -14,9 +14,11 @@ export function RoomMotionResolution({ dpr }: { dpr: number | [number, number] }
   const setDpr = useThree(state => state.setDpr);
   const invalidate = useThree(state => state.invalidate);
   const restingDpr = typeof dpr === "number" ? dpr : Math.max(dpr[0], Math.min(dpr[1], initialDpr));
-  // Lower the entire framebuffer, allowing texture mipmaps to soften naturally.
-  // A 1x mobile canvas also benefits; no texture mutation or extra blur pass.
-  const previewDpr = Math.min(restingDpr, Math.max(0.5, Math.min(0.85, restingDpr * 0.7)));
+  // Keep at least one sample per CSS pixel on desktop, so cabinet edges and
+  // handles stay legible while orbiting. Low-end 1x canvases keep a smaller budget.
+  const previewDpr = Math.min(restingDpr, Array.isArray(dpr) || restingDpr > 1
+    ? Math.max(1, Math.min(1.25, restingDpr * 0.75))
+    : Math.max(0.5, restingDpr * 0.85));
   useEffect(() => {
     if (initialDpr <= 0) return;
     setDpr(moving ? previewDpr : restingDpr);

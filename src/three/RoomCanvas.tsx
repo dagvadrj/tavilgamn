@@ -322,7 +322,7 @@ export function RoomCanvas({
         )}
         <color
           attach="background"
-          args={[solar.night ? "#252c38" : "#F3F4F6"]}
+          args={[solar.night ? ROOM_NIGHT_BACKDROP : ROOM_DAY_BACKDROP]}
         />
         <RoomLighting
           windowDaylight={false}

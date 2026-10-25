@@ -1,5 +1,6 @@
 import { applianceIssue } from "./plitka";
 import { roomContainsFootprint } from "./kitchenRoomOutline";
+import { kitchenCornerGeometry } from "./kitchenCornerGeometry";
 import { kitchenWallPanels } from "./kitchenWallPanels";
 import {
   roomWalls,
@@ -475,6 +476,7 @@ function subtractBoard<
 /** One board per contiguous straight run. At corners the first run owns the
  * shared material; the returning board is trimmed to an exact butt joint. */
 export function fitCountertops(kitchen: ModularKitchen): Countertop[] {
+  if (kitchen.countertopLayout?.mode === "manual") return kitchen.countertopLayout.panels;
   const surface = (c: ModularCabinet) => {
     const component = c.components?.find((item) => item.type === "worktop");
     return {
@@ -551,6 +553,9 @@ export function fitCountertops(kitchen: ModularKitchen): Countertop[] {
         pieces = pieces.flatMap((piece) => subtractBoard(piece, prior));
     fitted.push(...pieces);
   }
+  const corner = kitchenCornerGeometry(kitchen);
+  if (corner) fitted.push({ ...kitchen.countertop, id: `corner-top:${kitchen.cornerPlan!.side}`, cabinetIds: [],
+    width: corner.width, depth: corner.depth, position: corner.position });
   return fitted;
 }
 

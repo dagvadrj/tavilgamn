@@ -26,7 +26,7 @@ function replace(design, item, id = design.cabinets[0].id) {
 // Evaluate the actual shared React renderer with real Three geometries, materials,
 // and procedural textures. WebGL and a browser are unnecessary for these checks.
 const { KitchenAssemblyMesh } = loadSource('tests/helpers/manufacturing-kitchen.tsx', {
-  react: { ...React, useMemo: fn => fn(), useEffect: () => {} },
+  react: { ...React, useMemo: fn => fn(), useEffect: () => {}, useState: () => [undefined, () => {}] },
 });
 function scene(node, parent = new THREE.Group()) {
   for (const element of React.Children.toArray(node)) {

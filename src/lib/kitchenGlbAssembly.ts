@@ -121,6 +121,11 @@ export function parseKitchenGlbAssembly(
       if (typeof option.modelId !== "string" || !UUID.test(option.modelId)) fail("Эд ангийн GLB model ID буруу байна.");
       const result: KitchenGlbOption = { id: id(option.id), label: label(option.label, "Сонголтын нэр"), modelId: option.modelId as string };
       for (const key of ["style", "color"] as const) if (option[key] !== undefined) result[key] = label(option[key], key, 80);
+      if (option.materialId !== undefined) {
+        if (typeof option.materialId !== "string" || !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(option.materialId))
+          fail("Материалын code буруу байна.");
+        result.materialId = option.materialId as string;
+      }
       if (option.sizeMm !== undefined) {
         const size = object(option.sizeMm);
         if (![size.width, size.height, size.depth].every(n => typeof n === "number" && Number.isFinite(n) && n > 0 && n <= 10000)) fail("Эд ангийн хэмжээ 0–10000 мм байна.");

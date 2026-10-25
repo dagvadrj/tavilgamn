@@ -1,0 +1,75 @@
+[
+  {
+    "id": "98da0a97-ca78-4a06-ba14-c3ea4a1f0801",
+    "code": "BASE-1000",
+    "name": "1000мм доод шүүгээ",
+    "cabinetType": "base",
+    "widthMm": 1000,
+    "heightMm": 840,
+    "depthMm": 600,
+    "active": true,
+    "variants": [
+      {
+        "assetValidationIssues": [],
+        "frontProjectionMm": 0,
+        "physicalSize": false,
+        "furnitureModelId": "015e1644-a758-4fd2-9a11-a32d9108d76e",
+        "productId": "015e1644-a758-4fd2-9a11-a32d9108d76e",
+        "modelName": "BASE1000mm840mm598mm2h-Z596mm-B396mm",
+        "variantCode": "BASE-1000-2-DOORS",
+        "opening": "doors",
+        "doorCount": 2,
+        "drawerCount": 0,
+        "configuration": {},
+        "isDefault": true,
+        "sortOrder": 0,
+        "active": true,
+        "glbFile": "model-2e0089c6-4844-4e52-894a-d3896afb7aa6.glb",
+        "glbUrl": "/api/models/files/015e1644-a758-4fd2-9a11-a32d9108d76e/model-2e0089c6-4844-4e52-894a-d3896afb7aa6.glb",
+        "thumbnailUrl": "/api/models/files/015e1644-a758-4fd2-9a11-a32d9108d76e/thumbnail.jpg",
+        "previewGlbFile": null,
+        "previewGlbUrl": null,
+        "processingStatus": "ready"
+      }
+    ]
+  },
+  {
+    "id": "387a0bae-2314-45eb-8e82-dffbd45d5ad8",
+    "code": "WALL-800-H740-D598",
+    "name": "800мм дээд шүүгээ · 740 × 598 мм",
+    "cabinetType": "wall",
+    "widthMm": 800,
+    "heightMm": 740,
+    "depthMm": 598,
+    "active": true,
+    "variants": [
+      {
+        "assetValidationIssues": [],
+        "frontProjectionMm": 0,
+        "physicalSize": true,
+        "furnitureModelId": "f9dc384b-9e20-445b-9fc0-c23a561e92ef",
+        "productId": "f9dc384b-9e20-445b-9fc0-c23a561e92ef",
+        "modelName": "800мм дээд шүүгээ · 740 өндөртэй, 2 хаалгатай",
+        "variantCode": "WALL-800-H740-D598-2-DOORS",
+        "opening": "doors",
+        "doorCount": 2,
+        "drawerCount": 0,
+        "configuration": {
+          "catalogRoleCorrection": {
+            "to": "wall",
+            "from": "base"
+          }
+        },
+        "isDefault": false,
+        "sortOrder": 0,
+        "active": true,
+        "glbFile": "model-096a66ff-a812-436f-96b5-f30e9643f034.glb",
+        "glbUrl": "/api/models/files/f9dc384b-9e20-445b-9fc0-c23a561e92ef/model-096a66ff-a812-436f-96b5-f30e9643f034.glb",
+        "thumbnailUrl": "/api/models/files/f9dc384b-9e20-445b-9fc0-c23a561e92ef/thumbnail.png",
+        "previewGlbFile": null,
+        "previewGlbUrl": null,
+        "processingStatus": "ready"
+      }
+    ]
+  }
+]

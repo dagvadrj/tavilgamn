@@ -6,6 +6,9 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { instanceRepeatedModules } from "./instanceModules";
 import { configureModelTextureSampling } from "./modelTextureSampling";
+import { configureModelCutoutSampling } from "./modelCutoutSampling";
+import { configureModelDefaultMaterials } from "./modelDefaultMaterials";
+import { disposeKitchenTextureCoordinates } from "./kitchenTextureCoordinates";
 export interface ModelLoadMetrics {
   queuedAt: number;
   startedAt: number;
@@ -80,8 +83,10 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
     entry.promise = schedule(async () => {
       const startedAt = performance.now();
       const gltf = await owner.loader.loadAsync(url);
+      configureModelDefaultMaterials(gltf.scene, gltf.parser?.associations);
       configureModelTextureSampling(gltf.scene, renderer);
-      gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = true; object.receiveShadow = true; } });
+      configureModelCutoutSampling(gltf.scene, renderer);
+      gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = object.userData.applianceGlass !== true; object.receiveShadow = true; } });
       if (!gltf.animations.length && !options.preserveHierarchy) instanceRepeatedModules(gltf.scene);
       gltf.scene.updateMatrixWorld(true);
       let bounds = new THREE.Box3().setFromObject(gltf.scene);
@@ -134,5 +139,6 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
 }
 export function cloneModel(model: LoadedModel): LoadedModel { return { ...model, scene: clone(model.scene) as THREE.Group }; }
 export function disposeModelClone(model: LoadedModel) {
+  disposeKitchenTextureCoordinates(model.scene);
   model.scene.traverse(object => { if (object instanceof THREE.InstancedMesh) object.dispose(); });
 }

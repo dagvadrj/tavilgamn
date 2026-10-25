@@ -2,8 +2,20 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const THREE=require('three');
 const {loadSource}=require('./helpers/load-source.cjs');
-const {applyRoomCutaway,cutawayRaycast}=loadSource('src/three/roomCutaway.ts');
+const {applyRoomCutaway,cutawayRaycast,kitchenWallOutside}=loadSource('src/three/roomCutaway.ts');
 const {roomFloorFinish}=loadSource('src/three/roomFloorFinish.ts');
+
+test('kitchen wall cutaway stays stable near its plane and restores after crossing inside',()=>{
+  let outside=false;
+  for(const distance of [0,-.04,-.08,-.119,0,-.07]) {
+    outside=kitchenWallOutside(distance,outside);assert.equal(outside,false);
+  }
+  outside=kitchenWallOutside(-.13,outside);assert.equal(outside,true);
+  for(const distance of [-.06,0,.04,-.03,.059]) {
+    outside=kitchenWallOutside(distance,outside);assert.equal(outside,true);
+  }
+  assert.equal(kitchenWallOutside(.07,outside),false);
+});
 
 test('a hidden wall loses every color contribution, preserves physical shadows and restores authored transparency',()=>{
   const root=new THREE.Group(),trim=new THREE.Group();trim.userData.cutawayDecoration=true;

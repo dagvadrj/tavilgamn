@@ -18,6 +18,7 @@ import { kitchenSaveStatus } from "@/lib/kitchenSaveStatus";
 import { startPlannerNavigation } from "@/lib/plannerNavigation";
 
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
+import { pcmallAppliance } from "@/lib/pcmallAppliances";
 import "@/features/kitchen-planner/components/kitchen-editor.css";
 import "@/features/kitchen-planner/components/kitchen-flow.css";
 import "@/features/kitchen-planner/components/kitchen-stitch.css";
@@ -28,6 +29,10 @@ import {
 import { KitchenModelLibrary } from "@/features/kitchen-planner/components/KitchenModelLibrary";
 import { KitchenPlanWorkspace } from "@/features/kitchen-planner/components/KitchenPlanWorkspace";
 import { KitchenSelectionPanel } from "@/features/kitchen-planner/components/KitchenSelectionPanel";
+import { KitchenCountertopAppearance } from "@/features/kitchen-planner/components/KitchenCountertopAppearance";
+import { KitchenCornerPanel } from "@/features/kitchen-planner/components/KitchenCornerPanel";
+import { withKitchenCountertopMaterial } from "@/lib/kitchenCountertopMaterial";
+import { detachKitchenCountertops, updateKitchenCountertop, parseKitchenCountertopLayout } from "@/lib/kitchenCountertopLayout";
 import { KitchenSpaceEditor } from "@/features/kitchen-planner/components/KitchenSpaceEditor";
 import { KitchenStartDialog } from "@/features/kitchen-planner/components/KitchenStartDialog";
 import { Plan } from "@/features/kitchen-planner/components/PlannerPanels";
@@ -47,6 +52,7 @@ import "@/features/planner/components/planner-responsive.css";
 import { ViewportControls } from "@/features/planner/components/ViewportControls";
 import { EditorHistory } from "@/lib/editorHistory";
 import { FINISHES } from "@/lib/kitchen";
+import { withKitchenSupplierMaterials } from "@/lib/kitchenSupplierMaterials";
 import {
   arrangeKitchen,
   cloneKitchen,
@@ -81,12 +87,12 @@ import {
 } from "@/lib/kitchenExtras";
 import { type KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import {
-  applyKitchenCatalogVariants,
   kitchenVariantFromModule,
   kitchenVariantFits,
   type KitchenCatalogModule,
   type KitchenCatalogVariant,
 } from "@/lib/kitchenModuleCatalog";
+import { reconcileKitchenCatalog as applyKitchenCatalogVariants } from "@/lib/kitchenCatalogRoleCorrections";
 import {
   cabinetAxes,
   findCabinetSpace,
@@ -125,6 +131,8 @@ import { KitchenQuoteRequest } from "./KitchenQuoteRequest";
 import "@/features/kitchen-planner/components/kitchen-glb-workspace.css";
 import "@/features/kitchen-planner/components/kitchen-ikea-layout.css";
 import "@/features/kitchen-planner/styles/kitchen-studio-polish.css";
+import "@/features/kitchen-planner/styles/kitchen-interaction-stability.css";
+import "@/features/kitchen-planner/styles/kitchen-supplier-appliances.css";
 
 const FALLBACK_MATERIALS: KitchenMaterialDefinition[] = FINISHES.map(
   (finish) => ({
@@ -147,6 +155,8 @@ const KITCHEN_LAYOUT_OPTIONS = [
   ["double-side", "Хоёр талт"],
 ] as const;
 const KITCHEN_INSPECTOR_LABELS = {
+  corner: "Булангийн шийдэл",
+  countertop: "Тавцангийн материал",
   materials: "Загвар / Өнгө",
   catalog: "Шүүгээ, төхөөрөмж",
   room: "Өрөөний хэмжээ",
@@ -308,6 +318,12 @@ export function ModularKitchenPlanner({
     tone: "error" | "success";
   }>({ text: "", tone: "error" });
   const message = notice.text;
+  useEffect(() => {
+    if (notice.tone !== "success" || !notice.text) return;
+    const timer = setTimeout(() => setNotice(current => current === notice
+      ? { text: "", tone: "success" } : current), 4500);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const setMessage = useCallback(
     (text: string) => setNotice({ text, tone: "error" }),
     [],
@@ -495,9 +511,10 @@ export function ModularKitchenPlanner({
       ),
     [moduleCatalog],
   );
-  const selectableMaterials = materialCatalog.length
-    ? materialCatalog
-    : FALLBACK_MATERIALS;
+  const selectableMaterials = useMemo(
+    () => withKitchenSupplierMaterials(materialCatalog.length ? materialCatalog : FALLBACK_MATERIALS),
+    [materialCatalog],
+  );
   const materialDefinitions = useMemo(
     () =>
       Object.fromEntries(
@@ -637,21 +654,27 @@ export function ModularKitchenPlanner({
     if (commit(result)) selectCabinet(copy.id);
   }
   function addExtra(product: Product) {
-    if (busy) return;
+    if (busy) return false;
+    if ((design.extras?.length ?? 0) >= 40) { setMessage("Нэмэлт төхөөрөмж, тавилга 40 хүртэл байна."); return false; }
     if (!product.model) {
       setMessage("Энэ барааны 3D загвар хараахан бэлэн болоогүй.");
-      return;
+      return false;
     }
     const extra = findExtraSpace(
       design,
       extraFromProduct(product, crypto.randomUUID()),
     );
     if (!extra) {
-      setMessage("Энэ тавилга байрлуулах сул зай алга.");
-      return;
+      setMessage(pcmallAppliance(product.id)?.planningPlacement === "countertop"
+        ? "Төхөөрөмж багтах сул тавцан алга. Эхлээд тохирох хэмжээтэй тавцан байрлуулаарай."
+        : "Энэ тавилга байрлуулах сул зай алга.");
+      return false;
     }
-    if (commit({ ...design, extras: [...(design.extras ?? []), extra] }))
+    if (commit({ ...design, extras: [...(design.extras ?? []), extra] })) {
       selectCabinet(extra.id);
+      return true;
+    }
+    return false;
   }
   function changeExtra(extra: KitchenExtra) {
     commit({
@@ -759,6 +782,7 @@ export function ModularKitchenPlanner({
     try {
       parseKitchenSpace(next.room);
       parseBacksplashSettings(next.backsplashSettings, next.room);
+      parseKitchenCountertopLayout(next.countertopLayout, next);
       parseKitchenExtras(
         next.extras,
         new Set(next.cabinets.map((c) => c.id)),
@@ -785,6 +809,7 @@ export function ModularKitchenPlanner({
   }
   function selectCabinet(id: string) {
     setSheetExpanded(false);
+    if (fitCountertops(kitchen).some(top => top.id === id)) { editCountertop(id); return; }
     if (fitBacksplashes(kitchen).some((panel) => panel.id === id)) {
       setMessage(
         "Ханын хавтанг чирж зөөнө. Өндөр, хэмжээ, нарийн байрлалыг Тавцан хэсгээс тохируулна.",
@@ -795,7 +820,7 @@ export function ModularKitchenPlanner({
     setOpen(false);
     setCatalogOpen(false);
     setInspector(
-      design.extras?.some((extra) => extra.id === id) ? "extras" : "selection",
+      designRef.current.extras?.some((extra) => extra.id === id) ? "extras" : "selection",
     );
     setSettingsOpen(true);
   }
@@ -803,9 +828,9 @@ export function ModularKitchenPlanner({
     if (busy) return;
     setOpen(false);
 
-    setSettingsOpen(false);
     if (
       design.cabinets.some((c) => c.id === id) ||
+      fitCountertops(design).some(top => top.id === id) ||
       design.extras?.some((e) => e.id === id)
     )
       setSelectedId(id);
@@ -816,6 +841,13 @@ export function ModularKitchenPlanner({
   }
   function move(id: string, pose: CabinetPose) {
     if (!dragBase.current) return;
+    if (fitCountertops(dragBase.current).some(top => top.id === id)) {
+      const next = updateKitchenCountertop(dragBase.current, id, { position: pose });
+      draftRef.current = next;
+      setPreview(next);
+      setSnapMessage("Тавцанг боксоос тусдаа зөөж байна · Esc буцаах");
+      return;
+    }
     const base = dragBase.current,
       extra = base.extras?.find((e) => e.id === id);
     if (extra) {
@@ -894,6 +926,7 @@ export function ModularKitchenPlanner({
     setPreview(null);
     setDragging(false);
     setSnapMessage("");
+    if (inspectorTab === "countertop") setSettingsOpen(true);
   }
   function updateCabinet(patch: Partial<ModularCabinet>): string | undefined {
     if (!selected || busy) return "Өөрчлөлт дуусахыг хүлээнэ үү.";
@@ -954,6 +987,23 @@ export function ModularKitchenPlanner({
     }
     return commit(next) ? undefined : "Өөрчлөлтийг хийж чадсангүй.";
   }
+  function editCountertop(id?: string) {
+    if (busy) return;
+    setOpen(false);
+    setCatalogOpen(false);
+    setInspector("countertop");
+    setSettingsOpen(true);
+    setSelectedId(id ?? fitCountertops(designRef.current)[0]?.id ?? null);
+  }
+  function changeCountertopMaterial(id: string | undefined): string | undefined {
+    if (busy) return "Өөрчлөлт дуусахыг хүлээнэ үү.";
+    try {
+      return commit(withKitchenCountertopMaterial(designRef.current, id, materialDefinitions))
+        ? undefined : "Тавцангийн материалыг сольж чадсангүй. Байрлалын мэдэгдлийг шалгана уу.";
+    } catch (error) {
+      return (error as Error).message;
+    }
+  }
   function changeStage(stage: KitchenFlowStage) {
     if (setupStage === "equipment" && stage !== "equipment") {
       try {
@@ -986,6 +1036,7 @@ export function ModularKitchenPlanner({
   }
 
   function openToolbarTool(tool: KitchenToolbarTool) {
+    if (tool === "corner") { setOpen(false); setCatalogOpen(false); setInspector("corner"); setSettingsOpen(true); return; }
     setSuggestionsOpen(false);
     if (tool === "photo") {
       changeStage("finish");
@@ -1202,6 +1253,8 @@ export function ModularKitchenPlanner({
             ? catalogCategory === "appliances"
               ? "appliances"
               : "cabinets"
+            : inspector === "corner" && settingsOpen
+              ? "corner"
             : inspector === "extras" && settingsOpen
               ? extrasTab === "dining"
                 ? "dining"
@@ -1619,6 +1672,7 @@ export function ModularKitchenPlanner({
                     );
                     setSettingsOpen(false);
                   }}
+                  onSelectCountertop={editCountertop}
                   onStart={start}
                   onMove={move}
                   onEnd={() => finish()}
@@ -1827,7 +1881,18 @@ export function ModularKitchenPlanner({
             onClose={() => setSettingsOpen(false)}
           />
           {settingsOpen && plannerNotice(true)}
-          {selected &&
+          {inspector === "corner" ? <KitchenCornerPanel kitchen={design} disabled={busy} onClose={() => setSettingsOpen(false)}
+            onApply={next => { if (commit(next)) { setSelectedId(null); setOpen(false); setWorkspaceView("3d"); setMode("orbit"); setSuccessMessage("L булан, зайны хавтан болон тавцан байрлалаа."); } }} /> : inspector === "countertop" ? (
+            <KitchenCountertopAppearance kitchen={kitchen} selectedId={selectedId} materials={selectableMaterials}
+              disabled={busy} onChange={changeCountertopMaterial}
+              onSelect={setSelectedId}
+              onUpdate={(id, patch) => { if (!busy) { try { commit(updateKitchenCountertop(designRef.current, id, patch)); } catch (error) { setMessage((error as Error).message); } } }}
+              onLayout={manual => { if (!busy) commit(manual ? detachKitchenCountertops(designRef.current) : { ...designRef.current, countertopLayout: undefined }); }}
+              onMove={() => { if (!busy) { if (!commit(detachKitchenCountertops(designRef.current))) return; setWorkspaceView("3d"); setMode("move"); setSuccessMessage("Тавцан дээр дарж чирнэ. Боксууд байрандаа үлдэнэ."); } }}
+              onWall={(enabled, materialId) => busy ? "Өөрчлөлт дуусахыг хүлээнэ үү." : commit({ ...designRef.current, backsplash: enabled, backsplashMaterialId: materialId ?? designRef.current.backsplashMaterialId }) ? undefined : "Ханын өнгөлгөөг сольж чадсангүй."}
+              onBack={() => setInspector(selected ? "materials" : "catalog")}
+              onClose={() => setSettingsOpen(false)} />
+          ) : selected &&
           (inspector === "selection" || inspector === "materials") ? (
             <KitchenSelectionPanel
               key={`${selected.id}:${selected.variantId ?? ""}:${inspector}`}
@@ -1842,6 +1907,9 @@ export function ModularKitchenPlanner({
                 ]
               }
               modules={moduleCatalog}
+              materials={selectableMaterials}
+              onChangeAppearance={updateCabinet}
+              onEditCountertop={editCountertop}
               disabled={busy}
               initialMode={inspector === "materials" ? "modify" : "overview"}
               isOpen={open}
@@ -1903,6 +1971,11 @@ export function ModularKitchenPlanner({
                   initialTab={extrasTab}
                   products={kitchenAssets}
                   selected={selectedExtra}
+                  onFocus={() => {
+                    if (!selectedExtra) return;
+                    setWorkspaceView("3d"); setMode("orbit");
+                    setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: "focus", targetId: selectedExtra.id }));
+                  }}
                   room={design.room}
                   disabled={busy}
                   error={

@@ -4,7 +4,7 @@ const React=require('react');
 const {loadSource}=require('./helpers/load-source.cjs');
 const {createUnifiedKitchen}=loadSource('src/lib/kitchenAssembly.ts');
 const {KitchenTops}=loadSource('src/three/KitchenTops.tsx',{
- react:{...React,useMemo:fn=>fn(),useEffect(){}},
+ react:{...React,useMemo:fn=>fn(),useEffect(){},useState:()=>[undefined,()=>{}]},
  '@/three/kitchenTextures':{createKitchenTexture:()=>null},
 });
 function nodes(tree){
@@ -15,6 +15,7 @@ function nodes(tree){
 }
 test('production kitchen surfaces include continuous tops, real appliance cutouts and splashbacks without substitute wooden plinths',()=>{
  const kitchen=createUnifiedKitchen();
+ kitchen.backsplash=true;
  const all=nodes(KitchenTops({kitchen}));
  const tops=all.filter(n=>n.type==='extrudeGeometry');
  assert.ok(tops.length>0);

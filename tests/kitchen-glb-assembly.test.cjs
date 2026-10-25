@@ -24,12 +24,15 @@ test('part material overrides preserve UVs and isolate original geometry and chi
   const { applyKitchenPartMaterial } = loadSource('src/three/kitchenPartMaterial.ts');
   const { door, handle } = assets();
   const mesh = door.children[1], original = mesh.material, oldMap = new THREE.Texture(); original.map = oldMap;
+  original.normalScale.set(2,-2); original.bumpMap = new THREE.Texture();
   const uv = mesh.geometry.getAttribute('uv');
   const dispose = applyKitchenPartMaterial(door,{baseColor:'#ff0000',roughness:.2,metalness:.8},{});
   door.add(handle);
   assert.notEqual(mesh.material,original); assert.equal(mesh.material.map,null);
   assert.equal(mesh.material.color.getHexString(),'ff0000'); assert.equal(mesh.material.metalness,.8);
   assert.equal(original.map,oldMap); assert.equal(mesh.geometry.getAttribute('uv'),uv);
+  assert.deepEqual(mesh.material.normalScale.toArray(),[1,1]); assert.equal(mesh.material.bumpMap,null);
+  assert.deepEqual(original.normalScale.toArray(),[2,-2]); assert.ok(original.bumpMap);
   assert.equal(handle.children[0].material.color.getHexString(),'111111');
   dispose();
 });

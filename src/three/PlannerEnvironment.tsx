@@ -40,7 +40,7 @@ interface PlannerEnvironmentProps {
   daylight?: number;
 }
 
-/** A single local 128px IBL capture, with no remote HDR or animation loop. */
+/** One local reflection capture; enough detail for metal and polished cabinet fronts. */
 export const PlannerEnvironment = memo(function PlannerEnvironment({
   daylight = 1,
 }: PlannerEnvironmentProps) {
@@ -57,7 +57,7 @@ export const PlannerEnvironment = memo(function PlannerEnvironment({
   }, [scene, intensity, invalidate]);
 
   return (
-    <Environment resolution={128} frames={1} environmentIntensity={intensity}>
+    <Environment resolution={256} frames={1} environmentIntensity={intensity}>
       {reflectionStudio}
     </Environment>
   );

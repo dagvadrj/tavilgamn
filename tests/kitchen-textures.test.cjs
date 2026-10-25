@@ -7,7 +7,7 @@ const { createKitchenTexture } = loadSource('src/three/kitchenTextures.ts');
 test('procedural kitchen materials filter correctly when viewed from far away or at an angle', () => {
   for (const finish of ['oak', 'walnut', 'marble', 'concrete']) {
     const texture = createKitchenTexture(finish);
-    assert.equal(texture.image.width, 256);
+    assert.equal(texture.image.width, ['marble', 'concrete'].includes(finish) ? 512 : 256);
     assert.equal(texture.generateMipmaps, true);
     assert.equal(texture.minFilter, THREE.LinearMipmapLinearFilter);
     assert.equal(texture.colorSpace, THREE.SRGBColorSpace);

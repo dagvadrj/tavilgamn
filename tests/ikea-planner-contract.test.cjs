@@ -70,7 +70,7 @@ test('catalog responses retain failed physical validation so incompatible delive
   const rows = {
     kitchen_modules: [{ id: 'm', cabinet_type: 'base', width_mm: 600, height_mm: 840, depth_mm: 600, active: true }],
     kitchen_module_variants: [{ furniture_model_id: 'model', module_id: 'm', opening: 'doors', active: true, configuration: {} }],
-    furniture_models: [{ id: 'model', product_id: 'product', category: 'kitchen-cabinet', processing_status: 'ready', glb_path: 'delivery.glb',
+    kitchen_models: [{ id: 'model', product_id: 'product', category: 'kitchen-cabinet', processing_status: 'ready', glb_path: 'delivery.glb',
       glb_validation: { dimensions: { widthMm: 600, heightMm: 740, depthMm: 600 }, bottomCentered: true, transformsApplied: true } }],
   };
   const db = { from(table) { return { select() { return this; }, eq() { return this; }, order() { return this; }, in() { return this; },

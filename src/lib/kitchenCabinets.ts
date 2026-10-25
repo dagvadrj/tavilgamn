@@ -57,6 +57,7 @@ export interface KitchenWall { id: string; sourceWall?: KitchenSpaceItem["wall"]
 export interface CountertopSettings { thickness: number; frontOverhang: number; material: "laminate" | "granite" | "wood"; finish?: Finish; materialId?: string; color?: string }
 export interface Countertop extends CountertopSettings {
   id: string; cabinetIds: string[]; width: number; depth: number; position: CabinetPose;
+  cutoutAnchor?: CabinetPose;
 }
 export interface ModularKitchen {
   version: 1; room: KitchenRoom; cabinets: ModularCabinet[];
@@ -64,6 +65,9 @@ export interface ModularKitchen {
   layout?: KitchenLayout;
   wallClearance: number; countertop: CountertopSettings;
   backsplash?: boolean;
+  backsplashMaterialId?: string;
+  countertopLayout?: { mode: "manual"; panels: Countertop[] };
+  cornerPlan?: import("./kitchenCornerGeometry").KitchenCornerPlan;
 
   backsplashSettings?: { mode: "full-run" | "manual"; panels: { id: string; width: number; height: number; thickness: number; position: CabinetPose }[] };
 }

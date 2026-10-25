@@ -13,12 +13,11 @@ import { Edges, OrbitControls } from "@react-three/drei";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CameraMotionPreview } from "./CameraMotionPreview";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
-import { PlannerMotionShadows, RoomMotionResolution } from "./RoomMotionQuality";
+import { PlannerMotionShadows, RoomContactShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import {
   Plane,
   Object3D,
   Vector3,
-  PCFSoftShadowMap,
   type Group,
   type PerspectiveCamera,
 } from "three";
@@ -43,6 +42,8 @@ import { plannerLighting } from "@/lib/plannerLighting";
 import { ROOM_DAY_BACKDROP } from "@/lib/roomLighting";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
+import { applyCameraPose, cameraPose, cancelCameraTransition } from "@/lib/cameraTransition";
+import type { NavigationControls } from "@/lib/plannerCamera";
 import { CursorNavigation } from "./CursorNavigationBinding";
 import {
   SCENE_NAVIGATION_START,
@@ -59,6 +60,7 @@ export interface ModularSceneProps {
   interior?: boolean;
   cameraRequest?: CameraRequest;
   onSelect: (id: string) => void;
+  onSelectCountertop?: (id: string) => void;
   onDeselect?: () => void;
   onStart: (id: string) => void;
   onMove: (id: string, pose: CabinetPose) => void;
@@ -68,10 +70,10 @@ export interface ModularSceneProps {
   materialDefinitions?: Record<string, KitchenMaterialDefinition>;
 }
 function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
-  const { camera, size } = useThree();
+  const { camera, size, controls } = useThree();
   const fitted = useRef(false);
   useEffect(() => {
-    if (fitted.current) return;
+    if (fitted.current || !controls || !("target" in controls)) return;
     fitted.current = true;
     const perspective = camera as PerspectiveCamera;
     perspective.fov = PLANNER_CAMERA.fov;
@@ -88,16 +90,17 @@ function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
     camera.position
       .copy(target)
       .add(new Vector3(0.5, 0.85, 1).normalize().multiplyScalar(distance));
+    (controls as unknown as NavigationControls).target.copy(target);
     camera.lookAt(target);
     camera.updateProjectionMatrix();
-  }, [camera, focus, size.width, size.height]);
+  }, [camera, controls, focus, size.width, size.height]);
   return null;
 }
 type CaptureTarget = {
   setPointerCapture: (id: number) => void;
   releasePointerCapture: (id: number) => void;
 };
-function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
+function Scene(props: ModularSceneProps & { dpr: number | [number, number]; contactShadows: boolean }) {
   const { capture: registerCapture, kitchen, selectedId, mode } = props;
   // Stable while dragging; layout selection remounts this view to frame the new layout.
   const focus = useRef({
@@ -207,6 +210,12 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
     event.stopPropagation();
     props.onSelect(cabinet.id);
     if (mode !== "move") return;
+    cancelCameraTransition(camera as PerspectiveCamera);
+    if (controls && "target" in controls) {
+      const orbit = controls as unknown as NavigationControls;
+      // Clear residual orbit inertia at the current pose before fixing the drag plane.
+      applyCameraPose(camera as PerspectiveCamera, cameraPose(camera as PerspectiveCamera, orbit.target), orbit);
+    }
     const plane = new Plane(new Vector3(0, 1, 0), -event.point.y),
       point = new Vector3();
     if (!event.ray.intersectPlane(plane, point)) return;
@@ -253,7 +262,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
   }, [width, depth, roomHeight]);
   const shadowExtent = Math.max(3, Math.hypot(width, depth) / 2 + 0.5);
   const cameraTarget = props.cameraRequest?.targetId
-    ? kitchen.cabinets.find(
+    ? [...kitchen.cabinets, ...(kitchen.extras ?? [])].find(
         (cabinet) => cabinet.id === props.cameraRequest?.targetId,
       )
     : undefined;
@@ -263,16 +272,34 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
       <PlannerMotionShadows updatingLayout={dragActive || Boolean(props.open)} revision={kitchen} />
       <CanvasDiagnostics scene="modular-kitchen" />
       {!props.interior && <CameraFit focus={focus} />}
-      <color attach="background" args={["#f3f4f6"]} />
-      <ambientLight intensity={0.5} />
-      <hemisphereLight args={["#f7f9ff", "#b9a991", 0.85]} />
-      <directionalLight position={[-3, 4, -2]} intensity={0.45} color="#dfe9ff" />
+      <color attach="background" args={[ROOM_DAY_BACKDROP]} />
+      <PlannerEnvironment daylight={lighting.solar.daylight} />
+      <ambientLight color={lighting.ambientColor} intensity={lighting.ambientIntensity} />
+      <hemisphereLight args={[lighting.skyColor, lighting.groundColor, lighting.hemisphereIntensity]} />
+      <primitive object={sunlightTarget} />
+      {/* Broad interior fill keeps fronts readable when closed walls block the sun. */}
       <directionalLight
         castShadow
-        position={[2, 7, 4]}
-        intensity={1.8}
-        color="#fff4e6"
-        shadow-radius={4}
+        position={[width / 2, roomHeight * 0.9, depth * 0.85]}
+        target={sunlightTarget}
+        intensity={0.85}
+        color="#fffefb"
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-left={-shadowExtent}
+        shadow-camera-right={shadowExtent}
+        shadow-camera-top={shadowExtent}
+        shadow-camera-bottom={-shadowExtent}
+        shadow-camera-far={Math.max(12, shadowExtent * 3)}
+        shadow-normalBias={0.002}
+        shadow-bias={-0.0001}
+      />
+      <directionalLight
+        castShadow
+        position={[width / 2 + 3, roomHeight + 5, depth / 2 + 4]}
+        target={sunlightTarget}
+        intensity={lighting.sunlightIntensity}
+        color={lighting.sunColor}
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-left={-shadowExtent}
@@ -294,7 +321,6 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
           enableDamping
           dampingFactor={PLANNER_CAMERA.dampingFactor}
           rotateSpeed={PLANNER_CAMERA.rotateSpeed}
-          target={[focus.centerX / 1000, focus.h / 2, focus.centerZ / 1000]}
           minDistance={1}
           maxDistance={Math.max(18, Math.hypot(width, depth, roomHeight) * 4)}
           maxPolarAngle={Math.PI / 2.05}
@@ -326,15 +352,16 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
           }
         />
       )}
-      {!props.interior && <CursorNavigation smoothZoom />}
+      {!props.interior && <CursorNavigation smoothZoom enabled={!dragActive} />}
       {props.interior && (
         <KitchenInteriorView kitchen={kitchen} request={props.cameraRequest} />
       )}
-      <KitchenRoomShell room={kitchen.room} interior={props.interior} />
+      <KitchenRoomShell room={kitchen.room} interior={props.interior} interactionActive={dragActive} />
       <group
         ref={props.exportRoot}
         name="Kitchen"
         userData={{
+          roomContactCaster: true,
           kitchenExport: true,
           units: "meters",
           authoringUnits: "millimeters",
@@ -410,6 +437,9 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
           );
         })}
         <KitchenTops kitchen={kitchen} materialDefinitions={props.materialDefinitions}
+          onSelectCountertop={top => props.onSelectCountertop?.(top.id)}
+          onCountertopPointerDown={(event, top) => start(event, top)}
+          selectedId={props.selectedId}
           catalogApplianceIds={kitchen.cabinets.filter(c => props.variantModels?.[c.variantId ?? ""]?.glbFile && kitchenVariantMatchesRole(props.variantModels[c.variantId ?? ""], c)).map(c => c.id)} />
         {(kitchen.extras ?? []).map((extra) => (
           <group
@@ -440,6 +470,18 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number] }) {
           </group>
         ))}
       </group>
+      {props.contactShadows && (
+        <RoomContactShadows
+          updatingLayout={dragActive || Boolean(props.open)}
+          position={[width / 2, 0.003, depth / 2]}
+          opacity={0.32}
+          scale={Math.max(width, depth) * 1.15}
+          resolution={512}
+          blur={2}
+          far={1.4}
+          color="#4b4640"
+        />
+      )}
     </CameraMotionPreview>
   );
 }
@@ -470,9 +512,12 @@ export function ModularKitchenScene(props: ModularSceneProps) {
         shadows={performance.shadows}
         dpr={performance.dpr}
         frameloop="demand"
-        gl={{ preserveDrawingBuffer: true }}
-        onCreated={({ gl }) => { gl.shadowMap.type = PCFSoftShadowMap; }}
-        camera={{ position: [4, 5, 6], fov: 45 }}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: true }}
+        onCreated={({ gl }) => {
+          gl.setClearAlpha(0);
+          configurePlannerRenderer(gl);
+        }}
+        camera={{ position: [4, 5, 6], fov: PLANNER_CAMERA.fov }}
         onPointerMissed={() => props.onDeselect?.()}
         fallback={
           <p className="kp-viewer-message">
@@ -480,7 +525,7 @@ export function ModularKitchenScene(props: ModularSceneProps) {
           </p>
         }
       >
-        <Scene {...props} dpr={performance.dpr} />
+        <Scene {...props} dpr={performance.dpr} contactShadows={performance.contactShadows} />
       </Canvas>
     </SceneBoundary>
   );

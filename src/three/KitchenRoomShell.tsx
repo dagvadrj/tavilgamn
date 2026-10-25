@@ -29,7 +29,7 @@ import {
 } from "@/lib/roomRendering";
 import { useRoomMaterial } from "./roomMaterials";
 import { roomFloorFinish } from "./roomFloorFinish";
-import { applyRoomCutaway } from "./roomCutaway";
+import { applyRoomCutaway, kitchenWallOutside } from "./roomCutaway";
 import { animateToward } from "./demandAnimation";
 import { RoomDaylightFill } from "./RoomDaylightFill";
 import { useRoomPaintEnvironment } from "./useRoomPaintEnvironment";
@@ -49,6 +49,7 @@ function KitchenRoomWall({
   room,
   walls,
   interior,
+  interactionActive,
   color,
   contactTexture,
   paintEnvironment,
@@ -57,11 +58,13 @@ function KitchenRoomWall({
   room: KitchenRoom;
   walls: KitchenWall[];
   interior?: boolean;
+  interactionActive?: boolean;
   color: string;
   contactTexture: Texture;
   paintEnvironment: Texture | null;
 }) {
   const root = useRef<Group>(null);
+  const outside = useRef(false);
   const wallMesh = useRef<Mesh<BufferGeometry, MeshStandardMaterial[]>>(null);
   const transform = useMemo(
     () => kitchenWallTransform(wall, walls),
@@ -78,13 +81,13 @@ function KitchenRoomWall({
   const finish = useRoomMaterial("wall-paint", transform.length, height, color);
   useFrame(({ camera, invalidate }, delta) => {
     if (!root.current || !wallMesh.current) return;
-    const outside =
+    const distance =
       (camera.position.x - transform.x) * wall.inward.x +
-        (camera.position.z - transform.z) * wall.inward.z <
-      -0.06;
+        (camera.position.z - transform.z) * wall.inward.z;
+    if (!interactionActive) outside.current = kitchenWallOutside(distance, outside.current);
     const animation = animateToward(
       wallMesh.current.material[0].opacity,
-      !interior && outside ? 0 : 1,
+      !interior && outside.current ? 0 : 1,
       12,
       delta,
     );
@@ -274,9 +277,11 @@ function KitchenRoomWall({
 export function KitchenRoomShell({
   room,
   interior,
+  interactionActive,
 }: {
   room: KitchenRoom;
   interior?: boolean;
+  interactionActive?: boolean;
 }) {
   const floorGeometryKey = JSON.stringify([
     room.width,
@@ -399,6 +404,7 @@ export function KitchenRoomShell({
           walls={walls}
           room={structure}
           interior={interior}
+          interactionActive={interactionActive}
           contactTexture={contactTexture}
           paintEnvironment={paintEnvironment}
           color={

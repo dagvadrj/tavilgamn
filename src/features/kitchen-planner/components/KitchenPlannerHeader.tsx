@@ -7,6 +7,7 @@ import {
   Camera,
   Check,
   CookingPot,
+  CornerDownRight,
   PanelTop,
   Refrigerator,
   Ruler,
@@ -27,6 +28,7 @@ import { KitchenProjectName } from "./KitchenProjectName";
 import "./kitchen-project-header.css";
 
 export type KitchenToolbarTool =
+  | "corner"
   | "cabinets"
   | "appliances"
   | "dining"
@@ -36,6 +38,7 @@ export type KitchenToolbarTool =
   | "annotation";
 const tools = [
   { id: "cabinets", label: "Шүүгээ", icon: PanelTop },
+  { id: "corner", label: "Булан", icon: CornerDownRight },
   { id: "appliances", label: "Төхөөрөмж", icon: Refrigerator },
   { id: "dining", label: "Хоолны хэсэг", icon: Armchair },
   { id: "items", label: "Нэмэлт", icon: CookingPot },

@@ -5,7 +5,7 @@ const THREE = require("three");
 const { loadSource } = require("./helpers/load-source.cjs");
 
 // Run the real component's hooks and draw callbacks without needing a GPU.
-function harness(patch = {}) {
+function harness(patch = {}, textureAssets = {}) {
   const slots = [], requests = [], metrics = [], released = [];
   let cursor = 0, dirty = true, effects = [], frames = [], tree;
   let motion = null;
@@ -39,7 +39,10 @@ function harness(patch = {}) {
       return selector ? selector(state) : state;
     }, useFrame: fn => { frames.push(fn); } },
     "@react-three/drei": { Edges: () => null, Html: () => null },
-    "./kitchenMaterialTextures": { acquireKitchenMaterialTextures: () => ({ promise: Promise.resolve({}), release() {} }) },
+    "./kitchenMaterialTextures": { acquireKitchenMaterialTextures: paths => ({
+      promise: Promise.resolve(Object.fromEntries(Object.entries(paths ?? {}).flatMap(([kind,url]) => textureAssets[url] ? [[kind,textureAssets[url]]] : []))),
+      release() {},
+    }) },
     "@/lib/modelPerformance": { reportModelPerformance: metric => metrics.push(metric) },
     "./CameraMotionPreview": { useCameraMotionPreview: () => motion },
     "./modelLoader": {
@@ -82,6 +85,7 @@ function harness(patch = {}) {
     requests[index].resolve({ scene, triangles, animations,
       bounds: new THREE.Box3(new THREE.Vector3(-.5,0,-.5), new THREE.Vector3(.5,1,.5)),
       metrics: { queueMs: 0, loadDecodeMs: 10, resourceDurationMs: 8, encodedBodySize: 100 } });
+    return scene;
   }
   return { props, requests, metrics, released, root, flush, resolve,
     updateProps(patch) { Object.assign(props, patch); dirty = true; },
@@ -228,6 +232,65 @@ test("material-only updates stay pending until the new appearance is prepared", 
     assert.notEqual(run.primitive().props.object, original);
     assert.equal(run.tree.props.userData.deliveryReady, true);
   } finally { run.unmount(); }
+});
+
+test("failed finish textures retain the previous material instead of displaying an untextured replacement", async () => {
+  const originalError = console.error; console.error = () => {};
+  let errors = 0;
+  const run = harness({onError: () => errors++});
+  try {
+    await run.flush(); run.resolve(0); await run.flush();
+    const original = run.primitive().props.object;
+    run.updateProps({frontMaterial: {baseColor: '#bb905d', roughness: .6, metalness: 0, texturePaths: {baseColor: '/missing-wood.webp'}}});
+    await run.flush(); run.resolve(1); await run.flush();
+    assert.equal(run.primitive().props.object, original);
+    assert.equal(run.tree.props.userData.deliveryReady, false);
+    assert.equal(errors, 1);
+    assert.equal(run.released.length, 1, 'failed material delivery releases its model lease');
+  } finally {run.unmount(); console.error = originalError;}
+});
+
+test("a selected finish replaces old surface relief while preserving baked geometry occlusion", async () => {
+  const source = new THREE.MeshStandardMaterial({normalMap: new THREE.Texture(), bumpMap: new THREE.Texture(), aoMap: new THREE.Texture()});
+  source.normalScale.set(4, -3); source.normalMapType = THREE.ObjectSpaceNormalMap;
+  const normal = new THREE.Texture();
+  const run = harness({frontMaterial: {baseColor: '#eeeeee', roughness: .4, metalness: 0, texturePaths: {normal: '/paint-normal.webp'}}}, {'/paint-normal.webp': normal});
+  try {
+    await run.flush(); run.resolve(0, source); await run.flush();
+    const material = run.primitive().props.object.children[0].material;
+    assert.equal(material.normalMap, normal);
+    assert.deepEqual(material.normalScale.toArray(), [1, 1]);
+    assert.equal(material.normalMapType, THREE.TangentSpaceNormalMap);
+    assert.equal(material.bumpMap, null);
+    assert.equal(material.aoMap, source.aoMap);
+    assert.deepEqual(source.normalScale.toArray(), [4, -3]);
+    assert.ok(source.bumpMap);
+  } finally {run.unmount();}
+});
+
+test("repeated meshes reuse isolated materials without mixing front and carcass finishes", async () => {
+  const source = new THREE.MeshStandardMaterial({color: '#abcdef'});
+  const run = harness({
+    frontMaterial: {baseColor: '#ffffff', roughness: .3, metalness: 0, texturePaths: {}},
+    carcassMaterial: {baseColor: '#765432', roughness: .8, metalness: 0, texturePaths: {}},
+  });
+  let disposed = 0;
+  try {
+    await run.flush();
+    const scene = run.resolve(0, source);
+    const secondDoor = scene.children[0].clone(), carcass = scene.children[0].clone();
+    carcass.name = 'cabinet_box'; scene.add(secondDoor, carcass);
+    await run.flush();
+    const [first, second, box] = run.primitive().props.object.children;
+    assert.equal(first.material, second.material);
+    assert.notEqual(first.material, source);
+    assert.notEqual(first.material, box.material);
+    assert.equal(first.material.color.getHexString(), 'ffffff');
+    assert.equal(box.material.color.getHexString(), '765432');
+    assert.equal(source.color.getHexString(), 'abcdef');
+    first.material.addEventListener('dispose', () => disposed++);
+  } finally {run.unmount();}
+  assert.equal(disposed, 1);
 });
 
 test("camera and drag motion retain the identical delivery without extra leases, clones or metrics", async () => {

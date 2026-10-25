@@ -13,7 +13,7 @@ test('grazing-angle filtering respects the GPU limit and never changes texture c
   scene.add(new THREE.Mesh(new THREE.BoxGeometry(),material),new THREE.Mesh(new THREE.BoxGeometry(),material));
   const image=color.image,source=color.source,version=color.version;
   configureModelTextureSampling(scene,renderer(16));
-  assert.equal(color.anisotropy,4);assert.equal(normal.anisotropy,4);
+  assert.equal(color.anisotropy,8);assert.equal(normal.anisotropy,8);
   assert.equal(color.version,version+1,'shared textures update once');
   configureModelTextureSampling(scene,renderer(16));assert.equal(color.version,version+1);
   assert.equal(color.image,image);assert.equal(color.source,source);
@@ -29,7 +29,7 @@ test('nearest and no-mip samplers remain authored; compressed GPU textures can u
   compressed.magFilter=THREE.LinearFilter;compressed.minFilter=THREE.LinearMipmapLinearFilter;
   const scene=new THREE.Group();scene.add(new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshStandardMaterial({map:nearest,roughnessMap:noMips,normalMap:compressed})));
   configureModelTextureSampling(scene,renderer(8));
-  assert.equal(nearest.anisotropy,1);assert.equal(noMips.anisotropy,1);assert.equal(compressed.anisotropy,4);
+  assert.equal(nearest.anisotropy,1);assert.equal(noMips.anisotropy,1);assert.equal(compressed.anisotropy,8);
   configureModelTextureSampling(scene,{});assert.equal(compressed.anisotropy,1);
   configureModelTextureSampling(scene,renderer(NaN));assert.equal(compressed.anisotropy,1);
 });

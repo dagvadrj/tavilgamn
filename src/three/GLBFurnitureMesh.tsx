@@ -12,6 +12,9 @@ import {
   acquireKitchenMaterialTextures,
   type KitchenMaterialTextureSet,
 } from "./kitchenMaterialTextures";
+import { configureModelTextureSampling } from "./modelTextureSampling";
+import { kitchenSurfaceClassifier } from "./kitchenSurfaceClassification";
+import { prepareKitchenTextureCoordinates } from "./kitchenTextureCoordinates";
 
 import {
   acquireModel,
@@ -23,8 +26,12 @@ import { reportModelPerformance } from "@/lib/modelPerformance";
 import { registerModelFloorBand } from "./furnitureFloorBand";
 import { modelPlacement, modelSizeIssue } from "@/lib/modelPlacement";
 import { useKitchenOpenAnimation } from "./useKitchenOpenAnimation";
+import { prepareKitchenDoorMotion } from "./kitchenDoorMotion";
+import type { KitchenPartMotion } from "./kitchenGlbComposition";
 
 export interface GLBFurnitureMeshProps {
+  /** Keep separately paintable cabinet parts out of automatic mesh instancing. */
+  preserveHierarchy?: boolean;
   strictDimensions?: boolean;
   frontProjectionMm?: number;
   preservePhysicalSize?: boolean;
@@ -61,6 +68,7 @@ export interface GLBFurnitureMeshProps {
   /** Sample an authored opening animation; imported furniture is never rebuilt. */
   open?: boolean;
   openAnimation?: string;
+  cabinetOpening?: "doors" | "drawers";
 }
 type Display = {
   request: object;
@@ -71,15 +79,18 @@ type Display = {
   requestedAt: number;
   asset: LoadedModel;
   release: () => void;
+  motions?: KitchenPartMotion[];
 };
 function releaseDisplay(display: Display) {
+  const materials = new Set<THREE.Material>();
   display.asset.scene.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return;
     for (const material of Array.isArray(object.material)
       ? object.material
       : [object.material])
-      material.dispose();
+      materials.add(material);
   });
+  materials.forEach((material) => material.dispose());
   disposeModelClone(display.asset);
   display.release();
 }
@@ -90,10 +101,14 @@ function applyTextureSet(
 ) {
   material.map = textures.baseColor ?? null;
   material.normalMap = textures.normal ?? null;
+  material.normalMapType = THREE.TangentSpaceNormalMap;
+  material.normalScale.set(1, 1);
+  material.bumpMap = null;
   material.roughnessMap = textures.roughness ?? null;
   material.metalnessMap = textures.metalness ?? null;
 }
 export function GLBFurnitureMesh({
+  preserveHierarchy = false,
   modelId,
   basePath,
   glbFile,
@@ -118,6 +133,7 @@ export function GLBFurnitureMesh({
   trackFloorBand = false,
   open = false,
   openAnimation,
+  cabinetOpening,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
   const root = useRef<THREE.Group>(null);
@@ -162,6 +178,8 @@ export function GLBFurnitureMesh({
   // A retained model must not count as the newly requested delivery for exports.
   const request = useMemo(
     () => ({
+      preserveHierarchy,
+      cabinetOpening,
       enabled,
       base,
       glbFile,
@@ -184,6 +202,8 @@ export function GLBFurnitureMesh({
       frontProjectionMm,
     }),
     [
+      preserveHierarchy,
+      cabinetOpening,
       enabled,
       base,
       glbFile,
@@ -209,6 +229,8 @@ export function GLBFurnitureMesh({
 
   useEffect(() => {
     const {
+      preserveHierarchy,
+      cabinetOpening,
       enabled,
       base,
       glbFile,
@@ -241,7 +263,7 @@ export function GLBFurnitureMesh({
     const loadDelivery = async () => {
       const url = base + glbFile;
       const requestedAt = performance.now();
-      const lease = acquireModel(gl, url);
+      const lease = acquireModel(gl, url, { preserveHierarchy });
       const frontTextureLease =
         acquireKitchenMaterialTextures(frontTexturePaths);
       const carcassTextureLease =
@@ -254,6 +276,14 @@ export function GLBFurnitureMesh({
           carcassTextureLease.promise,
         ]);
         if (cancelled) return;
+        for (const [paths, textures] of [
+          [frontTexturePaths, frontTextures],
+          [carcassTexturePaths, carcassTextures],
+        ] as const) {
+          if (paths && Object.entries(paths).some(([kind, path]) =>
+            path && !textures[kind as keyof KitchenMaterialTextureSet]))
+            throw new Error("Сонгосон материалын texture ачаалж чадсангүй.");
+        }
         if (strictDimensions) {
           const issue = modelSizeIssue(asset.bounds, { w, h, d }, frontProjectionMm);
           if (issue) throw new Error(issue);
@@ -271,6 +301,8 @@ export function GLBFurnitureMesh({
             true,
           );
 
+        const materialClones = new Map<THREE.Material, Map<string, THREE.Material>>();
+        const classifySurface = front || carcass ? kitchenSurfaceClassifier(cloned.scene) : undefined;
         cloned.scene.traverse((object) => {
           if (!(object instanceof THREE.Mesh)) return;
 
@@ -278,6 +310,12 @@ export function GLBFurnitureMesh({
             ? object.material
             : [object.material];
           const clonedMaterials = materials.map((material) => {
+            const surface = classifySurface ? classifySurface(object, material) : kitchenCabinetSurface(object.name, material.name);
+            const appearance = front || carcass ? surface ?? "authored" : "authored";
+            const variants = materialClones.get(material) ?? new Map<string, THREE.Material>();
+            materialClones.set(material, variants);
+            const previous = variants.get(appearance);
+            if (previous) return previous;
             const clonedMaterial = material.clone();
             if (clonedMaterial instanceof THREE.MeshStandardMaterial) {
               // Preserve imported fabric grain, colour maps and baked occlusion.
@@ -290,10 +328,6 @@ export function GLBFurnitureMesh({
                 );
               // Preserve authored face culling. Forced DoubleSide exposes the
               // backs of overlapping scan surfaces at grazing camera angles.
-              const surface = kitchenCabinetSurface(
-                object.name,
-                clonedMaterial.name,
-              );
               const definition =
                 surface === "front"
                   ? front
@@ -322,13 +356,21 @@ export function GLBFurnitureMesh({
               }
               clonedMaterial.needsUpdate = true;
             }
+            variants.set(appearance, clonedMaterial);
             return clonedMaterial;
           });
           object.material = Array.isArray(object.material)
             ? clonedMaterials
             : clonedMaterials[0];
         });
+        // Replacement finishes are loaded outside the GLB and need the same
+        // hardware-bounded filtering as the authored material maps.
+        if (front || carcass) prepareKitchenTextureCoordinates(cloned.scene);
+        configureModelTextureSampling(cloned.scene, gl);
+        const motions = cabinetOpening && !cloned.animations?.some(clip => /^(open|opening)$/i.test(clip.name))
+          ? prepareKitchenDoorMotion(cloned.scene, cabinetOpening) : undefined;
         const next: Display = {
+          motions,
           request,
           dimensions: { w, h, d },
           preservePhysicalSize,
@@ -423,7 +465,7 @@ export function GLBFurnitureMesh({
         ? animation.name === openAnimation
         : /^(open|opening)$/i.test(animation.name),
     );
-  useKitchenOpenAnimation(ready?.asset.scene, openingClip, open);
+  useKitchenOpenAnimation(ready?.asset.scene, openingClip, open, openingClip ? undefined : ready?.motions);
   const size = ready?.asset.bounds.getSize(new THREE.Vector3());
   const origin = ready?.asset.bounds.getCenter(new THREE.Vector3());
   const valid = size && origin && Math.min(size.x, size.y, size.z) > 1e-9;

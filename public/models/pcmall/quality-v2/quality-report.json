@@ -1,0 +1,120 @@
+[
+  {
+    "type": "fridge",
+    "bytes": 104872,
+    "meshes": 6,
+    "triangles": 3216,
+    "dimensionsMm": [
+      595,
+      644,
+      1858
+    ],
+    "features": [
+      "soft-enamel-edges",
+      "door-gasket",
+      "pocket-grip"
+    ]
+  },
+  {
+    "type": "oven",
+    "bytes": 1146408,
+    "meshes": 18,
+    "triangles": 42450,
+    "dimensionsMm": [
+      595,
+      570,
+      595
+    ],
+    "features": [
+      "hollow-cavity",
+      "transparent-glass",
+      "wire-rack",
+      "baking-trays",
+      "convection-fan",
+      "satin-metal"
+    ]
+  },
+  {
+    "type": "cooktop",
+    "bytes": 477384,
+    "meshes": 3,
+    "triangles": 19728,
+    "dimensionsMm": [
+      592,
+      522,
+      47
+    ],
+    "features": [
+      "bevelled-glass",
+      "clearcoat",
+      "fine-control-markings"
+    ]
+  },
+  {
+    "type": "hood",
+    "bytes": 334276,
+    "meshes": 5,
+    "triangles": 10920,
+    "dimensionsMm": [
+      598,
+      470,
+      85
+    ],
+    "features": [
+      "open-filter",
+      "wire-grille",
+      "satin-metal"
+    ]
+  },
+  {
+    "type": "microwave",
+    "bytes": 414668,
+    "meshes": 11,
+    "triangles": 13074,
+    "dimensionsMm": [
+      489,
+      379,
+      275
+    ],
+    "features": [
+      "hollow-cavity",
+      "transparent-glass",
+      "turntable",
+      "door-mesh"
+    ]
+  },
+  {
+    "type": "dishwasher",
+    "bytes": 233896,
+    "meshes": 8,
+    "triangles": 8316,
+    "dimensionsMm": [
+      598,
+      550,
+      815
+    ],
+    "features": [
+      "panel-gaps",
+      "top-controls",
+      "satin-metal"
+    ]
+  },
+  {
+    "type": "washing-machine",
+    "bytes": 1140884,
+    "meshes": 19,
+    "triangles": 37884,
+    "dimensionsMm": [
+      600,
+      565,
+      850
+    ],
+    "features": [
+      "round-front-aperture",
+      "transparent-glass",
+      "stainless-drum",
+      "curved-gasket",
+      "satin-metal"
+    ]
+  }
+]

@@ -1,0 +1,35 @@
+{
+  "module": {
+    "id": "387a0bae-2314-45eb-8e82-dffbd45d5ad8",
+    "code": "BASE-800-H740-D598",
+    "name": "800мм 740 өндөртэй их бие (хөлгүй)",
+    "cabinet_type": "base",
+    "width_mm": 800,
+    "height_mm": 740,
+    "depth_mm": 598,
+    "active": true,
+    "created_at": "2026-10-01T13:47:13.764565+00:00",
+    "updated_at": "2026-10-01T13:47:13.764565+00:00"
+  },
+  "model": {
+    "id": "f9dc384b-9e20-445b-9fc0-c23a561e92ef",
+    "name": "800мм 740 өндөртэй 2 хаалгатай",
+    "cabinet_module_id": "387a0bae-2314-45eb-8e82-dffbd45d5ad8"
+  },
+  "variants": [
+    {
+      "furniture_model_id": "f9dc384b-9e20-445b-9fc0-c23a561e92ef",
+      "module_id": "387a0bae-2314-45eb-8e82-dffbd45d5ad8",
+      "variant_code": "BASE-800-H740-D598-2-DOORS",
+      "opening": "doors",
+      "door_count": 2,
+      "drawer_count": 0,
+      "configuration": {},
+      "is_default": false,
+      "sort_order": 0,
+      "active": true,
+      "created_at": "2026-10-01T14:41:11.67313+00:00",
+      "updated_at": "2026-10-19T09:55:38.105813+00:00"
+    }
+  ]
+}

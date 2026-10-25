@@ -1,5 +1,10 @@
 import * as THREE from "three";
 
+/** A small dead band prevents repeated wall fades while orbiting along its plane. */
+export function kitchenWallOutside(distance: number, wasOutside: boolean) {
+  return wasOutside ? distance < 0.06 : distance < -0.12;
+}
+
 type AuthoredSurface = Pick<THREE.Material, "opacity" | "transparent" | "depthWrite" | "colorWrite">;
 const authored = new WeakMap<THREE.Material, AuthoredSurface>();
 

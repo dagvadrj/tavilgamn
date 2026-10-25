@@ -25,6 +25,8 @@ import {
 import { fitBacksplashes, parseBacksplashSettings } from "./kitchenBacksplash";
 import { parseKitchenExtras } from "./kitchenExtras";
 import { parseKitchenSpace } from "./kitchenSpace";
+import { parseKitchenCountertopLayout } from "./kitchenCountertopLayout";
+import { parseKitchenCornerPlan } from "./kitchenCornerGeometry";
 
 export type SavedKitchen = {
   id: string;
@@ -62,7 +64,7 @@ export function createUnifiedKitchen(): ModularKitchen {
     return opening === "oven" ? [base] : [base, upper];
   });
   kitchen.countertop.finish = "marble";
-  kitchen.backsplash = true;
+  kitchen.backsplash = false;
   return resolveElevations(kitchen);
 }
 /** Closed, authored geometry bounds in mm. No viewer-dependent Box3 normalization. */
@@ -645,11 +647,17 @@ export function parseKitchen(value: unknown, options: { allowEmpty?: boolean } =
     raw.room,
   );
   const extras = parseKitchenExtras(raw.extras, ids, raw.room);
+  if (raw.backsplashMaterialId !== undefined && !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(raw.backsplashMaterialId)) throw new Error("Ханын өнгөлгөөний материалын код буруу байна.");
   const next: ModularKitchen = { version: 1, room: { width: raw.room.width, depth: raw.room.depth, height: raw.room.height, ...parseKitchenSpace(raw.room) }, cabinets, wallClearance: raw.wallClearance,
     countertop: { thickness: raw.countertop.thickness, frontOverhang: raw.countertop.frontOverhang, material: raw.countertop.material,
       ...(raw.countertop.finish ? { finish: raw.countertop.finish } : {}), ...(raw.countertop.materialId ? { materialId: raw.countertop.materialId } : {}),
       ...(raw.countertop.color ? { color: raw.countertop.color } : {}) }, backsplash: raw.backsplash === true,
-    ...(raw.layout ? { layout: raw.layout } : {}), ...(extras ? { extras } : {}), ...(backsplashSettings ? { backsplashSettings } : {}) };
+    ...(raw.layout ? { layout: raw.layout } : {}), ...(extras ? { extras } : {}), ...(backsplashSettings ? { backsplashSettings } : {}),
+    ...(raw.backsplashMaterialId ? { backsplashMaterialId: raw.backsplashMaterialId } : {}) };
+  const countertopLayout = parseKitchenCountertopLayout(raw.countertopLayout, next);
+  if (countertopLayout) next.countertopLayout = countertopLayout;
+  const cornerPlan = parseKitchenCornerPlan(raw.cornerPlan);
+  if (cornerPlan) next.cornerPlan = cornerPlan;
   const issue = placementIssues(next).find(i => i.severity === "error"); if (issue) throw new Error(issue.message);
   return next;
 }

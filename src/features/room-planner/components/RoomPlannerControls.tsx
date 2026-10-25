@@ -117,7 +117,7 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
       <div className="room-view-options" role="group" aria-label="Харах өнцөг" data-planner-tour="room-view">
         <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>3D</span></button>
         <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>2D</span></button>
-        <details className="room-dock-more room-side-views" ref={sideMenu}>
+        <details className="room-dock-more room-side-views" ref={sideMenu} onToggle={event => toggleMenu(event.currentTarget)}>
           <summary aria-label="Хажуугийн харагдац" data-active={SIDE_VIEWS.some(([side]) => side === view)}><Eye size={20}/><span>{SIDE_VIEWS.find(([side]) => side === view)?.[1] ?? "Хажуугаас"}</span><ChevronDown size={12}/></summary>
           <div className="room-dock-popover" role="group" aria-label="Харах талаа сонгох">
             {SIDE_VIEWS.map(([side, label]) => <button type="button" key={side} aria-pressed={view === side} onClick={() => {
@@ -129,7 +129,7 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
         <button type="button" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span>Дотроос</span></button>
       </div>
       <div className="room-dock-edit">
-        <details className="room-dock-more">
+        <details className="room-dock-more" onToggle={event => toggleMenu(event.currentTarget)}>
           <summary aria-label="Нэмэлт удирдлага"><MoreHorizontal size={22}/><ChevronDown size={12}/></summary>
           <div className="room-dock-popover">
             <button type="button" aria-pressed={dimensions} onClick={onDimensions}><Ruler size={17}/> Хэмжээс</button>

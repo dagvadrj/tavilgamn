@@ -7,7 +7,8 @@ export function fitBacksplashes(kitchen: ModularKitchen): BacksplashPanel[] {
   if (!kitchen.backsplash) return [];
   if (kitchen.backsplashSettings?.mode === "manual") return kitchen.backsplashSettings.panels;
   const panels: BacksplashPanel[] = [];
-  for (const top of fitCountertops(kitchen)) {
+  // Wall finishes stay on the wall when a detached worktop is moved.
+  for (const top of fitCountertops({ ...kitchen, countertopLayout: undefined })) {
     const { front } = cabinetAxes(top.position.rotation);
     const thickness = 12;
     const panel = { id: `backsplash:${top.id}`, width: top.width, height: kitchen.wallClearance, thickness,

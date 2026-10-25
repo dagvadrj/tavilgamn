@@ -49,6 +49,12 @@ export const KITCHEN_ASSET_TYPES = {
     partKind: "appliance",
     placement: "floor",
   },
+  "washing-machine": {
+    label: "Угаалгын машин",
+    group: "appliances",
+    partKind: "appliance",
+    placement: "floor",
+  },
   hood: {
     label: "Хиншүү сорогч",
     group: "appliances",

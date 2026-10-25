@@ -125,8 +125,8 @@ test('kitchen cutaway keeps wall shadows and settles its demand animation', () =
   mesh.castShadow = true;
   const root = new THREE.Group();
   root.add(mesh);
-  refs.at(-2).current = root;
-  refs.at(-1).current = mesh;
+  wallChildren[0].props.ref.current = root;
+  wallElement.props.ref.current = mesh;
   const frame = frames.at(-1);
   let invalidations = 0;
   const state = { camera: { position: new THREE.Vector3(2, 3, -2) }, invalidate: () => invalidations++ };

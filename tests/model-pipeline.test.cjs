@@ -34,7 +34,7 @@ test("3D canvas quality protects mobile and constrained devices", () => {
   assert.deepEqual(
     selectCanvasPerformance({ narrow: false, reducedMotion: false }),
     {
-      dpr: [1, 1.5],
+      dpr: [1, 2],
       shadows: true,
       contactShadows: true,
       autoRotate: true,

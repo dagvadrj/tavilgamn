@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { Product } from "@/lib/types";
 import { EXTRA_CATEGORIES, type KitchenExtra } from "@/lib/kitchenExtras";
 import { DimensionInput } from "./PlannerPanels";
+import { PcmallApplianceLibrary } from "./PcmallApplianceLibrary";
 import {
   assetGroup,
   kitchenAsset,
@@ -23,6 +24,7 @@ export function ExtrasPanel({
   onChange,
   onDelete,
   onDuplicate,
+  onFocus,
 }: {
   initialTab?: "dining" | "extra" | "appliances";
   products: Product[];
@@ -35,6 +37,7 @@ export function ExtrasPanel({
   onChange: (extra: KitchenExtra) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onFocus?: () => void;
 }) {
   const [tab, setTab] = useState<string>(initialTab),
     [query, setQuery] = useState("");
@@ -59,6 +62,7 @@ export function ExtrasPanel({
       {selected ? (
         <fieldset disabled={disabled} className="km-fields">
           <h2>{selected.name}</h2>
+          {onFocus && <button type="button" onClick={onFocus}>Төхөөрөмж рүү ойртуулах</button>}
           <p>
             {selected.width} × {selected.height} × {selected.depth} мм
           </p>
@@ -174,18 +178,19 @@ export function ExtrasPanel({
             )}
           </div>
           <label className="kp-field">
-            Тавилга хайх{" "}
+            {tab === "appliances" ? "Төхөөрөмж хайх" : "Тавилга хайх"}{" "}
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </label>
+          {tab === "appliances" && <PcmallApplianceLibrary disabled={disabled} onAdd={onAdd} query={query} />}
           {error ? (
             <p role="alert">{error}</p>
           ) : loading ? (
             !options.length && <PageSkeleton compact layout="rows" label="Каталог ачаалж байна…" />
-          ) : !options.length ? (
+          ) : !options.length && tab !== "appliances" ? (
             <p>Энэ төрөлд 3D загвартай бүтээгдэхүүн олдсонгүй.</p>
           ) : null}
           <div className="km-extras-list">

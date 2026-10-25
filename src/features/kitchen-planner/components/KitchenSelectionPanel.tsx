@@ -14,15 +14,20 @@ import type { Product } from "@/lib/types";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
 import "./kitchen-selection.css";
+import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
+import { KitchenCabinetAppearance, type CabinetAppearancePatch } from "./KitchenCabinetAppearance";
 
 type PanelMode = "overview" | "modify" | "replace" | "position";
-type PanelView = PanelMode | "style";
+type PanelView = PanelMode | "style" | "appearance";
 
 export type KitchenSelectionPanelProps = {
   cabinet: ModularCabinet;
   variant?: KitchenCatalogVariant;
   modules: KitchenCatalogModule[];
   products?: Product[];
+  materials?: KitchenMaterialDefinition[];
+  onChangeAppearance: (patch: CabinetAppearancePatch) => string | void;
+  onEditCountertop: () => void;
   onChangeSelections: (selections: Record<string, string>) => void;
   onReplace: (module: KitchenCatalogModule, variant: KitchenCatalogVariant) => void;
   onPositionChange: (position: CabinetPose) => void;
@@ -69,15 +74,16 @@ function PositionField({ label, value, unit, onCommit, disabled, min }: {
   </span></label>;
 }
 
-/** A product action bar sits above the left detail drawer. */
+/** Compact product actions expand into the detail drawer when editing. */
 export function KitchenSelectionPanel({
-  cabinet, variant, modules, products = [], onChangeSelections, onReplace, onPositionChange,
+  cabinet, variant, modules, products = [], materials = [], onChangeAppearance, onEditCountertop, onChangeSelections, onReplace, onPositionChange,
   onClose, onDuplicate, onRemove, onZoom, onToggleOpen,
   isOpen = false, disabled = false, initialMode = "overview",
 }: KitchenSelectionPanelProps) {
   const [view, setView] = useState<PanelView>(initialMode);
   const [slotId, setSlotId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const controllerHeadingRef = useRef<HTMLHeadingElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const assembly = useMemo(() => getKitchenGlbAssembly(variant?.configuration), [variant?.configuration]);
   const slots = assembly?.slots ?? [];
@@ -86,6 +92,7 @@ export function KitchenSelectionPanel({
   const name = variant?.modelName || cabinetLabel(cabinet);
   const product = products.find(p => p.id === variant?.productId);
   const hasMotion = slots.some(slot => Boolean(slot.motion)) || Boolean(assembly?.openAnimation) ||
+    Boolean(variant?.glbFile && !assembly && ["doors", "drawers"].includes(variant.opening)) ||
     (typeof variant?.configuration.openAnimation === "string" && Boolean(variant.configuration.openAnimation.trim()));
   const alternatives = useMemo(() => similarKitchenVariants(modules, cabinet, Number.MAX_SAFE_INTEGER), [modules, cabinet]);
   const exactAlternatives = alternatives.filter(({ module, variant: item }) =>
@@ -98,7 +105,10 @@ export function KitchenSelectionPanel({
   const filteredOptions = selectedSlot?.options.filter(option =>
     `${option.label} ${option.style ?? ""} ${option.color ?? ""}`.toLocaleLowerCase().includes(queryLower)) ?? [];
 
-  useEffect(() => { headingRef.current?.focus({ preventScroll: true }); }, [view, slotId]);
+  useEffect(() => {
+    const heading = view === "overview" ? controllerHeadingRef.current : headingRef.current;
+    heading?.focus({ preventScroll: true });
+  }, [view, slotId]);
 
   function navigate(next: PanelView, nextSlot: string | null = null) {
     setQuery("");
@@ -106,7 +116,7 @@ export function KitchenSelectionPanel({
     setView(next);
   }
   function back() {
-    if (view === "style") navigate("modify");
+    if (view === "style" || view === "appearance") navigate("modify");
     else if (view !== "overview") navigate("overview");
     else onClose();
   }
@@ -115,7 +125,7 @@ export function KitchenSelectionPanel({
   }
   function prefetch(url?: string | null) { if (url) void prefetchModel(url); }
 
-  const viewTitle = view === "style" ? "Загвар / Өнгө" : view === "replace" ? "Тавилга солих" :
+  const viewTitle = view === "appearance" ? "Боксын өнгө / Материал" : view === "style" ? "Загвар / Өнгө" : view === "replace" ? "Тавилга солих" :
     view === "position" ? "Байрлал" : view === "modify" ? "Тавилга өөрчлөх" : "Сонгосон тавилга";
   const openTitle = hasMotion ? (isOpen ? "Хаалга, шургуулгыг хаах" : "Хаалга, шургуулгыг нээх") :
     "Энэ загвар нээх хөдөлгөөнгүй";
@@ -124,7 +134,7 @@ export function KitchenSelectionPanel({
     onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); back(); } }}>
     <div className="ksp-controller">
       <header className="ksp-controller-heading">
-        <strong>{variant?.variantCode || cabinetLabel(cabinet)}</strong>
+        <h2 ref={controllerHeadingRef} tabIndex={-1} className="ksp-controller-title">{variant?.variantCode || cabinetLabel(cabinet)}</h2>
         <button type="button" className="ksp-icon-button" onClick={onClose} aria-label="Тавилгын удирдлагыг хаах" title="Хаах"><X size={16} /></button>
       </header>
       <div className="ksp-product">
@@ -137,6 +147,7 @@ export function KitchenSelectionPanel({
       </div>
       <div className="ksp-actions" role="group" aria-label="Тавилгын үйлдлүүд">
         <Action icon={Pencil} label="Өөрчлөх" title="Тавилгын хэсэг, загвар, өнгийг өөрчлөх" active={view === "modify"} disabled={disabled} onClick={() => navigate("modify")} />
+        <Action icon={Paintbrush} label="Материал" title="Боксын өнгө, хавтангийн хээг солих" active={view === "appearance"} disabled={disabled} onClick={() => navigate("appearance")} />
         <Action icon={ArrowLeftRight} label="Солих" title="Өөр тавилгаар солих" disabled={disabled} onClick={() => navigate("replace")} />
         <Action icon={DoorOpen} label={isOpen ? "Хаах" : "Нээх"} title={openTitle} disabled={disabled || !hasMotion} active={isOpen} onClick={onToggleOpen} />
         <Action icon={ZoomIn} label="Ойртуулах" title="Сонгосон тавилга руу ойртуулах" onClick={onZoom} />
@@ -157,9 +168,13 @@ export function KitchenSelectionPanel({
       {(view === "overview" || view === "modify") && <>
         <div className="ksp-section-heading"><h3>{view === "modify" ? "Хэсэг бүрийг өөрчлөх" : "Тавилгын хэсгүүд"}</h3>{slots.length > 0 && <span>{slots.length}</span>}</div>
         <div className="ksp-option-list">
+          <button type="button" className="ksp-option ksp-option--whole" disabled={disabled} onClick={() => navigate("appearance")}>
+            <span className="ksp-option-icon"><Paintbrush size={20} /></span>
+            <span className="ksp-option-info"><strong>Боксын өнгө / Материал</strong><span>Их бие, фасадын өнгийг солих</span></span><ChevronRight size={16} />
+          </button>
           <button type="button" className="ksp-option ksp-option--whole" disabled={disabled} onClick={() => navigate("style")}>
             <span className="ksp-option-icon"><Paintbrush size={20} /></span>
-            <span className="ksp-option-info"><strong>Загвар / Өнгө</strong><span>Тавилгын бэлэн хувилбар</span></span><ChevronRight size={16} />
+            <span className="ksp-option-info"><strong>Бэлэн загвар</strong><span>Тавилгын бэлэн хувилбар</span></span><ChevronRight size={16} />
           </button>
           {slots.map(slot => {
             const choice = resolveKitchenPartOption(slot, selections);
@@ -175,10 +190,12 @@ export function KitchenSelectionPanel({
             </div>;
           })}
         </div>
-        {!slots.length && <p className="ksp-note">Энэ тавилгын хэсгүүдийг тусад нь солих боломжгүй. Загвар / Өнгө сонголтоос бэлэн хувилбар сонгоорой.</p>}
+        {!slots.length && <p className="ksp-note">Хавтангийн хээ, өнгийг Боксын өнгө / Материал цэсээр солино. Бэлэн загвар цэсээр тавилгын өөр хувилбар сонгоно.</p>}
         {view === "overview" && <button type="button" className="ksp-primary" disabled={disabled} onClick={() => navigate("modify")}><Pencil size={16} />Тавилга өөрчлөх</button>}
         <div className="ksp-dimensions"><h3>Хэмжээ</h3><dl><div><dt>Өргөн</dt><dd>{cabinet.width} мм</dd></div><div><dt>Гүн</dt><dd>{cabinet.depth} мм</dd></div><div><dt>Өндөр</dt><dd>{cabinet.height} мм</dd></div></dl></div>
       </>}
+
+      {view === "appearance" && <KitchenCabinetAppearance cabinet={cabinet} materials={materials} disabled={disabled} onChange={onChangeAppearance} onEditCountertop={onEditCountertop} />}
 
       {(view === "style" || view === "replace") && <>
         <div className="ksp-choice-intro"><p>{view === "replace" ? "Шинэ тавилга сонгоно уу" : selectedSlot?.label || "Тавилгын бэлэн хувилбар"}</p>

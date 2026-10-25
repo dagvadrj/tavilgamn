@@ -169,6 +169,24 @@ test('pending navigation is interrupted before RAF and stale requests never repl
   } finally {h.dispose();controls.dispose();global.window=oldWindow;global.requestAnimationFrame=oldRAF;global.cancelAnimationFrame=oldCancel;}
 });
 
+test('focusing from a hidden plan waits for a measured 3D viewport and consumes the request once',()=>{
+ const oldWindow=global.window,oldRAF=global.requestAnimationFrame,oldCancel=global.cancelAnimationFrame;
+ const frames=new Map();let id=0;
+ global.window={matchMedia:()=>({matches:false})};global.requestAnimationFrame=fn=>{frames.set(++id,fn);return id;};global.cancelAnimationFrame=id=>frames.delete(id);
+ const h=hookHarness(),{camera,controls,surface}=fixture();
+ const state={camera,controls,gl:{domElement:surface},size:{width:0,height:600},invalidate(){}};
+ const {CameraNavigation}=loadSource('src/three/CameraNavigation.tsx',{react:h.react,'@react-three/fiber':{useThree:()=>state},'@/lib/cameraTransition':transition});
+ const request={id:1,action:'focus'},bounds={width:.595,depth:.57,height:.595,centerX:3.2,centerY:.2975,centerZ:.3};
+ const render=()=>h.render(()=>CameraNavigation({request,bounds}));
+ try{
+  const before=camera.position.clone();render();assert.equal(frames.size,0);near(camera.position,before);
+  state.size={width:1200,height:600};render();assert.equal(frames.size,1);
+  const work=[...frames.values()];frames.clear();work.forEach(fn=>fn());transition.advanceCameraTransition(camera,controls,Infinity);
+  near(controls.target,new THREE.Vector3(3.2,.2975,.3));assert.ok(camera.position.distanceTo(controls.target)<3);
+  state.size={width:1300,height:600};render();assert.equal(frames.size,0);
+ }finally{h.dispose();controls.dispose();global.window=oldWindow;global.requestAnimationFrame=oldRAF;global.cancelAnimationFrame=oldCancel;}
+});
+
 test('controller cancels on user input, honours live reduced-motion changes and removes listeners on unmount', () => {
   const oldWindow=global.window,media=new Surface();media.matches=false;global.window={matchMedia:()=>media};
   const h=hookHarness(),{camera,controls,surface}=fixture();let tick,invalidations=0;

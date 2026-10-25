@@ -35,7 +35,7 @@ export function selectCanvasPerformance(input: {
     (input.deviceMemory !== undefined && input.deviceMemory <= 4);
 
   return {
-    dpr: constrained ? 1 : [1, 1.5],
+    dpr: constrained ? 1 : [1, 2],
     shadows: !constrained,
     contactShadows: !constrained,
     autoRotate: !input.reducedMotion && !constrained,
@@ -43,7 +43,7 @@ export function selectCanvasPerformance(input: {
 }
 
 const DESKTOP_DEFAULT: CanvasPerformance = {
-  dpr: [1, 1.5],
+  dpr: [1, 2],
   shadows: true,
   contactShadows: true,
   autoRotate: true,

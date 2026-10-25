@@ -7,7 +7,9 @@ export function configureModelTextureSampling(
 ) {
   const supported = renderer.capabilities?.getMaxAnisotropy?.() ?? 1;
   const maximum = Number.isFinite(supported) ? Math.max(1, supported) : 1;
-  const budget = Math.min(4, maximum);
+  // Wood grain and fabric are commonly seen at grazing angles in the planner.
+  // Eight taps improve those surfaces while remaining bounded on mobile GPUs.
+  const budget = Math.min(8, maximum);
   const textures = new Set<THREE.Texture>();
   scene.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return;
