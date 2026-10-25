@@ -1,0 +1,375 @@
+.scroll-room {
+  --room-header-height: 0px;
+  position: relative;
+  height: 580svh;
+  margin-top: calc(-1 * var(--room-header-height));
+  color: #fff;
+  background: #dcd8cf;
+}
+
+.scroll-room-stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 560px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.scroll-room-scene,
+.scroll-room-shade,
+.scroll-room-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.scroll-room-scene {
+  z-index: 0;
+}
+
+.scroll-room-poster {
+  object-fit: cover;
+}
+
+.scroll-room-shade {
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(90deg, #152020b8, #15202068 30%, transparent 65%), linear-gradient(0deg, #142024b0, transparent 24%);
+}
+
+.scroll-room-copy {
+  position: absolute;
+  left: max(36px, calc((100% - 1280px) / 2));
+  top: 32%;
+  z-index: 6;
+  width: min(470px, 37%);
+  pointer-events: none;
+}
+
+.scroll-room-copy h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(34px, 4.1vw, 62px);
+  line-height: 1.09;
+  letter-spacing: -1.9px;
+  font-weight: 550;
+  white-space: pre-line;
+  text-wrap: balance;
+  text-shadow: 0 2px 24px #15202030;
+}
+
+.scroll-room-copy > p {
+  max-width: 400px;
+  margin: 24px 0;
+  color: #f0f2f1;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.scroll-room-actions,
+.scroll-room-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.scroll-room-actions,
+.scroll-room-tools {
+  pointer-events: auto;
+}
+
+.scroll-room-product-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 16px;
+  color: white;
+  font-size: 12px;
+  pointer-events: auto;
+}
+
+.scroll-room-actions > button:not(.home-button),
+.scroll-room-tools button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #ffffff60;
+  border-radius: 8px;
+  color: #fff;
+  background: #1b282b65;
+  backdrop-filter: blur(12px);
+  font-size: 12px;
+}
+
+.scroll-room-actions .home-button {
+  min-height: 48px;
+  background: #126fba;
+  border-color: #126fba;
+}
+
+.scroll-room-actions .home-button-secondary {
+  color: white;
+  background: #26333150;
+  border-color: #ffffff70;
+  backdrop-filter: blur(8px);
+}
+
+.scroll-room-tools {
+  position: absolute;
+  top: calc(var(--room-header-height) + 20px);
+  right: 28px;
+  z-index: 8;
+}
+
+.scroll-room-footer {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(760px, calc(100% - 64px));
+  z-index: 8;
+}
+
+.scroll-room-footer nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.scroll-room-footer nav button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 4px;
+  color: #f5f7f6;
+  border: 0;
+  border-bottom: 2px solid #ffffff45;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.scroll-room-footer nav button span {
+  opacity: 0.65;
+}
+
+.scroll-room-footer nav button[aria-current] {
+  color: #91d3ff;
+  border-color: #73c5ff;
+}
+
+.scroll-room-status {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  min-height: 30px;
+  margin-top: 10px;
+  color: #f4f5f3;
+  font-size: 11px;
+  text-align: center;
+}
+
+.scroll-room-status button {
+  text-decoration: underline;
+}
+
+.scroll-room-hotspot {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #ffffffa0;
+  border-radius: 30px;
+  color: #1f353b;
+  background: #ffffffed;
+  box-shadow: 0 4px 24px #18252730;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.scroll-room-hotspot span {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  outline: 1px solid #1a779c;
+  background: #1a779c;
+}
+
+.scroll-room-details {
+  position: absolute;
+  top: max(130px, 22%);
+  right: 32px;
+  z-index: 10;
+  width: 300px;
+  max-height: calc(100% - 260px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px;
+  border: 1px solid #ffffff9c;
+  border-radius: 16px;
+  background: #f9faf5f2;
+  color: #20364a;
+  box-shadow: 0 20px 60px #15202035;
+  backdrop-filter: blur(20px);
+}
+
+.scroll-room-details {
+  width: 360px;
+  padding-top: 42px;
+}
+
+.scroll-room-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+
+.scroll-room-details > span {
+  font-size: 12px;
+  color: #657782;
+}
+
+.scroll-room-details h2 {
+  margin: 10px 0 16px;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.scroll-room-details p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.scroll-room-details dt {
+  margin-top: 16px;
+  font-size: 11px;
+  color: #657782;
+}
+
+.scroll-room-details dd {
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+
+.scroll-room-details .home-button {
+  margin-top: 24px;
+}
+
+/* This attribute exists only during the hero tour. The header's design is unchanged. */
+
+.store-header[data-room-tour="true"] {
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 350ms ease;
+}
+
+.site-ui.shop-shell .store-header[data-room-tour="true"] {
+  position: sticky;
+  top: 0;
+}
+
+.store-header[data-room-hidden="true"] {
+  transform: translateY(-105%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scroll-room[data-reduced="true"] {
+  height: 100svh;
+  min-height: 560px;
+}
+
+.scroll-room[data-reduced="true"] .scroll-room-stage {
+  position: relative;
+}
+
+@media (max-width: 767px) {
+  .scroll-room {
+    height: 500svh;
+  }
+  .scroll-room-stage {
+    min-height: 540px;
+  }
+  .scroll-room-copy {
+    left: 22px;
+    top: calc(var(--room-header-height) + 96px);
+    width: calc(100% - 44px);
+  }
+  .scroll-room-copy h1 {
+    max-width: 330px;
+    font-size: clamp(30px, 7.5vw, 44px);
+    letter-spacing: -1px;
+  }
+  .scroll-room-copy > p {
+    max-width: 310px;
+    margin: 16px 0;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .scroll-room-shade {
+    background: linear-gradient(180deg, #132025a8, #13202528 45%, transparent 70%, #142024bb);
+  }
+  .scroll-room-tools {
+    top: calc(var(--room-header-height) + 12px);
+    right: 18px;
+    gap: 6px;
+  }
+  .scroll-room-tools button {
+    padding: 9px 11px;
+    font-size: 11px;
+  }
+  .scroll-room-actions {
+    gap: 8px;
+  }
+  .scroll-room-actions .home-button {
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+  .scroll-room-footer {
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    width: calc(100% - 28px);
+  }
+  .scroll-room-footer nav {
+    gap: 8px;
+  }
+  .scroll-room-footer nav button {
+    flex-direction: column;
+    gap: 3px;
+    font-size: 10px;
+    padding: 6px 2px;
+  }
+  .scroll-room-status {
+    font-size: 10px;
+    min-height: 24px;
+  }
+  .scroll-room-hotspot {
+    display: none;
+  }
+  .scroll-room-details {
+    top: calc(var(--room-header-height) + 70px);
+    right: 14px;
+    width: calc(100% - 28px);
+    max-height: calc(100% - var(--room-header-height) - 180px);
+    padding: 40px 20px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-header[data-room-tour="true"] {
+    transition: none;
+  }
+}

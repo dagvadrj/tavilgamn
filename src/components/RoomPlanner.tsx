@@ -177,12 +177,6 @@ const RoomCanvas = dynamic(
   { ssr: false, loading: () => <PlannerSkeleton /> },
 );
 
-const ROOM_OPTIONS: { id: RoomSize; label: string; sub: string }[] = [
-  { id: "40", label: "40 м² орон сууц", sub: "6.3 × 6.3 м" },
-  { id: "80", label: "80 м² орон сууц", sub: "8.9 × 8.9 м" },
-  { id: "120", label: "120 м² байшин", sub: "11 × 11 м" },
-];
-
 const STATIC_PRESETS: CustomInterior[] = [
   {
     id: "tvfurniture",
@@ -3396,11 +3390,6 @@ function RoomPlannerEditor() {
                   <option value="custom" disabled>
                     Өөрийн хэмжээ · {current.width} × {current.depth} м
                   </option>
-                  {ROOM_OPTIONS.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.label}
-                    </option>
-                  ))}
                 </select>
                 {allPresets.map((preset) => (
                   <button
