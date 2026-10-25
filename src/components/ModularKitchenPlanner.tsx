@@ -15,6 +15,7 @@ import { KitchenDesignSuggestions } from "@/features/kitchen-planner/components/
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { PlannerTour } from "@/features/planner/components/PlannerTour";
 import { kitchenSaveStatus } from "@/lib/kitchenSaveStatus";
+import { startPlannerNavigation } from "@/lib/plannerNavigation";
 
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
 import "@/features/kitchen-planner/components/kitchen-editor.css";

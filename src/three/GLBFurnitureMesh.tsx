@@ -22,6 +22,7 @@ import {
 import { reportModelPerformance } from "@/lib/modelPerformance";
 import { registerModelFloorBand } from "./furnitureFloorBand";
 import { modelPlacement, modelSizeIssue } from "@/lib/modelPlacement";
+import { useKitchenOpenAnimation } from "./useKitchenOpenAnimation";
 
 export interface GLBFurnitureMeshProps {
   strictDimensions?: boolean;

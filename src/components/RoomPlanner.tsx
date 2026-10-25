@@ -1,5 +1,6 @@
 "use client";
 import { PageSkeleton } from "@/components/PageSkeleton";
+import { PlannerViewport } from "@/features/planner/components/PlannerViewport";
 import { RoomPlannerSignIn } from "@/features/room-planner/components/RoomPlannerSignIn";
 import { trackProduct3d } from "@/lib/productEngagement";
 import {

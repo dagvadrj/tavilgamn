@@ -250,6 +250,7 @@ export function roomPlacementContext(
     }
   const room: PlacementRoom = {
     ...active,
+    allowFurnitureOverlap: true,
     openingZones: floors.flatMap(f => {
       const shared = connectionGeometry(f.r, rooms, design.connections ?? []);
       return roomOpeningZones({ ...f.r, openings: [...shared.visibleOpenings, ...shared.openings] }).map(zone => ({ ...zone,

@@ -16,6 +16,7 @@ import { openingWorldTransform } from "@/lib/roomOpenings";
 
 export type PlacementRoom = RoomShape & {
   openingZones?: OpeningZone[];
+  allowFurnitureOverlap?: boolean;
   placementGeometry?: Pick<
     RoomGeometry,
     "bounds" | "voids" | "segments" | "connected" | "simple"
