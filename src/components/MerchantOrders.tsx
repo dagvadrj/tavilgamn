@@ -1,7 +1,7 @@
 "use client";
 import { PageSkeleton } from "@/components/PageSkeleton";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -11,7 +11,7 @@ import {
   Truck,
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
-import { merchantRequest } from "@/features/merchant/merchantApi";
+import { useMerchantResource } from "@/features/merchant/useMerchantResource";
 import { useAuth } from "@/store/auth";
 import { formatPrice } from "@/lib/format";
 import type { DeliveryAddress, OrderLine } from "@/lib/orders";
@@ -56,43 +56,12 @@ export function MerchantOrders({
   onDelivery?: () => void;
 }) {
   const [page, setPage] = useState(0);
-  const [refresh, setRefresh] = useState(0);
-  const [result, setResult] = useState<{
+  const resource = useMerchantResource<{
     orders: MerchantOrder[];
     hasMore: boolean;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    const controller = new AbortController();
-    let active = true;
-    setLoading(true);
-    setError(null);
-    setResult(null);
-    void (async () => {
-      try {
-        const data = await merchantRequest<{ orders: MerchantOrder[]; hasMore: boolean }>(
-          `/api/merchant/orders?page=${page}`,
-          owner,
-          { signal: controller.signal },
-        );
-        if (active && isOwner(owner)) setResult(data);
-      } catch (reason) {
-        if (active)
-          setError(
-            reason instanceof Error
-              ? reason.message
-              : "Захиалгыг ачаалж чадсангүй.",
-          );
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [owner, page, refresh]);
+  }>(owner, `/api/merchant/orders?page=${page}`);
+  const { data: result, error, refresh } = resource;
+  const loading = resource.loading && !result;
   return (
     <section>
       <div className="merchant-section-heading">
@@ -105,7 +74,7 @@ export function MerchantOrders({
         <button
           className="btn-ghost"
           disabled={loading}
-          onClick={() => setRefresh((value) => value + 1)}
+          onClick={() => refresh()}
         >
           <RefreshCw size={16} />
           Шинэчлэх
@@ -131,17 +100,7 @@ export function MerchantOrders({
               owner={owner}
               order={order}
               onDelivery={onDelivery}
-              onUpdated={(status) =>
-                setResult(
-                  (current) =>
-                    current && {
-                      ...current,
-                      orders: current.orders.map((item) =>
-                        item.id === order.id ? { ...item, status } : item,
-                      ),
-                    },
-                )
-              }
+              onUpdated={refresh}
             />
           ))}
         </div>

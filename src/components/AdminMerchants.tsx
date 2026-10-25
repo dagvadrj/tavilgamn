@@ -16,9 +16,11 @@ import {
   Store,
   TrendingUp,
 } from "lucide-react";
+import { readAdminResource } from "@/features/dashboard/useAdminResource";
 import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
 import { STORE_TYPES } from "@/lib/storeTypes";
+import { AnimatedNumber } from "@/features/dashboard/AnimatedNumber";
 
 type MerchantOverview = {
   id: string;
@@ -68,15 +70,7 @@ function MerchantPanel({ owner }: { owner: string }) {
     let active = true;
     setLoading(true);
     setError(null);
-    authFetch("/api/admin/merchants", { signal: controller.signal }, owner)
-      .then(async (response) => {
-        const data = await response.json().catch(() => null);
-        if (!response.ok)
-          throw new Error(
-            data?.error ?? "Merchant мэдээллийг ачаалж чадсангүй.",
-          );
-        return data;
-      })
+    readAdminResource<{merchants: MerchantOverview[]}>(owner, "/api/admin/merchants", refresh > 0)
       .then((data) => {
         if (
           active &&
@@ -186,28 +180,30 @@ function MerchantPanel({ owner }: { owner: string }) {
         <MerchantStat
           icon={Store}
           label="Нийт Merchant"
-          value={loading ? "—" : `${merchants.length} дэлгүүр`}
+          value={loading ? null : merchants.length}
+          suffix=" дэлгүүр"
           detail={`${totals.active} идэвхтэй · ${totals.featured} Featured`}
         />
         <MerchantStat
           icon={TrendingUp}
           label="Нийт борлуулалт (GMV)"
-          value={loading ? "—" : money(totals.gross)}
+          value={loading ? null : totals.gross.toString()}
+          money
           detail="Төлөгдсөн захиалгууд"
         />
         <MerchantStat
           icon={BadgeDollarSign}
           label="Платформ орлого (Fee)"
-          value={loading ? "—" : money(totals.platform)}
+          value={loading ? null : totals.platform.toString()}
+          money
           detail={`Цэвэр шилжүүлэг: ${money(totals.net)}`}
           featured
         />
         <MerchantStat
           icon={Box}
           label="3D загвар хүсэлт"
-          value={
-            loading ? "—" : `${totals.requests.toLocaleString("mn-MN")} хүсэлт`
-          }
+          value={loading ? null : totals.requests.toString()}
+          suffix=" хүсэлт"
           detail="Дэлгүүрүүдийн нийт хүсэлт"
         />
         <article className="reference-kpi reference-spotlight">
@@ -598,12 +594,16 @@ function MerchantStat({
   value,
   detail,
   featured = false,
+  money = false,
+  suffix = "",
 }: {
   icon: typeof Store;
   label: string;
-  value: string;
+  value: string | number | null;
   detail: string;
   featured?: boolean;
+  money?: boolean;
+  suffix?: string;
 }) {
   return (
     <article className={`reference-kpi ${featured ? "is-featured" : ""}`}>
@@ -611,7 +611,16 @@ function MerchantStat({
         <span>{label}</span>
         <Icon size={18} />
       </div>
-      <strong>{value}</strong>
+      <strong>
+        {value === null ? (
+          "—"
+        ) : (
+          <>
+            <AnimatedNumber value={value} money={money} />
+            {suffix}
+          </>
+        )}
+      </strong>
       <small>{detail}</small>
     </article>
   );

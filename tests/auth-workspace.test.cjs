@@ -182,14 +182,13 @@ test("OAuth callback waits for auth initialization, preserves checkout, and hand
   assert.deepEqual(routed, []);
 });
 
-test("dashboard headers and settings use profile callbacks without storefront account links", () => {
+test("dashboard keeps profile in the sidebar without duplicate header controls", () => {
   let opens = 0;
   for (const [file, component] of [["src/components/AdminHeader.tsx", "AdminHeader"]]) {
     const Header = loadSource(file)[component];
     const tree = Header({ userName: "Test", storeName: "Store", onProfile: () => opens++, onSettings() {}, onProducts() {}, onMessages() {}, onQuotes() {}, onToggleSidebar() {}, onToggleMenu() {} });
     const profile = elements(tree, node => node.type === "button" && node.props["aria-label"]?.includes("миний бүртгэл"))[0];
-    assert.ok(profile);
-    profile.props.onClick();
+    assert.equal(profile, undefined);
     assert.equal(elements(tree, node => node.props.href === "/account").length, 0);
   }
   const { MerchantSidebar } = loadSource("src/components/MerchantSidebar.tsx");
@@ -198,5 +197,5 @@ test("dashboard headers and settings use profile callbacks without storefront ac
   assert.ok(profile);
   profile.props.onClick();
   assert.equal(elements(sidebar, node => node.props.href === "/account").length, 0);
-  assert.equal(opens, 2);
+  assert.equal(opens, 1);
 });

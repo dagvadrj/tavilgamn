@@ -9,6 +9,7 @@ import { CatalogStatus } from "./CatalogStatus";
 import { hasAvailableStock } from "@/lib/inventory";
 import { hasProductOffer } from "@/lib/catalogPresentation";
 import { matchesProductSearch } from "@/lib/productSearch";
+import { productFacet } from "@/lib/catalogFacets";
 import { Box, Tag, SlidersHorizontal } from "lucide-react";
 
 export function CatalogProducts({
@@ -17,12 +18,14 @@ export function CatalogProducts({
   initialSort,
   initialOffers = false,
   onReset,
+  facet = "",
 }: {
   query: string;
   categories: Category[];
   initialSort?: string;
   initialOffers?: boolean;
   onReset?: () => void;
+  facet?: string;
 }) {
   const catalog = useCatalog();
   const [page, setPage] = useState(1);
@@ -31,14 +34,27 @@ export function CatalogProducts({
   const [maxPrice, setMaxPrice] = useState("");
   const [offersOnly, setOffersOnly] = useState(initialOffers);
   const [modelsOnly, setModelsOnly] = useState(false);
-  useEffect(() => { setSort(initialSort === "new" ? "new" : "featured"); }, [initialSort]);
-  useEffect(() => { setOffersOnly(initialOffers); }, [initialOffers]);
+  useEffect(() => {
+    setSort(initialSort === "new" ? "new" : "featured");
+  }, [initialSort]);
+  useEffect(() => {
+    setOffersOnly(initialOffers);
+  }, [initialOffers]);
 
   const categoryKey = [...categories].sort().join(",");
 
   useEffect(() => {
     setPage(1);
-  }, [query, categoryKey, sort, minPrice, maxPrice, offersOnly, modelsOnly]);
+  }, [
+    query,
+    categoryKey,
+    facet,
+    sort,
+    minPrice,
+    maxPrice,
+    offersOnly,
+    modelsOnly,
+  ]);
 
   if (!catalog.ready) {
     return (
@@ -55,6 +71,7 @@ export function CatalogProducts({
     (product) =>
       hasAvailableStock(product) &&
       (!categories.length || categories.includes(product.category)) &&
+      (!facet || productFacet(product) === facet) &&
       (!minPrice || product.basePrice >= Number(minPrice)) &&
       (!maxPrice || product.basePrice <= Number(maxPrice)) &&
       (!offersOnly || hasProductOffer(product, checkedAt)) &&
@@ -80,7 +97,9 @@ export function CatalogProducts({
   return (
     <section className="mb-10" aria-label="Тавилга">
       <div className="catalog-toolbar">
-        <h2>Тавилга <span aria-live="polite">{filtered.length} илэрц</span></h2>
+        <h2>
+          Тавилга <span aria-live="polite">{filtered.length} илэрц</span>
+        </h2>
         <select
           aria-label="Бараа эрэмбэлэх"
           className="min-h-11 rounded-xl border border-[#111111]/15 bg-[#FFFFFF] px-3 text-sm"
@@ -95,24 +114,102 @@ export function CatalogProducts({
         </select>
       </div>
       <div className="catalog-quick-filters" aria-label="Нэмэлт шүүлтүүр">
-        <button type="button" aria-pressed={!offersOnly && !modelsOnly} onClick={() => { setOffersOnly(false); setModelsOnly(false); }}>Бүх сонголт</button>
-        <button type="button" aria-pressed={offersOnly} onClick={() => setOffersOnly(value => !value)}><Tag size={14} aria-hidden="true" /> Хямдрал, урамшуулал</button>
-        <button type="button" aria-pressed={modelsOnly} onClick={() => setModelsOnly(value => !value)}><Box size={14} aria-hidden="true" /> 3D загвартай</button>
+        <button
+          type="button"
+          aria-pressed={!offersOnly && !modelsOnly}
+          onClick={() => {
+            setOffersOnly(false);
+            setModelsOnly(false);
+          }}
+        >
+          Бүх сонголт
+        </button>
+        <button
+          type="button"
+          aria-pressed={offersOnly}
+          onClick={() => setOffersOnly((value) => !value)}
+        >
+          <Tag size={14} aria-hidden="true" /> Хямдрал, урамшуулал
+        </button>
+        <button
+          type="button"
+          aria-pressed={modelsOnly}
+          onClick={() => setModelsOnly((value) => !value)}
+        >
+          <Box size={14} aria-hidden="true" /> 3D загвартай
+        </button>
         <details className="catalog-price-filter">
-          <summary><SlidersHorizontal size={14} aria-hidden="true" /> Үнийн хүрээ{minPrice || maxPrice ? " · сонгосон" : ""}</summary>
+          <summary>
+            <SlidersHorizontal size={14} aria-hidden="true" /> Үнийн хүрээ
+            {minPrice || maxPrice ? " · сонгосон" : ""}
+          </summary>
           <div className="catalog-price-fields">
-            <label>Доод үнэ, ₮<input type="number" min="0" inputMode="numeric" aria-label="Хамгийн бага үнэ" placeholder="0" value={minPrice} onChange={e => setMinPrice(e.target.value)} /></label>
+            <label>
+              Доод үнэ, ₮
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                aria-label="Хамгийн бага үнэ"
+                placeholder="0"
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
+              />
+            </label>
             <span aria-hidden="true">–</span>
-            <label>Дээд үнэ, ₮<input type="number" min="0" inputMode="numeric" aria-label="Хамгийн их үнэ" placeholder="Хязгааргүй" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} /></label>
-            {minPrice || maxPrice ? <button type="button" onClick={() => { setMinPrice(""); setMaxPrice(""); }}>Үнийг цэвэрлэх</button> : null}
+            <label>
+              Дээд үнэ, ₮
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                aria-label="Хамгийн их үнэ"
+                placeholder="Хязгааргүй"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+              />
+            </label>
+            {minPrice || maxPrice ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMinPrice("");
+                  setMaxPrice("");
+                }}
+              >
+                Үнийг цэвэрлэх
+              </button>
+            ) : null}
           </div>
         </details>
       </div>
-      {(query || categories.length > 0 || minPrice || maxPrice || offersOnly || modelsOnly) && <div className="catalog-filter-summary">
-        <span>Сонгосон шүүлтүүрээр харуулж байна</span>
-        <button type="button" onClick={() => { setMinPrice(""); setMaxPrice(""); setOffersOnly(false); setModelsOnly(false); onReset?.(); }}>Бүх шүүлтүүрийг цэвэрлэх</button>
-      </div>}
-      {minPrice && maxPrice && Number(minPrice) > Number(maxPrice) ? <p role="status" className="catalog-price-error">Дээд үнэ нь доод үнээс их байх ёстой.</p> : null}
+      {(query ||
+        categories.length > 0 ||
+        minPrice ||
+        maxPrice ||
+        offersOnly ||
+        modelsOnly) && (
+        <div className="catalog-filter-summary">
+          <span>Сонгосон шүүлтүүрээр харуулж байна</span>
+          <button
+            type="button"
+            onClick={() => {
+              setMinPrice("");
+              setMaxPrice("");
+              setOffersOnly(false);
+              setModelsOnly(false);
+              onReset?.();
+            }}
+          >
+            Бүх шүүлтүүрийг цэвэрлэх
+          </button>
+        </div>
+      )}
+      {minPrice && maxPrice && Number(minPrice) > Number(maxPrice) ? (
+        <p role="status" className="catalog-price-error">
+          Дээд үнэ нь доод үнээс их байх ёстой.
+        </p>
+      ) : null}
       {catalog.error && (
         <CatalogStatus
           loading={false}
@@ -130,13 +227,13 @@ export function CatalogProducts({
         </div>
       ) : (
         <div className="catalog-results-grid">
-          {filtered.slice((current - 1) * 24, current * 24).map((product, index) => (
+          {filtered.slice((current - 1) * 24, current * 24).map((product) => (
             <ProductCard
               key={product.id}
               product={product}
               catalogStyle
               offerCheckedAt={checkedAt}
-              imageSizes={`(max-width: 539px) 100vw, (max-width: 999px) ${index % 3 === 0 ? "100vw" : "50vw"}, ${index % 6 === 0 || index % 6 === 4 ? "66vw" : "33vw"}`}
+              imageSizes="(max-width: 767px) 46vw, (max-width: 1023px) 45vw, 26vw"
             />
           ))}
         </div>

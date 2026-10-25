@@ -67,16 +67,11 @@ export function DashboardSettings({
             <div className="dashboard-setting-options">
               {(
                 [
-                  [
-                    "light",
-                    "Light",
-                    "Цагаан дэвсгэр, хар бичиг, цэнхэр товч",
-                    Sun,
-                  ],
+                  ["light", "Light", "Саарал шилэн панель, хар бичиг", Sun],
                   [
                     "dark",
                     "Dark",
-                    "Бараан дэвсгэр, цагаан бичиг, цэнхэр товч",
+                    "Хар дэвсгэр, утаат шил, цагаан бичиг",
                     Moon,
                   ],
                 ] as const

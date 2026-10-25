@@ -12,6 +12,7 @@ import {
 import { merchantHeaders } from "@/lib/merchantServer";
 import { merchantObject } from "@/lib/merchantValidation";
 import { toJson } from "@/lib/supabase/json";
+import { contractFileResponse } from "@/lib/merchantContractFileServer";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export async function GET(request: NextRequest) {
@@ -24,9 +25,9 @@ export async function GET(request: NextRequest) {
     if (error) throw error;
     const result = data as unknown as MerchantContractsData;
     const format = request.nextUrl.searchParams.get("format");
-    if (format && format !== "pdf")
-      throw new CatalogInputError("Зөвхөн PDF татна.");
-    if (format === "pdf") {
+    if (format && !["pdf", "file"].includes(format))
+      throw new CatalogInputError("Гэрээний файл эсвэл PDF татна.");
+    if (format === "pdf" || format === "file") {
       const id = request.nextUrl.searchParams.get("acceptance");
       const signed = id
         ? result.acceptances.find((item) => item.acceptance.id === id)
@@ -39,6 +40,13 @@ export async function GET(request: NextRequest) {
           { error: "Гэрээ олдсонгүй." },
           { status: 404, headers: merchantHeaders },
         );
+      if (contract.file_path) {
+        if (format === "pdf" && contract.file_type !== "application/pdf")
+          throw new CatalogInputError(
+            "Энэ гэрээний эх нь DOCX файл байна. Эх файлыг татна уу.",
+          );
+        return contractFileResponse(contract);
+      }
       return documentResponse(
         await (
           await import("@/lib/merchantPdf")

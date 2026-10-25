@@ -1,6 +1,9 @@
 "use client";
 import { MadeToOrderSwitch } from "./MerchantShowroom";
-import { Merchant3dInsights, MerchantWalletWidget } from "./MerchantShowroomInsights";
+import {
+  Merchant3dInsights,
+  MerchantWalletWidget,
+} from "./MerchantShowroomInsights";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -61,7 +64,11 @@ export function MerchantOverview({
   mode = "all",
   customizing,
   onCustomize,
+  section: selectedSection,
+  onSectionChange,
 }: {
+  section?: string;
+  onSectionChange?: (section: string) => void;
   owner: string;
   store: Store | null;
   onProducts: () => void;
@@ -78,7 +85,9 @@ export function MerchantOverview({
 }) {
   const [lowOnly, setLowOnly] = useState(false);
   const [localEditing, setLocalEditing] = useState(false);
-  const [section, setSection] = useState("overview");
+  const [localSection, setLocalSection] = useState("overview");
+  const section = selectedSection ?? localSection;
+  const setSection = onSectionChange ?? setLocalSection;
   const [date, setDate] = useState(todayInUlaanbaatar);
   const [orderPage, setOrderPage] = useState(0);
   const progress = useMerchantResource<ProgressStats>(
@@ -201,26 +210,28 @@ export function MerchantOverview({
         onProducts={onAddProduct ?? onProducts}
         onStore={onStore}
       />
-      <nav
-        className="merchant-stats-tabs"
-        aria-label="Dashboard статистикийн хэсгүүд"
-      >
-        {[
-          ["overview", "Ерөнхий тойм"],
-          ["progress", "Захиалгуудын явц"],
-          ["sales", "Борлуулалт"],
-          ["inventory", "Нөөц ба бараа"],
-        ].map(([id, label]) => (
-          <button
-            type="button"
-            key={id}
-            aria-pressed={section === id}
-            onClick={() => setSection(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      {!onSectionChange && (
+        <nav
+          className="merchant-stats-tabs"
+          aria-label="Dashboard статистикийн хэсгүүд"
+        >
+          {[
+            ["overview", "Ерөнхий тойм"],
+            ["progress", "Захиалгуудын явц"],
+            ["sales", "Борлуулалт"],
+            ["inventory", "Нөөц ба бараа"],
+          ].map(([id, label]) => (
+            <button
+              type="button"
+              key={id}
+              aria-pressed={section === id}
+              onClick={() => setSection(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+      )}
       {section !== "progress" && store ? (
         <div className="reference-store-banner merchant-compact-store">
           <div>
@@ -523,7 +534,7 @@ export function MerchantOverview({
                             {stockLabel(p)}
                           </small>
                         </div>
-                        <MadeToOrderSwitch owner={owner} product={p}/>
+                        <MadeToOrderSwitch owner={owner} product={p} />
                       </li>
                     ))}
                   </ul>
@@ -650,22 +661,34 @@ export function MerchantOverview({
           }}
         />
       </div>
-      {showSales && <><MerchantWalletWidget owner={owner} onOpen={() => onGrowth?.("wallet")} onBank={() => onGrowth?.("activation")}/><Merchant3dInsights owner={owner}/></>}
+      {showSales && (
+        <>
+          <MerchantWalletWidget
+            owner={owner}
+            onOpen={() => onGrowth?.("wallet")}
+            onBank={() => onGrowth?.("activation")}
+          />
+          <Merchant3dInsights owner={owner} />
+        </>
+      )}
       {section !== "inventory" && (
-        <><MerchantRiskSummary owner={owner} date={date} /><OrderProgressCards
-          stats={progress.data}
-          loading={progress.loading}
-          error={progress.error}
-          date={date}
-          page={orderPage}
-          onDate={(day) => {
-            setDate(day);
-            setOrderPage(0);
-          }}
-          onPage={setOrderPage}
-          onRetry={progress.refresh}
-          onDelivery={onDelivery}
-        /></>
+        <>
+          <MerchantRiskSummary owner={owner} date={date} />
+          <OrderProgressCards
+            stats={progress.data}
+            loading={progress.loading}
+            error={progress.error}
+            date={date}
+            page={orderPage}
+            onDate={(day) => {
+              setDate(day);
+              setOrderPage(0);
+            }}
+            onPage={setOrderPage}
+            onRetry={progress.refresh}
+            onDelivery={onDelivery}
+          />
+        </>
       )}
     </section>
   );

@@ -2,15 +2,23 @@
 
 import { DashboardNavigation } from "@/features/dashboard/DashboardNavigation";
 import { DashboardFormAssist } from "@/features/dashboard/DashboardFormAssist";
+import { DashboardMotion } from "@/features/dashboard/DashboardMotion";
 import "@/features/dashboard/dashboard-v14.css";
 
-import { useCallback, useState, type ReactNode, type RefObject } from "react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { AdminSidebar, ADMIN_TABS, type AdminTab } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
 import type { DashboardPreferences } from "@/features/dashboard/preferences";
 import "@/features/dashboard/merchant-theme.css";
 import "@/features/dashboard/merchant-inputs.css";
 import "@/features/dashboard/admin-theme.css";
+import "@/features/dashboard/dashboard-glass.css";
 
 export function AdminShell({
   active,
@@ -28,6 +36,8 @@ export function AdminShell({
   children: ReactNode;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const fallbackPanelRef = useRef<HTMLDivElement>(null);
+  const contentRef = panelRef ?? fallbackPanelRef;
   const closeMenu = useCallback(() => setMenuOpen(false), []);
   const changeTab = (tab: AdminTab) => {
     closeMenu();
@@ -37,7 +47,7 @@ export function AdminShell({
     ADMIN_TABS.find((item) => item.id === active)?.label ?? ADMIN_TABS[0].label;
   return (
     <div
-      className="admin-shell dashboard-shell dashboard-themed-shell dashboard-v14"
+      className="admin-shell dashboard-shell dashboard-themed-shell dashboard-v14 dashboard-glass"
       data-theme={preferences.theme}
       data-density={preferences.density}
       data-text-size={preferences.textSize}
@@ -55,10 +65,10 @@ export function AdminShell({
           navigation={
             <DashboardNavigation
               tabs={ADMIN_TABS.filter((tab) =>
-                ["dashboard", "merchants", "furniture", "orders"].includes(
+                ["dashboard", "sales", "merchant-stats"].includes(
                   tab.id,
                 ),
-              )}
+              ).sort((a, b) => ["dashboard", "sales", "merchant-stats"].indexOf(a.id) - ["dashboard", "sales", "merchant-stats"].indexOf(b.id))}
               active={active}
               onChange={changeTab}
             />
@@ -75,11 +85,12 @@ export function AdminShell({
         <main
           id="main-content"
           className="admin-content dashboard-content"
-          ref={panelRef}
+          ref={contentRef}
           tabIndex={-1}
           aria-label={label}
         >
           {children}
+          <DashboardMotion page={active} rootRef={contentRef} />
         </main>
         <footer className="admin-footer">
           <span>© {new Date().getFullYear()} tavilga.mn</span>

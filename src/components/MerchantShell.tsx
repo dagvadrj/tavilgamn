@@ -12,12 +12,13 @@ import {
   type MerchantTab,
 } from "./MerchantSidebar";
 import { MerchantHeader } from "./MerchantHeader";
-import { MerchantMotion } from "@/features/merchant/MerchantMotion";
+import { DashboardMotion } from "@/features/dashboard/DashboardMotion";
 import "@/features/merchant/merchant-stats.css";
 import type { DashboardPreferences } from "@/features/dashboard/preferences";
 import "@/features/dashboard/merchant-theme.css";
 import "@/features/dashboard/merchant-inputs.css";
 import "@/features/merchant/merchant-workspace.css";
+import "@/features/dashboard/dashboard-glass.css";
 
 export function MerchantShell({
   active,
@@ -57,7 +58,7 @@ export function MerchantShell({
 
   return (
     <div
-      className="merchant-app-shell dashboard-shell dashboard-themed-shell dashboard-v14"
+      className="merchant-app-shell dashboard-shell dashboard-themed-shell dashboard-v14 dashboard-glass"
       data-theme={preferences?.theme ?? "dark"}
       data-density={preferences?.density ?? "comfortable"}
       data-text-size={preferences?.textSize ?? "standard"}
@@ -77,16 +78,22 @@ export function MerchantShell({
       <div className="merchant-workspace dashboard-workspace">
         <MerchantHeader
           balances={
-            !allowedTabs && <MerchantBalanceChip
-              owner={owner}
-              enabled={hasStore}
-              onOpen={() => changeTab("wallet")}
-            />
+            !allowedTabs && (
+              <MerchantBalanceChip
+                owner={owner}
+                enabled={hasStore}
+                onOpen={() => changeTab("wallet")}
+              />
+            )
           }
           navigation={
             <DashboardNavigation
               tabs={MERCHANT_TABS.filter((tab) =>
-                allowedTabs ? allowedTabs.includes(tab.id) : ["overview", "products", "orders", "delivery"].includes(tab.id),
+                allowedTabs
+                  ? allowedTabs.includes(tab.id)
+                  : ["overview", "sales", "inventory", "progress"].includes(
+                      tab.id,
+                    ),
               ).map((tab) => ({
                 ...tab,
                 disabled: !hasStore && tab.id !== "overview",
@@ -115,7 +122,7 @@ export function MerchantShell({
           tabIndex={-1}
         >
           {children}
-          <MerchantMotion page={active} />
+          <DashboardMotion page={active} rootRef={panelRef} />
         </main>
       </div>
     </div>

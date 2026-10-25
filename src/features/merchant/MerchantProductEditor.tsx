@@ -15,6 +15,7 @@ import { Box, ImagePlus, Save, X } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
 import type { Product } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
+import { specificationFields } from "@/lib/productSpecifications";
 import { parseProduct } from "@/lib/catalogValidation";
 import { MAX_STOCK_QUANTITY } from "@/lib/inventory";
 import {
@@ -571,6 +572,56 @@ export function MerchantProductEditor({
               )}
             </div>
           </section>
+          <DashboardFormSection
+            title="Төрөл ба үзүүлэлт"
+            description="Ангиллын дэд төрөл болон бүтээгдэхүүний үзүүлэлт. Мэдэхгүй мэдээллээ хоосон үлдээнэ."
+            optional
+          >
+            <div className="merchant-form-grid">
+              {specificationFields(draft.category).map((spec) => (
+                <label key={spec.key}>
+                  {spec.label}
+                  {spec.key === "convertible" ? (
+                    <select
+                      className="input"
+                      value={draft.specifications?.[spec.key] ?? ""}
+                      onChange={(event) =>
+                        field("specifications", {
+                          ...draft.specifications,
+                          [spec.key]: event.target.value,
+                        })
+                      }
+                    >
+                      <option value="">Тодорхойгүй</option>
+                      <option value="Тийм">Ор болдог</option>
+                      <option value="Үгүй">Ор болдоггүй</option>
+                      {draft.specifications?.[spec.key] &&
+                        !["Тийм", "Үгүй"].includes(
+                          draft.specifications[spec.key],
+                        ) && (
+                          <option value={draft.specifications[spec.key]}>
+                            {draft.specifications[spec.key]}
+                          </option>
+                        )}
+                    </select>
+                  ) : (
+                    <input
+                      className="input"
+                      maxLength={300}
+                      placeholder={spec.placeholder}
+                      value={draft.specifications?.[spec.key] ?? ""}
+                      onChange={(event) =>
+                        field("specifications", {
+                          ...draft.specifications,
+                          [spec.key]: event.target.value,
+                        })
+                      }
+                    />
+                  )}
+                </label>
+              ))}
+            </div>
+          </DashboardFormSection>
           <DashboardFormSection
             title="Хүргэлт ба 3D"
             description="Хүргэлтийн тайлбар, 3D файл эсвэл загвар бэлтгүүлэх хүсэлт."

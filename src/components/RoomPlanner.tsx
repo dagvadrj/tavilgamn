@@ -11,7 +11,10 @@ import {
 import type { RoomPlacementHintSource } from "@/three/RoomPlacementHints";
 import { FurnitureAttachmentControls } from "@/features/room-planner/components/FurnitureAttachmentControls";
 import { RoomProductAlternatives } from "@/features/room-planner/components/RoomProductAlternatives";
-import { createRoomBuilderDraft, resizeRoomBuilder } from "@/lib/roomBuilderDraft";
+import {
+  createRoomBuilderDraft,
+  resizeRoomBuilder,
+} from "@/lib/roomBuilderDraft";
 import { furnishRoom, suggestedFurniture } from "@/lib/roomFurnishing";
 import "./room-planner-enhancements.css";
 import "@/features/planner/components/planner-catalog-upgrades.css";
@@ -755,24 +758,22 @@ function RoomPlannerEditor() {
       setNotice("QR-ийн барааны 3D загвар одоогоор ашиглах боломжгүй байна.");
       return;
     }
-    const result = useDesigns
-      .getState()
-      .placeFurniture({
-        instanceId: `p_${crypto.randomUUID()}`,
-        productId: product.id,
-        x: 0,
-        z: 0,
-        rotation: 0,
-        color: product.defaultColor,
-        material: product.materials[0]?.id ?? "wood",
-        placement: product.placement,
-        details: {
-          name: product.name,
-          dimensions: { ...product.dimensions },
-          image: product.image,
-          category: product.category,
-        },
-      });
+    const result = useDesigns.getState().placeFurniture({
+      instanceId: `p_${crypto.randomUUID()}`,
+      productId: product.id,
+      x: 0,
+      z: 0,
+      rotation: 0,
+      color: product.defaultColor,
+      material: product.materials[0]?.id ?? "wood",
+      placement: product.placement,
+      details: {
+        name: product.name,
+        dimensions: { ...product.dimensions },
+        image: product.image,
+        category: product.category,
+      },
+    });
     if (result.piece) {
       rememberFurniture(result.piece);
       setSelected(result.piece.instanceId);
@@ -1301,7 +1302,12 @@ function RoomPlannerEditor() {
   const save = () => {
     endEdit();
     saveCurrent(saveName.trim() || current.name.trim() || "Миний өрөө");
-    setSavedAt(new Date().toLocaleTimeString("mn-MN", { hour: "2-digit", minute: "2-digit" }));
+    setSavedAt(
+      new Date().toLocaleTimeString("mn-MN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    );
     setSaveName("");
     setNotice("Загварыг энэ төхөөрөмж дээр хадгаллаа.");
   };
@@ -1599,7 +1605,11 @@ function RoomPlannerEditor() {
           <span>tavilga.mn</span>
         </Link>
         <label className="room-project-name">
-          <span>{savedAt ? `Энэ төхөөрөмж дээр хадгалсан · ${savedAt}` : "Өрөөний төлөвлөгч"}</span>
+          <span>
+            {savedAt
+              ? `Энэ төхөөрөмж дээр хадгалсан · ${savedAt}`
+              : "Өрөөний төлөвлөгч"}
+          </span>
           <input
             aria-label="Төслийн нэр"
             value={current.name}
@@ -1707,13 +1717,6 @@ function RoomPlannerEditor() {
               </span>
               <small>Таалагдсан тавилга дээр дарж өрөөндөө нэмээрэй.</small>
             </div>
-            <Link href="/kitchen" className="room-kitchen-shortcut">
-              <ChefHat size={20} />
-              <span>
-                <strong>Гал тогоо төлөвлөх</strong>
-              </span>
-              <ChevronRight size={18} />
-            </Link>
             <PlannerCatalogToolbar
               query={query}
               onQuery={setQuery}
@@ -1823,11 +1826,11 @@ function RoomPlannerEditor() {
                       : paletteItems.length) && (
                     <p className="planner-empty">
                       {catalogFormat === "glb" && paletteItems.length > 0
-                        ? "Энэ сонголтод 3D загвартай тавилга алга. Бусад тавилгыг үзэж болно."
+                        ? "Энэ ангилалд 3D моделтой тавилга алга. Бусад ангилалын тавилгуудыг үзэж болно."
                         : catalogFormat === "photo" && dbPaletteItems.length > 0
-                          ? "Энэ сонголтод зөвхөн 3D загвартай тавилга байна."
+                          ? "Энд зөвхөн 3D моделтой тавилга байна."
                           : query.trim()
-                            ? "Энэ хүрээнд хайлтад тохирох тавилга олдсонгүй."
+                            ? "Тавилга олдсонгүй."
                             : "Энэ өрөө, ангилалд боломжтой тавилга одоогоор алга."}
                       {((catalogFormat === "glb" && paletteItems.length > 0) ||
                         (catalogFormat === "photo" &&
@@ -2050,7 +2053,10 @@ function RoomPlannerEditor() {
           />
         )}
         <RoomPlannerControls
-          onFurniture={() => { setKitchenOnly(false); setLeftOpen(!leftOpen || kitchenOnly); }}
+          onFurniture={() => {
+            setKitchenOnly(false);
+            setLeftOpen(!leftOpen || kitchenOnly);
+          }}
           catalogOpen={leftOpen}
           view={roomView}
           onView={(next) => {
@@ -2319,7 +2325,12 @@ function RoomPlannerEditor() {
           )}
         </div>
 
-        {!welcomeDismissed && (showStartHint || (current.pieces.length === 0 && !leftOpen && !rightOpen && !summaryOpen)) &&
+        {!welcomeDismissed &&
+          (showStartHint ||
+            (current.pieces.length === 0 &&
+              !leftOpen &&
+              !rightOpen &&
+              !summaryOpen)) &&
           !placementTemplate &&
           !selected &&
           !selectedOpening && (
@@ -2328,7 +2339,10 @@ function RoomPlannerEditor() {
                 type="button"
                 className="room-welcome-dismiss"
                 aria-label="Эхлэх зөвлөмжийг хаах"
-                onClick={() => { setShowStartHint(false); setWelcomeDismissed(true); }}
+                onClick={() => {
+                  setShowStartHint(false);
+                  setWelcomeDismissed(true);
+                }}
               >
                 <X size={17} />
               </button>
@@ -2336,7 +2350,10 @@ function RoomPlannerEditor() {
                 ӨӨРИЙНХӨӨ ӨРӨӨГ БҮТЭЭЕ
               </span>
               <strong>Өрөөгөө тохижуулж эхэлье</strong>
-              <p className="room-welcome-intro">Тавилга нэмээд чирж байрлуулаарай. Сонгосон тавилгынхаа өнгө, материал, байрлалыг самбараас тохируулна.</p>
+              <p className="room-welcome-intro">
+                Тавилга нэмээд чирж байрлуулаарай. Сонгосон тавилгынхаа өнгө,
+                материал, байрлалыг самбараас тохируулна.
+              </p>
               <button
                 type="button"
                 className="room-welcome-start"
@@ -3052,17 +3069,48 @@ function RoomPlannerEditor() {
                     </p>
                   </div>
                 </div>
-                <div className="room-selection-size" aria-label="Тавилгын хэмжээ">
-                  {Object.entries(dimsFor(selectedPiece)).map(([axis, value]) => <span key={axis}><small>{axis === "w" ? "Өргөн" : axis === "d" ? "Гүн" : "Өндөр"}</small><strong>{formatMeasurement(value)}</strong></span>)}
+                <div
+                  className="room-selection-size"
+                  aria-label="Тавилгын хэмжээ"
+                >
+                  {Object.entries(dimsFor(selectedPiece)).map(
+                    ([axis, value]) => (
+                      <span key={axis}>
+                        <small>
+                          {axis === "w"
+                            ? "Өргөн"
+                            : axis === "d"
+                              ? "Гүн"
+                              : "Өндөр"}
+                        </small>
+                        <strong>{formatMeasurement(value)}</strong>
+                      </span>
+                    ),
+                  )}
                 </div>
                 <div className="room-selection-actions">
-                  <button type="button" onClick={rotateSelected}><RotateCw size={16}/> Эргүүлэх</button>
-                  <button type="button" onClick={duplicateSelected}><Copy size={16}/> Хувилах</button>
-                  <button type="button" onClick={removeSelected}><Trash2 size={16}/> Устгах</button>
+                  <button type="button" onClick={rotateSelected}>
+                    <RotateCw size={16} /> Эргүүлэх
+                  </button>
+                  <button type="button" onClick={duplicateSelected}>
+                    <Copy size={16} /> Хувилах
+                  </button>
+                  <button type="button" onClick={removeSelected}>
+                    <Trash2 size={16} /> Устгах
+                  </button>
                 </div>
-                <RoomProductAlternatives key={selectedPiece.instanceId} piece={selectedPiece} product={selectedProduct} products={catalog.products}
-                  pieces={current.pieces} room={current} roomId={current.activeRoomId ?? `${current.id}-room-1`} context={placement}
-                  onReplace={updatePieces} onNotice={setNotice} />
+                <RoomProductAlternatives
+                  key={selectedPiece.instanceId}
+                  piece={selectedPiece}
+                  product={selectedProduct}
+                  products={catalog.products}
+                  pieces={current.pieces}
+                  room={current}
+                  roomId={current.activeRoomId ?? `${current.id}-room-1`}
+                  context={placement}
+                  onReplace={updatePieces}
+                  onNotice={setNotice}
+                />
                 {showDimensions && measurements.length > 0 && (
                   <section
                     className="planner-measure-details"

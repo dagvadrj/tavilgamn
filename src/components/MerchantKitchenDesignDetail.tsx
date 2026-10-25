@@ -24,6 +24,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { readMerchantResource } from "@/features/merchant/useMerchantResource";
 import { merchantRequest } from "@/features/merchant/merchantApi";
 import { clearDashboardDraft, useDraftState } from "@/hooks/useDashboardDraft";
 import {
@@ -167,22 +168,14 @@ export function MerchantKitchenDesignDetail({
   const archiveButton = useRef<HTMLButtonElement>(null);
 
   const load = useCallback(
-    async (signal?: AbortSignal) => {
+    async (signal?: AbortSignal, force = true) => {
       const sequence = ++loadSequence.current;
       try {
         const [next, saved] = await Promise.all([
-          merchantRequest<DetailData>(
-            `/api/merchant/kitchen-designs/${designId}`,
-            owner,
-            { signal, cache: "no-store" },
-          ),
+          readMerchantResource<DetailData>(owner, `/api/merchant/kitchen-designs/${designId}`, force),
           sourcesCache.current
             ? Promise.resolve({ kitchens: sourcesCache.current })
-            : merchantRequest<{ kitchens: SavedKitchenSource[] }>(
-                "/api/kitchens",
-                owner,
-                { signal },
-              ).catch(() => ({ kitchens: [] })),
+            : readMerchantResource<{ kitchens: SavedKitchenSource[] }>(owner, "/api/kitchens").catch(() => ({ kitchens: [] })),
         ]);
         if (signal?.aborted || sequence !== loadSequence.current) return;
         const previousMedia = lastMedia.current;
@@ -210,7 +203,7 @@ export function MerchantKitchenDesignDetail({
 
   useEffect(() => {
     const controller = new AbortController();
-    void load(controller.signal);
+    void load(controller.signal, false);
     return () => {
       controller.abort();
     };

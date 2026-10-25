@@ -212,6 +212,7 @@ export type Database = Omit<Generated, "public"> & {
       };
       homepage_scene_settings: {
         Row: {
+          hero: import("./database.types").Json | null;
           id: number;
           product_ids: string[];
           bed_product_id: string | null;
@@ -221,6 +222,7 @@ export type Database = Omit<Generated, "public"> & {
           updated_by: string | null;
         };
         Insert: {
+          hero?: import("./database.types").Json | null;
           id: number;
           product_ids: string[];
           bed_product_id?: string | null;
@@ -230,6 +232,7 @@ export type Database = Omit<Generated, "public"> & {
           updated_by?: string | null;
         };
         Update: {
+          hero?: import("./database.types").Json | null;
           id?: number;
           product_ids?: string[];
           bed_product_id?: string | null;

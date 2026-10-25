@@ -1,0 +1,116 @@
+.motion-cursor-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --cursor-x: 68%;
+  --cursor-y: 59%;
+}
+
+.motion-cursor-stage[data-cursor-scene="size"] {
+  --cursor-x: 31%;
+  --cursor-y: 33%;
+}
+
+.motion-cursor-stage[data-cursor-scene="catalog"] {
+  --cursor-x: 80%;
+  --cursor-y: 61%;
+}
+
+.motion-cursor-stage[data-cursor-scene="place"] {
+  --cursor-x: 50%;
+  --cursor-y: 58%;
+}
+
+.motion-cursor-stage[data-cursor-scene="view"] {
+  --cursor-x: 70%;
+  --cursor-y: 78%;
+}
+
+.motion-cursor-stage[data-cursor-scene="material"] {
+  --cursor-x: 53%;
+  --cursor-y: 82%;
+}
+
+.motion-cursor-stage[data-cursor-scene="save"] {
+  --cursor-x: 69%;
+  --cursor-y: 21%;
+}
+
+.motion-cursor-mark {
+  position: absolute;
+  left: var(--cursor-x);
+  top: var(--cursor-y);
+  color: #183d5e;
+  will-change: left, top;
+}
+
+.motion-cursor-mark i {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #1474be;
+  border-radius: 50%;
+  animation: motion-cursor-tap 2.2s ease-out both;
+}
+
+.motion-cursor-stage[data-paused="true"] .motion-cursor-mark,
+.motion-cursor-stage[data-paused="true"] .motion-cursor-mark i {
+  animation-play-state: paused;
+}
+
+@keyframes motion-cursor-arrive {
+  0% {
+    opacity: 0;
+    transform: translate(42px, 24px);
+  }
+  35% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  47% {
+    transform: scale(0.88);
+  }
+  60%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes motion-cursor-tap {
+  0%, 36% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  45% {
+    opacity: 0.8;
+  }
+  70%, 100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@media (pointer: coarse) {
+  .motion-cursor-mark > svg {
+    display: none;
+  }
+  .motion-cursor-mark {
+    width: 17px;
+    height: 17px;
+    border: 3px solid white;
+    border-radius: 50%;
+    background: #1474be;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-cursor-mark,
+  .motion-cursor-mark i {
+    animation: none;
+  }
+  .motion-cursor-mark i {
+    display: none;
+  }
+}

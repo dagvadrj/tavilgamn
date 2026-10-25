@@ -16,6 +16,8 @@ import { hasAvailableStock } from "@/lib/inventory";
 import type { PageData } from "@/lib/pageData";
 import { readHomepageSettings } from "@/lib/homepageSettingsServer";
 import { defaultHomepageSettings } from "@/lib/homepageSettings";
+import { DEFAULT_HOMEPAGE_HERO, homepageStatistics } from "@/lib/homepagePresentation";
+import { readHomepageMaterialCount, readHomepageMaterialSwatches } from "@/lib/homepageStatisticsServer";
 
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "no-store" };
@@ -38,10 +40,12 @@ export async function GET(
   try {
     switch (page) {
       case "home": {
-        const [catalog, stores, scene] = await Promise.all([
+        const [catalog, stores, scene, materialCount, swatches] = await Promise.all([
           readCachedProducts(),
           readCachedStoreDirectory(),
           readHomepageSettings().catch(() => defaultHomepageSettings()),
+          readHomepageMaterialCount().catch(() => null),
+          readHomepageMaterialSwatches().catch(() => []),
         ]);
         return json(page, {
           catalog,
@@ -49,6 +53,9 @@ export async function GET(
           paymentLabels: configuredPaymentLabels(),
           homepageProductIds: scene.productIds,
           homepageJourneyProducts: { bedProductId: scene.bedProductId, wardrobeProductId: scene.wardrobeProductId },
+          homepageHero: scene.hero ?? DEFAULT_HOMEPAGE_HERO,
+          homepageMaterialSwatches: swatches,
+          homepageStatistics: homepageStatistics(catalog, stores, materialCount),
         });
       }
       case "stores": {

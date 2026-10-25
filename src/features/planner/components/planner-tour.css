@@ -46,6 +46,32 @@
   box-shadow: 0 20px 70px rgb(10 20 40 / 24%), 0 3px 12px rgb(10 20 40 / 8%);
 }
 
+.planner-tour-real-preview {
+  display: flex;
+  flex-direction: column;
+}
+
+.planner-tour-real-preview > .model-demo {
+  flex: 1;
+  min-height: 0;
+}
+
+.planner-tour-real-preview .model-demo-badge {
+  font-size: 6px;
+}
+
+.planner-tour-real-caption {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  background: white;
+  border-top: 1px solid #e3e7ed;
+  font-size: 9px;
+  color: #52667c;
+}
+
 .planner-tour button {
   font: inherit;
   cursor: pointer;
@@ -54,6 +80,12 @@
 .planner-tour button:focus-visible {
   outline: 3px solid #224ed9;
   outline-offset: 3px;
+}
+
+.planner-tour-next {
+  min-height: var(--site-button-height);
+  border-radius: var(--site-button-radius);
+  background: var(--site-primary);
 }
 
 .planner-tour-preview {

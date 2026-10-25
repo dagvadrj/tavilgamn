@@ -13,7 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
-import { merchantRequest } from "@/features/merchant/merchantApi";
+import { readMerchantResource } from "@/features/merchant/useMerchantResource";
 import { formatPrice } from "@/lib/format";
 import type { KitchenQuoteStatus } from "@/lib/kitchenQuotes";
 import { useAuth } from "@/store/auth";
@@ -66,10 +66,9 @@ export function MerchantKitchenQuotes({ owner }: { owner: string }) {
     setError(null);
     void (async () => {
       try {
-        const data = await merchantRequest<{ quotes: MerchantKitchenQuote[]; hasMore: boolean }>(
+        const data = await readMerchantResource<{ quotes: MerchantKitchenQuote[]; hasMore: boolean }>(owner,
           `/api/merchant/kitchen-quotes?page=${page}${quoteId ? `&quote=${quoteId}` : ""}`,
-          owner,
-          { signal: controller.signal },
+          refresh > 0,
         );
         if (active && isOwner(owner)) setResult(data);
       } catch (reason) {

@@ -1,5 +1,7 @@
 "use client";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
+import { AnimatedNumber } from "@/features/dashboard/AnimatedNumber";
+export { AnimatedNumber } from "@/features/dashboard/AnimatedNumber";
 import { DashboardBarChart } from "@/features/dashboard/DashboardCharts";
 import { CheckCircle2, Clock3, ArrowUpRight, Package } from "lucide-react";
 import {
@@ -83,55 +85,6 @@ export function StatSkeleton({ rows = 3 }: { rows?: number }) {
         <i key={i} aria-hidden="true" />
       ))}
     </div>
-  );
-}
-export function AnimatedNumber({
-  value,
-  money = false,
-}: {
-  value: string | number;
-  money?: boolean;
-}) {
-  const ref = useRef<HTMLSpanElement>(null),
-    previous = useRef(0);
-  const label = Number.isSafeInteger(Number(value))
-    ? Number(value).toLocaleString("mn-MN")
-    : BigInt(value).toLocaleString("mn-MN");
-  useEffect(() => {
-    const node = ref.current,
-      target = Number(value);
-    if (!node) return;
-    if (
-      !Number.isSafeInteger(target) ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      node.textContent = label;
-      previous.current = target;
-      return;
-    }
-    const from = Number.isSafeInteger(previous.current)
-        ? previous.current
-        : target,
-      start = performance.now();
-    let frame = 0;
-    const tick = (time: number) => {
-      const t = Math.min(1, (time - start) / 650);
-      node.textContent = Math.round(
-        from + (target - from) * (1 - Math.pow(1 - t, 3)),
-      ).toLocaleString("mn-MN");
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    previous.current = target;
-    return () => cancelAnimationFrame(frame);
-  }, [value, label]);
-  return (
-    <span aria-label={label + (money ? " ₮" : "")}>
-      <span ref={ref} aria-hidden="true">
-        {label}
-      </span>
-      {money && <span aria-hidden="true"> ₮</span>}
-    </span>
   );
 }
 export function OrderProgressCards({

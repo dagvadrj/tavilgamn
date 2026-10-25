@@ -4,6 +4,77 @@
   min-width: 0;
 }
 
+.dashboard-shell .merchant-contract-selection {
+  width: 100%;
+  max-width: 900px;
+  padding: 24px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 20px;
+  background: var(--dashboard-surface);
+  font-weight: 550;
+}
+
+.dashboard-shell .merchant-commerce .merchant-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+}
+
+.dashboard-shell .merchant-commerce .merchant-section-heading h2 {
+  margin: 0 0 10px;
+  font-size: clamp(23px, 2.6vw, 32px);
+  font-weight: 600;
+  letter-spacing: -0.7px;
+  line-height: 1.25;
+}
+
+.dashboard-shell .merchant-commerce .merchant-panel {
+  padding: 24px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 20px;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .merchant-commerce h3 {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.dashboard-shell .merchant-commerce :is(input, select, textarea) {
+  width: 100%;
+  max-width: 100%;
+}
+
+.dashboard-shell .merchant-commerce .merchant-muted {
+  color: var(--dashboard-muted);
+  line-height: 1.7;
+}
+
+.dashboard-shell .merchant-contract-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  background: var(--dashboard-surface);
+}
+
+.dashboard-shell .merchant-contract-file > div {
+  display: grid;
+  flex: 1 1 160px;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-shell .merchant-contract-file small {
+  color: var(--dashboard-muted);
+}
+
 .dashboard-shell .merchant-commerce-toolbar {
   display: flex;
   flex-wrap: wrap;

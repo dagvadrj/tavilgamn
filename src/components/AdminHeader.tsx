@@ -5,12 +5,10 @@ import { Menu, MessageSquare, Package, Settings } from "lucide-react";
 
 export function AdminHeader({
   navigation,
-  userName,
   activeLabel,
   onProducts,
   onMessages,
   onSettings,
-  onProfile,
   menuOpen,
   onToggleMenu,
 }: {
@@ -24,7 +22,6 @@ export function AdminHeader({
   menuOpen: boolean;
   onToggleMenu: () => void;
 }) {
-  const initial = userName.trim().slice(0, 1).toUpperCase() || "A";
 
   return (
     <header className="admin-topbar dashboard-topbar">
@@ -47,9 +44,6 @@ export function AdminHeader({
 
       {navigation}
       <div className="admin-topbar-actions dashboard-header-actions">
-        {activeLabel === "Ерөнхий тойм" && (
-          <span className="reference-period">30 хоног</span>
-        )}
         <button
           type="button"
           className="admin-header-search"
@@ -81,19 +75,7 @@ export function AdminHeader({
           <MessageSquare size={19} strokeWidth={1.7} />
         </button>
 
-        <button
-          type="button"
-          onClick={onProfile}
-          className="admin-profile"
-          aria-label={`${userName} — миний бүртгэл`}
-        >
-          <span className="admin-avatar">{initial}</span>
 
-          <span className="admin-profile-copy">
-            <strong>{userName}</strong>
-            <small>Админ</small>
-          </span>
-        </button>
       </div>
     </header>
   );

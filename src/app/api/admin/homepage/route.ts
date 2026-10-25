@@ -4,7 +4,6 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { readHomepageSettings } from "@/lib/homepageSettingsServer";
 import { parseHomepageSettings } from "@/lib/homepageSettings";
 import { readProduct } from "@/lib/catalogServer";
-import { readCachedProducts } from "@/lib/publicCatalog";
 import { apiErrorResponse, privateHeaders } from "@/lib/api/errors";
 
 export const dynamic = "force-dynamic";
@@ -15,28 +14,8 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await requireAdmin(request);
     if (auth.error) return auth.error;
-    const [settings, catalog] = await Promise.all([
-      readHomepageSettings(),
-      readCachedProducts(),
-    ]);
-    return NextResponse.json(
-      {
-        ...settings,
-        products: catalog
-          .filter(
-            (product) =>
-              ["sofa", "bed", "wardrobe"].includes(product.category) &&
-              product.model,
-          )
-          .map(({ id, name, image, category }) => ({
-            id,
-            name,
-            image,
-            category,
-          })),
-      },
-      { headers: privateHeaders },
-    );
+    const settings = await readHomepageSettings();
+    return NextResponse.json(settings, { headers: privateHeaders });
   } catch {
     return fail("Нүүр хуудасны тохиргоог ачаалж чадсангүй.", 503);
   }
@@ -46,10 +25,10 @@ export async function PUT(request: NextRequest) {
   try {
     const auth = await requireAdmin(request);
     if (auth.error) return auth.error;
-    if (Number(request.headers.get("content-length") || 0) > 2048)
+    if (Number(request.headers.get("content-length") || 0) > 8192)
       return fail("Хүсэлт хэт том байна.", 413);
     const raw = await request.text();
-    if (raw.length > 2048) return fail("Хүсэлт хэт том байна.", 413);
+    if (raw.length > 8192) return fail("Хүсэлт хэт том байна.", 413);
     let body: unknown;
     try {
       body = JSON.parse(raw);
@@ -57,28 +36,58 @@ export async function PUT(request: NextRequest) {
       return fail("Хүсэлт буруу байна.", 400);
     }
     const settings = parseHomepageSettings(body);
-    if (!settings) return fail("Хоёр өөр 3D буйдан сонгоно уу.", 400);
-    const products = await Promise.all(
-      settings.productIds.map((id) => readProduct(id)),
-    );
-    if (
-      products.some((product) => !product?.model || product.category !== "sofa")
-    )
-      return fail(
-        "Сонгосон буйдан нийтэд харагдах 3D загвартай байх ёстой.",
-        422,
+    if (!settings)
+      return fail("Нүүр хуудасны утга эсвэл холбоос буруу байна.", 400);
+    // Hero edits preserve retired scene configuration without requiring old GLBs.
+    if (settings.hero) {
+      const current = await readHomepageSettings();
+      if (current.version !== settings.version)
+        return fail("Өөр админ шинэчилсэн байна. Дахин ачаална уу.", 409);
+      if ((body as Record<string, unknown>).updateFeatured === true) {
+        // Only changed selections need validating; retired fallback assets must not block text edits.
+        const changed = settings.productIds.filter(
+          (id, index) => id !== current.productIds[index],
+        );
+        const products = await Promise.all(
+          changed.map((id) => readProduct(id)),
+        );
+        if (
+          products.some(
+            (product) => !product?.model || product.category !== "sofa",
+          )
+        )
+          return fail(
+            "Онцлох бүтээгдэхүүн нийтэд харагдах 3D буйдан байх ёстой.",
+            422,
+          );
+      } else settings.productIds = current.productIds;
+      settings.bedProductId = current.bedProductId;
+      settings.wardrobeProductId = current.wardrobeProductId;
+    } else {
+      const products = await Promise.all(
+        settings.productIds.map((id) => readProduct(id)),
       );
-    for (const [id, category] of [
-      [settings.bedProductId, "bed"],
-      [settings.wardrobeProductId, "wardrobe"],
-    ] as const) {
-      if (!id) continue;
-      const product = await readProduct(id);
-      if (!product?.model || product.category !== category)
+      if (
+        products.some(
+          (product) => !product?.model || product.category !== "sofa",
+        )
+      )
         return fail(
-          "Өрөөний сонголт нийтэд харагдах, зөв ангиллын 3D бүтээгдэхүүн байх ёстой.",
+          "Сонгосон буйдан нийтэд харагдах 3D загвартай байх ёстой.",
           422,
         );
+      for (const [id, category] of [
+        [settings.bedProductId, "bed"],
+        [settings.wardrobeProductId, "wardrobe"],
+      ] as const) {
+        if (!id) continue;
+        const product = await readProduct(id);
+        if (!product?.model || product.category !== category)
+          return fail(
+            "Өрөөний сонголт нийтэд харагдах, зөв ангиллын 3D бүтээгдэхүүн байх ёстой.",
+            422,
+          );
+      }
     }
     const row = {
       id: 1,
@@ -86,6 +95,7 @@ export async function PUT(request: NextRequest) {
       version: settings.version + 1,
       updated_at: new Date().toISOString(),
       updated_by: auth.userId,
+      ...(settings.hero ? { hero: { ...settings.hero } } : {}),
       ...(settings.bedProductId !== undefined
         ? { bed_product_id: settings.bedProductId }
         : {}),

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { PageData } from "@/lib/pageData";
-import { InteriorHome } from "./InteriorHome";
+import { MotionHomepage } from "@/features/home-motion/MotionHomepage";
 
 const EMPTY_HOME: PageData["home"] = {
   catalog: [],
@@ -13,8 +13,12 @@ const EMPTY_HOME: PageData["home"] = {
 export function InteriorHomePage() {
   const [data, setData] = useState<PageData["home"]>(EMPTY_HOME);
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
+    setError(false);
+    setLoading(true);
     void fetch("/api/page-data/home", {
       signal: controller.signal,
       cache: "no-store",
@@ -24,12 +28,25 @@ export function InteriorHomePage() {
         const result = await response.json();
         if (!Array.isArray(result.catalog) || !Array.isArray(result.stores))
           throw new Error("Invalid home data");
-        if (!controller.signal.aborted) setData(result);
+        if (!controller.signal.aborted) {
+          setData(result);
+          setLoading(false);
+        }
       })
       .catch(() => {
-        if (!controller.signal.aborted) setError(true);
+        if (!controller.signal.aborted) {
+          setError(true);
+          setLoading(false);
+        }
       });
     return () => controller.abort();
-  }, []);
-  return <InteriorHome {...data} dataError={error} />;
+  }, [attempt]);
+  return (
+    <MotionHomepage
+      {...data}
+      loading={loading}
+      error={error}
+      onRetry={() => setAttempt((value) => value + 1)}
+    />
+  );
 }

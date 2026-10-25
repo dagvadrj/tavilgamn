@@ -35,6 +35,9 @@ export const MERCHANT_TABS: {
   icon: typeof LayoutDashboard;
 }[] = [
   { id: "overview", label: "Ерөнхий тойм", icon: LayoutDashboard },
+  { id: "sales", label: "Борлуулалт", icon: BarChart3 },
+  { id: "inventory", label: "Нөөц ба бараа", icon: Package },
+  { id: "progress", label: "Захиалгын явц", icon: Truck },
   { id: "activation", label: "Дэлгүүр идэвхжүүлэх", icon: ShieldCheck },
   { id: "wallet", label: "Хэтэвч, кредит", icon: Wallet },
   { id: "reports", label: "Тайлан татах", icon: BarChart3 },
@@ -100,9 +103,6 @@ export function MerchantSidebar({
         type="button"
         disabled={disabled}
         aria-label={item.label}
-        title={
-          disabled ? "Эхлээд дэлгүүрийн мэдээллээ бүртгэнэ үү" : item.label
-        }
         aria-current={active === item.id ? "page" : undefined}
         className={`dashboard-nav-button ${active === item.id ? "active" : ""}`}
         onClick={() => onChange(item.id)}
@@ -144,7 +144,6 @@ export function MerchantSidebar({
           <p className="dashboard-nav-label">ДЭЛГҮҮР</p>
           {MERCHANT_TABS.filter((item) =>
             [
-              "overview",
               "activation",
               "wallet",
               "reports",

@@ -1,5 +1,9 @@
 /* Shared workspace primitives. Storefront and planner themes stay independent. */
 
+.dashboard-shell .dashboard-animated-number {
+  font-variant-numeric: tabular-nums;
+}
+
 .dashboard-layout,
 .dashboard-drawer {
   --dashboard-bg: var(--site-bg);

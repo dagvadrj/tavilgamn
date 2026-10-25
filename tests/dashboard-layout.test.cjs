@@ -53,6 +53,7 @@ test("full admin sidebar preserves every operation and marks only the selected d
     ADMIN_TABS.map((tab) => tab.id),
     [
       "dashboard",
+      "sales", "merchant-stats",
       "merchants",
       "furniture",
       "orders",
@@ -62,6 +63,7 @@ test("full admin sidebar preserves every operation and marks only the selected d
       "kitchens",
       "merchant-ops",
       "kitchen-library",
+      "homepage",
       "rooms",
       "contracts",
       "settings",
@@ -80,7 +82,7 @@ test("full admin sidebar preserves every operation and marks only the selected d
       }),
     ),
   );
-  for (const tab of ADMIN_TABS)
+  for (const tab of ADMIN_TABS.filter(tab => !["dashboard", "sales", "merchant-stats"].includes(tab.id)))
     assert.ok(html.includes(tab.label), `Missing ${tab.label}`);
   assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1);
   assert.doesNotMatch(html, /href="\/account"/);
@@ -95,6 +97,7 @@ test("merchant sidebar keeps all operations and settings and disables private st
     MERCHANT_TABS.map((tab) => tab.id),
     [
       "overview",
+      "sales", "inventory", "progress",
       "activation",
       "wallet",
       "reports",
@@ -122,10 +125,10 @@ test("merchant sidebar keeps all operations and settings and disables private st
   const locked = desktopMarkup(
     renderToStaticMarkup(React.createElement(MerchantSidebar, props)),
   );
-  for (const tab of MERCHANT_TABS)
+  for (const tab of MERCHANT_TABS.filter(tab => !["overview", "sales", "inventory", "progress"].includes(tab.id)))
     assert.ok(locked.includes(tab.label), `Missing ${tab.label}`);
   assert.equal((locked.match(/disabled=""/g) ?? []).length, 14);
-  assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 1);
+  assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 0);
   const unlocked = desktopMarkup(
     renderToStaticMarkup(
       React.createElement(MerchantSidebar, { ...props, hasStore: true }),
@@ -267,6 +270,7 @@ test("mobile sidebar uses native dialog behavior and restores scroll on close an
       {
         react: {
           ...React,
+          useState: value => [value, () => {}],
           useRef: () => ({ current: dialog }),
           useEffect: (effect) => effects.push(effect),
         },
@@ -282,7 +286,7 @@ test("mobile sidebar uses native dialog behavior and restores scroll on close an
     const nativeDialog = elements(tree, (node) => node.type === "dialog")[0];
     assert.equal(nativeDialog.props.id, "test-menu");
     assert.equal(nativeDialog.props["aria-label"], "Удирдлага");
-    const cleanup = effects[0]();
+    const cleanup = effects[1]();
     assert.equal(dialog.shows, 1);
     assert.equal(global.document.body.style.overflow, "hidden");
     let prevented = false;

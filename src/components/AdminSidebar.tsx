@@ -28,6 +28,8 @@ export const ADMIN_TABS = [
     short: "Тойм",
     icon: LayoutDashboard,
   },
+  { id: "sales", label: "Борлуулалтын хандлага", short: "Борлуулалт", icon: LayoutDashboard },
+  { id: "merchant-stats", label: "Дэлгүүрийн статистик", short: "Дэлгүүрүүд", icon: Store },
   {
     id: "merchants",
     label: "Дэлгүүрүүд",
@@ -82,6 +84,7 @@ export const ADMIN_TABS = [
     short: "Kitchen GLB",
     icon: CookingPot,
   },
+  { id: "homepage", label: "Нүүр хуудас засах", short: "Нүүр хуудас", icon: House },
   { id: "rooms", label: "Бэлэн өрөөнүүд", short: "Өрөөнүүд", icon: House },
   { id: "contracts", label: "Merchant гэрээ", short: "Гэрээ", icon: FileText },
   {
@@ -113,7 +116,6 @@ export function AdminSidebar({
       label: "УДИРДЛАГА",
       tabs: ADMIN_TABS.filter((item) =>
         [
-          "dashboard",
           "merchants",
           "merchant-ops",
           "contracts",
@@ -132,6 +134,7 @@ export function AdminSidebar({
           "kitchens",
           "kitchen-library",
           "rooms",
+          "homepage",
         ].includes(item.id),
       ),
     },
@@ -167,7 +170,6 @@ export function AdminSidebar({
                 <button
                   key={item.id}
                   type="button"
-                  title={item.label}
                   aria-label={item.label}
                   aria-current={active === item.id ? "page" : undefined}
                   className="dashboard-nav-button"
@@ -192,22 +194,24 @@ export function AdminSidebar({
         <button
           type="button"
           className="dashboard-nav-button"
+          aria-label="Самбарын тохиргоо"
           aria-current={active === "settings" ? "page" : undefined}
           onClick={() => onChange("settings")}
         >
           <span className="dashboard-nav-icon">
             <Settings size={18} />
           </span>
-          Самбарын тохиргоо
+          <span>Самбарын тохиргоо</span>
         </button>
         <button
           type="button"
           onClick={() => onChange("profile")}
+          aria-label="Миний бүртгэл"
           className={`dashboard-nav-button ${active === "profile" ? "active" : ""}`}
           aria-current={active === "profile" ? "page" : undefined}
         >
-          <UserRound size={18} />
-          Миний бүртгэл
+          <span className="dashboard-nav-icon"><UserRound size={18} /></span>
+          <span>Миний бүртгэл</span>
         </button>
         <Link href="/#contact" className="dashboard-sidebar-link">
           <CircleHelp size={18} />

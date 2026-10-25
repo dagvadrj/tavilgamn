@@ -3,6 +3,7 @@ import { PageSkeleton } from "@/components/PageSkeleton";
 
 import { useEffect, useState } from "react";
 import { Search, Users, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { readAdminResource } from "@/features/dashboard/useAdminResource";
 import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
 
@@ -49,17 +50,7 @@ function UserList({ owner }: { owner: string }) {
 
     async function load() {
       try {
-        const response = await authFetch(
-          `/api/admin/users?page=${page}`,
-          { signal: controller.signal },
-          owner,
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error ?? "Хэрэглэгчдийг ачаалж чадсангүй.");
-        }
+        const data = await readAdminResource<Result>(owner, `/api/admin/users?page=${page}`, refresh > 0);
 
         if (
           active &&

@@ -1,10 +1,12 @@
 import { HOME_PRODUCT_IDS } from "@/features/home-interior/homeStory";
+import { parseHomepageHero, type HomepageHero } from "./homepagePresentation";
 
 export type HomepageSettings = {
   productIds: string[];
   version: number;
   bedProductId?: string | null;
   wardrobeProductId?: string | null;
+  hero?: HomepageHero;
 };
 export const defaultHomepageSettings = (): HomepageSettings => ({
   productIds: [...HOME_PRODUCT_IDS],
@@ -16,6 +18,9 @@ export const defaultHomepageSettings = (): HomepageSettings => ({
 export function parseHomepageSettings(value: unknown): HomepageSettings | null {
   if (!value || typeof value !== "object") return null;
   const input = value as Record<string, unknown>;
+  const hero =
+    input.hero === undefined ? undefined : parseHomepageHero(input.hero);
+  if (hero === null) return null;
   const optionalProduct = (v: unknown) =>
     v === undefined ||
     v === null ||
@@ -41,6 +46,7 @@ export function parseHomepageSettings(value: unknown): HomepageSettings | null {
   )
     return null;
   return {
+    ...(hero ? { hero } : {}),
     productIds: [...input.productIds],
     version: Number(input.version),
     ...(input.bedProductId !== undefined

@@ -3,15 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import {
-  Heart,
-  Star,
-  ShoppingBag,
-  Check,
-  Box,
-  ArrowUpRight,
-  X,
-} from "lucide-react";
+import { Heart, Star, ShoppingBag, Check, Box } from "lucide-react";
 import type { Product } from "@/lib/types";
 import {
   defaultCartSelection,
@@ -32,7 +24,6 @@ export function ProductCard({
   offerCheckedAt,
   flashSale = false,
   imageSizes,
-  initialDetailsOpen = false,
 }: {
   product: Product;
   catalogStyle?: boolean;
@@ -49,17 +40,6 @@ export function ProductCard({
   const [checkedAt, setCheckedAt] = useState(offerCheckedAt);
   const [colorId, setColorId] = useState(product.defaultColor);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
-  const [detailsPinned, setDetailsPinned] = useState(initialDetailsOpen);
-  const [detailsHovered, setDetailsHovered] = useState(false);
-  const [mobile, setMobile] = useState(false);
-  const detailsOpen = mobile || detailsPinned || detailsHovered;
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 767px)");
-    const update = () => setMobile(media.matches);
-    update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
   const [loadedPhoto, setLoadedPhoto] = useState<{
     element: HTMLImageElement;
     naturalWidth: number;
@@ -137,10 +117,10 @@ export function ProductCard({
   const sizes =
     imageSizes ??
     (flashSale
-      ? "(max-width: 639px) 72vw, (max-width: 999px) 33vw, 310px"
+      ? "(max-width: 767px) 46vw, (max-width: 999px) 33vw, 310px"
       : catalogStyle
-        ? "(max-width: 539px) 100vw, (max-width: 999px) 50vw, (max-width: 1439px) 33vw, 440px"
-        : "(max-width: 539px) 100vw, (max-width: 999px) 50vw, 360px");
+        ? "(max-width: 767px) 46vw, (max-width: 999px) 45vw, 30vw"
+        : "(max-width: 767px) 46vw, (max-width: 999px) 30vw, 280px");
   const addToCart = () => {
     if (!inStock || !selection) return;
     const added = add({
@@ -158,44 +138,13 @@ export function ProductCard({
     );
   };
 
-  const toggleDetails = () => {
-    setDetailsPinned((value) => !value);
-    setDetailsHovered(false);
-  };
-
   return (
-    <article
-      className={`product-card marketplace-product-card product-card-premium gallery-product-card${detailsOpen ? " is-revealed" : ""}`}
-      onPointerEnter={(event) => {
-        if (event.pointerType === "mouse") setDetailsHovered(true);
-      }}
-      onPointerLeave={(event) => {
-        if (!event.currentTarget.contains(document.activeElement))
-          setDetailsHovered(false);
-      }}
-      onFocus={() => setDetailsHovered(true)}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-          setDetailsHovered(false);
-          setDetailsPinned(false);
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key !== "Escape" || quickViewOpen) return;
-        event.currentTarget
-          .querySelector<HTMLButtonElement>(".product-details-toggle")
-          ?.focus();
-        setDetailsPinned(false);
-        setDetailsHovered(false);
-      }}
-    >
+    <article className="product-card marketplace-product-card product-card-premium gallery-product-card clean-product-card">
       <div className="product-photo">
-        <button
-          type="button"
+        <Link
           className="gallery-photo-trigger"
-          onClick={toggleDetails}
-          aria-label={`${product.name} — нэр, үнийг харах`}
-          aria-expanded={detailsOpen}
+          href={detailHref}
+          aria-label={`${product.name} — дэлгэрэнгүй үзэх`}
         >
           {hasProductPhoto(product) ? (
             <>
@@ -221,14 +170,13 @@ export function ProductCard({
               Зураг нэмэгдээгүй
             </span>
           )}
-        </button>
+        </Link>
       </div>
-      <div className="gallery-card-veil" aria-hidden="true" />
       <div className="gallery-card-topline">
         <span
           className={`product-badge${offer.discountPercent !== null ? " offer" : ""}`}
         >
-          {badge || CATEGORY_LABEL[product.category]}
+          {badge}
         </span>
         <button
           className={`wishlist-toggle ${saved ? "saved" : ""}`}
@@ -245,27 +193,7 @@ export function ProductCard({
           />
         </button>
       </div>
-      <button
-        type="button"
-        className="product-details-toggle"
-        onClick={toggleDetails}
-        aria-expanded={detailsOpen}
-        aria-label={`${product.name} — ${detailsOpen ? "мэдээлэл хураах" : "дэлгэрэнгүй"}`}
-      >
-        <span>{detailsOpen ? "Хураах" : "Дэлгэрэнгүй"}</span>
-        <span className="gallery-round-arrow">
-          {detailsOpen ? (
-            <X size={16} aria-hidden="true" />
-          ) : (
-            <ArrowUpRight size={16} aria-hidden="true" />
-          )}
-        </span>
-      </button>
-      <div
-        className="gallery-product-info"
-        aria-hidden={!detailsOpen}
-        inert={!detailsOpen}
-      >
+      <div className="gallery-product-info">
         <div className="gallery-info-eyebrow">
           <Link href={`/catalog/${product.category}`}>
             {CATEGORY_LABEL[product.category]}
@@ -333,7 +261,7 @@ export function ProductCard({
             className="product-add-cart"
             onClick={addToCart}
             disabled={!inStock || !selection}
-            aria-label={`${product.name} — сонгосон өнгөөр сагсанд нэмэх`}
+            aria-label={`${product.name} — сонгосон өнгөөр сагслах`}
             title={
               selection
                 ? `${selection.color.name} · ${selection.material.name}`

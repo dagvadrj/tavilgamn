@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type CSSProperties } from "react";
+import { ChartCircle, ChartPath, ChartRect } from "./ChartMotion";
 
 export type ChartDatum = {
   label: string;
@@ -53,7 +54,10 @@ export function DashboardBarChart({
     )
     .join(" ");
   return (
-    <div className="v14-chart">
+    <div
+      className="v14-chart"
+      style={{ "--chart-bar-fill": `url(#${id}-hatch)` } as CSSProperties}
+    >
       {!values.length ||
       !values.some((item) => item.primary + item.secondary > 0) ? (
         <div className="v14-chart-empty">
@@ -87,6 +91,20 @@ export function DashboardBarChart({
             aria-label={`${primaryLabel}${secondaryLabel ? `, ${secondaryLabel}` : ""}`}
           >
             <defs>
+              <pattern
+                id={`${id}-hatch`}
+                width="6"
+                height="6"
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(35)"
+              >
+                <rect width="6" height="6" fill="var(--dashboard-bg)" />
+                <rect
+                  width="2.5"
+                  height="6"
+                  fill="var(--glass-chart, var(--dashboard-ink))"
+                />
+              </pattern>
               <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1">
                 <stop stopColor="currentColor" stopOpacity="0.22" />
                 <stop offset="1" stopColor="currentColor" stopOpacity="0" />
@@ -107,14 +125,14 @@ export function DashboardBarChart({
             ))}
             {mode === "line" && (
               <>
-                <path
+                <ChartPath
                   className="v14-chart-area"
                   d={`${line} L${x(values.length - 1)},190 L${x(0)},190 Z`}
                   fill={`url(#${id}-fill)`}
                 />
-                <path className="v14-chart-line" d={line} />
+                <ChartPath className="v14-chart-line" d={line} />
                 {secondaryLabel && (
-                  <path
+                  <ChartPath
                     className="v14-chart-line v14-chart-line-secondary"
                     d={values
                       .map(
@@ -157,7 +175,8 @@ export function DashboardBarChart({
                   />
                   {mode === "bar" ? (
                     <>
-                      <rect
+                      <ChartRect
+                        entranceDelay={index * 55}
                         className="v14-bar-primary"
                         x={x(index) - Math.min(18, step * 0.28)}
                         y={190 - height(item.primary)}
@@ -166,7 +185,8 @@ export function DashboardBarChart({
                         rx="5"
                       />
                       {item.secondary > 0 && (
-                        <rect
+                        <ChartRect
+                          entranceDelay={index * 55}
                           className="v14-bar-secondary"
                           x={x(index) - Math.min(18, step * 0.28)}
                           y={190 - height(item.primary + item.secondary)}
@@ -248,7 +268,7 @@ export function DashboardDonut({
             const start = cursor;
             cursor += fraction * 100;
             return (
-              <circle
+              <ChartCircle
                 key={segment.label}
                 cx="100"
                 cy="100"
@@ -259,7 +279,7 @@ export function DashboardDonut({
                 className={`v14-donut-segment v14-segment-${index % 4}${selected === index ? " is-active" : ""}`}
               >
                 <title>{`${segment.label}: ${segment.display}`}</title>
-              </circle>
+              </ChartCircle>
             );
           })}
         </svg>

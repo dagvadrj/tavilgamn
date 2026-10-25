@@ -23,11 +23,14 @@ export async function generateMetadata({
 
 export default async function CategoryPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ category: string }>;
+  searchParams: Promise<{ type?: string }>;
 }) {
   const { category: categoryParam } = await params;
+  const { type } = await searchParams;
   if (!VALID.has(categoryParam as Category)) notFound();
   const category = categoryParam as Category;
-  return <CatalogView initialCategory={category} />;
+  return <CatalogView initialCategory={category} initialFacet={type} />;
 }

@@ -50,8 +50,10 @@ test("category dialog links to working category and room routes with labelled ta
   for (const category of CATEGORIES) assert.ok(markup.includes(`href="/catalog/${category.id}"`));
   for (const group of ROOM_CATALOG_GROUPS) {
     assert.ok(markup.includes(`href="/catalog?room=${group.id}"`));
-    assert.ok(markup.includes(`aria-controls="category-group-${group.id}"`));
   }
+  assert.match(markup, /aria-label="Тавилгын ангилал ба төрөл"/);
+  assert.match(markup, /Ор болдоггүй/);
+  assert.match(markup, /href="\/catalog\/sofa\?type=sleeper"/);
   for (const type of STORE_TYPES) assert.ok(markup.includes(`href="/stores?type=${type.id}"`));
   assert.ok(!markup.includes('href="/merchant"'));
   assert.ok(!markup.includes('href="/admin"'));

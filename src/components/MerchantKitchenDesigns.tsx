@@ -26,6 +26,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { readMerchantResource } from "@/features/merchant/useMerchantResource";
 import { merchantRequest as request } from "@/features/merchant/merchantApi";
 import type {
   KitchenDesignSummary,
@@ -261,12 +262,12 @@ export function MerchantKitchenDesigns({
     setMaterials,
     setServiceAreas,
   ]);
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = true) => {
     setError(null);
     try {
       const [marketplace, saved] = await Promise.all([
-        request<LoadResult>("/api/merchant/kitchen-designs", owner),
-        request<{ kitchens: SavedKitchen[] }>("/api/kitchens", owner),
+        readMerchantResource<LoadResult>(owner, "/api/merchant/kitchen-designs", force),
+        readMerchantResource<{ kitchens: SavedKitchen[] }>(owner, "/api/kitchens", force),
       ]);
       setData(marketplace);
       setKitchens(saved.kitchens);
@@ -285,7 +286,7 @@ export function MerchantKitchenDesigns({
   }, [draftStatus.loading, sourceKitchenId, kitchens, setSourceKitchenId]);
 
   useEffect(() => {
-    void load();
+    void load(false);
   }, [load]);
 
   useEffect(() => {

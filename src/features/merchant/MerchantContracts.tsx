@@ -1,7 +1,7 @@
 "use client";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useEffect, useState } from "react";
-import { Download, Check } from "lucide-react";
+import { Download, Check, FileText, RefreshCw } from "lucide-react";
 import { merchantRequest } from "./merchantApi";
 import { useMerchantResource } from "./useMerchantResource";
 import { merchantDownload } from "./merchantDownload";
@@ -28,10 +28,15 @@ export function MerchantContracts({ owner }: { owner: string }) {
     setBusy("download");
     setError("");
     try {
+      const version = id
+        ? resource.data?.acceptances.find((item) => item.acceptance.id === id)
+            ?.contract
+        : contract;
       await merchantDownload(
-        "/api/merchant/contracts?format=pdf" + (id ? `&acceptance=${id}` : ""),
+        `/api/merchant/contracts?format=${version?.file_path ? "file" : "pdf"}` +
+          (id ? `&acceptance=${id}` : ""),
         owner,
-        "merchant-contract.pdf",
+        version?.file_name ?? "merchant-contract.pdf",
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Файлыг татаж чадсангүй.");
@@ -41,7 +46,17 @@ export function MerchantContracts({ owner }: { owner: string }) {
   };
   return (
     <section className="merchant-commerce">
-      <h2>Платформтой байгуулах гэрээ</h2>
+      <div className="merchant-section-heading">
+        <h2>Платформтой байгуулах гэрээ</h2>
+        <button
+          type="button"
+          className="btn-ghost"
+          disabled={!!busy || resource.loading}
+          onClick={resource.refresh}
+        >
+          <RefreshCw size={16} /> Шинэчлэх
+        </button>
+      </div>
       {(resource.error || error) && (
         <p role="alert" className="merchant-error">
           {error || resource.error}
@@ -57,8 +72,8 @@ export function MerchantContracts({ owner }: { owner: string }) {
         <div className="merchant-panel">
           <h3>Гэрээ нийтлэгдээгүй байна</h3>
           <p>
-            Платформын админ баталсан гэрээний эхийг нийтэлсний дараа энд уншиж
-            зөвшөөрнө.
+            Админ таны дэлгүүрт зориулсан гэрээний файлыг нийтэлсний дараа энд
+            татаж уншаад зөвшөөрнө.
           </p>
         </div>
       )}
@@ -76,17 +91,35 @@ export function MerchantContracts({ owner }: { owner: string }) {
               disabled={!!busy}
               onClick={() => void download()}
             >
-              <Download size={16} /> PDF татах
+              <Download size={16} />{" "}
+              {contract.file_path ? "Гэрээний файл татах" : "PDF татах"}
             </button>
           </div>
-          <div
-            className="merchant-contract-body"
-            tabIndex={0}
-            role="region"
-            aria-label="Гэрээний эх"
-          >
-            {contract.body}
-          </div>
+          {contract.file_path ? (
+            <div className="merchant-contract-file">
+              <FileText size={24} />
+              <div>
+                <strong>{contract.file_name}</strong>
+                <small>
+                  {Math.ceil((contract.file_size ?? 0) / 1024).toLocaleString(
+                    "mn-MN",
+                  )}{" "}
+                  KB ·{" "}
+                  {contract.file_type === "application/pdf" ? "PDF" : "DOCX"}
+                </small>
+                <p>Гэрээний файлыг татаж уншаад доорх зөвшөөрлийг өгнө үү.</p>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="merchant-contract-body"
+              tabIndex={0}
+              role="region"
+              aria-label="Гэрээний эх"
+            >
+              {contract.body}
+            </div>
+          )}
           {acceptance ? (
             <p className="merchant-success" role="status">
               <Check size={16} /> {acceptance.signer_name} ·{" "}
@@ -151,7 +184,12 @@ export function MerchantContracts({ owner }: { owner: string }) {
               </p>
               <button
                 className="btn-primary"
-                disabled={!!busy || !consent || signer.trim().length < 2}
+                disabled={
+                  !!busy ||
+                  resource.loading ||
+                  !consent ||
+                  signer.trim().length < 2
+                }
               >
                 {busy === "accept" ? "Хадгалж байна…" : "Гэрээг зөвшөөрөх"}
               </button>
@@ -181,7 +219,9 @@ export function MerchantContracts({ owner }: { owner: string }) {
                   disabled={!!busy}
                   onClick={() => void download(item.acceptance.id)}
                 >
-                  PDF татах
+                  {item.contract.file_path
+                    ? "Гэрээний файл татах"
+                    : "PDF татах"}
                 </button>
               </li>
             ))}

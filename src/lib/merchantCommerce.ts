@@ -33,6 +33,12 @@ export type ContractVersion = {
   status: string;
   revision: number;
   published_at: string | null;
+  store_id?: string | null;
+  file_path?: string | null;
+  file_name?: string | null;
+  file_type?: string | null;
+  file_size?: number | null;
+  file_sha256?: string | null;
 };
 export type ContractAcceptance = {
   id: string;
@@ -53,6 +59,8 @@ export type MerchantContractsData = {
   acceptances: { acceptance: ContractAcceptance; contract: ContractVersion }[];
 };
 export type AdminContractsData = {
+  storeId?: string | null;
+  merchants?: { id: string; name: string; active: boolean }[];
   versions: ContractVersion[];
   acceptances: (ContractAcceptance & { version_no: number })[];
 };

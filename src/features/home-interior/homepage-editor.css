@@ -1,0 +1,127 @@
+.homepage-editor {
+  padding: 24px;
+}
+
+.homepage-editor-workspace {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+  align-items: start;
+}
+
+.homepage-editor-fields, .homepage-editor-field {
+  display: grid;
+  gap: 8px;
+}
+
+.homepage-editor-fields {
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.homepage-editor-field {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.homepage-editor-field .input {
+  width: 100%;
+  min-height: 38px;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+
+.homepage-editor-field textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.homepage-preview {
+  min-width: 0;
+  position: sticky;
+  top: 24px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--dashboard-surface);
+}
+
+.homepage-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.homepage-preview-toolbar > div {
+  display: flex;
+  gap: 4px;
+}
+
+.homepage-preview-toolbar button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  color: var(--dashboard-ink);
+}
+
+.homepage-preview-toolbar button[aria-pressed="true"] {
+  background: var(--dashboard-accent);
+  color: white;
+}
+
+.homepage-preview-hint {
+  padding: 0 16px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--dashboard-muted);
+}
+
+.homepage-preview-stage {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  background: #101826;
+}
+
+.homepage-preview-stage > div {
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.homepage-preview iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  transform-origin: top left;
+  background: #fbfcfe;
+}
+
+@media (max-width: 1199px) {
+  .homepage-editor-workspace {
+    grid-template-columns: 1fr;
+  }
+  .homepage-preview {
+    position: static;
+    grid-row: 1;
+  }
+  .homepage-editor-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .homepage-editor {
+    padding: 16px;
+  }
+  .homepage-editor-fields {
+    grid-template-columns: 1fr;
+  }
+}

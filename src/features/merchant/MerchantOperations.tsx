@@ -1,11 +1,5 @@
 "use client";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import {
   Plus,
@@ -27,6 +21,10 @@ import {
 import type { DeliveryStaff } from "@/lib/merchantDelivery";
 import { StatSkeleton } from "./MerchantStats";
 import "./merchant-operations.css";
+import {
+  useMerchantResource,
+  invalidateMerchantResources,
+} from "./useMerchantResource";
 
 export async function operationsRequest<T>(
   owner: string,
@@ -53,47 +51,44 @@ export async function operationsRequest<T>(
     throw new Error("Нэвтрэлт өөрчлөгдсөн байна.");
   return result;
 }
+// Staff use the same server-authorized operations API; merchant-only reads keep their guard.
+const operationsTransport = {
+  isAuthorized: (owner: string) => useAuth.getState().user?.id === owner,
+  request: async (path: string, owner: string, init: RequestInit) => {
+    const response = await authFetch(path, init, owner);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error ?? "Мэдээлэл ачаалсангүй.");
+    return data;
+  },
+};
 export function useOperations<T>(owner: string, action: string, query = "") {
-  const [state, setState] = useState<{ key: string; data?: T; error?: string }>(
-    { key: "" },
+  const resource = useMerchantResource<T>(
+    owner,
+    `/api/merchant/operations?action=${action}${query}`,
+    true,
+    0,
+    operationsTransport,
   );
-  const [revision, setRevision] = useState(0),
-    [busy, setBusy] = useState(false),
-    [message, setMessage] = useState("");
-  const pending = useRef(false),
-    key = `${owner}:${action}:${query}`;
-  const reload = useCallback(() => setRevision((v) => v + 1), []);
-  useEffect(() => {
-    const controller = new AbortController();
-    setState((previous) =>
-      previous.key === key ? { key, data: previous.data } : { key },
-    );
-    operationsRequest<T>(owner, action, undefined, query, controller.signal)
-      .then((data) => {
-        if (!controller.signal.aborted) setState({ key, data });
-      })
-      .catch((e) => {
-        if (!controller.signal.aborted) setState({ key, error: e.message });
-      });
-    return () => controller.abort();
-  }, [owner, action, query, revision, key]);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [saveError, setSaveError] = useState<string>();
+  const pending = useRef(false);
+  const reload = resource.refresh;
   async function save(action: string, data: unknown) {
     if (pending.current) return false;
     pending.current = true;
     setBusy(true);
     setMessage("");
+    setSaveError(undefined);
     try {
       await operationsRequest(owner, action, data);
       if (useAuth.getState().user?.id !== owner) return false;
       setMessage("Хадгаллаа.");
-      reload();
+      invalidateMerchantResources(owner);
       return true;
     } catch (e) {
       if (useAuth.getState().user?.id === owner)
-        setState((s) => ({
-          ...s,
-          error: e instanceof Error ? e.message : "Хадгалсангүй.",
-        }));
+        setSaveError(e instanceof Error ? e.message : "Хадгалсангүй.");
       return false;
     } finally {
       pending.current = false;
@@ -101,8 +96,8 @@ export function useOperations<T>(owner: string, action: string, query = "") {
     }
   }
   return {
-    data: state.key === key ? state.data : undefined,
-    error: state.key === key ? state.error : undefined,
+    data: resource.data ?? undefined,
+    error: saveError ?? resource.error ?? undefined,
     busy,
     message,
     save,
@@ -907,7 +902,7 @@ function AssistantForm({
     [preview, setPreview] = useState("");
   return (
     <form
-      className="ops-card ops-form"
+      className="ops-card ops-form ops-assistant-form"
       onSubmit={async (e) => {
         e.preventDefault();
         await save("save_assistant", form);

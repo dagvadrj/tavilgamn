@@ -21,7 +21,7 @@ function nodes(root) {
   return result;
 }
 
-test("gallery details open on touch, close on repeated tap or Escape, and leave the furniture image unchanged", () => {
+test("product details are immediately accessible and the photo opens the selected product", () => {
   const values = [];
   let index = 0, added;
   const { ProductCard } = loadSource("src/components/ProductCard.tsx", {
@@ -35,28 +35,16 @@ test("gallery details open on touch, close on repeated tap or Escape, and leave 
   });
   const render = () => { index = 0; return ProductCard({ product, catalogStyle: true }); };
   const panel = root => nodes(root).find(node => node.props.className === "gallery-product-info");
-  const toggle = root => nodes(root).find(node => node.props.className === "product-details-toggle");
-  let root = render();
-  assert.equal(panel(root).props.inert, true);
-  root.props.onPointerEnter({ pointerType: "touch" });
-  assert.equal(toggle(render()).props["aria-expanded"], false);
-  toggle(render()).props.onClick();
-  root = render();
-  assert.equal(panel(root).props.inert, false);
-  assert.equal(toggle(root).props["aria-expanded"], true);
+  const root = render();
+  assert.ok(!panel(root).props.inert);
+  assert.ok(!panel(root).props["aria-hidden"]);
+  const photo = nodes(root).find(node => node.props.className === "gallery-photo-trigger");
+  assert.equal(photo.props.href, "/product/chair?color=oak");
   const images = nodes(root).filter(node => node.props?.src);
   assert.deepEqual(images.map(node => node.props.src), ["/chair.jpg"]);
   assert.equal(images[0].props.quality, 95);
   nodes(root).find(node => node.props.className === "product-add-cart").props.onClick();
   assert.equal(added.unitPrice, 689000);
   assert.equal(added.color, "oak");
-  toggle(render()).props.onClick();
-  assert.equal(panel(render()).props.inert, true);
-  root = render();
-  root.props.onPointerEnter({ pointerType: "mouse" });
-  assert.equal(toggle(render()).props["aria-expanded"], true);
-  let focused = false;
-  render().props.onKeyDown({ key: "Escape", currentTarget: { querySelector: () => ({ focus() { focused = true; } }) } });
-  assert.equal(focused, true);
-  assert.equal(panel(render()).props.inert, true);
+  assert.ok(!panel(render()).props.inert);
 });
