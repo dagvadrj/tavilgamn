@@ -34,7 +34,14 @@ import { InteriorModel } from "./InteriorModel";
 import { getProduct } from "@/store/catalog";
 import { getDbModel } from "@/lib/modelRegistry";
 import { roomPlacementContext } from "./roomPlacement";
-import { isPlacementValid, snapToWall } from "./collision";
+import { isPlacementValid, snapToWall, type PlacementRoom } from "./collision";
+import {
+  clampDragPoint,
+  floorSlideDirections,
+  solveDragPoint,
+  type DragPoint,
+} from "./furnitureDragSolver";
+import { createFrameCoalescer } from "./frameCoalescer";
 import type { Measurement } from "@/lib/furnitureMeasurements";
 import { KitchenAssemblyMesh } from "./KitchenAssemblyMesh";
 import { dimsFor } from "./collision";
@@ -56,14 +63,23 @@ import { ROOM_DAY_BACKDROP, ROOM_NIGHT_BACKDROP } from "@/lib/roomLighting";
 import { RoomExportBridge } from "./RoomExportBridge";
 import { PlannerMotionShadows, RoomContactShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import { roomTourCamera } from "./roomCameraPlacement";
-import { RoomStreetView, CameraPointPlacement } from "./RoomStreetView";
+import { RoomStreetView } from "./RoomStreetView";
 import { RoomPreviewCapture } from "./RoomPreviewCapture";
 import { RoomCameraRig } from "./RoomCameraRig";
+import {
+  RoomEntryController,
+  type ExteriorMemory,
+  type RoomEntryTransition,
+} from "./RoomEntryController";
+import {
+  PLANNER_FURNITURE_GROUP,
+  createInteriorEntryChannel,
+} from "./roomEntryChannel";
+import type { CameraPose } from "@/lib/cameraTransition";
 import { CameraNavigation } from "./CameraNavigation";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 import { CursorNavigation } from "./CursorNavigationBinding";
-import { Camera } from "lucide-react";
 import {
   furnitureWallId,
   resolveFurnitureAttachments,
@@ -71,6 +87,7 @@ import {
 } from "@/lib/furnitureAttachment";
 import {
   SCENE_NAVIGATION_START,
+  holdOrbitControls,
   isSceneNavigationGesture,
 } from "./sceneNavigation";
 
@@ -126,10 +143,11 @@ interface RoomCanvasProps {
   resetKey?: number;
   cameraRequest?: CameraRequest;
   interior?: boolean;
-  cameraPlacement?: boolean;
-  onCameraPlace?: (x: number, z: number) => void;
   onCameraSave?: (pose: RoomInteriorCamera) => void;
-  onVisitRoom?: (id: string) => void;
+  /** Scroll-in finished walking into the active room. */
+  onEnterInterior?: (pose: RoomInteriorCamera) => void;
+  /** Scroll-out finished walking back to the orbit view. */
+  onExitInterior?: () => void;
   onEditStart?: () => void;
   onEditEnd?: () => void;
   /** Optional custom GLB interior to render instead of procedural room */
@@ -165,10 +183,9 @@ export function RoomCanvas({
   resetKey = 0,
   cameraRequest,
   interior = false,
-  cameraPlacement = false,
-  onCameraPlace,
   onCameraSave,
-  onVisitRoom,
+  onEnterInterior,
+  onExitInterior,
   onEditStart,
   onEditEnd,
   customInterior,
@@ -185,6 +202,14 @@ export function RoomCanvas({
   const performance = useCanvasPerformance();
   const [isDraggingPiece, setIsDraggingPiece] = useState(false);
   const [isLooking, setIsLooking] = useState(false);
+  const [entryTransition, setEntryTransition] =
+    useState<RoomEntryTransition>(null);
+  const entryChannel = useMemo(() => createInteriorEntryChannel(), []);
+  const exteriorMemory = useRef<ExteriorMemory | null>(null);
+  const restorePose = useRef<CameraPose | null>(null);
+  // A wheel exit remounts CameraNavigation; it must not replay a request
+  // (e.g. an earlier Fit) that was already handled before entering the room.
+  const replayedRequest = useRef<number | undefined>(undefined);
   const [contextLost, setContextLost] = useState(false);
   const [rendererAttempt, setRendererAttempt] = useState(0);
   const rendererStatus = useCallback((lost: boolean) => {
@@ -201,6 +226,10 @@ export function RoomCanvas({
   );
   const activeRoom = rooms.find((room) => room.id === design.activeRoomId);
   const origin = activeRoom ? roomPosition(activeRoom) : { x: 0, z: 0 };
+  const interiorPose = useMemo(
+    () => tourPoints.get(design.activeRoomId ?? "") ?? roomTourCamera(design),
+    [tourPoints, design],
+  );
   const activeBounds = getRoomGeometry(design).bounds;
   const wallFocus: [number, number] = [
     (activeBounds.minX + activeBounds.maxX) / 2,
@@ -288,7 +317,9 @@ export function RoomCanvas({
       }}
     >
       <CanvasLifecycle paused={Boolean(paused)} onUnavailable={rendererStatus} />
-      <CameraMotionPreview interactionActive={isDraggingPiece || isLooking}>
+      <CameraMotionPreview
+        interactionActive={isDraggingPiece || isLooking || entryTransition !== null}
+      >
         {onExportReady && <RoomExportBridge onReady={onExportReady} />}
         {onPlacementHintsReady && <RoomPlacementHints designId={design.id} roomId={design.activeRoomId ?? `${design.id}-room-1`} onReady={onPlacementHintsReady} />}
         <RoomMotionResolution dpr={performance.dpr} />
@@ -315,24 +346,49 @@ export function RoomCanvas({
             resetKey={resetKey}
             originX={origin.x}
             originZ={origin.z}
+            restore={restorePose}
           />
         )}
         {interior && (
           <RoomStreetView
             roomId={design.activeRoomId ?? design.id}
-            pose={
-              tourPoints.get(design.activeRoomId ?? "") ??
-              roomTourCamera(design)
-            }
+            pose={interiorPose}
             locked={locked}
             request={cameraRequest}
             onSave={onCameraSave}
             room={design}
             onLookingChange={setIsLooking}
+            channel={entryChannel}
           />
         )}
-        {cameraPlacement && onCameraPlace && (
-          <CameraPointPlacement onPlace={onCameraPlace} />
+        {!customInterior && (
+          <RoomEntryController
+            interior={interior}
+            enabled={
+              view === "perspective" &&
+              !locked &&
+              !isDraggingPiece
+            }
+            roomId={design.activeRoomId ?? design.id}
+            pose={interiorPose}
+            bounds={activeBounds}
+            height={design.height ?? 2.7}
+            originX={origin.x}
+            originZ={origin.z}
+            channel={entryChannel}
+            memory={exteriorMemory}
+            abortKey={cameraRequest?.id}
+            onTransition={setEntryTransition}
+            onEnter={onEnterInterior}
+            onExit={
+              onExitInterior &&
+              ((pose) => {
+                restorePose.current = pose;
+                replayedRequest.current = cameraRequest?.id;
+                onExitInterior();
+              })
+            }
+          />
         )}
         <color
           attach="background"
@@ -410,7 +466,7 @@ export function RoomCanvas({
                     sharedCuts={shared.cuts}
                     sharedBoundaries={shared.boundaries}
                     connectionOpenings={shared.openings}
-                    interior={interior}
+                    interior={interior && entryTransition !== "exiting"}
                     readOnly={!active || interior}
                     wallFocus={wallFocus}
                     onSelect={active ? onSelect : () => onSelectRoom?.(room.id)}
@@ -451,36 +507,13 @@ export function RoomCanvas({
                         kitchenMaterials={kitchenMaterials}
                       />
                     ))}
-                  {(cameraPlacement || (interior && !active)) && (
-                    <Html
-                      center
-                      occlude={interior}
-                      position={[
-                        tourPoints.get(room.id)!.x,
-                        0.25,
-                        tourPoints.get(room.id)!.z,
-                      ]}
-                      zIndexRange={[13, 0]}
-                    >
-                      <button
-                        type="button"
-                        className="rounded-full border-2 border-white bg-ui-accent px-3 py-2 text-white shadow-lg"
-                        aria-label={`${room.name}: дотроос харах`}
-                        title={`${room.name}: дотроос харах`}
-                        onClick={() => onVisitRoom?.(room.id)}
-                      >
-                        <Camera size={18} />
-                      </button>
-                    </Html>
-                  )}
-                  {!interior && !cameraPlacement && (
+                  {!interior && (
                     <RoomCaption
                       name={room.name}
                       area={getRoomGeometry(room).area}
                       span={Math.max(room.width, room.depth)}
                       active={active}
                       onSelect={() => onSelectRoom?.(room.id)}
-                      onVisit={() => onVisitRoom?.(room.id)}
                     />
                   )}
                 </group>
@@ -491,7 +524,7 @@ export function RoomCanvas({
           <group userData={{ roomExport: true }}>
             <RoomStructure
               onSurfaceDoubleClick={onSurfaceDoubleClick}
-              interior={interior}
+              interior={interior && entryTransition !== "exiting"}
               design={design}
               onSelect={onSelect}
               view={view}
@@ -547,7 +580,7 @@ export function RoomCanvas({
           <FurnitureMeasurements measurements={measurements} view={view} />
         )}
 
-        <group userData={{ roomExport: true }}>{design.pieces.map((piece) => (
+        <group name={PLANNER_FURNITURE_GROUP} userData={{ roomExport: true }}>{design.pieces.map((piece) => (
           <DraggablePiece
             key={piece.instanceId}
             piece={piece}
@@ -559,7 +592,7 @@ export function RoomCanvas({
             onDragChange={setIsDraggingPiece}
             snapEnabled={snapEnabled}
             gridEnabled={gridEnabled}
-            measureMode={showDimensions || interior || cameraPlacement}
+            measureMode={showDimensions}
             plan={view === "plan"}
             onEditStart={onEditStart}
             onEditEnd={onEditEnd}
@@ -583,7 +616,7 @@ export function RoomCanvas({
         {!interior && view === "perspective" && (
           <OrbitControls
             makeDefault
-            enabled={!locked && !isDraggingPiece}
+            enabled={!locked && !isDraggingPiece && entryTransition !== "entering"}
             enablePan
             screenSpacePanning
             enableRotate
@@ -617,8 +650,15 @@ export function RoomCanvas({
           <CameraNavigation
             onRest={() => onViewSettled?.(view)}
             enabled={!locked && !isDraggingPiece}
-            request={cameraRequest?.targetId && !cameraTarget ? undefined : cameraRequest}
+            request={
+              (cameraRequest?.targetId && !cameraTarget) ||
+              cameraRequest?.id === replayedRequest.current
+                ? undefined
+                : cameraRequest
+            }
             plan={view === "plan"}
+            // Mouse 1 on empty space orbits; furniture presses hold the controls.
+            leftDrag={view !== "plan"}
             bounds={cameraTarget ? furnitureCameraBounds(cameraTarget) : {
               width: spanX,
               depth: spanZ,
@@ -633,7 +673,7 @@ export function RoomCanvas({
             smoothZoom
             // A second finger must be able to cancel an object drag. The
             // controls' enabled flag already prevents wheel zoom during a drag.
-            enabled={!locked && !interior && !cameraPlacement}
+            enabled={!locked && !interior}
             plan={view === "plan"}
           />
         )}
@@ -659,14 +699,12 @@ function RoomCaption({
   span,
   active,
   onSelect,
-  onVisit,
 }: {
   name: string;
   area: number;
   span: number;
   active: boolean;
   onSelect: () => void;
-  onVisit?: () => void;
 }) {
   const anchor = useRef<THREE.Group>(null),
     button = useRef<HTMLButtonElement>(null);
@@ -698,17 +736,6 @@ function RoomCaption({
             <strong>{name}</strong>
             <small>{area.toFixed(1)} м²</small>
           </button>
-          {onVisit && (
-            <button
-              type="button"
-              className="rounded-full border-2 border-white bg-ui-accent p-2 text-white shadow-lg"
-              aria-label={`${name}: дотроос харах`}
-              title={`${name}: дотроос харах`}
-              onClick={onVisit}
-            >
-              <Camera size={18} />
-            </button>
-          )}
         </div>
       </Html>
     </group>
@@ -772,7 +799,7 @@ export function DraggablePiece({
   kitchenMaterials: Record<string, KitchenMaterialDefinition>;
 }) {
   const [hovered, setHovered] = useState(false);
-  const { camera, raycaster, gl } = useThree();
+  const { camera, raycaster, gl, controls } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const dragOffset = useRef(new THREE.Vector3());
   const dragCapture = useRef<{ pointerId: number; target: Element } | null>(
@@ -788,10 +815,15 @@ export function DraggablePiece({
       }
     : product?.model;
   const [dragging, setDragging] = useState(false);
-  const [invalid, setInvalid] = useState(false);
   const dragBefore = useRef<PlacedFurniture | null>(null);
   const moveCallback = useRef(onMove);
   moveCallback.current = onMove;
+  const heldControls = useRef<(() => void) | null>(null);
+  const placeAt = useRef<(clientX: number, clientY: number) => void>(() => {});
+  const mover = useRef<ReturnType<typeof createFrameCoalescer> | null>(null);
+  if (!mover.current)
+    mover.current = createFrameCoalescer((x, y) => placeAt.current(x, y));
+  const moves = mover.current;
 
   useCursor(
     hovered || dragging,
@@ -802,16 +834,23 @@ export function DraggablePiece({
   useEffect(() => {
     if (!dragging) return;
 
+    const releaseControls = () => {
+      heldControls.current?.();
+      heldControls.current = null;
+    };
     const finishDrag = (event?: Event) => {
       if (event && "pointerId" in event && dragCapture.current && event.pointerId !== dragCapture.current.pointerId) return;
       const before = dragBefore.current;
       dragBefore.current = null;
-      if (before && event && event.type !== "pointerup")
+      if (before && event && event.type !== "pointerup") {
+        moves.cancel();
         moveCallback.current(before.instanceId, before.x, before.z, {
           elevation: before.elevation,
           rotation: before.rotation,
           attachment: before.attachment,
         });
+      } else if (before) moves.flush();
+      releaseControls();
       const capture = dragCapture.current;
       dragCapture.current = null;
       try {
@@ -820,30 +859,39 @@ export function DraggablePiece({
         /* Capture may already be released. */
       }
       setDragging(false);
-      setInvalid(false);
       onDragChange(false);
       onEditEnd?.();
     };
+    // Window capture listeners keep an active drag alive outside the room
+    // meshes and the canvas, and before any scene handler stops propagation.
+    const move = (event: PointerEvent) => {
+      if (dragCapture.current?.pointerId === event.pointerId)
+        moves.push(event.clientX, event.clientY);
+    };
 
-    window.addEventListener("pointerup", finishDrag);
-    window.addEventListener("pointercancel", finishDrag);
+    window.addEventListener("pointermove", move, true);
+    window.addEventListener("pointerup", finishDrag, true);
+    window.addEventListener("pointercancel", finishDrag, true);
     window.addEventListener("blur", finishDrag);
     const escape = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); finishDrag(event); } };
     window.addEventListener("keydown", escape);
-    window.addEventListener("lostpointercapture", finishDrag);
+    window.addEventListener("lostpointercapture", finishDrag, true);
     gl.domElement.addEventListener(SCENE_NAVIGATION_START, finishDrag);
 
     return () => {
-      window.removeEventListener("pointerup", finishDrag);
-      window.removeEventListener("pointercancel", finishDrag);
+      window.removeEventListener("pointermove", move, true);
+      window.removeEventListener("pointerup", finishDrag, true);
+      window.removeEventListener("pointercancel", finishDrag, true);
       window.removeEventListener("blur", finishDrag);
       window.removeEventListener("keydown", escape);
-      window.removeEventListener("lostpointercapture", finishDrag);
+      window.removeEventListener("lostpointercapture", finishDrag, true);
       gl.domElement.removeEventListener(SCENE_NAVIGATION_START, finishDrag);
+      moves.cancel();
+      releaseControls();
       onDragChange(false);
       onEditEnd?.();
     };
-  }, [dragging, onDragChange, onEditEnd, gl]);
+  }, [dragging, onDragChange, onEditEnd, gl, moves]);
 
   if (!fileModel && !piece.kitchen && !piece.details) return null;
 
@@ -860,7 +908,7 @@ export function DraggablePiece({
         };
 
   const planeY = piece.elevation ?? 0;
-  const intersectFloor = (clientX: number, clientY: number) => {
+  const intersectFloor = (clientX: number, clientY: number, extend = false) => {
     const rect = gl.domElement.getBoundingClientRect();
     const x = ((clientX - rect.left) / rect.width) * 2 - 1;
     const y = -((clientY - rect.top) / rect.height) * 2 + 1;
@@ -868,7 +916,138 @@ export function DraggablePiece({
     const plane = furnitureDragPlane(piece, roomDims, plan);
     if (!plane) return null;
     const point = new THREE.Vector3();
-    return raycaster.ray.intersectPlane(plane, point);
+    const hit = raycaster.ray.intersectPlane(plane, point);
+    if (hit || !extend) return hit;
+    // Above the horizon the ray never meets the plane. Keep following its
+    // heading; placement then resolves to the nearest valid wall contact.
+    const heading = raycaster.ray.direction.clone().projectOnPlane(plane.normal);
+    if (heading.lengthSq() < 1e-10) return null;
+    return plane
+      .projectPoint(raycaster.ray.origin, point)
+      .addScaledVector(heading.normalize(), 50);
+  };
+  placeAt.current = (clientX, clientY) => {
+    const p = intersectFloor(clientX, clientY, true);
+    if (!p) return;
+    const attachment = piece.attachment;
+    const desired = p.add(dragOffset.current);
+    const wall =
+      attachment?.kind === "wall"
+        ? getRoomGeometry(roomDims).segments.find(
+            (s) => furnitureWallId(s) === attachment.segmentId,
+          )
+        : undefined;
+    if (attachment?.kind === "wall" && !wall) return;
+    const parent =
+      attachment?.kind === "surface"
+        ? allPieces.find((p) => p.instanceId === attachment.parentInstanceId)
+        : undefined;
+    if (attachment?.kind === "surface" && !parent) return;
+    const build = (point: DragPoint): PlacedFurniture | null => {
+      try {
+        if (attachment?.kind === "wall")
+          return wallAttachedPiece(
+            piece,
+            roomDims,
+            attachment.roomId,
+            attachment.segmentId,
+            point[0],
+            point[1],
+          );
+        if (attachment?.kind === "surface" && parent) {
+          const x = point[0] - parent.x,
+            z = point[1] - parent.z,
+            cos = Math.cos(parent.rotation),
+            sin = Math.sin(parent.rotation);
+          const moved: PlacedFurniture = {
+            ...piece,
+            attachment: {
+              ...attachment,
+              localPosition: [
+                x * cos - z * sin,
+                attachment.localPosition[1],
+                x * sin + z * cos,
+              ],
+            },
+          };
+          return resolveFurnitureAttachments(
+            allPieces.map((p) => (p.instanceId === moved.instanceId ? moved : p)),
+            roomDims,
+            "id" in roomDims ? String(roomDims.id) : "",
+            moved.instanceId,
+          )[0];
+        }
+        const moved = { ...piece, x: point[0], z: point[1] };
+        return attachment?.kind === "floor"
+          ? { ...moved, attachment: { ...attachment, x: moved.x, z: moved.z, yaw: moved.rotation } }
+          : moved;
+      } catch {
+        return null;
+      }
+    };
+    const boundary = { ...roomDims, allowFurnitureOverlap: true };
+    const supportsOthers = allPieces.some((p) => p.attachment?.kind === "surface");
+    const owned = ("pieces" in roomDims ? roomDims.pieces : allPieces) as PlacedFurniture[];
+    const valid = (candidate: PlacedFurniture) => {
+      if (!isPlacementValid(candidate, allPieces, boundary)) return false;
+      if (!supportsOthers) return true;
+      try {
+        const resolved = resolveFurnitureAttachments(
+          owned.map((p) => (p.instanceId === candidate.instanceId ? candidate : p)),
+          roomDims,
+          "id" in roomDims ? String(roomDims.id) : "",
+        );
+        const combined = allPieces.map(
+          (p) => resolved.find((r) => r.instanceId === p.instanceId) ?? p,
+        );
+        return resolved.every((p) => isPlacementValid(p, combined, boundary));
+      } catch {
+        return false;
+      }
+    };
+    const accept = (point: DragPoint) => {
+      const candidate = build(point);
+      return !!candidate && valid(candidate);
+    };
+    let from: DragPoint, target: DragPoint, directions: DragPoint[];
+    if (wall && attachment?.kind === "wall") {
+      const along =
+        ((desired.x - wall.a.x) * (wall.b.x - wall.a.x) +
+          (desired.z - wall.a.z) * (wall.b.z - wall.a.z)) /
+        wall.length;
+      from = [attachment.along, attachment.elevation];
+      target = [
+        Math.max(0, Math.min(wall.length, along)),
+        Math.max(0, Math.min(roomDims.height ?? 2.7, desired.y)),
+      ];
+      directions = [[1, 0], [0, 1]];
+    } else {
+      from = [piece.x, piece.z];
+      target = [desired.x, desired.z];
+      if (gridEnabled && !attachment)
+        target = [Math.round(target[0] * 4) / 4, Math.round(target[1] * 4) / 4];
+      if (snapEnabled && !attachment) {
+        const snapped = snapToWall({ ...piece, x: target[0], z: target[1] }, roomDims);
+        target = [snapped.x, snapped.z];
+      }
+      const room = roomDims as PlacementRoom;
+      target = clampDragPoint(target, (room.placementGeometry ?? getRoomGeometry(roomDims)).bounds);
+      directions = floorSlideDirections(room, target);
+    }
+    // Validation stays on: the solver only ever returns an accepted point.
+    const candidate = build(solveDragPoint({ from, to: target, accept, directions }));
+    if (
+      !candidate ||
+      (candidate.x === piece.x &&
+        candidate.z === piece.z &&
+        candidate.elevation === piece.elevation)
+    )
+      return;
+    moveCallback.current(piece.instanceId, candidate.x, candidate.z, {
+      elevation: candidate.elevation,
+      rotation: candidate.rotation,
+      attachment: candidate.attachment,
+    });
   };
 
   return (
@@ -904,6 +1083,8 @@ export function DraggablePiece({
         }
         const point = intersectFloor(event.clientX, event.clientY);
         if (!point) return;
+        heldControls.current?.();
+        heldControls.current = holdOrbitControls(controls);
         onEditStart?.();
         dragBefore.current = structuredClone(piece);
 
@@ -923,128 +1104,20 @@ export function DraggablePiece({
           target: event.target as Element,
         };
       }}
-      onPointerMove={(e) => {
+      onPointerMove={(event) => {
         if (!dragging || measureMode) return;
-        if (dragCapture.current?.pointerId !== e.pointerId) return;
-        const p = intersectFloor(e.clientX, e.clientY);
-        if (!p) return;
-        let candidate: PlacedFurniture = {
-          ...piece,
-          x: p.x + dragOffset.current.x,
-          z: p.z + dragOffset.current.z,
-        };
-        const attachment = piece.attachment;
-        if (attachment?.kind === "wall") {
-          const wall = getRoomGeometry(roomDims).segments.find(
-            (s) => furnitureWallId(s) === attachment.segmentId,
-          );
-          if (!wall) {
-            setInvalid(true);
-            return;
-          }
-          const along =
-            ((candidate.x - wall.a.x) * (wall.b.x - wall.a.x) +
-              (candidate.z - wall.a.z) * (wall.b.z - wall.a.z)) /
-            wall.length;
-          try {
-            candidate = wallAttachedPiece(
-              piece,
-              roomDims,
-              attachment.roomId,
-              attachment.segmentId,
-              along,
-              p.y + dragOffset.current.y,
-            );
-          } catch {
-            setInvalid(true);
-            return;
-          }
-        } else if (attachment?.kind === "surface") {
-          const parent = allPieces.find(
-            (p) => p.instanceId === attachment.parentInstanceId,
-          );
-          if (!parent) {
-            setInvalid(true);
-            return;
-          }
-          const x = candidate.x - parent.x,
-            z = candidate.z - parent.z,
-            cos = Math.cos(parent.rotation),
-            sin = Math.sin(parent.rotation);
-          candidate = {
-            ...candidate,
-            attachment: {
-              ...attachment,
-              localPosition: [
-                x * cos - z * sin,
-                attachment.localPosition[1],
-                x * sin + z * cos,
-              ],
-            },
-          };
-          try {
-            candidate = resolveFurnitureAttachments(
-              allPieces.map((p) =>
-                p.instanceId === candidate.instanceId ? candidate : p,
-              ),
-              roomDims,
-              "id" in roomDims ? String(roomDims.id) : "",
-              candidate.instanceId,
-            )[0];
-          } catch {
-            setInvalid(true);
-            return;
-          }
-        }
-        if (gridEnabled && !attachment)
-          candidate = {
-            ...candidate,
-            x: Math.round(candidate.x * 4) / 4,
-            z: Math.round(candidate.z * 4) / 4,
-          };
-        if (snapEnabled && !attachment)
-          candidate = snapToWall(candidate, roomDims);
-        if (candidate.attachment?.kind === "floor") candidate = {
-          ...candidate, attachment: { ...candidate.attachment, x: candidate.x, z: candidate.z, yaw: candidate.rotation },
-        };
-        const boundary = { ...roomDims, allowFurnitureOverlap: true };
-        let ok = isPlacementValid(candidate, allPieces, boundary);
-        if (ok && allPieces.some((p) => p.attachment?.kind === "surface"))
-          try {
-            const owned = (
-              "pieces" in roomDims ? roomDims.pieces : allPieces
-            ) as PlacedFurniture[];
-            const resolved = resolveFurnitureAttachments(
-              owned.map((p) =>
-                p.instanceId === candidate.instanceId ? candidate : p,
-              ),
-              roomDims,
-              "id" in roomDims ? String(roomDims.id) : "",
-            );
-            const combined = allPieces.map(
-              (p) => resolved.find((r) => r.instanceId === p.instanceId) ?? p,
-            );
-            ok = resolved.every((p) => isPlacementValid(p, combined, boundary));
-          } catch {
-            ok = false;
-          }
-        setInvalid(!ok);
-        if (ok)
-          onMove(piece.instanceId, candidate.x, candidate.z, {
-            elevation: candidate.elevation,
-            rotation: candidate.rotation,
-            attachment: candidate.attachment,
-          });
+        if (dragCapture.current?.pointerId !== event.pointerId) return;
+        moves.push(event.clientX, event.clientY);
       }}
       onPointerUp={(event) => {
         if (!dragging) return;
         if (dragCapture.current?.pointerId !== event.pointerId) return;
+        moves.flush();
         dragBefore.current = null;
         dragCapture.current = null;
         setDragging(false);
         onDragChange(false);
         onEditEnd?.();
-        setInvalid(false);
 
         (event.target as Element).releasePointerCapture?.(event.pointerId);
       }}
@@ -1061,6 +1134,9 @@ export function DraggablePiece({
           basePath={`/api/models/files/${fileModel.id}/`}
           glbFile={fileModel.file}
           preservePhysicalSize={fileModel.physicalSize}
+          // Physical sun/contact shadows already darken contacts. Authored AO on
+          // top crushes fabric colour (docs/room-realism.md); quality-baked AO stays.
+          bakedOcclusionIntensity={0}
           trackFloorBand
           w={dims.w}
           d={dims.d}
@@ -1087,12 +1163,6 @@ export function DraggablePiece({
           />
 
           <Edges color="#1463df" lineWidth={1.5} threshold={15} />
-        </mesh>
-      )}
-      {invalid && (
-        <mesh position={[0, dims.h / 2, 0]}>
-          <boxGeometry args={[dims.w + 0.1, dims.h + 0.1, dims.d + 0.1]} />
-          <meshBasicMaterial color="#E53935" transparent opacity={0.25} />
         </mesh>
       )}
     </group>

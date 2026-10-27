@@ -10,7 +10,6 @@ import {
   PencilRuler,
   Copy,
   Trash2,
-  Camera,
   X,
 } from "lucide-react";
 import type {
@@ -42,7 +41,6 @@ interface Props {
   onEditRoom?: () => void;
   onDuplicateRoom?: (id: string) => void;
   onRemoveRoom?: (id: string) => string | null;
-  onVisitRoom?: (id: string) => void;
 }
 export function RoomPlacementMap({
   design,
@@ -58,7 +56,6 @@ export function RoomPlacementMap({
   onEditRoom,
   onDuplicateRoom,
   onRemoveRoom,
-  onVisitRoom,
 }: Props) {
   const rooms = design.rooms ?? [],
     bounds = layoutBounds(rooms),
@@ -240,14 +237,6 @@ export function RoomPlacementMap({
               onClick={onEditRoom}
             >
               <PencilRuler size={17} />
-            </button>
-            <button
-              type="button"
-              title="Дотроос харах"
-              aria-label="Өрөөний камераар харах"
-              onClick={() => onVisitRoom?.(active.id)}
-            >
-              <Camera size={17} />
             </button>
             <button
               type="button"

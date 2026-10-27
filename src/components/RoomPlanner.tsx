@@ -152,7 +152,6 @@ import {
 import { RoomAddDialog } from "./RoomAddDialog";
 import { RoomTourControls } from "./RoomTourControls";
 import { interiorCamera } from "@/lib/roomInteriorCamera";
-import { tourPointValid } from "@/three/roomCameraPlacement";
 import { syncDesignRooms } from "@/lib/roomDesign";
 import { isPlacementValid, dimsFor } from "@/three/collision";
 import {
@@ -424,11 +423,8 @@ function RoomPlannerEditor() {
   useEffect(() => {
     if (roomView !== "top") setSettledPlan(null);
   }, [roomView]);
-  const [cameraPlacement, setCameraPlacement] = useState(false);
   const [addRoomType, setAddRoomType] = useState<RoomType | null>(null);
   function navigateView(action: CameraAction) {
-    if (["fit", "top", "front", "back", "left", "right"].includes(action))
-      setCameraPlacement(false);
     if (action === "top") {
       setView("plan");
       setRoomView("top");
@@ -502,7 +498,6 @@ function RoomPlannerEditor() {
     setRoomView("dollhouse");
     setView("perspective");
     setCameraRequest(undefined);
-    setCameraPlacement(false);
     setAddRoomType(null);
   }, [current?.id, setView, setResetKey]);
   useEffect(() => {
@@ -1060,7 +1055,6 @@ function RoomPlannerEditor() {
   const focusSelected = () => {
     if (!selected) return;
     setLocked(false);
-    setCameraPlacement(false);
     setCameraRequest((previous) => ({
       id: (previous?.id ?? 0) + 1,
       action: "focus",
@@ -1338,7 +1332,6 @@ function RoomPlannerEditor() {
     arrowleft: () => nudge(-0.1, 0),
     arrowright: () => nudge(0.1, 0),
     escape: () => {
-      setCameraPlacement(false);
       if (roomView === "interior") navigateView("fit");
       setSelected(null);
       setSelectedWall(null);
@@ -1979,7 +1972,6 @@ function RoomPlannerEditor() {
               setSelected(item.id);
               setSelectedOpening(null);
               setLocked(false);
-              setCameraPlacement(false);
               setRoomView("dollhouse");
               setView("perspective");
               setCameraRequest((previous) => ({
@@ -2047,11 +2039,6 @@ function RoomPlannerEditor() {
             }}
             onDuplicateRoom={duplicateRoom}
             onRemoveRoom={removeRoom}
-            onVisitRoom={(id) => {
-              selectRoom(id);
-              setRoomView("interior");
-              setView("perspective");
-            }}
             onMove={moveRoom}
             onConnection={updateConnection}
             onNotice={setNotice}
@@ -2068,7 +2055,6 @@ function RoomPlannerEditor() {
           view={roomView}
           onView={(next) => {
             setLocked(false);
-            setCameraPlacement(false);
             setSelected(null);
             setSelectedWall(null);
             setSelectedOpening(null);
@@ -2082,19 +2068,6 @@ function RoomPlannerEditor() {
                 action: next === "dollhouse" ? "fit" : next,
               }));
           }}
-          cameraPlacement={cameraPlacement}
-          onCameraPlace={() => {
-            setCameraPlacement(!cameraPlacement);
-            setRoomView("top");
-            setView("plan");
-            setLocked(false);
-            setSelected(null);
-            setPlacementTemplate(null);
-            setCameraRequest((previous) => ({
-              id: (previous?.id ?? 0) + 1,
-              action: "top",
-            }));
-          }}
           onZoom={navigateView}
           onRotate={navigateView}
           windowBearing={exteriorWindowBearing(current)}
@@ -2107,7 +2080,6 @@ function RoomPlannerEditor() {
           endLightingEdit={endEdit}
           onWindows={() => {
             if (roomView === "interior") navigateView("fit");
-            setCameraPlacement(false);
             endEdit();
             setRoomDetailsTab("room");
             setSelected(null);
@@ -2379,15 +2351,13 @@ function RoomPlannerEditor() {
             </div>
           )}
         <div className="room-camera-guide" role="status">
-          {cameraPlacement
-            ? "Камер байрлуулах шалан дээр дарна уу · Esc цуцлах"
-            : roomView === "interior"
-              ? "W/A/S/D — өрөө дотор алхах · Чирэх — эргэн харах · Дугуй — харах өнцөг"
-              : placementTemplate
-                ? "Хаалга, цонх байрлуулах ханандаа дарна уу · Esc цуцлах"
-                : selected
-                  ? "Тавилгыг чирж байрлуулна · Эргүүлэх товч: 90° · Сумтай товч: 10 см"
-                  : "Тавилга: дарж сонгох, чирж байрлуулах · Харах өнцөг: дунд товчоор чирэх · Ойртуулах: + / −"}
+          {roomView === "interior"
+            ? "W/A/S/D — өрөө дотор алхах · Чирэх — эргэн харах · Дугуй — ойртуулах, цааш гүйлгэвэл гадагш гарна"
+            : placementTemplate
+              ? "Хаалга, цонх байрлуулах ханандаа дарна уу · Esc цуцлах"
+              : selected
+                ? "Тавилгыг чирж байрлуулна · Эргүүлэх товч: 90° · Сумтай товч: 10 см"
+                : "Тавилга: дарж сонгох, чирж байрлуулах · Хоосон хэсгийг чирж эргүүлэх · Дугуйгаар ойртож өрөөнд орно"}
         </div>
 
         {roomView === "interior" && (
@@ -2507,32 +2477,18 @@ function RoomPlannerEditor() {
             key={current.id}
             design={current}
             interior={roomView === "interior"}
-            cameraPlacement={cameraPlacement}
-            onCameraPlace={(x, z) => {
-              if (!tourPointValid(current, x, z)) {
-                setNotice(
-                  "Камерыг өрөөний дотор, хана болон тавилгаас зайтай байрлуулна уу.",
-                );
-                return;
-              }
-              updateRoom({
-                interiorCamera: { ...interiorCamera(current), x, z },
-              });
-              setCameraPlacement(false);
-              setNotice(
-                "Камерын байрлал хадгалагдлаа. Дотроос харах товчийг дарна уу.",
-              );
-            }}
             onCameraSave={(pose) => updateRoom({ interiorCamera: pose })}
-            onVisitRoom={(id) => {
-              selectRoom(id);
+            onEnterInterior={(pose) => {
+              updateRoom({ interiorCamera: pose });
               setRoomView("interior");
               setView("perspective");
-              setCameraPlacement(false);
-              setLocked(false);
-              setSelected(null);
               setPlacementTemplate(null);
               setShowStartHint(false);
+            }}
+            onExitInterior={() => {
+              // The canvas has already walked the camera out; no fit request.
+              setRoomView("dollhouse");
+              setView("perspective");
             }}
             onSelectRoom={(id) => {
               selectRoom(id);
@@ -3634,7 +3590,6 @@ function RoomPlannerEditor() {
               setNotice(`Багтаагүй тавилга: ${result.skipped.join(", ")}.`);
             setAddRoomType(null);
             setRoomMapOpen(true);
-            setCameraPlacement(false);
             setShowStartHint(false);
           }}
         />

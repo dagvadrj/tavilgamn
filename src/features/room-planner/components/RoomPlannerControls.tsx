@@ -12,7 +12,7 @@ const SIDE_VIEWS = [
 ] as const;
 
 export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, onZoom, onRoom, onMaterials,
-  onHelp, onWindows, onCameraPlace, cameraPlacement, dimensions, onDimensions, grid, onGrid, snap, onSnap, locked, onLock,
+  onHelp, onWindows, dimensions, onDimensions, grid, onGrid, snap, onSnap, locked, onLock,
   expanded, onExpand, onRotate, lighting, ceiling, windowBearing, onLightingChange, onLightingSettings, beginLightingEdit, endLightingEdit,
 }: {
   onFurniture?: () => void; catalogOpen?: boolean;
@@ -21,7 +21,6 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
   view: RoomView; onView: (view: RoomView) => void;
   onZoom: (action: "zoom-in" | "zoom-out" | "fit") => void;
   onWindows?: () => void;
-  onCameraPlace?: () => void; cameraPlacement?: boolean;
   onRoom: () => void; onMaterials: () => void; onHelp: () => void;
   dimensions: boolean; onDimensions: () => void;
   grid: boolean; onGrid: () => void; snap: boolean; onSnap: () => void;
@@ -134,7 +133,6 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
           <div className="room-dock-popover">
             <button type="button" aria-pressed={dimensions} onClick={onDimensions}><Ruler size={17}/> Хэмжээс</button>
             <button type="button" onClick={onWindows}><PanelsTopLeft size={17}/> Цонх</button>
-            <button type="button" aria-pressed={cameraPlacement} onClick={onCameraPlace}><Camera size={17}/> Камер байрлуулах</button>
             <p>Харах өнцгийг эргүүлэх</p>
             <div className="room-dock-rotate">
               <button type="button" disabled={locked || view === "top"} onClick={() => onRotate("rotate-left")}><RotateCcw size={17}/> Зүүн</button>

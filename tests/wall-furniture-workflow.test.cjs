@@ -94,3 +94,54 @@ test('rendered wall furniture uses its height; Escape rolls a drag back and fore
     const escape=new Event('keydown',{cancelable:true});Object.defineProperty(escape,'key',{value:'Escape'});events.dispatchEvent(escape);render();assert.deepEqual(piece,before);
   }finally{h.dispose();global.window=previousWindow;}
 });
+
+test('dragging past a wall slides along it, holds orbit controls synchronously and never shows a red overlay',()=>{
+  const previousWindow=global.window,events=new EventTarget();global.window=events;
+  const h=hooks(),canvas=new EventTarget();canvas.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100});
+  const camera=new THREE.PerspectiveCamera(),controls={enabled:true};
+  // Top-view ray: screen x/y map to world x/z with 0.1 m per pixel around the centre.
+  const raycaster={ray:new THREE.Ray(),setFromCamera(point){this.ray.set(new THREE.Vector3(point.x*5,10,-point.y*5),new THREE.Vector3(0,-1,0));}};
+  const {DraggablePiece}=loadSource('src/three/RoomCanvas.tsx',{react:h.react,'@react-three/fiber':{Canvas:'canvas',useThree:()=>({camera,raycaster,gl:{domElement:canvas},controls})},'@react-three/drei':new Proxy({},{get:(_,key)=>key==='useCursor'?()=>{}:String(key)}),'@/store/catalog':{getProduct:()=>undefined},'@/lib/modelRegistry':{getDbModel:()=>undefined},'./GLBFurnitureMesh':{GLBFurnitureMesh:'glb'},'./InteriorModel':{InteriorModel:'interior'}});
+  let piece={instanceId:'box',productId:'unknown',x:0,z:0,rotation:0,details:{name:'Box',dimensions:{w:1,d:.6,h:.8}}};
+  const props={allPieces:[],roomDims:room,selected:true,onSelect(){},onMove(id,x,z,pose){piece={...piece,x,z,...pose};},onDragChange(){},snapEnabled:false,gridEnabled:false,measureMode:false,plan:true,kitchenMaterials:{}};
+  const render=()=>h.render(()=>DraggablePiece({...props,piece}));
+  const pointer=(x,y=50)=>({button:0,pointerId:1,clientX:x,clientY:y,stopPropagation(){},target:{setPointerCapture(){},releasePointerCapture(){}}});
+  const {minX,maxX}=getRoomGeometry(room).bounds;
+  try{
+    let tree=render();tree.props.onPointerDown(pointer(50));
+    assert.equal(controls.enabled,false,'the press disables orbit before native controls see it');
+    tree=render();
+    for(const [x,y] of [[95,50],[99,40],[99,60],[5,55]]){tree.props.onPointerMove(pointer(x,y));tree=render();}
+    assert.ok(Math.abs(piece.x-(minX+.5))<2e-3,'cursor beyond the left wall leaves the piece at the wall contact');
+    assert.ok(Math.abs(piece.z-.5)<2e-3,'motion along the wall continues while blocked');
+    assert.ok(isPlacementValid(piece,[],room));
+    assert.equal(JSON.stringify(tree).includes('E53935'),false,'no red invalid overlay is rendered');
+    tree.props.onPointerMove(pointer(98,50));tree=render();
+    assert.ok(Math.abs(piece.x-(maxX-.5))<2e-3);
+    const up=new Event('pointerup');Object.defineProperty(up,'pointerId',{value:1});events.dispatchEvent(up);render();
+    assert.equal(controls.enabled,true,'released drags restore the controls');
+    assert.ok(Math.abs(piece.x-(maxX-.5))<2e-3,'release keeps the last valid position');
+  }finally{h.dispose();global.window=previousWindow;}
+});
+
+test('wall-mounted furniture dragged beyond the wall end stays attached at its height',()=>{
+  const previousWindow=global.window,events=new EventTarget();global.window=events;
+  const h=hooks(),canvas=new EventTarget();canvas.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100});
+  const camera=new THREE.PerspectiveCamera(),raycaster={ray:new THREE.Ray(),setFromCamera(point){this.ray.set(new THREE.Vector3(point.x*5,10,-1.8),new THREE.Vector3(0,-1,0));}};
+  const {DraggablePiece}=loadSource('src/three/RoomCanvas.tsx',{react:h.react,'@react-three/fiber':{Canvas:'canvas',useThree:()=>({camera,raycaster,gl:{domElement:canvas}})},'@react-three/drei':new Proxy({},{get:(_,key)=>key==='useCursor'?()=>{}:String(key)}),'@/store/catalog':{getProduct:()=>undefined},'@/lib/modelRegistry':{getDbModel:()=>undefined},'./GLBFurnitureMesh':{GLBFurnitureMesh:'glb'},'./InteriorModel':{InteriorModel:'interior'}});
+  let piece=mount();
+  const props={allPieces:[],roomDims:room,selected:true,onSelect(){},onMove(id,x,z,pose){piece={...piece,x,z,...pose};},onDragChange(){},snapEnabled:false,gridEnabled:false,measureMode:false,plan:true,kitchenMaterials:{}};
+  const render=()=>h.render(()=>DraggablePiece({...props,piece}));
+  const pointer=x=>({button:0,pointerId:1,clientX:x,clientY:50,stopPropagation(){},target:{setPointerCapture(){},releasePointerCapture(){}}});
+  try{
+    let tree=render();tree.props.onPointerDown(pointer(50));tree=render();
+    for(const x of [80,140,400]){tree.props.onPointerMove(pointer(x));tree=render();}
+    assert.equal(piece.attachment.kind,'wall');assert.equal(piece.attachment.segmentId,wallId);
+    assert.equal(piece.elevation,1.4);
+    const {along}=piece.attachment;
+    assert.ok(Math.abs(along-.41)<1e-6||Math.abs(along-(wall.length-.41))<1e-6,'clamped to the wall end margin');
+    tree.props.onPointerMove(pointer(-300));render();
+    assert.equal(piece.attachment.kind,'wall');
+    assert.ok(Math.abs(piece.attachment.along-along)>1,'the opposite end is reachable');
+  }finally{h.dispose();global.window=previousWindow;}
+});

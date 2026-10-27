@@ -169,18 +169,6 @@ test('interior controller jumps once, ignores WASD, keeps FOV and restores canva
   h.unmount(); assert.equal(canvas.style.touchAction, 'auto'); assert.equal(canvas.tabIndex, -1); assert.equal(listeners.size, 0); assert.equal(camera.near, .1);
 });
 
-test('camera placement projects a canvas click onto the floor and removes its listener on unmount', () => {
-  const h = hooks(), camera = new THREE.PerspectiveCamera(40, 1, .1, 100), listeners = new Map();
-  camera.position.set(0, 8, .001); camera.lookAt(0, 0, 0); camera.updateMatrixWorld();
-  const canvas = { getBoundingClientRect: () => ({ left: 0, top: 0, width: 400, height: 400 }), addEventListener: (n, fn) => listeners.set(n, fn), removeEventListener: n => listeners.delete(n) };
-  const { CameraPointPlacement } = loadSource('src/three/RoomStreetView.tsx', { react: h.react, '@react-three/fiber': { useThree: () => ({ camera, gl: { domElement: canvas } }) } });
-  let point;
-  h.render(() => CameraPointPlacement({ onPlace: (x, z) => point = { x, z } }));
-  listeners.get('pointerdown')({ button: 0, clientX: 200, clientY: 200, stopImmediatePropagation() {} });
-  assert.ok(Math.abs(point.x) < 1e-7 && Math.abs(point.z) < 1e-7);
-  h.unmount(); assert.equal(listeners.size, 0);
-});
-
 test('tour controls remove held walking buttons and group FOV slider edits', () => {
   const React=require('react');
   const { RoomTourControls }=loadSource('src/components/RoomTourControls.tsx');
