@@ -57,11 +57,13 @@ test('paint PMREM restores transparent-clear state on success or failure and dis
     global.setTimeout=fn=>{timer=fn;return 1;};global.clearTimeout=()=>{};
     const originalTarget={id:'main'},originalColor=new THREE.Color('#abcdef');
     const gl={autoClear:true,xr:{enabled:true},target:originalTarget,face:2,level:1,color:originalColor.clone(),alpha:.4,
+      getContext:()=>({isContextLost:()=>false}),
       getRenderTarget(){return this.target;},getActiveCubeFace(){return this.face;},getActiveMipmapLevel(){return this.level;},
       getClearAlpha(){return this.alpha;},getClearColor(target){return target.copy(this.color);},
       setRenderTarget(target,face,level){this.target=target;this.face=face;this.level=level;},
       setClearColor(color,alpha){this.color.copy(color);this.alpha=alpha;}};
     const {useRoomPaintEnvironment}=loadSource('src/three/useRoomPaintEnvironment.ts',{
+      './CanvasLifecycle':{useContextRevision:()=>0},
       react:{...React,useState:()=>[null,value=>{published=value;}],useEffect:fn=>{cleanup=fn();}},
       '@react-three/fiber':{useThree:fn=>fn({gl,invalidate(){}})},
       three:{...THREE,DataTexture:class extends THREE.DataTexture{dispose(){sourceDisposed++;super.dispose();}},PMREMGenerator:class{

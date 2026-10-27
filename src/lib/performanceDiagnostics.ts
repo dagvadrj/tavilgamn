@@ -22,6 +22,7 @@ export type CanvasMetric = {
   cameraPosition?: [number, number, number];
   cameraTarget?: [number, number, number];
   cameraFov?: number;
+  modelCache?: { activeBytes: number; idleBytes: number; pending: number; entries: number; idleBudgetBytes: number };
 };
 
 export function performanceDiagnosticsEnabled() {

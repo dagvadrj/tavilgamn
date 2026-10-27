@@ -4,6 +4,7 @@ import { memo, useLayoutEffect } from "react";
 import { useThree } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
 import { plannerEnvironmentIntensity } from "@/lib/plannerLighting";
+import { useContextRevision } from "./CanvasLifecycle";
 
 // Environment's portal captures again when `children` changes, even at frames=1.
 // Keep the capture content stable across furniture edits AND daylight changes.
@@ -45,6 +46,7 @@ export const PlannerEnvironment = memo(function PlannerEnvironment({
   daylight = 1,
 }: PlannerEnvironmentProps) {
   const scene = useThree((state) => state.scene);
+  const revision = useContextRevision();
   const invalidate = useThree((state) => state.invalidate);
   const intensity = plannerEnvironmentIntensity(daylight);
   useLayoutEffect(() => {
@@ -57,7 +59,7 @@ export const PlannerEnvironment = memo(function PlannerEnvironment({
   }, [scene, intensity, invalidate]);
 
   return (
-    <Environment resolution={256} frames={1} environmentIntensity={intensity}>
+    <Environment key={revision} resolution={256} frames={1} environmentIntensity={intensity}>
       {reflectionStudio}
     </Environment>
   );

@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import * as THREE from "three";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import {
@@ -49,6 +49,8 @@ import {
 } from "@/lib/kitchenMaterials";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
+import { CanvasLifecycle } from "./CanvasLifecycle";
+import { RoomRendererBoundary } from "./RoomRendererBoundary";
 import { CameraMotionPreview } from "./CameraMotionPreview";
 import { ROOM_DAY_BACKDROP, ROOM_NIGHT_BACKDROP } from "@/lib/roomLighting";
 import { RoomExportBridge } from "./RoomExportBridge";
@@ -81,6 +83,7 @@ const ROOM_CAMERA = {
 };
 
 interface RoomCanvasProps {
+  onRendererUnavailable?: (unavailable: boolean) => void;
   onViewSettled?: (view: "plan" | "perspective") => void;
   onExportReady?: (exporter: (() => Promise<Blob>) | null) => void;
   onPlacementHintsReady?: (source: RoomPlacementHintSource | null) => void;
@@ -140,6 +143,7 @@ interface RoomCanvasProps {
 }
 
 export function RoomCanvas({
+  onRendererUnavailable,
   onViewSettled,
   onExportReady,
   onPlacementHintsReady,
@@ -181,6 +185,12 @@ export function RoomCanvas({
   const performance = useCanvasPerformance();
   const [isDraggingPiece, setIsDraggingPiece] = useState(false);
   const [isLooking, setIsLooking] = useState(false);
+  const [contextLost, setContextLost] = useState(false);
+  const [rendererAttempt, setRendererAttempt] = useState(0);
+  const rendererStatus = useCallback((lost: boolean) => {
+    setContextLost(lost);
+    onRendererUnavailable?.(lost);
+  }, [onRendererUnavailable]);
   const [kitchenMaterials, setKitchenMaterials] = useState<
     Record<string, KitchenMaterialDefinition>
   >({});
@@ -250,7 +260,10 @@ export function RoomCanvas({
     ? design.pieces.find((piece) => piece.instanceId === cameraRequest.targetId)
     : undefined;
   return (
+    <div className="relative h-full w-full" data-room-context={contextLost ? "lost" : "ready"}>
+    <RoomRendererBoundary onUnavailable={onRendererUnavailable}>
     <Canvas
+      key={rendererAttempt}
       shadows={performance.shadows}
       dpr={performance.dpr}
       frameloop={paused ? "never" : "demand"}
@@ -274,6 +287,7 @@ export function RoomCanvas({
         onSelectOpening?.(null);
       }}
     >
+      <CanvasLifecycle paused={Boolean(paused)} onUnavailable={rendererStatus} />
       <CameraMotionPreview interactionActive={isDraggingPiece || isLooking}>
         {onExportReady && <RoomExportBridge onReady={onExportReady} />}
         {onPlacementHintsReady && <RoomPlacementHints designId={design.id} roomId={design.activeRoomId ?? `${design.id}-room-1`} onReady={onPlacementHintsReady} />}
@@ -625,6 +639,18 @@ export function RoomCanvas({
         )}
       </CameraMotionPreview>
     </Canvas>
+    </RoomRendererBoundary>
+    {contextLost && (
+      <div role="status" className="absolute inset-0 z-10 grid place-content-center bg-white/90 p-6 text-center text-sm text-slate-700">
+        <p>3D харагдац түр тасарлаа. Сэргээж байна…</p>
+        <p className="mt-2 text-xs">Таны өрөөний төлөвлөгөө хэвээр байна.</p>
+        <button type="button" className="mx-auto mt-4 rounded-xl bg-blue-600 px-5 py-3 text-white" onClick={() => {
+          setContextLost(false);
+          setRendererAttempt(value => value + 1);
+        }}>3D дахин ачаалах</button>
+      </div>
+    )}
+    </div>
   );
 }
 function RoomCaption({
@@ -850,7 +876,12 @@ export function DraggablePiece({
       ref={groupRef}
       position={[piece.x, planeY, piece.z]}
       rotation={[0, piece.rotation, 0]}
-      onClick={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        // Opening the mobile inspector resizes the canvas. Wait until the tap's
+        // click has a target so it cannot land on a newly shifted room hotspot.
+        onSelect(piece.instanceId);
+      }}
       onPointerOver={(event) => {
         event.stopPropagation();
         setHovered(true);
@@ -868,7 +899,7 @@ export function DraggablePiece({
         event.stopPropagation();
 
         if (measureMode) {
-          onSelect(piece.instanceId);
+          if (event.pointerType !== "touch") onSelect(piece.instanceId);
           return;
         }
         const point = intersectFloor(event.clientX, event.clientY);
@@ -882,7 +913,7 @@ export function DraggablePiece({
           piece.z - point.z,
         );
 
-        onSelect(piece.instanceId);
+        if (event.pointerType !== "touch") onSelect(piece.instanceId);
         setDragging(true);
         onDragChange(true);
 

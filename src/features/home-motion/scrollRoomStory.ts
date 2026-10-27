@@ -34,14 +34,24 @@ const FOCUS: Record<RoomFurniture, { eye: RoomPoint; target: RoomPoint }> = {
   officeChair: { eye: [-0.1, 1.4, 2.1], target: [1.7, 0.9, 0.15] },
   bookshelf: { eye: [0.7, 1.9, -0.3], target: [2.5, 1.9, -4.3] },
 };
-export function roomFocusPose(item: RoomFurniture, rotation = 0) {
+export function roomFocusPose(
+  item: RoomFurniture,
+  rotation = 0,
+  compact = false,
+) {
   const offset = ROOM_ITEMS[item].room * ROOM_GAP;
   const world = ([x, y, z]: RoomPoint): RoomPoint => [
     offset + x * Math.cos(rotation) + z * Math.sin(rotation),
     y,
     -x * Math.sin(rotation) + z * Math.cos(rotation),
   ];
-  return { eye: world(FOCUS[item].eye), target: world(FOCUS[item].target) };
+  const focus = FOCUS[item];
+  const eye = compact
+    ? (focus.eye.map(
+        (value, i) => focus.target[i] + (value - focus.target[i]) * 1.55,
+      ) as RoomPoint)
+    : focus.eye;
+  return { eye: world(eye), target: world(focus.target) };
 }
 export const ROOM_ITEMS: Record<
   RoomFurniture,
@@ -109,12 +119,32 @@ const smooth = (start: number, end: number, p: number) => {
   return t * t * (3 - 2 * t);
 };
 /** Three separate, rotating room stages, following the supplied prototype. */
-export function scrollRoomPose(progress: number) {
+export function scrollRoomPose(progress: number, compact = false) {
   const p = clamp(progress);
   const travel = smooth(0.2, 0.4, p) + smooth(0.68, 0.88, p);
   const phase = Math.round(travel);
   const detail = 0.65 * smooth(0, 0.17, p) * (1 - smooth(0.18, 0.27, p));
   const x = travel * ROOM_GAP;
+  if (compact) {
+    // Portrait cameras frame the main furniture inside each room. The renderer
+    // reframes with a short fade instead of passing through a side wall/window.
+    const offset = phase * ROOM_GAP;
+    const center = phase === 0 ? 1.65 : phase === 1 ? 0.95 : 0.65;
+    return {
+      travel,
+      phase,
+      eye: [
+        offset + center + (travel - phase) * 0.25,
+        2,
+        4.6 - detail * 0.35,
+      ] as RoomPoint,
+      target: [offset + center, 0.85, -1.65] as RoomPoint,
+      rotations: [0, 1, 2].map((i) =>
+        Math.max(-0.06, Math.min(0.06, (i - travel) * 0.12)),
+      ),
+      settled: p >= 0.98,
+    };
+  }
   return {
     travel,
     phase,

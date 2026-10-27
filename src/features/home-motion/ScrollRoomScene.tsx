@@ -49,11 +49,8 @@ function Room(props: Props) {
   const invalidate = useThree((s) => s.invalidate);
   const size = useThree((s) => s.size);
   const setDpr = useThree((s) => s.setDpr);
-  const materials = usePremiumRoomMaterials();
-  const [roomMask, setRoomMask] = useState(() =>
-    roomStageMask(scrollRoomPose(motion.current.progress).travel),
-  );
-  const currentMask = useRef(roomMask);
+  const compact =
+    size.width < 768 || size.height < 520 || size.width / size.height < 0.85;
   const constrained = useMemo(() => {
     const memory = (navigator as Navigator & { deviceMemory?: number })
       .deviceMemory;
@@ -62,6 +59,18 @@ function Room(props: Props) {
       navigator.hardwareConcurrency <= 4
     );
   }, []);
+  const materials = usePremiumRoomMaterials();
+  const [roomMask, setRoomMask] = useState(() =>
+    compact
+      ? 1 << scrollRoomPose(motion.current.progress).phase
+      : roomStageMask(scrollRoomPose(motion.current.progress).travel),
+  );
+  const currentMask = useRef(roomMask);
+  const cameraPhase = useRef<number | null>(null);
+  const transitionOpacity = useRef(1);
+  const viewShift = useRef(0);
+  const viewShiftX = useRef(0);
+  const surface = useRef<HTMLElement | null>(null);
   const groups = useRef<(THREE.Group | null)[]>([]),
     sun = useRef<THREE.DirectionalLight>(null);
   const aim = useMemo(() => new THREE.Object3D(), []),
@@ -92,8 +101,13 @@ function Room(props: Props) {
   useEffect(() => {
     const c = camera as THREE.PerspectiveCamera;
     const aspect = size.width / size.height;
-    c.fov =
-      aspect < 1.4
+    c.fov = compact
+      ? aspect < 0.55
+        ? 66
+        : aspect < 1
+          ? 62
+          : 48
+      : aspect < 1.4
         ? Math.min(
             72,
             (2 *
@@ -103,9 +117,11 @@ function Room(props: Props) {
           )
         : 42;
     c.filmOffset = 0;
+    c.clearViewOffset();
+    initialized.current = false;
     c.updateProjectionMatrix();
     invalidate();
-  }, [camera, size.width, size.height, invalidate]);
+  }, [camera, size.width, size.height, compact, invalidate]);
   useFrame((_, delta) => {
     const state = motion.current;
     if (!state.visible || document.hidden) return;
@@ -124,8 +140,8 @@ function Room(props: Props) {
           );
     state.snap = false;
     progress.current = Math.abs(p - destination) < 0.0001 ? destination : p;
-    const pose = scrollRoomPose(progress.current);
-    const nextMask = roomStageMask(pose.travel);
+    const pose = scrollRoomPose(progress.current, compact);
+    const nextMask = compact ? 1 << pose.phase : roomStageMask(pose.travel);
     if (nextMask !== currentMask.current) {
       currentMask.current = nextMask;
       setRoomMask(nextMask);
@@ -133,10 +149,17 @@ function Room(props: Props) {
     gl.domElement.dataset.roomTravel = pose.travel.toFixed(3);
     const focus =
       props.selected && ROOM_ITEMS[props.selected].room === pose.phase
-        ? roomFocusPose(props.selected, pose.rotations[pose.phase])
+        ? roomFocusPose(props.selected, pose.rotations[pose.phase], compact)
         : pose;
     desiredEye.fromArray(focus.eye);
     desiredTarget.fromArray(focus.target);
+    // Reframe within the next room, with a brief fade, rather than crossing walls.
+    if (compact && cameraPhase.current !== pose.phase) {
+      if (cameraPhase.current !== null && !reduced)
+        transitionOpacity.current = 0.15;
+      initialized.current = false;
+    }
+    cameraPhase.current = pose.phase;
     const alpha =
       reduced || !initialized.current
         ? 1
@@ -144,9 +167,53 @@ function Room(props: Props) {
     camera.position.lerp(desiredEye, alpha);
     target.lerp(desiredTarget, alpha);
     initialized.current = true;
+    transitionOpacity.current = reduced
+      ? 1
+      : THREE.MathUtils.damp(
+          transitionOpacity.current,
+          1,
+          8,
+          Math.min(delta, 0.25),
+        );
+    if (transitionOpacity.current > 0.998) transitionOpacity.current = 1;
+    const landscapeFocus =
+      compact && size.width > size.height && !!props.selected;
+    const desiredShift = compact
+      ? landscapeFocus
+        ? -0.12
+        : props.selected
+          ? 0.12
+          : 0.045
+      : 0;
+    const desiredShiftX = landscapeFocus ? 0.15 : 0;
+    viewShift.current = THREE.MathUtils.lerp(
+      viewShift.current,
+      desiredShift,
+      alpha,
+    );
+    if (Math.abs(viewShift.current - desiredShift) < 0.0001)
+      viewShift.current = desiredShift;
+    viewShiftX.current = THREE.MathUtils.lerp(
+      viewShiftX.current,
+      desiredShiftX,
+      alpha,
+    );
+    if (Math.abs(viewShiftX.current - desiredShiftX) < 0.0001)
+      viewShiftX.current = desiredShiftX;
+    (camera as THREE.PerspectiveCamera).setViewOffset(
+      size.width,
+      size.height,
+      size.width * viewShiftX.current,
+      size.height * viewShift.current,
+      size.width,
+      size.height,
+    );
     const cameraMoving =
       camera.position.distanceToSquared(desiredEye) > 0.000001 ||
-      target.distanceToSquared(desiredTarget) > 0.000001;
+      target.distanceToSquared(desiredTarget) > 0.000001 ||
+      viewShift.current !== desiredShift ||
+      viewShiftX.current !== desiredShiftX ||
+      transitionOpacity.current !== 1;
     const moving = cameraMoving || progress.current !== destination;
     const dpr = roomPixelRatio(
       size.width,
@@ -161,6 +228,14 @@ function Room(props: Props) {
       target.copy(desiredTarget);
     }
     camera.lookAt(target);
+    if (!surface.current)
+      surface.current = gl.domElement.closest(".scroll-room-scene");
+    surface.current?.style.setProperty(
+      "--room-scene-opacity",
+      String(transitionOpacity.current),
+    );
+    gl.domElement.dataset.compact = String(compact);
+    gl.domElement.dataset.roomOpacity = transitionOpacity.current.toFixed(3);
     gl.domElement.dataset.roomSettled = String(
       progress.current === destination && !cameraMoving,
     );
@@ -184,8 +259,9 @@ function Room(props: Props) {
       }
     });
     if (sun.current) {
-      sun.current.position.set(pose.travel * ROOM_GAP + 5, 6, 3);
-      aim.position.set(pose.travel * ROOM_GAP, 0, -2);
+      const lightRoom = compact ? pose.phase : pose.travel;
+      sun.current.position.set(lightRoom * ROOM_GAP + 5, 6, 3);
+      aim.position.set(lightRoom * ROOM_GAP, 0, -2);
       aim.updateMatrixWorld();
     }
     if (shadowTravel.current !== pose.travel) {

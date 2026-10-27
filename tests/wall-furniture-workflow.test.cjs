@@ -59,6 +59,24 @@ test('admin can author wall-only mounting and cannot remove its last allowed sur
 
 function hooks(){const slots=[];let cursor=0,pending=[];return {react:{...React,useState:init=>{const at=cursor++;if(!slots[at])slots[at]={value:typeof init==='function'?init():init};return[slots[at].value,v=>{slots[at].value=typeof v==='function'?v(slots[at].value):v;}];},useRef:v=>{const at=cursor++;return slots[at]??(slots[at]={current:v});},useEffect:(fn,deps)=>{const at=cursor++,old=slots[at];if(!old||deps.some((v,i)=>!Object.is(v,old.deps[i]))){slots[at]={deps};pending.push(()=>{old?.cleanup?.();slots[at].cleanup=fn();});}},useMemo:fn=>fn()},render(fn){cursor=0;pending=[];const result=fn();pending.forEach(f=>f());return result;},dispose(){slots.forEach(s=>s.cleanup?.());}};}
 
+test('touch selection waits for click so an opening inspector cannot retarget the same tap',()=>{
+ const previousWindow=global.window;global.window=new EventTarget();
+ try{for(const pointerType of ['touch','mouse']){
+  const h=hooks(),canvas=new EventTarget(),selected=[];
+  canvas.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100});
+  const raycaster={ray:new THREE.Ray(new THREE.Vector3(0,10,-1.8),new THREE.Vector3(0,-1,0)),setFromCamera(){}};
+  const {DraggablePiece}=loadSource('src/three/RoomCanvas.tsx',{react:h.react,'@react-three/fiber':{Canvas:'canvas',useThree:()=>({camera:new THREE.PerspectiveCamera(),raycaster,gl:{domElement:canvas}})},'@react-three/drei':new Proxy({},{get:(_,key)=>key==='useCursor'?()=>{}:String(key)}),'@/store/catalog':{getProduct:()=>undefined},'@/lib/modelRegistry':{getDbModel:()=>undefined},'./GLBFurnitureMesh':{GLBFurnitureMesh:'glb'},'./InteriorModel':{InteriorModel:'interior'}});
+  const props={piece:mount(),allPieces:[],roomDims:room,selected:false,onSelect:id=>selected.push(id),onMove(){},onDragChange(){},snapEnabled:false,gridEnabled:false,measureMode:false,plan:true,kitchenMaterials:{}};
+  try{
+   const tree=h.render(()=>DraggablePiece(props));
+   tree.props.onPointerDown({pointerType,button:0,pointerId:1,clientX:50,clientY:50,stopPropagation(){},target:{setPointerCapture(){}}});
+   assert.equal(selected.length,pointerType==='touch'?0:1);
+   tree.props.onClick({stopPropagation(){}});
+   assert.equal(selected.at(-1),'shelf');
+  }finally{h.dispose()}
+ }}finally{global.window=previousWindow}
+});
+
 test('rendered wall furniture uses its height; Escape rolls a drag back and foreign pointers cannot move it',()=>{
   const previousWindow=global.window,events=new EventTarget();global.window=events;
   const h=hooks(),canvas=new EventTarget();canvas.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100});

@@ -33,7 +33,7 @@ type Props = {
   onBedStatus: (s: string) => void;
   onWardrobeStatus: (s: string) => void;
 };
-function Block({
+export function Block({
   at,
   size,
   material,
@@ -65,7 +65,7 @@ function Block({
     </mesh>
   );
 }
-function Finish({
+export function Finish({
   m,
   color,
   wood = false,
@@ -190,14 +190,16 @@ function ShelfBooks() {
     </instancedMesh>
   );
 }
-function Bookcase({
+export function Bookcase({
   at,
   m,
   color,
+  light = true,
 }: {
   at: RoomPoint;
   m: PremiumMaterials;
   color?: string;
+  light?: boolean;
 }) {
   return (
     <group position={at}>
@@ -230,14 +232,16 @@ function Bookcase({
           )}
         </group>
       ))}
-      <rectAreaLight
-        position={[0, 1.8, 0.35]}
-        rotation={[0, Math.PI, 0]}
-        width={2.7}
-        height={2.8}
-        intensity={0.7}
-        color="#ffc18a"
-      />
+      {light && (
+        <rectAreaLight
+          position={[0, 1.8, 0.35]}
+          rotation={[0, Math.PI, 0]}
+          width={2.7}
+          height={2.8}
+          intensity={0.7}
+          color="#ffc18a"
+        />
+      )}
     </group>
   );
 }
@@ -270,7 +274,13 @@ function TableLamp({ at, m }: { at: RoomPoint; m: PremiumMaterials }) {
     </group>
   );
 }
-function OfficeChair({ m, color }: { m: PremiumMaterials; color?: string }) {
+export function OfficeChair({
+  m,
+  color,
+}: {
+  m: PremiumMaterials;
+  color?: string;
+}) {
   return (
     <group>
       <mesh position={[0, 0.3, 0]} material={m.metal} castShadow>

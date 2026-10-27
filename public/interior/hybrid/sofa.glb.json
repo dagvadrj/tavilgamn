@@ -1,0 +1,48 @@
+{
+  "sourceSha256": "b3fc9348e4285109927cb24ec5cc5c4a91161cdf318b5da531108086aec8f82e",
+  "sourceBytes": 1952012,
+  "derivativeBytes": 1716820,
+  "before": {
+    "triangles": 69913,
+    "textures": [
+      {
+        "size": [
+          2048,
+          2048
+        ],
+        "encodedBytes": 981672,
+        "rgba8WithMipsBytes": 22369621.333333332
+      },
+      {
+        "size": [
+          2048,
+          2048
+        ],
+        "encodedBytes": 471011,
+        "rgba8WithMipsBytes": 22369621.333333332
+      }
+    ]
+  },
+  "after": {
+    "triangles": 45442,
+    "textures": [
+      {
+        "size": [
+          2048,
+          2048
+        ],
+        "encodedBytes": 979934,
+        "rgba8WithMipsBytes": 22369621.333333332
+      },
+      {
+        "size": [
+          2048,
+          2048
+        ],
+        "encodedBytes": 471011,
+        "rgba8WithMipsBytes": 22369621.333333332
+      }
+    ]
+  },
+  "textureMemoryNote": "Estimated uncompressed RGBA8 texture allocation including mip chain; not browser process RAM."
+}

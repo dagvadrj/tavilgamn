@@ -324,7 +324,9 @@ test("failed initial delivery reports an error and retry uses the same delivery;
     assert.equal(run.tree.props.userData.deliveryPending, true);
     run.find("button").props.onClick({ stopPropagation() {} }); await run.flush();
     assert.deepEqual(run.requests.map(request => request.url), ["/models/high.glb", "/models/high.glb"]);
-    run.unmount(); run.resolve(1); await run.flush();
+    run.unmount();
+    assert.deepEqual(run.released, ["/models/high.glb", "/models/high.glb"], 'unmount releases the pending lease before download finishes');
+    run.resolve(1); await run.flush();
     assert.equal(run.primitive(), null);
     assert.deepEqual(run.released, ["/models/high.glb", "/models/high.glb"]);
   } finally { console.error = originalError; }

@@ -15,14 +15,16 @@ export function PremiumRoomModel({
   color,
   onStatus,
   children,
+  prepare = false,
 }: {
   url?: string;
   size: readonly [number, number, number];
   color?: string;
   onStatus?: (status: string) => void;
   children?: ReactNode;
+  prepare?: boolean;
 }) {
-  const { gl, invalidate } = useThree();
+  const { gl, invalidate, camera, scene } = useThree();
   const [asset, setAsset] = useState<{
     model: LoadedModel;
     release: () => void;
@@ -38,8 +40,19 @@ export function PremiumRoomModel({
     const lease = acquireModel(gl, url);
     onStatus?.("loading");
     void lease.promise
-      .then((model) => {
+      .then(async (model) => {
+        if (prepare && !cancelled)
+          await gl.compileAsync(model.scene, camera, scene);
         if (cancelled) return;
+        if (prepare)
+          model.scene.traverse((object) => {
+            if (!(object instanceof THREE.Mesh)) return;
+            for (const material of Array.isArray(object.material)
+              ? object.material
+              : [object.material])
+              for (const value of Object.values(material))
+                if (value instanceof THREE.Texture) gl.initTexture(value);
+          });
         const owned = cloneModel(model);
         // The loader shares cached geometry/textures. Own only the materials we tint.
         const materials = new Map<THREE.Material, THREE.Material>();
@@ -66,7 +79,7 @@ export function PremiumRoomModel({
       cancelled = true;
       if (!transferred) lease.release();
     };
-  }, [url, gl, invalidate, onStatus]);
+  }, [url, gl, invalidate, onStatus, prepare, camera, scene]);
   useEffect(
     () => () => {
       if (asset) {

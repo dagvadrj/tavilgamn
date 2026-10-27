@@ -46,8 +46,8 @@ test('three room stages rotate continuously with reversible scroll and a living-
   assert.ok(a.rotations.every(v=>Math.abs(v)<=.58));
   assert.ok(b.travel>=a.travel);
  }
- const poses=ROOM_STEPS.map(scrollRoomPose);
- assert.deepEqual([...ROOM_STEPS].reverse().map(scrollRoomPose).reverse(),poses);
+ const poses=ROOM_STEPS.map(p=>scrollRoomPose(p));
+ assert.deepEqual([...ROOM_STEPS].reverse().map(p=>scrollRoomPose(p)).reverse(),poses);
  assert.deepEqual(scrollRoomPose(10),scrollRoomPose(1));
  assert.deepEqual(scrollRoomPose(NaN),scrollRoomPose(0));
  assert.equal(roomScrollProgress(-1200,3200,800,0),.5);
@@ -57,7 +57,8 @@ test('three room stages rotate continuously with reversible scroll and a living-
 test('hero texture and geometry assets stay within a bounded local download budget',()=>{
  const fs=require('node:fs'),path=require('node:path');
  const dir=path.resolve('public/interior/premium');let bytes=0;
- for(const name of fs.readdirSync(dir))bytes+=fs.statSync(path.join(dir,name)).size;
+ const total=folder=>fs.readdirSync(folder).reduce((sum,name)=>{const file=path.join(folder,name),stat=fs.statSync(file);return sum+(stat.isDirectory()?total(file):stat.size)},0);
+ bytes=total(dir);
  assert.ok(bytes<8*1024*1024);
  for(const surface of ['concrete','parquet','walnut','linen'])for(const channel of ['color','normal','roughness'])assert.ok(fs.statSync(path.join(dir,surface+'-'+channel+'.webp')).size>1000);
  for(const name of ['lounge-chair']){const b=fs.readFileSync(path.join(dir,name+'.glb'));assert.equal(b.readUInt32LE(0),0x46546c67);assert.equal(b.readUInt32LE(8),b.length);}
@@ -103,4 +104,20 @@ test('render resolution stays within the motion and idle pixel budgets on high-D
   assert.ok(roomPixelRatio(width,height,3,true,true)<=.75);
  }
  assert.equal(roomPixelRatio(390,844,1,false,false),1);
+});
+
+test('portrait camera remains inside its current room at every scroll stop, including reverse travel',()=>{
+ const {ROOM_GAP,roomFocusPose,ROOM_ITEMS}=loadSource('src/features/home-motion/scrollRoomStory.ts');
+ for(let p=0;p<=1;p+=.001){
+  const pose=scrollRoomPose(p,true),localX=pose.eye[0]-pose.phase*ROOM_GAP;
+  assert.ok(localX>.5 && localX<1.9);
+  assert.ok(pose.eye[2]>4.3 && pose.eye[2]<=4.6);
+  assert.ok(pose.rotations.every(v=>Math.abs(v)<=.06));
+  assert.deepEqual(scrollRoomPose(p,true),pose);
+ }
+ for(const item of Object.keys(ROOM_ITEMS)){
+  const pose=roomFocusPose(item,0,true);
+  assert.ok(Math.abs(pose.eye[0]-ROOM_ITEMS[item].room*ROOM_GAP)<4.8);
+  assert.ok(pose.eye[2]<5.9 && pose.eye[2]>-4.6);
+ }
 });

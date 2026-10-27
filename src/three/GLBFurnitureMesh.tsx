@@ -255,6 +255,7 @@ export function GLBFurnitureMesh({
     let cancelled = false;
     let readyShown = false;
     let assetPrepared = false;
+    let releasePending: (() => void) | undefined;
     const startedAt = performance.now();
     setError(false);
     // Keep the last complete scene attached while the next GLB and its textures
@@ -268,6 +269,15 @@ export function GLBFurnitureMesh({
         acquireKitchenMaterialTextures(frontTexturePaths);
       const carcassTextureLease =
         acquireKitchenMaterialTextures(carcassTexturePaths);
+      let released = false;
+      const release = () => {
+        if (released) return;
+        released = true;
+        frontTextureLease.release();
+        carcassTextureLease.release();
+        lease.release();
+      };
+      releasePending = release;
       let transferred = false;
       try {
         const [asset, frontTextures, carcassTextures] = await Promise.all([
@@ -378,11 +388,7 @@ export function GLBFurnitureMesh({
           variant: "high",
           requestedAt,
           asset: cloned,
-          release: () => {
-            frontTextureLease.release();
-            carcassTextureLease.release();
-            lease.release();
-          },
+          release,
         };
         {
           let firstFrame = true;
@@ -414,12 +420,13 @@ export function GLBFurnitureMesh({
           });
         }
         transferred = true;
+        releasePending = undefined;
         assetPrepared = true;
         owned.current.add(next);
         setDisplay(next);
         return true;
       } catch (error) {
-        console.error("[GlbFurnitureMesh]", error);
+        if (!cancelled) console.error("[GlbFurnitureMesh]", error);
         if (!cancelled && !assetPrepared) {
           setError(true);
           callbacks.current.onError?.();
@@ -427,9 +434,8 @@ export function GLBFurnitureMesh({
         return false;
       } finally {
         if (!transferred) {
-          frontTextureLease.release();
-          carcassTextureLease.release();
-          lease.release();
+          release();
+          releasePending = undefined;
         }
       }
     };
@@ -437,6 +443,7 @@ export function GLBFurnitureMesh({
     void loadDelivery();
     return () => {
       cancelled = true;
+      releasePending?.();
     };
   }, [gl, request]);
 

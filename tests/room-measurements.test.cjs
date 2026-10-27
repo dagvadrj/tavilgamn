@@ -44,7 +44,7 @@ test('room dimensions retain millimetre precision and resize with the measured f
  assert.equal(formatRoomMeasurement(4.8),'4.80 м');assert.equal(formatRoomMeasurement(1.99999999),'2.00 м');assert.equal(getRoomMeasurements({...r,width:5.123})[0].value,5.123);
 });
 test('real canvas renders separate measurements at each room origin and keeps them fixed across selection',()=>{
- const react={...React,useState:v=>[v,()=>{}],useRef:v=>({current:v}),useEffect:()=>{},useMemo:fn=>fn()};
+ const react={...React,useState:v=>[v,()=>{}],useRef:v=>({current:v}),useEffect:()=>{},useMemo:fn=>fn(),useCallback:fn=>fn};
  const {RoomCanvas}=loadSource('src/three/RoomCanvas.tsx',{react,'@react-three/fiber':{Canvas:'canvas'},'@react-three/drei':new Proxy({},{get:(_,key)=>String(key)})});
  const props={selected:null,onSelect:()=>{},onMove:()=>{},view:'perspective',snapEnabled:true,locked:false,showDimensions:true},before=plan(),after=rooms.activateDesignRoom(before,b.id);
  const worldLines=d=>{

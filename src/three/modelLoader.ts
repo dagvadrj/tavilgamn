@@ -9,6 +9,7 @@ import { configureModelTextureSampling } from "./modelTextureSampling";
 import { configureModelCutoutSampling } from "./modelCutoutSampling";
 import { configureModelDefaultMaterials } from "./modelDefaultMaterials";
 import { disposeKitchenTextureCoordinates } from "./kitchenTextureCoordinates";
+import { idleModelCacheBudget, modelResourceBytes, type ModelResourceBytes } from "./modelResources";
 export interface ModelLoadMetrics {
   queuedAt: number;
   startedAt: number;
@@ -18,16 +19,17 @@ export interface ModelLoadMetrics {
   resourceDurationMs: number | null;
   encodedBodySize: number | null;
 }
-export interface LoadedModel { scene: THREE.Group; bounds: THREE.Box3; metrics: ModelLoadMetrics; animations?: THREE.AnimationClip[]; triangles?: number }
+export interface LoadedModel { scene: THREE.Group; bounds: THREE.Box3; metrics: ModelLoadMetrics; animations?: THREE.AnimationClip[]; triangles?: number; resources?: ModelResourceBytes }
 interface Entry { promise: Promise<LoadedModel>; refs: number; ready?: LoadedModel; used: number }
-interface Pool { loader: GLTFLoader; draco: DRACOLoader; ktx: KTX2Loader; entries: Map<string, Entry>; idle?: ReturnType<typeof setTimeout> }
+interface Pool { loader: GLTFLoader; draco: DRACOLoader; ktx: KTX2Loader; entries: Map<string, Entry>; budget: number; idle?: ReturnType<typeof setTimeout> }
 const pools = new WeakMap<THREE.WebGLRenderer, Pool>();
 const queue: (() => void)[] = [];
 let active = 0;
 function pump() { while (active < 3 && queue.length) queue.shift()!(); }
 function schedule<T>(task: () => Promise<T>): Promise<T> {
   return new Promise((resolve, reject) => {
-    queue.push(() => { active++; task().then(resolve, reject).finally(() => { active--; pump(); }); }); pump();
+    // acquireModel must finish establishing the lease before cancellation checks.
+    queue.push(() => { active++; Promise.resolve().then(task).then(resolve, reject).finally(() => { active--; pump(); }); }); pump();
   });
 }
 export function createModelLoader(renderer: THREE.WebGLRenderer) {
@@ -56,11 +58,21 @@ function disposeModel(model: LoadedModel) {
   resources.forEach(resource => resource.dispose());
 }
 function trim(pool: Pool, renderer: THREE.WebGLRenderer) {
+  // A failed lease can be released after its retired pool's idle timeout.
+  // It must never schedule cleanup against a newer pool on the same renderer.
+  if (pools.get(renderer) !== pool) return;
   const unused = [...pool.entries.entries()].filter(([, entry]) => !entry.refs && entry.ready).sort((a, b) => a[1].used - b[1].used);
-  for (const [url, entry] of unused.slice(0, Math.max(0, unused.length - 4))) { disposeModel(entry.ready!); pool.entries.delete(url); }
+  let bytes = unused.reduce((sum, [, entry]) => sum + (entry.ready!.resources?.totalBytes ?? 0), 0);
+  let count = unused.length;
+  for (const [url, entry] of unused) {
+    if (count <= 4 && bytes <= pool.budget) break;
+    bytes -= entry.ready!.resources?.totalBytes ?? 0; count--;
+    disposeModel(entry.ready!); pool.entries.delete(url);
+  }
   if (pool.idle) clearTimeout(pool.idle);
   if ([...pool.entries.values()].every(entry => !entry.refs && entry.ready)) {
     pool.idle = setTimeout(() => {
+      if (pools.get(renderer) !== pool) return;
       pool.entries.forEach(entry => { if (entry.ready) disposeModel(entry.ready); });
       pool.entries.clear(); pool.draco.dispose(); pool.ktx.dispose(); pools.delete(renderer);
     }, 30000);
@@ -68,7 +80,7 @@ function trim(pool: Pool, renderer: THREE.WebGLRenderer) {
 }
 export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options: { preserveHierarchy?: boolean } = {}) {
   let pool = pools.get(renderer);
-  if (!pool) { pool = { ...createModelLoader(renderer), entries: new Map() }; pools.set(renderer, pool); }
+  if (!pool) { pool = { ...createModelLoader(renderer), entries: new Map(), budget: idleModelCacheBudget(typeof navigator === 'undefined' ? undefined : (navigator as Navigator & {deviceMemory?: number}).deviceMemory) }; pools.set(renderer, pool); }
   if (pool.idle) clearTimeout(pool.idle);
   const owner = pool;
   // Assembly sockets and individually replaceable nodes must keep their authored hierarchy.
@@ -81,8 +93,14 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
     const pending = entry;
     owner.entries.set(key, entry);
     entry.promise = schedule(async () => {
+      if (!pending.refs) throw new DOMException('Model request no longer has consumers', 'AbortError');
       const startedAt = performance.now();
       const gltf = await owner.loader.loadAsync(url);
+      // GLTFLoader cannot safely abort a running Draco worker. Discard its result
+      // before expensive scene preparation when every consumer has gone away.
+      const discard = () => disposeModel({ scene: gltf.scene } as LoadedModel);
+      if (!pending.refs) { discard(); throw new DOMException('Model request no longer has consumers', 'AbortError'); }
+      try {
       configureModelDefaultMaterials(gltf.scene, gltf.parser?.associations);
       configureModelTextureSampling(gltf.scene, renderer);
       configureModelCutoutSampling(gltf.scene, renderer);
@@ -112,6 +130,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
         triangles,
         bounds,
         animations: gltf.animations,
+        resources: modelResourceBytes(gltf.scene),
         metrics: {
           queuedAt,
           startedAt,
@@ -124,11 +143,11 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
       };
       const size = bounds.getSize(new THREE.Vector3());
       if (![size.x, size.y, size.z].every(value => Number.isFinite(value) && value > 1e-9)) {
-        disposeModel(result);
         throw new Error("Model has empty or invalid dimensions");
       }
       pending.ready = result; return result;
-    }).catch(error => { owner.entries.delete(key); throw error; }).finally(() => trim(owner, renderer));
+      } catch (error) { discard(); throw error; }
+    }).catch(error => { if (owner.entries.get(key) === pending) owner.entries.delete(key); throw error; }).finally(() => trim(owner, renderer));
   }
   entry.refs++; entry.used = Date.now();
   const leased = entry; let released = false;
@@ -136,6 +155,16 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
     if (released) return;
     released = true; leased.refs--; leased.used = Date.now(); trim(owner, renderer);
   } };
+}
+export function modelCacheStats(renderer: THREE.WebGLRenderer) {
+  const pool = pools.get(renderer);
+  let activeBytes = 0, idleBytes = 0, pending = 0;
+  for (const entry of pool?.entries.values() ?? []) {
+    if (!entry.ready) pending++;
+    else if (entry.refs) activeBytes += entry.ready.resources?.totalBytes ?? 0;
+    else idleBytes += entry.ready.resources?.totalBytes ?? 0;
+  }
+  return { activeBytes, idleBytes, pending, entries: pool?.entries.size ?? 0, idleBudgetBytes: pool?.budget ?? 0 };
 }
 export function cloneModel(model: LoadedModel): LoadedModel { return { ...model, scene: clone(model.scene) as THREE.Group }; }
 export function disposeModelClone(model: LoadedModel) {

@@ -418,7 +418,9 @@ function RoomPlannerEditor() {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [cameraRequest, setCameraRequest] = useState<CameraRequest>();
   const [settledPlan, setSettledPlan] = useState<string | null>(null);
-  const planReady = roomView === "top" && settledPlan === current?.id;
+  const [rendererUnavailable, setRendererUnavailable] = useState(false);
+  const planReady = roomView === "top" && (rendererUnavailable || settledPlan === current?.id);
+  useEffect(() => { setRendererUnavailable(false); }, [current?.id]);
   useEffect(() => {
     if (roomView !== "top") setSettledPlan(null);
   }, [roomView]);
@@ -1053,6 +1055,17 @@ function RoomPlannerEditor() {
     updatePieces(
       current.pieces.map((p) => (p.instanceId === selected ? rotated : p)),
     );
+  };
+
+  const focusSelected = () => {
+    if (!selected) return;
+    setLocked(false);
+    setCameraPlacement(false);
+    setCameraRequest((previous) => ({
+      id: (previous?.id ?? 0) + 1,
+      action: "focus",
+      targetId: selected,
+    }));
   };
 
   const removeSelected = () => {
@@ -2271,15 +2284,7 @@ function RoomPlannerEditor() {
                 type="button"
                 aria-label="Сонгосон тавилга дээр төвлөрөх"
                 title="Сонгосон тавилга дээр төвлөрөх"
-                onClick={() => {
-                  setLocked(false);
-                  setCameraPlacement(false);
-                  setCameraRequest((previous) => ({
-                    id: (previous?.id ?? 0) + 1,
-                    action: "focus",
-                    targetId: selected,
-                  }));
-                }}
+                onClick={focusSelected}
               >
                 <Focus size={16} />
                 <span>Ойртуулж харах</span>
@@ -2490,6 +2495,7 @@ function RoomPlannerEditor() {
           }
         >
           <RoomCanvas
+            onRendererUnavailable={setRendererUnavailable}
             onExportReady={templateAdmin.isAdmin ? exportReady : undefined}
             paused={planReady}
             onViewSettled={(settledView) => {
@@ -3082,7 +3088,15 @@ function RoomPlannerEditor() {
                     ),
                   )}
                 </div>
-                <div className="room-selection-actions">
+                <div className="room-selection-actions" style={{ flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    aria-label="Сонгосон тавилга дээр төвлөрөх"
+                    onClick={focusSelected}
+                    style={{ flex: "1 0 100%" }}
+                  >
+                    <Focus size={16} /> Ойртуулж харах
+                  </button>
                   <button type="button" onClick={rotateSelected}>
                     <RotateCw size={16} /> Эргүүлэх
                   </button>

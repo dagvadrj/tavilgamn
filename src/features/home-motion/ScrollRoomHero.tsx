@@ -1,6 +1,5 @@
 ﻿"use client";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowRight, Pause, Play, RotateCcw, X } from "lucide-react";
 import { PlannerLink as Link } from "@/components/PlannerLink";
@@ -16,8 +15,10 @@ import {
   type RoomFurniture,
 } from "./scrollRoomStory";
 import { useScrollRoom } from "./useScrollRoom";
+import { HybridBackdrop } from "./HybridBackdrop";
+import { HYBRID_ROOMS } from "./hybridRooms";
 import "./scroll-room.css";
-const Scene = dynamic(() => import("./ScrollRoomScene"), { ssr: false });
+const Scene = dynamic(() => import("./HybridRoomScene"), { ssr: false });
 const CHAPTERS = [
   {
     title: "Ухаалаг\nинтерьер шийдэл",
@@ -65,6 +66,14 @@ export function ScrollRoomHero({
   const returnFocus = useRef<HTMLElement | null>(null),
     closeButton = useRef<HTMLButtonElement>(null);
   const onReady = useCallback(() => setReady(true), []);
+  const [imageReady, setImageReady] = useState<Record<number, boolean>>({});
+  const onImageReady = useCallback(
+    (phase: number) =>
+      setImageReady((previous) =>
+        previous[phase] ? previous : { ...previous, [phase]: true },
+      ),
+    [],
+  );
   useEffect(() => {
     if (!tour.mounted) setReady(false);
   }, [tour.mounted]);
@@ -104,8 +113,7 @@ export function ScrollRoomHero({
     bed: bedStatus,
     wardrobe: wardrobeStatus,
   };
-  const product =
-    selected && statuses[selected] === "ready" ? products[selected] : undefined;
+  const product = selected ? products[selected] : undefined;
   const chapter = CHAPTERS[tour.phase];
   const title =
     tour.phase === 0 && hero.title !== DEFAULT_HOMEPAGE_HERO.title
@@ -121,6 +129,7 @@ export function ScrollRoomHero({
   const displayReady =
     tour.mounted &&
     ready &&
+    Boolean(imageReady[tour.phase]) &&
     (tour.phase !== 0 ||
       !sofa?.model ||
       sofaStatus === "ready" ||
@@ -141,17 +150,12 @@ export function ScrollRoomHero({
           className="scroll-room-scene"
           aria-label="Зочны, унтлагын болон ажлын өрөөний 3D үзүүлбэр"
         >
-          {!displayReady && (
-            <Image
-              src={hero.image || "/interior/premium/living-poster.webp"}
-              alt="Дулаан гэрэлтүүлэгтэй зочны өрөө"
-              fill
-              priority
-              sizes="100vw"
-              className="scroll-room-poster"
-              data-homepage-field="image"
-            />
-          )}
+          <HybridBackdrop
+            phase={tour.phase}
+            poster={!displayReady}
+            customPoster={hero.image || undefined}
+            onImageReady={onImageReady}
+          />
           {tour.mounted && !failed && (
             <Scene
               key={attempt}
@@ -266,7 +270,13 @@ export function ScrollRoomHero({
               ) : null}
             </h2>
             <p>{product ? product.name : "Интерьерийн жишиг загвар"}</p>
-            <fieldset className="scroll-room-swatches">
+            {(failed || statuses[selected] === "error") && (
+              <p role="status">
+                3D загвар түр боломжгүй. Бүтээгдэхүүний холбоосоор дэлгэрэнгүй
+                үзээрэй.
+              </p>
+            )}
+            <fieldset className="scroll-room-swatches" disabled={failed}>
               <legend>Өнгөний урьдчилсан дүрслэл</legend>
               {ROOM_FINISHES[finish].map((option) => (
                 <button
@@ -307,6 +317,19 @@ export function ScrollRoomHero({
           </aside>
         )}
         <div className="scroll-room-footer">
+          {!selected && (
+            <div
+              className="hybrid-item-links"
+              data-fallback={failed || !displayReady}
+              aria-label="Өрөөний тавилга"
+            >
+              {HYBRID_ROOMS[tour.phase].furniture.map((item) => (
+                <button key={item.id} onClick={() => select(item.id)}>
+                  {ROOM_ITEMS[item.id].label}
+                </button>
+              ))}
+            </div>
+          )}
           <nav aria-label="Өрөөний аяллын үе шат">
             {ROOM_LABELS.map((label, i) => (
               <button

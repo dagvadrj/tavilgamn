@@ -27,6 +27,80 @@
   z-index: 0;
 }
 
+.scroll-room-scene > .hybrid-backdrop {
+  position: absolute;
+  inset: 0;
+  opacity: 1 !important;
+  pointer-events: none;
+  transition: filter 600ms ease;
+}
+
+.hybrid-backplate {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(var(--hybrid-zoom, 1));
+  transition: opacity 600ms ease;
+}
+
+.hybrid-backplate[data-active="true"] {
+  opacity: 1;
+}
+
+.hybrid-photo-frame {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.hybrid-photo-frame img {
+  object-fit: cover;
+}
+
+.hybrid-item-links {
+  display: none;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto 14px;
+  pointer-events: auto;
+}
+
+.hybrid-item-links[data-fallback="true"] {
+  display: flex;
+}
+
+.hybrid-item-links button {
+  min-height: 36px;
+  padding: 7px 13px;
+  border: 1px solid #ffffff48;
+  border-radius: 20px;
+  color: #fff;
+  background: #211c1670;
+  font-size: 12px;
+}
+
+@media (width < 768px) {
+  .hybrid-item-links {
+    display: flex;
+  }
+  .scroll-room-hotspot[data-item="table"] {
+    display: none;
+  }
+}
+
+.scroll-room[data-detail="true"][data-ready="true"] .hybrid-backdrop {
+  filter: blur(9px) brightness(.65);
+}
+
+.scroll-room[data-detail="true"] .scroll-room-copy {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scroll-room[data-detail="true"] .scroll-room-copy button, .scroll-room[data-detail="true"] .scroll-room-copy a {
+  pointer-events: none;
+}
+
 .scroll-room-poster {
   object-fit: cover;
 }
@@ -383,13 +457,10 @@
     height: 380svh;
   }
   .scroll-room-stage {
-    min-height: 640px;
+    min-height: 0;
   }
   .scroll-room-copy {
-    left: 22px;
-    top: auto;
-    bottom: 210px;
-    width: calc(100% - 44px);
+    display: none;
   }
   .scroll-room-copy h1 {
     max-width: 350px;
@@ -402,7 +473,7 @@
     font-size: 13px;
   }
   .scroll-room-shade {
-    background: linear-gradient(0deg,#090806e0, #09080685 40%,transparent 75%);
+    background: linear-gradient(0deg,#090806bd,transparent 29%);
   }
   .scroll-room-actions {
     gap: 10px;
@@ -434,6 +505,12 @@
   .scroll-room-status {
     font-size: 9px;
   }
+  .scroll-room[data-ready='true'] .scroll-room-status {
+    display: none;
+  }
+  .shop-shell:has(.store-header[data-room-hidden='true']) .scroll-room-tools {
+    top: 16px;
+  }
   .scroll-room-hotspot {
     width: 38px;
     height: 38px;
@@ -447,7 +524,7 @@
   }
   .scroll-room-details {
     right: 16px;
-    bottom: calc(196px + env(safe-area-inset-bottom,0px));
+    bottom: calc(154px + env(safe-area-inset-bottom,0px));
     width: calc(100% - 32px);
     max-height: calc(100% - var(--room-header-height) - 250px);
     padding: 16px 18px 10px;
@@ -475,7 +552,59 @@
   }
 }
 
+@media (max-height:520px) and (orientation:landscape) {
+  .scroll-room-stage {
+    min-height: 0;
+  }
+  .scroll-room-copy {
+    display: none;
+  }
+  .scroll-room-footer {
+    bottom: 76px;
+    width: min(420px,55%);
+    left: 30%;
+  }
+  .scroll-room-footer nav button {
+    min-height: 44px;
+    font-size: 10px;
+    padding: 4px;
+  }
+  .scroll-room-footer nav button span {
+    font-size: 15px;
+  }
+  .scroll-room[data-ready='true'] .scroll-room-status {
+    display: none;
+  }
+  .scroll-room-details {
+    width: 280px;
+    bottom: 16px;
+    right: 12px;
+    max-height: calc(100% - var(--room-header-height) - 32px);
+    padding: 16px;
+  }
+  .scroll-room-tools {
+    top: calc(var(--room-header-height) + 12px);
+    right: 12px;
+  }
+  .shop-shell:has(.store-header[data-room-hidden='true']) .scroll-room-tools {
+    top: 12px;
+  }
+  .shop-shell:has(.store-header[data-room-hidden='true']) .scroll-room-details {
+    max-height: calc(100% - 32px);
+  }
+}
+
+@media (max-width:767px) and (max-height:520px) and (orientation:landscape) {
+  .scroll-room-details {
+    bottom: 80px;
+    max-height: calc(100% - var(--room-header-height) - 96px);
+  }
+}
+
 @media (prefers-reduced-motion:reduce) {
+  .hybrid-backplate, .hybrid-backdrop {
+    transition: none !important;
+  }
   .store-header[data-room-tour='true'] {
     transition: none;
   }
@@ -506,11 +635,18 @@
 }
 
 .scroll-room[data-ready="true"] .scroll-room-scene > div {
-  opacity: 1;
+  opacity: var(--room-scene-opacity,1);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .scroll-room-scene > div {
     transition: none;
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .scroll-room[data-detail="true"] .scroll-room-tools {
+    left: 12px;
+    right: auto;
   }
 }

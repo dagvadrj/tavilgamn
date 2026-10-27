@@ -89,6 +89,11 @@ test('catalog add callbacks use live state and scoped camera hints; top view and
   find(tree,'room-controls').props.onView('top');tree=render();find(tree,'room-canvas').props.onPlacementHintsReady(source);
   find(tree,'model-card').props.onAdd();tree=render();assert.equal(store.getState().current.pieces.length,4);assert.equal(reads,2,'hidden 3D camera must not affect SVG plan adds');
   store.getState().undo();assert.equal(store.getState().current.pieces.length,3);
+  const savedDesign=JSON.stringify(store.getState().current);
+  find(tree,'room-canvas').props.onRendererUnavailable(true);tree=render();
+  assert.equal(find(tree,'room-canvas').props.paused,true,'2D editor must start without a WebGL camera-settled callback');
+  assert.ok(nodes(tree).some(n=>n.type==='room-map'));
+  assert.equal(JSON.stringify(store.getState().current),savedDesign);
  }finally{global.document=oldDocument;global.localStorage=oldStorage;global.window=oldWindow;}
 });
 test('real planner map and scene selection keep one canvas key, current view and reset generation',()=>{
