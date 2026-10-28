@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowRight, Pause, Play, RotateCcw, X } from "lucide-react";
+import { ArrowDown, ArrowRight, Pause, Play, X } from "lucide-react";
 import { PlannerLink as Link } from "@/components/PlannerLink";
 import type { Product } from "@/lib/types";
 import {
@@ -18,27 +18,44 @@ import { useScrollRoom } from "./useScrollRoom";
 import { HybridBackdrop } from "./HybridBackdrop";
 import { HYBRID_ROOMS } from "./hybridRooms";
 import "./scroll-room.css";
+import "./room-hero-layout.css";
 const Scene = dynamic(() => import("./HybridRoomScene"), { ssr: false });
 const CHAPTERS = [
   {
-    title: "Ухаалаг\nинтерьер шийдэл",
     text: "Өөрийн орон зайдаа тохирсон чанартай тавилгыг хялбархан олоорой.",
     href: "/catalog",
     cta: "Тавилга үзэх",
   },
   {
-    title: "Тайван амрах\nтаны орон зай.",
     text: "Өдөр бүрийн амралтыг илүү тав тухтай, дулаахан болгох тавилга.",
     href: "/catalog/bed",
     cta: "Ор үзэх",
   },
   {
-    title: "Ажиллах тав\nтухтай орчин",
     text: "Өдөр тутмын бүтээмжийг нэмэгдүүлэх тав тухтай, загварлаг шийдлүүд.",
     href: "/catalog/office",
     cta: "Тавилга үзэх",
   },
 ];
+/** Letters resolve from blur one by one; the parent key restarts it per room. */
+function BlurTitle({ text }: { text: string }) {
+  let index = 0;
+  return (
+    <>
+      {text.split(" ").map((word) => (
+        <span key={word} className="room-hero-title-line" aria-hidden="true">
+          {[...word].map((letter, i) => (
+            <span key={i} style={{ animationDelay: `${100 + index++ * 45}ms` }}>
+              {letter}
+            </span>
+          ))}
+        </span>
+      ))}
+      <span className="room-hero-sr">{text}</span>
+    </>
+  );
+}
+
 export function ScrollRoomHero({
   sofa,
   bed,
@@ -115,10 +132,6 @@ export function ScrollRoomHero({
   };
   const product = selected ? products[selected] : undefined;
   const chapter = CHAPTERS[tour.phase];
-  const title =
-    tour.phase === 0 && hero.title !== DEFAULT_HOMEPAGE_HERO.title
-      ? hero.title
-      : chapter.title;
   const description =
     tour.phase === 0 && hero.description !== DEFAULT_HOMEPAGE_HERO.description
       ? hero.description
@@ -126,6 +139,7 @@ export function ScrollRoomHero({
   const activeItem: RoomFurniture =
     tour.phase === 0 ? "sofa" : tour.phase === 1 ? "bed" : "desk";
   const finish = selected ? ROOM_ITEMS[selected].finish : "fabric";
+  const playing = !tour.paused && !tour.reduced && !selected;
   const displayReady =
     tour.mounted &&
     ready &&
@@ -143,6 +157,7 @@ export function ScrollRoomHero({
       data-detail={!!selected}
       data-sofa-status={sofaStatus}
       data-ready={displayReady}
+      data-playing={playing}
       aria-label="Өрөөгөөр аялах 3D үзүүлбэр"
     >
       <div ref={tour.stage} className="scroll-room-stage">
@@ -177,16 +192,56 @@ export function ScrollRoomHero({
           )}
         </div>
         <div className="scroll-room-shade" aria-hidden="true" />
-        <div className="scroll-room-tools">
-          <button
-            onClick={tour.skip}
-            aria-label="Аяллыг алгасах"
-            title="Аяллыг алгасах"
+        <div className="room-hero-intro">
+          <h1 id="home-motion-title" data-homepage-field="title">
+            {hero.title}
+          </h1>
+          <Link className="room-hero-arrow" href="/planner">
+            Өрөөгөө төлөвлөх <ArrowRight size={18} />
+          </Link>
+        </div>
+        <div className="room-hero-aside">
+          <p data-homepage-field="description">{description}</p>
+          <Link
+            href={tour.phase === 0 ? hero.primaryHref : chapter.href}
+            data-homepage-field={tour.phase === 0 ? "primaryLabel" : undefined}
           >
-            <ArrowDown size={17} />
-          </button>
+            {tour.phase === 0 ? hero.primaryLabel : chapter.cta}
+          </Link>
+        </div>
+        <div className="room-hero-bottom">
+          <div className="room-hero-meta">
+            <nav aria-label="Өрөөний аяллын үе шат">
+              {ROOM_LABELS.map((label, i) => (
+                <button
+                  key={label}
+                  type="button"
+                  aria-current={tour.phase === i ? "step" : undefined}
+                  aria-label={`${label} — ${i + 1}/${ROOM_LABELS.length}`}
+                  onClick={() => {
+                    close();
+                    tour.choose(i);
+                  }}
+                >
+                  0{i + 1}
+                  <i aria-hidden="true" />
+                </button>
+              ))}
+              <span aria-hidden="true">/ 0{ROOM_LABELS.length}</span>
+            </nav>
+            <button type="button" onClick={() => select(activeItem)}>
+              {ROOM_ITEMS[activeItem].label} · Материал харах
+            </button>
+          </div>
+          <h2 className="room-hero-title" key={tour.phase}>
+            <BlurTitle text={ROOM_LABELS[tour.phase]} />
+          </h2>
+        </div>
+        <div className="room-hero-controls">
           {!tour.reduced && (
             <button
+              type="button"
+              className="room-hero-tool"
               onClick={tour.toggle}
               aria-label={
                 tour.paused ? "Аяллыг үргэлжлүүлэх" : "Аяллыг түр зогсоох"
@@ -197,53 +252,28 @@ export function ScrollRoomHero({
             </button>
           )}
           <button
-            onClick={() => {
-              setSelected(null);
-              tour.choose(-1);
-            }}
-            aria-label="Аяллыг эхнээс үзэх"
+            type="button"
+            className="room-hero-badge"
+            onClick={tour.skip}
+            aria-label="Аяллыг алгасах"
           >
-            <RotateCcw size={16} />
-          </button>
-        </div>
-        <div className="scroll-room-copy" key={tour.phase}>
-          <h1
-            id="home-motion-title"
-            data-homepage-field={tour.phase === 0 ? "title" : undefined}
-          >
-            {title}
-          </h1>
-          <p data-homepage-field={tour.phase === 0 ? "description" : undefined}>
-            {description}
-          </p>
-          <div className="scroll-room-actions">
-            {tour.phase === 0 && (
-              <button
-                className="home-button"
-                onClick={() => {
-                  tour.choose(-2);
-                  select("sofa");
-                }}
-              >
-                Ойроос харах
-              </button>
-            )}
-            <Link
-              className={`home-button ${tour.phase < 2 ? "home-button-secondary" : ""}`}
-              href={tour.phase === 0 ? hero.primaryHref : chapter.href}
-              data-homepage-field={
-                tour.phase === 0 ? "primaryLabel" : undefined
-              }
+            <svg
+              className="room-hero-ring"
+              viewBox="0 0 100 100"
+              aria-hidden="true"
             >
-              {tour.phase === 0 ? hero.primaryLabel : chapter.cta}
-            </Link>
-          </div>
-          <button
-            className="scroll-room-product-link"
-            onClick={() => select(activeItem)}
-          >
-            {ROOM_ITEMS[activeItem].label} · Материал харах{" "}
-            <ArrowRight size={14} />
+              <path
+                id="room-hero-badge-path"
+                d="M50 50m-37 0a37 37 0 1 1 74 0a37 37 0 1 1-74 0"
+                fill="none"
+              />
+              <text>
+                <textPath href="#room-hero-badge-path">
+                  ДООШ ГҮЙЛГЭХ • ДООШ ГҮЙЛГЭХ •
+                </textPath>
+              </text>
+            </svg>
+            <ArrowDown size={18} />
           </button>
         </div>
         {selected && (
@@ -330,21 +360,6 @@ export function ScrollRoomHero({
               ))}
             </div>
           )}
-          <nav aria-label="Өрөөний аяллын үе шат">
-            {ROOM_LABELS.map((label, i) => (
-              <button
-                key={label}
-                aria-current={tour.phase === i ? "step" : undefined}
-                onClick={() => {
-                  close();
-                  tour.choose(i);
-                }}
-              >
-                <span>0{i + 1}</span>
-                {label}
-              </button>
-            ))}
-          </nav>
           <div className="scroll-room-status" role="status">
             {failed ? (
               <>
