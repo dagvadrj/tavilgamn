@@ -30,6 +30,10 @@ import { RoomStructure, RoomLighting } from "./RoomStructure";
 import { PlannerEnvironment } from "./PlannerEnvironment";
 import { configurePlannerRenderer } from "./plannerRenderer";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
+import { SelectionScreenAnchor } from "./SelectionScreenAnchor";
+
+/** Selection is always this blue; load failures are red dashed (B2). */
+const SELECTION_COLOR = "#075eaa";
 import { InteriorModel } from "./InteriorModel";
 import { getProduct } from "@/store/catalog";
 import { getDbModel } from "@/lib/modelRegistry";
@@ -831,11 +835,14 @@ export function DraggablePiece({
   );
   // «Дахин оролдох» remounts the mesh; the loader has already dropped the failure.
   const [attempt, setAttempt] = useState(0);
+  // D1: a failed model shows only the red dashed volume, never blue over it.
+  const [failed, setFailed] = useState(false);
   useEffect(
     () =>
-      useRoomModelStatus.subscribe((state) =>
-        setAttempt(state.attempts[piece.instanceId] ?? 0),
-      ),
+      useRoomModelStatus.subscribe((state) => {
+        setAttempt(state.attempts[piece.instanceId] ?? 0);
+        setFailed(state.byInstance[piece.instanceId] === "error");
+      }),
     [piece.instanceId],
   );
   const [dragging, setDragging] = useState(false);
@@ -1190,9 +1197,9 @@ export function DraggablePiece({
           </span>
         </Html>
       ) : null}
-      {selected && (
+      {selected && !failed && (
         <mesh position={[0, dims.h / 2, 0]}>
-          <boxGeometry args={[dims.w + 0.08, dims.h + 0.08, dims.d + 0.08]} />
+          <boxGeometry args={[dims.w + 0.04, dims.h + 0.04, dims.d + 0.04]} />
 
           <meshBasicMaterial
             transparent
@@ -1201,8 +1208,38 @@ export function DraggablePiece({
             colorWrite={false}
           />
 
-          <Edges color="#1463df" lineWidth={1.5} threshold={15} />
+          <Edges color={SELECTION_COLOR} lineWidth={1.25} threshold={15} />
         </mesh>
+      )}
+      {selected &&
+        !failed &&
+        (!piece.attachment || piece.attachment.kind === "floor") && (
+        // Floor footprint under the piece, turned with it (the group carries the yaw).
+        <mesh
+          position={[0, -planeY + 0.006, 0]}
+          rotation-x={-Math.PI / 2}
+          renderOrder={2}
+          raycast={() => null}
+        >
+          <planeGeometry args={[dims.w + 0.06, dims.d + 0.06]} />
+          <meshBasicMaterial
+            color={SELECTION_COLOR}
+            transparent
+            opacity={0.14}
+            depthWrite={false}
+            polygonOffset
+            polygonOffsetFactor={-2}
+          />
+          <Edges color={SELECTION_COLOR} lineWidth={1.5} threshold={15} />
+        </mesh>
+      )}
+      {selected && (
+        <SelectionScreenAnchor
+          instanceId={piece.instanceId}
+          w={dims.w}
+          h={dims.h}
+          d={dims.d}
+        />
       )}
     </group>
   );

@@ -91,8 +91,8 @@ export function RoomAddedList({
       {rows.length ? (
         <>
           <p className="room-panel-hint">
-            Мөр дээр дарвал сонгогдоно — камер хөдлөхгүй. Харахын тулд
-            «Төвлөрүүлэх».
+            Мөр дээр дарвал бүтээгдэхүүний сонголт нээгдэнэ — камер
+            хөдлөхгүй. Харахын тулд «Төвлөрүүлэх».
           </p>
           <ul
             ref={list}
@@ -244,7 +244,7 @@ function AddedRow({
             <Focus size={15} aria-hidden="true" /> Төвлөрүүлэх
           </button>
           <button type="button" onClick={onDuplicate}>
-            <Copy size={15} aria-hidden="true" /> Хувилах
+            <Copy size={15} aria-hidden="true" /> Хуулбарлах
           </button>
           <button type="button" className="is-danger" onClick={onRemove}>
             <Trash2 size={15} aria-hidden="true" /> Устгах

@@ -138,7 +138,8 @@ test('real planner map and scene selection keep one canvas key, current view and
   store.getState().redo();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,b);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.resetKey,reset);
   // Focus and side navigation are ephemeral: neither changes design data nor undo history.
   const snapshot=JSON.stringify(store.getState().current),historyLength=store.getState().past.length;
-  nodes(tree).find(n=>n.type==='button'&&n.props['aria-label']==='Сонгосон тавилга дээр төвлөрөх').props.onClick();tree=render();
+  const toolbar=nodes(tree).find(n=>n.props&&n.props.instanceId===bed.instanceId&&Array.isArray(n.props.actions));assert.ok(toolbar,'the contextual toolbar targets the selected instance');
+  toolbar.props.actions.find(a=>a.id==='focus').run();tree=render();
   const focused=find(tree,'room-canvas');assert.equal(focused.props.cameraRequest.action,'focus');assert.equal(focused.props.cameraRequest.targetId,bed.instanceId);assert.equal(focused.props.selected,bed.instanceId);
   for(const side of ['front','back','left','right']) {
    find(tree,'room-controls').props.onView(side);tree=render();assert.equal(find(tree,'room-canvas').props.cameraRequest.action,side);assert.equal(find(tree,'room-canvas').props.view,'perspective');

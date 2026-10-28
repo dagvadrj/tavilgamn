@@ -163,7 +163,18 @@
 
 .room-panel-nested-header > div {
   display: grid;
+  flex: 1;
   min-width: 0;
+}
+
+.room-panel-nested-header > .room-panel-nested-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f3f5;
 }
 
 .room-panel-nested-header span {
@@ -986,6 +997,39 @@
   font-weight: 500;
 }
 
+.room-header-counts {
+  display: flex;
+  gap: 6px;
+}
+
+.room-header-counts > :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 22px;
+  background: #f6f7f9;
+  color: var(--room-ws-ink, #171c24);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.room-header-counts > :is(a, button):hover {
+  background: #eceef1;
+}
+
+@media (max-width: 1199px) {
+  .room-header-counts {
+    display: none;
+  }
+}
+
 .room-summary-backdrop {
   position: fixed;
   inset: 0;
@@ -1669,5 +1713,528 @@
 @media (prefers-reduced-motion: reduce) {
   .room-workspace-panel, .room-view-dock, .room-selection-bar {
     transition: none;
+  }
+}
+
+/* Selected-product options: one nested view of the left panel. */
+
+.room-options {
+  display: grid;
+  gap: 18px;
+}
+
+.room-options-hero {
+  display: grid;
+  gap: 10px;
+}
+
+.room-options-gallery {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #f4f5f7;
+}
+
+.room-options-gallery:focus-visible {
+  outline: 2px solid var(--room-ws-primary);
+  outline-offset: 2px;
+}
+
+.room-options-gallery > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.room-options-noimage {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  color: var(--room-ws-muted);
+  font-size: 12px;
+}
+
+.room-options-arrow {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px #171c2426;
+  color: var(--room-ws-ink);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.room-options-arrow.is-prev {
+  left: 8px;
+}
+
+.room-options-arrow.is-next {
+  right: 8px;
+}
+
+.room-options-thumbs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.room-options-thumbs > button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--room-ws-line);
+  border-radius: 10px;
+  background: #f4f5f7;
+  color: var(--room-ws-muted);
+  cursor: pointer;
+}
+
+.room-options-thumbs > button[aria-selected="true"] {
+  border-color: var(--room-ws-primary);
+  box-shadow: 0 0 0 1px var(--room-ws-primary);
+}
+
+.room-options-thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.room-options-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.room-options-title h3 {
+  margin: 2px 0 0;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.room-options-title h3 small {
+  color: var(--room-ws-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.room-options-category {
+  color: var(--room-ws-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.room-options-wish {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--room-ws-line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--room-ws-ink);
+  cursor: pointer;
+}
+
+.room-options-wish[aria-pressed="true"] {
+  border-color: var(--room-ws-danger);
+  color: var(--room-ws-danger);
+}
+
+.room-options-description {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #3b424c;
+  font-size: 12.5px;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.room-options-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.room-options-facts > div {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f6f7f9;
+}
+
+.room-options-facts.is-placement {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.room-options-facts dt {
+  color: var(--room-ws-muted);
+  font-size: 11px;
+}
+
+.room-options-facts dd {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-options-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.room-options-price strong {
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-options-price small {
+  color: var(--room-ws-muted);
+  font-size: 11.5px;
+}
+
+.room-options-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.room-options-buy {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  border: 0;
+  border-radius: 23px;
+  background: var(--room-ws-primary);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-options-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--room-ws-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.room-options-note {
+  margin: 0;
+  color: var(--room-ws-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.room-options-section {
+  display: grid;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--room-ws-line);
+}
+
+.room-options-section > h4 {
+  margin: 0;
+  color: var(--room-ws-muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.room-options-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+}
+
+.room-options-row > span {
+  display: grid;
+  gap: 2px;
+  font-size: 12.5px;
+}
+
+.room-options-row small {
+  color: var(--room-ws-muted);
+  font-size: 11.5px;
+}
+
+.room-options-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
+  border-radius: 14px;
+  background: #f1f3f5;
+}
+
+.room-options-modes > button {
+  min-height: 40px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #3b424c;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-options-modes > button[aria-selected="true"] {
+  background: #fff;
+  box-shadow: 0 1px 3px #171c241a;
+  color: var(--room-ws-primary);
+}
+
+.room-options-list {
+  display: grid;
+  gap: 8px;
+}
+
+.room-options-search input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--room-ws-line);
+  border-radius: 12px;
+  background: #f6f7f9;
+  font-size: 13px;
+}
+
+.room-options-count, .room-options-empty {
+  margin: 0;
+  color: var(--room-ws-muted);
+  font-size: 12px;
+}
+
+.room-options-list ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.room-options-list li {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--room-ws-line);
+  border-radius: 14px;
+}
+
+.room-options-list li[data-fit="no"] {
+  background: #f9fafb;
+}
+
+.room-options-thumb {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #f4f5f7;
+}
+
+.room-options-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.room-options-body {
+  display: grid;
+  flex: 1;
+  align-content: start;
+  gap: 2px;
+  min-width: 0;
+  font-size: 12.5px;
+}
+
+.room-options-body small {
+  color: var(--room-ws-muted);
+  font-size: 11.5px;
+}
+
+.room-options-body b {
+  font-variant-numeric: tabular-nums;
+}
+
+.room-options-body .room-options-reason {
+  color: var(--room-ws-warn);
+}
+
+.room-options-body button {
+  justify-self: start;
+  min-height: 36px;
+  margin-top: 4px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--room-ws-tint);
+  color: var(--room-ws-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-selection-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 44px;
+  margin-right: 2px;
+  padding: 0 6px 0 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.room-selection-title > strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.room-selection-title > strong small {
+  color: var(--room-ws-muted);
+  font-weight: 500;
+}
+
+.planner-workspace.planner-reference.room-simple .room-selection-bar > button:disabled {
+  color: #a3a9b1;
+  cursor: not-allowed;
+}
+
+.planner-workspace.planner-reference.room-simple .room-selection-bar > button:focus-visible {
+  outline: 2px solid var(--room-ws-primary);
+  outline-offset: 1px;
+}
+
+@media (min-width: 600px) {
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating {
+    position: absolute;
+    top: 16px;
+    left: var(--sel-dock-x, 50%);
+    z-index: 29;
+    width: max-content;
+    max-width: var(--sel-max, calc(100% - 24px));
+    transform: translateX(-50%);
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating[data-anchor="on"] {
+    top: var(--sel-y);
+    left: var(--sel-x);
+  }
+  /* D1: ink pill, icon over a short label; wraps rather than scrolls. */
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating {
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 18px;
+    background: #171c24;
+    box-shadow: 0 10px 30px #171c2447;
+    color: #fff;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > span {
+    align-self: center;
+    background: #ffffff2e;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating[data-compact="true"] > :is(strong, span, .room-selection-title) {
+    display: none;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > strong {
+    align-self: center;
+    max-width: 180px;
+    padding-left: 10px;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating .room-selection-title {
+    align-self: center;
+    max-width: 180px;
+    padding: 0 8px 0 10px;
+    border-radius: 14px;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating .room-selection-title small, .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > strong small {
+    color: #ffffffa6;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > button {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 3px;
+    min-width: 64px;
+    min-height: 52px;
+    padding: 4px 8px;
+    border-radius: 14px;
+    color: #fff;
+    font-size: 11.5px;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > button:last-child {
+    min-width: 44px;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > button:hover:not(:disabled), .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating .room-selection-title:hover {
+    background: #ffffff1f;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > button.is-primary {
+    background: #075eaa;
+    color: #fff;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > button.is-primary:hover {
+    background: #0a6cc2;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > button:disabled {
+    color: #ffffff66;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > button:focus-visible, .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating .room-selection-title:focus-visible {
+    outline: 2px solid #a9d1ff;
+    outline-offset: -2px;
+  }
+}
+
+@media (max-width: 599px) {
+  .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating {
+    overflow-x: auto;
   }
 }

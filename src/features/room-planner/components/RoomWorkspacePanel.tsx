@@ -7,7 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { ArrowLeft, ChevronLeft, PanelLeftOpen } from "lucide-react";
+import { ArrowLeft, ChevronLeft, PanelLeftOpen, X } from "lucide-react";
 import type {
   RoomPanelTab,
   RoomPanelView,
@@ -55,6 +55,7 @@ export function RoomWorkspacePanel({
   meta,
   nestedEyebrow,
   nestedTitle,
+  onNestedClose,
   footer,
   peekLine,
   labels,
@@ -69,6 +70,8 @@ export function RoomWorkspacePanel({
   meta: Record<RoomPanelTab, string>;
   nestedEyebrow?: string;
   nestedTitle?: string;
+  /** D1 product options: «×» clears the selection; the piece stays in the room. */
+  onNestedClose?: { label: string; run: () => void };
   footer?: React.ReactNode;
   /** Phone peek: one line «N тавилга өрөөнд · ₮ · сагсанд N ш». */
   peekLine?: string;
@@ -263,6 +266,17 @@ export function RoomWorkspacePanel({
               {nestedEyebrow && <span>{nestedEyebrow}</span>}
               <strong>{nestedTitle}</strong>
             </div>
+            {onNestedClose && (
+              <button
+                type="button"
+                className="room-panel-nested-close"
+                aria-label={onNestedClose.label}
+                title={onNestedClose.label}
+                onClick={onNestedClose.run}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            )}
           </div>
         )}
         {sheet === "peek" && phone ? (

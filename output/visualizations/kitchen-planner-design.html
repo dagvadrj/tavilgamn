@@ -1,0 +1,174 @@
+<div id="tavilga-kitchen-preview" lang="mn">
+  <style>
+    #tavilga-kitchen-preview{--kp-blue:#075eaa;--kp-ink:#171c24;--kp-muted:#5f6672;--kp-line:#e4e6ea;--kp-tint:#eaf3fc;--kp-canvas:#e9ecef;--kp-panel:264px;color-scheme:light;font-family:Inter,Arial,sans-serif;color:var(--kp-ink);font-size:14px;line-height:1.45;background:#fff;border:1px solid var(--kp-line);border-radius:20px;overflow:hidden;box-sizing:border-box;isolation:isolate}
+    #tavilga-kitchen-preview *{box-sizing:border-box}#tavilga-kitchen-preview button,#tavilga-kitchen-preview input,#tavilga-kitchen-preview select{font:inherit}#tavilga-kitchen-preview button{border:1px solid var(--kp-line);border-radius:9px;background:#fff;color:var(--kp-ink);padding:8px 11px;min-height:36px}#tavilga-kitchen-preview button:hover{background:#f4f7fa}#tavilga-kitchen-preview button:disabled{opacity:.45}#tavilga-kitchen-preview button[aria-pressed="true"]{background:var(--kp-tint);color:var(--kp-blue);border-color:#c4daed}#tavilga-kitchen-preview button.kp-primary{background:var(--kp-blue);border-color:var(--kp-blue);color:#fff}#tavilga-kitchen-preview button:focus-visible,#tavilga-kitchen-preview input:focus-visible{outline:3px solid #86b9e4;outline-offset:2px}
+    #tavilga-kitchen-preview .kp-head{display:flex;align-items:center;gap:18px;padding:16px 20px;border-bottom:1px solid var(--kp-line)}#tavilga-kitchen-preview .kp-brand{font-size:18px;font-weight:700;letter-spacing:-.6px;white-space:nowrap}#tavilga-kitchen-preview .kp-brand span{color:var(--kp-blue)}#tavilga-kitchen-preview .kp-title{padding-left:18px;border-left:1px solid var(--kp-line);font-weight:500}#tavilga-kitchen-preview .kp-sample{font-size:11px;color:var(--kp-muted);margin-left:auto;max-width:190px;text-align:right;padding-right:62px}
+    #tavilga-kitchen-preview .kp-steps{display:flex;gap:4px;padding:10px 16px;border-bottom:1px solid var(--kp-line);flex-wrap:wrap}#tavilga-kitchen-preview .kp-step{border:0;display:flex;gap:8px;align-items:center;padding:8px 12px;white-space:nowrap}#tavilga-kitchen-preview .kp-step span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#f0f2f4;font-size:12px}#tavilga-kitchen-preview .kp-step[aria-pressed="true"] span{background:var(--kp-blue);color:#fff}
+    #tavilga-kitchen-preview .kp-body{display:grid;grid-template-columns:var(--kp-panel) minmax(0,1fr);min-height:520px}#tavilga-kitchen-preview .kp-panel{padding:20px 16px;border-right:1px solid var(--kp-line);background:#fff;min-width:0}#tavilga-kitchen-preview .kp-panel h2{font-size:17px;margin:0 0 4px;font-weight:600}#tavilga-kitchen-preview .kp-panel p{margin:0 0 16px;color:var(--kp-muted);font-size:12px}#tavilga-kitchen-preview .kp-panel label{display:grid;gap:6px;margin:12px 0;font-size:12px;color:var(--kp-muted)}#tavilga-kitchen-preview .kp-panel input,#tavilga-kitchen-preview .kp-panel select{width:100%;border:1px solid var(--kp-line);border-radius:8px;padding:9px;background:#fff;color:var(--kp-ink);min-width:0}#tavilga-kitchen-preview .kp-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}#tavilga-kitchen-preview .kp-mini-tabs{display:flex;flex-wrap:wrap;gap:5px;margin:15px 0}#tavilga-kitchen-preview .kp-mini-tabs button{font-size:12px;padding:6px 10px;min-height:32px}
+    #tavilga-kitchen-preview .kp-library{display:grid;gap:10px}#tavilga-kitchen-preview .kp-product{display:grid;grid-template-columns:48px minmax(0,1fr);gap:11px;padding:12px;border:1px solid var(--kp-line);border-radius:14px;background:#fff}#tavilga-kitchen-preview .kp-product strong{display:block;font-size:12px;font-weight:600}#tavilga-kitchen-preview .kp-product small{display:block;color:var(--kp-muted);font-size:11px;margin:3px 0 8px}#tavilga-kitchen-preview .kp-product button{font-size:12px;min-height:29px;padding:4px 10px;color:var(--kp-blue)}#tavilga-kitchen-preview .kp-front{height:53px;width:45px;background:#f0ede7;border:1px solid #d9d4cc;border-radius:2px;position:relative;align-self:center}#tavilga-kitchen-preview .kp-front:before{content:"";position:absolute;left:3px;right:3px;top:17px;border-top:1px solid #c4beb5}#tavilga-kitchen-preview .kp-front:after{content:"";position:absolute;left:13px;right:13px;top:9px;border-top:2px solid #8c8982}#tavilga-kitchen-preview .kp-front.is-tall{height:66px;background:#b89c75}#tavilga-kitchen-preview .kp-front.is-wall{height:36px}
+    #tavilga-kitchen-preview .kp-appearance{border-top:1px solid var(--kp-line);margin-top:20px;padding-top:16px}#tavilga-kitchen-preview .kp-label{font-size:12px;font-weight:600;margin:0 0 10px}#tavilga-kitchen-preview .kp-swatches{display:flex;gap:7px}#tavilga-kitchen-preview .kp-swatches button{width:38px;height:38px;padding:4px;border-radius:50%;display:grid;place-items:center}#tavilga-kitchen-preview .kp-swatches button span{width:25px;height:25px;border-radius:50%;border:1px solid #b9b9b7}#tavilga-kitchen-preview .kp-swatch-name{display:block;margin-top:7px;color:var(--kp-muted);font-size:11px}#tavilga-kitchen-preview .kp-hint{padding:10px 0;border-top:1px solid var(--kp-line);font-size:11px;color:var(--kp-muted);margin-top:18px}
+    #tavilga-kitchen-preview .kp-stage{background:var(--kp-canvas);display:flex;flex-direction:column;min-width:0;position:relative}#tavilga-kitchen-preview .kp-stage-head{padding:16px 18px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}#tavilga-kitchen-preview .kp-stage-title strong{display:block;font-size:13px;font-weight:600}#tavilga-kitchen-preview .kp-stage-title small{color:var(--kp-muted);font-size:11px}#tavilga-kitchen-preview .kp-views{display:flex;padding:3px;background:#fff;border-radius:11px;gap:2px}#tavilga-kitchen-preview .kp-views button{border:0;font-size:12px;padding:6px 12px;min-height:31px}#tavilga-kitchen-preview .kp-scene{width:100%;height:400px;display:block;overflow:visible;touch-action:manipulation}#tavilga-kitchen-preview .kp-scene [data-item]{outline:none}#tavilga-kitchen-preview .kp-scene text{font-family:Inter,Arial,sans-serif;font-size:12px}
+    #tavilga-kitchen-preview .kp-selection{margin:auto 16px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--kp-line);border-radius:14px;padding:10px 12px;min-height:60px}#tavilga-kitchen-preview .kp-selected-name{flex:1;min-width:140px}#tavilga-kitchen-preview .kp-selected-name strong{display:block;font-size:12px}#tavilga-kitchen-preview .kp-selected-name small{display:block;color:var(--kp-muted);font-size:11px}#tavilga-kitchen-preview .kp-selected-actions{display:flex;gap:5px;flex-wrap:wrap}#tavilga-kitchen-preview .kp-selected-actions button{font-size:11px;padding:7px 9px;min-height:32px}
+    #tavilga-kitchen-preview .kp-bottom{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--kp-line);background:#fff}#tavilga-kitchen-preview .kp-status{color:var(--kp-muted);font-size:11px;max-width:70%}#tavilga-kitchen-preview .kp-summary{display:grid;gap:0;margin-top:16px}#tavilga-kitchen-preview .kp-summary div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--kp-line);font-size:12px}#tavilga-kitchen-preview .kp-summary div span{color:var(--kp-muted)}#tavilga-kitchen-preview .kp-review-list{padding:0;margin:15px 0;list-style:none;display:grid;gap:10px}#tavilga-kitchen-preview .kp-review-list li{font-size:12px;display:flex;align-items:flex-start;gap:7px}#tavilga-kitchen-preview .kp-review-list li:before{content:"✓";color:var(--kp-blue)}
+    @media(max-width:700px){#tavilga-kitchen-preview .kp-head{padding:13px 14px;gap:10px;flex-wrap:wrap}#tavilga-kitchen-preview .kp-title{font-size:12px;padding-left:10px}#tavilga-kitchen-preview .kp-sample{width:100%;text-align:left;max-width:none;margin-left:0;padding-right:60px}#tavilga-kitchen-preview .kp-steps{padding:8px;gap:2px}#tavilga-kitchen-preview .kp-step{padding:6px;font-size:11px;gap:4px}#tavilga-kitchen-preview .kp-step span{width:20px;height:20px}#tavilga-kitchen-preview .kp-body{grid-template-columns:1fr}#tavilga-kitchen-preview .kp-stage{grid-row:1}#tavilga-kitchen-preview .kp-scene{height:330px}#tavilga-kitchen-preview .kp-panel{border-right:0;border-top:1px solid var(--kp-line);padding:18px 14px}#tavilga-kitchen-preview .kp-library{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#tavilga-kitchen-preview .kp-product{grid-template-columns:34px minmax(0,1fr);padding:10px;gap:8px}#tavilga-kitchen-preview .kp-front{width:33px;height:45px}#tavilga-kitchen-preview .kp-front.is-tall{height:54px}#tavilga-kitchen-preview .kp-stage-head{padding:12px}#tavilga-kitchen-preview .kp-selection{margin:0 10px 12px}#tavilga-kitchen-preview .kp-status{max-width:100%}}
+    @media(max-width:370px){#tavilga-kitchen-preview .kp-library{grid-template-columns:1fr}#tavilga-kitchen-preview .kp-title{font-size:11px}#tavilga-kitchen-preview .kp-brand{font-size:16px}#tavilga-kitchen-preview .kp-step{font-size:10px}#tavilga-kitchen-preview .kp-selection{padding:10px}#tavilga-kitchen-preview .kp-selected-actions button{min-height:36px}}
+  </style>
+  <header class="kp-head">
+    <div class="kp-brand">tavilga<span>.mn</span></div>
+    <div class="kp-title">Миний гал тогоо</div>
+    <span class="kp-sample">UI prototype · sample layout</span>
+  </header>
+  <nav class="kp-steps" aria-label="Гал тогоо төлөвлөх үе шат">
+    <button class="kp-step cursor-interaction" data-step="room" aria-pressed="false"><span>1</span>Өрөө</button>
+    <button class="kp-step cursor-interaction" data-step="furnish" aria-pressed="true"><span>2</span>Тохижуулах</button>
+    <button class="kp-step cursor-interaction" data-step="estimate" aria-pressed="false"><span>3</span>Урьдчилсан үнэ</button>
+    <button class="kp-step cursor-interaction" data-step="measure" aria-pressed="false"><span>4</span>Хэмжилт</button>
+  </nav>
+  <div class="kp-body">
+    <aside class="kp-panel" aria-label="Өрөө болон гарнитурын сонголт"></aside>
+    <section class="kp-stage" aria-label="Гал тогооны урьдчилсан харагдац">
+      <div class="kp-stage-head">
+        <div class="kp-stage-title"><strong>Гарнитурын байрлал</strong><small class="kp-room-size">4.2 × 3.4 м · L хэлбэр</small></div>
+        <div class="kp-views" role="group" aria-label="Харах өнцөг">
+          <button class="cursor-interaction" data-view="iso" aria-pressed="true">3D</button>
+          <button class="cursor-interaction" data-view="top" aria-pressed="false">Дээрээс</button>
+        </div>
+      </div>
+      <svg class="kp-scene" aria-label="Шүүгээн дээр дарж сонгох гал тогооны жишээ зураг" role="img"></svg>
+      <div class="kp-selection"><div class="kp-selected-name"></div><div class="kp-selected-actions"><button class="cursor-interaction" data-action="rotate">Эргүүлэх</button><button class="cursor-interaction" data-action="copy">Хуулах</button><button class="cursor-interaction" data-action="remove">Устгах</button></div></div>
+    </section>
+  </div>
+  <footer class="kp-bottom"><span class="kp-status" role="status" aria-live="polite">Шүүгээн дээр дарж сонгоно.</span><button class="kp-primary cursor-interaction" data-action="next">Урьдчилсан үнэ →</button></footer>
+  <script>
+  (()=>{
+    const root=document.getElementById('tavilga-kitchen-preview');
+    const svg=root.querySelector('.kp-scene'),panel=root.querySelector('.kp-panel');
+    const materials={white:{label:'Матт цагаан',front:'#eeeae3',side:'#d4d0c8',top:'#f6f2eb'},oak:{label:'Байгалийн царс',front:'#b99a72',side:'#9d7f5c',top:'#cbae88'},sage:{label:'Саарал ногоон',front:'#929d94',side:'#737f77',top:'#a8b1a7'}};
+    const catalog={base:[{kind:'base',name:'Доод шүүгээ',w:600,d:600,h:860},{kind:'drawers',name:'Шургуулга',w:800,d:600,h:860},{kind:'sink',name:'Угаалтуурын шүүгээ',w:800,d:600,h:860}],wall:[{kind:'wall',name:'Дээд шүүгээ',w:600,d:350,h:720},{kind:'wall',name:'Дээд шүүгээ',w:800,d:350,h:720}],tall:[{kind:'tall',name:'Өндөр шүүгээ',w:600,d:600,h:2200}],appliance:[{kind:'oven',name:'Зуухны модуль',w:600,d:600,h:2200},{kind:'hob',name:'Плитканы модуль',w:800,d:600,h:860}]};
+    let seq=20;
+    const initial=()=>[
+      {id:'K01',kind:'base',name:'Доод шүүгээ',x:0,z:0,w:600,d:600,h:860},
+      {id:'K02',kind:'drawers',name:'Шургуулга',x:600,z:0,w:800,d:600,h:860},
+      {id:'K03',kind:'hob',name:'Плитканы модуль',x:1400,z:0,w:800,d:600,h:860},
+      {id:'K04',kind:'base',name:'Доод шүүгээ',x:2200,z:0,w:800,d:600,h:860},
+      {id:'K05',kind:'oven',name:'Зуухны модуль',x:3000,z:0,w:600,d:600,h:2200},
+      {id:'K06',kind:'tall',name:'Өндөр шүүгээ',x:3600,z:0,w:600,d:600,h:2200},
+      {id:'K07',kind:'sink',name:'Угаалтуурын шүүгээ',x:0,z:600,w:600,d:800,h:860},
+      {id:'K08',kind:'drawers',name:'Шургуулга',x:0,z:1400,w:600,d:800,h:860},
+      {id:'K09',kind:'base',name:'Доод шүүгээ',x:0,z:2200,w:600,d:600,h:860},
+      {id:'K10',kind:'wall',name:'Дээд шүүгээ',x:600,z:0,w:800,d:350,h:720,y:1450},
+      {id:'K11',kind:'wall',name:'Дээд шүүгээ',x:1400,z:0,w:800,d:350,h:720,y:1450},
+      {id:'K12',kind:'wall',name:'Дээд шүүгээ',x:2200,z:0,w:800,d:350,h:720,y:1450}
+    ];
+    let state={step:'furnish',view:'iso',category:'base',material:'white',room:{w:4200,d:3400,h:2700},items:initial(),selected:'K02',layout:'L хэлбэр'};
+    const visual={panelWidth:264,grain:true};
+    const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const selected=()=>state.items.find(item=>item.id===state.selected);
+    function status(text){root.querySelector('.kp-status').textContent=text;}
+    function swatches(){return '<div class="kp-appearance"><div class="kp-label">Нүүрний материал</div><div class="kp-swatches">'+Object.entries(materials).map(([id,m])=>'<button class="cursor-interaction" data-material="'+id+'" aria-label="'+m.label+'" aria-pressed="'+(id===state.material)+'"><span style="background:'+m.front+'"></span></button>').join('')+'</div><span class="kp-swatch-name">'+materials[state.material].label+'</span></div>';}
+    function renderPanel(){
+      if(state.step==='room')panel.innerHTML='<h2>Өрөөний хэмжээ</h2><p>Жишээ өрөөний хязгаарыг тохируулна.</p><div class="kp-form-row"><label>Өргөн · мм<input type="number" min="3000" max="7000" step="100" value="'+state.room.w+'" data-room="w"></label><label>Гүн · мм<input type="number" min="2800" max="6000" step="100" value="'+state.room.d+'" data-room="d"></label></div><label>Таазны өндөр · мм<input type="number" min="2400" max="3300" step="100" value="'+state.room.h+'" data-room="h"></label><div class="kp-label" style="margin-top:20px">Гарнитурын жишээ</div><div class="kp-mini-tabs"><button class="cursor-interaction" data-layout="L хэлбэр" aria-pressed="'+(state.layout==='L хэлбэр')+'">L хэлбэр</button><button class="cursor-interaction" data-layout="Шулуун" aria-pressed="'+(state.layout==='Шулуун')+'">Шулуун</button></div><div class="kp-hint">Хаалга, цонх, шугам сүлжээний бодит шалгалт нь production editor-т хийгдэнэ.</div>';
+      else if(state.step==='furnish')panel.innerHTML='<h2>Тохижуулах</h2><p>Модуль сонгоод өрөөндөө нэмээрэй.</p><div class="kp-mini-tabs">'+[['base','Доод'],['wall','Дээд'],['tall','Өндөр'],['appliance','Техник']].map(([id,n])=>'<button class="cursor-interaction" data-category="'+id+'" aria-pressed="'+(state.category===id)+'">'+n+'</button>').join('')+'</div><div class="kp-library">'+catalog[state.category].map((item,i)=>'<div class="kp-product"><div class="kp-front '+(item.h>1500?'is-tall':item.kind==='wall'?'is-wall':'')+'" aria-hidden="true"></div><div><strong>'+item.name+'</strong><small>'+item.w+' × '+item.d+' × '+item.h+' мм</small><button class="cursor-interaction" data-add="'+i+'">+ Нэмэх</button></div></div>').join('')+'</div>'+swatches()+'<div class="kp-hint">Хэмжээ нь жишээ модуль. Үнэ, нөөц болон бодит SKU холбогдоогүй.</div>';
+      else if(state.step==='estimate')panel.innerHTML='<h2>Урьдчилсан үнэ</h2><p>Сонгосон бүрдлийг нэг дор харна.</p><div class="kp-summary"><div><span>Шүүгээ / модуль</span><strong>'+state.items.length+' ш</strong></div><div><span>Өрөө</span><strong>'+(state.room.w/1000).toFixed(1)+' × '+(state.room.d/1000).toFixed(1)+' м</strong></div><div><span>Нүүр</span><strong>'+materials[state.material].label+'</strong></div><div><span>Үнийн мэдээлэл</span><strong>Холбогдоогүй</strong></div></div><div class="kp-hint">Production хувилбарт SKU, эд анги, тавцан болон үйлчилгээний бодит үнээр тооцно.</div>';
+      else panel.innerHTML='<h2>Хэмжилт</h2><p>Захиалгын өмнөх мэдээллээ шалгана.</p><ul class="kp-review-list"><li>Өрөөний өргөн, гүн болон тааз</li><li>Хаалга, цонхны нээлт</li><li>Ус, цахилгаан, агааржуулалтын цэгүүд</li><li>Шүүгээ, тавцан болон техникийн хэмжээ</li></ul><button class="kp-primary cursor-interaction" data-action="review">Жишээ бүрдлийг шалгах</button><div class="kp-hint">Энэ prototype нь инженерийн хэмжилт, автомат үнийн санал эсвэл захиалга үүсгэхгүй.</div>';
+    }
+    function render(){
+      root.style.setProperty('--kp-panel',visual.panelWidth+'px');
+      root.querySelectorAll('[data-step]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.step===state.step)));
+      root.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===state.view)));
+      root.querySelector('.kp-room-size').textContent=(state.room.w/1000).toFixed(1)+' × '+(state.room.d/1000).toFixed(1)+' м · '+state.layout;
+      const s=selected();
+      root.querySelector('.kp-selected-name').innerHTML=s?'<strong>'+esc(s.name)+' · '+s.id+'</strong><small>'+s.w+' × '+s.d+' × '+s.h+' мм'+(s.y?' · Дээд байрлал':'')+'</small>':'<strong>Шүүгээ сонгоогүй</strong><small>Зураг дээрх модулийг сонгоно.</small>';
+      root.querySelectorAll('.kp-selected-actions button').forEach(b=>b.disabled=!s);
+      const next=root.querySelector('[data-action="next"]');next.textContent=state.step==='room'?'Тохижуулах →':state.step==='furnish'?'Урьдчилсан үнэ →':state.step==='estimate'?'Хэмжилт →':'Тохижуулалтад буцах';
+      renderPanel();draw();
+    }
+    function draw(){
+      const W=Math.max(280,Math.round(svg.clientWidth)),H=window.matchMedia('(max-width:700px)').matches?330:400;
+      svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.style.height=H+'px';
+      const raw=(x,y,z)=>state.view==='top'?{x,y:z}:{x:(x-z)*.866,y:(x+z)*.46-y};
+      const corners=[[0,0,0],[state.room.w,0,0],[0,0,state.room.d],[state.room.w,0,state.room.d],...(state.view==='top'?[]:[[0,state.room.h,0],[state.room.w,state.room.h,0],[0,state.room.h,state.room.d]])].map(p=>raw(...p));
+      const minX=Math.min(...corners.map(p=>p.x)),maxX=Math.max(...corners.map(p=>p.x)),minY=Math.min(...corners.map(p=>p.y)),maxY=Math.max(...corners.map(p=>p.y));
+      const scale=Math.min((W-46)/(maxX-minX),(H-42)/(maxY-minY));const ox=(W-(maxX-minX)*scale)/2-minX*scale,oy=(H-(maxY-minY)*scale)/2-minY*scale;
+      const pt=(x,y,z)=>{const p=raw(x,y,z);return [ox+p.x*scale,oy+p.y*scale];};
+      const points=arr=>arr.map(a=>pt(...a).map(v=>v.toFixed(2)).join(',')).join(' ');
+      const poly=(arr,fill,stroke='#c9c5bf',extra='')=>'<polygon points="'+points(arr)+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width=".8" '+extra+'/>';
+      const line=(a,b,c='#d0ccc6',w=.65)=>{const p=pt(...a),q=pt(...b);return '<line x1="'+p[0]+'" y1="'+p[1]+'" x2="'+q[0]+'" y2="'+q[1]+'" stroke="'+c+'" stroke-width="'+w+'"/>';};
+      let html='<title>Гал тогооны жишээ байрлал</title><desc>'+state.items.length+' модультай '+state.layout+' гал тогооны сонгох боломжтой зураг.</desc>';
+      const rw=state.room.w,rd=state.room.d,rh=state.room.h;
+      if(state.view==='iso'){
+        html+=poly([[0,0,0],[rw,0,0],[rw,rh,0],[0,rh,0]],'#f5f3ef','#c4c4c2');
+        html+=poly([[0,0,0],[0,0,rd],[0,rh,rd],[0,rh,0]],'#e8e6e2','#c4c4c2');
+        html+=poly([[0,900,850],[0,900,2150],[0,2200,2150],[0,2200,850]],'#ecf3f5','#fff');
+        for(const z of [1280,1720])html+=line([0,930,z],[0,2170,z],'#fff',4);
+        html+=poly([[0,900,810],[120,900,810],[120,900,2190],[0,900,2190]],'#fcfcfa','#d4d1cb');
+      }
+      html+=poly([[0,-50,0],[rw,-50,0],[rw,-50,rd],[0,-50,rd]],'#d6d3ce','#c3c1bc');
+      html+=poly([[0,0,0],[rw,0,0],[rw,0,rd],[0,0,rd]],'#dfd9ce','#c3c1bc');
+      for(let x=600;x<rw;x+=600)html+=line([x,1,0],[x,1,rd]);for(let z=600;z<rd;z+=600)html+=line([0,1,z],[rw,1,z]);
+      if(state.view==='iso')html+=poly([[0,2,900],[1900,2,1500],[2500,2,2900],[0,2,2400]],'#f2e4c7','none','opacity=".36"');
+      const front=materials[state.material];
+      const items=[...state.items].sort((a,b)=>((a.x+a.z+(a.y||0)*.05)-(b.x+b.z+(b.y||0)*.05)));
+      for(const item of items){
+        const {x,z,w,d,h}=item,y=item.y||0;const tall=item.kind==='tall'||item.kind==='oven';const m=tall?materials.oak:front;
+        const isSelected=item.id===state.selected;
+        html+='<g data-item="'+item.id+'" role="button" aria-label="'+esc(item.name+' '+item.id)+'" class="cursor-interaction">';
+        if(state.view==='iso'){
+          html+=poly([[x,y,z+d],[x+w,y,z+d],[x+w,y+h,z+d],[x,y+h,z+d]],m.front,'#bdb8ae');
+          html+=poly([[x+w,y,z],[x+w,y,z+d],[x+w,y+h,z+d],[x+w,y+h,z]],m.side,'#b8b2a9');
+          if(item.kind==='drawers')for(const frac of [.33,.66])html+=line([x+8,y+h*frac,z+d+1],[x+w-8,y+h*frac,z+d+1],'#b7b2a9',.8);
+          else if(w>=780)html+=line([x+w/2,y+10,z+d+1],[x+w/2,y+h-10,z+d+1],'#b7b2a9',.8);
+          if(item.kind==='oven'){
+            html+=poly([[x+40,y+820,z+d+2],[x+w-40,y+820,z+d+2],[x+w-40,y+1480,z+d+2],[x+40,y+1480,z+d+2]],'#30343a','#1f2429');
+            html+=poly([[x+65,y+900,z+d+3],[x+w-65,y+900,z+d+3],[x+w-65,y+1340,z+d+3],[x+65,y+1340,z+d+3]],'#454a4e','#65696b');
+            html+=line([x+100,y+1410,z+d+4],[x+w-100,y+1410,z+d+4],'#b5b9bd',2);
+          }
+          if(visual.grain&&tall)for(let gx=x+55;gx<x+w;gx+=100)html+=line([gx,y+20,z+d+2],[gx,y+h-20,z+d+2],'#a88b66',.5);
+          const count=item.kind==='drawers'?3:1;for(let k=0;k<count;k++){const hh=item.kind==='drawers'?y+h*(.18+k*.33):y+h*.77;html+=line([x+w*.32,hh,z+d+3],[x+w*.68,hh,z+d+3],'#898983',1.8);}
+        }
+        const cap=!item.y&&h<1200?'#ebe5da':m.top;
+        html+=poly([[x,y+h,z],[x+w,y+h,z],[x+w,y+h,z+d],[x,y+h,z+d]],cap,'#bdb8ae');
+        if(item.kind==='hob'){
+          html+=poly([[x+70,y+h+3,z+65],[x+w-70,y+h+3,z+65],[x+w-70,y+h+3,z+d-65],[x+70,y+h+3,z+d-65]],'#343a3d','#20272b');
+          for(const [fx,fz]of [[.3,.3],[.7,.3],[.3,.7],[.7,.7]]){const p=pt(x+w*fx,y+h+4,z+d*fz);html+='<ellipse cx="'+p[0]+'" cy="'+p[1]+'" rx="'+(w*scale*.1)+'" ry="'+(state.view==='top'?d*scale*.1:d*scale*.06)+'" fill="none" stroke="#838a8c" stroke-width=".6"/>';}
+        }
+        if(item.kind==='sink'){
+          html+=poly([[x+90,y+h+3,z+110],[x+w-90,y+h+3,z+110],[x+w-90,y+h+3,z+d-100],[x+90,y+h+3,z+d-100]],'#a7b2b5','#e4e7e7');
+          html+=poly([[x+120,y+h+4,z+145],[x+w-120,y+h+4,z+145],[x+w-120,y+h+4,z+d-130],[x+120,y+h+4,z+d-130]],'#7f8d91','#cdd4d5');
+          html+=line([x+60,y+h+5,z+d*.45],[x+60,y+h+280,z+d*.45],'#7d8a8d',2);html+=line([x+60,y+h+280,z+d*.45],[x+210,y+h+280,z+d*.45],'#7d8a8d',2);
+        }
+        if(isSelected){html+=poly([[x,y+h+6,z],[x+w,y+h+6,z],[x+w,y+h+6,z+d],[x,y+h+6,z+d]],'none','#075eaa','style="stroke-width:2"');if(state.view==='iso')html+=line([x,y,z+d],[x,y+h,z+d],'#075eaa',2);}
+        if(state.view==='top'){const p=pt(x+w/2,y+h+10,z+d/2);html+='<text x="'+p[0]+'" y="'+(p[1]+4)+'" text-anchor="middle" fill="'+(item.kind==='hob'?'#fff':'#3e464d')+'">'+item.id+'</text>';}
+        html+='</g>';
+      }
+      const la=pt(rw/2,0,rd+180),lb=pt(rw+180,0,rd/2);
+      html+='<text x="'+la[0]+'" y="'+Math.min(H-8,la[1]+12)+'" text-anchor="middle" fill="#5f6672">'+(rw/1000).toFixed(1)+' м</text>';
+      html+='<text x="'+Math.min(W-20,lb[0]+5)+'" y="'+lb[1]+'" text-anchor="middle" fill="#5f6672">'+(rd/1000).toFixed(1)+' м</text>';
+      svg.innerHTML=html;
+    }
+    function overlap(a,b){return(a.y||0)<(b.y||0)+b.h&&(b.y||0)<(a.y||0)+a.h&&a.x<b.x+b.w-1&&a.x+a.w>b.x+1&&a.z<b.z+b.d-1&&a.z+a.d>b.z+1;}
+    function fits(item,ignore){return item.x>=0&&item.z>=0&&item.x+item.w<=state.room.w&&item.z+item.d<=state.room.d&&!state.items.some(other=>other.id!==ignore&&overlap(item,other));}
+    function place(item){const positions=[];for(let z=0;z<=state.room.d-item.d;z+=200)for(let x=0;x<=state.room.w-item.w;x+=200)positions.push({x,z});const p=positions.find(p=>fits({...item,...p}));return p?{...item,...p}:null;}
+    function commit(text){render();if(text)status(text);if(window.openai?.setWidgetState)window.openai.setWidgetState({modelContent:{step:state.step,view:state.view,material:materials[state.material].label,room:state.room,modules:state.items.length},privateContent:{state}}).catch(()=>{});}
+    root.addEventListener('click',event=>{
+      const button=event.target.closest('button');const item=event.target.closest('[data-item]');
+      if(item){state.selected=item.dataset.item;commit('Сонгосон: '+selected().name);return;}
+      if(!button||button.disabled)return;
+      if(button.dataset.step){state.step=button.dataset.step;commit();}
+      else if(button.dataset.view){state.view=button.dataset.view;commit();}
+      else if(button.dataset.category){state.category=button.dataset.category;commit();}
+      else if(button.dataset.material){state.material=button.dataset.material;commit('Нүүрний материал: '+materials[state.material].label);}
+      else if(button.dataset.layout){state.layout=button.dataset.layout;state.items=initial().filter(i=>state.layout==='L хэлбэр'||i.z===0);state.selected=state.items[0]?.id;commit('Гарнитурын жишээг шинэчиллээ.');}
+      else if(button.hasAttribute('data-add')){const source=catalog[state.category][Number(button.dataset.add)];const next=place({...source,id:'K'+(++seq),y:source.kind==='wall'?1450:0});if(!next){status('Жишээ өрөөнд энэ модуль багтах сул зай олдсонгүй.');return;}state.items.push(next);state.selected=next.id;commit(source.name+' нэмлээ.');}
+      else if(button.dataset.action==='next'){const steps=['room','furnish','estimate','measure'];state.step=steps[(steps.indexOf(state.step)+1)%4];commit();}
+      else if(button.dataset.action==='review'){status('Жишээ: '+state.items.length+' модуль. Бодит үнэ болон инженерийн хэмжилт холбогдоогүй.');}
+      else{const s=selected();if(!s)return;if(button.dataset.action==='remove'){state.items=state.items.filter(i=>i.id!==s.id);state.selected=null;commit('Сонгосон модулийг жишээнээс устгалаа.');}if(button.dataset.action==='rotate'){const next={...s,w:s.d,d:s.w};if(!fits(next,s.id)){status('Энэ байрлалд эргүүлэх сул зай алга. Дээрээс харах горимоор байрлалыг шалгаарай.');return;}Object.assign(s,next);commit('Модулийг 90° эргүүллээ.');}if(button.dataset.action==='copy'){const next=place({...s,id:'K'+(++seq)});if(!next){status('Хуулбар байрлуулах сул зай олдсонгүй.');return;}state.items.push(next);state.selected=next.id;commit('Шинэ хуулбар нэмлээ.');}}
+    });
+    root.addEventListener('change',event=>{const input=event.target;if(!input.dataset.room)return;const value=Number(input.value),key=input.dataset.room;if(!Number.isFinite(value)||value<Number(input.min)||value>Number(input.max)){input.value=state.room[key];return;}const previous=state.room[key];state.room[key]=value;const invalid=state.items.some(i=>i.x+i.w>state.room.w||i.z+i.d>state.room.d||(i.y||0)+i.h>state.room.h);if(invalid){state.room[key]=previous;status('Одоо байгаа шүүгээнд багтах хэмжээг сонгоно уу.');input.value=previous;return;}commit('Өрөөний жишээ хэмжээ шинэчлэгдлээ.');});
+    const restore=value=>{const saved=value?.privateContent?.state;if(!saved||!['room','furnish','estimate','measure'].includes(saved.step)||!['iso','top'].includes(saved.view)||!materials[saved.material]||!catalog[saved.category]||!saved.room||!['w','d','h'].every(k=>Number.isFinite(saved.room[k])&&saved.room[k]>=1000&&saved.room[k]<=10000)||!Array.isArray(saved.items)||saved.items.length>50||!saved.items.every(i=>typeof i.id==='string'&&typeof i.name==='string'&&['x','z','w','d','h'].every(k=>Number.isFinite(i[k]))&&i.w>0&&i.d>0&&i.h>0))return;state=saved;seq=Math.max(20,...state.items.map(i=>Number(i.id.replace('K',''))||0));render();};
+    render();restore(window.openai?.widgetState);window.addEventListener('openai:set_globals',e=>restore(e.detail?.globals?.widgetState));
+    new ResizeObserver(()=>draw()).observe(svg);
+    if(globalThis.Tweak){const tweak=new Tweak({container:root,onChange:render});tweak.addSlider(visual,'panelWidth',{label:'Panel width',min:230,max:300,step:10,unit:'px'});tweak.addToggle(visual,'grain',{label:'Wood grain'});}
+  })();
+  </script>
+</div>

@@ -1,0 +1,164 @@
+const { test } = require("node:test");
+const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
+const path = require("node:path");
+const React = require("react");
+const { renderToStaticMarkup } = require("react-dom/server");
+const { loadSource } = require("./helpers/load-source.cjs");
+
+const h = React.createElement;
+const read = (file) => readFileSync(path.resolve(__dirname, "..", file), "utf8");
+const store = (state) => Object.assign((select) => select(state), { getState: () => state, setState() {} });
+const image = { default: (props) => h("img", { src: props.src, alt: props.alt }) };
+const link = { PlannerLink: (props) => h("a", { href: props.href, className: props.className }, props.children) };
+
+const product = (id, category, extra = {}) => ({
+  id, name: id, category, description: "", basePrice: 100000, image: `/${id}.jpg`, images: [],
+  colors: [], materials: [], dimensions: { w: 1, d: 1, h: 1 }, rating: 0, reviewCount: 0,
+  stockQuantity: 3, model: { id, file: `${id}.glb` }, storeIds: ["s1"], ...extra,
+});
+
+test("gallery: primary image first, extras after, without blanks or repeats", () => {
+  const { productGallery } = loadSource("src/lib/productGallery.ts");
+  assert.deepEqual(productGallery({ image: "/a.jpg", images: ["/b.jpg", "/a.jpg", "", "  ", "/b.jpg", "/c.jpg"] }), ["/a.jpg", "/b.jpg", "/c.jpg"]);
+  assert.deepEqual(productGallery({ image: "", images: undefined }), []);
+  assert.deepEqual(productGallery({ image: "/a.jpg" }), ["/a.jpg"]);
+});
+
+test("pairing: other categories by rule, in stock with a model, merchant scope, honest reason", () => {
+  const { complementaryProducts } = loadSource("src/lib/roomProductOptions.ts");
+  const sofa = product("sofa-a", "sofa");
+  const catalog = [
+    sofa,
+    product("sofa-b", "sofa"),
+    product("table", "coffee-table", { basePrice: 300000 }),
+    product("side", "side-table", { basePrice: 90000 }),
+    product("side-empty", "side-table", { stockQuantity: 0 }),
+    product("side-nomodel", "side-table", { model: undefined }),
+    product("arm-other-store", "armchair", { storeIds: ["s2"] }),
+    product("bed", "bed"),
+  ];
+  const ids = (list) => list.map((item) => item.product.id);
+  const all = complementaryProducts(sofa, catalog, { roomType: "living" });
+  assert.deepEqual(ids(all), ["table", "side", "arm-other-store"], "rule order first, then price");
+  assert.ok(all.every((item) => item.product.category !== "sofa"), "same-category items belong to «Солих», never «Хослуулах»");
+  assert.match(all[0].reason, /^Буйдан-тай хамт хэрэглэдэг: /);
+  assert.deepEqual(ids(complementaryProducts(sofa, catalog, { roomType: "living", storeId: "s1" })), ["table", "side"]);
+  assert.deepEqual(complementaryProducts(product("x", "kitchen-cabinet"), catalog, { roomType: "living" }), []);
+});
+
+test("toolbar placement: 12px above the bounds, flips below, clamps 8px inside, null off stage", () => {
+  const { placeSelectionToolbar } = loadSource("src/lib/roomProductOptions.ts");
+  const stage = { width: 900, height: 600 };
+  const bar = { width: 400, height: 60 };
+  assert.deepEqual(placeSelectionToolbar({ left: 300, top: 300, right: 500, bottom: 420 }, stage, bar), { x: 400, y: 228, side: "above" });
+  assert.deepEqual(placeSelectionToolbar({ left: 300, top: 40, right: 500, bottom: 200 }, stage, bar), { x: 400, y: 212, side: "below" });
+  assert.equal(placeSelectionToolbar({ left: 0, top: 300, right: 60, bottom: 400 }, stage, bar).x, 208, "left edge clamps to 8px + half the bar");
+  assert.equal(placeSelectionToolbar({ left: 860, top: 300, right: 1200, bottom: 400 }, stage, bar).x, 692, "right edge clamps to 8px + half the bar");
+  assert.equal(placeSelectionToolbar({ left: 950, top: 100, right: 1100, bottom: 200 }, stage, bar), null);
+  assert.equal(placeSelectionToolbar({ left: 100, top: -300, right: 200, bottom: -10 }, stage, bar), null);
+  assert.deepEqual(placeSelectionToolbar({ left: 300, top: 20, right: 500, bottom: 580 }, stage, bar), { x: 400, y: 8, side: "above" });
+});
+
+function renderOptions(props, wish = []) {
+  const { RoomProductOptions } = loadSource("src/features/room-planner/components/RoomProductOptions.tsx", {
+    "next/image": image,
+    "@/components/PlannerLink": link,
+    "@/store/wishlist": { useWishlist: store({ has: (id) => wish.includes(id), toggle() {} }) },
+  });
+  return renderToStaticMarkup(h(RoomProductOptions, {
+    fallback: { name: "Сандал", image: null, dimensions: { w: 0.7, d: 0.8, h: 0.9 }, note: "Оруулсан 3D загвар. Дэлгүүрийн бараа биш тул дэлгэрэнгүй хуудас, сагс байхгүй." },
+    instanceLabel: "#2", canWish: true, price: 1598996, colors: [], materials: [], colorId: "", materialId: "",
+    onColor() {}, onMaterial() {}, appearanceTracksVariant: false, canBuy: true, onAddToCart() {},
+    mode: "replace", onMode() {}, revealRecommendations: 0, replace: h("p", null, "REPLACE"), pair: h("p", null, "PAIR"),
+    ...props,
+  }));
+}
+
+test("options: content order, real rating, delivery terms and an unregistered pickup row", () => {
+  const sofa = product("luna", "sofa", {
+    name: "Луна буйдан", description: "Гурван хүний буйдан.", images: ["/luna-2.jpg", "/luna.jpg"], rating: 4.6, reviewCount: 12,
+    deliveryTerms: "3 хоногт хүргэнэ", colors: [{ id: "grey", name: "Саарал", hex: "#b5b0a6" }],
+  });
+  const html = renderOptions({ product: sofa, storeName: "Гэр Тавилга", colors: sofa.colors, colorId: "grey" }, ["luna"]);
+  const order = ["room-options-gallery", "Буйдан · Гэр Тавилга", "Луна буйдан <small>#2</small>", "Гурван хүний буйдан.", "Хэмжээ", "★|4.6 · 12 сэтгэгдэл",
+    "сонгосон хувилбарын үнэ", "Сагсанд нэмэх", "Дэлгэрэнгүй", "Авах боломж", "Хувилбар", "Ижил бүтээгдэхүүнээр солих", "REPLACE"];
+  let at = -1;
+  for (const marker of order) {
+    const index = marker.split("|").map((part) => html.indexOf(part, at + 1)).find((found) => found > at) ?? -1;
+    assert.ok(index > at, `${marker} comes after the previous section`);
+    at = index;
+  }
+  assert.match(html, /4\.6 · 12 сэтгэгдэл/);
+  assert.match(html, /aria-pressed="true"[^>]*aria-label="Хүслийн жагсаалтаас хасах"/);
+  assert.match(html, /Дэлгүүрийн хүргэлтийн нөхцөл: 3 хоногт хүргэнэ · хүргэлтийн үнийн санал биш/);
+  assert.match(html, /Очиж авах, дэлгүүрт үзэх мэдээлэл бүртгэгдээгүй\./);
+  assert.match(html, /3D загвар үндсэн өнгөөр харагдана/);
+  assert.equal((html.match(/aria-label="Зураг \d"/g) ?? []).length, 2, "two distinct images give two thumbnails");
+  assert.match(html, /aria-label="Өмнөх зураг"/);
+  assert.match(html, /href="\/product\/luna"/);
+});
+
+test("options: one image has no arrows; no reviews says so; merchant hides cart and heart; custom models explain", () => {
+  const plain = product("shelf", "bookshelf", { name: "Тавиур" });
+  const single = renderOptions({ product: plain });
+  assert.doesNotMatch(single, /Өмнөх зураг|Дараах зураг|role="tablist" aria-label="Зургууд"/);
+  assert.match(single, /Сэтгэгдэл хараахан алга/);
+  assert.doesNotMatch(single, /★/);
+  const merchant = renderOptions({ product: plain, canWish: false, canBuy: false });
+  assert.doesNotMatch(merchant, /Хүслийн жагсаалт|Сагсанд нэмэх/);
+  const custom = renderOptions({ product: null, canBuy: false, price: null });
+  assert.match(custom, /Оруулсан 3D загвар\. Дэлгүүрийн бараа биш/);
+  assert.doesNotMatch(custom, /Хүслийн жагсаалт|Сагсанд нэмэх|Дэлгэрэнгүй|Авах боломж|Үнэлгээ/);
+  assert.match(custom, /Зураг алга/);
+});
+
+test("toolbar: one instance, real buttons with labels, and presses never reach the scene", () => {
+  const { RoomSelectionToolbar } = loadSource("src/features/room-planner/components/RoomSelectionToolbar.tsx", {
+    "@/store/selectionAnchor": { useSelectionAnchor: Object.assign(() => null, { getState: () => ({ instanceId: null, rect: null }), subscribe: () => () => {} }) },
+  });
+  const actions = ["Сагсанд", "Эргүүлэх", "Солих", "Хослуулах", "Хуулбарлах", "Устгах", "Төвлөрүүлэх"].map((label, i) => ({ id: String(i), label, icon: null, run() {}, primary: i === 0 }));
+  const html = renderToStaticMarkup(h(RoomSelectionToolbar, { instanceId: "p2", title: "Луна", number: 2, actions, onOpen() {}, onClose() {} }));
+  assert.match(html, /role="toolbar" aria-label="Сонгосон тавилга: Луна"/);
+  assert.match(html, /data-anchor="off"/, "without a projected anchor the bar docks at the stage top");
+  for (const action of actions) assert.match(html, new RegExp(`aria-label="${action.label}"[^>]*><span>${action.label}</span>`));
+  assert.match(html, /class="is-primary"[^>]*aria-label="Сагсанд"/);
+  const source = read("src/features/room-planner/components/RoomSelectionToolbar.tsx");
+  assert.match(source, /onPointerDown=\{\(event\) => event\.stopPropagation\(\)\}/);
+});
+
+test("planner wiring: cart adds quantity only, copy selects the new instance, remove keeps the cart", () => {
+  const source = read("src/components/RoomPlanner.tsx");
+  const body = (name) => {
+    const start = source.indexOf(`const ${name} = `);
+    assert.ok(start >= 0, name);
+    return source.slice(start, source.indexOf("\n  };\n", start));
+  };
+  const cart = body("addSelectedToCart");
+  assert.match(cart, /addToCart\(/);
+  assert.doesNotMatch(cart, /updatePieces|placeNewPiece|placeFurniture/, "«Сагсанд» never adds a copy to the scene");
+  assert.match(body("duplicateSelected"), /setSelected\(copy\.instanceId\)/);
+  const remove = body("removePiece");
+  assert.doesNotMatch(remove, /removeFromCart|useCart|cart\./, "removing from the room leaves the cart");
+  assert.match(remove, /label: "Буцаах"/);
+  assert.match(source, /id: "cart",[\s\S]{0,120}run: addSelectedToCart/);
+  assert.match(source, /if \(!selectedPiece\.attachment \|\| selectedPiece\.attachment\.kind === "floor"\)\s*selectionActions\.push\(\{\s*id: "rotate"/, "wall pieces get no «Эргүүлэх»");
+  assert.match(source, /<RoomSelectionToolbar\s+key=\{selectedPiece\.instanceId\}\s+instanceId=\{selectedPiece\.instanceId\}/);
+  assert.match(source, /<RoomProductOptions\s+key=\{selectedPiece\.instanceId\}/);
+});
+
+test("canvas: blue thin frame plus a floor footprint for floor pieces; never over a failed model", () => {
+  const source = read("src/three/RoomCanvas.tsx");
+  assert.match(source, /const SELECTION_COLOR = "#075eaa"/);
+  assert.match(source, /\{selected && !failed && \(\s*<mesh position=\{\[0, dims\.h \/ 2, 0\]\}>/);
+  assert.match(source, /\{selected &&\s*!failed &&\s*\(!piece\.attachment \|\| piece\.attachment\.kind === "floor"\) && \(/);
+  assert.match(source, /<planeGeometry args=\{\[dims\.w \+ 0\.06, dims\.d \+ 0\.06\]\} \/>/);
+  assert.match(source, /raycast=\{\(\) => null\}/);
+  const anchor = read("src/three/SelectionScreenAnchor.tsx");
+  assert.match(anchor, /useFrame\(/, "projection only runs on rendered frames");
+  assert.match(anchor, /if \(key === last\.current\) return;/, "an unchanged rect writes no store state");
+  assert.doesNotMatch(anchor, /setInterval|requestAnimationFrame/);
+  assert.equal((anchor.match(/invalidate\(\)/g) ?? []).length, 1, "one frame on selection so the bar anchors, never a loop");
+  const frame = anchor.slice(anchor.indexOf("useFrame("), anchor.indexOf("\n  });", anchor.indexOf("useFrame(")));
+  assert.doesNotMatch(frame, /invalidate/, "the frame callback never schedules another frame");
+});

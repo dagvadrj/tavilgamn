@@ -2,6 +2,7 @@
 import { useState } from "react";
 import type { Category, RoomWall, RoomType } from "@/lib/types";
 import type { EnvironmentTab } from "@/components/RoomEnvironmentPanel";
+import type { ProductOptionsMode } from "@/features/room-planner/components/RoomProductOptions";
 
 export interface CustomInterior {
   id: string;
@@ -59,8 +60,12 @@ export function useRoomPlannerUi() {
   );
   const [panelTab, setPanelTab] = useState<RoomPanelTab>("add");
   const [panelView, setPanelView] = useState<RoomPanelView>("list");
+  /** Product options: which recommendation list shows, and a reveal request. */
+  const [optionsMode, setOptionsMode] = useState<ProductOptionsMode>("replace");
+  const [optionsReveal, setOptionsReveal] = useState(0);
   return {
     panelOpen, setPanelOpen, panelTab, setPanelTab, panelView, setPanelView,
+    optionsMode, setOptionsMode, optionsReveal, setOptionsReveal,
     selected, setSelected, environmentTab, setEnvironmentTab, surface, setSurface, selectedWall, setSelectedWall, selectedOpening, setSelectedOpening, placementTemplate, setPlacementTemplate, showStartHint, setShowStartHint, view, setView, snapEnabled, setSnapEnabled, locked, setLocked, paletteCat, setPaletteCat, showCompare, setShowCompare, showRoomGeometry, setShowRoomGeometry, compareIds, setCompareIds, saveName, setSaveName, activePreset, setActivePreset, presetStatus, setPresetStatus, presetError, setPresetError, localFile, setLocalFile, localUrl, setLocalUrl, localScale, setLocalScale, query, setQuery, gridEnabled, setGridEnabled, showDimensions, setShowDimensions, resetKey, setResetKey, notice, setNotice, expanded, setExpanded, newRoomType, setNewRoomType
   };
 }

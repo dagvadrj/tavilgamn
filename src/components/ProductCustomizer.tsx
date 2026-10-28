@@ -28,6 +28,7 @@ import { useWishlist } from "@/store/wishlist";
 import { availableStock, quantityLimit, stockLabel } from "@/lib/inventory";
 import { modelDeliveryUrl, prefetchModel } from "@/lib/modelPrefetch";
 import { productOffer } from "@/lib/catalogPresentation";
+import { productGallery } from "@/lib/productGallery";
 import { FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE } from "@/lib/orders";
 import type { Group } from "three";
 import { ProductScaleHUD } from "./ProductScaleHUD";
@@ -71,8 +72,8 @@ export function ProductCustomizer({
   initialColor?: string;
 }) {
   const galleryImages = useMemo(
-    () => Array.from(new Set([product.image, ...(product.images ?? [])])),
-    [product.image, product.images],
+    () => productGallery(product),
+    [product],
   );
   const [color, setColor] = useState(
     product.colors.some((option) => option.id === initialColor)
