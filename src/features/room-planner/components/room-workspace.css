@@ -2165,9 +2165,62 @@
   color: var(--room-ws-warn);
 }
 
+.room-options-body .room-options-ok {
+  color: #17603d;
+}
+
+.room-options-skeleton {
+  display: grid;
+  gap: 8px;
+}
+
+.room-options-skeleton > span {
+  height: 88px;
+  border-radius: 14px;
+  background: #f1f3f5;
+  animation: room-options-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes room-options-pulse {
+  50% {
+    opacity: .55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-options-skeleton > span {
+    animation: none;
+  }
+}
+
+.room-options-error {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 18px 12px;
+  border: 1px solid #f1c4c0;
+  border-radius: 14px;
+  background: #fff8f7;
+  color: #b42318;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.room-options-error > button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--room-ws-primary);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .room-options-body button {
   justify-self: start;
-  min-height: 36px;
+  min-height: 44px;
   margin-top: 4px;
   padding: 0 14px;
   border: 0;
@@ -2300,5 +2353,104 @@
 @media (max-width: 599px) {
   .planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating {
     overflow-x: auto;
+  }
+}
+
+/* D5: phones keep four actions in the bar and the rest under «Бусад». */
+
+.room-selection-more {
+  position: relative;
+  display: none;
+}
+
+.room-selection-more > [role="menu"] {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 80;
+  display: grid;
+  min-width: 220px;
+  padding: 6px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 32px #171c2433;
+}
+
+.room-selection-more > [role="menu"] > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--room-ws-ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.room-selection-more > [role="menu"] > button:focus-visible, .room-selection-more > [role="menu"] > button:hover {
+  background: #f1f3f5;
+}
+
+@media (max-width: 599px) {
+  .planner-workspace.planner-reference.room-simple .room-selection-bar > button.is-more {
+    display: none;
+  }
+  .room-selection-more {
+    display: block;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-more-toggle {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 22px;
+    background: transparent;
+    color: var(--room-ws-ink);
+    cursor: pointer;
+  }
+  .room-selection-more-toggle > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  /* Sheet order: picture, name, price, rating → cart → colour → size → swap/pair. */
+  .room-options {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .room-options > [aria-label="Хувилбар"] {
+    order: 1;
+  }
+  .room-options > [aria-label="Санал болгох"] {
+    order: 2;
+  }
+  .room-options > [aria-label="Авах боломж"] {
+    order: 3;
+  }
+  .room-options > :not(.room-options-hero, [aria-label="Хувилбар"], [aria-label="Санал болгох"], [aria-label="Авах боломж"]) {
+    order: 4;
+  }
+  .room-options-gallery {
+    max-height: 168px;
+  }
+  .room-options-thumbs, .room-options-description {
+    display: none;
+  }
+  .planner-workspace.planner-reference.room-simple .room-selection-bar > span {
+    display: none;
+  }
+  /* «Бусад» already holds copy and remove; the sheet keeps its height for options. */
+  .room-workspace-panel[data-sheet][data-view="detail"] .room-panel-footer {
+    display: none;
   }
 }

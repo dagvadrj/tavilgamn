@@ -224,3 +224,65 @@ test("D2 wiring: price, cart payload and swatch share one variant; replace remem
   assert.match(options, /Өнгө солиход сагсанд байгаа бараа өөрчлөгдөхгүй\./);
   assert.match(read("src/three/FurnitureLoadState.tsx"), /export const SWAP_DIM_OPACITY = 0\.55;/);
 });
+
+test("D3 replace cards: 3D-ready, stock and fit each give an honest reason; imported models get none", () => {
+  const { alternativeFit, RoomProductAlternatives } = loadSource("src/features/room-planner/components/RoomProductAlternatives.tsx", {
+    "next/image": image,
+    "@/lib/roomProductReplacement": {
+      replaceRoomProduct: (piece, p) => (p.id === "wide" ? { pieces: null, error: "Шинэ хэмжээ энэ байрлалд багтахгүй." } : { pieces: [{ ...piece, productId: p.id }], error: null }),
+    },
+  });
+  const piece = { instanceId: "p1", productId: "sofa-a", x: 0, z: 0, rotation: 0, color: "c", material: "m", details: { name: "A", dimensions: { w: 2, d: 1, h: 1 }, category: "sofa" } };
+  const args = [[piece], { id: "r" }, "r", { room: {}, pieces: [piece] }];
+  assert.deepEqual(alternativeFit(piece, product("x", "sofa", { model: undefined }), ...args), { kind: "no-model" });
+  assert.deepEqual(alternativeFit(piece, product("x", "sofa", { stockQuantity: 0 }), ...args), { kind: "no-stock" });
+  assert.deepEqual(alternativeFit(piece, product("wide", "sofa"), ...args), { kind: "blocked", reason: "Шинэ хэмжээ энэ байрлалд багтахгүй." });
+  assert.deepEqual(alternativeFit(piece, product("ok", "sofa"), ...args), { kind: "fits" });
+  const catalog = [product("ok", "sofa"), product("wide", "sofa"), product("nomodel", "sofa", { model: undefined }), product("empty", "sofa", { stockQuantity: 0 }), product("chair", "armchair")];
+  const html = renderToStaticMarkup(h(RoomProductAlternatives, { piece, product: null, products: catalog, pieces: [piece], room: { id: "r" }, roomId: "r", context: { room: {}, pieces: [piece] }, onReplace() {}, onNotice() {} }));
+  assert.match(html, /1 бүтээгдэхүүн энэ байрлалд багтана/);
+  assert.match(html, /Багтахгүй — Шинэ хэмжээ/);
+  assert.match(html, /3D бэлэн биш/);
+  assert.match(html, /Нөөц дууссан/);
+  assert.equal((html.match(/Үүгээр солих/g) ?? []).length, 1, "only a fitting card can be chosen");
+  assert.doesNotMatch(html, />chair</, "another category never appears");
+  const imported = renderToStaticMarkup(h(RoomProductAlternatives, { piece: { ...piece, details: { ...piece.details, category: undefined } }, product: null, products: catalog, pieces: [piece], room: {}, roomId: "r", context: {}, onReplace() {}, onNotice() {} }));
+  assert.match(imported, /ангилал байхгүй тул санал гаргахгүй/);
+});
+
+test("D4 pairing states: loading skeleton, error with retry, an honest rule note, a new-instance action", () => {
+  const { RoomProductPairings } = loadSource("src/features/room-planner/components/RoomProductOptions.tsx", {
+    "next/image": image,
+    "@/components/PlannerLink": link,
+    "@/store/wishlist": { useWishlist: store({ has: () => false, toggle() {} }) },
+    "@/store/roomModelStatus": { useRoomModelStatus: store({ byInstance: {}, swapFailed: {}, previous: {} }) },
+  });
+  const base = { hasSource: true, suggestions: [{ product: product("side", "side-table"), reason: "Буйдан-тай хамт хэрэглэдэг: хажуугийн ширээ" }], onAdd() {} };
+  assert.match(renderToStaticMarkup(h(RoomProductPairings, { ...base, state: "loading" })), /aria-busy="true"/);
+  assert.match(renderToStaticMarkup(h(RoomProductPairings, { ...base, state: "error", onRetry() {} })), /role="alert"[\s\S]*Дахин оролдох/);
+  const ready = renderToStaticMarkup(h(RoomProductPairings, base));
+  assert.match(ready, /Санал · ангиллын дүрмээр \(баталгаатай нийцэл биш\)/);
+  assert.match(ready, /Өрөөнд нэмэх/);
+  assert.doesNotMatch(ready, /Үүгээр солих/, "pairing never reuses the replace action");
+  assert.match(renderToStaticMarkup(h(RoomProductPairings, { ...base, suggestions: [] })), /хослуулах 3D бэлэн бараа одоогоор алга/);
+});
+
+test("D5 phone toolbar: copy, focus and remove move under «Бусад»; replace/pair open the sheet full", () => {
+  const { RoomSelectionToolbar } = loadSource("src/features/room-planner/components/RoomSelectionToolbar.tsx", {
+    "@/store/selectionAnchor": { useSelectionAnchor: Object.assign(() => null, { getState: () => ({ instanceId: null, rect: null }), subscribe: () => () => {} }) },
+  });
+  const actions = [
+    { id: "cart", label: "Сагсанд", icon: null, run() {}, primary: true },
+    { id: "copy", label: "Хуулбарлах", icon: null, run() {}, more: true },
+    { id: "remove", label: "Устгах", menuLabel: "Өрөөнөөс устгах", icon: null, run() {}, more: true },
+  ];
+  const html = renderToStaticMarkup(h(RoomSelectionToolbar, { instanceId: "p", title: "Луна", number: 1, actions, onClose() {} }));
+  assert.match(html, /class="is-more"[^>]*aria-label="Хуулбарлах"/);
+  assert.match(html, /aria-haspopup="menu" aria-expanded="false" aria-label="Бусад үйлдэл"/);
+  const source = read("src/components/RoomPlanner.tsx");
+  assert.match(source, /label: "Хуулбарлах",[\s\S]{0,140}more: true/);
+  assert.match(source, /label: "Устгах",\s*menuLabel: "Өрөөнөөс устгах",[\s\S]{0,140}more: true/);
+  assert.match(source, /label: "Төвлөрүүлэх",\s*menuLabel: "Төвлөрүүлж харах",[\s\S]{0,140}more: true/);
+  assert.match(source, /expandRequest=\{optionsReveal\}/);
+  assert.match(read("src/features/room-planner/components/RoomWorkspacePanel.tsx"), /if \(expandRequest > 0 && isPhone\(\)\) setFull\(true\);/);
+});

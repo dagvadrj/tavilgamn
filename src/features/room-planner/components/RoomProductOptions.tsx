@@ -385,28 +385,59 @@ export function RoomProductPairings({
   suggestions,
   hasSource,
   onAdd,
+  state = "ready",
+  onRetry,
 }: {
   suggestions: { product: Product; reason: string }[];
   hasSource: boolean;
   onAdd: (product: Product) => void;
+  /** The catalog the suggestions come from. */
+  state?: "loading" | "error" | "ready";
+  onRetry?: () => void;
 }) {
   if (!hasSource)
     return <p className="room-options-empty">Энэ тавилга дэлгүүрийн бараа биш тул хослуулах санал гаргахгүй.</p>;
+  if (state === "loading")
+    return (
+      <div className="room-options-skeleton" aria-busy="true" aria-label="Санал ачаалж байна">
+        <span />
+        <span />
+      </div>
+    );
+  if (state === "error")
+    return (
+      <div className="room-options-error" role="alert">
+        <span>Санал ачаалагдсангүй</span>
+        {onRetry && (
+          <button type="button" onClick={onRetry}>
+            Дахин оролдох
+          </button>
+        )}
+      </div>
+    );
   if (!suggestions.length)
     return <p className="room-options-empty">Энэ өрөөнд хослуулах 3D бэлэн бараа одоогоор алга.</p>;
   return (
     <div className="room-options-list">
-      <p className="room-options-count">Нэмэхэд шинэ тавилга өрөөнд орно — сонгосон тавилга, сагс өөрчлөгдөхгүй.</p>
+      <p className="room-options-count">
+        Санал · ангиллын дүрмээр (баталгаатай нийцэл биш). Нэмэхэд шинэ тавилга өрөөнд орно — сонгосон тавилга, сагс өөрчлөгдөхгүй.
+      </p>
       <ul>
         {suggestions.map(({ product, reason }) => (
           <li key={product.id}>
-            <span className="room-options-thumb">{product.image ? <Image src={product.image} alt="" width={72} height={72} /> : null}</span>
+            <span className="room-options-thumb">
+              {product.image ? <Image src={product.image} alt="" width={72} height={72} /> : null}
+            </span>
             <span className="room-options-body">
               <strong>{product.name}</strong>
-              <small>{formatFurnitureCm(product.dimensions.w, product.dimensions.d, product.dimensions.h)} · {stockLabel(product)}</small>
+              <small>
+                {formatFurnitureCm(product.dimensions.w, product.dimensions.d, product.dimensions.h)} · {stockLabel(product)}
+              </small>
               <b>{product.basePrice > 0 ? formatPrice(product.basePrice) : "Үнэ тодруулах"}</b>
               <small className="room-options-why">{reason}</small>
-              <button type="button" onClick={() => onAdd(product)}>Өрөөнд нэмэх</button>
+              <button type="button" onClick={() => onAdd(product)}>
+                Өрөөнд нэмэх
+              </button>
             </span>
           </li>
         ))}

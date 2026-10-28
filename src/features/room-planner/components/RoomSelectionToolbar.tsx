@@ -1,6 +1,6 @@
 "use client";
-import { useLayoutEffect, useRef, type ReactNode } from "react";
-import { X } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { MoreHorizontal, X } from "lucide-react";
 import { placeSelectionToolbar } from "@/lib/roomProductOptions";
 import { useSelectionAnchor } from "@/store/selectionAnchor";
 
@@ -20,6 +20,9 @@ export interface SelectionAction {
   run: () => void;
   disabled?: string;
   primary?: boolean;
+  /** D5: on phones this action moves into «Бусад», under `menuLabel`. */
+  more?: boolean;
+  menuLabel?: string;
 }
 
 /**
@@ -118,7 +121,7 @@ export function RoomSelectionToolbar({
         <button
           key={action.id}
           type="button"
-          className={action.primary ? "is-primary" : undefined}
+          className={[action.primary && "is-primary", action.more && "is-more"].filter(Boolean).join(" ") || undefined}
           disabled={!!action.disabled}
           title={action.disabled ?? action.label}
           aria-label={action.disabled ? `${action.label} — ${action.disabled}` : action.label}
@@ -128,9 +131,75 @@ export function RoomSelectionToolbar({
           <span>{action.label}</span>
         </button>
       ))}
+      <SelectionMoreMenu actions={actions.filter((action) => action.more)} />
       <button type="button" aria-label="Сонголт цуцлах" title="Сонголт цуцлах" onClick={onClose}>
         <X size={16} />
       </button>
+    </div>
+  );
+}
+
+/** «Бусад» (phones only): the secondary actions as a small menu above the bar. */
+function SelectionMoreMenu({ actions }: { actions: SelectionAction[] }) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const outside = (event: PointerEvent) => {
+      if (!root.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", outside);
+    root.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
+    return () => document.removeEventListener("pointerdown", outside);
+  }, [open]);
+  if (!actions.length) return null;
+  const close = () => {
+    setOpen(false);
+    root.current?.querySelector<HTMLElement>(".room-selection-more-toggle")?.focus();
+  };
+  return (
+    <div
+      ref={root}
+      className="room-selection-more"
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && open) {
+          // One level only: the menu closes, the selection stays.
+          event.preventDefault();
+          event.stopPropagation();
+          close();
+        }
+      }}
+    >
+      <button
+        type="button"
+        className="room-selection-more-toggle"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Бусад үйлдэл"
+        onClick={() => setOpen((value) => !value)}
+      >
+        <MoreHorizontal size={16} />
+        <span>Бусад</span>
+      </button>
+      {open && (
+        <div role="menu" aria-label="Бусад үйлдэл">
+          {actions.map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              role="menuitem"
+              disabled={!!action.disabled}
+              onClick={() => {
+                setOpen(false);
+                action.run();
+              }}
+            >
+              {action.icon}
+              {action.menuLabel ?? action.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

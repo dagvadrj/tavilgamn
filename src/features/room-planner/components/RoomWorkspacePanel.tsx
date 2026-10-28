@@ -59,6 +59,7 @@ export function RoomWorkspacePanel({
   footer,
   peekLine,
   labels,
+  expandRequest = 0,
   children,
 }: {
   open: boolean;
@@ -77,6 +78,8 @@ export function RoomWorkspacePanel({
   peekLine?: string;
   /** Merchant editor (C3) names the three tabs after its own work. */
   labels?: Record<RoomPanelTab, string>;
+  /** D5: bumped by «Солих» / «Хослуулах»; a phone sheet opens to full height. */
+  expandRequest?: number;
   children: React.ReactNode;
 }) {
   const phone = useSyncExternalStore(subscribePhone, isPhone, () => false);
@@ -123,6 +126,9 @@ export function RoomWorkspacePanel({
   useEffect(() => {
     if (!open) setFull(false);
   }, [open]);
+  useEffect(() => {
+    if (expandRequest > 0 && isPhone()) setFull(true);
+  }, [expandRequest]);
   const scroller = useRef<HTMLDivElement>(null);
   const offsets = useRef(new Map<string, number>());
   const key = view === "list" ? tab : view;

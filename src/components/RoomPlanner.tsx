@@ -123,7 +123,7 @@ import {
 import { RoomHeaderCounts } from "@/features/room-planner/components/RoomHeaderCounts";
 import { complementaryProducts } from "@/lib/roomProductOptions";
 import { priceFor } from "@/lib/products";
-import { getProduct, useCatalog } from "@/store/catalog";
+import { getProduct, useCatalog, useCatalogStore } from "@/store/catalog";
 import { hasAvailableStock } from "@/lib/inventory";
 import {
   RoomCatalogEmpty,
@@ -1790,18 +1790,23 @@ function RoomPlannerEditor() {
         label: "Хуулбарлах",
         icon: <Copy size={16} />,
         run: duplicateSelected,
+        more: true,
       },
       {
         id: "remove",
         label: "Устгах",
+        menuLabel: "Өрөөнөөс устгах",
         icon: <Trash2 size={16} />,
         run: () => removePiece(id),
+        more: true,
       },
       {
         id: "focus",
         label: "Төвлөрүүлэх",
+        menuLabel: "Төвлөрүүлж харах",
         icon: <Focus size={16} />,
         run: focusSelected,
+        more: true,
       },
     );
   }
@@ -2279,6 +2284,7 @@ function RoomPlannerEditor() {
                     : (current.roomName ?? "Өрөө")
               : "Миний загварууд"
         }
+        expandRequest={optionsReveal}
         onNestedClose={
           panelView === "detail" && selectedPiece
             ? {
@@ -2706,6 +2712,8 @@ function RoomPlannerEditor() {
                       hasSource={!!selectedProduct && !selectedPiece.kitchen}
                       suggestions={complementSuggestions}
                       onAdd={addComplement}
+                      state={catalog.error ? "error" : catalog.loading && !catalog.products.length ? "loading" : "ready"}
+                      onRetry={() => void useCatalogStore.getState().refresh(true)}
                     />
                   }
                 >
