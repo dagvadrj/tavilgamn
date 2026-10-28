@@ -12,6 +12,7 @@ import { getKitchenGlbAssembly, resolveKitchenPartOption } from "@/lib/kitchenGl
 import { prefetchModel } from "@/lib/modelPrefetch";
 import type { Product } from "@/lib/types";
 import Link from "next/link";
+import { pcmallAppliance } from "@/lib/pcmallAppliances";
 import { formatPrice } from "@/lib/format";
 import "./kitchen-selection.css";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
@@ -89,11 +90,11 @@ export function KitchenSelectionPanel({
   const slots = assembly?.slots ?? [];
   const selectedSlot = slots.find(slot => slot.id === slotId);
   const selections = cabinet.partSelections ?? {};
-  const name = variant?.modelName || cabinetLabel(cabinet);
+  const name = cabinet.catalogAdaptation ? cabinetLabel(cabinet) : variant?.modelName || cabinetLabel(cabinet);
   const product = products.find(p => p.id === variant?.productId);
-  const hasMotion = slots.some(slot => Boolean(slot.motion)) || Boolean(assembly?.openAnimation) ||
+  const hasMotion = ['oven-tower', 'fridge-integrated'].includes(cabinet.catalogHousing ?? '') || cabinet.catalogAdaptation !== 'oven' && (slots.some(slot => Boolean(slot.motion)) || Boolean(assembly?.openAnimation) ||
     Boolean(variant?.glbFile && !assembly && ["doors", "drawers"].includes(variant.opening)) ||
-    (typeof variant?.configuration.openAnimation === "string" && Boolean(variant.configuration.openAnimation.trim()));
+    (typeof variant?.configuration.openAnimation === "string" && Boolean(variant.configuration.openAnimation.trim())));
   const alternatives = useMemo(() => similarKitchenVariants(modules, cabinet, Number.MAX_SAFE_INTEGER), [modules, cabinet]);
   const exactAlternatives = alternatives.filter(({ module, variant: item }) =>
     module.widthMm === cabinet.width && module.heightMm === cabinet.height && module.depthMm === cabinet.depth &&
@@ -163,7 +164,8 @@ export function KitchenSelectionPanel({
     </header>
 
     <div className="ksp-scroll">
-      {!variant?.glbFile && <p className="ksp-action-hint" role="status">Энэ хэмжээ, төрлийн 3D загвар бэлэн биш. Солих цэснээс каталогийн бэлэн бүтээгдэхүүн сонгоорой.</p>}
+      {!variant?.glbFile && !cabinet.catalogHousing && !pcmallAppliance(cabinet.applianceProductId ?? '') && <p className="ksp-action-hint" role="status">Энэ хэмжээ, төрлийн 3D загвар бэлэн биш. Солих цэснээс каталогийн бэлэн бүтээгдэхүүн сонгоорой.</p>}
+      {cabinet.catalogHousing === 'fridge-integrated' && <p className="ksp-action-hint" role="status">Суурилуулдаг хөргөгчийн box. Тохирох суурилуулдаг төхөөрөмжийн загвар, үнийг тусад нь сонгоно.</p>}
       {!hasMotion && view === "overview" && <p className="ksp-action-hint">Энэ загвар нээх хөдөлгөөнгүй.</p>}
       {(view === "overview" || view === "modify") && <>
         <div className="ksp-section-heading"><h3>{view === "modify" ? "Хэсэг бүрийг өөрчлөх" : "Тавилгын хэсгүүд"}</h3>{slots.length > 0 && <span>{slots.length}</span>}</div>

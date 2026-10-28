@@ -22,7 +22,7 @@ export type PcmallAppliance = {
 
 // Source specifications verified on 2026-10-24. The GLBs are our dimensioned
 // planning illustrations, not manufacturer CAD or installation drawings.
-export const PCMALL_MODEL_VERSION = "quality-v2";
+export const PCMALL_MODEL_VERSION = "quality-v3";
 export const PCMALL_MODEL_BASE_PATH = `/models/pcmall/${PCMALL_MODEL_VERSION}`;
 export const PCMALL_APPLIANCES: readonly PcmallAppliance[] = [
   { id: "10000000-1024-4026-8000-000000000001", type: "fridge", label: "Хөргөгч", model: "RR80H39C1FWT", name: "Samsung RR80H39C1FWT · 387 л",

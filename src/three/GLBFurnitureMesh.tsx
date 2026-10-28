@@ -27,6 +27,7 @@ import { registerModelFloorBand } from "./furnitureFloorBand";
 import { modelPlacement, modelSizeIssue } from "@/lib/modelPlacement";
 import { useKitchenOpenAnimation } from "./useKitchenOpenAnimation";
 import { prepareKitchenDoorMotion } from "./kitchenDoorMotion";
+import { prepareKitchenApplianceCarcass } from "./kitchenApplianceCarcass";
 import type { KitchenPartMotion } from "./kitchenGlbComposition";
 
 export interface GLBFurnitureMeshProps {
@@ -69,6 +70,7 @@ export interface GLBFurnitureMeshProps {
   open?: boolean;
   openAnimation?: string;
   cabinetOpening?: "doors" | "drawers";
+  cabinetAdaptation?: "sink" | "hob" | "oven" | "hood";
 }
 type Display = {
   request: object;
@@ -134,6 +136,7 @@ export function GLBFurnitureMesh({
   open = false,
   openAnimation,
   cabinetOpening,
+  cabinetAdaptation,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
   const root = useRef<THREE.Group>(null);
@@ -180,6 +183,7 @@ export function GLBFurnitureMesh({
     () => ({
       preserveHierarchy,
       cabinetOpening,
+      cabinetAdaptation,
       enabled,
       base,
       glbFile,
@@ -204,6 +208,7 @@ export function GLBFurnitureMesh({
     [
       preserveHierarchy,
       cabinetOpening,
+      cabinetAdaptation,
       enabled,
       base,
       glbFile,
@@ -231,6 +236,7 @@ export function GLBFurnitureMesh({
     const {
       preserveHierarchy,
       cabinetOpening,
+      cabinetAdaptation,
       enabled,
       base,
       glbFile,
@@ -290,6 +296,7 @@ export function GLBFurnitureMesh({
         }
         const cloned = cloneModel(asset);
         cloned.scene.animations = cloned.animations ?? [];
+        prepareKitchenApplianceCarcass(cloned.scene, cabinetAdaptation);
         if (trackFloorBand)
           registerModelFloorBand(
             modelId,

@@ -35,7 +35,8 @@ test('dedicated kitchen entry opens stage one of the seven-step kitchen flow; ot
     let tree = render();
     nodes(tree).find(n => n.type === 'gallery').props.onKitchen();
     assert.equal(routes.length, 1);
-    assert.match(routes[0], /^\/kitchen\?editor=1&space=1&draft=/);
+    assert.match(routes[0], /^\/kitchen\?editor=1&draft=/);
+    assert.equal(new URL(routes[0], 'https://planner.test').searchParams.has('space'), false, 'room setup must resume its saved step instead of forcing a space editor');
     const payload = JSON.parse([...saved.values()][0]);
     assert.equal(payload.flowStage, 'room');
     assert.equal(saved.size, 1);

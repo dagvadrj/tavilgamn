@@ -100,7 +100,7 @@ const QUESTIONS: Question[] = [
       {
         value: "freestanding",
         title: "Тусдаа хөргөгч",
-        description: "Side-by-side төрлийн бие даасан хөргөгч",
+        description: "Шүүгээнээс тусдаа бие даасан хөргөгч",
         diagram: "fridge-free",
       },
       {
@@ -195,7 +195,7 @@ function SuggestionDiagram({ kind }: { kind: string }) {
   );
 }
 
-export function KitchenSuggestionWizard({ roomDimensions, onBack, initialPreferences, onPreferencesChange, onComplete, onSetupStage }: { roomDimensions?: RoomSetupDimensions; onBack?: () => void; initialPreferences?: KitchenSuggestionPreferences; onPreferencesChange?: (preferences: KitchenSuggestionPreferences) => void; onComplete?: (preferences: KitchenSuggestionPreferences) => void; onSetupStage?: (stage: "room" | "size") => void } = {}) {
+export function KitchenSuggestionWizard({ roomDimensions, onBack, initialPreferences, onPreferencesChange, onComplete, onSetupStage, disabled = false }: { roomDimensions?: RoomSetupDimensions; onBack?: () => void; initialPreferences?: KitchenSuggestionPreferences; onPreferencesChange?: (preferences: KitchenSuggestionPreferences) => void; onComplete?: (preferences: KitchenSuggestionPreferences) => boolean | void; onSetupStage?: (stage: "room" | "size") => void; disabled?: boolean } = {}) {
   const router = useRouter();
   const user = useAuth((state) => state.user);
   const [step, setStep] = useState(0);
@@ -211,8 +211,9 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack, initialPrefere
   const design = useMemo(() => createSuggestedKitchen(preferences, roomDimensions), [preferences, roomDimensions]);
   const needsAdjustment = placementIssues(design).some(issue => issue.severity === "error");
 
-  function continueToPlanner(stage: KitchenFlowStage = "space") {
-    if (onComplete) { onComplete(preferences); return; }
+  function continueToPlanner(stage: KitchenFlowStage = "design") {
+    if (disabled) return;
+    if (onComplete) { if (onComplete(preferences) === false) setError('Загвар үүсгэж чадсангүй. Доорх байрлалын мэдэгдлийг шалгаж сонголтоо өөрчилнө үү.'); return; }
     try { parseKitchen(design); } catch {
       setError("Энэ өрөөнд сонголтууд багтахгүй байна. Өөр байрлал сонгох эсвэл өрөөний хэмжээгээ өөрчлөөрэй.");
       return;
@@ -319,8 +320,8 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack, initialPrefere
           </div>
           {roomDimensions && <p className="ks-intro">Өрөө: {roomDimensions.width} × {roomDimensions.depth} м · {roomDimensions.width * roomDimensions.depth} м²</p>}
           {needsAdjustment && <p className="ks-intro" role="status">Энэ сонголтын зарим шүүгээ өрөөнд багтахгүй байна. Байрлалаа өөрчилж сонгох эсвэл 3D загвар дээр илүүдэл шүүгээг хасаарай.</p>}
-          <button type="button" className="ks-next" onClick={() => continueToPlanner()}>
-            2D өрөөний план зурах <ArrowRight size={18} />
+          <button type="button" className="ks-next" disabled={disabled} onClick={() => continueToPlanner()}>
+            {disabled ? 'Загварын санг ачаалж байна…' : 'Гал тогооны загвар үүсгэх'} <ArrowRight size={18} />
           </button>
           {error && <p role="alert" className="ks-intro">{error}</p>}
         </section>

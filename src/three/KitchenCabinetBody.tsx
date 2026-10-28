@@ -2,6 +2,7 @@
 import { useEffect, useMemo } from "react";
 import type { Texture } from "three";
 import { ovenSlot, OVEN_BODY } from "@/lib/plitka";
+import { KitchenCatalogAppliance } from "./KitchenCatalogAppliance";
 import {
   componentColor,
   componentSurface,
@@ -188,10 +189,12 @@ export function CabinetBody({
   cabinet: c,
   open = false,
   materialDefinitions,
+  catalogAppliances = false,
 }: {
   cabinet: ModularCabinet;
   open?: boolean;
   materialDefinitions?: Record<string, KitchenMaterialDefinition>;
+  catalogAppliances?: boolean;
 }) {
   const finish =
     c.finish ??
@@ -341,7 +344,7 @@ export function CabinetBody({
           />
         </group>
       ))}
-      {slot && <Oven cabinet={c} />}
+      {slot && (catalogAppliances ? <KitchenCatalogAppliance cabinet={c} /> : <Oven cabinet={c} />)}
       {c.opening === "hood" && <Hood cabinet={c} />}
     </>
   );

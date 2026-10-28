@@ -6,11 +6,12 @@ import {
   isKitchenFlowStage,
   kitchenPreferences,
   restoreKitchenPreferences,
-  updateKitchenEquipment,
   type KitchenFlowStage,
   type KitchenSetupStage,
 } from "@/lib/kitchenFlow";
 import { DEFAULT_KITCHEN_SUGGESTION } from "@/lib/kitchenSuggestions";
+import { furnishKitchenFromCatalog } from "@/lib/kitchenCatalogFurnishing";
+import { createKitchenFromSelection } from "@/lib/kitchenSelectionDesign";
 import { KitchenDesignSuggestions } from "@/features/kitchen-planner/components/KitchenDesignSuggestions";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { PlannerTour } from "@/features/planner/components/PlannerTour";
@@ -485,11 +486,14 @@ export function ModularKitchenPlanner({
     if (!ready || !moduleCatalog.some((module) => module.variants.length))
       return;
     setDesign((current) => {
-      const next = applyKitchenCatalogVariants(current, moduleCatalog);
+      let next = applyKitchenCatalogVariants(current, moduleCatalog);
+      const generated = !savedId && !current.extras?.length && current.cabinets.length > 0 &&
+        current.cabinets.every(c => !c.variantId && /^(base-|wall-|suggested-)/.test(c.id));
+      if (generated) next = furnishKitchenFromCatalog(current, moduleCatalog).design ?? next;
       if (next !== current) designRef.current = next;
       return next;
     });
-  }, [moduleCatalog, ready]);
+  }, [moduleCatalog, ready, savedId]);
   const [preview, setPreview] = useState<ModularKitchen | null>(null);
   const draftRef = useRef<ModularKitchen | null>(null);
   const dragBase = useRef<ModularKitchen | null>(null);
@@ -807,6 +811,14 @@ export function ModularKitchenPlanner({
     setMessage("");
     return true;
   }
+  function applyCatalogModels() {
+    const result = furnishKitchenFromCatalog(design, moduleCatalog, { alignEquipment: true });
+    if (!result.design) { setMessage(result.error ?? "Тохирох загвар алга."); return; }
+    if (commit(result.design)) {
+      setOpen(false); setSelectedId(null); setSettingsOpen(false);
+      setMessage(`Сангийн box, төхөөрөмжүүдийг байрлалд таарууллаа.${result.omitted ? ` Бодит өргөнд тааруулж ${result.omitted} илүү жишиг дээд box-ийг хаслаа.` : ''}`);
+    }
+  }
   function selectCabinet(id: string) {
     setSheetExpanded(false);
     if (fitCountertops(kitchen).some(top => top.id === id)) { editCountertop(id); return; }
@@ -956,7 +968,7 @@ export function ModularKitchenPlanner({
         "corner",
       ].some((key) => key in patch)
     )
-      delete updated.variantId;
+      { delete updated.variantId; delete updated.catalogAdaptation; }
     if (updated.components)
       updated.components = updated.components.filter((item) =>
         componentTypes(updated).includes(item.type),
@@ -1005,15 +1017,6 @@ export function ModularKitchenPlanner({
     }
   }
   function changeStage(stage: KitchenFlowStage) {
-    if (setupStage === "equipment" && stage !== "equipment") {
-      try {
-        const next = updateKitchenEquipment(designRef.current, flowPreferences);
-        if (next !== designRef.current && !commit(next)) return;
-      } catch (reason) {
-        setMessage((reason as Error).message);
-        return;
-      }
-    }
     if (stage === "equipment" && setupStage !== "equipment")
       setFlowPreferences(kitchenPreferences(designRef.current));
     setSetupStage(
@@ -1033,6 +1036,19 @@ export function ModularKitchenPlanner({
       setCatalogOpen(!selected);
       setWorkspaceView("3d");
     }
+  }
+
+  function completeEquipment(preferences: typeof flowPreferences) {
+    if (busy || catalogLoading) return false;
+    try {
+      const next = createKitchenFromSelection(designRef.current, preferences, moduleCatalog);
+      if (!commit(next)) return false;
+      setFlowPreferences(preferences); setSetupStage(null); setSpaceOpen(false);
+      setSuggestionsOpen(false); setReviewOpen(false); setSettingsOpen(false); setCatalogOpen(false);
+      setSelectedId(null); setWorkspaceView('3d'); setMode('orbit');
+      setViewKey(key => key + 1); setMessage('Таны 4 сонголтод таарсан гал тогооны загвар үүслээ.');
+      return true;
+    } catch (reason) { setMessage((reason as Error).message); return false; }
   }
 
   function openToolbarTool(tool: KitchenToolbarTool) {
@@ -1345,6 +1361,9 @@ export function ModularKitchenPlanner({
                 >
                   Байрлалын санал үзэх
                 </button>
+                <button type="button" disabled={busy || catalogLoading || catalogError} onClick={event => {
+                  applyCatalogModels(); event.currentTarget.closest('details')?.removeAttribute('open');
+                }}>Сангийн box, төхөөрөмжөөр солих</button>
                 <button
                   type="button"
                   onClick={(event) => {
@@ -1418,7 +1437,7 @@ export function ModularKitchenPlanner({
       />
       {setupStage && <div className="kitchen-early-steps">
         {setupStage === "equipment" ? <>
-          <KitchenSuggestionWizard roomDimensions={{ width: design.room.width / 1000, depth: design.room.depth / 1000, height: design.room.height / 1000 }} initialPreferences={flowPreferences} onPreferencesChange={setFlowPreferences} onBack={() => changeStage("size")} onComplete={() => changeStage("space")} />
+          <KitchenSuggestionWizard roomDimensions={{ width: design.room.width / 1000, depth: design.room.depth / 1000, height: design.room.height / 1000 }} initialPreferences={flowPreferences} onPreferencesChange={setFlowPreferences} onBack={() => changeStage("size")} onComplete={completeEquipment} disabled={busy || catalogLoading} />
           {message && <p className="kitchen-setup-error" role="alert">{message}</p>}
         </> : <KitchenSetupSteps stage={setupStage} kitchen={design} disabled={busy} message={message} onChange={commit} onStage={changeStage} />}
       </div>}
@@ -1764,6 +1783,7 @@ export function ModularKitchenPlanner({
               <div className="kitchen-missing-models" role="status">
                 {sceneKitchen.cabinets.filter(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")).length} шүүгээнд тохирох 3D загвар сонгоно уу. Байрлал нь 2D планд хадгалагдана.
                 <button type="button" onClick={() => { const missing = sceneKitchen.cabinets.find(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")); if (missing) selectCabinet(missing.id); }}>Тохирох 3D загвар сонгох</button>
+                <button type="button" disabled={busy} onClick={applyCatalogModels}>Сангийн box, төхөөрөмжөөр солих</button>
               </div>
             )}
             <p className="kp-preview-hint" hidden={workspaceView === "2d"}>

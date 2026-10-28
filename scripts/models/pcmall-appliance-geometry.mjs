@@ -59,20 +59,20 @@ export function buildPcmallAppliance(item, sourceUrl) {
     for (const x of [-w * .4, w * .4]) for (const z of [-d * .37, d * .37])
       box("Adjustable foot", [.027, .02, .027], [x, .01, z], rubber, .004);
   };
-  const shell = (bottom = 0, thickness = .012) => {
+  const shell = (bottom = 0, thickness = .012, bodyWidth = w) => {
     section = "Enclosure";
     const depth = d - .04, z = -.02;
-    for (const side of [-1, 1]) box("Chassis side", [thickness, h - bottom, depth], [side * (w - thickness) / 2, (h + bottom) / 2, z], paint, .004);
-    box("Chassis top", [w - 2 * thickness, thickness, depth], [0, h - thickness / 2, z], paint, .004);
-    box("Chassis bottom", [w - 2 * thickness, thickness, depth], [0, bottom + thickness / 2, z], paint, .003);
-    box("Chassis back", [w - 2 * thickness, h - bottom - 2 * thickness, thickness], [0, (h + bottom) / 2, -d / 2 + thickness / 2], enamel, .002);
+    for (const side of [-1, 1]) box("Chassis side", [thickness, h - bottom, depth], [side * (bodyWidth - thickness) / 2, (h + bottom) / 2, z], paint, .004);
+    box("Chassis top", [bodyWidth - 2 * thickness, thickness, depth], [0, h - thickness / 2, z], paint, .004);
+    box("Chassis bottom", [bodyWidth - 2 * thickness, thickness, depth], [0, bottom + thickness / 2, z], paint, .003);
+    box("Chassis back", [bodyWidth - 2 * thickness, h - bottom - 2 * thickness, thickness], [0, (h + bottom) / 2, -d / 2 + thickness / 2], enamel, .002);
   };
   const touchMarks = (count, y, z, spacing = .026) => {
     for (let i = 0; i < count; i++) ring("Control icon", .0022, .00045, [(i - (count - 1) / 2) * spacing, y, z], dim);
   };
 
   if (item.type === "oven") {
-    shell();
+    shell(0, .012, Math.min(w, .56));
     section = "Oven cavity";
     const cavityWidth = w - .078, floor = .055, ceiling = h - .11, back = -d / 2 + .045;
     box("Cavity back", [cavityWidth, ceiling - floor, .008], [0, (floor + ceiling) / 2, back], enamel, .015);

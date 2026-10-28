@@ -440,7 +440,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
           onSelectCountertop={top => props.onSelectCountertop?.(top.id)}
           onCountertopPointerDown={(event, top) => start(event, top)}
           selectedId={props.selectedId}
-          catalogApplianceIds={kitchen.cabinets.filter(c => props.variantModels?.[c.variantId ?? ""]?.glbFile && kitchenVariantMatchesRole(props.variantModels[c.variantId ?? ""], c)).map(c => c.id)} />
+          catalogApplianceIds={kitchen.cabinets.filter(c => !c.catalogAdaptation && props.variantModels?.[c.variantId ?? ""]?.glbFile && kitchenVariantMatchesRole(props.variantModels[c.variantId ?? ""], c)).map(c => c.id)} />
         {(kitchen.extras ?? []).map((extra) => (
           <group
             key={extra.id}

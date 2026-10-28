@@ -6,6 +6,7 @@ import { COMPONENT_LABELS, getComponents, getComponentSize } from "./kitchenComp
 import { kitchenVariantFits, kitchenVariantFromModule, type KitchenCatalogModule } from "./kitchenModuleCatalog";
 import { getKitchenGlbAssembly, resolveKitchenPartOption, type KitchenGlbSlot } from "./kitchenGlbAssembly";
 import type { Product } from "./types";
+import { pcmallAppliance, PCMALL_APPLIANCES, pcmallProductId } from "./pcmallAppliances";
 export type BomRow = { id:string; label:string; quantity:number; unit:string; dimensions:string; material:string; unitPrice:number|null; included:boolean; productId?: string; variantCode?: string; modelId?: string };
 export type KitchenBom = { items:BomRow[]; knownSubtotal:number; unpricedCount:number; complete:boolean };
 const dims=(w:number,h:number,d:number)=>`${Math.round(w*100)/100} × ${Math.round(h*100)/100} × ${Math.round(d*100)/100} мм`;
@@ -20,11 +21,20 @@ export function buildKitchenBom(kitchen:ModularKitchen, modules:KitchenCatalogMo
   };
   const items:BomRow[]=[];
   for(const cabinet of kitchen.cabinets) {
+    const appliance = cabinet.applianceProductId ? pcmallAppliance(cabinet.applianceProductId) : undefined;
     const candidate=variants.get(cabinet.variantId??"");
     const variant=kitchenVariantFits(candidate,cabinet)?candidate:undefined, product=catalog.get(variant?.productId??"");
-    items.push({id:cabinet.id,label:variant?.modelName??cabinetLabel(cabinet),quantity:1,unit:"ш",dimensions:dims(cabinet.width,cabinet.height,cabinet.depth),
+    const customBox = ['oven-tower', 'fridge-integrated'].includes(cabinet.catalogHousing ?? '');
+    items.push({id:cabinet.id,label:cabinet.catalogAdaptation ? `${cabinetLabel(cabinet)} · ${variant?.modelName ?? ''}` : cabinet.catalogHousing ? cabinetLabel(cabinet) : appliance?.name ?? variant?.modelName??cabinetLabel(cabinet),quantity:1,unit:"ш",dimensions:dims(cabinet.width,cabinet.height,cabinet.depth),
       material:`Фасад: ${cabinet.frontMaterialId??cabinet.finish??cabinet.material}; их бие: ${cabinet.carcassMaterialId??cabinet.finish??cabinet.material}`,
-      unitPrice:price(product,cabinet.color),included:false, productId: variant?.productId, variantCode: variant?.variantCode, modelId: variant?.furnitureModelId });
+      unitPrice:price(product,cabinet.color),included:false, productId: variant?.productId ?? (customBox ? undefined : cabinet.applianceProductId), variantCode: variant?.variantCode, modelId: variant?.furnitureModelId ?? (customBox ? undefined : appliance?.id) });
+    const equipment = [
+      ...(appliance && (variant || cabinet.catalogHousing === 'oven-tower') ? [appliance] : []),
+      ...(cabinet.catalogAdaptation && ['oven', 'hob'].includes(cabinet.opening ?? '') ? [PCMALL_APPLIANCES.find(a => a.type === 'cooktop')!] : []),
+    ];
+    for (const item of equipment) items.push({ id: `${cabinet.id}/equipment/${item.type}`, label: item.name, quantity: 1, unit: 'ш',
+      dimensions: dims(item.width, item.height, item.depth), material: 'Үйлдвэрийн өнгөлгөө', productId: pcmallProductId(item), modelId: item.id, unitPrice: null, included: false });
+    if (cabinet.catalogHousing === 'fridge-integrated') items.push({ id: `${cabinet.id}/equipment/integrated-fridge`, label: 'Суурилуулдаг хөргөгч · бүтээгдэхүүн сонгоно', quantity: 1, unit: 'ш', dimensions: 'Суурилуулалтын загвараар тодруулна', material: 'Загвар сонгоно', unitPrice: null, included: false });
     const assembly = getKitchenGlbAssembly(variant?.configuration);
     if (assembly) {
       const byId = new Map(assembly.slots.map(slot => [slot.id, slot]));
@@ -43,7 +53,8 @@ export function buildKitchenBom(kitchen:ModularKitchen, modules:KitchenCatalogMo
       }
       continue;
     }
-    for(const component of getComponents(cabinet).filter(c=>c.type!=="worktop")) {
+    for(const component of getComponents(cabinet).filter(c=>c.type!=="worktop" &&
+      !(['oven','hood','refrigerator'].includes(c.type) && appliance) && !(c.type === 'cooktop' && cabinet.catalogAdaptation) && !(c.type === 'refrigerator' && cabinet.catalogHousing === 'fridge-integrated'))) {
       const size=getComponentSize(cabinet,component,kitchen);
       const quantity=component.type==="door-front" ? cabinet.doorCount : component.type==="drawer-front" ? cabinet.drawerCount : component.type==="handle" ? Math.max(1,cabinet.doorCount+cabinet.drawerCount) : 1;
       if(!quantity)continue;

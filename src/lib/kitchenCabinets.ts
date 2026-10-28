@@ -7,6 +7,7 @@ import { roomOutline, wallSamples, type RoomOutlinePoint } from "./kitchenRoomOu
 import type { KitchenExtra } from "./kitchenExtras";
 import type { CabinetComponent } from "./kitchenComponents";
 import type { Finish, FrontStyle } from "./kitchen";
+import { pcmallAppliance } from "./pcmallAppliances";
 export const CABINET_WIDTHS = [300, 400, 450, 500, 600, 700, 800, 900] as const;
 export const BASE_CABINET_WIDTHS = [150, 200, ...CABINET_WIDTHS, 1000] as const;
 export const cabinetWidths = (type: CabinetType) => type === "base" ? BASE_CABINET_WIDTHS : CABINET_WIDTHS;
@@ -24,6 +25,11 @@ export interface ModularCabinet {
   id: string;
   /** Optional kitchen_models-backed kitchen variant; dimensions remain authored here in mm. */
   variantId?: string;
+  /** Adapt an actual catalog carcass for a countertop fixture or built-in oven. */
+  catalogAdaptation?: "sink" | "hob" | "oven" | "hood";
+  catalogHousing?: "oven-tower" | "fridge-integrated" | "wall-hood";
+  refrigeratorInstallation?: "integrated" | "freestanding";
+  applianceProductId?: string;
   /** Chosen GLB option IDs, keyed by the catalog assembly slot ID. Empty means removed. */
   partSelections?: Record<string, string>;
   type: CabinetType;
@@ -88,6 +94,15 @@ export const HOOD_MOUNTS = [
   { id: "under-cabinet", label: "Шүүгээний доор" }, { id: "wall", label: "Шууд хананд" },
 ] as const;
 export function cabinetLabel(cabinet: ModularCabinet) {
+  if (cabinet.catalogAdaptation === 'hood') return 'Шүүгээнд суурилуулсан сорогч';
+  if (cabinet.catalogHousing === 'wall-hood') return 'Хананд ил сорогч';
+  if (cabinet.applianceProductId && cabinet.opening !== 'oven') {
+    const appliance = pcmallAppliance(cabinet.applianceProductId);
+    if (appliance) return `${appliance.label} · ${appliance.model}`;
+  }
+  if (cabinet.catalogHousing === 'fridge-integrated') return 'Суурилуулдаг хөргөгчийн box';
+  if (cabinet.catalogHousing === 'oven-tower') return 'Зуухны өндөр box';
+  if (cabinet.catalogAdaptation) return ({ sink: 'Угаалтуурын box', hob: 'Плитканы box', oven: 'Зуухны box', hood: 'Шүүгээнд суурилуулсан сорогч' })[cabinet.catalogAdaptation];
   if (cabinet.opening === "refrigerator") return "Хөргөгч";
   if (cabinet.opening === "hood") return cabinet.hoodMount === "wall" ? "Утаа сорогч" : "Утаа сорогчтой дээд шүүгээ";
   if (cabinet.corner) return cabinet.type === "wall" ? "Дээд булангийн шүүгээ" : "Доод булангийн шүүгээ";
@@ -160,6 +175,20 @@ export function roomWalls(room: KitchenRoom): KitchenWall[] {
   return room.openFront ? walls.filter(wall => wall.id !== "front") : walls;
 }
 export function validateCabinet(cabinet: ModularCabinet): string | null {
+  if (cabinet.catalogAdaptation !== undefined && (!['sink', 'hob', 'oven', 'hood'].includes(cabinet.catalogAdaptation) || cabinet.catalogAdaptation !== cabinet.opening || cabinet.type !== (cabinet.catalogAdaptation === 'hood' ? 'wall' : 'base') || !cabinet.variantId))
+    return "Төхөөрөмжийн box-ийн тохируулга буруу байна.";
+  if (cabinet.catalogHousing !== undefined && !(
+    cabinet.catalogHousing === 'oven-tower' && cabinet.type === 'tall' && cabinet.opening === 'oven' ||
+    cabinet.catalogHousing === 'fridge-integrated' && cabinet.type === 'tall' && cabinet.opening === 'refrigerator' && cabinet.refrigeratorInstallation === 'integrated' ||
+    cabinet.catalogHousing === 'wall-hood' && cabinet.type === 'wall' && cabinet.opening === 'hood' && cabinet.hoodMount === 'wall'))
+    return 'Төхөөрөмжийн захиалгат box-ийн төрөл буруу байна.';
+  if (cabinet.refrigeratorInstallation !== undefined && (!['integrated', 'freestanding'].includes(cabinet.refrigeratorInstallation) || cabinet.opening !== 'refrigerator'))
+    return 'Хөргөгчийн суурилуулалтын төрөл буруу байна.';
+  const appliance = cabinet.applianceProductId ? pcmallAppliance(cabinet.applianceProductId) : undefined;
+  if (cabinet.applianceProductId && (!appliance || !({ oven: 'oven', hood: 'hood', refrigerator: 'fridge' } as Record<string, string>)[cabinet.opening ?? ''] || appliance.type !== ({ oven: 'oven', hood: 'hood', refrigerator: 'fridge' } as Record<string, string>)[cabinet.opening ?? '']))
+    return "Сонгосон төхөөрөмж шүүгээний зориулалттай тохирохгүй байна.";
+  if (appliance && cabinet.opening !== 'oven' && cabinet.catalogAdaptation !== 'hood' && cabinet.catalogHousing !== 'wall-hood' && (cabinet.width !== appliance.width || cabinet.height !== appliance.height || cabinet.depth !== appliance.depth))
+    return "Сангийн төхөөрөмжийн бодит хэмжээг өөрчлөхгүй. Өөр төхөөрөмж сонгоно уу.";
 
   if (cabinet.opening !== undefined && !["doors", "drawers", "open", "sink", "hob", "oven", "hood", "refrigerator"].includes(cabinet.opening)) 
     return "Шүүгээний загвар буруу байна.";
@@ -167,9 +196,11 @@ export function validateCabinet(cabinet: ModularCabinet): string | null {
   if (!spec) return "Шүүгээний төрөл буруу байна.";
   const fridge = cabinet.opening === "refrigerator", directHood = cabinet.opening === "hood" && cabinet.hoodMount === "wall";
   const catalogSize=typeof cabinet.variantId==="string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cabinet.variantId);
+  const measuredHood = directHood && appliance?.type === 'hood' && cabinet.width === appliance.width && (cabinet.height === appliance.height || cabinet.catalogHousing === 'wall-hood' && cabinet.height >= appliance.height && cabinet.height <= 1200) && cabinet.depth === appliance.depth;
   if (!Number.isInteger(cabinet.width) || (fridge ? cabinet.width < 450 || cabinet.width > 1200
+    : measuredHood ? false
     : catalogSize ? cabinet.width<150 || cabinet.width>2400 : !(cabinetWidths(cabinet.type) as readonly number[]).includes(cabinet.width) && !(cabinet.corner === true && cabinet.type === "base" && cabinet.width === 1000))) return fridge ? "Хөргөгчийн өргөн 450–1200 мм байна." : "Шүүгээний өргөн стандарт хэмжээтэй байна.";
-  const heightRange = fridge ? REFRIGERATOR_LIMITS.height : directHood ? [200, 1200] : spec.heightRange;
+  const heightRange = fridge ? REFRIGERATOR_LIMITS.height : measuredHood ? [appliance.height, cabinet.catalogHousing === 'wall-hood' ? 1200 : appliance.height] : directHood ? [200, 1200] : spec.heightRange;
   const depthRange = fridge ? REFRIGERATOR_LIMITS.depth : directHood ? [250, 600] : catalogSize ? [250,1200] : spec.depthRange;
   if (!Number.isInteger(cabinet.height) || cabinet.height < heightRange[0] || cabinet.height > heightRange[1]) return `Өндөр ${heightRange.join("–")} мм байна.`;
   if (!Number.isInteger(cabinet.depth) || cabinet.depth < depthRange[0] || cabinet.depth > depthRange[1]) return `Гүн ${depthRange.join("–")} мм байна.`;

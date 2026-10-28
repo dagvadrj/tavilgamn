@@ -1,5 +1,6 @@
 /** Planned worktops, splashbacks and counter appliances share the manufacturing geometry. */
 "use client";
+import { KitchenCatalogAppliance } from "./KitchenCatalogAppliance";
 import { useMemo } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
 import { Path, Shape, type Texture } from "three";
@@ -201,7 +202,7 @@ function CounterAppliance({
       ]}
       rotation={[0, c.position.rotation, 0]}
     >
-      {hob ? (
+      {hob && c.catalogAdaptation ? <KitchenCatalogAppliance cabinet={c} cooktop /> : hob ? (
         <>
           <Board
             size={[

@@ -79,6 +79,7 @@ export type SimilarKitchenVariant = {
 };
 
 type CabinetMatch = {
+  catalogAdaptation?: "sink" | "hob" | "oven" | "hood";
   variantId?: string;
   partSelections?: Record<string, string>;
   type: "base" | "wall" | "tall";
@@ -90,10 +91,13 @@ type CabinetMatch = {
 };
 
 /** Validate saved assets again at render time, including legacy corner assignments. */
-export function kitchenVariantMatchesRole(variant: KitchenCatalogVariant | undefined, cabinet: Pick<CabinetMatch, "type" | "corner" | "opening">) {
+export function kitchenVariantMatchesRole(variant: KitchenCatalogVariant | undefined, cabinet: Pick<CabinetMatch, "type" | "corner" | "opening" | "catalogAdaptation">) {
   if (!variant) return false;
   if (variant.cabinetType && variant.cabinetType !== (cabinet.corner ? "corner" : cabinet.type)) return false;
-  if (variant.opening && variant.opening !== (cabinet.opening ?? "doors")) return false;
+  const adapted = "catalogAdaptation" in cabinet && cabinet.catalogAdaptation === cabinet.opening &&
+    ((cabinet.type === "base" && ["sink", "hob", "oven"].includes(cabinet.opening ?? "")) || (cabinet.type === "wall" && cabinet.opening === "hood")) &&
+    ["doors", "drawers", "open"].includes(variant.opening);
+  if (variant.opening && variant.opening !== (cabinet.opening ?? "doors") && !adapted) return false;
   if (variant.mount && variant.mount !== (cabinet.corner ? "corner" : cabinet.type === "wall" ? "wall" : "floor") &&
     !(variant.mount === "floor-wall" && cabinet.type !== "wall")) return false;
   if (cabinet.corner && variant.nominalSizeMm && (variant.nominalSizeMm.depth <= 450) !== (cabinet.type === "wall")) return false;
@@ -120,11 +124,10 @@ const readyVariant = (variant: KitchenCatalogVariant) => variant.active && Boole
 
 export function matchingKitchenVariants(modules: KitchenCatalogModule[], cabinet: CabinetMatch) {
   const cabinetType = cabinet.corner ? "corner" : cabinet.type;
-  const opening = cabinet.opening ?? "doors";
   return modules
     .filter((module) => module.active && module.cabinetType === cabinetType && module.widthMm === cabinet.width && module.heightMm === cabinet.height && module.depthMm === cabinet.depth)
     .flatMap((module) => module.variants.map(variant => kitchenVariantFromModule(module, variant)))
-    .filter((variant) => readyVariant(variant) && variant.opening === opening && kitchenVariantFits(variant, cabinet));
+    .filter((variant) => readyVariant(variant) && kitchenVariantFits(variant, cabinet));
 }
 
 /** Nearby catalog products for the selected cabinet, ordered by compatibility. */

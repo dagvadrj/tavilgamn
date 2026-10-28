@@ -262,11 +262,16 @@ export function wallCabinetClearance(
   cabinet: ModularCabinet,
   kitchen: ModularKitchen,
 ): number | null {
+  // A measured hood sits under its upper box; lowering that box to the generic
+  // counter gap would collide with the appliance. The hood's own gap is checked.
+  if (cabinet.type === 'wall' && kitchen.cabinets.some(device => device.id !== cabinet.id && device.applianceProductId &&
+    ['hood', 'refrigerator'].includes(device.opening ?? '') && footprintsOverlap(cabinet, device) &&
+    Math.abs(cabinet.position.y - device.position.y - device.height) <= 5)) return null;
   const below = kitchen.cabinets.filter(
     (base) => base.type === "base" && footprintsOverlap(cabinet, base),
   );
   return cabinet.type === "wall" && below.length
-    ? cabinet.position.y -
+    ? cabinet.position.y - (cabinet.catalogAdaptation === 'hood' ? 85 : 0) -
         Math.max(
           ...below.map(
             (base) =>

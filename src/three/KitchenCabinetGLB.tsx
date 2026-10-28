@@ -24,7 +24,8 @@ import { applyKitchenPartMaterial } from "./kitchenPartMaterial";
 import { acquireKitchenMaterialTextures } from "./kitchenMaterialTextures";
 import { configureModelTextureSampling } from "./modelTextureSampling";
 
-import { KitchenApplianceBody } from "./KitchenCabinetBody";
+import { KitchenCatalogAppliance } from "./KitchenCatalogAppliance";
+import { CabinetBody } from "./KitchenCabinetBody";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { resolveKitchenPaintMaterial } from "@/lib/kitchenPaint";
 
@@ -225,17 +226,20 @@ export function KitchenCabinetGLB({ cabinet, variant: candidate, materialDefinit
   const assembly = useMemo(() => getKitchenGlbAssembly(variant?.configuration), [variant?.configuration]);
   const frontMaterial = useMemo(() => resolveKitchenPaintMaterial(cabinet.frontMaterialId, materialDefinitions), [cabinet.frontMaterialId, materialDefinitions]);
   const carcassMaterial = useMemo(() => resolveKitchenPaintMaterial(cabinet.carcassMaterialId, materialDefinitions), [cabinet.carcassMaterialId, materialDefinitions]);
+  if (cabinet.catalogHousing === 'oven-tower') return <CabinetBody cabinet={cabinet} open={open} materialDefinitions={materialDefinitions} catalogAppliances />;
+  if (cabinet.catalogHousing === 'fridge-integrated') return <CabinetBody cabinet={{ ...cabinet, opening: 'doors', components: undefined }} open={open} materialDefinitions={materialDefinitions} />;
   if (!variant?.glbFile) return ["hood", "oven", "refrigerator"].includes(cabinet.opening ?? "")
-    ? <KitchenApplianceBody cabinet={cabinet} open={open} /> : <MissingKitchenModel cabinet={cabinet} selected={selected} />;
+    ? <KitchenCatalogAppliance cabinet={cabinet} /> : <MissingKitchenModel cabinet={cabinet} selected={selected} />;
   if (assembly) return <AssemblyModel cabinet={cabinet} variant={variant} assembly={assembly} materialDefinitions={materialDefinitions} frontMaterial={frontMaterial} carcassMaterial={carcassMaterial} open={open} selected={selected} />;
   return <group>
-    {cabinet.opening === "hood" && <KitchenApplianceBody cabinet={cabinet} open={open} />}
+    {(cabinet.opening === "hood" || cabinet.catalogAdaptation === "oven") && <KitchenCatalogAppliance cabinet={cabinet} />}
     <GLBFurnitureMesh modelId={variant.furnitureModelId} basePath={`/api/models/files/${variant.furnitureModelId}`}
     glbFile={variant.glbFile} selected={selected} showLoadStatus={selected}
     frontMaterial={frontMaterial}
     carcassMaterial={carcassMaterial}
     preserveHierarchy preservePhysicalSize strictDimensions frontProjectionMm={variant.frontProjectionMm} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
-    open={open} cabinetOpening={variant.opening === "doors" || variant.opening === "drawers" ? variant.opening : undefined}
+    cabinetAdaptation={cabinet.catalogAdaptation}
+    open={open} cabinetOpening={cabinet.catalogAdaptation === 'oven' ? undefined : cabinet.catalogAdaptation === 'sink' ? 'doors' : variant.opening === "doors" || variant.opening === "drawers" ? variant.opening : undefined}
     openAnimation={typeof variant.configuration.openAnimation === "string" ? variant.configuration.openAnimation : undefined} />
   </group>;
 }

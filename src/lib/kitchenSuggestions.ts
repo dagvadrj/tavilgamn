@@ -85,6 +85,7 @@ export function createSuggestedKitchen(
       refrigerator.color = "#e5d6bd";
       refrigerator.material = "wood";
     }
+    refrigerator.refrigeratorInstallation = preferences.refrigerator;
     kitchen.cabinets.push(refrigerator);
   }
 

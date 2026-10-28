@@ -9,6 +9,8 @@ export const COOKTOP_PRESETS = [
   { id: "800", label: "80 см · 780 × 520 мм", width: 780, height: 46, depth: 520, cutoutWidth: 750, cutoutDepth: 490, minWidth: 800 },
 ] as const;
 export function cooktopGeometry(c: ModularCabinet, model = c.components?.find(item => item.type === "cooktop")?.model ?? "induction") {
+  // Clearance for the authored catalog GLB housing, not an installation drawing.
+  if (c.catalogAdaptation) return { ...COOKTOP_PRESETS[1], width: 592, height: 47, depth: 522, cutoutWidth: 560, cutoutDepth: 494 };
   return COOKTOP_PRESETS.find(preset => model.endsWith(`-${preset.id}`))
     ?? { width: 520, height: 46, depth: 440, cutoutWidth: 500, cutoutDepth: 400, minWidth: 600 };
 }
@@ -30,7 +32,7 @@ export function applianceIssue(c: ModularCabinet): string | null {
       return "Плитканы хэмжээ шүүгээний дотор болон тавцангийн гүнд багтахгүй байна.";
   }
   if (c.opening === "hood") {
-    if (c.type !== "wall" || !["under-cabinet", "wall"].includes(c.hoodMount ?? "") || c.width < 600 || c.drawerCount !== 0 || c.corner)
+    if (c.type !== "wall" || !["under-cabinet", "wall"].includes(c.hoodMount ?? "") || c.width < (c.applianceProductId ? 598 : 600) || c.drawerCount !== 0 || c.corner)
       return "Утаа сорогчид 600 мм-ээс багагүй өргөнтэй дээд байрлал, угсралтын төрөл сонгоно уу.";
     return null;
   }

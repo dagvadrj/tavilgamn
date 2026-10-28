@@ -70,11 +70,11 @@ export function kitchenPreferences(
       ? "high-cabinet"
       : "under-worktop",
     hood: hood ? (hood.hoodMount === "wall" ? "wall" : "integrated") : "none",
-    refrigerator: fridge
+    refrigerator: fridge?.refrigeratorInstallation ?? (fridge
       ? fridge.refrigeratorStyle === "side-by-side"
         ? "freestanding"
         : "integrated"
-      : "none",
+      : "none"),
     layout:
       kitchen.layout === "straight" ||
       kitchen.layout === "u" ||
@@ -233,7 +233,7 @@ export function saveKitchenFlowDraft(
       flowStage: input.stage,
     }),
   );
-  return `/kitchen?editor=1&space=1&draft=${input.draftId}`;
+  return `/kitchen?editor=1${input.stage === 'space' ? '&space=1' : ''}&draft=${input.draftId}`;
 }
 
 export const KITCHEN_FLOW_LABELS = KITCHEN_WORKFLOW_STEPS.map(

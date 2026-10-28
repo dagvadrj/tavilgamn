@@ -593,6 +593,10 @@ export function parseKitchen(value: unknown, options: { allowEmpty?: boolean } =
     return {
       id: c.id,
       ...(c.variantId ? { variantId: c.variantId } : {}),
+      ...(c.catalogAdaptation ? { catalogAdaptation: c.catalogAdaptation } : {}),
+      ...(c.applianceProductId ? { applianceProductId: c.applianceProductId } : {}),
+      ...(c.catalogHousing ? { catalogHousing: c.catalogHousing } : {}),
+      ...(c.refrigeratorInstallation ? { refrigeratorInstallation: c.refrigeratorInstallation } : {}),
       ...(c.partSelections !== undefined ? { partSelections: parseKitchenPartSelections(c.partSelections) } : {}),
       type: c.type,
       width: c.width,
