@@ -2,6 +2,13 @@ import type { KitchenRoom, KitchenSpaceItem } from "./kitchenCabinets";
 
 type Vec3 = [number, number, number];
 
+/**
+ * Kitchen-only share of reflected/ambient fill (the room planner keeps 1).
+ * Applies to the scene environment and to wall paint's own reflection alike,
+ * so white fronts stay brighter than the walls behind them.
+ */
+export const KITCHEN_FILL = 0.62;
+
 const OUTWARD: Record<KitchenSpaceItem["wall"], [number, number]> = {
   back: [0, -1],
   right: [1, 0],

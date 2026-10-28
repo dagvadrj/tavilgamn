@@ -97,6 +97,8 @@ try {
       "--protect-boundaries", "--samples", "8192",
       // The cap is an input guard, never a visible-surface decimation target.
       "--target-triangles", values["max-triangles"], "--no-generate-preview",
+      // Nobody sees renders made inside an unattended job; the decoded read-back still runs.
+      "--no-review-renders",
       "--color-size", "2048", "--normal-size", "2048", "--orm-size", "2048",
       "--orm-codec", "etc1s", "--geometry-codec", "meshopt", "--node", process.execPath,
       ...(ktx ? ["--ktx-bin", ktx] : []),

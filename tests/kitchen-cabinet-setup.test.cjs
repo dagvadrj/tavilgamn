@@ -73,3 +73,41 @@ test('mirrored door reuse opens both fronts outward and separate replacement res
   const replacement=bindCabinetPart(value,'door-right',model).slots[1];
   assert.deepEqual(replacement.scale,[1,1,1]);assert.equal(replacement.motion.amount,100);
 });
+
+test('one handle choice places a handle on every front at its free edge, top for base and bottom for wall units', () => {
+  const { bindAllHandles, bindFrontHandle, handleSlotId } = loadSource('src/lib/kitchenCabinetSetup.ts');
+  const handle = { ...model, id: '33333333-2222-4333-8444-555555555555', name: 'Bar 160', partKind: 'handle', widthMm: 160, heightMm: 12, depthMm: 30 };
+  let value = reuseCabinetPart(twoDoors(), 'door-right', 'door-left', [model]);
+  const own = bindCabinetPart(value, 'door-right', model);
+  for (const [assembly, rightX] of [[value, 456], [own, -456]]) {
+    const base = bindAllHandles(assembly, handle, false);
+    const handles = base.slots.filter(s => s.kind === 'handle');
+    assert.deepEqual(handles.map(s => s.parentSlotId), ['door-left', 'door-right']);
+    assert.deepEqual(handles.map(s => s.positionMm), [[456, 318, 9], [rightX, 318, 9]], 'free edge, 80 mm below the top, on the face');
+    assert.equal(handles[0].options[0].modelId, handle.id);
+    assert.deepEqual(bindAllHandles(assembly, handle, true).slots.find(s => s.id === handleSlotId('door-left')).positionMm, [456, -318, 9]);
+    assert.equal(cabinetSetupProblem(base, [model, handle]), null);
+    assert.deepEqual(bindAllHandles(base, null, false).slots.map(s => s.id), ['door-left', 'door-right']);
+  }
+  const drawer = { ...model, partKind: 'drawer', widthMm: 996, heightMm: 196 };
+  const drawers = bindCabinetPart(cabinetSetupAssembly(null, 0, 1, size), 'drawer-1', drawer);
+  assert.deepEqual(bindAllHandles(drawers, handle, false).slots[1].positionMm, [0, 0, 9], 'drawer handle is centred');
+  const pending = bindFrontHandle(twoDoors(), 'door-left', undefined, false);
+  assert.equal(pending.slots.find(s => s.id === 'handle-door-left').options[0].modelId, '', 'upload target exists before the GLB is ready');
+  assert.deepEqual(bindCabinetPart(pending, 'handle-door-left', handle).slots.find(s => s.id === 'handle-door-left').options[0].modelId, handle.id);
+});
+
+test('changing a front re-places its handle and door-count labels follow the current layout', () => {
+  const { bindAllHandles, placeFrontHandle } = loadSource('src/lib/kitchenCabinetSetup.ts');
+  const handle = { ...model, id: '33333333-2222-4333-8444-555555555555', partKind: 'handle' };
+  const wide = { ...model, id: '44444444-2222-4333-8444-555555555555', widthMm: 596 };
+  let value = bindAllHandles(twoDoors(), handle, false);
+  value = placeFrontHandle(bindCabinetPart(value, 'door-left', wide), 'door-left', false);
+  assert.equal(value.slots.find(s => s.id === 'handle-door-left').positionMm[0], 556);
+  const single = cabinetSetupAssembly(value, 1, 0, size);
+  assert.equal(single.slots[0].label, 'Хаалга');
+  assert.equal(single.slots.find(s => s.id === 'handle-door-left').label, 'Хаалга · бариул');
+  const double = cabinetSetupAssembly(single, 2, 0, size);
+  assert.deepEqual(double.slots.filter(s => s.kind === 'door').map(s => s.label), ['Зүүн хаалга', 'Баруун хаалга']);
+  assert.equal(double.slots[0].options[0].modelId, wide.id, 'bound GLB survives the relabel');
+});

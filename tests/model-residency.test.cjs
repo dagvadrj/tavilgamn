@@ -26,6 +26,7 @@ function harness() {
     './modelTextureSampling':{configureModelTextureSampling(){}},
     './modelCutoutSampling':{configureModelCutoutSampling(){}},
     './modelDefaultMaterials':{configureModelDefaultMaterials(){if(failPrepare)throw Error('prepare failed')}},
+    './modelRaycast':{enableAcceleratedRaycast(){},scheduleRaycastTrees(){}},
   });
   const renderer={};
   return {requests,timers,renderer,...api,failPrepare(){failPrepare=true},acquire(url,options){const lease=api.acquireModel(renderer,url,options);lease.promise.catch(()=>{});leases.push(lease);return lease},async flush(){await new Promise(r=>setImmediate(r))},cleanup(){leases.forEach(l=>l.release());Object.assign(global,original)}};

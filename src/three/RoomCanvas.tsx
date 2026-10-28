@@ -26,7 +26,9 @@ import {
 import { roomLabelOpacity, solarLighting } from "@/lib/roomLighting";
 import { animateToward } from "./demandAnimation";
 import { getRoomGeometry } from "@/lib/roomGeometry";
-import { RoomStructure, RoomLighting } from "./RoomStructure";
+import { RoomStructure as RoomStructureView, RoomLighting as RoomLightingView } from "./RoomStructure";
+import { furnitureIndependent } from "./furnitureIndependent";
+import { PlannerAmbientOcclusion } from "./PlannerAmbientOcclusion";
 import { PlannerEnvironment } from "./PlannerEnvironment";
 import { configurePlannerRenderer } from "./plannerRenderer";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
@@ -95,6 +97,11 @@ import {
   holdOrbitControls,
   isSceneNavigationGesture,
 } from "./sceneNavigation";
+
+// Dragging furniture rewrites the design on every move; walls, surfaces and
+// lights depend only on the room, so they skip those renders.
+const RoomStructure = furnitureIndependent(RoomStructureView);
+const RoomLighting = furnitureIndependent(RoomLightingView);
 
 // The camera and WebGL renderer survive room selection; the rig owns their pose.
 const ROOM_CAMERA = {
@@ -336,6 +343,16 @@ export function RoomCanvas({
         <RoomMotionResolution dpr={performance.dpr} />
         <PlannerMotionShadows updatingLayout={isDraggingPiece} revision={design.updatedAt} />
         <CanvasDiagnostics scene="room" />
+        {/* Constrained devices skip the extra passes, as they skip shadows. */}
+        {performance.shadows && (
+          <PlannerAmbientOcclusion
+            normals="buffer"
+            bounds={[
+              [bounds.minX - 0.05, -0.05, bounds.minZ - 0.05],
+              [bounds.maxX + 0.05, roomHeight + 0.05, bounds.maxZ + 0.05],
+            ]}
+          />
+        )}
         <RoomPreviewCapture
           designId={design.id}
           revision={design.updatedAt}
@@ -424,6 +441,7 @@ export function RoomCanvas({
             rotation={[-Math.PI / 2, 0, 0]}
             receiveShadow={false}
             raycast={() => {}}
+            userData={{ noAmbientOcclusion: true }}
           >
             <planeGeometry
               args={[Math.max(60, spanX * 4), Math.max(60, spanZ * 4)]}
@@ -523,6 +541,7 @@ export function RoomCanvas({
                       name={room.name}
                       area={getRoomGeometry(room).area}
                       span={Math.max(room.width, room.depth)}
+                      height={room.height ?? 2.7}
                       active={active}
                       onSelect={() => onSelectRoom?.(room.id)}
                     />
@@ -710,12 +729,15 @@ function RoomCaption({
   name,
   area,
   span,
+  height,
   active,
   onSelect,
 }: {
   name: string;
   area: number;
   span: number;
+  /** Ceiling height in metres; the label floats above it, clear of furniture. */
+  height: number;
   active: boolean;
   onSelect: () => void;
 }) {
@@ -725,7 +747,8 @@ function RoomCaption({
   useFrame(({ camera, invalidate }, delta) => {
     if (!anchor.current || !button.current) return;
     anchor.current.getWorldPosition(world);
-    const target = roomLabelOpacity(camera.position.distanceTo(world), span);
+    // From inside the room the label would sit on the ceiling; it is for the overview.
+    const target = camera.position.y < world.y - 0.45 ? 0 : roomLabelOpacity(camera.position.distanceTo(world), span);
     const current = Number(button.current.style.opacity || 1);
     const animation = animateToward(current, target, 9, delta);
     button.current.style.opacity = String(animation.value);
@@ -736,7 +759,7 @@ function RoomCaption({
     if (animation.moving) invalidate();
   });
   return (
-    <group ref={anchor} position={[0, 0.35, 0]}>
+    <group ref={anchor} position={[0, height + 0.45, 0]}>
       <Html center zIndexRange={[12, 0]}>
         <div className="flex items-center gap-2">
           <button

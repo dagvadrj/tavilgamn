@@ -22,8 +22,10 @@ export function cabinetSetupAssembly(
     kind: KitchenGlbSlot["kind"],
     positionMm: KitchenPartVector,
     motion: KitchenGlbSlot["motion"],
-  ): KitchenGlbSlot =>
-    current?.slots.find((slot) => slot.id === id) ?? {
+  ): KitchenGlbSlot => {
+    const existing = current?.slots.find((slot) => slot.id === id);
+    // Labels follow the current door count; placement edits are kept.
+    return existing ? { ...existing, label, ...(existing.options.length === 1 && !existing.options[0].modelId ? { options: [{ ...existing.options[0], label }] } : {}) } : {
       id,
       label,
       kind,
@@ -36,6 +38,7 @@ export function cabinetSetupAssembly(
       options: [{ id: "default", label, modelId: "" }],
       motion,
     };
+  };
   for (let i = 0; i < doors; i++) {
     const side = i === 0 ? "left" : "right";
     slots.push(
@@ -85,7 +88,12 @@ export function cabinetSetupAssembly(
     );
     if (index < 0) break;
     const [slot] = extras.splice(index, 1);
-    slots.push(slot);
+    const front = slots.find((item) => item.id === slot.parentSlotId);
+    slots.push(
+      slot.kind === "handle" && front && slot.id === handleSlotId(front.id)
+        ? { ...slot, label: handleLabel(front) }
+        : slot,
+    );
     ids.add(slot.id);
   }
   return {
@@ -93,6 +101,90 @@ export function cabinetSetupAssembly(
     ...(current?.openAnimation ? { openAnimation: current.openAnimation } : {}),
     slots,
   };
+}
+
+const HANDLE_INSET_MM = 40;
+export const handleSlotId = (frontId: string) => `handle-${frontId}`;
+const handleLabel = (front: KitchenGlbSlot) => `${front.label} · бариул`;
+
+/**
+ * Handle mount in its front's local frame (mm). Doors hinge at their origin
+ * and extend toward the cabinet centre — a mirrored right door reuses the left
+ * door's frame — so the handle goes to the free edge, near the top of a base
+ * or tall unit and near the bottom of a wall unit. Drawer handles are centred.
+ */
+export function handleMount(front: KitchenGlbSlot, upper: boolean): KitchenPartVector {
+  const size = front.options.find((option) => option.id === front.defaultOptionId)?.sizeMm;
+  if (!size) return [0, 0, 0];
+  const z = size.depth / 2;
+  if (front.kind !== "door") return [0, 0, z];
+  const towardCentre = -Math.sign(front.positionMm[0] || -1) * Math.sign(front.scale[0]);
+  const x = towardCentre * Math.max(0, size.width - HANDLE_INSET_MM);
+  const y = (upper ? -1 : 1) * Math.max(0, size.height / 2 - HANDLE_INSET_MM * 2);
+  return [x, y, z];
+}
+
+/**
+ * Adds (or rebinds) one front's handle, placed automatically. `null` removes
+ * it; no model keeps an empty slot for a GLB that is still being uploaded.
+ */
+export function bindFrontHandle(
+  assembly: KitchenGlbAssembly,
+  frontId: string,
+  model: KitchenModelCandidate | null | undefined,
+  upper: boolean,
+): KitchenGlbAssembly {
+  const front = assembly.slots.find((slot) => slot.id === frontId);
+  if (!front) return assembly;
+  const id = handleSlotId(frontId);
+  const existing = assembly.slots.find((slot) => slot.id === id);
+  const rest = assembly.slots.filter((slot) => slot.id !== id);
+  if (model === null) return { ...assembly, slots: rest };
+  const slot: KitchenGlbSlot = existing ?? {
+    id,
+    label: handleLabel(front),
+    kind: "handle",
+    parentSlotId: frontId,
+    positionMm: handleMount(front, upper),
+    rotationDeg: [0, 0, 0],
+    scale: [1, 1, 1],
+    hideNodes: [],
+    optional: true,
+    defaultOptionId: "default",
+    options: [{ id: "default", label: handleLabel(front), modelId: "" }],
+  };
+  const next = { ...assembly, slots: [...rest, slot] };
+  return model ? bindCabinetPart(next, id, model) : next;
+}
+
+/** Re-places a front's handle after the front itself changed (new GLB or mirroring). */
+export function placeFrontHandle(
+  assembly: KitchenGlbAssembly,
+  frontId: string,
+  upper: boolean,
+): KitchenGlbAssembly {
+  const front = assembly.slots.find((slot) => slot.id === frontId);
+  const id = handleSlotId(frontId);
+  if (!front) return assembly;
+  return {
+    ...assembly,
+    slots: assembly.slots.map((slot) =>
+      slot.id === id ? { ...slot, positionMm: handleMount(front, upper) } : slot,
+    ),
+  };
+}
+
+export const FRONT_KINDS: KitchenGlbSlot["kind"][] = ["door", "drawer-front", "drawer"];
+
+/** One handle model on every door and drawer front. */
+export function bindAllHandles(
+  assembly: KitchenGlbAssembly,
+  model: KitchenModelCandidate | null,
+  upper: boolean,
+): KitchenGlbAssembly {
+  return assembly.slots
+    .filter((slot) => FRONT_KINDS.includes(slot.kind))
+    .reduce((next, front) => bindFrontHandle(next, front.id, model, upper), assembly);
 }
 
 export function bindCabinetPart(

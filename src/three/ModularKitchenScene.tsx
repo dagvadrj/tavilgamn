@@ -13,7 +13,7 @@ import { Edges, OrbitControls } from "@react-three/drei";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CameraMotionPreview } from "./CameraMotionPreview";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
-import { KitchenAmbientOcclusion } from "./KitchenAmbientOcclusion";
+import { PlannerAmbientOcclusion } from "./PlannerAmbientOcclusion";
 import { PlannerMotionShadows, RoomContactShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import {
   Plane,
@@ -40,7 +40,7 @@ import { KitchenRoomShell } from "./KitchenRoomShell";
 import { PlannerEnvironment } from "./PlannerEnvironment";
 import { configurePlannerRenderer } from "./plannerRenderer";
 import { plannerLighting } from "@/lib/plannerLighting";
-import { kitchenDaylight } from "@/lib/kitchenDaylight";
+import { KITCHEN_FILL, kitchenDaylight } from "@/lib/kitchenDaylight";
 import { ROOM_DAY_BACKDROP } from "@/lib/roomLighting";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
@@ -72,7 +72,6 @@ export interface ModularSceneProps {
   materialDefinitions?: Record<string, KitchenMaterialDefinition>;
 }
 /** Kitchen-only light balance (the shared room planner values stay as they are). */
-const KITCHEN_FILL = 0.62;
 const KITCHEN_WINDOW_SUN = 1.75;
 /** Candela, at the ceiling centre; tuned against the fill so the room shows a direction. */
 const KITCHEN_CEILING_LIGHT = 16;
@@ -296,7 +295,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
       <RoomMotionResolution dpr={props.dpr} />
       <PlannerMotionShadows updatingLayout={dragActive || Boolean(props.open)} revision={kitchen} />
       <CanvasDiagnostics scene="modular-kitchen" />
-      <KitchenAmbientOcclusion />
+      <PlannerAmbientOcclusion />
       {!props.interior && <CameraFit focus={focus} side={daylight.cameraSide} />}
       <color attach="background" args={[ROOM_DAY_BACKDROP]} />
       {/* Less uniform fill than the room planner: cabinet sides, plinths and

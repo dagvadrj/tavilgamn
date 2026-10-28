@@ -8,7 +8,15 @@ import type {
 } from "@/lib/kitchenGlbAssembly";
 import type { KitchenModelCandidate } from "@/lib/kitchenModuleCatalog";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
-import { bindCabinetPart, reuseCabinetPart } from "@/lib/kitchenCabinetSetup";
+import {
+  bindAllHandles,
+  bindCabinetPart,
+  bindFrontHandle,
+  FRONT_KINDS,
+  handleSlotId,
+  placeFrontHandle,
+  reuseCabinetPart,
+} from "@/lib/kitchenCabinetSetup";
 const Preview = dynamic(() => import("./AdminKitchenAssemblyPreview"), {
   ssr: false,
 });
@@ -20,7 +28,10 @@ export function AdminKitchenCabinetSetup({
   baseModel,
   materials,
   onUpload,
+  upper = false,
 }: {
+  /** Wall units carry their door handles near the bottom edge. */
+  upper?: boolean;
   assembly: KitchenGlbAssembly;
   onChange: (value: KitchenGlbAssembly) => void;
   models: KitchenModelCandidate[];
@@ -29,12 +40,21 @@ export function AdminKitchenCabinetSetup({
   onUpload: (slotId: string, kind: KitchenPartKind) => void;
 }) {
   const [step, setStep] = useState<"fronts" | "handles" | "preview">("fronts");
-  const fronts = assembly.slots.filter(
-    (slot) =>
-      slot.kind === "door" ||
-      slot.kind === "drawer-front" ||
-      slot.kind === "drawer",
+  const fronts = assembly.slots.filter((slot) =>
+    FRONT_KINDS.includes(slot.kind),
   );
+  const handleModels = models.filter(
+    (model) =>
+      model.partKind === "handle" && model.glbReady && !model.archivedAt,
+  );
+  const handleOf = (frontId: string) =>
+    assembly.slots.find((slot) => slot.id === handleSlotId(frontId))
+      ?.options[0]?.modelId ?? "";
+  const sharedHandle = fronts.every(
+    (front) => handleOf(front.id) === handleOf(fronts[0]?.id ?? ""),
+  )
+    ? handleOf(fronts[0]?.id ?? "")
+    : "mixed";
   const patch = (
     id: string,
     values: Partial<KitchenGlbAssembly["slots"][number]>,
@@ -104,8 +124,15 @@ export function AdminKitchenCabinetSetup({
                         const model = models.find(
                           (model) => model.id === event.target.value,
                         );
+                        // A new front size moves its handle to the new free edge.
                         if (model)
-                          onChange(bindCabinetPart(assembly, slot.id, model));
+                          onChange(
+                            placeFrontHandle(
+                              bindCabinetPart(assembly, slot.id, model),
+                              slot.id,
+                              upper,
+                            ),
+                          );
                         else
                           patch(slot.id, {
                             options: [
@@ -147,11 +174,15 @@ export function AdminKitchenCabinetSetup({
                           className="btn-ghost"
                           onClick={() => {
                             onChange(
-                              reuseCabinetPart(
-                                assembly,
+                              placeFrontHandle(
+                                reuseCabinetPart(
+                                  assembly,
+                                  slot.id,
+                                  fronts[index - 1].id,
+                                  models,
+                                ),
                                 slot.id,
-                                fronts[index - 1].id,
-                                models,
+                                upper,
                               ),
                             );
                           }}
@@ -231,69 +262,71 @@ export function AdminKitchenCabinetSetup({
       {step === "handles" && (
         <>
           <p className="ak-help">
-            Бариул сонгохгүй бол загвартаа бариул нэмэхгүй. Сонгосон бариул
-            хаалгаа дагаж хөдөлнө.
+            Нэг бариул сонгоход бүх хаалга, шургуулгад автоматаар тавигдана:
+            хаалганы нугасны эсрэг ирмэгт, {upper ? "доод" : "дээд"} талд;
+            шургуулганы голд. Бариул нүүрээ дагаж нээгдэнэ.
           </p>
+          {fronts.length > 0 && (
+            <label className="label">
+              Бүх нүүрний бариул
+              <select
+                className="input"
+                value={sharedHandle}
+                onChange={(event) => {
+                  const model = handleModels.find(
+                    (item) => item.id === event.target.value,
+                  );
+                  onChange(bindAllHandles(assembly, model ?? null, upper));
+                }}
+              >
+                {sharedHandle === "mixed" && (
+                  <option value="mixed" disabled>
+                    Нүүр бүрт өөр бариултай
+                  </option>
+                )}
+                <option value="">Бариулгүй</option>
+                {handleModels.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <div className="ak-setup-parts">
             {fronts.map((front) => {
-              const id = `handle-${front.id}`,
+              const id = handleSlotId(front.id),
                 slot = assembly.slots.find((item) => item.id === id),
                 choice = slot?.options[0];
               return (
                 <article key={id} className="ak-setup-part">
                   <h3>{front.label} · бариул</h3>
                   <label className="label">
-                    Бариулын GLB
+                    Энэ нүүрний бариул
                     <select
                       className="input"
                       value={choice?.modelId ?? ""}
                       onChange={(event) => {
-                        const model = models.find(
-                          (model) => model.id === event.target.value,
+                        const model = handleModels.find(
+                          (item) => item.id === event.target.value,
                         );
-                        const rest = assembly.slots.filter(
-                          (item) => item.id !== id,
-                        );
-                        if (!model) {
-                          onChange({ ...assembly, slots: rest });
-                          return;
-                        }
-                        const handle: KitchenGlbAssembly["slots"][number] =
-                          slot ?? {
-                            id,
-                            label: `${front.label} бариул`,
-                            kind: "handle",
-                            parentSlotId: front.id,
-                            positionMm: [0, 0, 0],
-                            rotationDeg: [0, 0, 0],
-                            scale: [1, 1, 1],
-                            hideNodes: [],
-                            optional: true,
-                            defaultOptionId: "default",
-                            options: [],
-                          };
                         onChange(
-                          bindCabinetPart(
-                            { ...assembly, slots: [...rest, handle] },
-                            id,
-                            model,
-                          ),
+                          bindFrontHandle(assembly, front.id, model ?? null, upper),
                         );
                       }}
                     >
-                      <option value="">Бариулгүй / дараа тохируулах</option>
-                      {models
-                        .filter(
-                          (model) =>
-                            model.partKind === "handle" &&
-                            model.glbReady &&
-                            !model.archivedAt,
-                        )
-                        .map((model) => (
-                          <option key={model.id} value={model.id}>
-                            {model.name}
+                      <option value="">Бариулгүй</option>
+                      {choice?.modelId &&
+                        !handleModels.some((model) => model.id === choice.modelId) && (
+                          <option value={choice.modelId}>
+                            {choice.label} · боловсруулж байна
                           </option>
-                        ))}
+                        )}
+                      {handleModels.map((model) => (
+                        <option key={model.id} value={model.id}>
+                          {model.name}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <button
@@ -304,25 +337,37 @@ export function AdminKitchenCabinetSetup({
                     Бариулын GLB оруулах
                   </button>
                   {slot && (
-                    <div className="ak-setup-position">
-                      {slot.positionMm.map((value, axis) => (
-                        <label className="label" key={axis}>
-                          {["X", "Y", "Z"][axis]} · мм
-                          <input
-                            className="input"
-                            type="number"
-                            value={value}
-                            onChange={(event) => {
-                              const next = [
-                                ...slot.positionMm,
-                              ] as KitchenPartVector;
-                              next[axis] = Number(event.target.value);
-                              setVector(id, next);
-                            }}
-                          />
-                        </label>
-                      ))}
-                    </div>
+                    <details>
+                      <summary>Нарийн тохируулга · нүүрний координатаар, мм</summary>
+                      <div className="ak-setup-position">
+                        {slot.positionMm.map((value, axis) => (
+                          <label className="label" key={axis}>
+                            {["X · нугаснаас", "Y · голоос дээш", "Z · нүүрнээс урагш"][axis]}
+                            <input
+                              className="input"
+                              type="number"
+                              value={value}
+                              onChange={(event) => {
+                                const next = [
+                                  ...slot.positionMm,
+                                ] as KitchenPartVector;
+                                next[axis] = Number(event.target.value);
+                                setVector(id, next);
+                              }}
+                            />
+                          </label>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-ghost"
+                        onClick={() =>
+                          onChange(placeFrontHandle(assembly, front.id, upper))
+                        }
+                      >
+                        Автоматаар байрлуулах
+                      </button>
+                    </details>
                   )}
                 </article>
               );

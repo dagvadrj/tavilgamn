@@ -10,6 +10,8 @@ import { configureModelCutoutSampling } from "./modelCutoutSampling";
 import { configureModelDefaultMaterials } from "./modelDefaultMaterials";
 import { disposeKitchenTextureCoordinates } from "./kitchenTextureCoordinates";
 import { idleModelCacheBudget, modelResourceBytes, type ModelResourceBytes } from "./modelResources";
+import { enableAcceleratedRaycast, scheduleRaycastTrees } from "./modelRaycast";
+enableAcceleratedRaycast();
 export interface ModelLoadMetrics {
   queuedAt: number;
   startedAt: number;
@@ -106,6 +108,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
       configureModelCutoutSampling(gltf.scene, renderer);
       gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = object.userData.applianceGlass !== true; object.receiveShadow = true; } });
       if (!gltf.animations.length && !options.preserveHierarchy) instanceRepeatedModules(gltf.scene);
+      scheduleRaycastTrees(gltf.scene);
       gltf.scene.updateMatrixWorld(true);
       let bounds = new THREE.Box3().setFromObject(gltf.scene);
       const authored = gltf.scene.userData.pipelineBounds;

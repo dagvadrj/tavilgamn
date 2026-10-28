@@ -120,3 +120,14 @@ test('pre-upgrade saves with empty light lists receive default automatic downlig
   const saved=rooms.syncDesignRooms({...legacy(),lighting:{mode:'day',ambient:.65,sunlight:1.8,fixtures:[]}});
   assert.equal(saved.lighting.fixtures.length,4);assert.equal(saved.lighting.autoLights,true);
 });
+
+test('ceiling lights glow softly in daytime and reach full output at night or when switched on', () => {
+  const lighting = loadSource('src/lib/roomLighting.ts');
+  const base = { mode: 'day', autoLights: true, ambient: .65, sunlight: 1.8, fixtures: [] };
+  const day = lighting.solarLighting({ ...base, timeOfDay: 12 });
+  assert.equal(day.lampsOn, false);
+  assert.equal(day.lampLevel, lighting.DAY_LAMP_LEVEL);
+  assert.ok(day.lampLevel > 0 && day.lampLevel < 1);
+  assert.equal(lighting.solarLighting({ ...base, timeOfDay: 22 }).lampLevel, 1);
+  assert.equal(lighting.solarLighting({ ...base, timeOfDay: 12, autoLights: false }).lampLevel, 1);
+});
