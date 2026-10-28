@@ -47,6 +47,10 @@ const MerchantKitchenQuotes = dynamic(
 );
 import { merchantRequest } from "@/features/merchant/merchantApi";
 import { MerchantOverview } from "@/features/merchant/MerchantOverview";
+const MerchantRooms = dynamic(
+  () => import("@/features/merchant/MerchantRooms").then((m) => m.MerchantRooms),
+  { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
+);
 const MerchantActivation = dynamic(
   () =>
     import("@/features/merchant/MerchantActivation").then(
@@ -476,6 +480,7 @@ function MerchantWorkspace({
           {!store &&
             [
               "products",
+              "rooms",
               "orders",
               "delivery",
               "quotes",
@@ -497,6 +502,8 @@ function MerchantWorkspace({
                 onStore={() => changeTab("store")}
               />
             )}
+
+          {tab === "rooms" && store && <MerchantRooms owner={owner} />}
 
           {tab === "orders" && store && (
             <MerchantOrders

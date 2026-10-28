@@ -11,6 +11,10 @@ export interface CustomInterior {
   label: string;
 }
 
+/** The one left workspace panel: three tabs plus nested views over them. */
+export type RoomPanelTab = "add" | "added" | "cart";
+export type RoomPanelView = "list" | "detail" | "room" | "designs";
+
 /** Ephemeral editor UI only. Persisted room data remains owned by useDesigns. */
 export function useRoomPlannerUi() {
   const [selected, setSelected] = useState<string | null>(null);
@@ -23,7 +27,6 @@ export function useRoomPlannerUi() {
     null,
   );
   const [showStartHint, setShowStartHint] = useState(false);
-  const [inspector, setInspector] = useState<"catalog" | "environment">("environment");
   const [view, setView] = useState<"plan" | "perspective">("perspective");
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [locked, setLocked] = useState(false);
@@ -32,8 +35,6 @@ export function useRoomPlannerUi() {
   const [showRoomGeometry, setShowRoomGeometry] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [saveName, setSaveName] = useState("");
-  const [leftOpen, setLeftOpen] = useState(false);
-  const [rightOpen, setRightOpen] = useState(false);
   const [activePreset, setActivePreset] = useState<CustomInterior | null>(null);
   const [presetStatus, setPresetStatus] = useState<
     "idle" | "loading" | "loaded" | "error"
@@ -49,7 +50,17 @@ export function useRoomPlannerUi() {
   const [notice, setNotice] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [newRoomType, setNewRoomType] = useState<RoomType>("bedroom");
+  // Desktop starts with the panel open; small screens open it on demand.
+  const [panelOpen, setPanelOpen] = useState(
+    () =>
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function" ||
+      window.matchMedia("(min-width: 960px)").matches,
+  );
+  const [panelTab, setPanelTab] = useState<RoomPanelTab>("add");
+  const [panelView, setPanelView] = useState<RoomPanelView>("list");
   return {
-    inspector, setInspector, selected, setSelected, environmentTab, setEnvironmentTab, surface, setSurface, selectedWall, setSelectedWall, selectedOpening, setSelectedOpening, placementTemplate, setPlacementTemplate, showStartHint, setShowStartHint, view, setView, snapEnabled, setSnapEnabled, locked, setLocked, paletteCat, setPaletteCat, showCompare, setShowCompare, showRoomGeometry, setShowRoomGeometry, compareIds, setCompareIds, saveName, setSaveName, leftOpen, setLeftOpen, rightOpen, setRightOpen, activePreset, setActivePreset, presetStatus, setPresetStatus, presetError, setPresetError, localFile, setLocalFile, localUrl, setLocalUrl, localScale, setLocalScale, query, setQuery, gridEnabled, setGridEnabled, showDimensions, setShowDimensions, resetKey, setResetKey, notice, setNotice, expanded, setExpanded, newRoomType, setNewRoomType
+    panelOpen, setPanelOpen, panelTab, setPanelTab, panelView, setPanelView,
+    selected, setSelected, environmentTab, setEnvironmentTab, surface, setSurface, selectedWall, setSelectedWall, selectedOpening, setSelectedOpening, placementTemplate, setPlacementTemplate, showStartHint, setShowStartHint, view, setView, snapEnabled, setSnapEnabled, locked, setLocked, paletteCat, setPaletteCat, showCompare, setShowCompare, showRoomGeometry, setShowRoomGeometry, compareIds, setCompareIds, saveName, setSaveName, activePreset, setActivePreset, presetStatus, setPresetStatus, presetError, setPresetError, localFile, setLocalFile, localUrl, setLocalUrl, localScale, setLocalScale, query, setQuery, gridEnabled, setGridEnabled, showDimensions, setShowDimensions, resetKey, setResetKey, notice, setNotice, expanded, setExpanded, newRoomType, setNewRoomType
   };
 }

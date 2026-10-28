@@ -1,38 +1,112 @@
 .room-catalog-filters {
   display: grid;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
   font-size: 12px;
 }
 
 .room-catalog-filters label {
   display: grid;
-  gap: 6px;
+  gap: 4px;
+  color: #5f6672;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .room-catalog-filters select {
   width: 100%;
-  min-height: 42px;
-  padding: 8px 10px;
-  border: 1px solid #dce2e8;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid #d3d8de;
   border-radius: 10px;
   background: #fff;
+  color: #171c24;
+  font-size: 13px;
+  font-weight: 500;
 }
 
-.room-catalog-filters summary {
-  cursor: pointer;
+.room-catalog-filters label.room-catalog-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 6px 0 14px;
+  border: 1px solid #e4e6ea;
+  border-radius: 14px;
+  background: #f6f7f9;
+  color: #5f6672;
+}
+
+.room-catalog-search input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: #171c24;
+  font-size: 14px;
+}
+
+.room-catalog-search button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #5f6672;
+}
+
+.room-catalog-search:focus-within {
+  border-color: #075eaa;
+  box-shadow: 0 0 0 3px #075eaa26;
+}
+
+.room-catalog-selects {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.room-catalog-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.room-catalog-chips > button {
   min-height: 36px;
-  align-content: center;
-  font-weight: 650;
+  padding: 0 13px;
+  border: 1px solid #e4e6ea;
+  border-radius: 18px;
+  background: #fff;
+  color: #171c24;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.room-catalog-filters details label {
-  margin-bottom: 10px;
+.room-catalog-chips > button[aria-pressed="true"] {
+  border-color: #171c24;
+  background: #171c24;
+  color: #fff;
 }
 
-.room-catalog-filters small {
-  color: #627180;
-  line-height: 1.5;
+.room-catalog-more > summary {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  color: #5f6672;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-catalog-more > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 6px;
 }
 
 .room-catalog-filter-status {
@@ -40,13 +114,19 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  color: #627180;
+  color: #5f6672;
+  font-variant-numeric: tabular-nums;
 }
 
 .room-catalog-filter-status button {
   min-height: 40px;
+  border: 0;
+  background: transparent;
   color: #075eaa;
+  font-weight: 600;
   text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
 
 .room-simple .room-kitchen-shortcut {

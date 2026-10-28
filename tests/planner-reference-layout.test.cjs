@@ -33,8 +33,10 @@ test("both planners retain lazy 3D scenes and only open room inspectors reserve 
   assert.match(kitchen, /className=\{`kitchen-flow-catalog/);
   assert.match(kitchen, /<KitchenPlanWorkspace/);
   assert.doesNotMatch(kitchen, /<PlannerRail/);
-  assert.match(room, /active=\{inspector === "catalog" && leftOpen\}/);
-  assert.match(room, /active=\{inspector === "environment" && rightOpen\}/);
+  // One left workspace panel replaces both right inspectors.
+  assert.match(room, /<RoomWorkspacePanel/);
+  assert.doesNotMatch(room, /<Drawer\b/);
+  assert.match(room, /panelOpen && "room-workspace-open"/);
   assert.match(room, /<RoomCatalogFilters/);
   assert.match(source("src/features/room-planner/components/RoomCatalogFilters.tsx"), /aria-label="Тавилгын ангилал"/);
   assert.match(source("src/features/room-planner/components/PlannerPanels.tsx"), /if \(!active\) return null/);

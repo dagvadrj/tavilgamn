@@ -8,6 +8,7 @@ export type MerchantLocationTab =
   | "reports"
   | "contracts"
   | "products"
+  | "rooms"
   | "orders"
   | "delivery"
   | "branches"
@@ -31,6 +32,7 @@ const MERCHANT_TABS = new Set<MerchantLocationTab>([
   "reports",
   "contracts",
   "products",
+  "rooms",
   "orders",
   "delivery",
   "branches",

@@ -33,6 +33,7 @@ import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import { InteriorModel } from "./InteriorModel";
 import { getProduct } from "@/store/catalog";
 import { getDbModel } from "@/lib/modelRegistry";
+import { useRoomModelStatus } from "@/store/roomModelStatus";
 import { roomPlacementContext } from "./roomPlacement";
 import { isPlacementValid, snapToWall, type PlacementRoom } from "./collision";
 import {
@@ -150,6 +151,8 @@ interface RoomCanvasProps {
   onExitInterior?: () => void;
   onEditStart?: () => void;
   onEditEnd?: () => void;
+  /** «Хасах» on a piece whose model failed to load (B2.4). */
+  onRemovePiece?: (id: string) => void;
   /** Optional custom GLB interior to render instead of procedural room */
   customInterior?: {
     basePath: string;
@@ -188,6 +191,7 @@ export function RoomCanvas({
   onExitInterior,
   onEditStart,
   onEditEnd,
+  onRemovePiece,
   customInterior,
   selectedWall,
   onSelectWall,
@@ -596,6 +600,7 @@ export function RoomCanvas({
             plan={view === "plan"}
             onEditStart={onEditStart}
             onEditEnd={onEditEnd}
+            onRemove={onRemovePiece}
             kitchenMaterials={kitchenMaterials}
           />
         ))}</group>
@@ -774,6 +779,7 @@ export function DraggablePiece({
   plan = false,
   onEditStart,
   onEditEnd,
+  onRemove,
   kitchenMaterials,
 }: {
   piece: PlacedFurniture;
@@ -796,6 +802,7 @@ export function DraggablePiece({
   plan?: boolean;
   onEditStart?: () => void;
   onEditEnd?: () => void;
+  onRemove?: (id: string) => void;
   kitchenMaterials: Record<string, KitchenMaterialDefinition>;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -814,6 +821,23 @@ export function DraggablePiece({
         physicalSize: dbModel.physicalSize,
       }
     : product?.model;
+  const fileKey = fileModel ? `${fileModel.id}/${fileModel.file}` : null;
+  useEffect(() => {
+    if (fileKey) useRoomModelStatus.getState().begin(piece.instanceId);
+  }, [fileKey, piece.instanceId]);
+  useEffect(
+    () => () => useRoomModelStatus.getState().clear(piece.instanceId),
+    [piece.instanceId],
+  );
+  // «Дахин оролдох» remounts the mesh; the loader has already dropped the failure.
+  const [attempt, setAttempt] = useState(0);
+  useEffect(
+    () =>
+      useRoomModelStatus.subscribe((state) =>
+        setAttempt(state.attempts[piece.instanceId] ?? 0),
+      ),
+    [piece.instanceId],
+  );
   const [dragging, setDragging] = useState(false);
   const dragBefore = useRef<PlacedFurniture | null>(null);
   const moveCallback = useRef(onMove);
@@ -1130,6 +1154,7 @@ export function DraggablePiece({
         />
       ) : fileModel ? (
         <GLBFurnitureMesh
+          key={attempt}
           modelId={fileModel.id}
           basePath={`/api/models/files/${fileModel.id}/`}
           glbFile={fileModel.file}
@@ -1143,6 +1168,20 @@ export function DraggablePiece({
           h={dims.h}
           selected={selected}
           deferUntilVisible
+          onReady={() =>
+            useRoomModelStatus.getState().set(piece.instanceId, "ready")
+          }
+          onError={() =>
+            useRoomModelStatus.getState().set(piece.instanceId, "error")
+          }
+          sceneStatus={{
+            floorOffset: planeY,
+            onRetry: () => useRoomModelStatus.getState().retry(piece.instanceId),
+            onRemove: onRemove && (() => onRemove(piece.instanceId)),
+            // The previous variant stays on screen at full opacity (B2.5).
+            onSwapError: () =>
+              useRoomModelStatus.getState().set(piece.instanceId, "ready"),
+          }}
         />
       ) : piece.details ? (
         <Html center position={[0, dims.h / 2, 0]} zIndexRange={[8, 0]}>

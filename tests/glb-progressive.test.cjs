@@ -422,3 +422,74 @@ test("new local occlusion bakes retain crease depth under room lighting",async()
     assert.equal(source.aoMapIntensity,.85);
   }finally{run.unmount();global.window=originalWindow;}
 });
+
+function loadState(tree) {
+  if (!React.isValidElement(tree)) return null;
+  if (tree.type?.name === "FurnitureLoadState") return tree;
+  for (const child of React.Children.toArray(tree.props.children)) {
+    const match = loadState(child); if (match) return match;
+  }
+  return null;
+}
+
+test("room scene status: sized volume while loading, dimmed previous variant during a swap, restored on a failed swap", async () => {
+  const quiet = console.error; console.error = () => {};
+  let errors = 0, swapErrors = 0;
+  const run = harness({ w: 1.8, d: 0.9, h: 0.8, onError: () => errors++,
+    sceneStatus: { floorOffset: 0, onSwapError: () => swapErrors++ } });
+  try {
+    await run.flush();
+    let state = loadState(run.tree);
+    assert.equal(state.props.phase, "loading");
+    assert.deepEqual([state.props.w, state.props.d, state.props.h], [1.8, 0.9, 0.8], "placeholder follows real w/d/h");
+    assert.equal(run.find("mesh"), null, "legacy placeholder is replaced by the room load state");
+    const first = run.resolve(0); await run.flush();
+    state = loadState(run.tree);
+    assert.equal(state.props.phase, "ready");
+    run.updateProps({ glbFile: "variant.glb" }); await run.flush();
+    state = loadState(run.tree);
+    assert.equal(state.props.phase, "swapping", "the previous model stays on screen while the variant loads");
+    assert.ok(run.primitive(), "previous model is still attached");
+    run.requests[1].reject(new Error("offline")); await run.flush();
+    state = loadState(run.tree);
+    assert.equal(state.props.phase, "ready");
+    assert.equal(state.props.swapFailed, true);
+    assert.equal(swapErrors, 1);
+    assert.equal(errors, 0, "a failed swap is not a failed piece");
+    assert.ok(state.props.model, "the previous variant is still the displayed model");
+    void first;
+  } finally { run.unmount(); console.error = quiet; }
+});
+
+test("room scene status: a first load failure keeps a failed volume with retry and remove", async () => {
+  const quiet = console.error; console.error = () => {};
+  let errors = 0, swapErrors = 0, retried = 0, removed = 0;
+  const run = harness({ onError: () => errors++, selected: true,
+    sceneStatus: { onSwapError: () => swapErrors++, onRetry: () => retried++, onRemove: () => removed++ } });
+  try {
+    await run.flush();
+    run.requests[0].reject(new Error("404")); await run.flush();
+    const state = loadState(run.tree);
+    assert.equal(state.props.phase, "error");
+    assert.equal(state.props.model, undefined);
+    assert.equal(errors, 1); assert.equal(swapErrors, 0);
+    state.props.onRetry(); state.props.onRemove();
+    assert.deepEqual([retried, removed], [1, 1]);
+  } finally { run.unmount(); console.error = quiet; }
+});
+
+test("variant dimming changes only the clone's materials and restores the authored values", () => {
+  const { setModelOpacity, SWAP_DIM_OPACITY } = loadSource("src/three/FurnitureLoadState.tsx", {
+    "@react-three/fiber": { useFrame() {} }, "./SceneHtml": { SceneHtml: () => null } });
+  const glass = new THREE.MeshStandardMaterial({ opacity: 0.6, transparent: true });
+  const fabric = new THREE.MeshStandardMaterial();
+  const scene = new THREE.Group();
+  scene.add(new THREE.Mesh(new THREE.BoxGeometry(), [glass, fabric]), new THREE.Mesh(new THREE.BoxGeometry(), fabric));
+  setModelOpacity(scene, SWAP_DIM_OPACITY);
+  setModelOpacity(scene, SWAP_DIM_OPACITY);
+  assert.ok(Math.abs(glass.opacity - 0.6 * SWAP_DIM_OPACITY) < 1e-9, "dimming is not compounded");
+  assert.equal(fabric.transparent, true);
+  setModelOpacity(scene, null);
+  assert.deepEqual([glass.opacity, glass.transparent, fabric.opacity, fabric.transparent], [0.6, true, 1, false]);
+  assert.equal(fabric.userData.loadFade, undefined);
+});

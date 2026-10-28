@@ -43,6 +43,7 @@ export const MERCHANT_TABS: {
   { id: "reports", label: "Тайлан татах", icon: BarChart3 },
   { id: "contracts", label: "Платформын гэрээ", icon: FileText },
   { id: "products", label: "Бүтээгдэхүүн", icon: Package },
+  { id: "rooms", label: "Тохижуулсан өрөөнүүд", icon: Armchair },
   { id: "orders", label: "Захиалгууд", icon: ShoppingBag },
   { id: "delivery", label: "Хүргэлт", icon: Truck },
   { id: "branches", label: "Салбар, агуулах", icon: MapPin },
@@ -83,6 +84,7 @@ export function MerchantSidebar({
       !hasStore &&
       [
         "products",
+        "rooms",
         "orders",
         "delivery",
         "kitchens",
@@ -149,6 +151,7 @@ export function MerchantSidebar({
               "reports",
               "contracts",
               "products",
+              "rooms",
               "orders",
               "delivery",
               "branches",

@@ -3,7 +3,11 @@ import { requireAdmin } from "@/lib/supabase/requireAdmin";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { toJson } from "@/lib/supabase/json";
 import { apiErrorResponse, privateHeaders } from "@/lib/api/errors";
-import { readTemplateInput, templateId } from "@/lib/roomTemplates";
+import {
+  readTemplateInput,
+  templateId,
+  templateStats,
+} from "@/lib/roomTemplates";
 import {
   roomTemplate,
   roomTemplateCard,
@@ -95,6 +99,13 @@ export async function PUT(request: NextRequest) {
       updated_by: auth.userId,
       updated_at: new Date().toISOString(),
       version: input.version + 1,
+      published_version:
+        input.status === "published" ? input.version + 1 : null,
+      ...(({ pieceCount, width, depth }) => ({
+        piece_count: pieceCount,
+        width,
+        depth,
+      }))(templateStats(input.design)),
     };
     const db = getSupabaseAdmin();
     if (

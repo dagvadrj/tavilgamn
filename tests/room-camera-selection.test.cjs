@@ -73,7 +73,7 @@ test('catalog add callbacks use live state and scoped camera hints; top view and
    '@/features/room-planner/components/RoomPlannerStart':{RoomPlannerStart:'room-start'},
    '@/features/room-planner/components/PlannerPanels':{Drawer:'drawer',CompareModal:'compare',NumberControl:'number',PlannerSkeleton:'skeleton'},
    '@/features/room-planner/components/RoomPlannerControls':{RoomPlannerControls:'room-controls'},
-   '@/features/planner/components/PlannerModelCard':{PlannerModelCard:'model-card'},
+   '@/features/room-planner/components/RoomCatalogCard':{RoomCatalogCard:'model-card',formatFurnitureCm:()=>''},
    './RoomPlacementMap':{RoomPlacementMap:'room-map'},'./RoomAddDialog':{RoomAddDialog:'add-room-dialog'},'./RoomTourControls':{RoomTourControls:'tour-controls'},
   });
   const render=()=>h.render(()=>{const shell=RoomPlanner();return typeof shell.type==='function'?shell.type(shell.props):shell;}),find=(t,type)=>nodes(t).find(n=>n.type===type);
@@ -130,7 +130,8 @@ test('real planner map and scene selection keep one canvas key, current view and
   store.getState().selectRoom(a);assert.equal(store.getState().moveRoom(b,{x:4,z:0},false),null);
   for(const connection of store.getState().current.connections ?? []) store.getState().updateConnection(connection.id,{kind:'open'});
   const bed={instanceId:'moving-bed',productId:'unknown-bed',x:0,z:0,rotation:0,color:'cream',material:'fabric'};
-  store.getState().updatePieces([bed]);tree=render();let moving=find(tree,'room-canvas');moving.props.onSelect(bed.instanceId);tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.selected,bed.instanceId);
+  store.getState().updatePieces([bed]);tree=render();let moving=find(tree,'room-canvas');const requestBeforeSelect=moving.props.cameraRequest;moving.props.onSelect(bed.instanceId);tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.selected,bed.instanceId);
+  assert.equal(moving.props.cameraRequest,requestBeforeSelect,'selecting furniture never moves the camera');
   const reset=moving.props.resetKey;moving.props.onEditStart();moving.props.onMove(bed.instanceId,4,0);tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,a);
   moving.props.onEditEnd();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,b);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.design.pieces[0].x,0);assert.equal(moving.key,canvas.key);assert.equal(moving.props.resetKey,reset);assert.equal(moving.props.view,'plan');
   store.getState().undo();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,a);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.design.pieces[0].x,0);
