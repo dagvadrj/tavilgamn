@@ -50,8 +50,8 @@ class PlannerGTAOPass extends GTAOPass {
 
 /**
  * Contact darkening in corners, along skirting, under wall units and between
- * modules: the cue a flat, evenly lit room or kitchen is missing. Skipped while the camera moves
- * so orbiting keeps the plain, faster frame.
+ * modules: the cue a flat, evenly lit room or kitchen is missing. The AO pass is
+ * skipped while the camera or furniture moves so those frames stay fast.
  */
 export function PlannerAmbientOcclusion({
   normals = "depth",
@@ -116,10 +116,13 @@ export function PlannerAmbientOcclusion({
       invalidate();
     };
   }, [pipeline, invalidate]);
-  // Priority 1 takes over rendering from the canvas.
+  // Priority 1 takes over rendering from the canvas. Motion frames still go
+  // through the composer with only the AO pass skipped: rendering straight to
+  // the screen needs a TONE_MAPPING variant of every material, and compiling
+  // those on the first furniture drag stalled the planner for seconds.
   useFrame(() => {
-    if (moving) gl.render(scene, camera);
-    else pipeline.composer.render();
+    pipeline.ao.enabled = !moving;
+    pipeline.composer.render();
   }, 1);
   useEffect(() => invalidate(), [moving, invalidate]);
   return null;

@@ -120,6 +120,16 @@ test("R2 model validation accepts only job-addressed delivery GLBs", () => {
     ),
     null,
   );
+  // Delivery jobs also publish a raster thumbnail beside the GLB.
+  assert.equal(
+    r2ModelKey(`r2://bucket/models/${id}/delivery/${id}/thumbnail-${id}.png`),
+    `models/${id}/delivery/${id}/thumbnail-${id}.png`,
+  );
+  assert.equal(
+    r2ModelKey(`r2://bucket/models/${id}/delivery/${id}/thumbnail-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee.png`),
+    null,
+  );
+  assert.equal(r2ModelKey(`r2://bucket/models/${id}/delivery/${id}/thumbnail-${id}.svg`), null);
 });
 
 test("preview backfill accepts legacy/high deliveries but rejects sources and cross-model references", async () => {

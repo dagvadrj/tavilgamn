@@ -147,5 +147,6 @@ test("PDP initial color selection feeds the same actual variant price into the f
   const withModel = renderToStaticMarkup(React.createElement(ProductCustomizer, {
     product: { ...product, id: "product with space", model: { id: "model", file: "/test.glb" } },
   }));
-  assert.match(withModel.match(/<a[^>]*class="pdp-room-link"[^>]*>/)?.[0] ?? '', /href="\/planner\?product=product%20with%20space"/);
+  assert.match(withModel.match(/<a[^>]*class="pdp-room-link"[^>]*>/)?.[0] ?? '', /href="\/planner\?product=product%20with%20space&amp;color=cream&amp;material=fabric&amp;source=product"/);
+  assert.ok(!html.includes('class="pdp-room-link" href'), "photo-only products do not link to an empty planner");
 });

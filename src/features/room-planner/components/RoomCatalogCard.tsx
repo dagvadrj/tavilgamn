@@ -13,6 +13,7 @@ export function RoomCatalogCard({
   name,
   merchant,
   image,
+  fallbackImage = null,
   dimensions,
   price,
   has3d,
@@ -24,6 +25,8 @@ export function RoomCatalogCard({
   name: string;
   merchant?: string;
   image: string | null;
+  /** Used when `image` is missing or fails to load (e.g. no model thumbnail). */
+  fallbackImage?: string | null;
   dimensions: string;
   price: string;
   has3d: boolean;
@@ -33,7 +36,11 @@ export function RoomCatalogCard({
   onAddToCart?: () => void;
   onPrefetch?: () => void;
 }) {
-  const [failedImage, setFailedImage] = useState<string | null>(null);
+  const [failedImages, setFailedImages] = useState<string[]>([]);
+  const source = [image, fallbackImage].find(
+    (candidate): candidate is string =>
+      !!candidate && !failedImages.includes(candidate),
+  );
   const loading = useRoomModelStatus((state) =>
     placedIds.some((id) => state.byInstance[id] === "loading"),
   );
@@ -44,15 +51,16 @@ export function RoomCatalogCard({
       onFocus={onPrefetch}
     >
       <div className="room-catalog-card-image">
-        {image && failedImage !== image ? (
+        {source ? (
           <Image
-            src={image}
+            key={source}
+            src={source}
             alt=""
             fill
-            unoptimized={image.startsWith("/api/")}
+            unoptimized={source.startsWith("/api/")}
             sizes="(max-width: 959px) 45vw, 180px"
             className="object-contain"
-            onError={() => setFailedImage(image)}
+            onError={() => setFailedImages((list) => [...list, source])}
           />
         ) : (
           <Armchair size={36} aria-hidden="true" />

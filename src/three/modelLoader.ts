@@ -103,7 +103,7 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
       const discard = () => disposeModel({ scene: gltf.scene } as LoadedModel);
       if (!pending.refs) { discard(); throw new DOMException('Model request no longer has consumers', 'AbortError'); }
       try {
-      configureModelDefaultMaterials(gltf.scene, gltf.parser?.associations);
+      configureModelDefaultMaterials(gltf.scene, gltf.parser?.associations, gltf.parser?.json?.materials);
       configureModelTextureSampling(gltf.scene, renderer);
       configureModelCutoutSampling(gltf.scene, renderer);
       gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = object.userData.applianceGlass !== true; object.receiveShadow = true; } });

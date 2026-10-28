@@ -879,10 +879,20 @@ function RoomPlannerEditor() {
   }, [current, setLeftOpen]);
   const handledShowroom = useRef<string | null>(null);
   const [showroomProduct, setShowroomProduct] = useState<string | null>(null);
+  // Variant chosen on the product page (or a showroom QR) before opening here.
+  const showroomVariant = useRef<{
+    color: string | null;
+    material: string | null;
+    source: string | null;
+  }>({ color: null, material: null, source: null });
   useEffect(() => {
-    setShowroomProduct(
-      new URLSearchParams(window.location.search).get("product"),
-    );
+    const params = new URLSearchParams(window.location.search);
+    showroomVariant.current = {
+      color: params.get("color"),
+      material: params.get("material"),
+      source: params.get("source"),
+    };
+    setShowroomProduct(params.get("product"));
   }, []);
   useEffect(() => {
     if (
@@ -896,18 +906,29 @@ function RoomPlannerEditor() {
       return;
     const product = catalog.products.find((p) => p.id === showroomProduct);
     handledShowroom.current = showroomProduct;
+    const variant = showroomVariant.current;
     if (!product?.model) {
-      setNotice("QR-ийн барааны 3D загвар одоогоор ашиглах боломжгүй байна.");
+      setNotice(
+        variant.source === "showroom"
+          ? "QR-ийн барааны 3D загвар одоогоор ашиглах боломжгүй байна."
+          : "Энэ барааны 3D загвар одоогоор ашиглах боломжгүй байна.",
+      );
       return;
     }
+    const color = product.colors.some((option) => option.id === variant.color)
+      ? variant.color!
+      : product.defaultColor;
+    const material =
+      product.materials.find((option) => option.id === variant.material) ??
+      product.materials[0];
     const result = useDesigns.getState().placeFurniture({
       instanceId: `p_${crypto.randomUUID()}`,
       productId: product.id,
       x: 0,
       z: 0,
       rotation: 0,
-      color: product.defaultColor,
-      material: product.materials[0]?.id ?? "wood",
+      color,
+      material: material?.id ?? "wood",
       placement: product.placement,
       details: {
         name: product.name,
@@ -932,6 +953,8 @@ function RoomPlannerEditor() {
     const url = new URL(window.location.href);
     url.searchParams.delete("product");
     url.searchParams.delete("source");
+    url.searchParams.delete("color");
+    url.searchParams.delete("material");
     window.history.replaceState(window.history.state, "", url);
   }, [
     showroomProduct,
@@ -984,7 +1007,9 @@ function RoomPlannerEditor() {
       <>
         {showroomProduct && (
           <p className="container-page py-3 text-sm" role="status">
-            QR-аар сонгосон бараа:{" "}
+            {showroomVariant.current.source === "showroom"
+              ? "QR-аар сонгосон бараа: "
+              : "Өрөөндөө байрлуулах бараа: "}
             <strong>
               {catalog.products.find((p) => p.id === showroomProduct)?.name ??
                 "Ачаалж байна…"}
@@ -1513,6 +1538,16 @@ function RoomPlannerEditor() {
     (placedByProduct.get(piece.modelId ?? piece.productId) ?? []).indexOf(
       piece.instanceId,
     ) + 1;
+  // New delivery jobs no longer render model thumbnails, so a 3D card falls
+  // back to the catalog photo of the product that uses this model.
+  const catalogPhoto = (modelId: string, fileModelId?: string) =>
+    getProduct(modelId)?.image ||
+    catalog.products.find(
+      (product) =>
+        product.model &&
+        (product.model.id === modelId || product.model.id === fileModelId),
+    )?.image ||
+    null;
   const merchantName = (ids?: string[]) =>
     ids?.map((id) => storeNames.get(id)).find(Boolean);
   const catalogMerchants = [...storeNames]
@@ -3279,6 +3314,10 @@ function RoomPlannerEditor() {
                             ? `/api/models/files/${entry.item.fileModelId ?? entry.item.id}/${entry.item.thumbnailFile}`
                             : null
                         }
+                        fallbackImage={catalogPhoto(
+                          entry.item.id,
+                          entry.item.fileModelId,
+                        )}
                         dimensions={formatFurnitureCm(
                           entry.item.dimensionsW,
                           entry.item.dimensionsD,
