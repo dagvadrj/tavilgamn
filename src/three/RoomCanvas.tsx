@@ -157,6 +157,8 @@ interface RoomCanvasProps {
   onEditEnd?: () => void;
   /** «Хасах» on a piece whose model failed to load (B2.4). */
   onRemovePiece?: (id: string) => void;
+  /** D2: a failed replacement puts the previous product back. */
+  onRevertSwap?: (id: string) => void;
   /** Optional custom GLB interior to render instead of procedural room */
   customInterior?: {
     basePath: string;
@@ -196,6 +198,7 @@ export function RoomCanvas({
   onEditStart,
   onEditEnd,
   onRemovePiece,
+  onRevertSwap,
   customInterior,
   selectedWall,
   onSelectWall,
@@ -605,6 +608,7 @@ export function RoomCanvas({
             onEditStart={onEditStart}
             onEditEnd={onEditEnd}
             onRemove={onRemovePiece}
+            onRevertSwap={onRevertSwap}
             kitchenMaterials={kitchenMaterials}
           />
         ))}</group>
@@ -784,6 +788,7 @@ export function DraggablePiece({
   onEditStart,
   onEditEnd,
   onRemove,
+  onRevertSwap,
   kitchenMaterials,
 }: {
   piece: PlacedFurniture;
@@ -807,6 +812,7 @@ export function DraggablePiece({
   onEditStart?: () => void;
   onEditEnd?: () => void;
   onRemove?: (id: string) => void;
+  onRevertSwap?: (id: string) => void;
   kitchenMaterials: Record<string, KitchenMaterialDefinition>;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -837,11 +843,13 @@ export function DraggablePiece({
   const [attempt, setAttempt] = useState(0);
   // D1: a failed model shows only the red dashed volume, never blue over it.
   const [failed, setFailed] = useState(false);
+  const [swapRetry, setSwapRetry] = useState(0);
   useEffect(
     () =>
       useRoomModelStatus.subscribe((state) => {
         setAttempt(state.attempts[piece.instanceId] ?? 0);
         setFailed(state.byInstance[piece.instanceId] === "error");
+        setSwapRetry(state.swapRetries[piece.instanceId] ?? 0);
       }),
     [piece.instanceId],
   );
@@ -1187,7 +1195,11 @@ export function DraggablePiece({
             onRemove: onRemove && (() => onRemove(piece.instanceId)),
             // The previous variant stays on screen at full opacity (B2.5).
             onSwapError: () =>
-              useRoomModelStatus.getState().set(piece.instanceId, "ready"),
+              useRoomModelStatus.getState().swapError(piece.instanceId),
+            onSwapRetry: () =>
+              useRoomModelStatus.getState().retrySwap(piece.instanceId),
+            retrySignal: swapRetry,
+            onRevert: onRevertSwap && (() => onRevertSwap(piece.instanceId)),
           }}
         />
       ) : piece.details ? (

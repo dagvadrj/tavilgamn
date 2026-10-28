@@ -162,3 +162,65 @@ test("canvas: blue thin frame plus a floor footprint for floor pieces; never ove
   const frame = anchor.slice(anchor.indexOf("useFrame("), anchor.indexOf("\n  });", anchor.indexOf("useFrame(")));
   assert.doesNotMatch(frame, /invalidate/, "the frame callback never schedules another frame");
 });
+
+test("D2 store: the visible product is the revert target until the new model is on screen", () => {
+  const { useRoomModelStatus: store } = loadSource("src/store/roomModelStatus.ts");
+  const s = () => store.getState();
+  const a = { instanceId: "p1", productId: "a", x: 1, z: 2, rotation: 0, color: "grey", material: "fabric" };
+  s().set("p1", "ready");
+  s().remember(a);
+  s().begin("p1");
+  assert.equal(s().byInstance.p1, "swapping");
+  s().remember({ ...a, productId: "b" });
+  assert.equal(s().previous.p1.productId, "a", "A→B→C: A is still on screen, so A stays the target");
+  s().swapError("p1");
+  assert.equal(s().byInstance.p1, "ready");
+  assert.equal(s().swapFailed.p1, true);
+  s().retrySwap("p1");
+  assert.equal(s().byInstance.p1, "swapping");
+  assert.equal(s().swapFailed.p1, undefined);
+  assert.equal(s().swapRetries.p1, 1);
+  assert.equal(s().previous.p1.productId, "a", "a retry keeps the revert target");
+  s().set("p1", "ready");
+  assert.equal(s().previous.p1, undefined, "a ready new model forgets the old one");
+  s().remember(a); s().forget("p1");
+  assert.equal(s().previous.p1, undefined);
+  const before = s();
+  s().clear("missing");
+  assert.equal(s(), before, "clearing an unknown piece is a no-op");
+});
+
+test("D2 panel: loading keeps the old model, failure offers retry and revert, swatches carry the surcharge", () => {
+  const state = { byInstance: {}, swapFailed: {}, previous: {}, retrySwap() {} };
+  const mod = loadSource("src/features/room-planner/components/RoomProductOptions.tsx", {
+    "next/image": image,
+    "@/components/PlannerLink": link,
+    "@/store/wishlist": { useWishlist: store({ has: () => false, toggle() {} }) },
+    "@/store/roomModelStatus": { useRoomModelStatus: store(state) },
+  });
+  const status = () => renderToStaticMarkup(h(mod.RoomVariantStatus, { instanceId: "p1", name: "Талст буйдан", onRevert() {} }));
+  assert.equal(status(), "");
+  state.byInstance = { p1: "swapping" };
+  assert.match(status(), /role="status"[^>]*>Талст буйдан ачаалж байна — өмнөх загвар харагдсаар/);
+  state.byInstance = { p1: "ready" }; state.swapFailed = { p1: true };
+  assert.match(status(), /role="alert"[\s\S]*Шинэ хувилбар ачаалагдсангүй — өмнөх загвар хэвээр[\s\S]*Дахин оролдох/);
+  assert.doesNotMatch(status(), /Буцаах/, "nothing to revert to without a snapshot");
+  state.previous = { p1: { instanceId: "p1" } };
+  assert.match(status(), /Буцаах/);
+  assert.equal(mod.swatchLabel({ name: "Хөх хилэн", priceDelta: 120000 }), `Хөх хилэн (+${loadSource("src/lib/format.ts").formatPrice(120000)})`);
+  assert.equal(mod.swatchLabel({ name: "Саарал" }), "Саарал");
+});
+
+test("D2 wiring: price, cart payload and swatch share one variant; replace remembers, revert validates", () => {
+  const source = read("src/components/RoomPlanner.tsx");
+  assert.match(source, /price=\{\s*selectedPiece\.kitchen \|\| selectedDetails\.basePrice <= 0\s*\? null\s*: getPiecePrice\(selectedPiece\)\s*\}/);
+  const cart = source.slice(source.indexOf("const addSelectedToCart = "), source.indexOf("const measurements ="));
+  assert.match(cart, /color: selectedPiece\.color,\s*material: selectedPiece\.material,\s*unitPrice: getPiecePrice\(selectedPiece\)/);
+  assert.match(source, /onReplace=\{\(pieces\) => \{[\s\S]{0,200}useRoomModelStatus\.getState\(\)\.remember\(selectedPiece\);\s*updatePieces\(pieces\);/);
+  const revert = source.slice(source.indexOf("const revertSwap = "), source.indexOf("const openOptions = "));
+  assert.match(revert, /isPlacementValid\(candidate, placement\.pieces, placement\.room\)/);
+  assert.match(revert, /x: piece\.x,\s*z: piece\.z,\s*rotation: piece\.rotation/);
+  const options = read("src/features/room-planner/components/RoomProductOptions.tsx");
+  assert.match(options, /Өнгө солиход сагсанд байгаа бараа өөрчлөгдөхгүй\./);
+  assert.match(read("src/three/FurnitureLoadState.tsx"), /export const SWAP_DIM_OPACITY = 0\.55;/);
+});

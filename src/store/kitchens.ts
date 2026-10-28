@@ -6,6 +6,8 @@ import type { ModularKitchen } from "@/lib/kitchenCabinets";
 
 interface KitchenState {
   owner: string | null; items: SavedKitchen[]; loading: boolean; loaded: boolean; error: string;
+  /** K7: the last save hit a newer revision saved elsewhere (HTTP 409). */
+  conflict: boolean;
   refresh: () => Promise<void>;
   save: (id: string, name: string, design: ModularKitchen, expectedRevision?:number) => Promise<SavedKitchen | null>;
   versions: (id:string,before?:number) => Promise<KitchenVersionSummary[]>;
@@ -29,11 +31,11 @@ async function request(owner: string, init: RequestInit = {}, query = "") {
   const session = await authenticatedSession(owner);
   const response = await fetch(`/api/kitchens${query}`, { ...init, cache: "no-store", headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` } });
   const body = await response.json();
-  if (!response.ok) throw new Error(body.error ?? "Гарнитурын сан холбогдсонгүй.");
+  if (!response.ok) throw Object.assign(new Error(body.error ?? "Гарнитурын сан холбогдсонгүй."), { status: response.status });
   return body;
 }
 export const useKitchens = create<KitchenState>((set, get) => ({
-  owner: null, items: [], loading: false, loaded: false, error: "",
+  owner: null, items: [], loading: false, loaded: false, error: "", conflict: false,
   refresh: async () => {
     if (get().loading) return;
     const owner = get().owner, epoch = generation, requestId = ++listRequest;
@@ -50,13 +52,13 @@ export const useKitchens = create<KitchenState>((set, get) => ({
     const owner = get().owner, epoch = generation;
     if (!owner) { set({ error: "Хадгалахын тулд нэвтэрнэ үү." }); return null; }
     // Prevent a stale list response overwriting this successful save.
-    ++listRequest; set({ error: "", loading: false });
+    ++listRequest; set({ error: "", conflict: false, loading: false });
     try {
       const result = readSaved((await request(owner, { method: "PUT", body: JSON.stringify({ id, name, design, expectedRevision:expectedRevision??get().items.find(item=>item.id===id)?.revision??0 }) })).kitchen);
       if (epoch !== generation) return null;
       ++listRequest;
       set({ items: [result, ...get().items.filter(item => item.id !== id)], loading: false }); return result;
-    } catch (error) { if (epoch === generation) set({ error: error instanceof Error ? error.message : "Хадгалж чадсангүй." }); return null; }
+    } catch (error) { if (epoch === generation) set({ error: error instanceof Error ? error.message : "Хадгалж чадсангүй.", conflict: (error as { status?: number }).status === 409 }); return null; }
   },
   versions: async(id,before)=>{
     const owner=get().owner,epoch=generation;if(!owner)throw new Error('Нэвтэрнэ үү.');

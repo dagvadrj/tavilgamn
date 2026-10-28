@@ -840,10 +840,12 @@
 }
 
 .room-detail-swatches > button {
-  width: 36px;
-  height: 36px;
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 1px var(--room-ws-line);
+  width: 44px;
+  height: 44px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #d3d8de;
+  cursor: pointer;
 }
 
 .room-detail-swatches > button[aria-pressed="true"] {
@@ -851,7 +853,63 @@
 }
 
 .room-detail-materials > button {
-  min-height: 36px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #d3d8de;
+  border-radius: 22px;
+  background: #fff;
+  color: var(--room-ws-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-detail-materials > button[aria-pressed="true"] {
+  border-color: var(--room-ws-primary);
+  background: var(--room-ws-tint);
+  box-shadow: 0 0 0 1px var(--room-ws-primary);
+  color: var(--room-ws-primary);
+}
+
+.room-options-status {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--room-ws-tint);
+  color: var(--room-ws-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.room-options-status.is-error {
+  background: #fdecea;
+  color: #b42318;
+}
+
+.room-options-status > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.room-options-status button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #d3d8de;
+  border-radius: 22px;
+  background: #fff;
+  color: var(--room-ws-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-options-status button.is-primary {
+  border-color: var(--room-ws-primary);
+  background: var(--room-ws-primary);
+  color: #fff;
 }
 
 .room-detail-cart {
@@ -1436,6 +1494,12 @@
 .room-scene-chip > button.is-danger {
   background: #fdecea;
   color: #b42318;
+}
+
+.room-scene-chip > button.is-secondary {
+  box-shadow: inset 0 0 0 1px #d3d8de;
+  background: #fff;
+  color: #171c24;
 }
 
 @keyframes room-scene-chip-out {

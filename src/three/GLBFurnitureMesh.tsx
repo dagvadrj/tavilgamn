@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Edges } from "@react-three/drei";
 import { SceneHtml as Html } from "./SceneHtml";
-import { FurnitureLoadState } from "./FurnitureLoadState";
+import { FurnitureLoadState, SWAP_DIM_OPACITY, setModelOpacity } from "./FurnitureLoadState";
 import * as THREE from "three";
 import {
   kitchenCabinetSurface,
@@ -68,6 +68,13 @@ export interface GLBFurnitureMeshProps {
   onReady?: () => void;
   onError?: () => void;
   /**
+   * K4: with `strictDimensions`, a material-only change keeps the previous
+   * model on screen (dimmed) until the new request is delivered.
+   */
+  retainWhilePending?: boolean;
+  /** Outside retries; each one requests again without dropping the old model. */
+  retrySubscribe?: (onRetry: (count: number) => void) => () => void;
+  /**
    * Room pieces draw their own load states in the scene (B2): a sized volume,
    * a failed volume with retry/remove, and a dimmed previous variant.
    */
@@ -77,6 +84,12 @@ export interface GLBFurnitureMeshProps {
     onRemove?: () => void;
     /** A new file failed while the previous model is still shown. */
     onSwapError?: () => void;
+    /** D2 «Буцаах»: put the previous product back after a failed swap. */
+    onRevert?: () => void;
+    /** Bumped from the panel: request the new file again, keeping the old one. */
+    retrySignal?: number;
+    /** A retry while the old model is shown; it comes back as `retrySignal`. */
+    onSwapRetry?: () => void;
   };
   /** Sample an authored opening animation; imported furniture is never rebuilt. */
   open?: boolean;
@@ -139,6 +152,8 @@ export function GLBFurnitureMesh({
   carcassColor,
   onReady,
   onError,
+  retainWhilePending = false,
+  retrySubscribe,
   sceneStatus,
   preservePhysicalSize = false,
   strictDimensions = false,
@@ -185,6 +200,15 @@ export function GLBFurnitureMesh({
 
   const [error, setError] = useState(false);
   const [retry, setRetry] = useState(0);
+  const [outsideRetry, setOutsideRetry] = useState(0);
+  useEffect(() => retrySubscribe?.(setOutsideRetry), [retrySubscribe]);
+  const retrySignal = (sceneStatus?.retrySignal ?? 0) + outsideRetry;
+  const seenRetrySignal = useRef(retrySignal);
+  useEffect(() => {
+    if (retrySignal === seenRetrySignal.current) return;
+    seenRetrySignal.current = retrySignal;
+    setRetry((value) => value + 1);
+  }, [retrySignal]);
   const base = basePath.endsWith("/") ? basePath : `${basePath}/`;
   const front = frontMaterial ?? materialOverride;
   const carcass = carcassMaterial ?? materialOverride;
@@ -487,7 +511,17 @@ export function GLBFurnitureMesh({
     };
   }, []);
 
-  const ready = strictDimensions && display?.request !== request ? null : display;
+  // Same file and size: only the appearance is pending, so the old one may stay.
+  const sameShape =
+    !!display &&
+    display.url === base + glbFile &&
+    display.dimensions.w === w &&
+    display.dimensions.h === h &&
+    display.dimensions.d === d;
+  const ready =
+    strictDimensions && display?.request !== request && !(retainWhilePending && sameShape)
+      ? null
+      : display;
   const currentDelivery = ready?.request === request;
   const openingClip = ready?.asset.animations?.find((animation) =>
       openAnimation
@@ -499,6 +533,11 @@ export function GLBFurnitureMesh({
   const origin = ready?.asset.bounds.getCenter(new THREE.Vector3());
   const valid = size && origin && Math.min(size.x, size.y, size.z) > 1e-9;
   const swapping = !!ready && !currentDelivery && ready.url !== base + glbFile;
+  const appearancePending = retainWhilePending && !!ready && !currentDelivery && !error;
+  useEffect(() => {
+    if (!retainWhilePending || !ready) return;
+    setModelOpacity(ready.asset.scene, appearancePending ? SWAP_DIM_OPACITY : null);
+  }, [retainWhilePending, ready, appearancePending]);
   const placement =
     ready && valid
       ? modelPlacement(
@@ -547,11 +586,14 @@ export function GLBFurnitureMesh({
           swapFailed={error && !!ready}
           selected={selected}
           onRetry={() =>
-            ready || !sceneStatus.onRetry
-              ? setRetry((value) => value + 1)
-              : sceneStatus.onRetry()
+            ready && sceneStatus.onSwapRetry
+              ? sceneStatus.onSwapRetry()
+              : ready || !sceneStatus.onRetry
+                ? setRetry((value) => value + 1)
+                : sceneStatus.onRetry()
           }
           onRemove={sceneStatus.onRemove}
+          onRevert={sceneStatus.onRevert}
         />
       )}
       {!sceneStatus && !ready && (

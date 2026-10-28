@@ -18,6 +18,7 @@ import { CATEGORY_LABEL } from "@/lib/catalogCategories";
 import { stockLabel } from "@/lib/inventory";
 import { formatPrice } from "@/lib/format";
 import { useWishlist } from "@/store/wishlist";
+import { useRoomModelStatus } from "@/store/roomModelStatus";
 import { formatFurnitureCm } from "./RoomCatalogCard";
 
 export type ProductOptionsMode = "replace" | "pair";
@@ -52,6 +53,7 @@ export function RoomProductOptions({
   mode,
   onMode,
   revealRecommendations,
+  variantStatus,
   replace,
   pair,
   children,
@@ -78,6 +80,8 @@ export function RoomProductOptions({
   onMode: (mode: ProductOptionsMode) => void;
   /** Bumped by the toolbar's «Солих» / «Хослуулах» to bring the list into view. */
   revealRecommendations: number;
+  /** D2: the new model's load state, shown while the old one stays. */
+  variantStatus?: ReactNode;
   replace: ReactNode;
   pair: ReactNode;
   children?: ReactNode;
@@ -236,6 +240,8 @@ export function RoomProductOptions({
         </div>
       </section>
 
+      {variantStatus}
+
       {product && (
         <section className="room-options-section" aria-label="Авах боломж">
           <h4>Авах боломж</h4>
@@ -267,9 +273,9 @@ export function RoomProductOptions({
                   <button
                     key={color.id}
                     type="button"
-                    aria-label={color.name}
+                    aria-label={swatchLabel(color)}
                     aria-pressed={colorId === color.id}
-                    title={color.name}
+                    title={swatchLabel(color)}
                     style={{ background: color.hex }}
                     onClick={() => onColor(color.id)}
                   />
@@ -302,6 +308,9 @@ export function RoomProductOptions({
           )}
           <p className="room-detail-label">Хэмжээ · {formatFurnitureCm(dims.w, dims.d, dims.h)}</p>
           <p className="room-options-note">Энэ барааны өөр хэмжээний хувилбар бүртгэгдээгүй.</p>
+          {canBuy && (
+            <p className="room-options-note">Өнгө солиход сагсанд байгаа бараа өөрчлөгдөхгүй.</p>
+          )}
         </section>
       )}
 
@@ -320,6 +329,55 @@ export function RoomProductOptions({
       {children}
     </div>
   );
+}
+
+/** Swatch name with its surcharge, the same figure the price and cart use. */
+export const swatchLabel = (color: Pick<ColorOption, "name" | "priceDelta">) =>
+  color.priceDelta ? `${color.name} (+${formatPrice(color.priceDelta)})` : color.name;
+
+/**
+ * D2: while a replacement's model loads the previous one stays on screen; if
+ * it fails, the previous model stays in full with retry and revert.
+ */
+export function RoomVariantStatus({
+  instanceId,
+  name,
+  onRevert,
+}: {
+  instanceId: string;
+  name: string;
+  onRevert: () => void;
+}) {
+  const status = useRoomModelStatus((state) => state.byInstance[instanceId]);
+  const failed = useRoomModelStatus((state) => !!state.swapFailed[instanceId]);
+  const canRevert = useRoomModelStatus((state) => instanceId in state.previous);
+  if (failed)
+    return (
+      <div className="room-options-status is-error" role="alert">
+        <span>Шинэ хувилбар ачаалагдсангүй — өмнөх загвар хэвээр</span>
+        <div>
+          <button
+            type="button"
+            className="is-primary"
+            onClick={() => useRoomModelStatus.getState().retrySwap(instanceId)}
+          >
+            Дахин оролдох
+          </button>
+          {canRevert && (
+            <button type="button" onClick={onRevert}>
+              Буцаах
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  if (status === "swapping")
+    return (
+      <p className="room-options-status" role="status">
+        {name} ачаалж байна — өмнөх загвар харагдсаар
+      </p>
+    );
+  return null;
 }
 
 /** «Хослуулах»: a new instance beside the selection; the selection stays. */

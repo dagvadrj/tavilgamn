@@ -113,6 +113,7 @@ import {
 import {
   RoomProductOptions,
   RoomProductPairings,
+  RoomVariantStatus,
   type ProductOptionsMode,
 } from "@/features/room-planner/components/RoomProductOptions";
 import {
@@ -1695,6 +1696,35 @@ function RoomPlannerEditor() {
       ),
     );
   };
+  /**
+   * D2 «Буцаах» after a failed replacement: the previous product returns at
+   * the piece's current pose, validated like any other placement.
+   */
+  const revertSwap = (instanceId: string) => {
+    const status = useRoomModelStatus.getState();
+    const previous = status.previous[instanceId];
+    const piece = current.pieces.find((p) => p.instanceId === instanceId);
+    if (!previous || !piece) return;
+    const candidate: PlacedFurniture = {
+      ...previous,
+      x: piece.x,
+      z: piece.z,
+      rotation: piece.rotation,
+      elevation: piece.elevation,
+      attachment: piece.attachment,
+    };
+    if (!isPlacementValid(candidate, placement.pieces, placement.room)) {
+      setNotice(
+        "Өмнөх бараа одоогийн байрлалд багтахгүй байна. Ctrl+Z ашиглана уу.",
+      );
+      return;
+    }
+    status.forget(instanceId);
+    updatePieces(
+      current.pieces.map((p) => (p.instanceId === instanceId ? candidate : p)),
+    );
+    setNotice("Өмнөх бараа сэргэлээ.");
+  };
   /** «Солих» / «Хослуулах»: the options view with that list brought into view. */
   const openOptions = (mode: ProductOptionsMode) => {
     setOptionsMode(mode);
@@ -2644,6 +2674,13 @@ function RoomPlannerEditor() {
                   mode={optionsMode}
                   onMode={setOptionsMode}
                   revealRecommendations={optionsReveal}
+                  variantStatus={
+                    <RoomVariantStatus
+                      instanceId={selectedPiece.instanceId}
+                      name={selectedDetails.name}
+                      onRevert={() => revertSwap(selectedPiece.instanceId)}
+                    />
+                  }
                   replace={
                     <RoomProductAlternatives
                       key={selectedPiece.instanceId}
@@ -2655,7 +2692,12 @@ function RoomPlannerEditor() {
                       roomId={current.activeRoomId ?? `${current.id}-room-1`}
                       context={placement}
                       storeId={merchantStoreId}
-                      onReplace={updatePieces}
+                      onReplace={(pieces) => {
+                        // The visible product stays the revert target until
+                        // the new model is on screen (D2).
+                        useRoomModelStatus.getState().remember(selectedPiece);
+                        updatePieces(pieces);
+                      }}
                       onNotice={setNotice}
                     />
                   }
@@ -3898,6 +3940,7 @@ function RoomPlannerEditor() {
             onEditStart={beginEdit}
             onEditEnd={endEdit}
             onRemovePiece={removePiece}
+            onRevertSwap={revertSwap}
             customInterior={
               localUrl
                 ? {

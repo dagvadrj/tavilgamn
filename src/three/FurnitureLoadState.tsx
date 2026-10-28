@@ -9,7 +9,7 @@ export const FURNITURE_FADE_MS = 200;
 /** How long «Бэлэн» stays above a piece that just finished loading. */
 const READY_CHIP_MS = 1400;
 /** Opacity of the previous variant while the next one loads (B2.5). */
-export const SWAP_DIM_OPACITY = 0.45;
+export const SWAP_DIM_OPACITY = 0.55;
 
 type FadeState = { opacity: number; transparent: boolean };
 
@@ -65,6 +65,7 @@ export function FurnitureLoadState({
   selected,
   onRetry,
   onRemove,
+  onRevert,
 }: {
   w: number;
   d: number;
@@ -79,6 +80,8 @@ export function FurnitureLoadState({
   selected: boolean;
   onRetry: () => void;
   onRemove?: () => void;
+  /** After a failed swap: the previous product comes back. */
+  onRevert?: () => void;
 }) {
   const volume = useRef<THREE.MeshBasicMaterial>(null);
   const footprint = useRef<THREE.MeshBasicMaterial>(null);
@@ -247,7 +250,7 @@ export function FurnitureLoadState({
               {chip === "error"
                 ? "Загвар ачаалагдсангүй"
                 : chip === "swap-error"
-                  ? "Шинэ хувилбар ачаалагдсангүй"
+                  ? "Шинэ хувилбар ачаалагдсангүй — өмнөх загвар хэвээр"
                   : chip === "swapping"
                     ? "Хувилбар солиж байна…"
                     : chip === "loading"
@@ -263,6 +266,18 @@ export function FurnitureLoadState({
                 }}
               >
                 Дахин оролдох
+              </button>
+            )}
+            {chip === "swap-error" && onRevert && (
+              <button
+                type="button"
+                className="is-secondary"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onRevert();
+                }}
+              >
+                Буцаах
               </button>
             )}
             {chip === "error" && onRemove && (
