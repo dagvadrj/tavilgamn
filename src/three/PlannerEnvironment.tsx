@@ -39,16 +39,19 @@ const reflectionStudio = (
 
 interface PlannerEnvironmentProps {
   daylight?: number;
+  /** Scene-specific share of reflected fill (the kitchen keeps more contrast). */
+  scale?: number;
 }
 
 /** One local reflection capture; enough detail for metal and polished cabinet fronts. */
 export const PlannerEnvironment = memo(function PlannerEnvironment({
   daylight = 1,
+  scale = 1,
 }: PlannerEnvironmentProps) {
   const scene = useThree((state) => state.scene);
   const revision = useContextRevision();
   const invalidate = useThree((state) => state.invalidate);
-  const intensity = plannerEnvironmentIntensity(daylight);
+  const intensity = plannerEnvironmentIntensity(daylight) * scale;
   useLayoutEffect(() => {
     const previousIntensity = scene.environmentIntensity;
     scene.environmentIntensity = intensity;

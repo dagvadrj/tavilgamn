@@ -4,6 +4,7 @@ import {
   Material,
   Texture,
   PropertyBinding,
+  WebGLRenderer,
   type AnimationClip,
   type Object3D,
 } from "three";
@@ -110,20 +111,58 @@ export function snapshotKitchen(root: Group) {
     },
   };
 }
-export async function encodeKitchenGlb(root: Group, includeAnimations = true): Promise<ArrayBuffer> {
+export async function encodeKitchenGlb(
+  root: Group,
+  includeAnimations = true,
+): Promise<ArrayBuffer> {
   const snapshot = snapshotKitchen(root);
+  let renderer: WebGLRenderer | undefined;
+  const readableTextures = new Map<Texture, Texture>();
   try {
-    const { GLTFExporter } =
-      await import("three/examples/jsm/exporters/GLTFExporter.js");
-    const data = await new GLTFExporter().parseAsync(snapshot.scene, {
+    const [{ GLTFExporter }, { decompress }] = await Promise.all([
+      import("three/examples/jsm/exporters/GLTFExporter.js"),
+      import("three/examples/jsm/utils/WebGLTextureUtils.js"),
+    ]);
+    const exporter = new GLTFExporter().setTextureUtils({
+      decompress(texture, maxTextureSize) {
+        const cached = readableTextures.get(texture);
+        if (cached) return cached;
+        // KTX2 textures need GPU readback before embedding them in a GLB.
+        // Keep export work off the planner's canvas and allocate only if needed.
+        renderer ??= new WebGLRenderer({ antialias: false });
+        const readable = decompress(
+          texture,
+          Math.min(maxTextureSize ?? 2048, 2048),
+          renderer,
+        );
+        readableTextures.set(texture, readable);
+        // Retain the helper's flipY=true to undo GPU readback's reversed rows.
+        readable.channel = texture.channel;
+        readable.offset.copy(texture.offset);
+        readable.repeat.copy(texture.repeat);
+        readable.center.copy(texture.center);
+        readable.rotation = texture.rotation;
+        readable.matrix.copy(texture.matrix);
+        readable.matrixAutoUpdate = texture.matrixAutoUpdate;
+        readable.userData = { ...texture.userData, mimeType: "image/png" };
+        return readable;
+      },
+    });
+    const data = await exporter.parseAsync(snapshot.scene, {
       binary: true,
       onlyVisible: true,
+      maxTextureSize: 2048,
       animations: includeAnimations ? snapshot.animations : [],
     });
     if (!(data instanceof ArrayBuffer))
       throw new Error("GLB экспорт амжилтгүй боллоо.");
     return data;
   } finally {
+    readableTextures.forEach((texture) => texture.dispose());
+    if (renderer) {
+      renderer.dispose();
+      renderer.forceContextLoss();
+    }
     snapshot.dispose();
   }
 }

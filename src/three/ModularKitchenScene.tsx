@@ -13,6 +13,7 @@ import { Edges, OrbitControls } from "@react-three/drei";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CameraMotionPreview } from "./CameraMotionPreview";
 import { CanvasDiagnostics } from "./CanvasDiagnostics";
+import { KitchenAmbientOcclusion } from "./KitchenAmbientOcclusion";
 import { PlannerMotionShadows, RoomContactShadows, RoomMotionResolution } from "./RoomMotionQuality";
 import {
   Plane,
@@ -39,6 +40,7 @@ import { KitchenRoomShell } from "./KitchenRoomShell";
 import { PlannerEnvironment } from "./PlannerEnvironment";
 import { configurePlannerRenderer } from "./plannerRenderer";
 import { plannerLighting } from "@/lib/plannerLighting";
+import { kitchenDaylight } from "@/lib/kitchenDaylight";
 import { ROOM_DAY_BACKDROP } from "@/lib/roomLighting";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
@@ -69,7 +71,13 @@ export interface ModularSceneProps {
   variantModels?: Record<string, KitchenCatalogVariant>;
   materialDefinitions?: Record<string, KitchenMaterialDefinition>;
 }
-function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
+/** Kitchen-only light balance (the shared room planner values stay as they are). */
+const KITCHEN_FILL = 0.62;
+const KITCHEN_WINDOW_SUN = 1.75;
+/** Candela, at the ceiling centre; tuned against the fill so the room shows a direction. */
+const KITCHEN_CEILING_LIGHT = 16;
+
+function CameraFit({ focus, side }: { focus: ReturnType<typeof kitchenEnvelope>; side: [number, number] }) {
   const { camera, size, controls } = useThree();
   const fitted = useRef(false);
   useEffect(() => {
@@ -89,11 +97,12 @@ function CameraFit({ focus }: { focus: ReturnType<typeof kitchenEnvelope> }) {
       Math.max(1.6, (size.height / Math.max(1, size.width)) * 1.8);
     camera.position
       .copy(target)
-      .add(new Vector3(0.5, 0.85, 1).normalize().multiplyScalar(distance));
+      // Open on the side facing the window so its wall and daylight stay in view.
+      .add(new Vector3(side[0] * 1.12, 0.85, side[1] * 1.12).normalize().multiplyScalar(distance));
     (controls as unknown as NavigationControls).target.copy(target);
     camera.lookAt(target);
     camera.updateProjectionMatrix();
-  }, [camera, controls, focus, size.width, size.height]);
+  }, [camera, controls, focus, side, size.width, size.height]);
   return null;
 }
 type CaptureTarget = {
@@ -255,12 +264,28 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
     depth = kitchen.room.depth / 1000;
   const roomHeight = kitchen.room.height / 1000;
   const lighting = plannerLighting();
+  // Structural inputs only: paint and furniture changes keep the same sun.
+  const daylightKey = JSON.stringify({ width: kitchen.room.width, depth: kitchen.room.depth, height: kitchen.room.height, items: kitchen.room.items ?? [] });
+  const daylight = useMemo(() => kitchenDaylight(JSON.parse(daylightKey)), [daylightKey]);
   const sunlightTarget = useMemo(() => {
+    const target = new Object3D();
+    target.position.set(...daylight.target);
+    return target;
+  }, [daylight]);
+  const fillTarget = useMemo(() => {
     const target = new Object3D();
     target.position.set(width / 2, roomHeight / 3, depth / 2);
     return target;
   }, [width, depth, roomHeight]);
-  const shadowExtent = Math.max(3, Math.hypot(width, depth) / 2 + 0.5);
+  // The sun is aimed at the window, not the room centre: cover the whole room from there.
+  const sunExtent = Math.hypot(width, depth) + 1;
+  const ceilingLightTarget = useMemo(() => {
+    const target = new Object3D();
+    target.position.set(width / 2, 0, depth / 2);
+    return target;
+  }, [width, depth]);
+  // Wide enough to reach the room corners from the ceiling centre.
+  const ceilingLightAngle = Math.min(1.3, Math.atan(Math.hypot(width, depth) / 2 / roomHeight) + 0.25);
   const cameraTarget = props.cameraRequest?.targetId
     ? [...kitchen.cabinets, ...(kitchen.extras ?? [])].find(
         (cabinet) => cabinet.id === props.cameraRequest?.targetId,
@@ -271,44 +296,58 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
       <RoomMotionResolution dpr={props.dpr} />
       <PlannerMotionShadows updatingLayout={dragActive || Boolean(props.open)} revision={kitchen} />
       <CanvasDiagnostics scene="modular-kitchen" />
-      {!props.interior && <CameraFit focus={focus} />}
+      <KitchenAmbientOcclusion />
+      {!props.interior && <CameraFit focus={focus} side={daylight.cameraSide} />}
       <color attach="background" args={[ROOM_DAY_BACKDROP]} />
-      <PlannerEnvironment daylight={lighting.solar.daylight} />
-      <ambientLight color={lighting.ambientColor} intensity={lighting.ambientIntensity} />
+      {/* Less uniform fill than the room planner: cabinet sides, plinths and
+          the window patch need contrast to read as daylight, not a flat studio. */}
+      <PlannerEnvironment daylight={lighting.solar.daylight} scale={KITCHEN_FILL} />
+      <ambientLight color={lighting.ambientColor} intensity={lighting.ambientIntensity * KITCHEN_FILL} />
       <hemisphereLight args={[lighting.skyColor, lighting.groundColor, lighting.hemisphereIntensity]} />
       <primitive object={sunlightTarget} />
-      {/* Broad interior fill keeps fronts readable when closed walls block the sun. */}
+      <primitive object={fillTarget} />
+      {/* Soft interior fill keeps fronts readable; it casts no second shadow. */}
       <directionalLight
-        castShadow
         position={[width / 2, roomHeight * 0.9, depth * 0.85]}
-        target={sunlightTarget}
-        intensity={0.85}
+        target={fillTarget}
+        intensity={0.45}
         color="#fffefb"
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-left={-shadowExtent}
-        shadow-camera-right={shadowExtent}
-        shadow-camera-top={shadowExtent}
-        shadow-camera-bottom={-shadowExtent}
-        shadow-camera-far={Math.max(12, shadowExtent * 3)}
-        shadow-normalBias={0.002}
-        shadow-bias={-0.0001}
       />
+      {/* One sun through the real window: its frame and mullion shadow the floor. */}
       <directionalLight
         castShadow
-        position={[width / 2 + 3, roomHeight + 5, depth / 2 + 4]}
+        position={daylight.position}
         target={sunlightTarget}
-        intensity={lighting.sunlightIntensity}
-        color={lighting.sunColor}
+        intensity={lighting.sunlightIntensity * (daylight.windowId ? KITCHEN_WINDOW_SUN : 1)}
+        color={daylight.windowId && !lighting.solar.night ? "#ffe6c7" : lighting.sunColor}
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-left={-shadowExtent}
-        shadow-camera-right={shadowExtent}
-        shadow-camera-top={shadowExtent}
-        shadow-camera-bottom={-shadowExtent}
-        shadow-camera-far={Math.max(20, shadowExtent * 4)}
+        shadow-camera-left={-sunExtent}
+        shadow-camera-right={sunExtent}
+        shadow-camera-top={sunExtent}
+        shadow-camera-bottom={-sunExtent}
+        shadow-camera-far={Math.max(20, sunExtent * 2 + 12)}
         shadow-normalBias={0.015}
         shadow-bias={-0.0001}
+      />
+      <primitive object={ceilingLightTarget} />
+      {/* Ceiling fixture: the walls and roof block the sun in a windowless room,
+          so this is what shades the backsplash under wall units and darkens corners. */}
+      <spotLight
+        castShadow
+        position={[width / 2, roomHeight - 0.06, depth / 2]}
+        target={ceilingLightTarget}
+        intensity={KITCHEN_CEILING_LIGHT * (daylight.windowId ? 0.4 : 1)}
+        angle={ceilingLightAngle}
+        penumbra={1}
+        decay={2}
+        color="#fff1dc"
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-near={0.05}
+        shadow-camera-far={Math.max(6, Math.hypot(width, depth, roomHeight) + 1)}
+        shadow-normalBias={0.02}
+        shadow-bias={-0.0002}
       />
       {!props.interior && (
         <OrbitControls
@@ -474,11 +513,11 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
         <RoomContactShadows
           updatingLayout={dragActive || Boolean(props.open)}
           position={[width / 2, 0.003, depth / 2]}
-          opacity={0.32}
+          opacity={0.42}
           scale={Math.max(width, depth) * 1.15}
           resolution={512}
-          blur={2}
-          far={1.4}
+          blur={2.2}
+          far={1.1}
           color="#4b4640"
         />
       )}
