@@ -62,7 +62,7 @@ test('store import preserves the previous project and starts an independent undo
 function apiHarness(allowed=true){
  const rows=new Map();let dbReads=0;
  const db={from(){dbReads++;const filters=[],q={
-  select(){return q;},eq(key,value){filters.push([key,value]);return q;},order(){return q;},limit(){return Promise.resolve({data:[...rows.values()].filter(r=>filters.every(([k,v])=>r[k]===v)),error:null});},
+  select(){return q;},eq(key,value){filters.push([key,value]);return q;},is(key,value){filters.push([key,value,'is']);return q;},order(){return q;},limit(){return Promise.resolve({data:[...rows.values()].filter(r=>filters.every(([k,v,op])=>op==='is'?(r[k]??null)===v:r[k]===v)),error:null});},range(from,to){return q.limit().then(result=>({...result,data:result.data.slice(from,to+1)}));},
   update(value){q.value=value;return q;},insert(value){q.value={...value,id};q.inserting=true;return q;},
   maybeSingle(){if(q.value){const row=rows.get(id);if(!row||!filters.every(([k,v])=>row[k]===v))return Promise.resolve({data:null,error:null});rows.set(id,{...row,...q.value});return Promise.resolve({data:rows.get(id),error:null});}return Promise.resolve({data:[...rows.values()].find(r=>filters.every(([k,v])=>r[k]===v))??null,error:null});},
   single(){rows.set(id,q.value);return Promise.resolve({data:q.value,error:null});}

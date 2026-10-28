@@ -14,7 +14,8 @@ const shared = [
   'src/features/room-planner/components/room-template-admin.css',
 ];
 const own = 'src/features/room-planner/components/room-planner-simple.css';
-const sheets = new Map([...shared, own].map(file => [file, readStylesheet(file)]));
+const workspace = 'src/features/room-planner/components/room-workspace.css';
+const sheets = new Map([...shared, own, workspace].map(file => [file, readStylesheet(file)]));
 const planner = fs.readFileSync('src/components/RoomPlanner.tsx', 'utf8');
 const rootClasses = planner.match(/"(room-planner-layout [^"]+)"/)[1].split(/\s+/);
 const element = (classes, tag = 'div') => ({ classes: new Set(classes.split(/\s+/)), tag });
@@ -62,23 +63,31 @@ function computed(order, ancestors, width, height = 900) {
   return Object.fromEntries([...winners].map(([key, entry]) => [key, entry.value.replace(/\s+/g, '')]));
 }
 
-const orders = [[...shared, own], [own, ...shared], [own, ...shared.toReversed()], [...shared.slice(0, 2), own, ...shared.slice(2)]];
+// The workspace sheet is imported last by both the route layout and the editor.
+const orders = [[...shared, own], [own, ...shared], [own, ...shared.toReversed()], [...shared.slice(0, 2), own, ...shared.slice(2)]].map(order => [...order, workspace]);
 
-test('room canvas stays in the first column with no phantom rail for every shared CSS loading order', () => {
-  assert.ok(!rootClasses.includes('room-reference'), 'the one-inspector editor must not opt into the legacy rail layout');
+test('the left workspace panel floats over one canvas column and the stage takes the remaining width', () => {
+  assert.ok(!rootClasses.includes('room-reference'), 'the one-panel editor must not opt into the legacy rail layout');
+  assert.ok(!rootClasses.includes('room-panel-open'), 'the right-column grid must never be reintroduced');
   for (const order of orders) for (const width of [1920, 1280, 1100, 959, 390]) for (const open of [false, true]) {
-    const root = element([...rootClasses, ...(open ? ['room-panel-open'] : [])].join(' '));
+    const root = element([...rootClasses, ...(open ? ['room-workspace-open'] : [])].join(' '));
     const layout = computed(order, [root], width);
     assert.equal(layout.display, 'grid');
-    assert.equal(layout['grid-template-columns'], open && width > 959 ? 'minmax(0,1fr)360px' : 'minmax(0,1fr)', `${width}px open=${open} own stylesheet at ${order.indexOf(own)}`);
-    assert.equal(computed(order, [root, element('planner-stage')], width)['grid-column'], '1');
-    assert.equal(computed(order, [root, element('planner-stage')], width)['grid-row'], '1');
+    assert.equal(layout['grid-template-columns'], 'minmax(0,1fr)', `${width}px open=${open}`);
+    const stage = computed(order, [root, element('planner-stage')], width);
+    assert.equal(stage['grid-column'], '1');
+    assert.equal(stage['grid-row'], '1');
+    assert.equal(stage['margin-left'] ?? '0', open && width > 959 ? 'calc(var(--room-ws-panel-width)+24px)' : '0', `${width}px open=${open} stage offset`);
     if (open) {
-      const drawer = computed(order, [root, element('planner-drawer', 'aside')], width);
-      assert.equal(drawer.position, width > 959 ? 'relative' : 'fixed');
-      assert.equal(computed(order, [root, element('planner-drawer', 'aside'), element('planner-drawer-heading')], width).display, 'flex');
+      const panel = computed(order, [root, element('room-workspace-panel', 'aside')], width);
+      assert.equal(panel.position, width > 959 ? 'absolute' : 'fixed');
+      assert.equal(panel.display, 'flex');
+      const backdrop = computed(order, [root, element('room-panel-backdrop')], width);
+      assert.equal(backdrop.display, width > 959 ? 'none' : 'block', 'the overlay backdrop exists only for the drawer/sheet');
     }
   }
+  assert.equal(computed(orders[0], [element(rootClasses.join(' '))], 1100)['--room-ws-panel-width'], '360px');
+  assert.equal(computed(orders[0], [element(rootClasses.join(' '))], 1440)['--room-ws-panel-width'], '412px');
 });
 
 test('room caption cannot stretch into a white panel when shared studio styles load after the editor', () => {

@@ -1,11 +1,9 @@
 "use client";
-import { PageSkeleton } from "@/components/PageSkeleton";
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { useState } from "react";
 import { ArrowRight, ChefHat, PencilRuler } from "lucide-react";
 import type { RoomDesign, RoomType } from "@/lib/types";
-import type { RoomTemplate, RoomTemplateCard } from "@/lib/roomTemplates";
 import { ROOM_TYPES } from "@/lib/roomGeometry";
+import { RoomTemplateShowcase } from "./RoomTemplateShowcase";
 import "./room-templates.css";
 
 export function RoomTemplateGallery({
@@ -18,100 +16,6 @@ export function RoomTemplateGallery({
   onTemplate: (design: RoomDesign) => void;
 }) {
   const [type, setType] = useState<RoomType>("living");
-  const [templates, setTemplates] = useState<RoomTemplateCard[] | null>(null);
-  const [error, setError] = useState("");
-  const [attempt, setAttempt] = useState(0);
-  const [opening, setOpening] = useState<string | null>(null);
-  const [filter, setFilter] = useState<RoomType | "all">("all");
-  const [furnishing, setFurnishing] = useState("all");
-  const [expanded, setExpanded] = useState(false);
-  const openRequest = useRef<AbortController | null>(null);
-  useEffect(() => () => openRequest.current?.abort(), []);
-  useEffect(() => {
-    const controller = new AbortController();
-    setError("");
-    setTemplates(null);
-    void fetch("/api/room-templates", {
-      signal: controller.signal,
-      cache: "no-store",
-    })
-      .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
-        if (!controller.signal.aborted) setTemplates(data.templates);
-      })
-      .catch((error) => {
-        if (!controller.signal.aborted) setError(error.message);
-      });
-    return () => controller.abort();
-  }, [attempt]);
-  async function open(id: string) {
-    if (opening) return;
-    const controller = new AbortController();
-    openRequest.current = controller;
-    setOpening(id);
-    setError("");
-    try {
-      const response = await fetch(`/api/room-templates?id=${id}`, {
-        cache: "no-store",
-        signal: controller.signal,
-      });
-      const data = (await response.json()) as {
-        template: RoomTemplate;
-        error?: string;
-      };
-      if (!response.ok) throw new Error(data.error);
-      if (!controller.signal.aborted) onTemplate(data.template.design);
-    } catch (error) {
-      if (!controller.signal.aborted)
-        setError(
-          error instanceof Error ? error.message : "Өрөөг нээж чадсангүй.",
-        );
-    } finally {
-      if (!controller.signal.aborted) setOpening(null);
-    }
-  }
-  const empty = templates?.filter((item) => item.kind === "empty") ?? [];
-  const furnished =
-    templates?.filter(
-      (item) =>
-        item.kind === "furnished" &&
-        (filter === "all" || item.roomType === filter) &&
-        (furnishing === "all" || item.furnishing === furnishing),
-    ) ?? [];
-  const cards = (items: RoomTemplateCard[]) => (
-    <div className="room-template-grid">
-      {items.map((item) => (
-        <button
-          type="button"
-          className="room-template-card"
-          key={item.id}
-          disabled={opening !== null}
-          onClick={() => void open(item.id)}
-        >
-          <span className="room-template-image">
-            <Image
-              unoptimized
-              src={item.previewImage}
-              width={768}
-              height={480}
-              alt={item.title}
-            />
-          </span>
-          <span className="room-template-copy">
-            <strong>{item.title}</strong>
-            <small>
-              {item.area.toFixed(1)} м² · {ROOM_TYPES[item.roomType].label}
-            </small>
-            {item.description && <small>{item.description}</small>}
-            {opening === item.id && (
-              <small role="status">Өрөөг нээж байна…</small>
-            )}
-          </span>
-        </button>
-      ))}
-    </div>
-  );
   return (
     <div className="room-template-library">
       <div className="room-planner-entry-choices">
@@ -189,7 +93,7 @@ export function RoomTemplateGallery({
           </label>
           <button
             type="button"
-            disabled={opening !== null}
+
             onClick={() => onBuild(type)}
           >
             Өрөө байгуулах <ArrowRight size={18} />
@@ -223,86 +127,13 @@ export function RoomTemplateGallery({
           <h2>Гал тогоогоо төлөвлөе</h2>
           <p>Өрөөгөө хэмжиж, тавилгаа сонгоод урьдчилсан үнэ, хэмжилтийн дараагийн алхмаа хараарай.</p>
           <span className="room-kitchen-steps">Хэмжих → Байрлуулах → Дуусгах</span>
-          <button type="button" disabled={opening !== null} onClick={onKitchen}>
+          <button type="button" onClick={onKitchen}>
             Гал тогоо төлөвлөх <ArrowRight size={18} />
           </button>
         </div>
       </article>
       </div>
-      {error && (
-        <div className="room-template-message" role="alert">
-          {error}{" "}
-          <button
-            type="button"
-            onClick={() => setAttempt((value) => value + 1)}
-          >
-            Дахин ачаалах
-          </button>
-        </div>
-      )}
-      <section aria-labelledby="empty-room-heading">
-        <h2 id="empty-room-heading">Хоосон өрөөнүүд</h2>
-        <p>Бэлэн хэлбэр, засалтай өрөөг сонгоод тавилгаа байрлуулаарай.</p>
-        {!templates && !error && <PageSkeleton compact layout="cards" label="Хоосон өрөөнүүдийг ачаалж байна…" />}
-        {cards(expanded ? empty : empty.slice(0, 8))}
-        {templates && !empty.length && (
-          <p className="room-template-empty">
-            Хоосон өрөөний загварууд удахгүй нэмэгдэнэ.
-          </p>
-        )}
-        {empty.length > 8 && (
-          <button
-            className="room-template-more"
-            type="button"
-            onClick={() => setExpanded((value) => !value)}
-          >
-            {expanded ? "Цөөлж харах" : `Бүгдийг харах (${empty.length})`}
-          </button>
-        )}
-      </section>
-      <section aria-labelledby="furnished-room-heading">
-        <h2 id="furnished-room-heading">Тохижуулсан өрөөнүүд</h2>
-        <p>Бэлэн зохиомжийг өөрийн өрөөнд тохируулж өөрчлөөрэй.</p>
-        <div className="room-template-filters">
-          <div aria-label="Өрөөний төрлөөр шүүх">
-            <button
-              type="button"
-              aria-pressed={filter === "all"}
-              onClick={() => setFilter("all")}
-            >
-              Бүгд
-            </button>
-            {Object.entries(ROOM_TYPES).map(([key, value]) => (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={filter === key}
-                onClick={() => setFilter(key as RoomType)}
-              >
-                {value.label}
-              </button>
-            ))}
-          </div>
-          <label>
-            Тохижилт
-            <select
-              value={furnishing}
-              onChange={(event) => setFurnishing(event.target.value)}
-            >
-              <option value="all">Бүх зохиомж</option>
-              <option value="full">Бүрэн тохижуулсан</option>
-              <option value="partial">Хэсэгчлэн тохижуулсан</option>
-            </select>
-          </label>
-        </div>
-        {!templates && !error && <PageSkeleton compact layout="cards" label="Тохижуулсан өрөөнүүдийг ачаалж байна…" />}
-        {cards(furnished)}
-        {templates && !furnished.length && (
-          <p className="room-template-empty">
-            Энэ сонголтод тохирох бэлэн зохиомж одоогоор алга.
-          </p>
-        )}
-      </section>
+      <RoomTemplateShowcase onTemplate={onTemplate} />
     </div>
   );
 }

@@ -24,6 +24,8 @@ import "@/features/planner/components/planner-responsive.css";
 import "@/features/planner/components/viewport-controls.css";
 import "@/features/kitchen-planner/styles/kitchen-interaction-stability.css";
 import "@/features/kitchen-planner/styles/kitchen-supplier-appliances.css";
+// Last: the room workspace panel owns the editor layout over older inspector styles.
+import "@/features/room-planner/components/room-workspace.css";
 
 export default function PlannerLayout({ children }: { children: React.ReactNode }) {
   return <main id="main-content" className="min-h-dvh min-w-0 flex-1">{children}</main>;

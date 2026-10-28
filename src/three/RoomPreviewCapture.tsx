@@ -18,6 +18,9 @@ export function captureRoomPreview(
   rooms: DesignRoom[],
   origin: { x: number; z: number },
 ) {
+  // A lost context silently renders/readbacks zeroes instead of throwing. Never
+  // replace a valid saved preview with that empty image.
+  if (gl.getContext?.().isContextLost()) return null;
   let pending = false;
   scene.traverse((object) => {
     if (object.userData.deliveryPending && !object.userData.exportExclude)

@@ -7,11 +7,9 @@ import {
   domAnimation,
 } from "framer-motion";
 import {
-  ArrowDown,
   ArrowRight,
   ArrowUpRight,
   Armchair,
-  Check,
   Grid2X2,
   Layers,
   Ruler,
@@ -24,7 +22,7 @@ import { hasAvailableStock } from "@/lib/inventory";
 import { hasProductPhoto } from "@/lib/homeMarketplace";
 import { DEFAULT_HOMEPAGE_HERO } from "@/lib/homepagePresentation";
 import type { PageData } from "@/lib/pageData";
-import { HeroDemo } from "./HeroDemo";
+import { ScrollRoomHero } from "./ScrollRoomHero";
 import { HomepageTour } from "./HomepageTour";
 import { HomeCount, HomeStatistics } from "./HomeStatistics";
 import { ProductPhoto } from "./ProductPhoto";
@@ -40,6 +38,7 @@ export function MotionHomepage({
   stores,
   homepageHero,
   homepageProductIds,
+  homepageJourneyProducts,
   homepageMaterialSwatches = [],
   homepageStatistics: stats,
   loading,
@@ -55,67 +54,32 @@ export function MotionHomepage({
     homepageProductIds
       ?.map((id) => catalog.find((item) => item.id === id && item.model))
       .find(Boolean) ??
-    catalog.find((item) => item.category === "sofa" && item.model) ??
-    catalog.find((item) => item.model);
+    catalog.find((item) => item.category === "sofa" && item.model);
+  const bed = catalog.find(
+    (item) =>
+      item.category === "bed" &&
+      item.model &&
+      item.id === homepageJourneyProducts?.bedProductId,
+  );
+  const wardrobe = catalog.find(
+    (item) =>
+      item.category === "wardrobe" &&
+      item.model &&
+      item.id === homepageJourneyProducts?.wardrobeProductId,
+  );
   const bento = useMotionActivity<HTMLElement>();
   const available = catalog.filter(hasAvailableStock).filter(hasProductPhoto);
   return (
     <MotionConfig reducedMotion="user">
       <LazyMotion features={domAnimation}>
         <div className="home-motion">
-          <section
-            className="home-hero-layout home-motion-wrap"
-            aria-labelledby="home-motion-title"
-          >
-            <div className="home-hero-copy">
-              <motion.p
-                className="home-eyebrow"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6 }}
-              >
-                <span /> ТӨСӨӨЛЛӨӨС БОДИТ СОНГОЛТ РУУ
-              </motion.p>
-              <motion.h1
-                id="home-motion-title"
-                data-homepage-field="title"
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.75 }}
-              >
-                {hero.title}
-              </motion.h1>
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.18, duration: 0.6 }}
-              >
-                <p className="home-hero-description" data-homepage-field="description">{hero.description}</p>
-                <div className="home-hero-actions">
-                  <Link href={hero.primaryHref} className="home-button" data-homepage-field="primaryLabel">
-                    {hero.primaryLabel}
-                    <ArrowUpRight size={18} />
-                  </Link>
-                  <Link
-                    href={hero.secondaryHref}
-                    className="home-button home-button-secondary"
-                    data-homepage-field="secondaryLabel"
-                  >
-                    {hero.secondaryLabel}
-                    <ArrowRight size={18} />
-                  </Link>
-                </div>
-                <p className="home-hero-note">
-                  <Check size={14} /> Өөрийн хурдаар төлөвлө. Боломжуудаа
-                  харьцуул.
-                </p>
-              </motion.div>
-              <a className="home-discover" href="#how-it-works">
-                Хэрхэн ажиллахыг үзэх <ArrowDown size={15} />
-              </a>
-            </div>
-            <HeroDemo product={product} image={hero.image} loading={loading} />
-          </section>
+          <ScrollRoomHero
+            sofa={product}
+            bed={bed}
+            wardrobe={wardrobe}
+            hero={hero}
+            loading={loading}
+          />
           {error && (
             <div className="home-data-notice home-motion-wrap" role="alert">
               Каталог, үзүүлэлтүүдийг ачаалж чадсангүй.{" "}

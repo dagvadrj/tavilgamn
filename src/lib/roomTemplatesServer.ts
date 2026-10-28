@@ -6,13 +6,25 @@ import { templateId } from "./roomTemplates";
 import { getSupabaseAdmin } from "./supabase/admin";
 import type { RoomTemplateRow } from "./supabase/database";
 export const templateCardColumns =
-  "id,title,description,kind,furnishing,room_type,area,preview_image,status,sort_order,version";
-export function roomTemplateCard(
-  row: Omit<
-    RoomTemplateRow,
-    "design" | "created_at" | "updated_at" | "updated_by"
-  >,
-): RoomTemplateCard {
+  "id,title,description,kind,furnishing,room_type,area,preview_image,status,sort_order,version,store_id,piece_count,width,depth";
+type CardRow = Omit<
+  RoomTemplateRow,
+  | "design"
+  | "created_at"
+  | "updated_at"
+  | "updated_by"
+  | "store_id"
+  | "published_version"
+  | "draft"
+  | "draft_version"
+  | "piece_count"
+  | "width"
+  | "depth"
+> &
+  Partial<
+    Pick<RoomTemplateRow, "store_id" | "piece_count" | "width" | "depth">
+  >;
+export function roomTemplateCard(row: CardRow): RoomTemplateCard {
   return {
     id: row.id,
     title: row.title,
@@ -25,29 +37,41 @@ export function roomTemplateCard(
     status: row.status as RoomTemplateCard["status"],
     sortOrder: row.sort_order,
     version: row.version,
+    storeId: row.store_id ?? null,
+    pieceCount: row.piece_count ?? 0,
+    width: row.width ?? null,
+    depth: row.depth ?? null,
   };
 }
 export function roomTemplate(row: RoomTemplateRow): RoomTemplate {
   return { ...roomTemplateCard(row), design: readTemplateDesign(row.design) };
 }
 
-/** A public template cannot depend on retired or missing furniture deliveries. */
-export async function templateAssetsAvailable(
-  design: RoomDesign,
-  db = getSupabaseAdmin(),
-) {
-  const pieces = (design.rooms ?? [])
+const templatePieces = (design: RoomDesign) =>
+  (design.rooms ?? [])
     .flatMap((room) => room.pieces)
     .filter((piece) => !piece.kitchen);
-  if (!pieces.length) return true;
+
+/**
+ * Number of placed pieces per design whose 3D delivery is retired or missing.
+ * One query pair covers every design, so merchant lists stay a single round trip.
+ */
+export async function templateMissingModels(
+  designs: RoomDesign[],
+  db = getSupabaseAdmin(),
+) {
+  const pieces = designs.map(templatePieces);
   const keys = [
     ...new Set(
-      pieces.flatMap((piece) => [
-        piece.productId,
-        ...(piece.modelId ? [piece.modelId] : []),
-      ]),
+      pieces
+        .flat()
+        .flatMap((piece) => [
+          piece.productId,
+          ...(piece.modelId ? [piece.modelId] : []),
+        ]),
     ),
   ];
+  if (!keys.length) return designs.map(() => 0);
   const uuidKeys = keys.filter(templateId);
   const columns = "id,product_id,glb_path,archived_at";
   const results = await Promise.all([
@@ -68,11 +92,24 @@ export async function templateAssetsAvailable(
   const rows = results
     .flatMap((result) => result.data ?? [])
     .filter((row) => row.glb_path);
-  return pieces.every((piece) =>
-    rows.some((row) =>
-      piece.modelId
-        ? row.id === piece.modelId || row.product_id === piece.modelId
-        : row.product_id === piece.productId,
-    ),
+  return pieces.map(
+    (list) =>
+      list.filter(
+        (piece) =>
+          !rows.some((row) =>
+            piece.modelId
+              ? row.id === piece.modelId || row.product_id === piece.modelId
+              : row.product_id === piece.productId,
+          ),
+      ).length,
   );
+}
+
+/** A public template cannot depend on retired or missing furniture deliveries. */
+export async function templateAssetsAvailable(
+  design: RoomDesign,
+  db = getSupabaseAdmin(),
+) {
+  const [missing] = await templateMissingModels([design], db);
+  return missing === 0;
 }

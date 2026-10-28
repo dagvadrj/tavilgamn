@@ -73,7 +73,7 @@ test('catalog add callbacks use live state and scoped camera hints; top view and
    '@/features/room-planner/components/RoomPlannerStart':{RoomPlannerStart:'room-start'},
    '@/features/room-planner/components/PlannerPanels':{Drawer:'drawer',CompareModal:'compare',NumberControl:'number',PlannerSkeleton:'skeleton'},
    '@/features/room-planner/components/RoomPlannerControls':{RoomPlannerControls:'room-controls'},
-   '@/features/planner/components/PlannerModelCard':{PlannerModelCard:'model-card'},
+   '@/features/room-planner/components/RoomCatalogCard':{RoomCatalogCard:'model-card',formatFurnitureCm:()=>''},
    './RoomPlacementMap':{RoomPlacementMap:'room-map'},'./RoomAddDialog':{RoomAddDialog:'add-room-dialog'},'./RoomTourControls':{RoomTourControls:'tour-controls'},
   });
   const render=()=>h.render(()=>{const shell=RoomPlanner();return typeof shell.type==='function'?shell.type(shell.props):shell;}),find=(t,type)=>nodes(t).find(n=>n.type===type);
@@ -89,6 +89,11 @@ test('catalog add callbacks use live state and scoped camera hints; top view and
   find(tree,'room-controls').props.onView('top');tree=render();find(tree,'room-canvas').props.onPlacementHintsReady(source);
   find(tree,'model-card').props.onAdd();tree=render();assert.equal(store.getState().current.pieces.length,4);assert.equal(reads,2,'hidden 3D camera must not affect SVG plan adds');
   store.getState().undo();assert.equal(store.getState().current.pieces.length,3);
+  const savedDesign=JSON.stringify(store.getState().current);
+  find(tree,'room-canvas').props.onRendererUnavailable(true);tree=render();
+  assert.equal(find(tree,'room-canvas').props.paused,true,'2D editor must start without a WebGL camera-settled callback');
+  assert.ok(nodes(tree).some(n=>n.type==='room-map'));
+  assert.equal(JSON.stringify(store.getState().current),savedDesign);
  }finally{global.document=oldDocument;global.localStorage=oldStorage;global.window=oldWindow;}
 });
 test('real planner map and scene selection keep one canvas key, current view and reset generation',()=>{
@@ -125,7 +130,8 @@ test('real planner map and scene selection keep one canvas key, current view and
   store.getState().selectRoom(a);assert.equal(store.getState().moveRoom(b,{x:4,z:0},false),null);
   for(const connection of store.getState().current.connections ?? []) store.getState().updateConnection(connection.id,{kind:'open'});
   const bed={instanceId:'moving-bed',productId:'unknown-bed',x:0,z:0,rotation:0,color:'cream',material:'fabric'};
-  store.getState().updatePieces([bed]);tree=render();let moving=find(tree,'room-canvas');moving.props.onSelect(bed.instanceId);tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.selected,bed.instanceId);
+  store.getState().updatePieces([bed]);tree=render();let moving=find(tree,'room-canvas');const requestBeforeSelect=moving.props.cameraRequest;moving.props.onSelect(bed.instanceId);tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.selected,bed.instanceId);
+  assert.equal(moving.props.cameraRequest,requestBeforeSelect,'selecting furniture never moves the camera');
   const reset=moving.props.resetKey;moving.props.onEditStart();moving.props.onMove(bed.instanceId,4,0);tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,a);
   moving.props.onEditEnd();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,b);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.design.pieces[0].x,0);assert.equal(moving.key,canvas.key);assert.equal(moving.props.resetKey,reset);assert.equal(moving.props.view,'plan');
   store.getState().undo();tree=render();moving=find(tree,'room-canvas');assert.equal(moving.props.design.activeRoomId,a);assert.equal(moving.props.selected,bed.instanceId);assert.equal(moving.props.design.pieces[0].x,0);
@@ -138,15 +144,15 @@ test('real planner map and scene selection keep one canvas key, current view and
    find(tree,'room-controls').props.onView(side);tree=render();assert.equal(find(tree,'room-canvas').props.cameraRequest.action,side);assert.equal(find(tree,'room-canvas').props.view,'perspective');
   }
   assert.equal(JSON.stringify(store.getState().current),snapshot);assert.equal(store.getState().past.length,historyLength);
-  // Interior mode persists through room visits and camera placement returns to plan editing.
+  // Wheel entry/exit is the only way in and out; per-room camera buttons and camera placement are gone.
   find(tree,'room-controls').props.onView('interior');tree=render();
   let tour=find(tree,'room-canvas');assert.equal(tour.props.interior,true);assert.equal(tour.props.view,'perspective');assert.equal(tour.props.selected,null);
   find(tree,'tour-controls').props.onFov(48);tree=render();assert.equal(store.getState().current.interiorCamera.fov,48);
-  tour.props.onVisitRoom(a);tree=render();tour=find(tree,'room-canvas');assert.equal(tour.props.design.activeRoomId,a);assert.equal(tour.props.interior,true);
+  assert.equal(tour.props.onVisitRoom,undefined);assert.equal(tour.props.cameraPlacement,undefined);assert.equal(find(tree,'room-controls').props.onCameraPlace,undefined);assert.equal(find(tree,'room-map')?.props.onVisitRoom,undefined);
   tour.props.onCameraSave({x:-.7,z:.4,eyeHeight:1.6,yaw:.5,pitch:.1});tree=render();assert.equal(store.getState().current.interiorCamera.yaw,.5);
-  find(tree,'room-controls').props.onCameraPlace();tree=render();tour=find(tree,'room-canvas');assert.equal(tour.props.cameraPlacement,true);assert.equal(tour.props.interior,false);assert.equal(tour.props.view,'plan');
-  tour.props.onCameraPlace(100,100);tree=render();assert.equal(find(tree,'room-canvas').props.cameraPlacement,true);
-  find(tree,'room-canvas').props.onCameraPlace(-.8,.7);tree=render();assert.equal(find(tree,'room-canvas').props.cameraPlacement,false);assert.equal(store.getState().current.interiorCamera.x,-.8);
+  tour.props.onExitInterior();tree=render();tour=find(tree,'room-canvas');assert.equal(tour.props.interior,false);assert.equal(tour.props.view,'perspective');
+  tour.props.onEnterInterior({x:-.8,z:.7,eyeHeight:1.6,yaw:.2,pitch:-.12,fov:60});tree=render();tour=find(tree,'room-canvas');
+  assert.equal(tour.props.interior,true);assert.equal(store.getState().current.interiorCamera.x,-.8);assert.equal(store.getState().current.interiorCamera.yaw,.2);
   // Adding from the map opens the setup dialog before creating any room.
   const roomCount=store.getState().current.rooms.length;
   find(tree,'room-map').props.onAdd('office');tree=render();assert.equal(store.getState().current.rooms.length,roomCount);
@@ -162,4 +168,11 @@ test('real planner map and scene selection keep one canvas key, current view and
   assert.equal(plan.props.onMovePiece(shelf.instanceId,shelf.x-.5,shelf.z+.3),null,'off-plane pointer input must be projected to the attached wall');
   const movedShelf=store.getState().current.pieces[0];assert.ok(Math.abs(movedShelf.z-shelf.z-.3)<1e-8);assert.equal(movedShelf.x,shelf.x);assert.equal(movedShelf.elevation,1.5);assert.equal(movedShelf.attachment.segmentId,shelf.attachment.segmentId);
  }finally{global.document=oldDocument;global.localStorage=oldStorage;global.window=oldWindow;}
+});
+test('remounting after a scroll exit resumes the handed-over pose once instead of re-framing',()=>{
+ const h=rigHarness(false),pose={position:new THREE.Vector3(4,3.2,5),target:new THREE.Vector3(.5,1.1,-.2),up:new THREE.Vector3(0,1,0),fov:45,far:320,zoom:1};
+ const restore={current:pose};h.render({restore});
+ vectorNear(h.camera.position,pose.position);assert.equal(restore.current,null,'the handed-over pose is consumed');
+ h.attach();h.render({restore});vectorNear(h.state.controls.target,pose.target);vectorNear(h.camera.position,pose.position);
+ const dir=pose.target.clone().sub(pose.position).normalize();near(h.camera.getWorldDirection(new THREE.Vector3()).angleTo(dir),0);
 });

@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-27",
+  "stage": "model residency, touch selection, context recovery and independent 2D fallback",
+  "overallGoalComplete": false,
+  "checks": {
+    "fullTestsPassed": 1149,
+    "fullTestsFailed": 0,
+    "productionBuild": ".next-planner-recovery: passed",
+    "typecheck": "passed",
+    "lint": "passed",
+    "styles": "five existing CRLF formatting failures; files match HEAD ignoring line endings"
+  },
+  "browser": {
+    "method": "Dedicated headless Chrome through Playwright; Browser plugin unavailable. No existing user tabs inspected.",
+    "physicalPhoneTested": false,
+    "viewports": [1366, 390],
+    "deleteUndoCyclesPerViewport": 3,
+    "modelRequestsPerContext": 1,
+    "cacheEntriesAfterEachUndo": 1,
+    "estimatedIdleBytesAfterEachDelete": 18682880,
+    "idleBudgetBytesOnTestMachine": 67108864,
+    "mobileInput": "touch taps: sofa/list, delete, undo and focus",
+    "cameraChecksPassed": 9,
+    "contextRecovery": "forced loss/restore: pixel-identical canvas image, unchanged camera and furniture; no page errors",
+    "noWebglFallback": "390px portrait: 2D opens without waiting for the 3D camera; explicit 3D retry succeeds",
+    "visibilityReturn": "synthetic hidden/visible document events: demand rendering resumes",
+    "isolatedCamera": { "focusWorstMs": 16.1, "interiorLookWorstMs": 16.1, "pinchWorstMs": 86.8, "pageErrors": 0 },
+    "cameraChecks": ["stable selection", "25-degree focus", "zoom button", "wheel reverse", "touch pinch", "gesture interruption", "furniture drag", "interior look", "reduced motion"],
+    "appErrors": [],
+    "warnings": ["one desktop favicon.ico 404"]
+  },
+  "deliveryAudit": {
+    "file": "model-2ac67957-7846-4b0a-a878-8e352d24ddc4.glb",
+    "encodedBytes": 3455824,
+    "triangles": 297424,
+    "geometryCodec": "Meshopt",
+    "textureCodec": "KTX2 / KHR_texture_basisu",
+    "textures": 2,
+    "textureDimensions": [2048, 2048],
+    "mipLevels": 12,
+    "catalogOriginalModified": false
+  },
+  "performanceLimits": [
+    "Baseline/after orbit profile used headless RTX 4060 Direct3D11, not a low-end phone or integrated GPU.",
+    "No meaningful camera-speed improvement is claimed from the model lifetime changes.",
+    "Concurrent functional QA recorded a 247.5 ms worst interior-motion interval. A later isolated run observed 16.1 ms worst focus/interior-look intervals, but pinch still had an 86.8 ms interval. This does not establish smooth physical-device performance.",
+    "Model byte estimates exclude scene environment textures, DOM images, clone-specific allocations and process RAM."
+  ]
+}

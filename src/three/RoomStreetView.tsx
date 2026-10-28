@@ -16,7 +16,13 @@ import {
   clampTourFov,
   tourVerticalFov,
   dampInteriorLook,
+  MAX_TOUR_FOV,
 } from "@/lib/roomInteriorCamera";
+import {
+  pointerHitsFurniture,
+  type InteriorEntryChannel,
+} from "./roomEntryChannel";
+import { SCENE_NAVIGATION_START } from "./sceneNavigation";
 
 export function RoomStreetView({
   pose,
@@ -28,6 +34,7 @@ export function RoomStreetView({
   onLookingChange,
   originX = 0,
   originZ = 0,
+  channel,
 }: {
   pose: RoomInteriorCamera;
   roomId: string;
@@ -38,8 +45,10 @@ export function RoomStreetView({
   onLookingChange?: (looking: boolean) => void;
   originX?: number;
   originZ?: number;
+  /** Wheel entry/exit takes the camera through this hand-over. */
+  channel?: InteriorEntryChannel;
 }) {
-  const { camera, gl, invalidate, size } = useThree();
+  const { camera, gl, invalidate, size, scene } = useThree();
   const current = useRef(pose),
     save = useRef(onSave),
     handled = useRef(request?.id);
@@ -221,7 +230,27 @@ export function RoomStreetView({
     }
     return true;
   };
+  useEffect(() => {
+    if (!channel) return;
+    channel.atWidestView = () =>
+      clampTourFov(desired.current.fov) >= MAX_TOUR_FOV - 0.01;
+    channel.hold = () => {
+      travel.current = null;
+      zoom.current = null;
+      desired.current = current.current;
+      pendingSave.current = false;
+    };
+    channel.resume = apply;
+    return () => {
+      channel.suspended = false;
+      channel.atWidestView = () => false;
+      channel.hold = () => {};
+      channel.resume = () => {};
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channel, camera, aspect, originX, originZ]);
   useFrame((_, delta) => {
+    if (channel?.suspended) return;
     if (locked) {
       travel.current = null;
       zoom.current = null;
@@ -308,11 +337,34 @@ export function RoomStreetView({
       const [a, b] = [...touches.values()];
       return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
     };
+    // A press that starts on furniture is the furniture drag's gesture; its
+    // pointer passes through to the scene untouched until it is released.
+    let furniture: { id: number; x: number; y: number } | null = null;
     const before = canvas.style.touchAction;
     canvas.style.touchAction = "none";
     const down = (event: PointerEvent) => {
+      if (channel?.suspended) {
+        event.stopImmediatePropagation();
+        return;
+      }
+      if (
+        event.button === 0 &&
+        !furniture &&
+        !drag &&
+        !touches.size &&
+        pointerHitsFurniture(scene, camera, canvas, event.clientX, event.clientY)
+      ) {
+        furniture = { id: event.pointerId, x: event.clientX, y: event.clientY };
+        return;
+      }
       event.stopImmediatePropagation();
       if (locked || event.button !== 0) return;
+      if (event.pointerType === "touch" && furniture) {
+        // A second finger turns the gesture into a pinch: roll the drag back.
+        canvas.dispatchEvent(new Event(SCENE_NAVIGATION_START));
+        touches.set(furniture.id, { x: furniture.x, y: furniture.y });
+        furniture = null;
+      }
       if (event.pointerType === "touch") {
         touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
         canvas.setPointerCapture(event.pointerId);
@@ -335,6 +387,11 @@ export function RoomStreetView({
       canvas.setPointerCapture(event.pointerId);
     };
     const move = (event: PointerEvent) => {
+      if (furniture?.id === event.pointerId) {
+        furniture.x = event.clientX;
+        furniture.y = event.clientY;
+        return;
+      }
       event.stopImmediatePropagation();
       if (touches.has(event.pointerId)) {
         const before = distance();
@@ -359,6 +416,10 @@ export function RoomStreetView({
       drag.y = event.clientY;
     };
     const up = (event: PointerEvent) => {
+      if (furniture?.id === event.pointerId) {
+        furniture = null;
+        return;
+      }
       event.stopImmediatePropagation();
       if (event.type === "pointercancel") {
         blur();
@@ -382,7 +443,7 @@ export function RoomStreetView({
     const wheel = (event: WheelEvent) => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (locked) return;
+      if (locked || channel?.suspended) return;
       travel.current = null;
       const pixels =
         event.deltaY *
@@ -406,6 +467,7 @@ export function RoomStreetView({
         return;
       if (
         locked ||
+        channel?.suspended ||
         !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)
       )
         return;
@@ -441,6 +503,7 @@ export function RoomStreetView({
         if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
       touches.clear();
       pinching = false;
+      furniture = null;
       looking.current?.(false);
     };
     const tabIndex = canvas.tabIndex;
@@ -465,7 +528,7 @@ export function RoomStreetView({
       looking.current?.(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [camera, gl, locked, roomId, aspect, invalidate, originX, originZ]);
+  }, [camera, gl, scene, channel, locked, roomId, aspect, invalidate, originX, originZ]);
   return locked ? null : (
     <RoomTourNavigation
       room={room}
@@ -475,34 +538,4 @@ export function RoomStreetView({
       originZ={originZ}
     />
   );
-}
-
-export function CameraPointPlacement({
-  onPlace,
-}: {
-  onPlace: (x: number, z: number) => void;
-}) {
-  const { camera, gl } = useThree();
-  useEffect(() => {
-    const canvas = gl.domElement;
-    const ray = new THREE.Raycaster(),
-      plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    const down = (event: PointerEvent) => {
-      if (event.button !== 0) return;
-      event.stopImmediatePropagation();
-      const bounds = canvas.getBoundingClientRect();
-      ray.setFromCamera(
-        new THREE.Vector2(
-          ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
-          1 - ((event.clientY - bounds.top) / bounds.height) * 2,
-        ),
-        camera,
-      );
-      const point = ray.ray.intersectPlane(plane, new THREE.Vector3());
-      if (point) onPlace(point.x, point.z);
-    };
-    canvas.addEventListener("pointerdown", down, true);
-    return () => canvas.removeEventListener("pointerdown", down, true);
-  }, [camera, gl, onPlace]);
-  return null;
 }

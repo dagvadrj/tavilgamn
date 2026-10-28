@@ -16,3 +16,18 @@ export function roomSaveStatus(current: RoomDesign, saved: RoomDesign | undefine
   if (roomContentKey(current) !== roomContentKey(saved)) return { kind: "modified", label: "Хадгалсан хувилбараас өөрчлөгдсөн", detail: "Одоогийн ажлын явц энэ төхөөрөмж дээр үлдсэн. «Хадгалах» дарвал нэртэй хувилбар шинэчлэгдэнэ." };
   return { kind: "saved", label: "Загвар энэ төхөөрөмж дээр хадгалагдсан", detail: "Хадгалсан загваруудаасаа дахин нээнэ. Өөр төхөөрөмжид автоматаар шилжихгүй." };
 }
+
+export type RoomSaveChip = { tone: "dirty" | "saving" | "saved" | "error"; label: string; retry: boolean };
+
+/** Header chip. The cart is a separate store, so cart edits never mark the room dirty. */
+export function roomSaveChip(kind: ReturnType<typeof roomSaveStatus>["kind"], savedAt: number | undefined): RoomSaveChip {
+  if (kind === "checking") return { tone: "saving", label: "Хадгалж байна…", retry: false };
+  if (kind === "error") return { tone: "error", label: "Хадгалж чадсангүй", retry: true };
+  if (kind === "saved") {
+    // 24-hour HH:MM by hand: browsers without mn-MN data fall back to «03:07 AM».
+    const date = savedAt ? new Date(savedAt) : null;
+    const time = date ? `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}` : null;
+    return { tone: "saved", label: time ? `Хадгалсан · ${time}` : "Хадгалсан", retry: false };
+  }
+  return { tone: "dirty", label: "Хадгалаагүй өөрчлөлт", retry: false };
+}

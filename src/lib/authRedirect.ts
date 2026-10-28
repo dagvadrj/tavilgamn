@@ -9,6 +9,7 @@ const tabs = {
     "reports",
     "contracts",
     "products",
+    "rooms",
     "orders",
     "delivery",
     "branches",

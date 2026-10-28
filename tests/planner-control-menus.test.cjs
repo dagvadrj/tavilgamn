@@ -40,3 +40,21 @@ test('mobile light popup reserves the summary column across orientation changes 
  close.props.onClick();assert.equal(light.open,false);assert.equal(focused,1);assert.equal(ended,1);
  cleanups.forEach(fn=>fn?.());
 });
+
+test('side view menu is a radio menu: arrow keys move focus, the dock label names the active side',t=>{
+ const original=global.document;t.after(()=>{global.document=original});
+ const {RoomPlannerControls}=loadSource('src/features/room-planner/components/RoomPlannerControls.tsx',{react:{...React,useRef:()=>({current:null}),useEffect(){},useCallback:fn=>fn}});
+ const noop=()=>{};const tree=RoomPlannerControls({view:'left',onView:noop,onZoom:noop,onRoom:noop,onHelp:noop,dimensions:false,onDimensions:noop,grid:false,onGrid:noop,snap:false,onSnap:noop,locked:false,onLock:noop,expanded:false,onExpand:noop,onRotate:noop});
+ const all=nodes(tree);const summary=all.find(n=>n.type==='summary'&&n.props['aria-haspopup']==='menu');
+ assert.equal(summary.props['aria-label'],'Хажуугаас харах · Зүүн тал');
+ const text=c=>typeof c==='string'?c:React.isValidElement(c)?React.Children.toArray(c.props.children).map(text).join(''):'';
+ assert.match(text(summary),/Хажуугаас · Зүүн/);
+ const menu=all.find(n=>n.props.role==='menu');const items=nodes(menu).filter(n=>n.props.role==='menuitemradio');
+ assert.deepEqual(items.map(n=>n.props['aria-checked']),[false,false,true,false]);
+ assert.deepEqual(items.map(n=>n.props.tabIndex),[-1,-1,0,-1],'one roving tab stop on the active side');
+ const focused=[];const els=[0,1,2,3].map(i=>({focus:()=>focused.push(i)}));global.document={activeElement:els[2]};
+ const key=k=>{let prevented=false;menu.props.onKeyDown({key:k,currentTarget:{querySelectorAll:()=>els},preventDefault:()=>{prevented=true}});return prevented;};
+ assert.equal(key('ArrowDown'),true);assert.equal(key('ArrowUp'),true);global.document.activeElement=els[3];key('ArrowRight');key('Home');key('End');
+ assert.deepEqual(focused,[3,1,0,0,3],'wraps around and supports Home/End');
+ assert.equal(key('a'),false,'other keys are left alone');
+});

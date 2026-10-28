@@ -10,7 +10,7 @@ import { ROOM_WALL_THICKNESS, wallBlocksFocus } from "@/lib/roomRendering";
 import { openingWorldTransform, validateOpening, wallLength, windowLayout, DEFAULT_DOOR_FINISH } from "@/lib/roomOpenings";
 import { RoomWindow } from "./RoomWindow";
 import { animateToward } from "./demandAnimation";
-import { SCENE_NAVIGATION_START, isSceneNavigationGesture } from "./sceneNavigation";
+import { SCENE_NAVIGATION_START, holdOrbitControls, isSceneNavigationGesture } from "./sceneNavigation";
 import { applyRoomCutaway, cutawayRaycast } from "./roomCutaway";
 
 const noRaycast = () => {};
@@ -90,10 +90,10 @@ export interface OpeningMeshProps {
 
 export function OpeningMesh(props: OpeningMeshProps) {
   const { design, opening, selected, onSelect, onUpdate, onDragChange, onEditStart, onError } = props;
-  const { camera, gl } = useThree();
+  const { camera, gl, controls } = useThree();
   const latest = useRef(props);
   latest.current = props;
-  const dragging = useRef<{ pointerId: number; target: CaptureTarget; offset: number; clientX: number; clientY: number; moved: boolean } | null>(null);
+  const dragging = useRef<{ pointerId: number; target: CaptureTarget; offset: number; clientX: number; clientY: number; moved: boolean; release: () => void } | null>(null);
   const [invalid, setInvalid] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const transform = openingWorldTransform(design, opening);
@@ -176,6 +176,7 @@ export function OpeningMesh(props: OpeningMeshProps) {
       const drag = dragging.current;
       if (!drag || (event && event.pointerId !== drag.pointerId)) return;
       dragging.current = null;
+      drag.release();
       try { drag.target.releasePointerCapture?.(drag.pointerId); } catch { /* Browser may already have released capture. */ }
       setIsDragging(false);
       setInvalid(null);
@@ -209,7 +210,7 @@ export function OpeningMesh(props: OpeningMeshProps) {
     const position = projectPosition(event.clientX, event.clientY);
     if (position === null) return;
     const target = event.target as CaptureTarget;
-    dragging.current = { pointerId: event.pointerId, target, offset: opening.position - position, clientX: event.clientX, clientY: event.clientY, moved: false };
+    dragging.current = { pointerId: event.pointerId, target, offset: opening.position - position, clientX: event.clientX, clientY: event.clientY, moved: false, release: holdOrbitControls(controls) };
     target.setPointerCapture?.(event.pointerId);
     onEditStart?.();
     setIsDragging(true);

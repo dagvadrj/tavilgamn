@@ -6,6 +6,19 @@ import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 export const SCENE_NAVIGATION_START = "scene-navigation-start";
 const gestures = new WeakSet<HTMLElement>();
 export const isSceneNavigationGesture = (element: HTMLElement) => gestures.has(element);
+
+/**
+ * Native orbit controls receive an object press right after R3F dispatches it.
+ * Disable them synchronously so the same press cannot also move the camera;
+ * the returned function restores the previous state when the drag ends.
+ */
+export function holdOrbitControls(controls: unknown): () => void {
+  const orbit = controls as { enabled?: unknown } | null | undefined;
+  if (!orbit || typeof orbit.enabled !== "boolean") return () => {};
+  const enabled = orbit.enabled;
+  orbit.enabled = false;
+  return () => { orbit.enabled = enabled; };
+}
 type Point = { x: number; y: number };
 
 /** Keep the same world point beneath a moving pinch midpoint, including at zoom limits. */

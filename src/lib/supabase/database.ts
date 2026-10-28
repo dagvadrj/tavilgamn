@@ -200,8 +200,13 @@ export type Database = Omit<Generated, "public"> & {
         Row: RoomTemplateRow;
         Insert: Omit<
           RoomTemplateRow,
-          "id" | "created_at" | "updated_at" | "version"
-        > & {
+          | "id"
+          | "created_at"
+          | "updated_at"
+          | "version"
+          | RoomTemplateMerchantColumns
+        > &
+          Partial<Pick<RoomTemplateRow, RoomTemplateMerchantColumns>> & {
           id?: string;
           created_at?: string;
           updated_at?: string;
@@ -264,4 +269,21 @@ export type RoomTemplateRow = {
   updated_by: string | null;
   created_at: string;
   updated_at: string;
+  /** Owning merchant store; null for the platform's starter templates. */
+  store_id: string | null;
+  published_version: number | null;
+  /** Pending edit of a published room; shoppers keep the main columns. */
+  draft: import("./database.types").Json | null;
+  draft_version: number | null;
+  piece_count: number;
+  width: number | null;
+  depth: number | null;
 };
+type RoomTemplateMerchantColumns =
+  | "store_id"
+  | "published_version"
+  | "draft"
+  | "draft_version"
+  | "piece_count"
+  | "width"
+  | "depth";

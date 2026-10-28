@@ -1,0 +1,1673 @@
+/* Room planner workspace: one floating left panel, stage in the remaining space. */
+
+.planner-workspace.planner-reference.room-simple {
+  --room-ws-canvas: #e9ecef;
+  --room-ws-ink: #171c24;
+  --room-ws-muted: #5f6672;
+  --room-ws-line: #e4e6ea;
+  --room-ws-tint: #eaf3fc;
+  --room-ws-primary: #075eaa;
+  --room-ws-warn: #8a4b00;
+  --room-ws-warn-bg: #fff4e5;
+  --room-ws-ok: #17603d;
+  --room-ws-ok-bg: #e7f5ee;
+  --room-ws-danger: #b42318;
+  --room-ws-danger-bg: #fdecea;
+  --room-ws-panel-width: 412px;
+  --room-ws-panel-top: var(--reference-header);
+  background: var(--room-ws-canvas);
+}
+
+.planner-workspace.planner-reference.room-simple.room-admin-mode {
+  --room-ws-panel-top: calc(var(--reference-header) + 56px);
+}
+
+.planner-workspace.planner-reference.room-simple.room-workspace-open > .planner-stage {
+  margin-left: calc(var(--room-ws-panel-width) + 24px);
+}
+
+.planner-workspace.planner-reference.room-simple .room-workspace-panel {
+  position: absolute;
+  top: calc(var(--room-ws-panel-top) + 12px);
+  left: 12px;
+  bottom: 12px;
+  z-index: 34;
+  display: flex;
+  flex-direction: column;
+  width: var(--room-ws-panel-width);
+  min-height: 0;
+  border-radius: 20px;
+  background: #fff;
+  color: var(--room-ws-ink);
+  box-shadow: 0 10px 36px #171c241a, 0 0 0 1px #171c240d;
+}
+
+.planner-workspace.planner-reference.room-simple .room-panel-backdrop {
+  display: none;
+}
+
+.room-panel-handle {
+  position: absolute;
+  top: 50%;
+  right: -24px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 64px;
+  padding: 0;
+  border: 1px solid var(--room-ws-line);
+  border-left: 0;
+  border-radius: 0 12px 12px 0;
+  background: #fff;
+  color: var(--room-ws-muted);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.room-panel-handle:hover {
+  color: var(--room-ws-ink);
+}
+
+.planner-workspace.planner-reference.room-simple .room-panel-open-button {
+  position: absolute;
+  top: calc(var(--room-ws-panel-top) + 16px);
+  left: 16px;
+  z-index: 34;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 0 18px 0 16px;
+  border: 0;
+  border-radius: 25px;
+  background: #fff;
+  color: var(--room-ws-ink);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 3px 16px #171c2414;
+  cursor: pointer;
+}
+
+.planner-workspace.planner-reference.room-simple:not(.room-workspace-open) .room-stage-actions {
+  left: 230px;
+}
+
+.room-panel-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin: 12px 12px 0;
+  padding: 4px;
+  border-radius: 16px;
+  background: #f1f3f5;
+}
+
+.room-panel-tabs > button {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 7px 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--room-ws-muted);
+  cursor: pointer;
+}
+
+.room-panel-tabs > button > span {
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.room-panel-tabs > button > small {
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-panel-tabs > button[aria-selected="true"] {
+  background: #fff;
+  color: var(--room-ws-ink);
+  box-shadow: 0 1px 4px #171c2414;
+}
+
+.room-panel-tabs > button[aria-selected="true"] > small {
+  color: var(--room-ws-primary);
+}
+
+.room-panel-nested-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--room-ws-line);
+}
+
+.room-panel-nested-header > button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--room-ws-line);
+  border-radius: 22px;
+  background: #fff;
+  color: var(--room-ws-ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-panel-nested-header > div {
+  display: grid;
+  min-width: 0;
+}
+
+.room-panel-nested-header span {
+  color: var(--room-ws-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.room-panel-nested-header strong {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.room-panel-footer {
+  display: grid;
+  gap: 10px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--room-ws-line);
+}
+
+.room-panel-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--room-ws-muted);
+  font-size: 12px;
+}
+
+.room-panel-total strong {
+  color: var(--room-ws-ink);
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-panel-footer-primary, .room-panel-footer-actions > .is-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  border: 0;
+  border-radius: 23px;
+  background: var(--room-ws-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-panel-footer-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.room-panel-footer-actions > a, .room-panel-footer-actions > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 46px;
+  border: 1px solid var(--room-ws-line);
+  border-radius: 23px;
+  background: #fff;
+  color: var(--room-ws-ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.room-panel-footer-actions > .is-primary {
+  border: 0;
+}
+
+.room-panel-footer-actions > .is-danger {
+  border-color: #f1c4c0;
+  color: var(--room-ws-danger);
+}
+
+.room-panel-add, .room-added, .room-cart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 20px;
+}
+
+.room-segmented {
+  display: flex;
+  align-self: flex-start;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--room-ws-line);
+  border-radius: 12px;
+}
+
+.room-segmented > button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--room-ws-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-segmented > button[aria-pressed="true"] {
+  background: var(--room-ws-ink);
+  color: #fff;
+}
+
+.room-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.room-catalog-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--room-ws-line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.room-catalog-card-image {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  background: #f4f5f7;
+  color: #a3a9b1;
+}
+
+.room-catalog-badge {
+  position: absolute;
+  top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border-radius: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-catalog-badge.is-3d {
+  left: 8px;
+  background: #fff;
+  color: var(--room-ws-primary);
+}
+
+.room-catalog-badge.is-missing {
+  left: 8px;
+  background: var(--room-ws-warn-bg);
+  color: var(--room-ws-warn);
+}
+
+.room-catalog-badge.is-placed {
+  right: 8px;
+  background: var(--room-ws-primary);
+  color: #fff;
+}
+
+.room-catalog-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px 12px;
+}
+
+.room-catalog-merchant, .room-catalog-dims {
+  color: var(--room-ws-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-catalog-card-body > strong {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.room-catalog-price {
+  margin: 4px 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-catalog-card-actions {
+  display: grid;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.room-catalog-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--room-ws-primary);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-catalog-add[aria-busy="true"] {
+  background: var(--room-ws-tint);
+  color: var(--room-ws-primary);
+  cursor: progress;
+}
+
+.room-catalog-add:disabled:not([aria-busy="true"]) {
+  background: #f1f3f5;
+  color: var(--room-ws-muted);
+  cursor: not-allowed;
+}
+
+.room-catalog-cart-link {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--room-ws-primary);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.room-panel-context {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 14px;
+  border-radius: 16px;
+  background: #f6f7f9;
+}
+
+.room-panel-context > div {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.room-panel-context strong {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.room-panel-context span {
+  color: var(--room-ws-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-panel-context > button {
+  flex: none;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #d3d8de;
+  border-radius: 22px;
+  background: #fff;
+  color: var(--room-ws-ink);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.room-panel-hint {
+  margin: 0 2px;
+  color: var(--room-ws-muted);
+  font-size: 11.5px;
+}
+
+.room-panel-info, .room-panel-warning {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--room-ws-tint);
+  color: #0b4a85;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.room-panel-warning {
+  background: var(--room-ws-warn-bg);
+  color: var(--room-ws-warn);
+}
+
+.room-panel-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 36px 20px;
+  border: 1px dashed #d3d8de;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.room-panel-empty strong {
+  font-size: 14px;
+}
+
+.room-panel-empty p {
+  margin: 0;
+  color: var(--room-ws-muted);
+  font-size: 12px;
+}
+
+.room-panel-empty button {
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--room-ws-tint);
+  color: var(--room-ws-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-panel-empty button.is-primary {
+  background: var(--room-ws-primary);
+  color: #fff;
+}
+
+.room-added-list, .room-cart-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.room-added-list > li, .room-cart-list > li {
+  border: 1px solid var(--room-ws-line);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.room-added-list > li[data-selected] {
+  border-color: var(--room-ws-primary);
+  box-shadow: 0 0 0 1px var(--room-ws-primary);
+}
+
+.room-added-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 72px;
+  padding: 8px 12px 8px 8px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.room-added-thumb {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f4f5f7;
+  color: #a3a9b1;
+}
+
+.room-added-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.room-added-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.room-added-text > strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-added-text > strong small {
+  color: var(--room-ws-muted);
+  font-weight: 500;
+}
+
+.room-added-text > span {
+  overflow: hidden;
+  color: var(--room-ws-muted);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-added-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.room-added-chips > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f1f3f5;
+  color: var(--room-ws-muted);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.room-added-chips > .is-ready {
+  background: var(--room-ws-ok-bg);
+  color: var(--room-ws-ok);
+}
+
+.room-added-chips > .is-loading, .room-added-chips > .is-cart {
+  background: var(--room-ws-tint);
+  color: var(--room-ws-primary);
+}
+
+.room-added-chips > .is-error {
+  background: var(--room-ws-danger-bg);
+  color: var(--room-ws-danger);
+}
+
+.room-added-price {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.room-added-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 10px 10px;
+}
+
+.room-added-actions > button, .room-cart-place > button, .room-cart-quantity button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 0 11px;
+  border: 1px solid var(--room-ws-line);
+  border-radius: 22px;
+  background: #fff;
+  color: var(--room-ws-ink);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.room-added-actions > .is-danger {
+  border-color: #f1c4c0;
+  color: var(--room-ws-danger);
+}
+
+.room-added-actions > .is-primary {
+  margin-left: auto;
+  border-color: var(--room-ws-primary);
+  background: var(--room-ws-primary);
+  color: #fff;
+}
+
+.room-cart-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 0;
+}
+
+.room-cart-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  color: var(--room-ws-muted);
+  font-size: 11.5px;
+}
+
+.room-cart-text strong {
+  color: var(--room-ws-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.room-cart-remove {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--room-ws-muted);
+  cursor: pointer;
+}
+
+.room-cart-remove:hover {
+  background: var(--room-ws-danger-bg);
+  color: var(--room-ws-danger);
+}
+
+.room-cart-quantity, .room-cart-place {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+.room-cart-quantity > div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.room-cart-quantity button {
+  width: 44px;
+  padding: 0;
+}
+
+.room-cart-quantity output {
+  min-width: 28px;
+  font-weight: 650;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-cart-quantity strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.room-cart-place {
+  border-top: 1px solid var(--room-ws-line);
+  color: var(--room-ws-muted);
+  font-size: 12px;
+}
+
+.room-cart-place > button:disabled, .room-added-actions > button:disabled {
+  color: #a3a9b1;
+  cursor: not-allowed;
+}
+
+.room-cart-list > li > .room-panel-warning {
+  margin: 0 12px 12px;
+}
+
+.room-panel-nested {
+  padding-bottom: 16px;
+}
+
+.room-detail {
+  display: grid;
+  gap: 18px;
+  padding: 16px;
+}
+
+.room-detail-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.room-detail-summary > img, .room-detail-summary > span {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: #f4f5f7;
+  object-fit: contain;
+}
+
+.room-detail-summary > div {
+  display: grid;
+  gap: 2px;
+}
+
+.room-detail-summary small {
+  color: var(--room-ws-muted);
+  font-size: 12px;
+}
+
+.room-detail-summary b {
+  font-variant-numeric: tabular-nums;
+}
+
+.room-detail-section {
+  display: grid;
+  gap: 10px;
+}
+
+.room-detail-section > h3 {
+  margin: 0;
+  color: var(--room-ws-muted);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.room-detail-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.room-detail-swatches, .room-detail-materials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.room-detail-swatches > button {
+  width: 36px;
+  height: 36px;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--room-ws-line);
+}
+
+.room-detail-swatches > button[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px var(--room-ws-primary);
+}
+
+.room-detail-materials > button {
+  min-height: 36px;
+}
+
+.room-detail-cart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  border: 1px solid var(--room-ws-primary);
+  border-radius: 23px;
+  background: var(--room-ws-tint);
+  color: var(--room-ws-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.planner-workspace.planner-reference.room-simple .room-panel-nested .planner-inspector-intro[hidden] {
+  display: none;
+}
+
+.planner-workspace.planner-reference.room-simple .planner-selection-toolbar {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  z-index: 28;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  transform: translateX(-50%);
+}
+
+.planner-workspace.planner-reference.room-simple .room-selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 5px 5px 16px;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 6px 24px #171c241a;
+  white-space: nowrap;
+}
+
+.room-selection-bar > strong {
+  margin-right: 6px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
+
+.room-selection-bar > strong small {
+  color: var(--room-ws-muted);
+  font-weight: 500;
+}
+
+.room-selection-bar > span {
+  width: 1px;
+  height: 24px;
+  background: var(--room-ws-line);
+}
+
+.planner-workspace.planner-reference.room-simple .room-selection-bar > button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 22px;
+  background: transparent;
+  color: var(--room-ws-ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.planner-workspace.planner-reference.room-simple .room-selection-bar > button.is-primary {
+  background: var(--room-ws-tint);
+  color: var(--room-ws-primary);
+}
+
+.planner-workspace.planner-reference.room-simple .room-fit-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--room-ws-ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-dock-divider {
+  flex: none;
+  width: 1px;
+  height: 28px;
+  margin: 0 4px;
+  background: var(--room-ws-line);
+}
+
+.planner-workspace.planner-reference.room-simple .room-view-dock .room-dock-room {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.planner-notice-action {
+  min-height: 36px;
+  margin-left: 4px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #ffffff1f;
+  color: #a9d1ff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-header-price {
+  display: grid;
+  text-align: right;
+  line-height: 1.15;
+}
+
+.room-header-price > small {
+  color: var(--room-ws-muted, #5f6672);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.room-summary-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #171c2466;
+}
+
+.room-summary-modal {
+  display: grid;
+  gap: 14px;
+  width: min(480px, 100%);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 20px;
+  border-radius: 20px;
+  background: #fff;
+  color: #171c24;
+  box-shadow: 0 24px 64px #171c2433;
+}
+
+.room-summary-modal > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.room-summary-modal > header span {
+  color: #5f6672;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.room-summary-modal h2 {
+  margin: 2px 0;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.room-summary-modal > header p {
+  margin: 0;
+  color: #5f6672;
+  font-size: 12px;
+}
+
+.room-summary-modal > header button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f3f5;
+  cursor: pointer;
+}
+
+.room-summary-figure {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f6f7f9;
+}
+
+.room-summary-figure > span, .room-summary-figure > small {
+  color: #5f6672;
+  font-size: 12px;
+}
+
+.room-summary-figure > strong {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.room-summary-figure > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 23px;
+  background: #075eaa;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-summary-figure > button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.room-summary-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  color: #075eaa;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.room-summary-modal > footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.room-summary-modal > footer > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #e4e6ea;
+  border-radius: 22px;
+  background: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-panel-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.room-panel-empty > svg {
+  color: var(--room-ws-muted);
+}
+
+.room-panel-empty.is-error {
+  border-color: #f1c4c0;
+  background: var(--room-ws-danger-bg);
+}
+
+.room-panel-empty.is-error > svg, .room-panel-empty.is-error > strong {
+  color: var(--room-ws-danger);
+}
+
+.room-catalog-skeleton {
+  display: grid;
+  gap: 12px;
+}
+
+.room-skeleton-chips {
+  display: flex;
+  gap: 6px;
+}
+
+.room-skeleton-chips > span, .room-skeleton-card > span {
+  display: block;
+  border-radius: 10px;
+  background: #eceef1;
+  animation: room-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.room-skeleton-chips > span {
+  height: 36px;
+  border-radius: 18px;
+}
+
+.room-skeleton-card {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid var(--room-ws-line);
+  border-radius: 16px;
+}
+
+.room-skeleton-card > span:first-child {
+  aspect-ratio: 4 / 3;
+  border-radius: 0;
+}
+
+.room-skeleton-card > span:not(:first-child) {
+  height: 12px;
+  margin: 0 12px;
+}
+
+.room-skeleton-card > span:nth-child(3) {
+  width: 55%;
+}
+
+.room-skeleton-card > span:last-child {
+  height: 44px;
+  margin-top: 6px;
+  border-radius: 12px;
+}
+
+@keyframes room-skeleton-pulse {
+  50% {
+    opacity: .45;
+  }
+}
+
+.room-added-row {
+  position: relative;
+}
+
+.room-added-progress {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--room-ws-tint);
+}
+
+.room-added-progress::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 35%;
+  border-radius: 2px;
+  background: var(--room-ws-primary);
+  animation: room-progress-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes room-progress-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(290%);
+  }
+}
+
+.room-added-chips > .is-swapping {
+  background: var(--room-ws-warn-bg);
+  color: var(--room-ws-warn);
+}
+
+.room-added-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px 10px;
+  color: var(--room-ws-danger);
+  font-size: 12px;
+}
+
+.room-added-error > span {
+  flex: 1 0 100%;
+}
+
+.room-added-error > button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #f1c4c0;
+  border-radius: 22px;
+  background: #fff;
+  color: var(--room-ws-danger);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-added-error > button.is-primary {
+  border-color: var(--room-ws-primary);
+  background: var(--room-ws-primary);
+  color: #fff;
+}
+
+.room-added-list > li:has(.room-added-error) {
+  border-color: #f1c4c0;
+}
+
+.room-project-name > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.planner-workspace.planner-reference.room-simple .room-project-name {
+  width: auto;
+  min-width: 0;
+}
+
+.room-project-name > div > input {
+  width: 220px;
+  min-width: 80px;
+}
+
+.room-save-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f1f3f5;
+  color: #5f6672;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.room-save-chip > i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.room-save-chip[data-tone="dirty"] {
+  background: #fff4e5;
+  color: #8a4b00;
+}
+
+.room-save-chip[data-tone="saving"] {
+  background: #eaf3fc;
+  color: #075eaa;
+}
+
+.room-save-chip[data-tone="saved"] {
+  background: #e7f5ee;
+  color: #17603d;
+}
+
+.room-save-chip[data-tone="error"] {
+  background: #fdecea;
+  color: #b42318;
+}
+
+.room-save-chip > button {
+  min-height: 24px;
+  margin: -2px -4px -2px 2px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 12px;
+  background: #b42318;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.room-scene-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid #cfdeeb;
+  border-radius: 999px;
+  background: #f3f7fbf2;
+  color: #2f5577;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px #20212414;
+  pointer-events: none;
+}
+
+.room-scene-chip[data-state="ready"] {
+  border-color: #b7e0c9;
+  background: #e7f5eef2;
+  color: #17603d;
+  animation: room-scene-chip-out 1.4s ease forwards;
+}
+
+.room-scene-chip[data-state="swapping"] {
+  border-color: #c7d7fe;
+  background: #eef4fff2;
+  color: #1d4ed8;
+}
+
+.room-scene-chip:is([data-state="error"], [data-state="swap-error"]) {
+  padding: 4px 4px 4px 12px;
+  border-color: #f5c2bd;
+  background: #fff;
+  color: #b42318;
+  pointer-events: auto;
+}
+
+.room-scene-chip > button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #1463df;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.room-scene-chip > button.is-danger {
+  background: #fdecea;
+  color: #b42318;
+}
+
+@keyframes room-scene-chip-out {
+  0%, 70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.room-side-views .room-dock-popover > button[aria-checked="true"] {
+  color: #075eaa;
+  background: #eff6ff;
+}
+
+.room-side-views .room-dock-popover > button:focus-visible {
+  outline: 2px solid #1463df;
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-skeleton-chips > span, .room-skeleton-card > span, .room-added-progress::after, .room-scene-chip[data-state="ready"] {
+    animation: none;
+  }
+}
+
+@media (min-width: 960px) and (max-width: 1199px) {
+  .planner-workspace.planner-reference.room-simple {
+    --room-ws-panel-width: 360px;
+  }
+  .planner-workspace.planner-reference.room-simple .room-view-dock .room-dock-room > span {
+    display: none;
+  }
+}
+
+@media (max-width: 959px) {
+  .planner-workspace.planner-reference.room-simple.room-workspace-open > .planner-stage {
+    margin-left: 0;
+  }
+  .planner-workspace.planner-reference.room-simple .room-workspace-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 80;
+    width: min(380px, 88vw);
+    border-radius: 0 20px 20px 0;
+  }
+  .planner-workspace.planner-reference.room-simple .room-panel-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 79;
+    display: block;
+    background: #171c2466;
+  }
+  .planner-workspace.planner-reference.room-simple:not(.room-workspace-open) .room-stage-actions {
+    left: 24px;
+    top: 82px;
+  }
+  .planner-workspace.planner-reference.room-simple .room-view-dock .room-dock-room > span {
+    display: none;
+  }
+}
+
+.room-sheet-grabber, .room-sheet-peek, .room-summary-price {
+  display: none;
+}
+
+@media (max-width: 599px) {
+  .planner-workspace.planner-reference.planner-studio.room-simple {
+    --room-header-h: 56px;
+    --room-sheet-half: min(470px, calc(100dvh - var(--room-header-h) - 220px));
+    --room-sheet-h: 132px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple:not(.room-admin-mode, .planner-expanded) {
+    padding-top: var(--room-header-h);
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple:has(.room-workspace-panel[data-sheet="half"]) {
+    --room-sheet-h: var(--room-sheet-half);
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple:has(.room-workspace-panel[data-sheet="full"]) {
+    --room-sheet-h: calc(100dvh - var(--room-header-h));
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-studio-header {
+    height: var(--room-header-h);
+    gap: 4px;
+    padding: 0 8px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-studio-header :is(.studio-brand > span, .room-project-name > span, .room-header-price) {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-project-name {
+    flex: 1;
+    min-width: 0;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-project-name > div {
+    display: grid;
+    gap: 1px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-project-name input {
+    min-width: 0;
+    font-size: 14.5px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-save-chip {
+    justify-self: start;
+    padding: 0;
+    background: none;
+    font-size: 11px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .studio-file-actions {
+    gap: 2px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .studio-file-actions > :is(button[aria-label="Хадгалсан загварууд"], button[aria-label="Зураг татах"]) {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .studio-file-actions button:not(.room-summary-button) > span {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .studio-file-actions button:not(.room-summary-button) {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .studio-file-actions .room-summary-button {
+    display: grid;
+    grid-template-columns: auto;
+    min-height: 44px;
+    padding: 4px 14px;
+    line-height: 1.1;
+    text-align: center;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .studio-file-actions .room-summary-button > span {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    opacity: 0.85;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .studio-file-actions .room-summary-button > svg {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-summary-price {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple > .planner-stage {
+    align-self: start;
+    height: calc(100dvh - var(--room-header-h) - min(var(--room-sheet-h), var(--room-sheet-half)));
+    min-height: 200px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-workspace-panel {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 80;
+    width: auto;
+    height: var(--room-sheet-h);
+    border-radius: 20px 20px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -8px 30px #171c241f;
+    transition: height 0.24s ease;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-workspace-panel .room-panel-tabs {
+    margin-top: 0;
+  }
+  .room-panel-handle {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-sheet-grabber {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 100%;
+    min-height: 28px;
+    padding: 10px 0 8px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-sheet-grabber > span {
+    width: 40px;
+    height: 5px;
+    border-radius: 3px;
+    background: #c9ced6;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-sheet-peek {
+    display: block;
+    margin: 10px 16px 0;
+    overflow: hidden;
+    color: var(--room-ws-muted);
+    font-size: 12.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock, .planner-workspace.planner-reference.planner-studio.room-simple .room-selection-bar {
+    position: fixed;
+    right: 12px;
+    bottom: calc(var(--room-sheet-h) + 10px);
+    left: 12px;
+    z-index: 70;
+    width: auto;
+    max-width: none;
+    margin: 0;
+    transform: none;
+    transition: bottom 0.24s ease;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .planner-selection-toolbar:has(> .room-selection-bar) {
+    transform: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock {
+    justify-content: space-between;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock :is(.room-dock-divider, .room-dock-room) {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-view-dock .room-view-options {
+    flex: 1;
+    justify-content: space-around;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple.room-has-selection .room-view-dock, .planner-workspace.planner-reference.planner-studio.room-simple:has(.room-workspace-panel[data-sheet="full"]) :is(.room-view-dock, .room-selection-bar) {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-selection-bar > strong {
+    flex: 1;
+    min-width: 0;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-selection-bar > button:not(.is-primary) > span {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-selection-bar > button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-zoom-controls {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-stage-actions, .planner-workspace.planner-reference.planner-studio.room-simple:not(.room-workspace-open) .room-stage-actions {
+    top: 12px;
+    left: 12px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-map-toggle {
+    top: 68px;
+    left: 12px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple :is(.planner-room-caption, .room-navigation-status) {
+    display: none;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-panel-tabs > button > span {
+    font-size: 12.5px;
+  }
+  .planner-workspace.planner-reference.planner-studio.room-simple .room-panel-tabs > button {
+    min-width: 0;
+    padding-inline: 4px;
+  }
+  .room-catalog-search input {
+    font-size: 16px;
+  }
+  .room-catalog-chips {
+    flex-wrap: nowrap;
+    margin-inline: -12px;
+    padding: 0 12px 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .room-catalog-chips > button {
+    flex: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-workspace-panel, .room-view-dock, .room-selection-bar {
+    transition: none;
+  }
+}

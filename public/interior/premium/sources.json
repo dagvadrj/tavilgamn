@@ -1,0 +1,37 @@
+[
+  {
+    "name": "concrete",
+    "source": "https://polyhaven.com/a/concrete_wall_006",
+    "license": "CC0-1.0"
+  },
+  {
+    "name": "parquet",
+    "source": "https://polyhaven.com/a/herringbone_parquet",
+    "license": "CC0-1.0"
+  },
+  {
+    "name": "walnut",
+    "source": "https://polyhaven.com/a/wood_table_001",
+    "license": "CC0-1.0"
+  },
+  {
+    "name": "linen",
+    "source": "https://polyhaven.com/a/rough_linen",
+    "license": "CC0-1.0",
+    "note": "Normal/roughness from rough_linen; color: image_gen neutral ivory upholstery weave"
+  },
+  {
+    "name": "lounge-chair",
+    "source": "https://polyhaven.com/a/mid_century_lounge_chair",
+    "license": "CC0-1.0"
+  },
+  {
+    "name": "living-poster",
+    "source": "User living-room reference, UI removed with image_gen",
+    "usage": "Loading/error poster only; active room is WebGL"
+  },
+  {
+    "name": "window-city",
+    "source": "image_gen: soft Ulaanbaatar skyline exterior background"
+  }
+]

@@ -103,6 +103,7 @@ test("merchant sidebar keeps all operations and settings and disables private st
       "reports",
       "contracts",
       "products",
+      "rooms",
       "orders",
       "delivery",
       "branches", "staff", "reviews", "assistant", "returns",
@@ -127,7 +128,7 @@ test("merchant sidebar keeps all operations and settings and disables private st
   );
   for (const tab of MERCHANT_TABS.filter(tab => !["overview", "sales", "inventory", "progress"].includes(tab.id)))
     assert.ok(locked.includes(tab.label), `Missing ${tab.label}`);
-  assert.equal((locked.match(/disabled=""/g) ?? []).length, 14);
+  assert.equal((locked.match(/disabled=""/g) ?? []).length, 15);
   assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 0);
   const unlocked = desktopMarkup(
     renderToStaticMarkup(

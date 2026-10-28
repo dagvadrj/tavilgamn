@@ -5,6 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { performanceDiagnosticsEnabled, reportCanvasMetric, summarizeFrames, summarizeMotionFrames } from "@/lib/performanceDiagnostics";
 import { useCameraMotionPreview } from "./CameraMotionPreview";
 import type { PerspectiveCamera, Vector3 } from "three";
+import { modelCacheStats } from "./modelLoader";
 
 export function CanvasDiagnostics({ scene }: { scene: string }) {
   const gl = useThree(state => state.gl);
@@ -64,6 +65,7 @@ export function CanvasDiagnostics({ scene }: { scene: string }) {
         cameraPosition: state.camera.position.toArray(),
         cameraTarget: controls?.target?.toArray(),
         cameraFov: (state.camera as PerspectiveCamera).fov,
+        modelCache: modelCacheStats(gl),
       });
       started = now;
       sample.current = { frames: 0, intervals: [], motionIntervals: [], last: sample.current.last,

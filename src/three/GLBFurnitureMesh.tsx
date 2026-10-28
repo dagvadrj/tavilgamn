@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Edges } from "@react-three/drei";
 import { SceneHtml as Html } from "./SceneHtml";
+import { FurnitureLoadState } from "./FurnitureLoadState";
 import * as THREE from "three";
 import {
   kitchenCabinetSurface,
@@ -66,6 +67,17 @@ export interface GLBFurnitureMeshProps {
   carcassColor?: string;
   onReady?: () => void;
   onError?: () => void;
+  /**
+   * Room pieces draw their own load states in the scene (B2): a sized volume,
+   * a failed volume with retry/remove, and a dimmed previous variant.
+   */
+  sceneStatus?: {
+    floorOffset?: number;
+    onRetry?: () => void;
+    onRemove?: () => void;
+    /** A new file failed while the previous model is still shown. */
+    onSwapError?: () => void;
+  };
   /** Sample an authored opening animation; imported furniture is never rebuilt. */
   open?: boolean;
   openAnimation?: string;
@@ -127,6 +139,7 @@ export function GLBFurnitureMesh({
   carcassColor,
   onReady,
   onError,
+  sceneStatus,
   preservePhysicalSize = false,
   strictDimensions = false,
   frontProjectionMm = 0,
@@ -165,8 +178,8 @@ export function GLBFurnitureMesh({
     if (!enabled && visible) setSeen(true);
 
   });
-  const callbacks = useRef({ onReady, onError });
-  callbacks.current = { onReady, onError };
+  const callbacks = useRef({ onReady, onError, onSwapError: sceneStatus?.onSwapError });
+  callbacks.current = { onReady, onError, onSwapError: sceneStatus?.onSwapError };
   const [display, setDisplay] = useState<Display | null>(null);
   const owned = useRef(new Set<Display>());
 
@@ -261,6 +274,7 @@ export function GLBFurnitureMesh({
     let cancelled = false;
     let readyShown = false;
     let assetPrepared = false;
+    let releasePending: (() => void) | undefined;
     const startedAt = performance.now();
     setError(false);
     // Keep the last complete scene attached while the next GLB and its textures
@@ -274,6 +288,15 @@ export function GLBFurnitureMesh({
         acquireKitchenMaterialTextures(frontTexturePaths);
       const carcassTextureLease =
         acquireKitchenMaterialTextures(carcassTexturePaths);
+      let released = false;
+      const release = () => {
+        if (released) return;
+        released = true;
+        frontTextureLease.release();
+        carcassTextureLease.release();
+        lease.release();
+      };
+      releasePending = release;
       let transferred = false;
       try {
         const [asset, frontTextures, carcassTextures] = await Promise.all([
@@ -385,11 +408,7 @@ export function GLBFurnitureMesh({
           variant: "high",
           requestedAt,
           asset: cloned,
-          release: () => {
-            frontTextureLease.release();
-            carcassTextureLease.release();
-            lease.release();
-          },
+          release,
         };
         {
           let firstFrame = true;
@@ -421,22 +440,24 @@ export function GLBFurnitureMesh({
           });
         }
         transferred = true;
+        releasePending = undefined;
         assetPrepared = true;
         owned.current.add(next);
         setDisplay(next);
         return true;
       } catch (error) {
-        console.error("[GlbFurnitureMesh]", error);
+        if (!cancelled) console.error("[GlbFurnitureMesh]", error);
         if (!cancelled && !assetPrepared) {
           setError(true);
-          callbacks.current.onError?.();
+          // A retained previous model means a variant swap failed, not the piece.
+          const swap = owned.current.size > 0 && callbacks.current.onSwapError;
+          (swap || callbacks.current.onError)?.();
         }
         return false;
       } finally {
         if (!transferred) {
-          frontTextureLease.release();
-          carcassTextureLease.release();
-          lease.release();
+          release();
+          releasePending = undefined;
         }
       }
     };
@@ -444,6 +465,7 @@ export function GLBFurnitureMesh({
     void loadDelivery();
     return () => {
       cancelled = true;
+      releasePending?.();
     };
   }, [gl, request]);
 
@@ -476,6 +498,7 @@ export function GLBFurnitureMesh({
   const size = ready?.asset.bounds.getSize(new THREE.Vector3());
   const origin = ready?.asset.bounds.getCenter(new THREE.Vector3());
   const valid = size && origin && Math.min(size.x, size.y, size.z) > 1e-9;
+  const swapping = !!ready && !currentDelivery && ready.url !== base + glbFile;
   const placement =
     ready && valid
       ? modelPlacement(
@@ -505,7 +528,33 @@ export function GLBFurnitureMesh({
           />
         </group>
       ) : null}
-      {!ready && (
+      {sceneStatus && (
+        <FurnitureLoadState
+          w={w}
+          d={d}
+          h={h}
+          floorOffset={sceneStatus.floorOffset}
+          phase={
+            error && !ready
+              ? "error"
+              : !ready
+                ? "loading"
+                : swapping && !error
+                  ? "swapping"
+                  : "ready"
+          }
+          model={ready && valid ? ready.asset.scene : undefined}
+          swapFailed={error && !!ready}
+          selected={selected}
+          onRetry={() =>
+            ready || !sceneStatus.onRetry
+              ? setRetry((value) => value + 1)
+              : sceneStatus.onRetry()
+          }
+          onRemove={sceneStatus.onRemove}
+        />
+      )}
+      {!sceneStatus && !ready && (
         <mesh
           name="FurnitureLoadingPlaceholder"
           position={[0, h / 2, 0]}
@@ -521,7 +570,7 @@ export function GLBFurnitureMesh({
           <Edges color="#1463df" lineWidth={1} />
         </mesh>
       )}
-      {showLoadStatus && enabled && (
+      {!sceneStatus && showLoadStatus && enabled && (
         <Html position={[0, h + 0.1, 0]} center zIndexRange={[8, 0]}
           style={{ display: !currentDelivery || error ? undefined : "none" }}>
           {error ? (

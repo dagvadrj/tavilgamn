@@ -1,0 +1,334 @@
+{
+  "date": "2026-10-26",
+  "viewport": [
+    1366,
+    768
+  ],
+  "deviceScaleFactor": 1,
+  "method": "Sequential production builds in Chromium SwiftShader. No interception during performance measurement so browser HTTP cache remains enabled. Frame intervals observe rendered canvas updates; not physical-device GPU frame time. Texture sizes estimated from GL allocations, exclude DOM images and process RAM.",
+  "baseline": {
+    "renderer": "Chromium SwiftShader; same machine, viewport and DPR; not physical-device FPS",
+    "runs": [
+      {
+        "cache": "cold",
+        "preparation": {
+          "shaderSubmissionCalls": 42,
+          "shaderSubmissionCpuMs": 0,
+          "firstRenderedFrameMs": 2378.5999999996275,
+          "estimatedTextureAllocationBytes": 206790434.6666667
+        },
+        "idle": {
+          "engine": "three.js r170",
+          "roomTravel": "0.000",
+          "compact": "false",
+          "roomOpacity": "1.000",
+          "roomSettled": "true",
+          "roomFocus": "",
+          "cameraPosition": "0.250,1.850,4.700",
+          "renderFrame": "28",
+          "drawCalls": "49",
+          "triangles": "13126",
+          "geometries": "58",
+          "textures": "19",
+          "roomCount": "1",
+          "width": 1366,
+          "height": 768
+        },
+        "focus": {
+          "engine": "three.js r170",
+          "roomTravel": "0.000",
+          "compact": "false",
+          "roomOpacity": "1.000",
+          "roomSettled": "true",
+          "roomFocus": "sofa",
+          "cameraPosition": "-0.200,1.350,0.800",
+          "renderFrame": "39",
+          "drawCalls": "36",
+          "triangles": "80395",
+          "geometries": "64",
+          "textures": "27",
+          "roomCount": "1",
+          "width": 1366,
+          "height": 768
+        },
+        "idleStopped": true,
+        "medianFrameMs": 502.70000000018626,
+        "p95FrameMs": 1474.2000000001863,
+        "framesOver100ms": 6,
+        "frameSamples": 10,
+        "shaderCallsDuringFocus": 0,
+        "estimatedTextureBytes": 206790434.6666667,
+        "transferredBytes": 7823952,
+        "encodedBodyBytes": 8223804
+      },
+      {
+        "cache": "warm",
+        "preparation": {
+          "shaderSubmissionCalls": 42,
+          "shaderSubmissionCpuMs": 0,
+          "firstRenderedFrameMs": 1684.7999999998137,
+          "estimatedTextureAllocationBytes": 206790434.6666667
+        },
+        "idle": {
+          "engine": "three.js r170",
+          "roomTravel": "0.000",
+          "compact": "false",
+          "roomOpacity": "1.000",
+          "roomSettled": "true",
+          "roomFocus": "",
+          "cameraPosition": "0.250,1.850,4.700",
+          "renderFrame": "37",
+          "drawCalls": "51",
+          "triangles": "92948",
+          "geometries": "64",
+          "textures": "27",
+          "roomCount": "1",
+          "width": 1366,
+          "height": 768
+        },
+        "focus": {
+          "engine": "three.js r170",
+          "roomTravel": "0.000",
+          "compact": "false",
+          "roomOpacity": "1.000",
+          "roomSettled": "true",
+          "roomFocus": "sofa",
+          "cameraPosition": "-0.200,1.350,0.800",
+          "renderFrame": "48",
+          "drawCalls": "36",
+          "triangles": "80395",
+          "geometries": "64",
+          "textures": "27",
+          "roomCount": "1",
+          "width": 1366,
+          "height": 768
+        },
+        "idleStopped": true,
+        "medianFrameMs": 501.19999999925494,
+        "p95FrameMs": 1497,
+        "framesOver100ms": 6,
+        "frameSamples": 10,
+        "shaderCallsDuringFocus": 0,
+        "estimatedTextureBytes": 206790434.6666667,
+        "transferredBytes": 5100,
+        "encodedBodyBytes": 5317728
+      }
+    ],
+    "errors": []
+  },
+  "hybrid": {
+    "renderer": "Chromium SwiftShader; same machine, viewport and DPR; not physical-device FPS",
+    "runs": [
+      {
+        "cache": "cold",
+        "preparation": {
+          "shaderSubmissionCalls": 54,
+          "shaderSubmissionCpuMs": 0,
+          "firstRenderedFrameMs": 2060.7999999998137,
+          "estimatedTextureAllocationBytes": 130158612
+        },
+        "idle": {
+          "engine": "three.js r170",
+          "renderFrame": "38",
+          "drawCalls": "9",
+          "triangles": "52152",
+          "textures": "15",
+          "geometries": "54",
+          "roomCount": "1",
+          "roomTravel": "0.000",
+          "roomFocus": "",
+          "roomSettled": "true",
+          "cameraPosition": "0.000,2.500,7.800",
+          "hybrid": "true",
+          "width": 1366,
+          "height": 768
+        },
+        "focus": {
+          "engine": "three.js r170",
+          "renderFrame": "57",
+          "drawCalls": "2",
+          "triangles": "45444",
+          "textures": "15",
+          "geometries": "54",
+          "roomCount": "1",
+          "roomTravel": "0.000",
+          "roomFocus": "sofa",
+          "roomSettled": "true",
+          "cameraPosition": "4.247,2.167,6.810",
+          "hybrid": "true",
+          "width": 1366,
+          "height": 768
+        },
+        "idleStopped": true,
+        "medianFrameMs": 68.20000000018626,
+        "p95FrameMs": 205.5,
+        "framesOver100ms": 6,
+        "frameSamples": 18,
+        "shaderCallsDuringFocus": 0,
+        "estimatedTextureBytes": 130158612,
+        "transferredBytes": 7556191,
+        "encodedBodyBytes": 7956343
+      },
+      {
+        "cache": "warm",
+        "preparation": {
+          "shaderSubmissionCalls": 54,
+          "shaderSubmissionCpuMs": 0.20000000018626451,
+          "firstRenderedFrameMs": 1283.7000000001863,
+          "estimatedTextureAllocationBytes": 130158612
+        },
+        "idle": {
+          "engine": "three.js r170",
+          "renderFrame": "40",
+          "drawCalls": "9",
+          "triangles": "52152",
+          "textures": "15",
+          "geometries": "54",
+          "roomCount": "1",
+          "roomTravel": "0.000",
+          "roomFocus": "",
+          "roomSettled": "true",
+          "cameraPosition": "0.000,2.500,7.800",
+          "hybrid": "true",
+          "width": 1366,
+          "height": 768
+        },
+        "focus": {
+          "engine": "three.js r170",
+          "renderFrame": "59",
+          "drawCalls": "2",
+          "triangles": "45444",
+          "textures": "15",
+          "geometries": "54",
+          "roomCount": "1",
+          "roomTravel": "0.000",
+          "roomFocus": "sofa",
+          "roomSettled": "true",
+          "cameraPosition": "4.247,2.167,6.810",
+          "hybrid": "true",
+          "width": 1366,
+          "height": 768
+        },
+        "idleStopped": true,
+        "medianFrameMs": 70.09999999962747,
+        "p95FrameMs": 187,
+        "framesOver100ms": 7,
+        "frameSamples": 18,
+        "shaderCallsDuringFocus": 0,
+        "estimatedTextureBytes": 130158612,
+        "transferredBytes": 3600,
+        "encodedBodyBytes": 6496611
+      }
+    ],
+    "errors": []
+  },
+  "browser": {
+    "result": [
+      {
+        "label": "desktop",
+        "index": 0,
+        "drawCalls": "9",
+        "triangles": "52152",
+        "camera": "0.000,2.500,7.800"
+      },
+      {
+        "label": "desktop",
+        "index": 1,
+        "drawCalls": "24",
+        "triangles": "27804",
+        "camera": "0.000,2.700,8.800"
+      },
+      {
+        "label": "desktop",
+        "index": 2,
+        "drawCalls": "12",
+        "triangles": "19536",
+        "camera": "0.000,2.600,7.800"
+      },
+      {
+        "label": "phone",
+        "index": 0,
+        "drawCalls": "7",
+        "triangles": "46002",
+        "camera": "0.000,2.500,7.800"
+      },
+      {
+        "label": "phone",
+        "index": 1,
+        "drawCalls": "19",
+        "triangles": "26628",
+        "camera": "0.000,2.700,8.800"
+      },
+      {
+        "label": "phone",
+        "index": 2,
+        "drawCalls": "11",
+        "triangles": "19456",
+        "camera": "0.000,2.600,7.800"
+      },
+      {
+        "label": "landscape",
+        "index": 0,
+        "drawCalls": "9",
+        "triangles": "52152",
+        "camera": "0.000,2.500,7.800"
+      },
+      {
+        "label": "landscape",
+        "index": 1,
+        "drawCalls": "24",
+        "triangles": "27804",
+        "camera": "0.000,2.700,8.800"
+      },
+      {
+        "label": "landscape",
+        "index": 2,
+        "drawCalls": "12",
+        "triangles": "19536",
+        "camera": "0.000,2.600,7.800"
+      }
+    ],
+    "errors": []
+  },
+  "fallbacks": [
+    {
+      "mode": "no-webgl",
+      "passed": true
+    },
+    {
+      "mode": "model-error",
+      "passed": true
+    },
+    {
+      "mode": "slow-model",
+      "passed": true
+    },
+    {
+      "mode": "reduced-motion",
+      "passed": true
+    },
+    {
+      "mode": "context-loss",
+      "passed": true
+    },
+    {
+      "mode": "offscreen-return",
+      "passed": true
+    }
+  ],
+  "checks": {
+    "productionBuild": true,
+    "typecheck": true,
+    "lint": true,
+    "focusedTests": 27,
+    "stylesFiles": 124,
+    "allNineFurnitureColorAndCloseChecks": true
+  },
+  "limitations": [
+    "Physical midrange phone and integrated-GPU notebook not available; 30 FPS target remains unverified.",
+    "SwiftShader still exhibits >100 ms rendered-frame intervals; no universal smoothness claim.",
+    "Initial shader submission CPU timing is not GPU compilation timing.",
+    "Other unset catalog slots keep existing procedural preview furniture.",
+    "New admin-selected models use catalog fallback until a matching hero derivative is registered."
+  ]
+}

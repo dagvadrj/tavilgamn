@@ -85,9 +85,11 @@ test("daylight only adjusts environment strength while the one-shot IBL capture 
   let invalidations = 0;
   const invalidate = () => invalidations++;
   let cleanup;
+  let contextRevision = 0;
   const { PlannerEnvironment } = loadSource(
     "src/three/PlannerEnvironment.tsx",
     {
+      "./CanvasLifecycle": { useContextRevision: () => contextRevision },
       react: {
         ...React,
         useLayoutEffect: (effect) => {
@@ -133,6 +135,10 @@ test("daylight only adjusts environment strength while the one-shot IBL capture 
     ),
   );
   assert.equal(invalidations, 2);
+  assert.equal(day.key, night.key, "daylight does not rebuild GPU captures");
+  contextRevision++;
+  const restored = PlannerEnvironment.type({ daylight: 0 });
+  assert.notEqual(restored.key, night.key, "a restored context must recapture GPU-only reflection targets");
   cleanup();
   assert.equal(scene.environmentIntensity, 0.9);
 });

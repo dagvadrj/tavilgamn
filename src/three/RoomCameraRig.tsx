@@ -1,8 +1,8 @@
 "use client";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type MutableRefObject } from "react";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { applyCameraPose, beginCameraTransition, cameraPose, shiftCameraTransition } from "@/lib/cameraTransition";
+import { applyCameraPose, beginCameraTransition, cameraPose, shiftCameraTransition, type CameraPose } from "@/lib/cameraTransition";
 import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 
 interface CameraControls {
@@ -19,10 +19,12 @@ interface Props {
   resetKey: number;
   originX: number;
   originZ: number;
+  /** A pose to resume on mount (leaving a room by scroll), consumed once. */
+  restore?: MutableRefObject<CameraPose | null>;
 }
 
 /** Keep the same world-space view when the selected room changes local coordinates. */
-export function RoomCameraRig({ view, width, depth, height, centerX, centerZ, resetKey, originX, originZ }: Props) {
+export function RoomCameraRig({ view, width, depth, height, centerX, centerZ, resetKey, originX, originZ, restore }: Props) {
   const camera = useThree(state => state.camera);
   const rawControls = useThree(state => state.controls);
   const controls = rawControls && "target" in rawControls && "update" in rawControls ? rawControls as unknown as CameraControls : undefined;
@@ -35,7 +37,17 @@ export function RoomCameraRig({ view, width, depth, height, centerX, centerZ, re
     const target = (controls && controls === last?.controls ? controls.target : last?.target.clone()) ?? new THREE.Vector3();
     const perspective = camera as THREE.PerspectiveCamera;
     const from = cameraPose(perspective, target);
-    if (!last || last.camera !== camera || last.view !== view || last.resetKey !== resetKey) {
+    const resume = !last ? restore?.current : null;
+    if (resume) {
+      if (restore) restore.current = null;
+      target.copy(resume.target);
+      perspective.fov = resume.fov;
+      perspective.zoom = resume.zoom;
+      perspective.far = resume.far;
+      camera.up.copy(resume.up);
+      camera.position.copy(resume.position);
+      camera.lookAt(target);
+    } else if (!last || last.camera !== camera || last.view !== view || last.resetKey !== resetKey) {
       perspective.fov = view === "plan" ? 35 : PLANNER_CAMERA.fov;
       perspective.zoom = 1;
       const aspect = size.width / Math.max(size.height, 1);
@@ -72,6 +84,6 @@ export function RoomCameraRig({ view, width, depth, height, centerX, centerZ, re
     }
     previous.current = { camera, view, resetKey, originX, originZ, target: controls?.target ?? target, controls };
     invalidate();
-  }, [camera, controls, view, width, depth, height, centerX, centerZ, resetKey, originX, originZ, size.width, size.height, invalidate]);
+  }, [camera, controls, view, width, depth, height, centerX, centerZ, resetKey, originX, originZ, size.width, size.height, invalidate, restore]);
   return null;
 }

@@ -35,9 +35,10 @@ import dynamic from "next/dynamic";
 import {
   useRoomPlannerUi,
   type CustomInterior,
+  type RoomPanelTab,
+  type RoomPanelView,
 } from "@/features/room-planner/hooks/useRoomPlannerUi";
 import {
-  Drawer,
   CompareModal,
   NumberControl,
   PlannerSkeleton,
@@ -45,13 +46,13 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RoomPlannerStart } from "@/features/room-planner/components/RoomPlannerStart";
 import {
-  PlannerCatalogToolbar,
   sortPlannerCatalog,
   type PlannerCatalogSort,
 } from "@/features/planner/components/PlannerCatalogToolbar";
 import { RoomCatalogFilters } from "@/features/room-planner/components/RoomCatalogFilters";
 import { RoomPlacementHelp } from "@/features/room-planner/components/RoomPlacementHelp";
 import { useRoomSaveStatus } from "@/features/room-planner/hooks/useRoomSaveStatus";
+import { roomSaveChip } from "@/lib/roomSaveStatus";
 import { roomPlacementWarnings } from "@/lib/roomPlacementWarnings";
 import {
   RoomTemplateAdminControls,
@@ -71,7 +72,6 @@ import {
   roomPlannerCatalog,
   type RoomCatalogScope,
 } from "@/lib/roomCatalogPolicy";
-import { PlannerModelCard } from "@/features/planner/components/PlannerModelCard";
 import type { CameraAction, CameraRequest } from "@/lib/plannerCamera";
 import Image from "next/image";
 import { PlannerLink as Link } from "@/components/PlannerLink";
@@ -112,12 +112,17 @@ import {
 import { priceFor } from "@/lib/products";
 import { getProduct, useCatalog } from "@/store/catalog";
 import { hasAvailableStock } from "@/lib/inventory";
-import { CatalogStatus } from "@/components/CatalogStatus";
+import {
+  RoomCatalogEmpty,
+  RoomCatalogError,
+  RoomCatalogSkeleton,
+} from "@/features/room-planner/components/RoomCatalogStates";
 import { useDesigns, ROOM_DIMENSIONS } from "@/store/designs";
 import { stockLabel } from "@/lib/inventory";
 import { useCart } from "@/store/cart";
 import type {
   PlacedFurniture,
+  Product,
   RoomDesign,
   RoomSize,
   Material,
@@ -152,7 +157,6 @@ import {
 import { RoomAddDialog } from "./RoomAddDialog";
 import { RoomTourControls } from "./RoomTourControls";
 import { interiorCamera } from "@/lib/roomInteriorCamera";
-import { tourPointValid } from "@/three/roomCameraPlacement";
 import { syncDesignRooms } from "@/lib/roomDesign";
 import { isPlacementValid, dimsFor } from "@/three/collision";
 import {
@@ -169,19 +173,43 @@ import "@/features/room-planner/components/room-planner-simple.css";
 import "@/features/room-planner/components/room-panel-theme.css";
 import "@/features/planner/components/planner-tools.css";
 import "@/features/room-planner/styles/studio-refresh.css";
-import { RoomProductCard } from "@/features/room-planner/components/RoomProductCard";
+// Last: the workspace panel owns the editor layout over the older inspector styles.
+import "@/features/room-planner/components/room-workspace.css";
+import {
+  RoomCatalogCard,
+  formatFurnitureCm,
+} from "@/features/room-planner/components/RoomCatalogCard";
+import {
+  RoomWorkspacePanel,
+  ROOM_PANEL_TABS,
+} from "@/features/room-planner/components/RoomWorkspacePanel";
+import {
+  RoomAddedList,
+  type RoomAddedRow,
+} from "@/features/room-planner/components/RoomAddedList";
+import {
+  RoomCartList,
+  RoomCartFooter,
+} from "@/features/room-planner/components/RoomCartList";
+import { RoomSummaryModal } from "@/features/room-planner/components/RoomSummaryModal";
+import { useStoreNames } from "@/features/room-planner/hooks/useStoreNames";
+import { useRoomModelStatus } from "@/store/roomModelStatus";
+import {
+  MerchantConflictDialog,
+  MerchantPublishDialog,
+  MerchantRoomCameraPanel,
+  MerchantRoomHeader,
+  MerchantRoomPreview,
+  useMerchantRoomEditor,
+} from "@/features/room-planner/components/MerchantRoomEditor";
+import { defaultCartSelection } from "@/lib/homeMarketplace";
+import type { CartItem } from "@/lib/types";
 import { type DbModelInfo, getDbModel } from "@/lib/modelRegistry";
 
 const RoomCanvas = dynamic(
   () => import("@/three/RoomCanvas").then((m) => m.RoomCanvas),
   { ssr: false, loading: () => <PlannerSkeleton /> },
 );
-
-const ROOM_OPTIONS: { id: RoomSize; label: string; sub: string }[] = [
-  { id: "40", label: "40 м² орон сууц", sub: "6.3 × 6.3 м" },
-  { id: "80", label: "80 м² орон сууц", sub: "8.9 × 8.9 м" },
-  { id: "120", label: "120 м² байшин", sub: "11 × 11 м" },
-];
 
 const STATIC_PRESETS: CustomInterior[] = [
   {
@@ -192,6 +220,12 @@ const STATIC_PRESETS: CustomInterior[] = [
     label: "tv (өөрийн загвар)",
   },
 ];
+
+/** Below 960px the panel is an overlay drawer or sheet, not a column. */
+const narrowPanel = () =>
+  typeof window !== "undefined" &&
+  typeof window.matchMedia === "function" &&
+  window.matchMedia("(max-width: 959px)").matches;
 
 export function RoomPlanner() {
   const { initialized, initialize, user } = useAuth();
@@ -212,7 +246,6 @@ export function RoomPlanner() {
 function RoomPlannerEditor() {
   const [tourRequest, setTourRequest] = useState(0);
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
-  const [savedAt, setSavedAt] = useState<string | null>(null);
   useEffect(() => {
     const preserveRoom = () => {
       const state = useDesigns.getState();
@@ -260,9 +293,6 @@ function RoomPlannerEditor() {
   const kitchenLibrary = useKitchens(),
     kitchenUser = useAuth((state) => state.user);
   const handledKitchen = useRef<string | null>(null);
-  const [roomDetailsTab, setRoomDetailsTab] = useState<
-    "room" | "selection" | "project"
-  >("room");
   const [kitchenOnly, setKitchenOnly] = useState(false);
   const [catalogScope, setCatalogScope] = useState<RoomCatalogScope>("room");
   const [catalogFormat, setCatalogFormat] = useState<"all" | "glb" | "photo">(
@@ -275,6 +305,15 @@ function RoomPlannerEditor() {
     return useDesigns.getState().current!.id;
   }, []);
   const templateAdmin = useRoomTemplateAdmin(loadTemplate);
+  // C3: `?merchantRoom=` edits a store's own furnished room.
+  const merchantRoom = useMerchantRoomEditor(loadTemplate);
+  const merchantMode = merchantRoom.active && !!merchantRoom.meta;
+  const [merchantDialog, setMerchantDialog] = useState<
+    "publish" | "preview" | null
+  >(null);
+  useEffect(() => {
+    if (merchantMode) setRoomStartOpen(false);
+  }, [merchantMode]);
   const glbExporter = useRef<(() => Promise<Blob>) | null>(null);
   const exportReady = useCallback((exporter: (() => Promise<Blob>) | null) => {
     glbExporter.current = exporter;
@@ -320,8 +359,12 @@ function RoomPlannerEditor() {
   const measureFactor = measureUnit === "мм" ? 1000 : 100;
   const [roomView, setRoomView] = useState<RoomView>("dollhouse");
   const {
-    inspector,
-    setInspector,
+    panelOpen,
+    setPanelOpen,
+    panelTab,
+    setPanelTab,
+    panelView,
+    setPanelView,
     selected,
     setSelected,
     environmentTab,
@@ -352,10 +395,6 @@ function RoomPlannerEditor() {
     setCompareIds,
     saveName,
     setSaveName,
-    leftOpen,
-    setLeftOpen: setCatalogOpen,
-    rightOpen,
-    setRightOpen: setPropertiesOpen,
     activePreset,
     setActivePreset,
     presetStatus,
@@ -383,36 +422,77 @@ function RoomPlannerEditor() {
     newRoomType,
     setNewRoomType,
   } = useRoomPlannerUi();
+  // The nested views reuse the former inspector sections unchanged.
+  const roomDetailsTab =
+    panelView === "detail"
+      ? "selection"
+      : panelView === "designs"
+        ? "project"
+        : "room";
+  /** Opens a tab list; on drawer/sheet widths closing hands the screen back. */
   const setLeftOpen = useCallback(
     (open: boolean) => {
-      setCatalogOpen(open);
       if (open) {
-        setInspector("catalog");
-        setPropertiesOpen(false);
+        setPanelOpen(true);
+        setPanelTab("add");
+        setPanelView("list");
         setSummaryOpen(false);
         setShowStartHint(false);
-      }
+      } else if (narrowPanel()) setPanelOpen(false);
     },
-    [setCatalogOpen, setInspector, setPropertiesOpen, setShowStartHint],
+    [setPanelOpen, setPanelTab, setPanelView, setShowStartHint],
   );
-  const setRightOpen = useCallback(
-    (open: boolean) => {
-      setPropertiesOpen(open);
-      if (open) {
-        setInspector("environment");
-        setCatalogOpen(false);
-        setSummaryOpen(false);
-        setShowStartHint(false);
-      }
+  const openNested = useCallback(
+    (next: Exclude<RoomPanelView, "list">) => {
+      setPanelOpen(true);
+      setPanelView(next);
+      if (next !== "room") setEnvironmentTab("room");
+      setSummaryOpen(false);
+      setShowStartHint(false);
     },
-    [setCatalogOpen, setInspector, setPropertiesOpen, setShowStartHint],
+    [setPanelOpen, setPanelView, setEnvironmentTab, setShowStartHint],
+  );
+  /** «Буцах»: the tab, its search, filters and scroll are where they were. */
+  const closeNested = useCallback(() => {
+    setPanelView("list");
+  }, [setPanelView]);
+  const showTab = useCallback(
+    (tab: RoomPanelTab) => {
+      setPanelOpen(true);
+      setPanelTab(tab);
+      setPanelView("list");
+      setShowStartHint(false);
+    },
+    [setPanelOpen, setPanelTab, setPanelView, setShowStartHint],
   );
   useEffect(() => {
-    if (!selected) return;
-    setRoomDetailsTab("selection");
-    setEnvironmentTab("room");
-    setRightOpen(true);
-  }, [selected, setEnvironmentTab, setRightOpen]);
+    if (panelView === "detail" && !selected) setPanelView("list");
+  }, [panelView, selected, setPanelView]);
+  const [noticeAction, setNoticeAction] = useState<{
+    message: string;
+    label: string;
+    run: () => void;
+  } | null>(null);
+  const showNotice = useCallback(
+    (message: string, action?: { label: string; run: () => void }) => {
+      setNotice(message);
+      setNoticeAction(action ? { message, ...action } : null);
+    },
+    [setNotice],
+  );
+  const [focusedOn, setFocusedOn] = useState<string | null>(null);
+  useEffect(() => {
+    if (focusedOn && focusedOn !== selected) setFocusedOn(null);
+  }, [focusedOn, selected]);
+  const storeNames = useStoreNames();
+  const [catalogMerchant, setCatalogMerchant] = useState("all");
+  // The merchant editor shows only the store's own products («Миний бараа»).
+  const merchantStoreId = merchantMode ? merchantRoom.store?.id : undefined;
+  useEffect(() => {
+    if (merchantStoreId && catalogMerchant !== merchantStoreId)
+      setCatalogMerchant(merchantStoreId);
+  }, [merchantStoreId, catalogMerchant]);
+  const cartItems = useCart((state) => state.items) ?? [];
   const dbModels = useMemo(
     () =>
       catalog.products
@@ -424,15 +504,14 @@ function RoomPlannerEditor() {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [cameraRequest, setCameraRequest] = useState<CameraRequest>();
   const [settledPlan, setSettledPlan] = useState<string | null>(null);
-  const planReady = roomView === "top" && settledPlan === current?.id;
+  const [rendererUnavailable, setRendererUnavailable] = useState(false);
+  const planReady = roomView === "top" && (rendererUnavailable || settledPlan === current?.id);
+  useEffect(() => { setRendererUnavailable(false); }, [current?.id]);
   useEffect(() => {
     if (roomView !== "top") setSettledPlan(null);
   }, [roomView]);
-  const [cameraPlacement, setCameraPlacement] = useState(false);
   const [addRoomType, setAddRoomType] = useState<RoomType | null>(null);
   function navigateView(action: CameraAction) {
-    if (["fit", "top", "front", "back", "left", "right"].includes(action))
-      setCameraPlacement(false);
     if (action === "top") {
       setView("plan");
       setRoomView("top");
@@ -506,7 +585,6 @@ function RoomPlannerEditor() {
     setRoomView("dollhouse");
     setView("perspective");
     setCameraRequest(undefined);
-    setCameraPlacement(false);
     setAddRoomType(null);
   }, [current?.id, setView, setResetKey]);
   useEffect(() => {
@@ -518,6 +596,8 @@ function RoomPlannerEditor() {
   }, [current?.openings, selectedOpening, setSelectedOpening]);
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
+      // The panel, menus and dialogs handle their own Escape first.
+      if (event.defaultPrevented) return;
       const target = event.target as HTMLElement;
       if (
         target.closest(
@@ -571,7 +651,7 @@ function RoomPlannerEditor() {
     const piece = result?.piece;
     if (piece) {
       setSelected(piece.instanceId);
-      setRightOpen(true);
+      showTab("added");
       setNotice(`Гарнитурыг өрөөнд байрлууллаа. ${result.message}`);
     } else {
       setNotice(
@@ -598,7 +678,7 @@ function RoomPlannerEditor() {
     setSelected,
     setNotice,
     setLeftOpen,
-    setRightOpen,
+    showTab,
   ]);
 
   useEffect(() => {
@@ -631,8 +711,16 @@ function RoomPlannerEditor() {
   const scopedCatalog = useMemo(
     () =>
       roomPlannerCatalog(
-        catalog.products.filter((p) => !p.model),
-        dbModels,
+        catalog.products.filter(
+          (p) =>
+            !p.model &&
+            (catalogMerchant === "all" || p.storeIds?.includes(catalogMerchant)),
+        ),
+        catalogMerchant === "all"
+          ? dbModels
+          : dbModels.filter((model) =>
+              getProduct(model.id)?.storeIds?.includes(catalogMerchant),
+            ),
         {
           roomType: activeRoomType,
           scope: catalogScope,
@@ -644,6 +732,7 @@ function RoomPlannerEditor() {
     [
       catalog.products,
       dbModels,
+      catalogMerchant,
       activeRoomType,
       catalogScope,
       paletteCat,
@@ -670,6 +759,42 @@ function RoomPlannerEditor() {
       ),
     [scopedCatalog.models, catalogSort],
   );
+  /** The same search in every category, for «Бусад ангилалд N илэрц» (B1.3). */
+  const searchElsewhere = useMemo(() => {
+    if (!query.trim() || scopedCatalog.category === "all") return 0;
+    const everywhere = roomPlannerCatalog(
+      catalog.products.filter(
+        (p) =>
+          !p.model &&
+          (catalogMerchant === "all" || p.storeIds?.includes(catalogMerchant)),
+      ),
+      catalogMerchant === "all"
+        ? dbModels
+        : dbModels.filter((model) =>
+            getProduct(model.id)?.storeIds?.includes(catalogMerchant),
+          ),
+      {
+        roomType: activeRoomType,
+        scope: catalogScope,
+        category: "all",
+        query,
+        format: catalogFormat,
+      },
+    );
+    return (
+      (catalogFormat === "glb" ? 0 : everywhere.photos.length) +
+      (catalogFormat === "photo" ? 0 : everywhere.models.length)
+    );
+  }, [
+    query,
+    scopedCatalog.category,
+    catalog.products,
+    dbModels,
+    catalogMerchant,
+    activeRoomType,
+    catalogScope,
+    catalogFormat,
+  ]);
   const catalogEntries = useMemo(
     () =>
       sortPlannerCatalog(
@@ -777,7 +902,6 @@ function RoomPlannerEditor() {
     if (result.piece) {
       rememberFurniture(result.piece);
       setSelected(result.piece.instanceId);
-      setCatalogOpen(false);
       setLeftOpen(false);
       trackProduct3d(product.id, "placement");
       setNotice(
@@ -801,7 +925,6 @@ function RoomPlannerEditor() {
     catalog.products,
     rememberFurniture,
     setSelected,
-    setCatalogOpen,
     setLeftOpen,
     setNotice,
   ]);
@@ -814,6 +937,21 @@ function RoomPlannerEditor() {
     designs,
     useDesigns.persist?.getOptions().name,
   );
+  const saveChip = storageStatus
+    ? roomSaveChip(
+        storageStatus.kind,
+        designs.find((design) => design.id === current?.id)?.updatedAt,
+      )
+    : null;
+  if (merchantRoom.active && (merchantRoom.error || !merchantRoom.meta))
+    return (
+      <main className="container-page py-10">
+        <p role={merchantRoom.error ? "alert" : "status"}>
+          {merchantRoom.error || "Өрөөг нээж байна…"}
+        </p>
+        <Link href="/merchant?tab=rooms">Өрөөнүүд рүү буцах</Link>
+      </main>
+    );
   if (templateAdmin.loading || templateAdmin.error)
     return (
       <main className="container-page py-10">
@@ -899,17 +1037,45 @@ function RoomPlannerEditor() {
             }
             setRoomStartOpen(false);
             setShowStartHint(false);
-            setCatalogOpen(false);
-            setPropertiesOpen(false);
             setSummaryOpen(false);
+            setPanelView("list");
             setKitchenOnly(type === "kitchen");
-            setLeftOpen(type === "kitchen");
+            if (type === "kitchen") setLeftOpen(true);
           }}
         />
       </>
     );
   }
 
+  /** «… өрөөнд нэмэгдлээ · Харах» once the 3D model has actually rendered. */
+  const announceWhenReady = (piece: PlacedFurniture) => {
+    const name = piece.details?.name ?? "Тавилга";
+    const view = () => {
+      setSelected(piece.instanceId);
+      setSelectedOpening(null);
+      setSelectedWall(null);
+      showTab("added");
+    };
+    const settle = (status: string | undefined) => {
+      if (status === "ready") {
+        showNotice(`${name} өрөөнд нэмэгдлээ.`, { label: "Харах", run: view });
+        return true;
+      }
+      if (status === "error") {
+        showNotice(`${name}-ийн 3D загвар ачаалагдсангүй. Байрлал хадгалагдсан.`, {
+          label: "Харах",
+          run: view,
+        });
+        return true;
+      }
+      return false;
+    };
+    const stop = useRoomModelStatus.subscribe((state) => {
+      if (settle(state.byInstance[piece.instanceId])) stop();
+    });
+    // Give up quietly if the piece is removed before it ever loads.
+    window.setTimeout(stop, 60_000);
+  };
   const placeNewPiece = (piece: PlacedFurniture) => {
     const latest = useDesigns.getState().current;
     if (!latest || latest.id !== current.id) {
@@ -943,6 +1109,7 @@ function RoomPlannerEditor() {
     setSelectedWall(null);
     setPlacementTemplate(null);
     setLeftOpen(false);
+    announceWhenReady(result.piece);
     setNotice(
       result.piece.attachment?.kind === "wall"
         ? "Тавилгыг хананд бэхэллээ. Ханын дагуу болон дээш, доош чирж зөөнө."
@@ -951,7 +1118,10 @@ function RoomPlannerEditor() {
           : "Тавилгыг сул зайд байрлууллаа. Чирж зөөх эсвэл Эргүүлэх товчоор чиглэлийг нь өөрчилнө.",
     );
   };
-  const addPiece = (productId: string) => {
+  const addPiece = (
+    productId: string,
+    variant?: { color: string; material: Material },
+  ) => {
     const product = getProduct(productId);
     if (!product) return;
     if (!product.model) {
@@ -965,8 +1135,8 @@ function RoomPlannerEditor() {
       x: 0,
       z: 0,
       rotation: 0,
-      color: product.defaultColor,
-      material: product.materials[0]?.id ?? "wood",
+      color: variant?.color ?? product.defaultColor,
+      material: variant?.material ?? product.materials[0]?.id ?? "wood",
       details: {
         name: product.name,
         dimensions: { ...product.dimensions },
@@ -977,9 +1147,13 @@ function RoomPlannerEditor() {
     placeNewPiece(piece);
   };
 
-  const addModelPiece = (model: DbModelInfo) => {
-    const defaultColor = model.colors[0]?.id ?? "default";
-    const defaultMaterial = (model.materials[0]?.id ?? "wood") as Material;
+  const addModelPiece = (
+    model: DbModelInfo,
+    variant?: { color: string; material: Material },
+  ) => {
+    const defaultColor = variant?.color ?? model.colors[0]?.id ?? "default";
+    const defaultMaterial =
+      variant?.material ?? ((model.materials[0]?.id ?? "wood") as Material);
     const piece: PlacedFurniture = {
       instanceId: `m_${crypto.randomUUID()}`,
       productId: model.id,
@@ -1061,6 +1235,39 @@ function RoomPlannerEditor() {
     );
   };
 
+  /** C3 cover: only from a fully loaded room, never a half-drawn one. */
+  const captureCover = () => {
+    const status = useRoomModelStatus.getState().byInstance;
+    if (
+      addedRows.some(
+        (row) => !row.has3d || status[row.instanceId] !== "ready",
+      )
+    ) {
+      showTab("cart");
+      setNotice("Бүх загвар ачаалагдсаны дараа cover болгоно.");
+      return;
+    }
+    const image = previewCapture.current?.();
+    if (!image) {
+      setNotice("Cover зураг үүссэнгүй. 3D өрөө бэлэн болсны дараа дахин оролдоно уу.");
+      return;
+    }
+    merchantRoom.setCover(image);
+    setNotice("Одоогийн харагдац cover болж тогтлоо.");
+  };
+  const focusSelected = () => {
+    if (!selected) return;
+    setFocusedOn(selected);
+    setLocked(false);
+    // B3: the sheet drops to peek (the drawer closes) so the camera is visible.
+    if (narrowPanel()) setPanelOpen(false);
+    setCameraRequest((previous) => ({
+      id: (previous?.id ?? 0) + 1,
+      action: "focus",
+      targetId: selected,
+    }));
+  };
+
   const removeSelected = () => {
     if (selectedOpening) {
       updateRoom({
@@ -1071,8 +1278,13 @@ function RoomPlannerEditor() {
       setSelectedOpening(null);
       return;
     }
-    if (!selected) return;
-    const removed = new Set([selected]);
+    if (selected) removePiece(selected);
+  };
+  /** Removes one instance with whatever stands on it; one undo step and «Буцаах». */
+  const removePiece = (instanceId: string) => {
+    const piece = current.pieces.find((p) => p.instanceId === instanceId);
+    if (!piece) return;
+    const removed = new Set([instanceId]);
     for (let changed = true; changed;) {
       changed = false;
       for (const p of current.pieces)
@@ -1085,8 +1297,27 @@ function RoomPlannerEditor() {
           changed = true;
         }
     }
+    const name =
+      piece.kitchen?.name ??
+      getProduct(piece.productId)?.name ??
+      getDbPieceModel(piece)?.name ??
+      piece.details?.name ??
+      "Тавилга";
+    const wasSelected = selected === instanceId;
     updatePieces(current.pieces.filter((p) => !removed.has(p.instanceId)));
-    setSelected(null);
+    if (selected && removed.has(selected)) setSelected(null);
+    const head = useDesigns.getState().past.length;
+    showNotice(`${name} өрөөнөөс хасагдлаа.`, {
+      label: "Буцаах",
+      run: () => {
+        if (useDesigns.getState().past.length !== head) {
+          showNotice("Дараа нь өөр өөрчлөлт хийсэн тул Ctrl+Z ашиглана уу.");
+          return;
+        }
+        undo();
+        if (wasSelected) setSelected(instanceId);
+      },
+    });
   };
 
   const resizeRoom = (size: RoomSize) => {
@@ -1246,6 +1477,132 @@ function RoomPlannerEditor() {
       (selectedPiece?.details
         ? { ...selectedPiece.details, basePrice: 0, colors: [], materials: [] }
         : null));
+  /** Instances per catalog product: «Өрөөнд N» badges and the #n row numbers. */
+  const placedByProduct = new Map<string, string[]>();
+  for (const piece of current.pieces) {
+    const key = piece.modelId ?? piece.productId;
+    placedByProduct.set(key, [
+      ...(placedByProduct.get(key) ?? []),
+      piece.instanceId,
+    ]);
+  }
+  const pieceNumber = (piece: PlacedFurniture) =>
+    (placedByProduct.get(piece.modelId ?? piece.productId) ?? []).indexOf(
+      piece.instanceId,
+    ) + 1;
+  const merchantName = (ids?: string[]) =>
+    ids?.map((id) => storeNames.get(id)).find(Boolean);
+  const catalogMerchants = [...storeNames]
+    .filter(([id]) =>
+      catalog.products.some((product) => product.storeIds?.includes(id)),
+    )
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name, "mn"));
+  const resetCatalogFilters = () => {
+    setCatalogScope("all");
+    setPaletteCat("all");
+    setQuery("");
+    setCatalogFormat("all");
+    setCatalogMerchant("all");
+  };
+  const addedRows: RoomAddedRow[] = current.pieces.map((piece) => {
+    const product = getProduct(piece.productId);
+    const model = getDbPieceModel(piece);
+    const dims = dimsFor(piece);
+    const colors = product?.colors ?? model?.colors ?? [];
+    const materials = product?.materials ?? model?.materials ?? [];
+    const variant = piece.kitchen
+      ? "Өөрийн гарнитур"
+      : [
+          colors.find((color) => color.id === piece.color)?.name,
+          materials.find((material) => material.id === piece.material)?.name,
+        ]
+          .filter(Boolean)
+          .join(" · ");
+    return {
+      instanceId: piece.instanceId,
+      productId: piece.modelId ?? piece.productId,
+      color: piece.color,
+      material: piece.material,
+      name:
+        piece.kitchen?.name ??
+        product?.name ??
+        model?.name ??
+        piece.details?.name ??
+        "Тавилга",
+      number: pieceNumber(piece),
+      image:
+        product?.image ||
+        (model?.thumbnailFile
+          ? `/api/models/files/${model.fileModelId ?? model.id}/${model.thumbnailFile}`
+          : null) ||
+        piece.details?.image ||
+        null,
+      meta: [formatFurnitureCm(dims.w, dims.d, dims.h), variant]
+        .filter(Boolean)
+        .join(" · "),
+      price: piece.kitchen ? "Тусдаа үнэ" : formatPrice(getPiecePrice(piece)),
+      has3d: !piece.kitchen && !!(product?.model ?? model),
+      purchasable: !piece.kitchen && !!product,
+    };
+  });
+  /** «Шууд сагсанд нэмэх» for photo-only products, default variant only. */
+  const addProductToCart = (product: Product) => {
+    const selection = defaultCartSelection(product);
+    if (!selection) {
+      setNotice("Энэ барааны өнгө, материалын сонголт бүрэн биш байна.");
+      return;
+    }
+    const added = addToCart({
+      productId: product.id,
+      name: product.name,
+      image: product.image,
+      color: selection.color.id,
+      material: selection.material.id,
+      unitPrice: selection.unitPrice,
+      qty: 1,
+      stockQuantity: product.stockQuantity,
+      madeToOrder: product.madeToOrder,
+    });
+    showNotice(
+      added
+        ? `${product.name} сагсанд нэмэгдлээ.`
+        : "Нөөц хүрэлцэхгүй тул сагсанд нэмэгдсэнгүй.",
+      added ? { label: "Сагс харах", run: () => showTab("cart") } : undefined,
+    );
+  };
+  /** A new scene instance of the cart variant; the quantity to buy is untouched. */
+  const placeCartItem = (item: CartItem) => {
+    const variant = { color: item.color, material: item.material };
+    const model = getDbModel(item.productId);
+    if (model) addModelPiece(model, variant);
+    else addPiece(item.productId, variant);
+  };
+  const addSelectedToCart = () => {
+    if (!selectedPiece || selectedPiece.kitchen) return;
+    const product = getProduct(selectedPiece.productId);
+    if (!product) {
+      setNotice("Энэ тавилга дэлгүүрийн бараа биш тул сагслах боломжгүй.");
+      return;
+    }
+    const added = addToCart({
+      productId: product.id,
+      name: product.name,
+      image: product.image,
+      color: selectedPiece.color,
+      material: selectedPiece.material,
+      unitPrice: getPiecePrice(selectedPiece),
+      qty: 1,
+      stockQuantity: product.stockQuantity,
+      madeToOrder: product.madeToOrder,
+    });
+    showNotice(
+      added
+        ? `${product.name} энэ хувилбараар сагсанд нэмэгдлээ.`
+        : "Нөөц хүрэлцэхгүй тул сагсанд нэмэгдсэнгүй.",
+      added ? { label: "Сагс харах", run: () => showTab("cart") } : undefined,
+    );
+  };
   const measurements =
     showDimensions && selectedPiece && selectedDetails
       ? getFurnitureMeasurements(
@@ -1302,12 +1659,6 @@ function RoomPlannerEditor() {
   const save = () => {
     endEdit();
     saveCurrent(saveName.trim() || current.name.trim() || "Миний өрөө");
-    setSavedAt(
-      new Date().toLocaleTimeString("mn-MN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    );
     setSaveName("");
     setNotice("Загварыг энэ төхөөрөмж дээр хадгаллаа.");
   };
@@ -1322,7 +1673,7 @@ function RoomPlannerEditor() {
     undo,
     redo,
     duplicate: duplicateSelected,
-    save,
+    save: merchantMode ? () => void merchantRoom.save() : save,
     r: rotateSelected,
     delete: removeSelected,
     backspace: removeSelected,
@@ -1330,18 +1681,30 @@ function RoomPlannerEditor() {
     arrowdown: () => nudge(0, 0.1),
     arrowleft: () => nudge(-0.1, 0),
     arrowright: () => nudge(0.1, 0),
+    // B3: Escape goes down exactly one level per press.
     escape: () => {
-      setCameraPlacement(false);
-      if (roomView === "interior") navigateView("fit");
-      setSelected(null);
-      setSelectedWall(null);
-      setSelectedOpening(null);
-      setPlacementTemplate(null);
-      setLeftOpen(false);
-      setRightOpen(false);
-      setExpanded(false);
-      setShowCompare(false);
-      setSummaryOpen(false);
+      if (summaryOpen || showCompare) {
+        setSummaryOpen(false);
+        setShowCompare(false);
+        return;
+      }
+      if (panelView !== "list") {
+        closeNested();
+        return;
+      }
+      if (selected || selectedWall || selectedOpening || placementTemplate) {
+        setSelected(null);
+        setSelectedWall(null);
+        setSelectedOpening(null);
+        setPlacementTemplate(null);
+        return;
+      }
+      if (roomView === "interior") {
+        navigateView("fit");
+        return;
+      }
+      if (expanded) setExpanded(false);
+      else setLeftOpen(false);
     },
   };
   const exportImage = () => {
@@ -1476,9 +1839,8 @@ function RoomPlannerEditor() {
   };
   const selectWall = (wall: RoomWall) => {
     setSelectedWall(wall);
-    setRoomDetailsTab("room");
     setEnvironmentTab("room");
-    setRightOpen(true);
+    openNested("room");
     setSelected(null);
     setSelectedOpening(null);
   };
@@ -1526,7 +1888,7 @@ function RoomPlannerEditor() {
     setSelectedWall(wallId);
     setPlacementTemplate(null);
     setEnvironmentTab("openings");
-    setRightOpen(true);
+    openNested("room");
   };
   const armPlacement = (templateId: string | null) => {
     setPlacementTemplate(templateId);
@@ -1536,7 +1898,7 @@ function RoomPlannerEditor() {
       setActivePreset(null);
       setLocalFile(null);
       setLocalUrl(null);
-      setRightOpen(false);
+      if (narrowPanel()) setPanelOpen(false);
     }
   };
 
@@ -1546,7 +1908,9 @@ function RoomPlannerEditor() {
       data-planner-ready="room"
       className={cn(
         "room-planner-layout planner-workspace planner-studio planner-reference room-simple relative overflow-hidden",
-        (leftOpen || rightOpen || summaryOpen) && "room-panel-open",
+        panelOpen && "room-workspace-open",
+        // Phones show one slot under the scene: the dock or the selection bar.
+        selected && selectedPiece && "room-has-selection",
         expanded && "planner-expanded",
         templateAdmin.isAdmin && "room-admin-mode",
       )}
@@ -1599,36 +1963,53 @@ function RoomPlannerEditor() {
           }}
         />
       )}
+      {merchantMode ? (
+        <MerchantRoomHeader
+          editor={merchantRoom}
+          onPreview={() => setMerchantDialog("preview")}
+          onPublish={() => setMerchantDialog("publish")}
+        />
+      ) : (
       <header className="studio-header room-studio-header">
         <Link href="/" className="studio-brand" aria-label="Tavilga.mn нүүр">
           <House size={19} />
           <span>tavilga.mn</span>
         </Link>
-        <label className="room-project-name">
-          <span>
-            {savedAt
-              ? `Энэ төхөөрөмж дээр хадгалсан · ${savedAt}`
-              : "Өрөөний төлөвлөгч"}
-          </span>
-          <input
-            aria-label="Төслийн нэр"
-            value={current.name}
-            onFocus={beginEdit}
-            onBlur={endEdit}
-            onChange={(event) => updateRoom({ name: event.target.value })}
-          />
-        </label>
+        <div className="room-project-name">
+          <span>Өрөөний төлөвлөгч</span>
+          <div>
+            <input
+              aria-label="Төслийн нэр"
+              value={current.name}
+              onFocus={beginEdit}
+              onBlur={endEdit}
+              onChange={(event) => updateRoom({ name: event.target.value })}
+            />
+            {saveChip && (
+              <span
+                className="room-save-chip"
+                data-tone={saveChip.tone}
+                aria-live="polite"
+                title={storageStatus?.detail}
+              >
+                <i aria-hidden="true" />
+                {saveChip.label}
+                {saveChip.retry && (
+                  <button type="button" onClick={save}>
+                    Дахин оролдох
+                  </button>
+                )}
+              </span>
+            )}
+          </div>
+        </div>
         <div className="studio-file-actions">
           <RoomPlannerSignIn />
           <button
             type="button"
             title="Хадгалсан загварууд"
             aria-label="Хадгалсан загварууд"
-            onClick={() => {
-              setRoomDetailsTab("project");
-              setEnvironmentTab("room");
-              setRightOpen(true);
-            }}
+            onClick={() => openNested("designs")}
           >
             <Layers size={18} />
             <span>Миний загварууд</span>
@@ -1653,1076 +2034,140 @@ function RoomPlannerEditor() {
             <Save size={18} />
             <span>Хадгалах</span>
           </button>
-          <span className="room-header-price">{formatPrice(totalPrice)}</span>
+          <span className="room-header-price">
+            <small>Өрөөний дүн</small>
+            {formatPrice(totalPrice)}
+          </span>
           <button
             type="button"
             className="room-summary-button"
+            aria-haspopup="dialog"
             aria-expanded={summaryOpen}
             onClick={() => {
               endEdit();
               setPlacementTemplate(null);
-              setLeftOpen(false);
-              setRightOpen(false);
               setShowStartHint(false);
               setSummaryOpen((value) => !value);
             }}
           >
             <span>Тойм</span>
+            <small className="room-summary-price">
+              {formatPrice(totalPrice)}
+            </small>
             <ChevronRight size={20} />
           </button>
         </div>
       </header>
+      )}
       {notice && (
         <div className="planner-notice" role="status">
           <Check size={17} />
           <span>{notice}</span>
+          {noticeAction?.message === notice && (
+            <button
+              type="button"
+              className="planner-notice-action"
+              onClick={() => {
+                const action = noticeAction;
+                setNotice("");
+                setNoticeAction(null);
+                action.run();
+              }}
+            >
+              {noticeAction.label}
+            </button>
+          )}
           <button aria-label="Мэдэгдэл хаах" onClick={() => setNotice("")}>
             <X size={16} />
           </button>
         </div>
       )}
-      {/* One shared right inspector; the catalog no longer consumes canvas width on the left. */}
-      <Drawer
-        side="right"
-        open={leftOpen}
-        active={inspector === "catalog" && leftOpen}
-        onClose={() => setLeftOpen(false)}
-        title={kitchenOnly ? "Гарнитур нэмэх" : "Тавилга нэмэх"}
-      >
-        <div
-          className="planner-inspector-tabs"
-          role="group"
-          aria-label="Тавилгын сангийн хэсэг"
-        >
-          <button
-            type="button"
-            aria-pressed={!kitchenOnly}
-            onClick={() => setKitchenOnly(false)}
-          >
-            Каталог
-          </button>
-          <button
-            type="button"
-            aria-pressed={kitchenOnly}
-            onClick={() => setKitchenOnly(true)}
-          >
-            Миний гарнитур
-          </button>
-        </div>
-        {!kitchenOnly && (
-          <div className="border-b border-ui-line p-4">
-            <div className="planner-panel-heading">
-              <span>
-                <LayoutGrid size={18} /> Тавилгын сан
-              </span>
-              <small>Таалагдсан тавилга дээр дарж өрөөндөө нэмээрэй.</small>
-            </div>
-            <PlannerCatalogToolbar
-              query={query}
-              onQuery={setQuery}
-              label="Тавилга нэрээр хайх"
-              placeholder="Тавилга хайх…"
-              sort={catalogSort}
-              onSort={setCatalogSort}
-              filterCount={
-                Number(catalogScope !== "all") +
-                Number(scopedCatalog.category !== "all") +
-                Number(catalogFormat !== "all")
-              }
-              filters={
-                <RoomCatalogFilters
-                  categories={scopedCatalog.categories}
-                  category={scopedCatalog.category}
-                  onCategory={setPaletteCat}
-                  scope={catalogScope}
-                  onScope={setCatalogScope}
-                  format={catalogFormat}
-                  onFormat={setCatalogFormat}
-                  roomName={ROOM_TYPES[activeRoomType].label}
-                  query={query}
-                  count={
-                    (catalogFormat !== "glb" ? paletteItems.length : 0) +
-                    (catalogFormat !== "photo" ? dbPaletteItems.length : 0)
-                  }
-                  onReset={() => {
-                    setCatalogScope("all");
-                    setPaletteCat("all");
-                    setQuery("");
-                    setCatalogFormat("all");
-                  }}
-                />
-              }
-            />
-            <p className="room-catalog-compact-count" role="status">
-              {(catalogFormat !== "glb" ? paletteItems.length : 0) +
-                (catalogFormat !== "photo" ? dbPaletteItems.length : 0)}{" "}
-              тавилга
-            </p>
-          </div>
-        )}
-        <div className="studio-catalog-scroll flex-1 overflow-y-auto p-3">
-          {kitchenOnly && (
-            <div className="room-kitchen-intro">
-              <span className="room-kitchen-intro-icon">
-                <ChefHat size={24} aria-hidden="true" />
-              </span>
-              <h2>Гарнитураа сонгоорой</h2>
-              <p>
-                Доорх хадгалсан загвараас сонгоод «Өрөөнд байрлуулах» дарна уу.
-                Шинээр хийх бол эхлээд шүүгээ, хэмжээ, өнгөө сонгоорой.
-              </p>
-              <Link className="room-kitchen-create" href="/kitchen?new=1">
-                <Plus size={18} aria-hidden="true" />
-                <span>
-                  <strong>Шинээр гарнитур хийх</strong>
-                  <small>Шүүгээ, хэмжээ, өнгөө сонгоод хадгалах</small>
-                </span>
-                <ArrowRight size={18} aria-hidden="true" />
-              </Link>
-            </div>
-          )}
-          {kitchenOnly && (
-            <section
-              className="planner-kitchen-library"
-              aria-label="Миний хадгалсан гарнитурууд"
-            >
-              <SavedKitchenList
-                placement={activePlacement}
-                onPlace={(saved: SavedKitchen) => {
-                  const result = useDesigns.getState().placeKitchen(saved);
-                  const piece = result.piece;
-                  if (!piece) {
-                    setNotice(result.error ?? result.message);
-                    return;
-                  }
-                  setSelected(piece.instanceId);
-                  setLeftOpen(false);
-                  setActivePreset(null);
-                  setLocalFile(null);
-                  setLocalUrl(null);
-                  setNotice(
-                    `Гарнитурыг бодит хэмжээгээр байрлууллаа. ${result.message}`,
-                  );
-                }}
-              />
-            </section>
-          )}
-          {!kitchenOnly && (
-            <>
-              {(catalog.loading || !catalog.ready || catalog.error) && (
-                <CatalogStatus
-                  loading={catalog.loading}
-                  error={catalog.error}
-                  retry={() => void catalog.refresh()}
-                />
-              )}
-              <div className="planner-model-grid">
-                {catalog.ready &&
-                  !catalog.loading &&
-                  !(catalogFormat === "all"
-                    ? dbPaletteItems.length + paletteItems.length
-                    : catalogFormat === "glb"
-                      ? dbPaletteItems.length
-                      : paletteItems.length) && (
-                    <p className="planner-empty">
-                      {catalogFormat === "glb" && paletteItems.length > 0
-                        ? "Энэ ангилалд 3D моделтой тавилга алга. Бусад ангилалын тавилгуудыг үзэж болно."
-                        : catalogFormat === "photo" && dbPaletteItems.length > 0
-                          ? "Энд зөвхөн 3D моделтой тавилга байна."
-                          : query.trim()
-                            ? "Тавилга олдсонгүй."
-                            : "Энэ өрөө, ангилалд боломжтой тавилга одоогоор алга."}
-                      {((catalogFormat === "glb" && paletteItems.length > 0) ||
-                        (catalogFormat === "photo" &&
-                          dbPaletteItems.length > 0)) && (
-                        <button
-                          type="button"
-                          className="planner-secondary-button"
-                          onClick={() => setCatalogFormat("all")}
-                        >
-                          Энэ сонголтын бүх тавилга
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className="planner-secondary-button"
-                        onClick={() => {
-                          setCatalogScope("all");
-                          setPaletteCat("all");
-                          setQuery("");
-                          setCatalogFormat("all");
-                        }}
-                      >
-                        Бүх тавилга харах
-                      </button>
-                    </p>
-                  )}
-                {catalogEntries.map((entry) =>
-                  entry.kind === "photo" ? (
-                    <RoomProductCard
-                      key={entry.item.id}
-                      product={entry.item}
-                      onAdd={() => addPiece(entry.item.id)}
-                    />
-                  ) : (
-                    (() => {
-                      const m = entry.item;
-                      return (
-                        <PlannerModelCard
-                          key={m.id}
-                          name={m.name}
-                          image={
-                            m.thumbnailFile
-                              ? `/api/models/files/${m.fileModelId ?? m.id}/${m.thumbnailFile}`
-                              : null
-                          }
-                          dimensions={`${Math.round(m.dimensionsW * 1000)} × ${Math.round(m.dimensionsD * 1000)} × ${Math.round(m.dimensionsH * 1000)} мм`}
-                          detail={
-                            m.basePrice > 0
-                              ? formatPrice(m.basePrice)
-                              : stockLabel(m)
-                          }
-                          file={m.glbFile}
-                          onAdd={() => addModelPiece(m)}
-                          onPrefetch={() =>
-                            void prefetchModel(
-                              modelDeliveryUrl(
-                                m.fileModelId ?? m.id,
-                                m.glbFile,
-                              ),
-                            )
-                          }
-                        />
-                      );
-                    })()
-                  ),
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </Drawer>
-
-      {/* CENTER: canvas */}
-      <div
-        className="planner-stage relative h-full"
-        data-planner-tour="room-stage"
-      >
-        <div className="room-stage-actions">
-          <button
-            type="button"
-            className="room-add-button"
-            data-planner-tour="room-catalog"
-            aria-expanded={leftOpen && !kitchenOnly}
-            onClick={() => {
-              setKitchenOnly(false);
-              setLeftOpen(!leftOpen || kitchenOnly);
-            }}
-          >
-            <Plus size={20} /> Тавилга нэмэх
-          </button>
-          {current.roomType === "kitchen" && (
-            <button
-              type="button"
-              className="room-kitchen-button"
-              aria-expanded={leftOpen && kitchenOnly}
-              onClick={() => {
-                setKitchenOnly(true);
-                setLeftOpen(!leftOpen || !kitchenOnly);
-              }}
-            >
-              <ChefHat size={20} aria-hidden="true" />
-              <span>Гарнитур нэмэх</span>
-              <ChevronDown size={16} aria-hidden="true" />
-            </button>
-          )}
-          <div
-            className="room-history-controls"
-            role="group"
-            aria-label="Өөрчлөлт буцаах"
-          >
-            <button
-              type="button"
-              title="Буцаах (Ctrl+Z)"
-              aria-label="Буцаах"
-              disabled={!past.length}
-              onClick={undo}
-            >
-              <Undo2 size={18} />
-            </button>
-            <button
-              type="button"
-              title="Дахин хийх (Ctrl+Shift+Z)"
-              aria-label="Дахин хийх"
-              disabled={!future.length}
-              onClick={redo}
-            >
-              <Redo2 size={18} />
-            </button>
-          </div>
-          <RoomPlacementHelp
-            warnings={placementWarnings}
-            onHelp={() => {
-              setShowStartHint(false);
-              setTourRequest((value) => value + 1);
-            }}
-            onSelect={(item) => {
-              endEdit();
-              selectRoom(item.roomId);
-              setSelected(item.id);
-              setSelectedOpening(null);
-              setLocked(false);
-              setCameraPlacement(false);
-              setRoomView("dollhouse");
-              setView("perspective");
-              setCameraRequest((previous) => ({
-                id: (previous?.id ?? 0) + 1,
-                action: "focus",
-                targetId: item.id,
-              }));
-            }}
-          />
-        </div>
-        {recommendationsOpen && (
-          <aside className="room-furniture-suggestions">
-            <div className="flex justify-between">
-              <strong>Өрөөнд санал болгох</strong>
+      {/* One left workspace panel: three tabs, with editing as nested views. */}
+      <RoomWorkspacePanel
+        open={panelOpen}
+        onOpenChange={setPanelOpen}
+        tab={panelTab}
+        onTab={(tab) => {
+          setPanelTab(tab);
+          setShowStartHint(false);
+        }}
+        view={panelView}
+        onBack={closeNested}
+        labels={
+          merchantMode
+            ? { add: "Миний бараа", added: "Байрлуулсан", cart: "Өрөө ба камер" }
+            : undefined
+        }
+        meta={merchantMode ? {
+          add: `${catalogEntries.length} бараа`,
+          added: `${current.pieces.length} тавилга`,
+          cart: merchantRoom.cover ? "Cover бэлэн" : "Cover сонгоогүй",
+        } : {
+          add: kitchenOnly ? "Миний гарнитур" : "Каталог",
+          added: `${current.pieces.length} өрөөнд`,
+          cart: `${cartItems.reduce((sum, item) => sum + item.qty, 0)} ширхэг`,
+        }}
+        nestedEyebrow={
+          panelView === "detail"
+            ? "Засах"
+            : panelView === "room"
+              ? "Өрөө ба материал"
+              : "Төсөл"
+        }
+        nestedTitle={
+          panelView === "detail"
+            ? selectedPiece
+              ? `${selectedDetails?.name ?? "Тавилга"} #${pieceNumber(selectedPiece)}`
+              : "Тавилга"
+            : panelView === "room"
+              ? environmentTab === "surfaces"
+                ? "Өнгө, материал"
+                : environmentTab === "openings"
+                  ? "Хаалга, цонх"
+                  : environmentTab === "lighting"
+                    ? "Гэрэлтүүлэг"
+                    : (current.roomName ?? "Өрөө")
+              : "Миний загварууд"
+        }
+        peekLine={merchantMode ? `${current.pieces.length} тавилга өрөөнд · ${merchantRoom.cover ? "cover бэлэн" : "cover сонгоогүй"}` : `${current.pieces.length} тавилга өрөөнд · ${formatPrice(totalPrice)} · сагсанд ${cartItems.reduce((sum, item) => sum + item.qty, 0)} ш`}
+        footer={
+          panelView === "detail" && selectedPiece ? (
+            <div className="room-panel-footer-actions">
+              <button type="button" onClick={duplicateSelected}>
+                <Copy size={16} /> Хувилах
+              </button>
               <button
                 type="button"
-                aria-label="Санал болгох хэсгийг хаах"
-                onClick={() => setRecommendationsOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-            {suggestedFurniture(
-              current.roomType ?? "living",
-              catalog.products,
-              current.pieces,
-            ).map((product) => (
-              <button
-                key={product.id}
-                type="button"
-                onClick={() => addPiece(product.id)}
-              >
-                {product.name}
-                <span>+ Нэмэх</span>
-              </button>
-            ))}
-            {!suggestedFurniture(
-              current.roomType ?? "living",
-              catalog.products,
-              current.pieces,
-            ).length && <p>Тавилга нэмэх хэсгээс өөр сонголт үзээрэй.</p>}
-          </aside>
-        )}
-        {!localUrl && !activePreset && (
-          <RoomPlacementMap
-            design={current}
-            open={roomMapOpen}
-            onOpen={setRoomMapOpen}
-            onSelect={(id) => {
-              selectRoom(id);
-              setSelected(null);
-              setSelectedOpening(null);
-              setSelectedWall(null);
-              setPlacementTemplate(null);
-            }}
-            onAdd={(type) => {
-              setAddRoomType(type);
-              setRoomMapOpen(true);
-              setShowStartHint(false);
-              setLeftOpen(false);
-              setRightOpen(false);
-            }}
-            onEditRoom={() => {
-              setShowRoomGeometry(true);
-            }}
-            onDuplicateRoom={duplicateRoom}
-            onRemoveRoom={removeRoom}
-            onVisitRoom={(id) => {
-              selectRoom(id);
-              setRoomView("interior");
-              setView("perspective");
-            }}
-            onMove={moveRoom}
-            onConnection={updateConnection}
-            onNotice={setNotice}
-            beginEdit={beginEdit}
-            endEdit={endEdit}
-          />
-        )}
-        <RoomPlannerControls
-          onFurniture={() => {
-            setKitchenOnly(false);
-            setLeftOpen(!leftOpen || kitchenOnly);
-          }}
-          catalogOpen={leftOpen}
-          view={roomView}
-          onView={(next) => {
-            setLocked(false);
-            setCameraPlacement(false);
-            setSelected(null);
-            setSelectedWall(null);
-            setSelectedOpening(null);
-            setPlacementTemplate(null);
-            setRoomView(next);
-            setShowStartHint(false);
-            setView(next === "top" ? "plan" : "perspective");
-            if (next !== "interior")
-              setCameraRequest((previous) => ({
-                id: (previous?.id ?? 0) + 1,
-                action: next === "dollhouse" ? "fit" : next,
-              }));
-          }}
-          cameraPlacement={cameraPlacement}
-          onCameraPlace={() => {
-            setCameraPlacement(!cameraPlacement);
-            setRoomView("top");
-            setView("plan");
-            setLocked(false);
-            setSelected(null);
-            setPlacementTemplate(null);
-            setCameraRequest((previous) => ({
-              id: (previous?.id ?? 0) + 1,
-              action: "top",
-            }));
-          }}
-          onZoom={navigateView}
-          onRotate={navigateView}
-          windowBearing={exteriorWindowBearing(current)}
-          ceiling={current.ceiling}
-          lighting={current.lighting}
-          onLightingChange={(patch) =>
-            updateRoom({ lighting: { ...current.lighting!, ...patch } })
-          }
-          beginLightingEdit={beginEdit}
-          endLightingEdit={endEdit}
-          onWindows={() => {
-            if (roomView === "interior") navigateView("fit");
-            setCameraPlacement(false);
-            endEdit();
-            setRoomDetailsTab("room");
-            setSelected(null);
-            setSelectedOpening(null);
-            setSelectedWall(null);
-            setPlacementTemplate("window-panoramic");
-            setEnvironmentTab("openings");
-            setRightOpen(true);
-          }}
-          onLightingSettings={() => {
-            endEdit();
-            setRoomDetailsTab("room");
-            setPlacementTemplate(null);
-            setEnvironmentTab("lighting");
-            setRightOpen(true);
-          }}
-          onRoom={() => {
-            endEdit();
-            setPlacementTemplate(null);
-            setRoomDetailsTab("room");
-            setEnvironmentTab("room");
-            setRightOpen(true);
-          }}
-          onMaterials={() => {
-            endEdit();
-            setRoomDetailsTab("room");
-            setPlacementTemplate(null);
-            setEnvironmentTab("surfaces");
-            setRightOpen(true);
-          }}
-          onHelp={() => {
-            setShowStartHint(false);
-            setTourRequest((value) => value + 1);
-          }}
-          dimensions={showDimensions}
-          onDimensions={() => setShowDimensions((value) => !value)}
-          grid={gridEnabled}
-          onGrid={() => setGridEnabled((value) => !value)}
-          snap={snapEnabled}
-          onSnap={() => setSnapEnabled((value) => !value)}
-          locked={locked}
-          onLock={() => setLocked((value) => !value)}
-          expanded={expanded}
-          onExpand={() => setExpanded((value) => !value)}
-        />
-        <div className="planner-room-caption">
-          <strong>
-            {current.roomName ?? "Зочны өрөө"} · {current.width} ×{" "}
-            {current.depth} м
-          </strong>
-          <span>
-            {geometry.area.toFixed(2)} м² ашиглах талбай ·{" "}
-            {current.pieces.length} тавилга
-          </span>
-        </div>
-        {showDimensions && (
-          <div className="planner-measure-readout" role="status">
-            <strong>
-              <Ruler size={14} /> Хэмжээс · см
-            </strong>
-            {measurements.length ? (
-              <>
-                <span>{selectedDetails?.name ?? "Тавилга"}</span>
-                <span>
-                  {measurements
-                    .filter((item) => item.kind === "size")
-                    .map((item) => formatMeasurement(item.value))
-                    .join(" × ")}{" "}
-                  · өргөн × урт × өндөр
-                </span>
-                {measurements.find((item) => item.id === "ceiling") && (
-                  <span>
-                    Тааз хүртэл:{" "}
-                    {formatMeasurement(
-                      measurements.find((item) => item.id === "ceiling")!.value,
-                    )}
-                  </span>
-                )}
-                {(activePreset || localUrl) && (
-                  <span>
-                    Өөрийн 3D интерьерийн хана, таазны хэмжилт дэмжигдэхгүй.
-                  </span>
-                )}
-              </>
-            ) : activePreset || localUrl ? (
-              <span>Хэмжих тавилга дээр дарна уу.</span>
-            ) : (
-              <>
-                <span>{current.roomName ?? "Өрөө"}</span>
-                <span>
-                  {formatMeasurement(current.width)} ×{" "}
-                  {formatMeasurement(current.depth)} · үндсэн өргөн × урт
-                </span>
-                <span>
-                  Таазны өндөр · {formatMeasurement(current.height ?? 2.7)}
-                </span>
-                <span>
-                  Өрөө тус бүрийг ханын дагуу хэмжинэ. Тавилгын хэмжээг харах
-                  бол дээр нь дарна уу.
-                </span>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* preset loading status */}
-        {(activePreset || localFile) && (
-          <div className="absolute left-1/2 top-24 z-20 -translate-x-1/2 rounded-full border border-ui-line bg-white/95 px-4 py-2 text-xs shadow-sm backdrop-blur md:top-16">
-            {presetStatus === "loading" && "Загвар ачаалж байна…"}
-            {presetStatus === "loaded" && "✓ Загвар амжилттай ачааллаа"}
-            {presetStatus === "error" && (
-              <span className="text-red-600">
-                ⚠ Алдаа: {presetError ?? "загвар олдсонгүй"}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* right-side selection actions */}
-        <div className="planner-selection-toolbar">
-          {selectedOpening &&
-            current.openings?.find((o) => o.id === selectedOpening) && (
-              <details
-                className="room-opening-context"
-                open
-                key={selectedOpening}
-              >
-                <summary>Хаалга, цонх засах</summary>
-                <OpeningQuickEditor
-                  room={current}
-                  opening={current.openings.find(
-                    (o) => o.id === selectedOpening,
-                  )!}
-                  onChange={changeOpening}
-                  onRemove={removeSelected}
-                  beginEdit={beginEdit}
-                  endEdit={endEdit}
-                />
-              </details>
-            )}
-          {selectedOpening && (
-            <>
-              <button
-                onClick={() => {
-                  setEnvironmentTab("openings");
-                  setRightOpen(true);
-                }}
-              >
-                <DoorOpen size={16} /> Хаалга, цонхны тохиргоо
-              </button>
-              <button
+                className="is-danger"
                 onClick={removeSelected}
-                aria-label="Сонгосон нээлхийг устгах"
               >
-                <Trash2 size={16} />
-              </button>
-            </>
-          )}
-          {selected && (
-            <>
-              <button
-                onClick={() => {
-                  setRoomDetailsTab("selection");
-                  setEnvironmentTab("room");
-                  setRightOpen(true);
-                }}
-                title="Сонгосон тавилгын тохиргоо"
-                className="planner-selection-name"
-              >
-                <Settings size={16} />
-                <span>{selectedDetails?.name ?? "Тавилга"}</span>
-              </button>
-              <button
-                type="button"
-                aria-label="Сонгосон тавилга дээр төвлөрөх"
-                title="Сонгосон тавилга дээр төвлөрөх"
-                onClick={() => {
-                  setLocked(false);
-                  setCameraPlacement(false);
-                  setCameraRequest((previous) => ({
-                    id: (previous?.id ?? 0) + 1,
-                    action: "focus",
-                    targetId: selected,
-                  }));
-                }}
-              >
-                <Focus size={16} />
-                <span>Ойртуулж харах</span>
-              </button>
-              <button
-                onClick={duplicateSelected}
-                aria-label="Сонгосон тавилгыг хуулах"
-                title="Хуулах (Ctrl+D)"
-              >
-                <Copy size={16} />
-                <span>Хуулах</span>
-              </button>
-              <button
-                onClick={rotateSelected}
-                className="flex items-center gap-1.5 rounded-full bg-ui-accent px-3 py-2 text-xs font-medium text-[#FFFFFF]"
-              >
-                <RotateCw className="h-3 w-3" /> Эргүүлэх
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setRoomDetailsTab("selection");
-                  setEnvironmentTab("room");
-                  setRightOpen(true);
-                }}
-              >
-                <Move size={16} />
-                <span>Байрлал</span>
-              </button>
-              <button
-                onClick={removeSelected}
-                className="flex items-center gap-1.5 rounded-full border border-red-500/30 bg-red-50 px-3 py-2 text-xs font-medium text-red-700"
-              >
-                <Trash2 className="h-3 w-3" /> Устгах
-              </button>
-            </>
-          )}
-        </div>
-
-        {!welcomeDismissed &&
-          (showStartHint ||
-            (current.pieces.length === 0 &&
-              !leftOpen &&
-              !rightOpen &&
-              !summaryOpen)) &&
-          !placementTemplate &&
-          !selected &&
-          !selectedOpening && (
-            <div className="room-welcome-card">
-              <button
-                type="button"
-                className="room-welcome-dismiss"
-                aria-label="Эхлэх зөвлөмжийг хаах"
-                onClick={() => {
-                  setShowStartHint(false);
-                  setWelcomeDismissed(true);
-                }}
-              >
-                <X size={17} />
-              </button>
-              <span className="room-welcome-eyebrow">
-                ӨӨРИЙНХӨӨ ӨРӨӨГ БҮТЭЭЕ
-              </span>
-              <strong>Өрөөгөө тохижуулж эхэлье</strong>
-              <p className="room-welcome-intro">
-                Тавилга нэмээд чирж байрлуулаарай. Сонгосон тавилгынхаа өнгө,
-                материал, байрлалыг самбараас тохируулна.
-              </p>
-              <button
-                type="button"
-                className="room-welcome-start"
-                onClick={() => {
-                  setShowStartHint(false);
-                  setKitchenOnly(false);
-                  setLeftOpen(true);
-                }}
-              >
-                <Plus size={18} /> Тавилга нэмэх
-              </button>
-              <button
-                type="button"
-                className="room-welcome-skip"
-                onClick={() => {
-                  setShowStartHint(false);
-                  setRoomDetailsTab("room");
-                  setEnvironmentTab("room");
-                  setRightOpen(true);
-                }}
-              >
-                Өрөөний хэмжээ тохируулах
+                <Trash2 size={16} /> Өрөөнөөс устгах
               </button>
             </div>
-          )}
-        <div className="room-camera-guide" role="status">
-          {cameraPlacement
-            ? "Камер байрлуулах шалан дээр дарна уу · Esc цуцлах"
-            : roomView === "interior"
-              ? "W/A/S/D — өрөө дотор алхах · Чирэх — эргэн харах · Дугуй — харах өнцөг"
-              : placementTemplate
-                ? "Хаалга, цонх байрлуулах ханандаа дарна уу · Esc цуцлах"
-                : selected
-                  ? "Тавилгыг чирж байрлуулна · Эргүүлэх товч: 90° · Сумтай товч: 10 см"
-                  : "Тавилга: дарж сонгох, чирж байрлуулах · Харах өнцөг: дунд товчоор чирэх · Ойртуулах: + / −"}
-        </div>
-
-        {roomView === "interior" && (
-          <RoomTourControls
-            design={current}
-            locked={locked}
-            onSelectRoom={selectRoom}
-            onExit={() => navigateView("fit")}
-            onFov={(fov) =>
-              updateRoom({
-                interiorCamera: { ...interiorCamera(current), fov },
-              })
-            }
-            beginEdit={beginEdit}
-            endEdit={endEdit}
-          />
-        )}
-        {planReady && (
-          <div
-            className="room-plan-workspace"
-            onPointerDownCapture={beginEdit}
-            onPointerUp={endEdit}
-            onPointerCancel={endEdit}
-            onLostPointerCapture={endEdit}
-          >
-            <RoomWallPlan
-              onSurfaceDoubleClick={(surface, wall, x, y) =>
-                setSurfacePopup({ surface, wall, x, y })
-              }
-              key={current.activeRoomId}
-              room={current}
-              pieces={current.pieces}
-              selectedPiece={selected}
-              onSelectPiece={setSelected}
-              onChange={applyRoomShape}
-              onMovePiece={(id, x, z) => {
-                const piece = current.pieces.find((p) => p.instanceId === id);
-                if (!piece) return null;
-                try {
-                  const candidate = moveAttachedFurniture(
-                    piece,
-                    x,
-                    z,
-                    current,
-                    current.activeRoomId ?? `${current.id}-room-1`,
-                    current.pieces,
-                  );
-                  const pieces = resolveFurnitureAttachments(
-                    current.pieces.map((p) =>
-                      p.instanceId === id ? candidate : p,
-                    ),
-                    current,
-                    current.activeRoomId ?? `${current.id}-room-1`,
-                  );
-                  const combined = placement.pieces.map(
-                    (p) =>
-                      pieces.find((next) => next.instanceId === p.instanceId) ??
-                      p,
-                  );
-                  if (
-                    !pieces.every((p) =>
-                      isPlacementValid(p, combined, placement.room),
-                    )
-                  )
-                    return "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.";
-                  updatePieces(pieces);
-                  return null;
-                } catch (reason) {
-                  return (reason as Error).message;
-                }
-              }}
-            />
-            {selected && (
-              <div className="room-plan-piece-actions">
-                <button type="button" onClick={rotateSelected}>
-                  Эргүүлэх
-                </button>
-                <button type="button" onClick={duplicateSelected}>
-                  Хувилах
-                </button>
+          ) : panelView !== "list" || merchantMode ? null : panelTab === "added" ? (
+            current.pieces.length > 0 && (
+              <>
+                <div className="room-panel-total">
+                  <span>Өрөөний тавилгын дүн</span>
+                  <strong>{formatPrice(totalPrice)}</strong>
+                </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (selectedPiece) rememberFurniture(selectedPiece);
-                    setNotice("Миний тавилгад хадгаллаа.");
-                  }}
+                  className="room-panel-footer-primary"
+                  onClick={buyEverything}
                 >
-                  Миний тавилгад
+                  <ShoppingBag size={17} /> Өрөөний тавилгыг бүгдийг сагслах
                 </button>
-                <button type="button" onClick={removeSelected}>
-                  Устгах
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-        <div
-          className="planner-canvas h-full w-full pt-10 xl:pt-0"
-          style={
-            planReady
-              ? { opacity: 0, pointerEvents: "none" }
-              : roomView === "top"
-                ? { pointerEvents: "none" }
-                : undefined
-          }
-        >
-          <RoomCanvas
-            onExportReady={templateAdmin.isAdmin ? exportReady : undefined}
-            paused={planReady}
-            onViewSettled={(settledView) => {
-              if (settledView === "plan") setSettledPlan(current.id);
-            }}
-            onPreview={savePreview}
-            onPreviewReady={previewReady}
-            onPlacementHintsReady={placementHintsReady}
-            key={current.id}
-            design={current}
-            interior={roomView === "interior"}
-            cameraPlacement={cameraPlacement}
-            onCameraPlace={(x, z) => {
-              if (!tourPointValid(current, x, z)) {
-                setNotice(
-                  "Камерыг өрөөний дотор, хана болон тавилгаас зайтай байрлуулна уу.",
-                );
-                return;
-              }
-              updateRoom({
-                interiorCamera: { ...interiorCamera(current), x, z },
-              });
-              setCameraPlacement(false);
-              setNotice(
-                "Камерын байрлал хадгалагдлаа. Дотроос харах товчийг дарна уу.",
-              );
-            }}
-            onCameraSave={(pose) => updateRoom({ interiorCamera: pose })}
-            onVisitRoom={(id) => {
-              selectRoom(id);
-              setRoomView("interior");
-              setView("perspective");
-              setCameraPlacement(false);
-              setLocked(false);
-              setSelected(null);
-              setPlacementTemplate(null);
-              setShowStartHint(false);
-            }}
-            onSelectRoom={(id) => {
-              selectRoom(id);
-              setSelected(null);
-              setSelectedOpening(null);
-              setSelectedWall(null);
-              setPlacementTemplate(null);
-            }}
-            selected={selected}
-            onSelect={(id) => {
-              setSelected(id);
-              if (id) {
-                setSelectedOpening(null);
-                setSelectedWall(null);
-                setPlacementTemplate(null);
-                setRoomDetailsTab("selection");
-                setEnvironmentTab("room");
-                setRightOpen(true);
-              }
-            }}
-            selectedWall={selectedWall}
-            onSelectWall={selectWall}
-            onSurfaceDoubleClick={(surface, wall, x, y) => {
-              setSurfacePopup({ surface, wall, x, y });
-              setSurface(surface);
-              if (wall) selectWall(wall);
-              setRightOpen(false);
-            }}
-            selectedOpening={selectedOpening}
-            onSelectOpening={selectOpening}
-            onUpdateOpening={changeOpening}
-            placementTemplate={placementTemplate}
-            onPlaceOpening={(wall, position) => {
-              if (placementTemplate)
-                addOpening(placementTemplate, wall, position);
-            }}
-            onPlacementError={setNotice}
-            onMove={onMove}
-            view={view}
-            snapEnabled={snapEnabled}
-            locked={locked}
-            gridEnabled={gridEnabled}
-            showDimensions={showDimensions}
-            measurements={measurements}
-            resetKey={resetKey}
-            cameraRequest={cameraRequest}
-            onEditStart={beginEdit}
-            onEditEnd={endEdit}
-            customInterior={
-              localUrl
-                ? {
-                    basePath: "",
-                    glb: localUrl,
-                    scale: localScale,
-                    onLoaded: () => setPresetStatus("loaded"),
-                    onError: (msg) => {
-                      setPresetStatus("error");
-                      setPresetError(msg);
-                    },
-                  }
-                : activePreset
-                  ? {
-                      basePath: activePreset.basePath,
-                      glb: activePreset.glb,
-                      scale: activePreset.scale,
-                      onLoaded: () => setPresetStatus("loaded"),
-                      onError: (msg) => {
-                        setPresetStatus("error");
-                        setPresetError(msg);
-                      },
-                    }
-                  : null
-            }
-          />
-        </div>
-      </div>
-
-      <Drawer
-        side="right"
-        open={summaryOpen}
-        active={summaryOpen}
-        onClose={() => setSummaryOpen(false)}
-        title="Төслийн тойм"
-      >
-        <div className="room-summary-content">
-          <h2>{current.name}</h2>
-          <p>
-            {current.roomName ?? "Миний өрөө"} · {geometry.area.toFixed(1)} м² ·{" "}
-            {current.pieces.length} тавилга
-          </p>
-          <div className="room-summary-total">
-            <span>Тавилгын нийт үнэ</span>
-            <strong>{formatPrice(totalPrice)}</strong>
-          </div>
-          <p className="room-summary-note">
-            Энэ өрөөнд байрлуулсан тавилгын үнэ. Өөрийн гарнитурын үнийг тусад
-            нь тооцно.
-          </p>
-          {!current.pieces.length && (
-            <div className="planner-empty">
-              Өрөө тань одоогоор хоосон байна.
-              <button
-                type="button"
-                className="planner-secondary-button"
-                onClick={() => setLeftOpen(true)}
-              >
-                <Plus size={16} /> Тавилга нэмэх
-              </button>
-            </div>
-          )}
-          <div className="room-summary-list">
-            {current.pieces.map((piece, index) => (
-              <button
-                type="button"
-                key={piece.instanceId}
-                onClick={() => {
-                  setSelected(piece.instanceId);
-                  setSelectedOpening(null);
-                  setSelectedWall(null);
-                  setRoomDetailsTab("selection");
-                  setEnvironmentTab("room");
-                  setRightOpen(true);
-                }}
-              >
-                <span>{index + 1}</span>
-                <div>
-                  <strong>
-                    {piece.kitchen?.name ??
-                      getProduct(piece.productId)?.name ??
-                      getDbPieceModel(piece)?.name ??
-                      "Тавилга"}
-                  </strong>
-                  <small>
-                    {piece.kitchen
-                      ? "Өөрийн гарнитур"
-                      : formatPrice(getPiecePrice(piece))}
-                  </small>
-                </div>
-                <ChevronRight size={16} />
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            className="room-summary-cart"
-            disabled={!current.pieces.length}
-            onClick={buyEverything}
-          >
-            <ShoppingBag size={18} /> Тавилгыг сагсанд нэмэх
-          </button>
-          <Link className="room-summary-cart-link" href="/cart">
-            Сагс харах <ChevronRight size={16} />
-          </Link>
-          <button
-            type="button"
-            className="planner-secondary-button"
-            onClick={save}
-          >
-            <Save size={17} /> Загвар хадгалах
-          </button>
-          <p className="planner-storage-note">
-            Ажлын явц энэ төхөөрөмж дээр автоматаар үлдэнэ.
-          </p>
-          <Link className="room-summary-cart-link" href="/kitchen">
-            Гал тогооны төлөвлөгч <ChevronRight size={16} />
-          </Link>
-        </div>
-      </Drawer>
-
-      {/* RIGHT: properties + saved designs */}
-      <Drawer
-        side="right"
-        open={rightOpen}
-        active={inspector === "environment" && rightOpen}
-        onClose={() => setRightOpen(false)}
-        title={
-          environmentTab === "surfaces"
-            ? "Өнгө, материал"
-            : environmentTab === "openings"
-              ? "Хаалга, цонх"
-              : environmentTab === "lighting"
-                ? "Гэрэлтүүлэг"
-                : roomDetailsTab === "selection"
-                  ? "Тавилгын тохиргоо"
-                  : roomDetailsTab === "project"
-                    ? "Миний загварууд"
-                    : "Өрөө засах"
+              </>
+            )
+          ) : panelTab === "cart" && cartItems.length > 0 ? (
+            <RoomCartFooter />
+          ) : null
         }
       >
-        <nav
+        {panelView !== "list" ? (
+          <div className="room-panel-nested">
+        {panelView === "room" && <nav
           className="room-environment-tabs"
           aria-label="Өрөөний тохиргооны хэсэг"
         >
@@ -2747,8 +2192,8 @@ function RoomPlannerEditor() {
               <span>{label}</span>
             </button>
           ))}
-        </nav>
-        {environmentTab !== "room" && (
+        </nav>}
+        {panelView === "room" && environmentTab !== "room" && (
           <>
             {(activePreset || localFile) && (
               <div className="room-custom-notice">
@@ -2813,8 +2258,11 @@ function RoomPlannerEditor() {
             />
           </>
         )}
-        <div hidden={environmentTab !== "room"}>
-          <div className="planner-inspector-intro">
+        <div hidden={panelView === "room" && environmentTab !== "room"}>
+          <div
+            className="planner-inspector-intro"
+            hidden={panelView === "detail"}
+          >
             <h2>
               {roomDetailsTab === "room"
                 ? "Өрөөний хэмжээ"
@@ -2966,8 +2414,8 @@ function RoomPlannerEditor() {
                       className="btn-ghost"
                       onClick={() => {
                         setAddRoomType(newRoomType);
-                        setLeftOpen(false);
-                        setRightOpen(false);
+                        closeNested();
+                        if (narrowPanel()) setPanelOpen(false);
                         setRoomMapOpen(true);
                       }}
                     >
@@ -3017,7 +2465,7 @@ function RoomPlannerEditor() {
                 className="room-welcome-start room-size-done"
                 onClick={() => {
                   endEdit();
-                  setRightOpen(false);
+                  setLeftOpen(true);
                 }}
               >
                 Болсон, тавилга байрлуулах <Check size={17} />
@@ -3026,140 +2474,196 @@ function RoomPlannerEditor() {
           </div>
           <div hidden={roomDetailsTab !== "selection"}>
             {selectedPiece && selectedDetails ? (
-              <div className="border-b border-ui-line p-4">
-                <p className="label mb-3">Сонгосон</p>
-
-                <div className="flex gap-3">
+              <div className="room-detail">
+                <div className="room-detail-summary">
                   {selectedProduct ? (
                     <Image
                       src={selectedProduct.image}
-                      alt={selectedProduct.name}
-                      width={56}
-                      height={56}
-                      className="h-14 w-14 flex-shrink-0 rounded-lg object-cover"
+                      alt=""
+                      width={64}
+                      height={64}
                     />
                   ) : selectedDbModel?.thumbnailFile ? (
                     <Image
                       src={`/api/models/files/${selectedDbModel.fileModelId ?? selectedDbModel.id}/${selectedDbModel.thumbnailFile}`}
-                      alt={selectedDbModel.name}
-                      width={56}
-                      height={56}
+                      alt=""
+                      width={64}
+                      height={64}
                       unoptimized
-                      className="h-14 w-14 flex-shrink-0 rounded-lg object-cover"
                     />
                   ) : (
-                    <div className="grid h-14 w-14 flex-shrink-0 place-items-center rounded-lg bg-[#EEEEE7]">
-                      <Sparkles className="h-5 w-5 text-[#AD6547]/50" />
-                    </div>
+                    <span>
+                      <Sparkles size={20} aria-hidden="true" />
+                    </span>
                   )}
-
                   <div>
-                    <p className="text-sm font-medium">
-                      {selectedDetails.name}
-                    </p>
-                    <p className="mt-1 text-xs">
+                    <strong>{selectedDetails.name}</strong>
+                    <small>
                       {selectedPiece.kitchen
                         ? "Өөрийн гарнитур"
                         : stockLabel(selectedProduct ?? selectedDbModel ?? {})}
-                    </p>
-                    <p className="font-mono text-xs text-ui-muted">
+                    </small>
+                    <b>
                       {selectedDetails.basePrice > 0
                         ? formatPrice(getPiecePrice(selectedPiece))
                         : "Үнэ тогтоогдоогүй"}
-                    </p>
+                    </b>
                   </div>
                 </div>
-                <div
-                  className="room-selection-size"
-                  aria-label="Тавилгын хэмжээ"
-                >
-                  {Object.entries(dimsFor(selectedPiece)).map(
-                    ([axis, value]) => (
-                      <span key={axis}>
-                        <small>
-                          {axis === "w"
-                            ? "Өргөн"
-                            : axis === "d"
-                              ? "Гүн"
-                              : "Өндөр"}
-                        </small>
-                        <strong>{formatMeasurement(value)}</strong>
-                      </span>
-                    ),
-                  )}
-                </div>
-                <div className="room-selection-actions">
-                  <button type="button" onClick={rotateSelected}>
-                    <RotateCw size={16} /> Эргүүлэх
-                  </button>
-                  <button type="button" onClick={duplicateSelected}>
-                    <Copy size={16} /> Хувилах
-                  </button>
-                  <button type="button" onClick={removeSelected}>
-                    <Trash2 size={16} /> Устгах
-                  </button>
-                </div>
-                <RoomProductAlternatives
-                  key={selectedPiece.instanceId}
-                  piece={selectedPiece}
-                  product={selectedProduct}
-                  products={catalog.products}
-                  pieces={current.pieces}
-                  room={current}
-                  roomId={current.activeRoomId ?? `${current.id}-room-1`}
-                  context={placement}
-                  onReplace={updatePieces}
-                  onNotice={setNotice}
-                />
-                {showDimensions && measurements.length > 0 && (
-                  <section
-                    className="planner-measure-details"
-                    aria-label="Сонгосон тавилгын хэмжээс"
-                  >
-                    <h3>Хэмжээ ба зай · см</h3>
-                    <dl>
-                      {measurements.map((item) => (
-                        <div key={item.id}>
-                          <dt>{item.label}</dt>
-                          <dd>{formatMeasurement(item.value)}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                    <p>
-                      Ханын зайг тавилгын гадна хүрээнээс хэмжинэ. Багана урд нь
-                      байвал багана хүртэлх зай гарна.
+                <section className="room-detail-section" aria-label="Хувилбар">
+                  <h3>Хувилбар</h3>
+                  {selectedPiece.kitchen ? (
+                    <p className="mt-4 text-xs leading-5">
+                      Бодит хэмжээгээр байрласан гарнитур.{" "}
+                      <Link
+                        className="underline"
+                        href={`/kitchen?design=${selectedPiece.kitchen.id}`}
+                      >
+                        Гарнитурын тохиргоог нээх →
+                      </Link>
+                      <br />
+                      Зассан хувилбарыг хадгалж, Өөрийн загвараас дахин оруулна.
                     </p>
-                  </section>
-                )}
-                <FurnitureAttachmentControls
-                  piece={selectedPiece}
-                  pieces={current.pieces}
-                  room={current}
-                  roomId={current.activeRoomId ?? `${current.id}-room-1`}
-                  onChange={(candidate) => {
-                    try {
-                      const pieces = resolveFurnitureAttachments(
-                        current.pieces.map((p) =>
-                          p.instanceId === candidate.instanceId ? candidate : p,
-                        ),
-                        current,
-                        current.activeRoomId ?? `${current.id}-room-1`,
-                      );
-                      if (
-                        !pieces.every((p) =>
-                          isPlacementValid(p, pieces, placement.room),
-                        )
-                      )
-                        return "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.";
-                      updatePieces(pieces);
-                      return null;
-                    } catch (reason) {
-                      return (reason as Error).message;
-                    }
-                  }}
-                />
-                <div className="planner-transform">
-                  <p className="label">Байрлал · өрөөний төвөөс</p>
+                  ) : (
+                    <>
+                      <p className="room-detail-label">
+                        Өнгө ·{" "}
+                        {selectedDetails.colors.find(
+                          (color) => color.id === selectedPiece.color,
+                        )?.name ?? "—"}
+                      </p>
+                      <div className="room-detail-swatches">
+                        {selectedDetails.colors.map((color) => (
+                          <button
+                            key={color.id}
+                            type="button"
+                            aria-label={color.name}
+                            aria-pressed={selectedPiece.color === color.id}
+                            onClick={() => {
+                              if (
+                                selectedPiece.color !== color.id &&
+                                !selectedPiece.modelId
+                              )
+                                trackProduct3d(
+                                  selectedPiece.productId,
+                                  "color",
+                                  color.id,
+                                );
+                              updatePieces(
+                                current.pieces.map((piece) =>
+                                  piece.instanceId === selectedPiece.instanceId
+                                    ? { ...piece, color: color.id }
+                                    : piece,
+                                ),
+                              );
+                            }}
+                            style={{ background: color.hex }}
+                            className={cn(
+                              "h-7 w-7 rounded-full border-2",
+                              selectedPiece.color === color.id
+                                ? "border-ui-line"
+                                : "border-white",
+                            )}
+                            title={color.name}
+                          />
+                        ))}
+                      </div>
+                      <p className="room-detail-label">Материал</p>
+                      <div className="room-detail-materials">
+                        {selectedDetails.materials.map((material) => (
+                          <button
+                            key={material.id}
+                            type="button"
+                            onClick={() => {
+                              if (
+                                selectedPiece.material !== material.id &&
+                                !selectedPiece.modelId
+                              )
+                                trackProduct3d(
+                                  selectedPiece.productId,
+                                  "material",
+                                  material.id,
+                                );
+                              updatePieces(
+                                current.pieces.map((piece) =>
+                                  piece.instanceId === selectedPiece.instanceId
+                                    ? { ...piece, material: material.id }
+                                    : piece,
+                                ),
+                              );
+                            }}
+                            className={cn(
+                              "rounded-full border px-3 py-1.5 text-xs transition",
+                              selectedPiece.material === material.id
+                                ? "border-ui-line bg-ui-accent text-white"
+                                : "border-ui-line bg-white text-ui-muted hover:border-ui-line",
+                            )}
+                          >
+                            {material.name}
+                            {material.priceDelta > 0 &&
+                              ` (+${formatPrice(material.priceDelta)})`}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  <RoomProductAlternatives
+                    key={selectedPiece.instanceId}
+                    piece={selectedPiece}
+                    product={selectedProduct}
+                    products={catalog.products}
+                    pieces={current.pieces}
+                    room={current}
+                    roomId={current.activeRoomId ?? `${current.id}-room-1`}
+                    context={placement}
+                    onReplace={updatePieces}
+                    onNotice={setNotice}
+                  />
+                </section>
+                <section className="room-detail-section" aria-label="Хэмжээ">
+                  <h3>Хэмжээ</h3>
+                  <div className="room-selection-size">
+                    {Object.entries(dimsFor(selectedPiece)).map(
+                      ([axis, value]) => (
+                        <span key={axis}>
+                          <small>
+                            {axis === "w"
+                              ? "Өргөн"
+                              : axis === "d"
+                                ? "Гүн"
+                                : "Өндөр"}
+                          </small>
+                          <strong>{formatMeasurement(value)}</strong>
+                        </span>
+                      ),
+                    )}
+                  </div>
+                  {showDimensions && measurements.length > 0 && (
+                    <section
+                      className="planner-measure-details"
+                      aria-label="Сонгосон тавилгын хэмжээс"
+                    >
+                      <h3>Хэмжээ ба зай · см</h3>
+                      <dl>
+                        {measurements.map((item) => (
+                          <div key={item.id}>
+                            <dt>{item.label}</dt>
+                            <dd>{formatMeasurement(item.value)}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <p>
+                        Ханын зайг тавилгын гадна хүрээнээс хэмжинэ. Багана урд нь
+                        байвал багана хүртэлх зай гарна.
+                      </p>
+                    </section>
+                  )}
+                </section>
+                <section
+                  className="room-detail-section planner-transform"
+                  aria-label="Байрлал"
+                >
+                  <h3>Байрлал · өрөөний төвөөс</h3>
                   <div className="planner-fields">
                     <NumberControl
                       label="Хажуу тийш · метр"
@@ -3221,112 +2725,42 @@ function RoomPlannerEditor() {
                       <ArrowRight size={17} />
                     </button>
                   </div>
-                  <div className="planner-fields">
-                    <button
-                      className="btn-ghost !px-2 !py-2"
-                      onClick={duplicateSelected}
-                    >
-                      <Copy size={15} /> Хуулах
-                    </button>
-                    <button
-                      className="btn-ghost !px-2 !py-2 text-red-700"
-                      onClick={removeSelected}
-                    >
-                      <Trash2 size={15} /> Устгах
-                    </button>
-                  </div>
-                </div>
-                {selectedPiece.kitchen ? (
-                  <p className="mt-4 text-xs leading-5">
-                    Бодит хэмжээгээр байрласан гарнитур.{" "}
-                    <Link
-                      className="underline"
-                      href={`/kitchen?design=${selectedPiece.kitchen.id}`}
-                    >
-                      Гарнитурын тохиргоог нээх →
-                    </Link>
-                    <br />
-                    Зассан хувилбарыг хадгалж, Өөрийн загвараас дахин оруулна.
-                  </p>
-                ) : (
-                  <>
-                    <p className="label mb-2 mt-4">Өнгө</p>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedDetails.colors.map((color) => (
-                        <button
-                          key={color.id}
-                          type="button"
-                          aria-label={color.name}
-                          aria-pressed={selectedPiece.color === color.id}
-                          onClick={() => {
-                            if (
-                              selectedPiece.color !== color.id &&
-                              !selectedPiece.modelId
-                            )
-                              trackProduct3d(
-                                selectedPiece.productId,
-                                "color",
-                                color.id,
-                              );
-                            updatePieces(
-                              current.pieces.map((piece) =>
-                                piece.instanceId === selectedPiece.instanceId
-                                  ? { ...piece, color: color.id }
-                                  : piece,
-                              ),
-                            );
-                          }}
-                          style={{ background: color.hex }}
-                          className={cn(
-                            "h-7 w-7 rounded-full border-2",
-                            selectedPiece.color === color.id
-                              ? "border-ui-line"
-                              : "border-white",
-                          )}
-                          title={color.name}
-                        />
-                      ))}
-                    </div>
-                    <p className="label mb-2 mt-4">Материал</p>
-
-                    <div className="flex flex-wrap gap-2">
-                      {selectedDetails.materials.map((material) => (
-                        <button
-                          key={material.id}
-                          type="button"
-                          onClick={() => {
-                            if (
-                              selectedPiece.material !== material.id &&
-                              !selectedPiece.modelId
-                            )
-                              trackProduct3d(
-                                selectedPiece.productId,
-                                "material",
-                                material.id,
-                              );
-                            updatePieces(
-                              current.pieces.map((piece) =>
-                                piece.instanceId === selectedPiece.instanceId
-                                  ? { ...piece, material: material.id }
-                                  : piece,
-                              ),
-                            );
-                          }}
-                          className={cn(
-                            "rounded-full border px-3 py-1.5 text-xs transition",
-                            selectedPiece.material === material.id
-                              ? "border-ui-line bg-ui-accent text-white"
-                              : "border-ui-line bg-white text-ui-muted hover:border-ui-line",
-                          )}
-                        >
-                          {material.name}
-                          {material.priceDelta > 0 &&
-                            ` (+${formatPrice(material.priceDelta)})`}
-                        </button>
-                      ))}
-                    </div>
-                  </>
+                  <FurnitureAttachmentControls
+                    piece={selectedPiece}
+                    pieces={current.pieces}
+                    room={current}
+                    roomId={current.activeRoomId ?? `${current.id}-room-1`}
+                    onChange={(candidate) => {
+                      try {
+                        const pieces = resolveFurnitureAttachments(
+                          current.pieces.map((p) =>
+                            p.instanceId === candidate.instanceId ? candidate : p,
+                          ),
+                          current,
+                          current.activeRoomId ?? `${current.id}-room-1`,
+                        );
+                        if (
+                          !pieces.every((p) =>
+                            isPlacementValid(p, pieces, placement.room),
+                          )
+                        )
+                          return "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.";
+                        updatePieces(pieces);
+                        return null;
+                      } catch (reason) {
+                        return (reason as Error).message;
+                      }
+                    }}
+                  />
+                </section>
+                {!merchantMode && !selectedPiece.kitchen && selectedProduct && (
+                  <button
+                    type="button"
+                    className="room-detail-cart"
+                    onClick={addSelectedToCart}
+                  >
+                    <ShoppingBag size={17} /> Энэ хувилбарыг сагсанд нэмэх
+                  </button>
                 )}
               </div>
             ) : (
@@ -3335,49 +2769,6 @@ function RoomPlannerEditor() {
               </div>
             )}
 
-            <section className="planner-object-list">
-              <p className="label">
-                <Layers size={15} /> Өрөөн дэх тавилга · {current.pieces.length}
-              </p>
-              {!current.pieces.length && (
-                <div className="planner-empty">
-                  <p>Одоогоор тавилга нэмээгүй байна.</p>
-                  <button
-                    type="button"
-                    className="planner-secondary-button"
-                    onClick={() => setLeftOpen(true)}
-                  >
-                    <Plus size={16} /> Тавилга нэмэх
-                  </button>
-                </div>
-              )}
-              {current.pieces.map((piece, index) => (
-                <button
-                  key={piece.instanceId}
-                  aria-pressed={selected === piece.instanceId}
-                  onClick={() => {
-                    setSelected(piece.instanceId);
-                    setRightOpen(true);
-                  }}
-                >
-                  <span className="planner-object-number">{index + 1}</span>
-                  <span>
-                    <strong>
-                      {piece.kitchen?.name ??
-                        getProduct(piece.productId)?.name ??
-                        getDbPieceModel(piece)?.name ??
-                        "Тавилга"}
-                    </strong>
-                    <small>
-                      {piece.kitchen
-                        ? "Өөрийн гарнитур · бодит хэмжээ"
-                        : formatPrice(getPiecePrice(piece))}
-                    </small>
-                  </span>
-                  <Move size={14} />
-                </button>
-              ))}
-            </section>
           </div>
           <div hidden={roomDetailsTab !== "project"}>
             <details className="planner-advanced">
@@ -3396,11 +2787,6 @@ function RoomPlannerEditor() {
                   <option value="custom" disabled>
                     Өөрийн хэмжээ · {current.width} × {current.depth} м
                   </option>
-                  {ROOM_OPTIONS.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.label}
-                    </option>
-                  ))}
                 </select>
                 {allPresets.map((preset) => (
                   <button
@@ -3586,8 +2972,7 @@ function RoomPlannerEditor() {
               <button
                 onClick={() => {
                   endEdit();
-                  setLeftOpen(false);
-                  setRightOpen(false);
+                  closeNested();
                   previewCapture.current?.();
                   setRoomStartOpen(true);
                 }}
@@ -3598,7 +2983,928 @@ function RoomPlannerEditor() {
             </div>
           </div>
         </div>
-      </Drawer>
+          </div>
+        ) : panelTab === "add" ? (
+          <div className="room-panel-add">
+            {!merchantMode && <div
+              className="room-segmented"
+              role="group"
+              aria-label="Каталогийн горим"
+            >
+              <button
+                type="button"
+                aria-pressed={!kitchenOnly}
+                onClick={() => setKitchenOnly(false)}
+              >
+                Каталог
+              </button>
+              <button
+                type="button"
+                aria-pressed={kitchenOnly}
+                onClick={() => setKitchenOnly(true)}
+              >
+                Миний гарнитур
+              </button>
+            </div>}
+              {kitchenOnly && (
+                <div className="room-kitchen-intro">
+                  <span className="room-kitchen-intro-icon">
+                    <ChefHat size={24} aria-hidden="true" />
+                  </span>
+                  <h2>Гарнитураа сонгоорой</h2>
+                  <p>
+                    Доорх хадгалсан загвараас сонгоод «Өрөөнд байрлуулах» дарна уу.
+                    Шинээр хийх бол эхлээд шүүгээ, хэмжээ, өнгөө сонгоорой.
+                  </p>
+                  <Link className="room-kitchen-create" href="/kitchen?new=1">
+                    <Plus size={18} aria-hidden="true" />
+                    <span>
+                      <strong>Шинээр гарнитур хийх</strong>
+                      <small>Шүүгээ, хэмжээ, өнгөө сонгоод хадгалах</small>
+                    </span>
+                    <ArrowRight size={18} aria-hidden="true" />
+                  </Link>
+                </div>
+              )}
+              {kitchenOnly && (
+                <section
+                  className="planner-kitchen-library"
+                  aria-label="Миний хадгалсан гарнитурууд"
+                >
+                  <SavedKitchenList
+                    placement={activePlacement}
+                    onPlace={(saved: SavedKitchen) => {
+                      const result = useDesigns.getState().placeKitchen(saved);
+                      const piece = result.piece;
+                      if (!piece) {
+                        setNotice(result.error ?? result.message);
+                        return;
+                      }
+                      setSelected(piece.instanceId);
+                      setLeftOpen(false);
+                      setActivePreset(null);
+                      setLocalFile(null);
+                      setLocalUrl(null);
+                      setNotice(
+                        `Гарнитурыг бодит хэмжээгээр байрлууллаа. ${result.message}`,
+                      );
+                    }}
+                  />
+                </section>
+              )}
+            {!kitchenOnly && catalog.error && (
+              <RoomCatalogError
+                message={catalog.error}
+                onRetry={() => void catalog.refresh(true)}
+              />
+            )}
+            {!kitchenOnly && !catalog.ready && !catalog.error && (
+              <RoomCatalogSkeleton />
+            )}
+            {!kitchenOnly && catalog.ready && (
+              <>
+                <RoomCatalogFilters
+                  categories={scopedCatalog.categories}
+                  category={scopedCatalog.category}
+                  onCategory={setPaletteCat}
+                  scope={catalogScope}
+                  onScope={setCatalogScope}
+                  merchant={catalogMerchant}
+                  merchants={catalogMerchants}
+                  onMerchant={setCatalogMerchant}
+                  format={catalogFormat}
+                  onFormat={setCatalogFormat}
+                  sort={catalogSort}
+                  onSort={setCatalogSort}
+                  roomName={ROOM_TYPES[activeRoomType].label}
+                  query={query}
+                  onQuery={setQuery}
+                  count={catalogEntries.length}
+                  onReset={resetCatalogFilters}
+                  merchantLocked={
+                    merchantMode ? merchantRoom.store?.name : undefined
+                  }
+                />
+                {!catalogEntries.length && (
+                  <RoomCatalogEmpty
+                    query={query}
+                    category={
+                      scopedCatalog.category === "all"
+                        ? null
+                        : (scopedCatalog.categories.find(
+                            (item) => item.id === scopedCatalog.category,
+                          )?.name ?? null)
+                    }
+                    elsewhere={searchElsewhere}
+                    scope={
+                      catalogScope === "room"
+                        ? ROOM_TYPES[activeRoomType].label
+                        : null
+                    }
+                    merchant={
+                      catalogMerchant === "all"
+                        ? null
+                        : (storeNames.get(catalogMerchant) ?? null)
+                    }
+                    onAllCategories={() => setPaletteCat("all")}
+                    onClearQuery={() => setQuery("")}
+                    onAllStores={() => {
+                      setCatalogScope("all");
+                      setCatalogMerchant("all");
+                    }}
+                    onReset={resetCatalogFilters}
+                  />
+                )}
+                <div className="room-catalog-grid">
+                  {catalogEntries.map((entry) =>
+                    entry.kind === "photo" ? (
+                      <RoomCatalogCard
+                        key={entry.item.id}
+                        name={entry.item.name}
+                        merchant={merchantName(entry.item.storeIds)}
+                        image={entry.item.image || null}
+                        dimensions={formatFurnitureCm(
+                          entry.item.dimensions.w,
+                          entry.item.dimensions.d,
+                          entry.item.dimensions.h,
+                        )}
+                        price={formatPrice(entry.item.basePrice)}
+                        has3d={false}
+                        placedIds={placedByProduct.get(entry.item.id) ?? []}
+                        onAdd={() => addPiece(entry.item.id)}
+                        onAddToCart={
+                          merchantMode
+                            ? undefined
+                            : () => addProductToCart(entry.item)
+                        }
+                      />
+                    ) : (
+                      <RoomCatalogCard
+                        key={entry.item.id}
+                        name={entry.item.name}
+                        merchant={merchantName(
+                          getProduct(entry.item.id)?.storeIds,
+                        )}
+                        image={
+                          entry.item.thumbnailFile
+                            ? `/api/models/files/${entry.item.fileModelId ?? entry.item.id}/${entry.item.thumbnailFile}`
+                            : null
+                        }
+                        dimensions={formatFurnitureCm(
+                          entry.item.dimensionsW,
+                          entry.item.dimensionsD,
+                          entry.item.dimensionsH,
+                        )}
+                        price={
+                          entry.item.basePrice > 0
+                            ? formatPrice(entry.item.basePrice)
+                            : stockLabel(entry.item)
+                        }
+                        has3d
+                        placedIds={placedByProduct.get(entry.item.id) ?? []}
+                        onAdd={() => addModelPiece(entry.item)}
+                        onPrefetch={() =>
+                          void prefetchModel(
+                            modelDeliveryUrl(
+                              entry.item.fileModelId ?? entry.item.id,
+                              entry.item.glbFile,
+                            ),
+                          )
+                        }
+                      />
+                    ),
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        ) : panelTab === "added" ? (
+          <RoomAddedList
+            rows={
+              merchantMode
+                ? addedRows.map((row) => ({ ...row, purchasable: false }))
+                : addedRows
+            }
+            selected={selected}
+            room={`${current.roomName ?? "Зочны өрөө"} · ${current.width} × ${current.depth} м · ${geometry.area.toFixed(1)} м²`}
+            summary={`${current.pieces.length} тавилга өрөөнд · ${formatPrice(totalPrice)}`}
+            onRoom={() => {
+              setEnvironmentTab("room");
+              openNested("room");
+            }}
+            onSelect={(id) => {
+              setSelected(id);
+              setSelectedOpening(null);
+              setSelectedWall(null);
+              setPlacementTemplate(null);
+            }}
+            onFocus={focusSelected}
+            onDuplicate={duplicateSelected}
+            onRemove={removePiece}
+            onEdit={() => openNested("detail")}
+            onAddFurniture={() => showTab("add")}
+            onTemplates={() => {
+              endEdit();
+              previewCapture.current?.();
+              setRoomStartOpen(true);
+            }}
+          />
+        ) : merchantMode ? (
+          <MerchantRoomCameraPanel
+            design={current}
+            cover={merchantRoom.cover}
+            rows={addedRows}
+            onCover={captureCover}
+            onRoom={() => {
+              setEnvironmentTab("room");
+              openNested("room");
+            }}
+          />
+        ) : (
+          <RoomCartList
+            storeNames={storeNames}
+            placedCount={(item) =>
+              current.pieces.filter(
+                (piece) =>
+                  (piece.modelId ?? piece.productId) === item.productId &&
+                  piece.color === item.color &&
+                  piece.material === item.material,
+              ).length
+            }
+            onPlace={placeCartItem}
+            onRemoved={(item, restore) =>
+              showNotice(`${item.name} сагснаас хасагдлаа.`, {
+                label: "Буцаах",
+                run: restore,
+              })
+            }
+            onBrowse={() => showTab("add")}
+            roomPieceCount={current.pieces.length}
+            onBuyRoom={buyEverything}
+          />
+        )}
+      </RoomWorkspacePanel>
+
+      {/* CENTER: canvas */}
+      <div
+        className="planner-stage relative h-full"
+        data-planner-tour="room-stage"
+      >
+        <div className="room-stage-actions">
+          <div
+            className="room-history-controls"
+            role="group"
+            aria-label="Өөрчлөлт буцаах"
+          >
+            <button
+              type="button"
+              title="Буцаах (Ctrl+Z)"
+              aria-label="Буцаах"
+              disabled={!past.length}
+              onClick={undo}
+            >
+              <Undo2 size={18} />
+            </button>
+            <button
+              type="button"
+              title="Дахин хийх (Ctrl+Shift+Z)"
+              aria-label="Дахин хийх"
+              disabled={!future.length}
+              onClick={redo}
+            >
+              <Redo2 size={18} />
+            </button>
+          </div>
+          <RoomPlacementHelp
+            warnings={placementWarnings}
+            onHelp={() => {
+              setShowStartHint(false);
+              setTourRequest((value) => value + 1);
+            }}
+            onSelect={(item) => {
+              endEdit();
+              selectRoom(item.roomId);
+              setSelected(item.id);
+              setSelectedOpening(null);
+              setLocked(false);
+              setRoomView("dollhouse");
+              setView("perspective");
+              setCameraRequest((previous) => ({
+                id: (previous?.id ?? 0) + 1,
+                action: "focus",
+                targetId: item.id,
+              }));
+            }}
+          />
+        </div>
+        {recommendationsOpen && (
+          <aside className="room-furniture-suggestions">
+            <div className="flex justify-between">
+              <strong>Өрөөнд санал болгох</strong>
+              <button
+                type="button"
+                aria-label="Санал болгох хэсгийг хаах"
+                onClick={() => setRecommendationsOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            {suggestedFurniture(
+              current.roomType ?? "living",
+              catalog.products,
+              current.pieces,
+            ).map((product) => (
+              <button
+                key={product.id}
+                type="button"
+                onClick={() => addPiece(product.id)}
+              >
+                {product.name}
+                <span>+ Нэмэх</span>
+              </button>
+            ))}
+            {!suggestedFurniture(
+              current.roomType ?? "living",
+              catalog.products,
+              current.pieces,
+            ).length && <p>Тавилга нэмэх хэсгээс өөр сонголт үзээрэй.</p>}
+          </aside>
+        )}
+        {!localUrl && !activePreset && (
+          <RoomPlacementMap
+            design={current}
+            open={roomMapOpen}
+            onOpen={setRoomMapOpen}
+            onSelect={(id) => {
+              selectRoom(id);
+              setSelected(null);
+              setSelectedOpening(null);
+              setSelectedWall(null);
+              setPlacementTemplate(null);
+            }}
+            onAdd={(type) => {
+              setAddRoomType(type);
+              setRoomMapOpen(true);
+              setShowStartHint(false);
+              setPanelView("list");
+              if (narrowPanel()) setPanelOpen(false);
+            }}
+            onEditRoom={() => {
+              setShowRoomGeometry(true);
+            }}
+            onDuplicateRoom={duplicateRoom}
+            onRemoveRoom={removeRoom}
+            onMove={moveRoom}
+            onConnection={updateConnection}
+            onNotice={setNotice}
+            beginEdit={beginEdit}
+            endEdit={endEdit}
+          />
+        )}
+        <RoomPlannerControls
+          onCover={merchantMode ? captureCover : undefined}
+          roomActive={panelOpen && panelView === "room"}
+          view={roomView}
+          onView={(next) => {
+            setLocked(false);
+            setSelected(null);
+            setSelectedWall(null);
+            setSelectedOpening(null);
+            setPlacementTemplate(null);
+            setRoomView(next);
+            setShowStartHint(false);
+            setView(next === "top" ? "plan" : "perspective");
+            if (next !== "interior")
+              setCameraRequest((previous) => ({
+                id: (previous?.id ?? 0) + 1,
+                action: next === "dollhouse" ? "fit" : next,
+              }));
+          }}
+          onZoom={navigateView}
+          onRotate={navigateView}
+          windowBearing={exteriorWindowBearing(current)}
+          ceiling={current.ceiling}
+          lighting={current.lighting}
+          onLightingChange={(patch) =>
+            updateRoom({ lighting: { ...current.lighting!, ...patch } })
+          }
+          beginLightingEdit={beginEdit}
+          endLightingEdit={endEdit}
+          onWindows={() => {
+            if (roomView === "interior") navigateView("fit");
+            endEdit();
+            setSelected(null);
+            setSelectedOpening(null);
+            setSelectedWall(null);
+            setPlacementTemplate("window-panoramic");
+            setEnvironmentTab("openings");
+            openNested("room");
+          }}
+          onLightingSettings={() => {
+            endEdit();
+            setPlacementTemplate(null);
+            setEnvironmentTab("lighting");
+            openNested("room");
+          }}
+          onRoom={() => {
+            endEdit();
+            setPlacementTemplate(null);
+            if (panelOpen && panelView === "room") {
+              closeNested();
+              return;
+            }
+            setEnvironmentTab("room");
+            openNested("room");
+          }}
+          onHelp={() => {
+            setShowStartHint(false);
+            setTourRequest((value) => value + 1);
+          }}
+          dimensions={showDimensions}
+          onDimensions={() => setShowDimensions((value) => !value)}
+          grid={gridEnabled}
+          onGrid={() => setGridEnabled((value) => !value)}
+          snap={snapEnabled}
+          onSnap={() => setSnapEnabled((value) => !value)}
+          locked={locked}
+          onLock={() => setLocked((value) => !value)}
+          expanded={expanded}
+          onExpand={() => setExpanded((value) => !value)}
+        />
+        <div className="planner-room-caption">
+          <strong>
+            {current.roomName ?? "Зочны өрөө"} · {current.width} ×{" "}
+            {current.depth} м
+          </strong>
+          <span>
+            {geometry.area.toFixed(2)} м² ашиглах талбай ·{" "}
+            {current.pieces.length} тавилга
+          </span>
+        </div>
+        {showDimensions && (
+          <div className="planner-measure-readout" role="status">
+            <strong>
+              <Ruler size={14} /> Хэмжээс · см
+            </strong>
+            {measurements.length ? (
+              <>
+                <span>{selectedDetails?.name ?? "Тавилга"}</span>
+                <span>
+                  {measurements
+                    .filter((item) => item.kind === "size")
+                    .map((item) => formatMeasurement(item.value))
+                    .join(" × ")}{" "}
+                  · өргөн × урт × өндөр
+                </span>
+                {measurements.find((item) => item.id === "ceiling") && (
+                  <span>
+                    Тааз хүртэл:{" "}
+                    {formatMeasurement(
+                      measurements.find((item) => item.id === "ceiling")!.value,
+                    )}
+                  </span>
+                )}
+                {(activePreset || localUrl) && (
+                  <span>
+                    Өөрийн 3D интерьерийн хана, таазны хэмжилт дэмжигдэхгүй.
+                  </span>
+                )}
+              </>
+            ) : activePreset || localUrl ? (
+              <span>Хэмжих тавилга дээр дарна уу.</span>
+            ) : (
+              <>
+                <span>{current.roomName ?? "Өрөө"}</span>
+                <span>
+                  {formatMeasurement(current.width)} ×{" "}
+                  {formatMeasurement(current.depth)} · үндсэн өргөн × урт
+                </span>
+                <span>
+                  Таазны өндөр · {formatMeasurement(current.height ?? 2.7)}
+                </span>
+                <span>
+                  Өрөө тус бүрийг ханын дагуу хэмжинэ. Тавилгын хэмжээг харах
+                  бол дээр нь дарна уу.
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* preset loading status */}
+        {(activePreset || localFile) && (
+          <div className="absolute left-1/2 top-24 z-20 -translate-x-1/2 rounded-full border border-ui-line bg-white/95 px-4 py-2 text-xs shadow-sm backdrop-blur md:top-16">
+            {presetStatus === "loading" && "Загвар ачаалж байна…"}
+            {presetStatus === "loaded" && "✓ Загвар амжилттай ачааллаа"}
+            {presetStatus === "error" && (
+              <span className="text-red-600">
+                ⚠ Алдаа: {presetError ?? "загвар олдсонгүй"}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* right-side selection actions */}
+        <div className="planner-selection-toolbar">
+          {selectedOpening &&
+            current.openings?.find((o) => o.id === selectedOpening) && (
+              <details
+                className="room-opening-context"
+                open
+                key={selectedOpening}
+              >
+                <summary>Хаалга, цонх засах</summary>
+                <OpeningQuickEditor
+                  room={current}
+                  opening={current.openings.find(
+                    (o) => o.id === selectedOpening,
+                  )!}
+                  onChange={changeOpening}
+                  onRemove={removeSelected}
+                  beginEdit={beginEdit}
+                  endEdit={endEdit}
+                />
+              </details>
+            )}
+          {selectedOpening && (
+            <>
+              <button
+                onClick={() => {
+                  setEnvironmentTab("openings");
+                  openNested("room");
+                }}
+              >
+                <DoorOpen size={16} /> Хаалга, цонхны тохиргоо
+              </button>
+              <button
+                onClick={removeSelected}
+                aria-label="Сонгосон нээлхийг устгах"
+              >
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
+          {selected && selectedPiece && (
+            <div
+              className="room-selection-bar"
+              role="toolbar"
+              aria-label="Сонгосон тавилга"
+            >
+              <strong>
+                {selectedDetails?.name ?? "Тавилга"}{" "}
+                <small>#{pieceNumber(selectedPiece)}</small>
+              </strong>
+              <span aria-hidden="true" />
+              <button
+                type="button"
+                aria-label="Сонгосон тавилга дээр төвлөрөх"
+                title="Сонгосон тавилга дээр төвлөрөх"
+                onClick={focusSelected}
+              >
+                <Focus size={16} />
+                <span>Төвлөрүүлж харах</span>
+              </button>
+              {!(panelOpen && panelView === "detail") && (
+                <button
+                  type="button"
+                  className="is-primary"
+                  onClick={() => openNested("detail")}
+                >
+                  <Settings size={16} />
+                  <span>Засах</span>
+                </button>
+              )}
+              <button
+                type="button"
+                aria-label="Сонголт цуцлах"
+                onClick={() => setSelected(null)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+          {focusedOn && (
+            <button
+              type="button"
+              className="room-fit-chip"
+              onClick={() => {
+                setFocusedOn(null);
+                navigateView("fit");
+              }}
+            >
+              <Maximize size={14} /> Бүтэн өрөө харах
+            </button>
+          )}
+        </div>
+
+        {!welcomeDismissed &&
+          (showStartHint ||
+            (current.pieces.length === 0 &&
+              !panelOpen &&
+              !summaryOpen)) &&
+          !placementTemplate &&
+          !selected &&
+          !selectedOpening && (
+            <div className="room-welcome-card">
+              <button
+                type="button"
+                className="room-welcome-dismiss"
+                aria-label="Эхлэх зөвлөмжийг хаах"
+                onClick={() => {
+                  setShowStartHint(false);
+                  setWelcomeDismissed(true);
+                }}
+              >
+                <X size={17} />
+              </button>
+              <span className="room-welcome-eyebrow">
+                ӨӨРИЙНХӨӨ ӨРӨӨГ БҮТЭЭЕ
+              </span>
+              <strong>Өрөөгөө тохижуулж эхэлье</strong>
+              <p className="room-welcome-intro">
+                Тавилга нэмээд чирж байрлуулаарай. Сонгосон тавилгынхаа өнгө,
+                материал, байрлалыг самбараас тохируулна.
+              </p>
+              <button
+                type="button"
+                className="room-welcome-start"
+                onClick={() => {
+                  setShowStartHint(false);
+                  setKitchenOnly(false);
+                  setLeftOpen(true);
+                }}
+              >
+                <Plus size={18} /> Тавилга нэмэх
+              </button>
+              <button
+                type="button"
+                className="room-welcome-skip"
+                onClick={() => {
+                  setShowStartHint(false);
+                  setEnvironmentTab("room");
+                  openNested("room");
+                }}
+              >
+                Өрөөний хэмжээ тохируулах
+              </button>
+            </div>
+          )}
+        <div className="room-camera-guide" role="status">
+          {roomView === "interior"
+            ? "W/A/S/D — өрөө дотор алхах · Чирэх — эргэн харах · Дугуй — ойртуулах, цааш гүйлгэвэл гадагш гарна"
+            : placementTemplate
+              ? "Хаалга, цонх байрлуулах ханандаа дарна уу · Esc цуцлах"
+              : selected
+                ? "Тавилгыг чирж байрлуулна · Эргүүлэх товч: 90° · Сумтай товч: 10 см"
+                : "Тавилга: дарж сонгох, чирж байрлуулах · Хоосон хэсгийг чирж эргүүлэх · Дугуйгаар ойртож өрөөнд орно"}
+        </div>
+
+        {roomView === "interior" && (
+          <RoomTourControls
+            design={current}
+            locked={locked}
+            onSelectRoom={selectRoom}
+            onExit={() => navigateView("fit")}
+            onFov={(fov) =>
+              updateRoom({
+                interiorCamera: { ...interiorCamera(current), fov },
+              })
+            }
+            beginEdit={beginEdit}
+            endEdit={endEdit}
+          />
+        )}
+        {planReady && (
+          <div
+            className="room-plan-workspace"
+            onPointerDownCapture={beginEdit}
+            onPointerUp={endEdit}
+            onPointerCancel={endEdit}
+            onLostPointerCapture={endEdit}
+          >
+            <RoomWallPlan
+              onSurfaceDoubleClick={(surface, wall, x, y) =>
+                setSurfacePopup({ surface, wall, x, y })
+              }
+              key={current.activeRoomId}
+              room={current}
+              pieces={current.pieces}
+              selectedPiece={selected}
+              onSelectPiece={setSelected}
+              onChange={applyRoomShape}
+              onMovePiece={(id, x, z) => {
+                const piece = current.pieces.find((p) => p.instanceId === id);
+                if (!piece) return null;
+                try {
+                  const candidate = moveAttachedFurniture(
+                    piece,
+                    x,
+                    z,
+                    current,
+                    current.activeRoomId ?? `${current.id}-room-1`,
+                    current.pieces,
+                  );
+                  const pieces = resolveFurnitureAttachments(
+                    current.pieces.map((p) =>
+                      p.instanceId === id ? candidate : p,
+                    ),
+                    current,
+                    current.activeRoomId ?? `${current.id}-room-1`,
+                  );
+                  const combined = placement.pieces.map(
+                    (p) =>
+                      pieces.find((next) => next.instanceId === p.instanceId) ??
+                      p,
+                  );
+                  if (
+                    !pieces.every((p) =>
+                      isPlacementValid(p, combined, placement.room),
+                    )
+                  )
+                    return "Тавилга өрөөний хана, багана эсвэл таазны хязгаараас гарч байна.";
+                  updatePieces(pieces);
+                  return null;
+                } catch (reason) {
+                  return (reason as Error).message;
+                }
+              }}
+            />
+            {selected && (
+              <div className="room-plan-piece-actions">
+                <button type="button" onClick={rotateSelected}>
+                  Эргүүлэх
+                </button>
+                <button type="button" onClick={duplicateSelected}>
+                  Хувилах
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedPiece) rememberFurniture(selectedPiece);
+                    setNotice("Миний тавилгад хадгаллаа.");
+                  }}
+                >
+                  Миний тавилгад
+                </button>
+                <button type="button" onClick={removeSelected}>
+                  Устгах
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        <div
+          className="planner-canvas h-full w-full pt-10 xl:pt-0"
+          style={
+            planReady
+              ? { opacity: 0, pointerEvents: "none" }
+              : roomView === "top"
+                ? { pointerEvents: "none" }
+                : undefined
+          }
+        >
+          <RoomCanvas
+            onRendererUnavailable={setRendererUnavailable}
+            onExportReady={templateAdmin.isAdmin ? exportReady : undefined}
+            paused={planReady}
+            onViewSettled={(settledView) => {
+              if (settledView === "plan") setSettledPlan(current.id);
+            }}
+            onPreview={savePreview}
+            onPreviewReady={previewReady}
+            onPlacementHintsReady={placementHintsReady}
+            key={current.id}
+            design={current}
+            interior={roomView === "interior"}
+            onCameraSave={(pose) => updateRoom({ interiorCamera: pose })}
+            onEnterInterior={(pose) => {
+              updateRoom({ interiorCamera: pose });
+              setRoomView("interior");
+              setView("perspective");
+              setPlacementTemplate(null);
+              setShowStartHint(false);
+            }}
+            onExitInterior={() => {
+              // The canvas has already walked the camera out; no fit request.
+              setRoomView("dollhouse");
+              setView("perspective");
+            }}
+            onSelectRoom={(id) => {
+              selectRoom(id);
+              setSelected(null);
+              setSelectedOpening(null);
+              setSelectedWall(null);
+              setPlacementTemplate(null);
+            }}
+            selected={selected}
+            onSelect={(id) => {
+              setSelected(id);
+              if (id) {
+                setSelectedOpening(null);
+                setSelectedWall(null);
+                setPlacementTemplate(null);
+              }
+            }}
+            selectedWall={selectedWall}
+            onSelectWall={selectWall}
+            onSurfaceDoubleClick={(surface, wall, x, y) => {
+              setSurfacePopup({ surface, wall, x, y });
+              setSurface(surface);
+              if (wall) selectWall(wall);
+              closeNested();
+            }}
+            selectedOpening={selectedOpening}
+            onSelectOpening={selectOpening}
+            onUpdateOpening={changeOpening}
+            placementTemplate={placementTemplate}
+            onPlaceOpening={(wall, position) => {
+              if (placementTemplate)
+                addOpening(placementTemplate, wall, position);
+            }}
+            onPlacementError={setNotice}
+            onMove={onMove}
+            view={view}
+            snapEnabled={snapEnabled}
+            locked={locked}
+            gridEnabled={gridEnabled}
+            showDimensions={showDimensions}
+            measurements={measurements}
+            resetKey={resetKey}
+            cameraRequest={cameraRequest}
+            onEditStart={beginEdit}
+            onEditEnd={endEdit}
+            onRemovePiece={removePiece}
+            customInterior={
+              localUrl
+                ? {
+                    basePath: "",
+                    glb: localUrl,
+                    scale: localScale,
+                    onLoaded: () => setPresetStatus("loaded"),
+                    onError: (msg) => {
+                      setPresetStatus("error");
+                      setPresetError(msg);
+                    },
+                  }
+                : activePreset
+                  ? {
+                      basePath: activePreset.basePath,
+                      glb: activePreset.glb,
+                      scale: activePreset.scale,
+                      onLoaded: () => setPresetStatus("loaded"),
+                      onError: (msg) => {
+                        setPresetStatus("error");
+                        setPresetError(msg);
+                      },
+                    }
+                  : null
+            }
+          />
+        </div>
+      </div>
+
+      {merchantMode && merchantDialog === "publish" && (
+        <MerchantPublishDialog
+          editor={merchantRoom}
+          rows={addedRows}
+          onShow={(id) => {
+            // «Харуулах»: select the blocking piece and bring the camera to it.
+            setSelected(id);
+            setFocusedOn(id);
+            setLocked(false);
+            setCameraRequest((previous) => ({
+              id: (previous?.id ?? 0) + 1,
+              action: "focus",
+              targetId: id,
+            }));
+          }}
+          onClose={() => setMerchantDialog(null)}
+        />
+      )}
+      {merchantMode && merchantDialog === "preview" && (
+        <MerchantRoomPreview
+          editor={merchantRoom}
+          design={current}
+          rows={addedRows}
+          onClose={() => setMerchantDialog(null)}
+        />
+      )}
+      {merchantMode && merchantRoom.conflict && (
+        <MerchantConflictDialog editor={merchantRoom} />
+      )}
+      {summaryOpen && !merchantMode && (
+        <RoomSummaryModal
+          name={current.name}
+          room={`${current.roomName ?? "Миний өрөө"} · ${geometry.area.toFixed(1)} м²`}
+          pieceCount={current.pieces.length}
+          roomTotal={totalPrice}
+          canBuyRoom={current.pieces.length > 0}
+          onBuyRoom={buyEverything}
+          onSave={save}
+          onClose={() => setSummaryOpen(false)}
+        />
+      )}
+
 
       {addRoomType && (
         <RoomAddDialog
@@ -3631,7 +3937,6 @@ function RoomPlannerEditor() {
               setNotice(`Багтаагүй тавилга: ${result.skipped.join(", ")}.`);
             setAddRoomType(null);
             setRoomMapOpen(true);
-            setCameraPlacement(false);
             setShowStartHint(false);
           }}
         />

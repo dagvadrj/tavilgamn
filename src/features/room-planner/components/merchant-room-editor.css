@@ -1,0 +1,274 @@
+/* C3: merchant editor chrome over the shared room workspace. */
+.merchant-room-header .merchant-room-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 22px;
+  color: #171c24;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.merchant-room-header .merchant-room-back:hover {
+  background: #f1f1ef;
+}
+
+.merchant-room-status {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef0f3;
+  color: #171c24;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.merchant-room-status[data-status="published"] {
+  background: #e7f5ee;
+  color: #17603d;
+}
+
+.merchant-room-status[data-status="archived"] {
+  background: #f1f1ef;
+  color: #5f6672;
+}
+
+.merchant-room-header .studio-file-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.merchant-room-camera {
+  display: grid;
+  gap: 18px;
+  padding: 14px 16px 20px;
+}
+
+.merchant-room-camera section {
+  display: grid;
+  gap: 8px;
+}
+
+.merchant-room-camera h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.merchant-room-camera p {
+  margin: 0;
+  color: #5f6672;
+  font-size: 13px;
+}
+
+.merchant-room-camera button, .merchant-room-dialog button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #e4e6ea;
+  border-radius: 22px;
+  background: #fff;
+  color: #171c24;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.merchant-room-camera .is-primary, .merchant-room-dialog .is-primary {
+  border-color: #075eaa;
+  background: #075eaa;
+  color: #fff;
+}
+
+.merchant-room-dialog .is-danger {
+  border-color: #f1c4c0;
+  color: #b42318;
+}
+
+.merchant-room-camera button:disabled, .merchant-room-dialog button:disabled {
+  border-color: #e4e6ea;
+  background: #f1f1ef;
+  color: #a3a9b1;
+  cursor: not-allowed;
+}
+
+.merchant-room-cover {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 14px;
+  aspect-ratio: 16 / 10;
+  background: #eef0f3;
+  color: #5f6672;
+  font-size: 13px;
+}
+
+.merchant-room-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.merchant-room-cover-missing {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  color: #8a4b00;
+  text-align: center;
+}
+
+.merchant-room-cover-missing span {
+  color: #5f6672;
+  font-size: 13px;
+}
+
+.merchant-room-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: #171c2466;
+}
+
+.merchant-room-dialog {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  width: min(500px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 24px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 60px #171c2433;
+}
+
+.merchant-room-dialog h3 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.merchant-room-dialog h4 {
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+
+.merchant-room-dialog > p, .merchant-room-dialog > small {
+  margin: 0;
+  color: #5f6672;
+}
+
+.merchant-room-dialog > label {
+  display: grid;
+  gap: 4px;
+  color: #5f6672;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.merchant-room-dialog :is(input, select, textarea) {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #e4e6ea;
+  border-radius: 12px;
+  color: #171c24;
+  font: inherit;
+  font-size: 15px;
+}
+
+.merchant-room-dialog .merchant-room-dialog-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  padding: 0;
+  border: 0;
+}
+
+.merchant-room-checks {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.merchant-room-checks li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #f6f7f9;
+}
+
+.merchant-room-checks li > span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background: #e7f5ee;
+  color: #17603d;
+}
+
+.merchant-room-checks li[data-ok="false"] > span {
+  background: #fff4e5;
+  color: #8a4b00;
+}
+
+.merchant-room-checks li[data-blocking="true"] > span {
+  background: #fdecea;
+  color: #b42318;
+}
+
+.merchant-room-checks li > div {
+  display: grid;
+}
+
+.merchant-room-checks small {
+  color: #5f6672;
+  font-size: 12px;
+}
+
+.merchant-room-dialog-actions, .merchant-room-conflict-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.merchant-room-conflict-actions {
+  display: grid;
+  justify-content: stretch;
+}
+
+.merchant-room-dialog.is-conflict > svg {
+  color: #8a4b00;
+}
+
+.merchant-room-reason {
+  color: #8a4b00;
+  font-size: 12.5px;
+}
+
+.merchant-room-error {
+  color: #b42318;
+  font-size: 13px;
+}
+
+.merchant-room-cover.is-large {
+  width: 100%;
+}

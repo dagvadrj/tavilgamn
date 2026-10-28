@@ -116,3 +116,37 @@ test('reduced-motion rotation after a floor jump never restores the old camera l
     assert.deepEqual(f.camera.position.toArray(),[-.8,1.6,0]);
   }finally{f.dispose();}
 });
+
+test('a press on furniture passes through to the furniture drag; look-around ignores that pointer',()=>{
+  const previousWindow=global.window,slots=[],listeners=new Map();let cursor=0,effects=[],frame;
+  const effect=(fn,deps)=>{const at=cursor++,old=slots[at];if(!old||deps.some((v,i)=>!Object.is(v,old.deps[i]))){slots[at]={deps,cleanup:old?.cleanup};effects.push(()=>{old?.cleanup?.();slots[at].cleanup=fn();});}};
+  const react={useRef:v=>slots[cursor++]??(slots[cursor-1]={current:v}),useEffect:effect,useLayoutEffect:effect};
+  global.window={matchMedia:()=>({matches:false,addEventListener(){},removeEventListener(){}})};
+  const canvas={style:{},tabIndex:-1,focus(){},setPointerCapture(){},hasPointerCapture:()=>true,releasePointerCapture(){},dispatchEvent(){},
+    getBoundingClientRect:()=>({left:0,top:0,width:200,height:100}),addEventListener:(n,fn)=>listeners.set(n,fn),removeEventListener:n=>listeners.delete(n)};
+  const camera=new THREE.PerspectiveCamera(45,2),scene=new THREE.Scene(),furniture=new THREE.Group();
+  furniture.name='planner-furniture';const box=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,.8));box.position.set(.7,1.6,-2.6);furniture.add(box);scene.add(furniture);scene.updateMatrixWorld(true);
+  const {RoomStreetView}=loadSource('src/three/RoomStreetView.tsx',{react,'@react-three/fiber':{useThree:()=>({camera,gl:{domElement:canvas},size:{width:200,height:100},invalidate(){},scene}),useFrame:fn=>{frame=fn;}}});
+  const {createInteriorEntryChannel}=loadSource('src/three/roomEntryChannel.ts');
+  const channel=createInteriorEntryChannel(),saved=[];
+  const props={pose:{...initial,yaw:0,pitch:0},roomId:'test',locked:false,room:{width:5,depth:4,pieces:[]},onSave:p=>saved.push(p),channel};
+  cursor=0;effects=[];RoomStreetView(props);effects.forEach(e=>e());
+  const emit=(n,patch={})=>{let stopped=false;listeners.get(n)({pointerId:1,button:0,clientX:100,clientY:50,preventDefault(){},stopImmediatePropagation(){stopped=true;},...patch});return stopped;};
+  try{
+    const before=camera.quaternion.clone();
+    assert.equal(emit('pointerdown'),false,'furniture under the cursor keeps the press for R3F');
+    assert.equal(emit('pointermove',{clientX:190}),false);
+    for(let i=0;i<30;i++)frame({},1/60);
+    assert.ok(camera.quaternion.angleTo(before)<1e-7,'the camera does not look around during a furniture drag');
+    assert.equal(emit('pointerup'),false);
+    assert.equal(emit('pointerdown',{clientX:5,clientY:5}),true,'empty space starts look-around');
+    emit('pointerup',{clientX:5,clientY:5});
+    // Suspended by the wheel exit: interior input and frames do not write the camera.
+    emit('pointerdown',{clientX:5,clientY:5});emit('pointermove',{clientX:150,clientY:5});
+    channel.suspended=true;const held=camera.quaternion.clone();
+    for(let i=0;i<30;i++)frame({},1/60);
+    assert.ok(camera.quaternion.angleTo(held)<1e-7);
+    assert.equal(channel.atWidestView(),false);
+    channel.suspended=false;
+  }finally{slots.forEach(s=>s.cleanup?.());global.window=previousWindow;}
+});

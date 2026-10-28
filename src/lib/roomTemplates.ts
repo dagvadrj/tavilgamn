@@ -18,6 +18,12 @@ export interface RoomTemplateCard {
   sortOrder: number;
   status: RoomTemplateStatus;
   version: number;
+  /** Owning merchant store; null/absent for the platform's starter templates. */
+  storeId?: string | null;
+  pieceCount?: number;
+  /** Footprint of the main room in metres, for «5 × 4 м». */
+  width?: number | null;
+  depth?: number | null;
 }
 export interface RoomTemplate extends RoomTemplateCard {
   design: RoomDesign;
@@ -158,12 +164,32 @@ export function readTemplateInput(value: unknown) {
     kind: (design.rooms!.some((room) => room.pieces.length)
       ? "furnished"
       : "empty") as RoomTemplateKind,
-    roomType: design.roomType ?? "living",
+    roomType:
+      typeof value.roomType === "string" && Object.hasOwn(ROOM_TYPES, value.roomType)
+        ? (value.roomType as RoomType)
+        : (design.roomType ?? "living"),
     area: design.rooms!.reduce(
       (sum, room) => sum + getRoomGeometry(room).area,
       0,
     ),
   };
+}
+
+/** Counts and footprint kept beside the design so gallery cards stay small. */
+export function templateStats(design: RoomDesign) {
+  const rooms = design.rooms ?? [];
+  return {
+    pieceCount: rooms.reduce((sum, room) => sum + room.pieces.length, 0),
+    width: Number.isFinite(design.width) && design.width > 0 ? design.width : null,
+    depth: Number.isFinite(design.depth) && design.depth > 0 ? design.depth : null,
+  };
+}
+
+/** «5 × 4 м» from a card's footprint; empty when unknown. */
+export function templateFootprint(card: Pick<RoomTemplateCard, "width" | "depth">) {
+  if (!card.width || !card.depth) return "";
+  const metre = (value: number) => String(Math.round(value * 10) / 10);
+  return `${metre(card.width)} × ${metre(card.depth)} м`;
 }
 
 /** Copy identity and all structural references; catalog/model identifiers stay stable. */
@@ -206,4 +232,34 @@ export function instantiateRoomTemplate(
   copy.createdAt = copy.updatedAt = Date.now();
   delete copy.previewImage;
   return syncDesignRooms(copy);
+}
+
+export const GALLERY_PAGE_SIZE = 24;
+export type GalleryFurnishing = "full" | "partial";
+/** Public gallery query: store id or "platform", room type, furnishing, page. */
+export function readGalleryFilter(params: URLSearchParams) {
+  const store = params.get("store") ?? "";
+  const type = params.get("type") ?? "";
+  const furnishing = params.get("furnishing") ?? "";
+  const offset = Number(params.get("offset") ?? 0);
+  const limit = Number(params.get("limit") ?? GALLERY_PAGE_SIZE);
+  if (
+    (store && store !== "platform" && !/^[\w-]{1,80}$/.test(store)) ||
+    (type && !Object.hasOwn(ROOM_TYPES, type)) ||
+    (furnishing && !["full", "partial"].includes(furnishing)) ||
+    !Number.isInteger(offset) ||
+    offset < 0 ||
+    offset > 5000 ||
+    !Number.isInteger(limit) ||
+    limit < 1 ||
+    limit > 100
+  )
+    return null;
+  return {
+    store,
+    type: type as RoomType | "",
+    furnishing: furnishing as GalleryFurnishing | "",
+    offset,
+    limit,
+  };
 }

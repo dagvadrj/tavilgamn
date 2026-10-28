@@ -1,28 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { RoomLighting, RoomCeiling } from "@/lib/types";
 import { DEFAULT_ROOM_LIGHTING } from "@/lib/roomDesign";
 import { RoomLightingTimeControls } from "./RoomLightingTimeControls";
-import { Lightbulb, PanelsTopLeft, X, Box, ChevronDown, Camera, Eye, Focus, Grid2X2, HelpCircle, Lock, Magnet, Maximize, Minus, MoreHorizontal, Paintbrush, PencilRuler, Plus, RotateCcw, RotateCw, Ruler, Unlock } from "lucide-react";
+import { Image as ImageIcon, Lightbulb, PanelsTopLeft, X, Box, ChevronDown, Camera, Eye, Focus, Grid2X2, HelpCircle, Lock, Magnet, Maximize, Minus, MoreHorizontal, PencilRuler, Plus, RotateCcw, RotateCw, Ruler, Unlock } from "lucide-react";
 
 export type RoomView = "dollhouse" | "top" | "front" | "back" | "left" | "right" | "interior";
 const SIDE_VIEWS = [
-  ["front", "Урдаас"], ["back", "Араас"], ["left", "Зүүнээс"], ["right", "Баруунаас"],
+  ["front", "Урд тал"], ["back", "Ар тал"], ["left", "Зүүн тал"], ["right", "Баруун тал"],
 ] as const;
 
-export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, onZoom, onRoom, onMaterials,
-  onHelp, onWindows, onCameraPlace, cameraPlacement, dimensions, onDimensions, grid, onGrid, snap, onSnap, locked, onLock,
+export function RoomPlannerControls({ onCover, roomActive, view, onView, onZoom, onRoom,
+  onHelp, onWindows, dimensions, onDimensions, grid, onGrid, snap, onSnap, locked, onLock,
   expanded, onExpand, onRotate, lighting, ceiling, windowBearing, onLightingChange, onLightingSettings, beginLightingEdit, endLightingEdit,
 }: {
-  onFurniture?: () => void; catalogOpen?: boolean;
+  /** «Өрөө ба материал» is a nested view of the left panel. */
+  roomActive?: boolean;
+  /** Merchant editor (C3): «Cover болгох» from the current view. */
+  onCover?: () => void;
   windowBearing?: number; ceiling?: RoomCeiling; lighting?: RoomLighting; onLightingChange?: (patch: Partial<RoomLighting>) => void; onLightingSettings?: () => void;
   beginLightingEdit?: () => void; endLightingEdit?: () => void;
   view: RoomView; onView: (view: RoomView) => void;
   onZoom: (action: "zoom-in" | "zoom-out" | "fit") => void;
   onWindows?: () => void;
-  onCameraPlace?: () => void; cameraPlacement?: boolean;
-  onRoom: () => void; onMaterials: () => void; onHelp: () => void;
+  onRoom: () => void; onHelp: () => void;
   dimensions: boolean; onDimensions: () => void;
   grid: boolean; onGrid: () => void; snap: boolean; onSnap: () => void;
   locked: boolean; onLock: () => void; expanded: boolean; onExpand: () => void;
@@ -55,6 +57,18 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
       if (other !== menu) other.open = false;
     });
     positionMenu(menu);
+  };
+  const activeSide = SIDE_VIEWS.find(([side]) => side === view);
+  /** Arrow keys, Home and End move between the four sides; Escape is handled below. */
+  const moveSideFocus = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'));
+    const current = items.indexOf(document.activeElement as HTMLButtonElement);
+    const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[event.key];
+    const next = step !== undefined ? (current + step + items.length) % items.length
+      : event.key === "Home" ? 0 : event.key === "End" ? items.length - 1 : -1;
+    if (next < 0) return;
+    event.preventDefault();
+    items[next]?.focus();
   };
   const closeLights = () => { if (lightMenu.current) { lightMenu.current.open = false; lightMenu.current.querySelector("summary")?.focus(); } endLightingEdit?.(); };
   useEffect(() => {
@@ -89,11 +103,6 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
     };
   }, [positionMenu, positionLights]);
   return <>
-    <nav className="room-tools-rail" aria-label="Үндсэн хэрэгслүүд">
-      <button type="button" aria-expanded={catalogOpen} onClick={onFurniture}><Plus size={20}/><span>Тавилга</span></button>
-      <button type="button" onClick={onRoom} data-planner-tour="room-size"><PencilRuler size={20}/><span>Өрөө</span></button>
-      <button type="button" onClick={onMaterials} data-planner-tour="room-material"><Paintbrush size={20}/><span>Материал</span></button>
-    </nav>
     <div className="room-zoom-controls" role="group" aria-label="Өрөөг ойртуулах, холдуулах">
       <button type="button" aria-label="Ойртуулах" title="Ойртуулах" disabled={locked} onClick={() => onZoom("zoom-in")}><Plus size={22}/></button>
       <button type="button" aria-label="Өрөөг бүтнээр харах" title="Өрөөг бүтнээр харах" disabled={locked} onClick={() => onZoom("fit")}><Focus size={19}/></button>
@@ -115,12 +124,17 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
     </div>}
     <nav className="room-view-dock" ref={dock} aria-label="Өрөө харах, засах">
       <div className="room-view-options" role="group" aria-label="Харах өнцөг" data-planner-tour="room-view">
-        <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>3D</span></button>
-        <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>2D</span></button>
-        <details className="room-dock-more room-side-views" ref={sideMenu} onToggle={event => toggleMenu(event.currentTarget)}>
-          <summary aria-label="Хажуугийн харагдац" data-active={SIDE_VIEWS.some(([side]) => side === view)}><Eye size={20}/><span>{SIDE_VIEWS.find(([side]) => side === view)?.[1] ?? "Хажуугаас"}</span><ChevronDown size={12}/></summary>
-          <div className="room-dock-popover" role="group" aria-label="Харах талаа сонгох">
-            {SIDE_VIEWS.map(([side, label]) => <button type="button" key={side} aria-pressed={view === side} onClick={() => {
+        <button type="button" aria-pressed={view === "dollhouse"} onClick={() => onView("dollhouse")}><Box size={20}/><span>Гаднаас</span></button>
+        <button type="button" aria-pressed={view === "top"} onClick={() => onView("top")}><Grid2X2 size={20}/><span>Дээрээс</span></button>
+        <details className="room-dock-more room-side-views" ref={sideMenu} onToggle={event => {
+          const menu = event.currentTarget;
+          toggleMenu(menu);
+          // B2.6: the opened menu takes focus on the active side, or on «Урд тал».
+          if (menu.open) (menu.querySelector<HTMLButtonElement>('[aria-checked="true"]') ?? menu.querySelector<HTMLButtonElement>('[role="menuitemradio"]'))?.focus?.();
+        }}>
+          <summary aria-label={activeSide ? `Хажуугаас харах · ${activeSide[1]}` : "Хажуугаас харах"} aria-haspopup="menu" data-active={!!activeSide}><Eye size={20}/><span>{activeSide ? `Хажуугаас · ${activeSide[1].replace(" тал", "")}` : "Хажуугаас"}</span><ChevronDown size={12}/></summary>
+          <div className="room-dock-popover" role="menu" aria-label="Харах талаа сонгох" onKeyDown={moveSideFocus}>
+            {SIDE_VIEWS.map(([side, label]) => <button type="button" role="menuitemradio" key={side} aria-checked={view === side} tabIndex={view === side || (!activeSide && side === "front") ? 0 : -1} onClick={() => {
               onView(side);
               if (sideMenu.current) { sideMenu.current.open = false; sideMenu.current.querySelector("summary")?.focus(); }
             }}>{label}</button>)}
@@ -128,13 +142,15 @@ export function RoomPlannerControls({ onFurniture, catalogOpen, view, onView, on
         </details>
         <button type="button" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span>Дотроос</span></button>
       </div>
+      <span className="room-dock-divider" aria-hidden="true" />
+      <button type="button" className="room-dock-room" aria-pressed={!!roomActive} onClick={onRoom} data-planner-tour="room-size"><PencilRuler size={20}/><span>Өрөө ба материал</span></button>
+      {onCover && <button type="button" className="room-dock-cover" onClick={onCover}><ImageIcon size={20}/><span>Cover болгох</span></button>}
       <div className="room-dock-edit">
         <details className="room-dock-more" onToggle={event => toggleMenu(event.currentTarget)}>
           <summary aria-label="Нэмэлт удирдлага"><MoreHorizontal size={22}/><ChevronDown size={12}/></summary>
           <div className="room-dock-popover">
             <button type="button" aria-pressed={dimensions} onClick={onDimensions}><Ruler size={17}/> Хэмжээс</button>
             <button type="button" onClick={onWindows}><PanelsTopLeft size={17}/> Цонх</button>
-            <button type="button" aria-pressed={cameraPlacement} onClick={onCameraPlace}><Camera size={17}/> Камер байрлуулах</button>
             <p>Харах өнцгийг эргүүлэх</p>
             <div className="room-dock-rotate">
               <button type="button" disabled={locked || view === "top"} onClick={() => onRotate("rotate-left")}><RotateCcw size={17}/> Зүүн</button>

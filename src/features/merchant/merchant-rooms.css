@@ -1,0 +1,462 @@
+/* C2: furnished rooms of one merchant store. */
+.merchant-rooms {
+  display: grid;
+  gap: 16px;
+}
+
+.merchant-rooms-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.merchant-rooms-head h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.merchant-rooms-head p {
+  margin: 4px 0 0;
+  color: #5f6672;
+}
+
+.merchant-rooms button, .merchant-room-button, .merchant-rooms-dialog-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #e4e6ea;
+  border-radius: 22px;
+  background: #fff;
+  color: #171c24;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.merchant-rooms .is-primary, .merchant-rooms-dialog-actions .is-primary {
+  border-color: #075eaa;
+  background: #075eaa;
+  color: #fff;
+}
+
+.merchant-rooms button:disabled {
+  color: #a3a9b1;
+  cursor: not-allowed;
+}
+
+.merchant-rooms-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.merchant-rooms-tools [role="group"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.merchant-rooms-tools [role="group"] > button[aria-pressed="true"] {
+  border-color: #171c24;
+  background: #171c24;
+  color: #fff;
+}
+
+.merchant-rooms-tools [role="group"] > button > span {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #eef0f3;
+  color: #5f6672;
+  font-size: 11.5px;
+}
+
+.merchant-rooms-tools [role="group"] > button[aria-pressed="true"] > span {
+  background: #ffffff2e;
+  color: #fff;
+}
+
+.merchant-rooms-tools [data-filter="attention"] > span {
+  background: #fff4e5;
+  color: #8a4b00;
+}
+
+.merchant-rooms-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #e4e6ea;
+  border-radius: 22px;
+  background: #fff;
+  color: #5f6672;
+}
+
+.merchant-rooms-search input {
+  min-width: 180px;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+}
+
+.merchant-rooms-table {
+  overflow-x: auto;
+  border: 1px solid #e4e6ea;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.merchant-rooms-row {
+  display: grid;
+  grid-template-columns: 96px minmax(200px, 1.6fr) minmax(170px, 1fr) 130px minmax(330px, auto);
+  align-items: center;
+  gap: 14px;
+  min-width: 900px;
+  padding: 12px 16px;
+  border-top: 1px solid #eef0f3;
+}
+
+.merchant-rooms-row.is-head {
+  border-top: 0;
+  color: #5f6672;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.merchant-rooms-row[aria-busy="true"] {
+  opacity: 0.6;
+}
+
+.merchant-rooms-thumb {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eef0f3;
+  color: #8a919c;
+}
+
+.merchant-rooms-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.merchant-rooms-name, .merchant-rooms-status {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.merchant-rooms-name small, .merchant-rooms-status small, .merchant-rooms-updated {
+  color: #5f6672;
+  font-size: 12.5px;
+}
+
+.merchant-rooms-name .merchant-rooms-warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #8a4b00;
+}
+
+.merchant-room-pill {
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef0f3;
+  color: #171c24;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.merchant-room-pill[data-state="published"] {
+  background: #e7f5ee;
+  color: #17603d;
+}
+
+.merchant-room-pill[data-state="attention"] {
+  background: #fff4e5;
+  color: #8a4b00;
+}
+
+.merchant-room-pill[data-state="archived"] {
+  background: #f1f1ef;
+  color: #5f6672;
+}
+
+.merchant-rooms-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.merchant-room-menu {
+  position: relative;
+}
+
+.merchant-rooms .merchant-room-icon {
+  width: 44px;
+  padding: 0;
+}
+
+.merchant-room-menu [role="menu"] {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  width: 250px;
+  padding: 6px;
+  border: 1px solid #e4e6ea;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 40px #20212426;
+}
+
+.merchant-rooms .merchant-room-menu [role="menuitem"] {
+  display: grid;
+  justify-content: start;
+  justify-items: start;
+  gap: 2px;
+  border: 0;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.merchant-rooms .merchant-room-menu [role="menuitem"]:hover:not(:disabled) {
+  background: #f1f1ef;
+}
+
+.merchant-rooms .merchant-room-menu [data-danger] {
+  color: #b42318;
+}
+
+.merchant-room-menu [role="menuitem"] small {
+  color: #8a4b00;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.merchant-rooms-empty {
+  margin: 0;
+  padding: 28px 16px;
+  color: #5f6672;
+  text-align: center;
+}
+
+.merchant-rooms-note {
+  margin: 0;
+  color: #5f6672;
+  font-size: 12.5px;
+}
+
+.merchant-rooms-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fdecea;
+  color: #b42318;
+}
+
+.merchant-rooms-skeleton {
+  display: grid;
+  gap: 8px;
+}
+
+.merchant-rooms-skeleton > span {
+  height: 72px;
+  border-radius: 14px;
+  background: #eef0f3;
+}
+
+.merchant-rooms-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 6px 16px;
+  border-radius: 24px;
+  background: #171c24;
+  color: #fff;
+  transform: translateX(-50%);
+}
+
+.merchant-rooms .merchant-rooms-toast button {
+  min-height: 36px;
+  border: 0;
+  background: #ffffff1f;
+  color: #fff;
+}
+
+.merchant-rooms-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: #171c2466;
+}
+
+.merchant-rooms-dialog {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  width: min(480px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 24px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 60px #171c2433;
+}
+
+.merchant-rooms-dialog h3 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.merchant-rooms-dialog > small, .merchant-rooms-dialog > p {
+  margin: 0;
+  color: #5f6672;
+}
+
+.merchant-rooms .merchant-rooms-dialog-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  padding: 0;
+  border: 0;
+}
+
+.merchant-rooms-form {
+  display: grid;
+  gap: 12px;
+}
+
+.merchant-rooms-form > label {
+  display: grid;
+  gap: 4px;
+  color: #5f6672;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.merchant-rooms-form :is(input:not([type="radio"]), select) {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #e4e6ea;
+  border-radius: 12px;
+  color: #171c24;
+  font: inherit;
+  font-size: 15px;
+}
+
+.merchant-rooms-form fieldset {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.merchant-rooms-form legend {
+  margin-bottom: 4px;
+  color: #5f6672;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.merchant-rooms-size {
+  display: flex;
+  gap: 6px;
+  min-height: 56px;
+  padding: 10px;
+  border: 1px solid #e4e6ea;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.merchant-rooms-size:has(input:checked) {
+  border-color: #075eaa;
+  background: #eaf3fc;
+}
+
+.merchant-rooms-size > span {
+  display: grid;
+}
+
+.merchant-rooms-size small {
+  color: #5f6672;
+  font-size: 11.5px;
+}
+
+.merchant-rooms-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.merchant-rooms-preview {
+  overflow: hidden;
+  border-radius: 14px;
+  aspect-ratio: 16 / 10;
+  background: #eef0f3;
+}
+
+.merchant-rooms-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.merchant-rooms-cover-missing {
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  height: 100%;
+  padding: 16px;
+  color: #8a4b00;
+  text-align: center;
+}
+
+.merchant-rooms-cover-missing span {
+  color: #5f6672;
+  font-size: 13px;
+}
+
+@media (max-width: 599px) {
+  .merchant-rooms-form fieldset {
+    grid-template-columns: 1fr;
+  }
+  .merchant-rooms-search, .merchant-rooms-search input {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+}

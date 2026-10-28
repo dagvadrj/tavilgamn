@@ -372,6 +372,7 @@ test("loader shares requests, limits concurrency, retries failures and retains a
 
     assert.equal(a.promise, same.promise);
 
+    await new Promise((resolve) => setImmediate(resolve));
     gates.shift()();
 
     const loaded = await a.promise;
@@ -420,6 +421,7 @@ test("loader shares requests, limits concurrency, retries failures and retains a
 
     const bad = acquireModel(renderer, "retry");
 
+    await new Promise((resolve) => setImmediate(resolve));
     gates.shift()();
 
     await assert.rejects(bad.promise);
@@ -428,6 +430,7 @@ test("loader shares requests, limits concurrency, retries failures and retains a
 
     const good = acquireModel(renderer, "retry");
 
+    await new Promise((resolve) => setImmediate(resolve));
     gates.shift()();
 
     await good.promise;
