@@ -150,11 +150,11 @@ export function AdminModelRequests({
     <section className="admin-model-requests">
       <div className="admin-model-request-heading">
         <div>
-          <span className="admin-eyebrow">MERCHANT REQUESTS</span>
+          <span className="admin-eyebrow">ДЭЛГҮҮРИЙН ХҮСЭЛТ</span>
 
           <h2>3D загварын хүсэлт</h2>
 
-          <p>Merchant-аас 3D загварт оруулах хүсэлт өгсөн бүтээгдэхүүнүүд.</p>
+          <p>Дэлгүүрүүдээс 3D загварт оруулах хүсэлт өгсөн бүтээгдэхүүнүүд.</p>
         </div>
 
         <button

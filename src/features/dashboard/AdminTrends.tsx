@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { TopbarActions } from "./DashboardTopbarSlot";
+import { OVERVIEW_RANGES, type OverviewDays } from "./overviewMath";
 import { DashboardBarChart } from "./DashboardCharts";
 import { useAdminResource } from "./useAdminResource";
 import {
@@ -10,60 +12,38 @@ import { StatSkeleton } from "@/features/merchant/MerchantStats";
 import type { MerchantInsightsData } from "@/lib/merchantGrowth";
 
 export function AdminTrends({ owner }: { owner: string }) {
+  // One range control; the grouping follows from it instead of a second toggle.
+  const [days, setDays] = useState<OverviewDays>(30);
   const resource = useAdminResource<{ series: MerchantInsightsData["series"] }>(
     owner,
-    "/api/admin/trends",
+    `/api/admin/trends?days=${days}`,
   );
-  const [period, setPeriod] = useState<InsightPeriod>("day");
-  const [days, setDays] = useState(30);
-  const series = groupInsightSeries(
-    resource.data?.series.slice(-days) ?? [],
-    period,
-  );
+  const period: InsightPeriod =
+    days <= 30 ? "day" : days <= 90 ? "week" : "month";
+  const series = groupInsightSeries(resource.data?.series ?? [], period);
   return (
     <section className="dashboard-time-trends">
+      <TopbarActions>
+        <div className="dashboard-segmented" role="group" aria-label="Хугацаа">
+          {OVERVIEW_RANGES.map((range) => (
+            <button
+              key={range.days}
+              type="button"
+              aria-pressed={days === range.days}
+              onClick={() => setDays(range.days)}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+      </TopbarActions>
       <header className="dashboard-trend-controls">
         <div>
           <h2>Борлуулалтын хандлага</h2>
-          <p>Төлөгдсөн marketplace захиалга · үүссэн огноогоор</p>
-        </div>
-        <div
-          className="v14-chart-toggle"
-          role="group"
-          aria-label="Графикийн нэгж"
-        >
-          {(
-            [
-              ["day", "Өдөр"],
-              ["week", "Долоо хоног"],
-              ["month", "Сар"],
-            ] as const
-          ).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={period === value}
-              onClick={() => setPeriod(value)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <div
-          className="v14-chart-toggle"
-          role="group"
-          aria-label="Статистикийн хугацаа"
-        >
-          {[7, 30, 90].map((value) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={days === value}
-              onClick={() => setDays(value)}
-            >
-              {value} хоног
-            </button>
-          ))}
+          <p>
+            Төлөгдсөн захиалга ·{" "}
+            {period === "day" ? "өдрөөр" : period === "week" ? "долоо хоногоор" : "сараар"}
+          </p>
         </div>
       </header>
       {resource.error && (
