@@ -149,6 +149,7 @@ interface RoomCanvasProps {
   snapEnabled: boolean;
   /** When true, orbit controls are disabled so dragging furniture doesn't move camera */
   locked: boolean;
+  handTool?: boolean;
   gridEnabled?: boolean;
   showDimensions?: boolean;
   measurements?: Measurement[];
@@ -184,15 +185,16 @@ export function RoomCanvas({
   paused = false,
   onPreview,
   onPreviewReady,
-  onSurfaceDoubleClick,
+  onSurfaceDoubleClick: editSurface,
   design,
-  onSelectRoom,
+  onSelectRoom: selectRoom,
   selected,
-  onSelect,
+  onSelect: selectPiece,
   onMove,
   view,
   snapEnabled,
   locked,
+  handTool = false,
   gridEnabled = false,
   showDimensions = false,
   measurements = [],
@@ -208,14 +210,22 @@ export function RoomCanvas({
   onRevertSwap,
   customInterior,
   selectedWall,
-  onSelectWall,
+  onSelectWall: selectWall,
   selectedOpening,
-  onSelectOpening,
-  onUpdateOpening,
-  placementTemplate,
-  onPlaceOpening,
+  onSelectOpening: selectOpening,
+  onUpdateOpening: updateOpening,
+  placementTemplate: openingTemplate,
+  onPlaceOpening: placeOpening,
   onPlacementError,
 }: RoomCanvasProps) {
+  const onSelect = handTool ? () => {} : selectPiece;
+  const onSelectRoom = handTool ? undefined : selectRoom;
+  const onSelectWall = handTool ? undefined : selectWall;
+  const onSelectOpening = handTool ? undefined : selectOpening;
+  const onUpdateOpening = handTool ? undefined : updateOpening;
+  const onPlaceOpening = handTool ? undefined : placeOpening;
+  const onSurfaceDoubleClick = handTool ? undefined : editSurface;
+  const placementTemplate = handTool ? null : openingTemplate;
   const placement = useMemo(() => roomPlacementContext(design), [design]);
   const performance = useCanvasPerformance();
   const [isDraggingPiece, setIsDraggingPiece] = useState(false);
@@ -307,7 +317,11 @@ export function RoomCanvas({
     ? design.pieces.find((piece) => piece.instanceId === cameraRequest.targetId)
     : undefined;
   return (
-    <div className="relative h-full w-full" data-room-context={contextLost ? "lost" : "ready"}>
+    <div className="relative h-full w-full" data-room-context={contextLost ? "lost" : "ready"}
+      style={{ cursor: handTool ? "grab" : undefined }}
+      onPointerDownCapture={event => { if (handTool && !locked) event.currentTarget.style.cursor = "grabbing"; }}
+      onPointerUpCapture={event => { if (handTool) event.currentTarget.style.cursor = "grab"; }}
+      onPointerCancelCapture={event => { if (handTool) event.currentTarget.style.cursor = "grab"; }}>
     <RoomRendererBoundary onUnavailable={onRendererUnavailable}>
     <Canvas
       key={rendererAttempt}
@@ -395,6 +409,7 @@ export function RoomCanvas({
             enabled={
               view === "perspective" &&
               !locked &&
+              !handTool &&
               !isDraggingPiece
             }
             roomId={design.activeRoomId ?? design.id}
@@ -496,7 +511,7 @@ export function RoomCanvas({
                     sharedBoundaries={shared.boundaries}
                     connectionOpenings={shared.openings}
                     interior={interior && entryTransition !== "exiting"}
-                    readOnly={!active || interior}
+                    readOnly={!active || interior || handTool}
                     wallFocus={wallFocus}
                     onSelect={active ? onSelect : () => onSelectRoom?.(room.id)}
                     selectedWall={active ? selectedWall : null}
@@ -522,6 +537,7 @@ export function RoomCanvas({
                   {!active &&
                     room.pieces.map((piece) => (
                       <DraggablePiece
+                        navigationOnly={handTool}
                         key={piece.instanceId}
                         piece={piece}
                         allPieces={room.pieces}
@@ -553,6 +569,7 @@ export function RoomCanvas({
         ) : (
           <group userData={{ roomExport: true }}>
             <RoomStructure
+              readOnly={handTool}
               onSurfaceDoubleClick={onSurfaceDoubleClick}
               interior={interior && entryTransition !== "exiting"}
               design={design}
@@ -612,6 +629,7 @@ export function RoomCanvas({
 
         <group name={PLANNER_FURNITURE_GROUP} userData={{ roomExport: true }}>{design.pieces.map((piece) => (
           <DraggablePiece
+            navigationOnly={handTool}
             key={piece.instanceId}
             piece={piece}
             allPieces={customInterior ? design.pieces : placement.pieces}
@@ -651,7 +669,7 @@ export function RoomCanvas({
             enabled={!locked && !isDraggingPiece && entryTransition !== "entering"}
             enablePan
             screenSpacePanning
-            enableRotate
+            enableRotate={!handTool}
             enableZoom
             zoomToCursor
             enableDamping
@@ -680,6 +698,7 @@ export function RoomCanvas({
         )}
         {!interior && (
           <CameraNavigation
+            handTool={handTool}
             onRest={() => onViewSettled?.(view)}
             enabled={!locked && !isDraggingPiece}
             request={
@@ -797,6 +816,7 @@ function FloorGrid({ width, depth }: { width: number; depth: number }) {
   );
 }
 export function DraggablePiece({
+  navigationOnly = false,
   piece,
   allPieces,
   roomDims,
@@ -814,6 +834,7 @@ export function DraggablePiece({
   onRevertSwap,
   kitchenMaterials,
 }: {
+  navigationOnly?: boolean;
   piece: PlacedFurniture;
   allPieces: PlacedFurniture[];
   onDragChange: (dragging: boolean) => void;
@@ -888,7 +909,7 @@ export function DraggablePiece({
   const moves = mover.current;
 
   useCursor(
-    hovered || dragging,
+    !navigationOnly && (hovered || dragging),
     measureMode ? "crosshair" : dragging ? "grabbing" : "grab",
     "default",
   );
@@ -1118,12 +1139,14 @@ export function DraggablePiece({
       position={[piece.x, planeY, piece.z]}
       rotation={[0, piece.rotation, 0]}
       onClick={(event) => {
+        if (navigationOnly) return;
         event.stopPropagation();
         // Opening the mobile inspector resizes the canvas. Wait until the tap's
         // click has a target so it cannot land on a newly shifted room hotspot.
         onSelect(piece.instanceId);
       }}
       onPointerOver={(event) => {
+        if (navigationOnly) return;
         event.stopPropagation();
         setHovered(true);
       }}
@@ -1131,6 +1154,7 @@ export function DraggablePiece({
         setHovered(false);
       }}
       onPointerDown={(event) => {
+        if (navigationOnly) return;
         if (event.button !== 0) return;
         if (
           event.pointerType === "touch" &&

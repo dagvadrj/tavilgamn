@@ -393,6 +393,7 @@ function RoomPlannerEditor() {
   const measureUnit = useRoomMeasureUnit((state) => state.unit);
   const measureFactor = measureUnit === "мм" ? 1000 : 100;
   const [roomView, setRoomView] = useState<RoomView>("dollhouse");
+  const [handTool, setHandTool] = useState(false);
   const {
     panelOpen,
     setPanelOpen,
@@ -1873,6 +1874,8 @@ function RoomPlannerEditor() {
     redo,
     duplicate: duplicateSelected,
     save: merchantMode ? () => void merchantRoom.save() : save,
+    h: () => { if (roomView !== "interior") { setHandTool(true); setLocked(false); setPlacementTemplate(null); } },
+    v: () => setHandTool(false),
     r: rotateSelected,
     delete: removeSelected,
     backspace: removeSelected,
@@ -1887,6 +1890,7 @@ function RoomPlannerEditor() {
         setShowCompare(false);
         return;
       }
+      if (handTool) { setHandTool(false); return; }
       if (panelView !== "list") {
         closeNested();
         return;
@@ -3541,10 +3545,13 @@ function RoomPlannerEditor() {
           />
         )}
         <RoomPlannerControls
+          handTool={handTool}
+          onHandTool={() => { setHandTool(value => !value); setLocked(false); setPlacementTemplate(null); }}
           onCover={merchantMode ? captureCover : undefined}
           roomActive={panelOpen && panelView === "room"}
           view={roomView}
           onView={(next) => {
+            if (next === "interior") setHandTool(false);
             setLocked(false);
             setSelected(null);
             setSelectedWall(null);
@@ -3570,6 +3577,7 @@ function RoomPlannerEditor() {
           beginLightingEdit={beginEdit}
           endLightingEdit={endEdit}
           onWindows={() => {
+            setHandTool(false);
             if (roomView === "interior") navigateView("fit");
             endEdit();
             setSelected(null);
@@ -3809,7 +3817,9 @@ function RoomPlannerEditor() {
             </div>
           )}
         <div className="room-camera-guide" role="status">
-          {roomView === "interior"
+          {handTool
+            ? "Гар: чирж харагдацыг зөөнө · V / Esc: сонгох горим"
+            : roomView === "interior"
             ? "W/A/S/D — өрөө дотор алхах · Чирэх — эргэн харах · Дугуй — ойртуулах, цааш гүйлгэвэл гадагш гарна"
             : placementTemplate
               ? "Хаалга, цонх байрлуулах ханандаа дарна уу · Esc цуцлах"
@@ -3836,12 +3846,14 @@ function RoomPlannerEditor() {
         {planReady && (
           <div
             className="room-plan-workspace"
-            onPointerDownCapture={beginEdit}
+            onPointerDownCapture={() => { if (!handTool) beginEdit(); }}
             onPointerUp={endEdit}
             onPointerCancel={endEdit}
             onLostPointerCapture={endEdit}
           >
             <RoomWallPlan
+              handTool={handTool}
+              locked={locked}
               onSurfaceDoubleClick={(surface, wall, x, y) =>
                 setSurfacePopup({ surface, wall, x, y })
               }
@@ -3923,6 +3935,7 @@ function RoomPlannerEditor() {
           }
         >
           <RoomCanvas
+            handTool={handTool}
             onRendererUnavailable={setRendererUnavailable}
             onExportReady={templateAdmin.isAdmin ? exportReady : undefined}
             paused={planReady}
@@ -3937,6 +3950,7 @@ function RoomPlannerEditor() {
             interior={roomView === "interior"}
             onCameraSave={(pose) => updateRoom({ interiorCamera: pose })}
             onEnterInterior={(pose) => {
+              setHandTool(false);
               updateRoom({ interiorCamera: pose });
               setRoomView("interior");
               setView("perspective");

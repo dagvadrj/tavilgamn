@@ -1,5 +1,16 @@
 ﻿const {test}=require('node:test');const assert=require('node:assert/strict');const React=require('react');const {loadSource}=require('./helpers/load-source.cjs');
 function nodes(node){return !React.isValidElement(node)?[]:[node,...React.Children.toArray(node.props.children).flatMap(nodes)];}
+
+test('hand tool is an accessible toggle in the main dock and is unavailable in the interior walking view',()=>{
+ const {RoomPlannerControls}=loadSource('src/features/room-planner/components/RoomPlannerControls.tsx',{react:{...React,useRef:()=>({current:null}),useEffect(){},useCallback:fn=>fn}});
+ let toggles=0;const noop=()=>{},props={view:'dollhouse',onView:noop,onZoom:noop,onRoom:noop,onHelp:noop,dimensions:false,onDimensions:noop,grid:false,onGrid:noop,snap:true,onSnap:noop,locked:false,onLock:noop,expanded:false,onExpand:noop,onRotate:noop,onHandTool:()=>toggles++};
+ const button=extra=>nodes(RoomPlannerControls({...props,...extra})).find(n=>n.props['aria-label']==='Харагдац зөөх');
+ assert.equal(button().props['aria-pressed'],false);assert.equal(button().props['aria-keyshortcuts'],'H');
+ button().props.onClick();assert.equal(toggles,1);
+ assert.equal(button({handTool:true}).props['aria-pressed'],true);
+ assert.equal(button({view:'top'}).props.disabled,false);
+ assert.equal(button({view:'interior'}).props.disabled,true);
+});
 test('room floating menus remain within the viewport and outside the scrolling toolbar across resizing',t=>{
  const original=global.window;t.after(()=>{global.window=original});global.window={innerWidth:320,innerHeight:568};
  let top=300,right=310;const properties=new Map(),other={open:true};

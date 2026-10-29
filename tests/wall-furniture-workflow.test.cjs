@@ -95,6 +95,18 @@ test('rendered wall furniture uses its height; Escape rolls a drag back and fore
   }finally{h.dispose();global.window=previousWindow;}
 });
 
+test('hand tool lets presses on furniture reach camera controls without selecting, moving or starting history',()=>{
+  const h=hooks(),canvas=new EventTarget(),controls={enabled:true};
+  const {DraggablePiece}=loadSource('src/three/RoomCanvas.tsx',{react:h.react,'@react-three/fiber':{Canvas:'canvas',useThree:()=>({camera:new THREE.PerspectiveCamera(),raycaster:{},gl:{domElement:canvas},controls})},'@react-three/drei':new Proxy({},{get:(_,key)=>key==='useCursor'?()=>{}:String(key)}),'@/store/catalog':{getProduct:()=>undefined},'@/lib/modelRegistry':{getDbModel:()=>undefined},'./GLBFurnitureMesh':{GLBFurnitureMesh:'glb'},'./InteriorModel':{InteriorModel:'interior'}});
+  const fail=()=>assert.fail('hand mode must not edit furniture or intercept the camera press');
+  try {
+    const tree=h.render(()=>DraggablePiece({navigationOnly:true,piece:{instanceId:'box',productId:'unknown',x:0,z:0,rotation:0,details:{name:'Box',dimensions:{w:1,d:.6,h:.8}}},allPieces:[],roomDims:room,selected:false,onSelect:fail,onMove:fail,onDragChange:fail,onEditStart:fail,snapEnabled:false,gridEnabled:false,measureMode:false,kitchenMaterials:{}}));
+    const event={button:0,pointerId:1,stopPropagation:fail,target:{setPointerCapture:fail}};
+    tree.props.onPointerOver(event);tree.props.onPointerDown(event);tree.props.onPointerMove(event);tree.props.onClick(event);
+    assert.equal(controls.enabled,true);
+  }finally{h.dispose();}
+});
+
 test('dragging past a wall slides along it, holds orbit controls synchronously and never shows a red overlay',()=>{
   const previousWindow=global.window,events=new EventTarget();global.window=events;
   const h=hooks(),canvas=new EventTarget();canvas.getBoundingClientRect=()=>({left:0,top:0,width:100,height:100});

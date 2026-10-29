@@ -146,7 +146,12 @@ test('real planner map and scene selection keep one canvas key, current view and
   }
   assert.equal(JSON.stringify(store.getState().current),snapshot);assert.equal(store.getState().past.length,historyLength);
   // Wheel entry/exit is the only way in and out; per-room camera buttons and camera placement are gone.
+  find(tree,'room-controls').props.onHandTool();tree=render();
+  assert.equal(find(tree,'room-controls').props.handTool,true);
+  assert.equal(find(tree,'room-canvas').props.handTool,true);
+  assert.equal(JSON.stringify(store.getState().current),snapshot);assert.equal(store.getState().past.length,historyLength);
   find(tree,'room-controls').props.onView('interior');tree=render();
+  assert.equal(find(tree,'room-canvas').props.handTool,false,'walking restores the regular navigation mode');
   let tour=find(tree,'room-canvas');assert.equal(tour.props.interior,true);assert.equal(tour.props.view,'perspective');assert.equal(tour.props.selected,null);
   find(tree,'tour-controls').props.onFov(48);tree=render();assert.equal(store.getState().current.interiorCamera.fov,48);
   assert.equal(tour.props.onVisitRoom,undefined);assert.equal(tour.props.cameraPlacement,undefined);assert.equal(find(tree,'room-controls').props.onCameraPlace,undefined);assert.equal(find(tree,'room-map')?.props.onVisitRoom,undefined);

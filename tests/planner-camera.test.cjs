@@ -78,13 +78,13 @@ class Surface {
   emit(type,event){for(const x of [...(this.handlers.get(type)||[])].sort((a,b)=>Number(b.capture)-Number(a.capture)))x.fn(event);}
   releasePointerCapture(){}
 }
-function mouseFixture(plan=false,leftDrag=false){
+function mouseFixture(plan=false,leftDrag=false,handTool=false){
   const camera=new PerspectiveCamera(40,4/3,.1,300);camera.position.set(5,4,6);
   const element=new Surface();element.ownerDocument=new Surface();
   const controls=new (plan?MapControls:OrbitControls)(camera,element);
-  controls.enableRotate=!plan;controls.update();
+  controls.enableRotate=!plan&&!handTool;controls.update();
   const touches={...controls.touches},previous={...controls.mouseButtons};
-  const cleanup=bindBlenderMouse(controls,element,plan,leftDrag);
+  const cleanup=bindBlenderMouse(controls,element,plan,leftDrag,handTool);
   const event=(button,x,y,modifiers={})=>({button,pointerId:1,pointerType:'mouse',clientX:x,clientY:y,pageX:x,pageY:y,
     shiftKey:false,ctrlKey:false,metaKey:false,preventDefault(){},...modifiers});
   const drag=(button,modifiers={})=>{
@@ -98,6 +98,20 @@ test('Blender middle drag rotates; left drag does not orbit or compete with obje
   const f=mouseFixture(),p=f.camera.position.clone();f.drag(0);assert.ok(f.camera.position.distanceTo(p)<1e-8);
   f.drag(1);assert.ok(f.camera.position.distanceTo(p)>.1);assert.ok(f.controls.target.length()<1e-8);
   f.cleanup();f.controls.dispose();
+});
+
+test('hand tool left drag pans without rotating, respects locks, and restores mouse and touch controls',()=>{
+  for(const plan of [false,true]) {
+    const f=mouseFixture(plan,true,true),offset=f.camera.position.clone().sub(f.controls.target);
+    assert.equal(f.controls.touches.ONE,require('three').TOUCH.PAN);
+    f.drag(0);
+    assert.ok(f.controls.target.length()>.1);
+    assert.ok(f.camera.position.clone().sub(f.controls.target).distanceTo(offset)<1e-8);
+    const position=f.camera.position.clone();f.controls.enabled=false;f.drag(0);
+    assert.ok(f.camera.position.distanceTo(position)<1e-8);
+    f.cleanup();assert.deepEqual(f.controls.mouseButtons,f.previous);assert.deepEqual(f.controls.touches,f.touches);
+    f.controls.dispose();
+  }
 });
 test('Blender Shift + middle drag pans rather than rotating',()=>{
   const f=mouseFixture(),before=f.camera.position.clone().sub(f.controls.target);

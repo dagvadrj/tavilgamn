@@ -10,7 +10,8 @@ const rectangle = () => ({ width: 5, depth: 4, height: 2.7, wallFeatures: [], co
 function componentHarness(initial = rectangle(), accept = () => null, extra = {}) {
   let room = structuredClone(initial), tree, plan, cursor = 0, frameId = 0;
   const slots = [], cleanups = [], frames = new Map(), captures = new Set(), changes = [];
-  const previous = Object.fromEntries(["DOMPoint", "requestAnimationFrame", "cancelAnimationFrame"].map(key => [key, global[key]]));
+  const previous = Object.fromEntries(["window", "DOMPoint", "requestAnimationFrame", "cancelAnimationFrame"].map(key => [key, global[key]]));
+  global.window = { addEventListener() {}, removeEventListener() {} };
   const inverse = { a: .01, b: 0, c: 0, d: .01, e: -1, f: -2 };
   let currentInverse = inverse;
   global.DOMPoint = class {
@@ -79,6 +80,7 @@ function componentHarness(initial = rectangle(), accept = () => null, extra = {}
   return {
     get room() { return room; }, get changes() { return changes; }, get pendingFrames() { return frames.size; },
     get captured() { return captures.size; }, get editing() { return plan.props.editing; },
+    panStart(x = 350, y = 200, pointerId = 1) { dispatch("onPointerDownCapture", x, y, pointerId); },
     start(wall, x = 350, y = 200, pointerId = 1) {
       const target = handle(wall);
       assert.ok(target, `${wall} wall is keyboard/pointer accessible`);
@@ -109,6 +111,26 @@ function componentHarness(initial = rectangle(), accept = () => null, extra = {}
     },
   };
 }
+
+test("hand tool pans the SVG viewport without editing walls or furniture and survives cancellation", () => {
+  const h = componentHarness(rectangle(), () => assert.fail("pan must not edit the room"), { handTool: true });
+  try {
+    assert.equal(h.editing.overlay, null, "editing hit targets are absent in hand mode");
+    h.panStart(); assert.equal(h.captured, 1);
+    assert.equal(h.editing.svgProps.style.cursor, "grabbing");
+    h.move(400, 230);
+    for (const [axis,value] of Object.entries({minX:-3,maxX:2,minZ:-2.3,maxZ:1.7})) assert.ok(Math.abs(h.editing.bounds[axis]-value)<1e-9);
+    h.changeViewport();h.move(420,240);
+    assert.ok(Math.abs(h.editing.bounds.minX+3.2)<1e-9,"gesture retains its original SVG transform");
+    h.cancel();assert.equal(h.captured,0);
+    assert.equal(h.editing.svgProps.style.cursor,"grab");
+    const bounds=h.editing.bounds;h.move(800,800);assert.deepEqual(h.editing.bounds,bounds);
+    assert.deepEqual(h.room,rectangle());assert.equal(h.changes.length,0);
+  } finally { h.cleanup(); }
+  const locked=componentHarness(rectangle(),()=>assert.fail(),{handTool:true,locked:true});
+  try { locked.panStart();locked.move(500);assert.equal(locked.captured,0);assert.equal(locked.editing.bounds,undefined); }
+  finally {locked.cleanup();}
+});
 
 test("wall pointer samples coalesce per frame and retain the gesture's original geometry and SVG transform", () => {
   const h = componentHarness();

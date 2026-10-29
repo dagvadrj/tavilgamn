@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, type KeyboardEvent as ReactKeyboardEven
 import type { RoomLighting, RoomCeiling } from "@/lib/types";
 import { DEFAULT_ROOM_LIGHTING } from "@/lib/roomDesign";
 import { RoomLightingTimeControls } from "./RoomLightingTimeControls";
+import { Hand } from "lucide-react";
 import { Image as ImageIcon, Lightbulb, PanelsTopLeft, X, Box, ChevronDown, Camera, Eye, Focus, Grid2X2, HelpCircle, Lock, Magnet, Maximize, Minus, MoreHorizontal, PencilRuler, Plus, RotateCcw, RotateCw, Ruler, Unlock } from "lucide-react";
 
 export type RoomView = "dollhouse" | "top" | "front" | "back" | "left" | "right" | "interior";
@@ -11,12 +12,14 @@ const SIDE_VIEWS = [
   ["front", "Урд тал"], ["back", "Ар тал"], ["left", "Зүүн тал"], ["right", "Баруун тал"],
 ] as const;
 
-export function RoomPlannerControls({ onCover, roomActive, view, onView, onZoom, onRoom,
+export function RoomPlannerControls({ onCover, roomActive, view, onView, onZoom, onRoom, handTool = false, onHandTool,
   onHelp, onWindows, dimensions, onDimensions, grid, onGrid, snap, onSnap, locked, onLock,
   expanded, onExpand, onRotate, lighting, ceiling, windowBearing, onLightingChange, onLightingSettings, beginLightingEdit, endLightingEdit,
 }: {
   /** «Өрөө ба материал» is a nested view of the left panel. */
   roomActive?: boolean;
+  handTool?: boolean;
+  onHandTool?: () => void;
   /** Merchant editor (C3): «Cover болгох» from the current view. */
   onCover?: () => void;
   windowBearing?: number; ceiling?: RoomCeiling; lighting?: RoomLighting; onLightingChange?: (patch: Partial<RoomLighting>) => void; onLightingSettings?: () => void;
@@ -142,6 +145,7 @@ export function RoomPlannerControls({ onCover, roomActive, view, onView, onZoom,
         </details>
         <button type="button" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span>Дотроос</span></button>
       </div>
+      {onHandTool && <button type="button" aria-label="Харагдац зөөх" aria-pressed={handTool} aria-keyshortcuts="H" disabled={view === "interior"} title={view === "interior" ? "Гаднаас эсвэл дээрээс харах үед ашиглана" : "Гар · Харагдац зөөх (H) · Буцах: V / Esc"} onClick={onHandTool}><Hand size={20}/><span>Гар</span></button>}
       <span className="room-dock-divider" aria-hidden="true" />
       <button type="button" className="room-dock-room" aria-pressed={!!roomActive} onClick={onRoom} data-planner-tour="room-size"><PencilRuler size={20}/><span>Өрөө ба материал</span></button>
       {onCover && <button type="button" className="room-dock-cover" onClick={onCover}><ImageIcon size={20}/><span>Cover болгох</span></button>}

@@ -1,4 +1,4 @@
-import { MathUtils, MOUSE, PerspectiveCamera, Vector3 } from "three";
+import { MathUtils, MOUSE, TOUCH, PerspectiveCamera, Vector3 } from "three";
 import { applyCameraPose, cameraPose } from "./cameraTransition";
 import { PLANNER_CAMERA } from "./plannerCameraProfile";
 
@@ -11,13 +11,15 @@ export interface CameraBounds {
 export interface NavigationControls {
   target: Vector3; update: () => void; minDistance?: number; maxDistance?: number; enableDamping?: boolean;
 }
-type MouseControls = { domElement?: HTMLElement; mouseButtons: Partial<Record<"LEFT" | "MIDDLE" | "RIGHT", MOUSE>> };
+type MouseControls = { domElement?: HTMLElement; mouseButtons: Partial<Record<"LEFT" | "MIDDLE" | "RIGHT", MOUSE>>; touches?: { ONE?: TOUCH } };
 
 /** Blender-style desktop input, leaving the controls' touch mapping unchanged. */
-export function bindBlenderMouse(controls: MouseControls, element: HTMLElement, plan = false, leftDrag = false) {
+export function bindBlenderMouse(controls: MouseControls, element: HTMLElement, plan = false, leftDrag = false, handTool = false) {
   const previous = { ...controls.mouseButtons };
+  const previousTouch = controls.touches?.ONE;
+  if (handTool && controls.touches) controls.touches.ONE = TOUCH.PAN;
   // Editors opting in must disable controls synchronously while moving an object.
-  controls.mouseButtons.LEFT = leftDrag ? (plan ? MOUSE.PAN : MOUSE.ROTATE) : undefined;
+  controls.mouseButtons.LEFT = handTool ? MOUSE.PAN : leftDrag ? (plan ? MOUSE.PAN : MOUSE.ROTATE) : undefined;
   controls.mouseButtons.MIDDLE = plan ? MOUSE.PAN : MOUSE.ROTATE;
   controls.mouseButtons.RIGHT = MOUSE.PAN;
   const prepare = (event: PointerEvent) => {
@@ -31,6 +33,7 @@ export function bindBlenderMouse(controls: MouseControls, element: HTMLElement, 
   return () => {
     element.removeEventListener("pointerdown", prepare, true);
     controls.mouseButtons = previous;
+    if (controls.touches) controls.touches.ONE = previousTouch;
   };
 }
 

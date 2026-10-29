@@ -40,7 +40,11 @@ export function RoomWallPlan({
   onSelectPiece,
   selectedPiece,
   onSurfaceDoubleClick,
+  handTool = false,
+  locked = false,
 }: {
+  handTool?: boolean;
+  locked?: boolean;
   onSurfaceDoubleClick?: (
     surface: "wall" | "floor" | "ceiling",
     wall: RoomWall | undefined,
@@ -61,6 +65,9 @@ export function RoomWallPlan({
     start: Point;
   } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const [pan, setPan] = useState<Point>({ x: 0, z: 0 });
+  const [panning, setPanning] = useState(false);
+  const panGesture = useRef<{ pointer: number; start: Point; inverse: DOMMatrix; offset: Point } | null>(null);
   const gesture = useRef<Gesture | null>(null);
   const pendingFrame = useRef<number | null>(null);
   const pendingPoint = useRef<Point | null>(null);
@@ -73,6 +80,40 @@ export function RoomWallPlan({
   const helpId = useId();
   const unit = useRoomMeasureUnit(state => state.unit);
   const [measurement, setMeasurement] = useState<{ index: number; x: number; y: number } | null>(null);
+  useEffect(() => {
+    if (handTool) setMeasurement(null);
+    if (!handTool || locked) {
+      const active = panGesture.current;
+      panGesture.current = null;
+      setPanning(false);
+      if (active && svgRef.current?.hasPointerCapture(active.pointer)) svgRef.current.releasePointerCapture(active.pointer);
+    }
+  }, [handTool, locked]);
+  useEffect(() => {
+    const cancel = () => {
+      const active = panGesture.current;
+      panGesture.current = null;
+      setPanning(false);
+      if (active && svgRef.current?.hasPointerCapture(active.pointer)) svgRef.current.releasePointerCapture(active.pointer);
+    };
+    window.addEventListener("blur", cancel);
+    return () => window.removeEventListener("blur", cancel);
+  }, []);
+  const movePan = (event: PointerEvent<SVGSVGElement>) => {
+    const active = panGesture.current;
+    if (!active || active.pointer !== event.pointerId) return false;
+    const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(active.inverse);
+    setPan({ x: active.offset.x - (point.x - active.start.x), z: active.offset.z - (point.y - active.start.z) });
+    return true;
+  };
+  const finishPan = (event: PointerEvent<SVGSVGElement>, cancelled = false) => {
+    if (panGesture.current?.pointer !== event.pointerId) return false;
+    if (!cancelled) movePan(event);
+    panGesture.current = null;
+    setPanning(false);
+    if (svgRef.current?.hasPointerCapture(event.pointerId)) svgRef.current.releasePointerCapture(event.pointerId);
+    return true;
+  };
   const measuredSegment = measurement ? getRoomGeometry(room).segments.filter(s => !s.hole)[measurement.index] : undefined;
   const moveFurniture = (event: PointerEvent<SVGSVGElement>) => {
     const furniture = pieceGesture.current;
@@ -101,7 +142,9 @@ export function RoomWallPlan({
   const targets = getRoomWallTargets(room);
   const selected = targets.find((target) => target.id === selectedId);
   const geometry = getRoomGeometry(room);
-  const bounds = dragView?.bounds ?? geometry.bounds;
+  const viewport = { minX: geometry.bounds.minX + pan.x, maxX: geometry.bounds.maxX + pan.x,
+    minZ: geometry.bounds.minZ + pan.z, maxZ: geometry.bounds.maxZ + pan.z };
+  const bounds = dragView?.bounds ?? viewport;
   const span = Math.max(bounds.maxX - bounds.minX, bounds.maxZ - bounds.minZ);
   const grip = span / 55;
 
@@ -173,12 +216,12 @@ export function RoomWallPlan({
       room,
       inverse,
       start: { x: point.x, z: point.y },
-      bounds: geometry.bounds,
+      bounds: viewport,
       contentShift: { x: 0, z: 0 },
     };
     setSelectedId(target.id);
     setIssue("");
-    setDragView({ bounds: geometry.bounds, offset: { x: 0, z: 0 } });
+    setDragView({ bounds: viewport, offset: { x: 0, z: 0 } });
     svg.setPointerCapture(event.pointerId);
   };
   const flushPointer = () => {
@@ -218,8 +261,7 @@ export function RoomWallPlan({
   return (
     <section className="room-wall-plan" aria-label="Хана чирж төлөвлөх">
       <p id={helpId} className="room-shape-help">
-        Хана эсвэл дугуй бариулыг чирж хэмжээг өөрчилнө. Сум: 1 мм · Shift +
-        сум: 10 мм.
+        {handTool ? "Гар: чирж харагдацыг зөөнө · V / Esc: сонгох горим" : "Хана эсвэл дугуй бариулыг чирж хэмжээг өөрчилнө. Сум: 1 мм · Shift + сум: 10 мм."}
       </p>
       <div className="room-wall-live" aria-live="polite" aria-atomic="true">
         <span>
@@ -248,14 +290,30 @@ setIssue(error ?? "");
         room={room}
         pieces={pieces}
         editing={{
-onEditMeasurement: (index, rect) => {
+onEditMeasurement: handTool ? undefined : (index, rect) => {
 setMeasurement({ index, x: Math.max(12, Math.min(rect.x, window.innerWidth - 292)), y: Math.max(12, Math.min(rect.y + 24, window.innerHeight - 210)) });
 },
           svgRef,
-          bounds: dragView?.bounds,
+          bounds: dragView?.bounds ?? (pan.x || pan.z ? viewport : undefined),
+          handTool,
           offset: dragView?.offset,
           svgProps: {
+            style: handTool ? { cursor: panning ? "grabbing" : "grab", touchAction: "none" } : undefined,
+            onPointerDownCapture: (event) => {
+              if (!handTool) return;
+              event.stopPropagation();
+              event.preventDefault();
+              if (locked || event.button !== 0 || panGesture.current) return;
+              const matrix = svgRef.current?.getScreenCTM();
+              if (!matrix) return;
+              const inverse = matrix.inverse();
+              const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(inverse);
+              panGesture.current = { pointer: event.pointerId, start: { x: point.x, z: point.y }, inverse, offset: pan };
+              setPanning(true);
+              svgRef.current?.setPointerCapture(event.pointerId);
+            },
             onDoubleClick: (event) => {
+              if (handTool) return;
               if (
                 (event.target as Element).classList?.contains("room-plan-floor")
               )
@@ -268,6 +326,7 @@ setMeasurement({ index, x: Math.max(12, Math.min(rect.x, window.innerWidth - 292
             },
             "aria-describedby": helpId,
             onPointerMove: (event) => {
+              if (movePan(event)) return;
               if (moveFurniture(event)) return;
               const active = gesture.current;
               if (!active || active.pointerId !== event.pointerId) return;
@@ -281,6 +340,7 @@ setMeasurement({ index, x: Math.max(12, Math.min(rect.x, window.innerWidth - 292
                 });
             },
             onPointerUp: (event) => {
+              if (finishPan(event)) return;
               if (pieceGesture.current?.pointer === event.pointerId) {
                 moveFurniture(event);
                 pieceGesture.current = null;
@@ -288,6 +348,7 @@ setMeasurement({ index, x: Math.max(12, Math.min(rect.x, window.innerWidth - 292
               } else endDrag(event);
             },
             onPointerCancel: (event) => {
+              if (finishPan(event, true)) return;
               if (pieceGesture.current?.pointer === event.pointerId) {
                 const piece=pieceGesture.current.piece;
                 pieceGesture.current = null;
@@ -296,6 +357,7 @@ setMeasurement({ index, x: Math.max(12, Math.min(rect.x, window.innerWidth - 292
               endDrag(event, true);
             },
             onLostPointerCapture: (event) => {
+              if (finishPan(event, true)) return;
               if (pieceGesture.current?.pointer === event.pointerId) {
                 const piece=pieceGesture.current.piece;
                 pieceGesture.current = null;
@@ -304,7 +366,7 @@ setMeasurement({ index, x: Math.max(12, Math.min(rect.x, window.innerWidth - 292
               endDrag(event, true);
             },
           },
-          overlay: (
+          overlay: handTool ? null : (
             <g className="room-wall-handles">
               {onMovePiece &&
                 pieces?.flatMap((piece) =>

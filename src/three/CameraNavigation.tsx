@@ -7,8 +7,8 @@ import { applyCameraPose, beginCameraTransition, cameraPose, cameraTransitionDes
 import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 import { CameraTransitionController } from "./CameraTransitionController";
 
-export function CameraNavigation({ request, bounds, plan = false, leftDrag = false, enabled = true, onRest }: {
-  request?: CameraRequest; bounds: CameraBounds; plan?: boolean; leftDrag?: boolean; enabled?: boolean; onRest?: () => void;
+export function CameraNavigation({ request, bounds, plan = false, leftDrag = false, handTool = false, enabled = true, onRest }: {
+  request?: CameraRequest; bounds: CameraBounds; plan?: boolean; leftDrag?: boolean; handTool?: boolean; enabled?: boolean; onRest?: () => void;
 }) {
   const { camera, controls, gl, size, invalidate } = useThree();
   const handled = useRef<number | undefined>(undefined);
@@ -18,8 +18,8 @@ export function CameraNavigation({ request, bounds, plan = false, leftDrag = fal
   useEffect(() => {
     if (!controls || !("mouseButtons" in controls)) return;
     const orbit = controls as Parameters<typeof bindBlenderMouse>[0];
-    return bindBlenderMouse(orbit, orbit.domElement ?? gl.domElement, plan, leftDrag);
-  }, [controls, gl, plan, leftDrag]);
+    return bindBlenderMouse(orbit, orbit.domElement ?? gl.domElement, plan, leftDrag, handTool);
+  }, [controls, gl, plan, leftDrag, handTool]);
   useEffect(() => {
     if (!enabled) {
       handled.current = request?.id;

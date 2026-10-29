@@ -138,6 +138,7 @@ export function RoomPlanPreview({
   room: RoomShape;
   pieces?: PlacedFurniture[];
   editing?: {
+    handTool?: boolean;
     onEditMeasurement?: (segmentIndex: number, rect: { x: number; y: number }) => void;
     overlay: ReactNode;
     bounds?: Bounds;
@@ -166,7 +167,7 @@ export function RoomPlanPreview({
     >
       <figcaption>
         {editing
-          ? "Ханыг чирж өрөөгөө төлөвлөх"
+          ? editing.handTool ? "Гар · Харагдац зөөх" : "Ханыг чирж өрөөгөө төлөвлөх"
           : `Өрөөний план · дээрээс харах · ${unit}`}
       </figcaption>
       <svg
