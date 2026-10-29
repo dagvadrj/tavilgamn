@@ -1130,7 +1130,36 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                     setUploadName(file.name.replace(/\.glb$/i, ""));
                 }}
               />
-              <small className="mt-1 block text-black/45">200 MB хүртэл</small>
+              {uploadGlb ? (
+                <span className="mt-1 flex items-center justify-between gap-2 text-xs">
+                  <span className="truncate">
+                    {uploadGlb.name} ·{" "}
+                    {(uploadGlb.size / 1048576).toFixed(2)} MB
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-ghost !min-h-8 !px-2 text-red-600"
+                    onClick={() => {
+                      if (
+                        uploadName === uploadGlb.name.replace(/\.glb$/i, "")
+                      )
+                        setUploadName("");
+                      setUploadGlb(null);
+                      setMeasuredSize(null);
+                      setPreview(null);
+                      setUploadError(null);
+                      if (glbInput.current) glbInput.current.value = "";
+                    }}
+                  >
+                    <Trash2 size={13} />
+                    Хасах
+                  </button>
+                </span>
+              ) : (
+                <small className="mt-1 block text-black/45">
+                  200 MB хүртэл
+                </small>
+              )}
             </label>
             <label className="label md:col-span-2">
               Загварын нэр
