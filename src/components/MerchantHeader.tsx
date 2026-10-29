@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { ChevronRight, House, Menu } from "lucide-react";
 import { MerchantNotifications } from "./MerchantNotifications";
+import { DashboardThemeToggle } from "@/features/dashboard/DashboardThemeToggle";
 
 /** A location trail replaces the dashboard's large header panel. */
 export function MerchantHeader({
@@ -63,6 +64,7 @@ export function MerchantHeader({
       {navigation}
       <div className="merchant-header-actions">
         {balances}
+        <DashboardThemeToggle owner={owner} role="merchant" />
         {!hideNotifications && <MerchantNotifications owner={owner} onKitchens={onKitchens} />}
       </div>
 

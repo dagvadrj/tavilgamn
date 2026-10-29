@@ -1,44 +1,8 @@
 /* V14 reference: quiet canvas, floating navigation and warm financial accents. */
 
 .dashboard-layout .dashboard-v14.dashboard-themed-shell.dashboard-shell {
-  --dashboard-bg: #f1eff4;
-  --dashboard-surface: #fff;
-  --dashboard-elevated: #f6f4f8;
-  --dashboard-border: #e7e4eb;
-  --dashboard-ink: #25232b;
-  --dashboard-muted: #77737f;
-  --dashboard-accent: #e95630;
-  --dashboard-on-accent: #fff;
-  --dashboard-success: #36816b;
-  --site-bg: #f1eff4;
-  --site-surface: #fff;
-  --site-hover: #f6f4f8;
-  --site-line: #e7e4eb;
-  --site-ink: #25232b;
-  --site-muted: #77737f;
-  --site-accent: #e95630;
-  --site-success: #36816b;
   background: var(--dashboard-bg);
   color: var(--dashboard-ink);
-}
-
-.dashboard-layout .dashboard-v14.dashboard-themed-shell[data-theme="dark"] {
-  --dashboard-bg: #111015;
-  --dashboard-surface: #1b191f;
-  --dashboard-elevated: #242128;
-  --dashboard-border: #322e37;
-  --dashboard-ink: #f6f3f9;
-  --dashboard-muted: #b3acbe;
-  --dashboard-accent: #ff855f;
-  --dashboard-success: #85cbb2;
-  --site-bg: #111015;
-  --site-surface: #1b191f;
-  --site-hover: #242128;
-  --site-line: #322e37;
-  --site-ink: #f6f3f9;
-  --site-muted: #b3acbe;
-  --site-accent: #ff855f;
-  --site-success: #85cbb2;
 }
 
 .dashboard-layout .dashboard-v14.dashboard-shell .dashboard-workspace {
@@ -155,7 +119,7 @@
   border: 1px solid color-mix(in srgb, var(--dashboard-border) 38%, transparent);
   border-radius: 22px;
   background: var(--dashboard-surface);
-  box-shadow: 0 3px 14px #19132003;
+  box-shadow: 0 3px 14px var(--dashboard-shadow);
 }
 
 .dashboard-layout .dashboard-v14.dashboard-shell .reference-kpi {
@@ -172,10 +136,7 @@
 }
 
 .dashboard-layout .dashboard-v14.dashboard-shell .reference-kpi.is-featured {
-  background: linear-gradient(125deg, #f88b63, #ed5c35 58%, #d94721);
-  border-color: #ee704c;
-  color: #fff;
-  box-shadow: 0 6px 20px #e956301c;
+
 }
 
 .dashboard-layout .dashboard-v14.dashboard-shell .reference-kpi.is-featured :is(strong, small, span, svg) {
@@ -398,7 +359,7 @@
 .v14-chart-toggle button[aria-pressed="true"] {
   color: var(--dashboard-ink);
   background: var(--dashboard-surface);
-  box-shadow: 0 2px 6px #17131d08;
+  box-shadow: 0 2px 6px var(--dashboard-shadow);
 }
 
 .v14-donut-layout {
@@ -440,13 +401,13 @@
 }
 
 .v14-segment-2 {
-  stroke: #f5b39c;
-  background: #f5b39c;
+  stroke: var(--dashboard-chart-3);
+  background: var(--dashboard-chart-3);
 }
 
 .v14-segment-3 {
-  stroke: #aba4b6;
-  background: #aba4b6;
+  stroke: var(--dashboard-chart-4);
+  background: var(--dashboard-chart-4);
 }
 
 .v14-donut-segment.is-active {

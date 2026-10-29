@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import {
+  DASHBOARD_DARK_QUERY,
+  DASHBOARD_THEME_KEY,
   dashboardPreferencesKey,
   parseDashboardPreferences,
+  resolveDashboardTheme,
   type DashboardPreferences,
 } from "./preferences";
 
@@ -19,6 +22,29 @@ function subscribe(onChange: () => void) {
   };
 }
 
+function subscribeScheme(onChange: () => void) {
+  const media = window.matchMedia?.(DASHBOARD_DARK_QUERY);
+  media?.addEventListener("change", onChange);
+  return () => media?.removeEventListener("change", onChange);
+}
+
+const prefersDark = () =>
+  Boolean(window.matchMedia?.(DASHBOARD_DARK_QUERY).matches);
+
+/** <html data-dashboard-theme> is the only theme switch the stylesheets read. */
+function applyTheme(raw: string | null) {
+  const { theme } = parseDashboardPreferences(raw);
+  document.documentElement.dataset.dashboardTheme = resolveDashboardTheme(
+    theme,
+    prefersDark(),
+  );
+  try {
+    window.localStorage.setItem(DASHBOARD_THEME_KEY, theme);
+  } catch {
+    // The inline script falls back to the system theme.
+  }
+}
+
 export function useDashboardPreferences(
   owner: string,
   role: "admin" | "merchant",
@@ -32,7 +58,14 @@ export function useDashboardPreferences(
     }
   }, [key]);
   const raw = useSyncExternalStore(subscribe, getSnapshot, serverSnapshot);
+  const dark = useSyncExternalStore(subscribeScheme, prefersDark, () => false);
   const preferences = useMemo(() => parseDashboardPreferences(raw), [raw]);
+  useEffect(() => {
+    // Read storage directly: during hydration `raw` is still the server snapshot.
+    // Accounts without saved settings keep the device theme set before paint.
+    const stored = getSnapshot();
+    if (stored !== null) applyTheme(stored);
+  }, [getSnapshot, raw, dark]);
   const updatePreferences = useCallback(
     (patch: Partial<DashboardPreferences>) => {
       try {
@@ -51,5 +84,9 @@ export function useDashboardPreferences(
     },
     [key],
   );
-  return { preferences, updatePreferences };
+  return {
+    preferences,
+    theme: resolveDashboardTheme(preferences.theme, dark),
+    updatePreferences,
+  };
 }

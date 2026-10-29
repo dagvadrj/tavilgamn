@@ -167,6 +167,7 @@ export function AdminDashboard({
       active={currentTab}
       onChange={selectTab}
       userName={user.name}
+      owner={user.id}
       preferences={preferences}
       panelRef={panelRef}
     >

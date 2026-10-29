@@ -7,7 +7,7 @@
   --merchant-input-radius: 10px;
 }
 
-.dashboard-themed-shell[data-theme="dark"] .dashboard-content {
+:root[data-dashboard-theme="dark"] .dashboard-themed-shell .dashboard-content {
   --merchant-input-bg: var(--dashboard-elevated);
 }
 

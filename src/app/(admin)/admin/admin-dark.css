@@ -1,8 +1,7 @@
-/* Presentation-only dark dashboard; existing functional layout classes are retained. */
+/* Admin workspace presentation. Colors come from dashboard-tokens.css, so it follows both themes. */
 
 body:has(.admin-shell),
 body:has(.admin-gate) {
-  background: #090a0c;
   padding-bottom: 0;
 }
 
@@ -75,9 +74,7 @@ body:has(.admin-gate) {
 }
 
 .admin-shell .admin-avatar {
-  background: #343044;
-  color: #ded6ff;
-  border: 1px solid #514866;
+  border: 1px solid;
   width: 34px;
   height: 34px;
   font-size: 12px;
@@ -88,8 +85,8 @@ body:has(.admin-gate) {
 }
 
 .admin-gate {
-  background: #090a0c;
-  color: #a3a6ae;
+  background: var(--dashboard-bg);
+  color: var(--dashboard-muted);
 }
 
 .admin-shell
@@ -271,7 +268,7 @@ body:has(.admin-gate) {
     .admin-top-merchant-list article:hover,
     .admin-list-item:hover
   ) {
-  background: #ffffff03;
+  background: color-mix(in srgb, var(--dashboard-ink) 3%, transparent);
 }
 
 .admin-shell
@@ -296,7 +293,7 @@ body:has(.admin-gate) {
 }
 
 .admin-shell :is(input, textarea)::placeholder {
-  color: #9a9ca5;
+  color: var(--dashboard-muted);
 }
 
 .admin-shell :is(.admin-search, .admin-toolbar .input) {
@@ -319,24 +316,8 @@ body:has(.admin-gate) {
   font-size: 11px;
 }
 
-.admin-shell
-  :is(
-    .btn-ghost:hover,
-    .admin-pagination button:hover,
-    .admin-model-tabs button:hover
-  ) {
-  background: #25272c;
-}
-
 .admin-shell :is(.btn-primary, .admin-model-tabs button.active) {
-  border-color: #7360df;
-  background: #6651cb;
-  color: #fff;
   border-radius: 9px;
-}
-
-.admin-shell .btn-primary:hover {
-  background: #735ed9;
 }
 
 .admin-shell
@@ -358,14 +339,14 @@ body:has(.admin-gate) {
     .admin-model-request-status.requested
   ) {
   color: var(--dashboard-warning);
-  background: #2b2417;
-  border-color: #55452b;
+  background: color-mix(in srgb, var(--dashboard-warning) 14%, var(--dashboard-solid));
+  border-color: color-mix(in srgb, var(--dashboard-warning) 35%, var(--dashboard-solid));
 }
 
 .admin-shell :is(.admin-model-request-status.processing, .admin-transfer) {
-  color: #b4acff;
-  background: #211d31;
-  border-color: #494061;
+  color: var(--dashboard-info);
+  background: color-mix(in srgb, var(--dashboard-info) 12%, var(--dashboard-solid));
+  border-color: color-mix(in srgb, var(--dashboard-info) 35%, var(--dashboard-solid));
 }
 
 .admin-shell
@@ -378,8 +359,8 @@ body:has(.admin-gate) {
     .admin-model-delete
   ) {
   color: var(--dashboard-danger);
-  background: #2c191b;
-  border-color: #5b3034;
+  background: color-mix(in srgb, var(--dashboard-danger) 12%, var(--dashboard-solid));
+  border-color: color-mix(in srgb, var(--dashboard-danger) 35%, var(--dashboard-solid));
 }
 
 .admin-shell :is(.admin-error, .admin-model-delete) {
@@ -387,7 +368,7 @@ body:has(.admin-gate) {
 }
 
 .admin-shell .admin-model-delete:hover {
-  background: #3c2226;
+  background: color-mix(in srgb, var(--dashboard-danger) 20%, var(--dashboard-solid));
 }
 
 .admin-shell .admin-loading {
@@ -396,7 +377,7 @@ body:has(.admin-gate) {
 
 .admin-shell .admin-upload-zone {
   color: var(--dashboard-muted);
-  border-color: #4b4e58;
+  border-color: var(--dashboard-control-border);
   background: var(--dashboard-elevated);
 }
 
@@ -409,11 +390,11 @@ body:has(.admin-gate) {
 }
 
 .admin-shell input[type="checkbox"] {
-  accent-color: #a395ff;
+  accent-color: var(--dashboard-accent);
 }
 
 .admin-shell .admin-dialog-backdrop {
-  background: #000a;
+  background: var(--dashboard-overlay);
 }
 
 .admin-shell .admin-dialog {
@@ -431,7 +412,7 @@ body:has(.admin-gate) {
 }
 
 .admin-shell .admin-dialog-icon {
-  background: #2c191b;
+  background: color-mix(in srgb, var(--dashboard-danger) 12%, var(--dashboard-solid));
   color: var(--dashboard-danger);
 }
 
@@ -465,11 +446,11 @@ body:has(.admin-gate) {
 }
 
 .admin-shell :is(.bg-violet-50, .bg-blue-50) {
-  background: #211d31;
+  background: color-mix(in srgb, var(--dashboard-info) 12%, var(--dashboard-solid));
 }
 
 .admin-shell :is(.text-violet-950, .text-blue-700) {
-  color: #c6bcff;
+  color: var(--dashboard-info);
 }
 
 .admin-shell :is(.text-green-700, .text-green-600) {
@@ -481,7 +462,7 @@ body:has(.admin-gate) {
 }
 
 .admin-shell :is(.border-violet-200, .border-blue-200) {
-  border-color: #494061;
+  border-color: color-mix(in srgb, var(--dashboard-info) 35%, var(--dashboard-solid));
 }
 
 .admin-shell .admin-footer {
@@ -508,14 +489,6 @@ body:has(.admin-gate) {
   background: var(--dashboard-elevated);
   border-color: var(--dashboard-border);
   color: var(--dashboard-ink);
-}
-
-.admin-shell .admin-edit-button:hover {
-  background: #25272c;
-}
-
-.admin-shell .admin-data-table tr:hover td {
-  background: #17181c;
 }
 
 .admin-shell .admin-data-table td:first-child {
@@ -547,7 +520,7 @@ body:has(.admin-gate) {
 
 .admin-shell .admin-status.low {
   color: var(--dashboard-warning);
-  background: #2b2417;
+  background: color-mix(in srgb, var(--dashboard-warning) 14%, var(--dashboard-solid));
 }
 
 .admin-shell
@@ -562,8 +535,8 @@ body:has(.admin-gate) {
 }
 
 .admin-shell input::file-selector-button {
-  background: #302a44;
-  color: #ddd5ff;
+  background: color-mix(in srgb, var(--dashboard-accent) 14%, var(--dashboard-solid));
+  color: var(--dashboard-ink);
 }
 
 .admin-shell .admin-empty strong {
@@ -624,7 +597,7 @@ body:has(.admin-gate) {
 .admin-revenue-bar-track {
   height: 9px;
   border-radius: 3px;
-  background: #22212b;
+  background: color-mix(in srgb, var(--dashboard-ink) 8%, transparent);
   overflow: hidden;
 }
 
@@ -632,7 +605,7 @@ body:has(.admin-gate) {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #49339f, #9277ff);
+  background: linear-gradient(90deg, var(--dashboard-accent), var(--glass-glow));
 }
 
 .admin-revenue-split {
@@ -642,15 +615,15 @@ body:has(.admin-gate) {
   margin: 26px 0 20px;
   border-radius: 6px;
   overflow: hidden;
-  background: #22212b;
+  background: color-mix(in srgb, var(--dashboard-ink) 8%, transparent);
 }
 
 .admin-revenue-split span:first-child {
-  background: #8364f6;
+  background: var(--dashboard-accent);
 }
 
 .admin-revenue-split span:last-child {
-  background: #4951a1;
+  background: color-mix(in srgb, var(--dashboard-accent) 40%, var(--dashboard-solid));
 }
 
 .admin-revenue-legend {
@@ -677,12 +650,12 @@ body:has(.admin-gate) {
   width: 9px;
   height: 9px;
   border-radius: 3px;
-  background: #8364f6;
+  background: var(--dashboard-accent);
   flex-shrink: 0;
 }
 
 .admin-revenue-legend > div:last-child i {
-  background: #4951a1;
+  background: color-mix(in srgb, var(--dashboard-accent) 40%, var(--dashboard-solid));
 }
 
 .admin-revenue-legend dd {

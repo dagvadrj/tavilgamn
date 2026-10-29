@@ -11,10 +11,10 @@ test("dashboard preferences tolerate stale or corrupt browser storage", () => {
     assert.deepEqual(parseDashboardPreferences(raw), DEFAULT_DASHBOARD_PREFERENCES);
   }
   assert.deepEqual(parseDashboardPreferences('{"density":"compact","textSize":"large","overview":"inventory"}'), {
-    theme: "dark", density: "compact", textSize: "large", overview: "inventory",
+    theme: "system", density: "compact", textSize: "large", overview: "inventory",
   });
   assert.equal(parseDashboardPreferences('{"theme":"light"}').theme, "light");
-  assert.equal(parseDashboardPreferences('{"theme":"invalid"}').theme, "dark");
+  assert.equal(parseDashboardPreferences('{"theme":"invalid"}').theme, "system");
   assert.equal(parseDashboardPreferences('{"theme":"dark"}').theme, "dark");
 });
 
@@ -34,6 +34,7 @@ test("preference updates persist across remounts, merge current values, and rema
       react: {
         useCallback: (callback) => callback,
         useMemo: (callback) => callback(),
+        useEffect: () => {},
         useSyncExternalStore: (_subscribe, snapshot) => snapshot(),
       },
     });
@@ -42,7 +43,7 @@ test("preference updates persist across remounts, merge current values, and rema
     // An older mounted consumer must merge against the latest stored settings.
     assert.equal(first.updatePreferences({ textSize: "large" }), true);
     assert.deepEqual(useDashboardPreferences("owner-a", "merchant").preferences, {
-      theme: "dark", density: "compact", textSize: "large", overview: "all",
+      theme: "system", density: "compact", textSize: "large", overview: "all",
     });
     for (const [owner, role] of [["owner-b", "merchant"], ["owner-a", "admin"]]) {
       assert.deepEqual(useDashboardPreferences(owner, role).preferences, preferencesModule.DEFAULT_DASHBOARD_PREFERENCES);
@@ -92,7 +93,7 @@ test("dashboard settings route each control to its real preference or store acti
   assert.equal(profileOpens, 1);
   const admin = DashboardSettings({ role: "admin", preferences: preferencesModule.DEFAULT_DASHBOARD_PREFERENCES, onChange: () => true });
   assert.equal(findAll(admin, (node) => node.type === "select").length, 0);
-  assert.deepEqual(findAll(admin, node => node.type === "input" && node.props.name === "dashboard-theme").map(node => node.props.value), ["light", "dark"]);
+  assert.deepEqual(findAll(admin, node => node.type === "input" && node.props.name === "dashboard-theme").map(node => node.props.value), ["system", "light", "dark"]);
 });
 
 test("merchant settings deep links survive navigation without retaining a kitchen target", () => {

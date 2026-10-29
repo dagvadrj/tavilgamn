@@ -317,11 +317,14 @@ test("mobile sidebar uses native dialog behavior and restores scroll on close an
 
 test("dashboard styles share room surfaces, preserve dark mode and accessible responsive behavior", () => {
   const css = read("src/features/dashboard/dashboard.css");
-  assert.match(css, /--dashboard-bg:\s*var\(--site-bg\)/);
-  assert.match(css, /color-scheme:\s*light/);
-  const theme = read("src/features/dashboard/merchant-theme.css");
-  assert.match(theme, /\[data-theme="dark"\]/);
+  const theme = read("src/features/dashboard/dashboard-tokens.css");
+  assert.match(theme, /--site-bg:\s*var\(--dashboard-bg\)/);
+  assert.match(theme, /color-scheme:\s*light/);
+  assert.match(theme, /:root\[data-dashboard-theme="dark"\]/);
   assert.match(theme, /color-scheme:\s*dark/);
+  // Tokens are defined once; no other dashboard layer redefines the palette.
+  for (const file of ["dashboard.css", "dashboard-v14.css", "dashboard-glass.css", "merchant-theme.css", "dashboard-reference.css"])
+    assert.doesNotMatch(read("src/features/dashboard/" + file), /--dashboard-(bg|ink|surface):/);
   assert.match(css, /:focus-visible/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
   assert.match(css, /@media\s*\(max-width:\s*1023px\)/);

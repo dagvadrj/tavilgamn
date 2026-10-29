@@ -59,7 +59,6 @@ export function MerchantShell({
   return (
     <div
       className="merchant-app-shell dashboard-shell dashboard-themed-shell dashboard-v14 dashboard-glass"
-      data-theme={preferences?.theme ?? "dark"}
       data-density={preferences?.density ?? "comfortable"}
       data-text-size={preferences?.textSize ?? "standard"}
     >

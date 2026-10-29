@@ -3,6 +3,7 @@
 import { DashboardNavigation } from "@/features/dashboard/DashboardNavigation";
 import { DashboardFormAssist } from "@/features/dashboard/DashboardFormAssist";
 import { DashboardMotion } from "@/features/dashboard/DashboardMotion";
+import { DashboardThemeToggle } from "@/features/dashboard/DashboardThemeToggle";
 import "@/features/dashboard/dashboard-v14.css";
 
 import {
@@ -24,6 +25,7 @@ export function AdminShell({
   active,
   onChange,
   userName,
+  owner,
   preferences,
   panelRef,
   children,
@@ -31,6 +33,7 @@ export function AdminShell({
   active: AdminTab;
   onChange: (tab: AdminTab) => void;
   userName: string;
+  owner: string;
   preferences: DashboardPreferences;
   panelRef?: RefObject<HTMLDivElement | null>;
   children: ReactNode;
@@ -48,7 +51,6 @@ export function AdminShell({
   return (
     <div
       className="admin-shell dashboard-shell dashboard-themed-shell dashboard-v14 dashboard-glass"
-      data-theme={preferences.theme}
       data-density={preferences.density}
       data-text-size={preferences.textSize}
     >
@@ -73,6 +75,7 @@ export function AdminShell({
               onChange={changeTab}
             />
           }
+          themeToggle={<DashboardThemeToggle owner={owner} role="admin" />}
           userName={userName}
           activeLabel={label}
           menuOpen={menuOpen}

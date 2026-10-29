@@ -5,6 +5,7 @@ import { Menu, MessageSquare, Package, Settings } from "lucide-react";
 
 export function AdminHeader({
   navigation,
+  themeToggle,
   activeLabel,
   onProducts,
   onMessages,
@@ -13,6 +14,7 @@ export function AdminHeader({
   onToggleMenu,
 }: {
   navigation?: ReactNode;
+  themeToggle?: ReactNode;
   userName: string;
   activeLabel: string;
   onProducts: () => void;
@@ -44,6 +46,7 @@ export function AdminHeader({
 
       {navigation}
       <div className="admin-topbar-actions dashboard-header-actions">
+        {themeToggle}
         <button
           type="button"
           className="admin-header-search"

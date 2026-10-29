@@ -1,0 +1,108 @@
+/* The only admin/merchant palette. Light is the default; dark follows <html data-dashboard-theme>, which an inline script sets before paint. Components use var(--dashboard-*) and never their own hex. */
+
+.dashboard-layout,
+.dashboard-nav-tooltip {
+  --dashboard-bg: #f5f7fb;
+  --dashboard-surface: #ffffff9c;
+  --dashboard-solid: #fff;
+  --dashboard-elevated: #ffffff70;
+  --dashboard-border: #ffffffb3;
+  --dashboard-control-border: #b9c6d6;
+  --dashboard-ink: #172b4d;
+  --dashboard-muted: #607087;
+  --dashboard-accent: #075eaa;
+  --dashboard-on-accent: #fff;
+  --dashboard-success: #2f6f4f;
+  --dashboard-danger: #b42336;
+  --dashboard-warning: #856000;
+  --dashboard-info: #075eaa;
+  --dashboard-overlay: #0f1a2b66;
+  --dashboard-chart-1: var(--dashboard-ink);
+  --dashboard-chart-2: var(--dashboard-accent);
+  --dashboard-chart-3: #c2410c;
+  --dashboard-chart-4: #7c8799;
+  --dashboard-tooltip-bg: #11151ef5;
+  --dashboard-tooltip-ink: #f5f7fc;
+  --dashboard-shadow: #173d7012;
+  --dashboard-backdrop: radial-gradient(ellipse at 12% 20%, #a9ccee80, transparent 48%), radial-gradient(ellipse at 85% 60%, #c8d7f280, transparent 45%), #e5edf6;
+  --site-bg: var(--dashboard-bg);
+  --site-surface: var(--dashboard-surface);
+  --site-hover: var(--dashboard-elevated);
+  --site-line: var(--dashboard-border);
+  --site-ink: var(--dashboard-ink);
+  --site-muted: var(--dashboard-muted);
+  --site-accent: var(--dashboard-accent);
+  --site-primary: var(--dashboard-accent);
+  --site-primary-hover: #064d8b;
+  --site-success: var(--dashboard-success);
+  --site-danger: var(--dashboard-danger);
+  --site-selected: color-mix(in srgb, var(--dashboard-accent) 10%, var(--dashboard-solid));
+  --site-ink-rgb: 23 43 77;
+  --site-muted-rgb: 96 112 135;
+  --site-line-rgb: 220 229 239;
+  --site-accent-rgb: 7 94 170;
+  --glass-shadow: 0 12px 36px #173d7010, inset 0 1px 0 #ffffffd9, inset 0 -1px 0 #ffffff38;
+  --glass-panel: linear-gradient(135deg, #ffffff66, #ffffff08 55%, #ffffff30), var(--dashboard-surface);
+  --glass-control: linear-gradient(145deg, #ffffff8c, #ffffff26);
+  --glass-field: #ffffff80;
+  --glass-chart: #075eaa;
+  --glass-glow: #80baff;
+  color-scheme: light;
+}
+
+:root[data-dashboard-theme="dark"] :is(.dashboard-layout, .dashboard-nav-tooltip) {
+  --dashboard-bg: #080f1d;
+  --dashboard-surface: #14233a8c;
+  --dashboard-solid: #111c2e;
+  --dashboard-elevated: #8bbcff12;
+  --dashboard-border: #bbd9ff26;
+  --dashboard-control-border: #5b7394;
+  --dashboard-ink: #edf4ff;
+  --dashboard-muted: #a8b8cc;
+  --dashboard-accent: #80baff;
+  --dashboard-on-accent: #102239;
+  --dashboard-success: #7fd1a7;
+  --dashboard-danger: #ff9aab;
+  --dashboard-warning: #edcd8b;
+  --dashboard-info: #80baff;
+  --dashboard-overlay: #000000a3;
+  --dashboard-chart-3: #f5a37f;
+  --dashboard-chart-4: #8d9ab0;
+  --dashboard-tooltip-bg: #e6eefaf5;
+  --dashboard-tooltip-ink: #0b1626;
+  --dashboard-shadow: #00000033;
+  --dashboard-backdrop: radial-gradient(ellipse at 8% 10%, #124b805e, transparent 45%), radial-gradient(ellipse at 82% 38%, #294a8b40, transparent 46%), radial-gradient(ellipse at 45% 100%, #103b6140, transparent 55%), #080f1d;
+  --site-primary-hover: #afd3ff;
+  --site-ink-rgb: 237 244 255;
+  --site-muted-rgb: 168 184 204;
+  --site-line-rgb: 64 88 120;
+  --site-accent-rgb: 128 186 255;
+  --glass-shadow: 0 16px 44px #00000033, inset 0 1px 0 #dcecff20, inset 0 -1px 0 #7dacf50a;
+  --glass-panel: linear-gradient(135deg, #b7d9ff12, #ffffff02 48%, #8cbaff08), var(--dashboard-surface);
+  --glass-control: linear-gradient(145deg, #b7d9ff16, #ffffff04);
+  --glass-field: #070f2066;
+  --glass-chart: #80baff;
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .dashboard-layout {
+    --dashboard-surface: var(--dashboard-solid);
+    --glass-panel: var(--dashboard-surface);
+    --glass-control: var(--dashboard-elevated);
+    --glass-field: var(--dashboard-surface);
+  }
+  :root[data-dashboard-theme="dark"] .dashboard-layout {
+    --dashboard-surface: #17263b;
+  }
+}
+
+/* Overscroll and the auth check render outside the shell; they follow the same theme. */
+
+body:has(.dashboard-layout) {
+  background: #f5f7fb;
+}
+
+:root[data-dashboard-theme="dark"] body:has(.dashboard-layout) {
+  background: #080f1d;
+}
