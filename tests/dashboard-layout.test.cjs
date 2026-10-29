@@ -206,12 +206,10 @@ test("admin header navigation has working callbacks and exposes matching dialog 
   const calls = [];
   const { AdminHeader } = loadSource("src/components/AdminHeader.tsx");
   const tree = AdminHeader({
-    userName: "Тест админ",
     activeLabel: "Бүтээгдэхүүн",
     menuOpen: true,
-    onProducts: () => calls.push("products"),
-    onSettings: () => calls.push("settings"),
-    onProfile: () => calls.push("profile"),
+    slotRef() {},
+    onSearch: () => calls.push("search"),
     onMessages: () => calls.push("messages"),
     onToggleMenu: () => calls.push("menu"),
   });
@@ -221,10 +219,11 @@ test("admin header navigation has working callbacks and exposes matching dialog 
   const menu = buttons.find((button) => button.props["aria-controls"]);
   assert.equal(menu.props["aria-controls"], "admin-navigation");
   assert.equal(menu.props["aria-expanded"], true);
-  buttons
-    .find((button) => button.props["aria-label"] === "Самбарын тохиргоо")
-    .props.onClick();
-  assert.deepEqual(calls, ["settings"]);
+  for (const label of ["Хайх", "Мессеж"])
+    buttons.find((button) => button.props["aria-label"] === label).props.onClick();
+  assert.deepEqual(calls, ["search", "messages"]);
+  // One date-range control lives in the page, so the header has no tab strip.
+  assert.equal(elements(tree, (node) => node.props?.["aria-current"] === "page")[0].props.children, "Бүтээгдэхүүн");
 });
 
 test("mobile sidebar uses native dialog behavior and restores scroll on close and desktop resize", () => {
@@ -323,7 +322,7 @@ test("dashboard styles share room surfaces, preserve dark mode and accessible re
   assert.match(theme, /:root\[data-dashboard-theme="dark"\]/);
   assert.match(theme, /color-scheme:\s*dark/);
   // Tokens are defined once; no other dashboard layer redefines the palette.
-  for (const file of ["dashboard.css", "dashboard-v14.css", "dashboard-glass.css", "merchant-theme.css", "dashboard-reference.css"])
+  for (const file of ["dashboard.css", "dashboard-v14.css", "dashboard-mono.css", "merchant-theme.css", "dashboard-reference.css"])
     assert.doesNotMatch(read("src/features/dashboard/" + file), /--dashboard-(bg|ink|surface):/);
   assert.match(css, /:focus-visible/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);

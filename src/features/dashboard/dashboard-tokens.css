@@ -1,30 +1,37 @@
-/* The only admin/merchant palette. Light is the default; dark follows <html data-dashboard-theme>, which an inline script sets before paint. Components use var(--dashboard-*) and never their own hex. */
+/* The only admin/merchant palette ("Minimal Monochrome"). Dark/light follows <html data-dashboard-theme>, set by an inline script before paint. Monochrome plus one highlight; structure comes from 1px borders, never shadows, gradients or glass. Components use var(--dashboard-*) and never their own hex. */
 
 .dashboard-layout,
 .dashboard-nav-tooltip {
-  --dashboard-bg: #dfe8f3;
-  --dashboard-surface: #ffffffa8;
-  --dashboard-solid: #fff;
-  --dashboard-elevated: #ffffff85;
-  --dashboard-border: #b7c8dc8c;
-  --dashboard-control-border: #9fb1c7;
-  --dashboard-ink: #172b4d;
-  --dashboard-muted: #607087;
-  --dashboard-accent: #075eaa;
-  --dashboard-on-accent: #fff;
-  --dashboard-success: #2f6f4f;
-  --dashboard-danger: #b42336;
-  --dashboard-warning: #856000;
-  --dashboard-info: #075eaa;
-  --dashboard-overlay: #0f1a2b66;
+  --dashboard-bg: #fff;
+  --dashboard-panel: #fafafa;
+  --dashboard-surface: var(--dashboard-bg);
+  --dashboard-solid: var(--dashboard-bg);
+  --dashboard-elevated: #f4f4f4;
+  --dashboard-border: #eaeaea;
+  --dashboard-control-border: #e0e0e0;
+  --dashboard-ink: #0a0a0a;
+  --dashboard-muted: #5f5f5f;
+  --dashboard-subtle: #9a9a9a;
+  /* Primary actions are inverted ink; the highlight marks only "now" and "needs attention". */
+  --dashboard-accent: var(--dashboard-ink);
+  --dashboard-on-accent: var(--dashboard-bg);
+  --dashboard-highlight: #0a0a0a;
+  --dashboard-on-highlight: #fff;
+  --dashboard-bar: #e4e4e4;
+  --dashboard-bar-hover: #c9c9c9;
+  --dashboard-success: var(--dashboard-ink);
+  --dashboard-danger: #b42318;
+  --dashboard-warning: #8a5a00;
+  --dashboard-info: var(--dashboard-ink);
+  --dashboard-overlay: #0a0a0a66;
   --dashboard-chart-1: var(--dashboard-ink);
-  --dashboard-chart-2: var(--dashboard-accent);
-  --dashboard-chart-3: #c2410c;
-  --dashboard-chart-4: #7c8799;
-  --dashboard-tooltip-bg: #11151ef5;
-  --dashboard-tooltip-ink: #f5f7fc;
-  --dashboard-shadow: #172b4d14;
-  --dashboard-backdrop: radial-gradient(ellipse at 8% 0%, #8fbdf0d9, transparent 52%), radial-gradient(ellipse at 92% 28%, #b8c9f6d9, transparent 46%), radial-gradient(ellipse at 45% 100%, #a3d4ea99, transparent 55%), #dfe8f3;
+  --dashboard-chart-2: var(--dashboard-bar-hover);
+  --dashboard-chart-3: var(--dashboard-muted);
+  --dashboard-chart-4: var(--dashboard-bar);
+  --dashboard-tooltip-bg: var(--dashboard-ink);
+  --dashboard-tooltip-ink: var(--dashboard-bg);
+  --dashboard-shadow: transparent;
+  --dashboard-backdrop: var(--dashboard-bg);
   --site-bg: var(--dashboard-bg);
   --site-surface: var(--dashboard-surface);
   --site-hover: var(--dashboard-elevated);
@@ -33,79 +40,56 @@
   --site-muted: var(--dashboard-muted);
   --site-accent: var(--dashboard-accent);
   --site-primary: var(--dashboard-accent);
-  --site-primary-hover: #064d8b;
+  --site-primary-hover: var(--dashboard-muted);
   --site-success: var(--dashboard-success);
   --site-danger: var(--dashboard-danger);
-  --site-selected: color-mix(in srgb, var(--dashboard-accent) 10%, var(--dashboard-solid));
-  --site-ink-rgb: 23 43 77;
-  --site-muted-rgb: 96 112 135;
-  --site-line-rgb: 220 229 239;
-  --site-accent-rgb: 7 94 170;
-  --glass-shadow: 0 12px 32px #1e3a6a24, 0 1px 2px #1e3a6a14, inset 0 1px 0 #ffffffeb, inset 0 0 0 1px #ffffff59;
-  --glass-panel: linear-gradient(140deg, #ffffffb8, #ffffff4d 58%, #ffffff80), var(--dashboard-surface);
-  --glass-control: linear-gradient(145deg, #ffffffd1, #ffffff8c);
-  --glass-field: #ffffffe0;
-  --glass-chrome: linear-gradient(160deg, #ffffff99, #ffffff40 60%, #ffffff66);
-  --glass-chart: #075eaa;
-  --glass-glow: #80baff;
+  --site-selected: var(--dashboard-elevated);
+  --site-ink-rgb: 10 10 10;
+  --site-muted-rgb: 95 95 95;
+  --site-line-rgb: 234 234 234;
+  --site-accent-rgb: 10 10 10;
+  /* Legacy glass hooks resolve to flat surfaces so no layer can reintroduce the old look. */
+  --glass-shadow: none;
+  --glass-panel: var(--dashboard-surface);
+  --glass-control: var(--dashboard-bg);
+  --glass-field: var(--dashboard-bg);
+  --glass-chrome: var(--dashboard-panel);
+  --glass-chart: var(--dashboard-ink);
+  --glass-glow: var(--dashboard-bar-hover);
   color-scheme: light;
+  font-family: var(--font-dashboard), var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: "tnum", "cv11";
 }
 
 :root[data-dashboard-theme="dark"] :is(.dashboard-layout, .dashboard-nav-tooltip) {
-  --dashboard-bg: #080f1d;
-  --dashboard-surface: #14233a8c;
-  --dashboard-solid: #111c2e;
-  --dashboard-elevated: #8bbcff12;
-  --dashboard-border: #bbd9ff26;
-  --dashboard-control-border: #5b7394;
-  --dashboard-ink: #edf4ff;
-  --dashboard-muted: #a8b8cc;
-  --dashboard-accent: #80baff;
-  --dashboard-on-accent: #102239;
-  --dashboard-success: #7fd1a7;
-  --dashboard-danger: #ff9aab;
-  --dashboard-warning: #edcd8b;
-  --dashboard-info: #80baff;
-  --dashboard-overlay: #000000a3;
-  --dashboard-chart-3: #f5a37f;
-  --dashboard-chart-4: #8d9ab0;
-  --dashboard-tooltip-bg: #e6eefaf5;
-  --dashboard-tooltip-ink: #0b1626;
-  --dashboard-shadow: #00000033;
-  --dashboard-backdrop: radial-gradient(ellipse at 8% 10%, #124b805e, transparent 45%), radial-gradient(ellipse at 82% 38%, #294a8b40, transparent 46%), radial-gradient(ellipse at 45% 100%, #103b6140, transparent 55%), #080f1d;
-  --site-primary-hover: #afd3ff;
-  --site-ink-rgb: 237 244 255;
-  --site-muted-rgb: 168 184 204;
-  --site-line-rgb: 64 88 120;
-  --site-accent-rgb: 128 186 255;
-  --glass-shadow: 0 16px 44px #00000033, inset 0 1px 0 #dcecff20, inset 0 -1px 0 #7dacf50a;
-  --glass-panel: linear-gradient(135deg, #b7d9ff12, #ffffff02 48%, #8cbaff08), var(--dashboard-surface);
-  --glass-control: linear-gradient(145deg, #b7d9ff16, #ffffff04);
-  --glass-field: #070f2066;
-  --glass-chrome: linear-gradient(160deg, #b7d9ff14, #0a152933 60%, #8cbaff0d);
-  --glass-chart: #80baff;
+  --dashboard-bg: #0a0a0a;
+  --dashboard-panel: #0f0f0f;
+  --dashboard-elevated: #161616;
+  --dashboard-border: #1f1f1f;
+  --dashboard-control-border: #2a2a2a;
+  --dashboard-ink: #ededed;
+  --dashboard-muted: #a1a1a1;
+  --dashboard-subtle: #666;
+  --dashboard-highlight: #d4ff3a;
+  --dashboard-on-highlight: #0a0a0a;
+  --dashboard-bar: #2e2e2e;
+  --dashboard-bar-hover: #4a4a4a;
+  --dashboard-danger: #ff8a80;
+  --dashboard-warning: #e8c46a;
+  --dashboard-overlay: #000000b3;
+  --site-ink-rgb: 237 237 237;
+  --site-muted-rgb: 161 161 161;
+  --site-line-rgb: 31 31 31;
+  --site-accent-rgb: 237 237 237;
   color-scheme: dark;
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .dashboard-layout {
-    --dashboard-surface: var(--dashboard-solid);
-    --glass-panel: var(--dashboard-surface);
-    --glass-control: var(--dashboard-elevated);
-    --glass-field: var(--dashboard-surface);
-    --glass-chrome: var(--dashboard-surface);
-  }
-  :root[data-dashboard-theme="dark"] .dashboard-layout {
-    --dashboard-surface: #17263b;
-  }
 }
 
 /* Overscroll and the auth check render outside the shell; they follow the same theme. */
 
 body:has(.dashboard-layout) {
-  background: #dfe8f3;
+  background: #fff;
 }
 
 :root[data-dashboard-theme="dark"] body:has(.dashboard-layout) {
-  background: #080f1d;
+  background: #0a0a0a;
 }
