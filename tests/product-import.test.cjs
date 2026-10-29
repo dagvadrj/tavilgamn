@@ -100,3 +100,21 @@ test('admin import requires a real store and saves products only for it',async()
  assert.equal(saved.status,201);assert.deepEqual(await saved.json(),{count:2,replayed:false});
  assert.deepEqual(calls[0].args.p_data.storeIds,['store-a']);assert.equal(calls[0].args.p_create,true);
 });
+
+test('admin image upload accepts only the object it signed, like the merchant upload',async()=>{
+ const oldFetch=global.fetch,oldEnv=['CLOUDINARY_CLOUD_NAME','CLOUDINARY_API_KEY','CLOUDINARY_API_SECRET'].map(k=>process.env[k]);
+ Object.assign(process.env,{CLOUDINARY_CLOUD_NAME:'demo',CLOUDINARY_API_KEY:'test',CLOUDINARY_API_SECRET:'test'});
+ try{
+  const route=loadSource('src/app/api/admin/images/route.ts',{'@/lib/supabase/requireAdmin':{requireAdmin:async()=>({userId:'admin',error:null})}});
+  const upload=()=>{const form=new FormData();form.set('file',new File(['jpg'],'a.jpg',{type:'image/jpeg'}));return route.POST(new NextRequest('http://local/api/admin/images',{method:'POST',body:form}));};
+  global.fetch=async(_url,init)=>({ok:true,json:async()=>({public_id:init.body.get('public_id'),secure_url:`https://res.cloudinary.com/demo/image/upload/v1/${init.body.get('public_id')}.jpg`})});
+  assert.equal((await upload()).status,201);
+  global.fetch=async()=>({ok:true,json:async()=>({public_id:'foreign',secure_url:'https://res.cloudinary.com/demo/image/upload/foreign.jpg'})});
+  assert.equal((await upload()).status,502);
+  global.fetch=async(_url,init)=>({ok:true,json:async()=>({public_id:init.body.get('public_id'),secure_url:'https://res.cloudinary.com/other/image/upload/x.jpg'})});
+  assert.equal((await upload()).status,502);
+ }finally{
+  global.fetch=oldFetch;
+  ['CLOUDINARY_CLOUD_NAME','CLOUDINARY_API_KEY','CLOUDINARY_API_SECRET'].forEach((k,i)=>oldEnv[i]===undefined?delete process.env[k]:process.env[k]=oldEnv[i]);
+ }
+});
