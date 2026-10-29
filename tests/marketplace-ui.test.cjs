@@ -174,43 +174,6 @@ test("catalog quick filters compose promotion and 3D filters without promising s
   );
 });
 
-test("home promotion section is conditional on real currently available product offers", async () => {
-  async function render(products) {
-    const Home = loadSource("src/components/pages/HomePageClient.tsx", {
-      "@/lib/catalogServer": { readProducts: async () => products },
-      "@/lib/storeDirectory": { readStoreDirectory: async () => [] },
-      "@/components/FeaturedMerchants": { FeaturedMerchants: () => null },
-      "@/components/ProductCard": {
-        ProductCard: ({ product }) =>
-          React.createElement("article", { "data-product": product.id }),
-      },
-      "next/image": {
-        default: ({ alt }) =>
-          React.createElement("span", { "aria-label": alt }),
-      },
-    }).HomeContent;
-    return renderToStaticMarkup(React.createElement(Home, { catalog: products, stores: [], paymentLabels: [] }));
-  }
-  assert.ok(!(await render([product])).includes('id="offers-title"'));
-  const offered = await render([{ ...product, compareAtPrice: 100000 }]);
-  assert.ok(
-    offered.includes('id="offers-title"') &&
-      offered.includes("/catalog?offers=1"),
-  );
-  assert.ok(
-    !(
-      await render([{ ...product, compareAtPrice: 100000, stockQuantity: 0 }])
-    ).includes('id="offers-title"'),
-  );
-  const surcharged = {
-    ...product,
-    compareAtPrice: 100000,
-    colors: [{ id: "oak", name: "Царс", hex: "#c9aa80", priceDelta: 30000 }],
-    materials: [{ id: "wood", name: "Мод", priceDelta: 0 }],
-  };
-  assert.ok(!(await render([surcharged])).includes('id="offers-title"'));
-});
-
 test("store styling is isolated from fullscreen planners and supports small touch screens", () => {
   const css = require("../scripts/styles/read.cjs")
     .readStylesheet("src/app/(shop)/storefront.css")

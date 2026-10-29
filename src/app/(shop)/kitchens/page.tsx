@@ -1,4 +1,6 @@
-import { KitchensPageClient } from "@/components/pages/KitchensPageClient";
+import { KitchensContent } from "@/components/pages/KitchensPageClient";
+import { readCachedKitchenDesigns } from "@/lib/publicKitchens";
+import { withTimeout } from "@/lib/withTimeout";
 
 export const metadata = {
   title: "Гал тогооны загварууд — tavilga.mn",
@@ -10,6 +12,10 @@ export default async function KitchenMarketplacePage({
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  const query = (await searchParams).q?.trim().slice(0, 120) ?? "";
-  return <KitchensPageClient query={query} />;
+  const [params, designs] = await Promise.all([
+    searchParams,
+    withTimeout(readCachedKitchenDesigns(), 8000, "Kitchen designs"),
+  ]);
+  const query = params.q?.trim().slice(0, 120) ?? "";
+  return <KitchensContent allDesigns={designs} query={query} />;
 }

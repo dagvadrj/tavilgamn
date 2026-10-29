@@ -1,6 +1,3 @@
-"use client";
-
-import { RemotePage } from "@/components/RemotePage";
 import type { PageData } from "@/lib/pageData";
 import { PlannerLink as Link } from "@/components/PlannerLink";
 import {
@@ -15,14 +12,6 @@ import { DirectoryHeading } from "@/components/DirectoryHeading";
 import { DirectoryCard } from "@/components/DirectoryCard";
 
 const typeIcons = { factory: Factory, handmade: Hammer, retail: StoreIcon };
-
-export function StoresPageClient({ type }: { type?: string }) {
-  return (
-    <RemotePage page="stores" variant="catalog">
-      {(data) => <StoresContent {...data} type={type} />}
-    </RemotePage>
-  );
-}
 
 export function StoresContent({
   directory,

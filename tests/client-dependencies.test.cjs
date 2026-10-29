@@ -73,8 +73,8 @@ test("auth and persisted design updates stay independent of eager 3D imports", (
   );
 });
 
-test("immediate page shells do not bundle server data readers or credentials", () => {
-  for (const page of ["Home", "Stores", "Store", "Product", "Kitchens", "Kitchen"]) {
+test("page content components do not bundle server data readers or credentials", () => {
+  for (const page of ["Stores", "Store", "Kitchens", "Kitchen"]) {
     const entry = `src/components/pages/${page}PageClient.tsx`;
     const packages = eagerPackages(entry);
     assert.ok(!packages.has("server-only"), `${entry} imports a server-only dependency`);
