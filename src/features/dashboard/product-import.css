@@ -251,9 +251,11 @@
   font: inherit;
 }
 
-.product-import-table td[data-invalid] :is(input, select) {
-  border-color: var(--dashboard-danger);
-  box-shadow: 0 0 0 1px var(--dashboard-danger);
+/* Outline, not border: the dashboard's shared field rules own border-color. */
+
+.product-import-table td[data-invalid] :is(input, select):not(:focus-visible) {
+  outline: 2px solid var(--dashboard-danger);
+  outline-offset: -1px;
 }
 
 .product-import-table input[type="checkbox"] {
@@ -370,4 +372,12 @@
 
 .product-import-table[data-compact] table {
   min-width: 0;
+}
+
+.product-import-store {
+  display: grid;
+  gap: 6px;
+  max-width: 420px;
+  color: var(--dashboard-ink);
+  font-weight: 600;
 }

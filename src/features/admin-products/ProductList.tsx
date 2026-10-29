@@ -12,16 +12,23 @@ import {
   Box,
   ChevronLeft,
   ChevronRight,
+  FileSpreadsheet,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import type { Product, Store } from "@/lib/types";
 import { CATEGORIES, CATEGORY_LABEL } from "@/lib/products";
-import { useCatalog } from "@/store/catalog";
+import { useCatalog, useCatalogStore } from "@/store/catalog";
 import { authFetch } from "@/lib/authFetch";
 import { formatPrice } from "@/lib/format";
 import { CatalogStatus } from "@/components/CatalogStatus";
 import { stockLabel } from "@/lib/inventory";
 import { blank, ProductEditor } from "@/features/admin-products/ProductEditor";
 import { ProductDetails } from "@/features/admin-products/ProductDetails";
+const ProductImportFlow = dynamic(() =>
+  import("@/features/dashboard/ProductImportFlow").then(
+    (m) => m.ProductImportFlow,
+  ),
+);
 
 export function ProductList({
   owner,
@@ -42,6 +49,8 @@ export function ProductList({
   const [storeId, setStoreId] = useState("");
   const [stores, setStores] = useState<Store[]>([]);
   const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importStore, setImportStore] = useState("");
   const [editing, setEditing] = useDraftState<{
     product: Product;
     create: boolean;
@@ -142,6 +151,36 @@ export function ProductList({
         close={() => setDetailsId(null)}
       />
     );
+  if (importing)
+    return (
+      <ProductImportFlow
+        owner={owner}
+        endpoint="/api/admin/products/import"
+        storeId={importStore || undefined}
+        existingNames={catalog.products
+          .filter((product) => product.storeIds?.includes(importStore))
+          .map((product) => product.name)}
+        storePicker={
+          <label className="product-import-store">
+            Аль дэлгүүрийн нэрийн өмнөөс оруулах вэ?
+            <select
+              className="input"
+              value={importStore}
+              onChange={(event) => setImportStore(event.target.value)}
+            >
+              <option value="">Дэлгүүр сонгох…</option>
+              {stores.map((store) => (
+                <option key={store.id} value={store.id}>
+                  {store.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        }
+        onImported={() => void useCatalogStore.getState().refresh(true)}
+        onClose={() => setImporting(false)}
+      />
+    );
   if (editing)
     return (
       <ProductEditor
@@ -171,15 +210,23 @@ export function ProductList({
             <Box size={16} />
             3D загвар
           </button>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={() => setEditing({ product: blank(), create: true })}
-          >
-            <Plus size={17} />
-            Бараа нэмэх
-          </button>
         </div>
+      </div>
+      <div className="dashboard-choice-grid" role="group" aria-label="Бараа нэмэх арга">
+        <button type="button" className="dashboard-choice is-primary" onClick={() => setImporting(true)}>
+          <FileSpreadsheet size={26} aria-hidden="true" />
+          <strong>Excel-ээр оруулах</strong>
+          <small>Дэлгүүр сонгоод олон барааг нэг дор</small>
+        </button>
+        <button
+          type="button"
+          className="dashboard-choice"
+          onClick={() => setEditing({ product: blank(), create: true })}
+        >
+          <Plus size={26} aria-hidden="true" />
+          <strong>Нэг бүтээгдэхүүн нэмэх</strong>
+          <small>Бүх тохиргоог гараар бөглөнө</small>
+        </button>
       </div>
       <>
         <div className="admin-toolbar">
