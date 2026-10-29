@@ -236,7 +236,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   const [installation, setInstallation] = useDraftState<
     KitchenAsset["installation"]
   >(uploadScope, "installation", "freestanding");
-  const [family, setFamily] = useState("base");
+  const [measuredSize, setMeasuredSize] = useState<{
+    widthMm: number;
+    heightMm: number;
+    depthMm: number;
+  } | null>(null);
   const [libraryQuery, setLibraryQuery] = useState("");
   const [libraryGroup, setLibraryGroup] = useState("all");
   const [libraryStatus, setLibraryStatus] = useState("all");
@@ -385,7 +389,31 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     [modules, selectedModel],
   );
   const selectedModule = modules.find((module) => module.id === moduleId);
-  const uploadModule = modules.find((module) => module.id === uploadModuleId);
+  // Cabinet modules are matched from the measured GLB instead of picked by hand.
+  // Depth may include up to 100 mm of handle projection.
+  const sizeMatchedModules = useMemo(
+    () =>
+      measuredSize
+        ? modules
+            .filter(
+              (module) =>
+                module.active &&
+                Math.abs(module.widthMm - measuredSize.widthMm) <= 5 &&
+                Math.abs(module.heightMm - measuredSize.heightMm) <= 5 &&
+                measuredSize.depthMm >= module.depthMm - 5 &&
+                measuredSize.depthMm <= module.depthMm + 105,
+            )
+            .sort(
+              (a, b) =>
+                Math.abs(a.depthMm - measuredSize.depthMm) -
+                Math.abs(b.depthMm - measuredSize.depthMm),
+            )
+        : [],
+    [modules, measuredSize],
+  );
+  const uploadModule = sizeMatchedModules.find(
+    (module) => module.id === uploadModuleId,
+  );
   const upperCabinet = selectedModule?.cabinetType === "wall";
   const setupAssembly = useMemo(
     () =>
@@ -455,6 +483,17 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     [selectedModule],
   );
 
+  useEffect(() => {
+    if (uploadStatus.loading || uploadPartKind) return;
+    if (!sizeMatchedModules.some((module) => module.id === uploadModuleId))
+      setUploadModuleId(sizeMatchedModules[0]?.id ?? "");
+  }, [
+    sizeMatchedModules,
+    uploadModuleId,
+    uploadPartKind,
+    setUploadModuleId,
+    uploadStatus.loading,
+  ]);
   useEffect(() => {
     if (draftStatus.loading) return;
     if (
@@ -547,6 +586,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       `${selectedModel?.name ?? "Шүүгээ"} · ${next.slots.find((slot) => slot.id === slotId)?.label ?? PART_LABELS[kind]}`,
     );
     setUploadGlb(null);
+    setMeasuredSize(null);
     setPreview(null);
     setUploadThumbnail(null);
     setWorkspace("upload");
@@ -614,7 +654,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       !uploadGlb ||
       !uploadName.trim()
     ) {
-      setUploadError("Загварын нэр, module болон GLB файлыг бүрэн сонгоно уу.");
+      setUploadError(
+        uploadGlb && !uploadPartKind && !uploadModule
+          ? "GLB-ийн хэмжээнд тохирох шүүгээний module олдсонгүй."
+          : "Загварын нэр болон GLB файлыг оруулна уу.",
+      );
       return;
     }
     if (!preview || preview.file !== uploadGlb || !preview.frontConfirmed) {
@@ -758,13 +802,14 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       setUploadName("");
       setUploadModuleId("");
       setUploadGlb(null);
+      setMeasuredSize(null);
       setUploadThumbnail(null);
       if (glbInput.current) glbInput.current.value = "";
       if (thumbnailInput.current) thumbnailInput.current.value = "";
       setUploadSuccess(
         wasPart
           ? "GLB орууллаа. Боловсруулалт дуусмагц гал тогооны санд харагдана. Суурилуулдаг хэрэгслийг «Шүүгээнд холбох» хэсгээр холбоно."
-          : "GLB орууллаа. Боловсруулалт дууссаны дараа «Шүүгээнд холбох» хэсгээс хийцээ сонгоод холбоорой.",
+          : "GLB орууллаа. Боловсруулалт дуусмагц хийцээ сонгоод угсралтаа хадгална уу.",
       );
       await load();
       if (!wasPart) {
@@ -969,15 +1014,16 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       <nav className="ak-workspace-tabs" aria-label="Гал тогооны GLB удирдлага">
         {(
           [
-            ["upload", "1. GLB нэмэх"],
-            ["link", "2. Шүүгээнд холбох"],
-            ["library", `3. Загварын сан (${models.length})`],
+            ["upload", "GLB нэмэх"],
+            ["library", `Загварын сан (${models.length})`],
           ] as const
         ).map(([id, label]) => (
           <button
             type="button"
             key={id}
-            aria-pressed={workspace === id}
+            aria-pressed={
+              workspace === id || (id === "upload" && workspace === "link")
+            }
             disabled={uploading}
             onClick={() => {
               if (id !== "upload") cancelPartUpload();
@@ -1023,9 +1069,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           <span className="admin-eyebrow">KITCHEN GLB UPLOAD</span>
           <h2 className="mt-1 text-lg font-semibold">Гал тогооны GLB нэмэх</h2>
           <p className="text-sm text-black/55">
-            Эхлээд ангиллаа сонгоод, хэмжээ болон GLB файлаа оруулна. Хэрэгсэл,
-            эд ангийн хэмжээг GLB-ээс уншиж бөглөнө. Thumbnail-ийг автоматаар
-            үүсгэнэ.
+            Ангиллаа сонгоод GLB файлаа оруулна. Нэр, хэмжээ, module болон
+            thumbnail-ийг GLB-ээс автоматаар бөглөнө.
           </p>
         </div>
         <DashboardDraftNotice
@@ -1064,7 +1109,43 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
           className="grid gap-3 rounded-xl bg-black/[0.03] p-4 md:grid-cols-2 xl:grid-cols-4"
         >
           <fieldset disabled={uploading} className="contents">
-            {isAsset ? (
+            <label className="label md:col-span-2">
+              GLB файл
+              <input
+                ref={glbInput}
+                key={
+                  uploadGlb
+                    ? `${uploadGlb.name}:${uploadGlb.lastModified}`
+                    : "empty-glb"
+                }
+                className="input mt-1 w-full !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs"
+                type="file"
+                accept=".glb,model/gltf-binary"
+                required={!uploadGlb}
+                onChange={(event) => {
+                  const file = event.target.files?.[0] ?? null;
+                  setUploadGlb(file);
+                  setMeasuredSize(null);
+                  if (file && !uploadName.trim())
+                    setUploadName(file.name.replace(/\.glb$/i, ""));
+                }}
+              />
+              <small className="mt-1 block text-black/45">200 MB хүртэл</small>
+            </label>
+            <label className="label md:col-span-2">
+              Загварын нэр
+              <input
+                className="input mt-1 w-full"
+                required
+                maxLength={160}
+                placeholder={
+                  isAsset ? assetDefinition.label : "Ж: 600мм 3 шургуулгатай"
+                }
+                value={uploadName}
+                onChange={(event) => setUploadName(event.target.value)}
+              />
+            </label>
+            {isAsset && (
               <>
                 <label className="label">
                   Хэрэгслийн төрөл
@@ -1075,8 +1156,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                       const type = event.target.value as KitchenAssetType;
                       setAssetType(type);
                       setUploadPartKind(KITCHEN_ASSET_TYPES[type].partKind);
-                      if (KITCHEN_ASSET_TYPES[type].placement === "cabinet")
-                        setInstallation("integrated");
+                      setInstallation(
+                        KITCHEN_ASSET_TYPES[type].placement === "cabinet"
+                          ? "integrated"
+                          : "freestanding",
+                      );
                     }}
                   >
                     {Object.entries(KITCHEN_ASSET_TYPES)
@@ -1107,48 +1191,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                     </option>
                   </select>
                 </label>
-                <p className="ak-help md:col-span-2 xl:col-span-4">
-                  {installation === "integrated"
-                    ? "Боловсруулсны дараа «Шүүгээнд холбох → Эд ангийн тохиргоо»-оос шүүгээнд холбоно."
-                    : "Боловсруулалт дуусмагц гал тогоо төлөвлөгчийн хэрэгслийн санд шууд харагдана."}
-                </p>
               </>
-            ) : null}
-            {!uploadPartKind && (
-              <label className="label">
-                Шүүгээний төрөл
-                <select
-                  className="input mt-1 w-full"
-                  value={family}
-                  onChange={(event) => {
-                    setFamily(event.target.value);
-                    setUploadModuleId("");
-                  }}
-                >
-                  {Object.entries(CABINET_FAMILIES).map(([id, label]) => (
-                    <option key={id} value={id}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
             )}
-            <label className="label">
-              Загварын нэр
-              <input
-                className="input mt-1 w-full"
-                required
-                maxLength={160}
-                placeholder={
-                  isAsset ? assetDefinition.label : "Ж: 600мм 3 шургуулгатай"
-                }
-                value={uploadName}
-                onChange={(event) => setUploadName(event.target.value)}
-              />
-            </label>
             {group === "parts" && (
               <label className="label">
-                GLB зориулалт
+                Эд ангийн төрөл
                 <select
                   className="input mt-1 w-full"
                   value={uploadPartKind}
@@ -1160,135 +1207,122 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                 >
                   {Object.entries(PART_LABELS).map(([kind, label]) => (
                     <option key={kind} value={kind}>
-                      {label} · солигдох эд анги
+                      {label}
                     </option>
                   ))}
                 </select>
               </label>
             )}
-            {!uploadPartKind && (
-              <label className="label">
-                Хэмжээ (өргөн × өндөр × гүн)
-                <select
-                  className="input mt-1 w-full"
-                  required
-                  value={uploadModuleId}
-                  onChange={(event) => setUploadModuleId(event.target.value)}
-                >
-                  <option value="">Сонгоно уу</option>
-                  {modules
-                    .filter(
-                      (module) =>
-                        module.active && cabinetFamily(module.code) === family,
-                    )
-                    .map((module) => (
-                      <option key={module.id} value={module.id}>
-                        {module.name} · {module.widthMm}×{module.heightMm}×
-                        {module.depthMm} мм
-                      </option>
-                    ))}
-                </select>
-              </label>
-            )}
-            {uploadPartKind ? (
-              <div className="grid grid-cols-3 gap-2 md:col-span-2 xl:col-span-4">
-                {(["widthMm", "heightMm", "depthMm"] as const).map((key, i) => (
-                  <label key={key} className="label">
-                    {["Өргөн", "Өндөр", "Гүн"][i]} · мм
-                    <input
-                      type="number"
+            {!uploadPartKind && uploadGlb && measuredSize && (
+              <div className="md:col-span-2 xl:col-span-4">
+                {sizeMatchedModules.length > 1 ? (
+                  <label className="label">
+                    Тохирох module
+                    <select
                       className="input mt-1 w-full"
-                      min={1}
-                      max={4000}
-                      step={1}
                       required
-                      value={partSize[key]}
+                      value={uploadModuleId}
                       onChange={(event) =>
-                        setPartSize({
-                          ...partSize,
-                          [key]: Number(event.target.value),
-                        })
+                        setUploadModuleId(event.target.value)
+                      }
+                    >
+                      {sizeMatchedModules.map((module) => (
+                        <option key={module.id} value={module.id}>
+                          {CABINET_FAMILIES[
+                            cabinetFamily(
+                              module.code,
+                            ) as keyof typeof CABINET_FAMILIES
+                          ] ?? module.code}{" "}
+                          · {module.name} · {module.widthMm}×{module.heightMm}×
+                          {module.depthMm} мм
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : uploadModule ? (
+                  <p className="ak-help">
+                    <strong>Module:</strong> {uploadModule.name} ·{" "}
+                    {uploadModule.widthMm}×{uploadModule.heightMm}×
+                    {uploadModule.depthMm} мм
+                  </p>
+                ) : (
+                  <p className="text-sm text-red-600" role="alert">
+                    {Math.round(measuredSize.widthMm)}×
+                    {Math.round(measuredSize.heightMm)}×
+                    {Math.round(measuredSize.depthMm)} мм хэмжээтэй шүүгээний
+                    module олдсонгүй. GLB-ийн хэмжээг шалгана уу.
+                  </p>
+                )}
+              </div>
+            )}
+            <details className="ak-help md:col-span-2 xl:col-span-4">
+              <summary>Нэмэлт тохиргоо (сонголттой)</summary>
+              <div className="grid gap-3 pt-3 md:grid-cols-2 xl:grid-cols-4">
+                {uploadPartKind ? (
+                  (["widthMm", "heightMm", "depthMm"] as const).map((key, i) => (
+                    <label key={key} className="label">
+                      {["Өргөн", "Өндөр", "Гүн"][i]} · мм
+                      <input
+                        type="number"
+                        className="input mt-1 w-full"
+                        min={1}
+                        max={4000}
+                        step={1}
+                        required
+                        value={partSize[key]}
+                        onChange={(event) =>
+                          setPartSize({
+                            ...partSize,
+                            [key]: Number(event.target.value),
+                          })
+                        }
+                      />
+                    </label>
+                  ))
+                ) : (
+                  <label className="flex items-center gap-2 md:col-span-2">
+                    <input
+                      type="checkbox"
+                      checked={authoredNodes}
+                      onChange={(event) =>
+                        setAuthoredNodes(event.target.checked)
                       }
                     />
+                    Хаалга, бариул холбох нэртэй node / anchor агуулсан GLB
                   </label>
-                ))}
-              </div>
-            ) : (
-              <details className="ak-help md:col-span-2 xl:col-span-4">
-                <summary>Нарийвчилсан холболт (сонголттой)</summary>
-                <label className="flex items-center gap-2">
+                )}
+                <label className="label md:col-span-2">
+                  Өөр thumbnail зураг
                   <input
-                    type="checkbox"
-                    checked={authoredNodes}
-                    onChange={(event) => setAuthoredNodes(event.target.checked)}
+                    ref={thumbnailInput}
+                    key={
+                      uploadThumbnail
+                        ? `${uploadThumbnail.name}:${uploadThumbnail.lastModified}`
+                        : "empty-thumbnail"
+                    }
+                    className="input mt-1 w-full !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(event) =>
+                      setUploadThumbnail(event.target.files?.[0] ?? null)
+                    }
                   />
-                  Хаалга, бариул холбох нэртэй node / anchor агуулсан GLB
+                  <small className="mt-1 block text-black/45">
+                    JPG, PNG, WebP · 10 MB хүртэл
+                  </small>
                 </label>
-              </details>
-            )}
-            <label className="label">
-              GLB файл
-              <input
-                ref={glbInput}
-                key={
-                  uploadGlb
-                    ? `${uploadGlb.name}:${uploadGlb.lastModified}`
-                    : "empty-glb"
-                }
-                className="input mt-1 w-full !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs"
-                type="file"
-                accept=".glb,model/gltf-binary"
-                required={!uploadGlb}
-                onChange={(event) => {
-                  const file = event.target.files?.[0] ?? null;
-                  setUploadGlb(file);
-                  if (file && !uploadName.trim())
-                    setUploadName(file.name.replace(/\.glb$/i, ""));
-                }}
-              />
-              <small className="mt-1 block text-black/45">200 MB хүртэл</small>
-            </label>
-            <label className="label">
-              Нэмэлт thumbnail зураг (сонголттой)
-              <input
-                ref={thumbnailInput}
-                key={
-                  uploadThumbnail
-                    ? `${uploadThumbnail.name}:${uploadThumbnail.lastModified}`
-                    : "empty-thumbnail"
-                }
-                className="input mt-1 w-full !py-2 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1 file:text-xs"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(event) =>
-                  setUploadThumbnail(event.target.files?.[0] ?? null)
-                }
-              />
-              <small className="mt-1 block text-black/45">
-                JPG, PNG, WebP · 10 MB хүртэл
-              </small>
-            </label>
-            <div className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs text-black/55 md:col-span-2 xl:col-span-3">
-              <strong className="text-black/70">Ангилал:</strong>{" "}
-              {KITCHEN_ASSET_GROUPS[group]} ·{" "}
-              <strong className="text-black/70">Хэмжээ:</strong>{" "}
-              {uploadPartKind
-                ? PART_LABELS[uploadPartKind]
-                : uploadModule
-                  ? `${uploadModule.widthMm}×${uploadModule.heightMm}×${uploadModule.depthMm} мм`
-                  : "Module сонгоно уу"}
-            </div>
+              </div>
+            </details>
             <GlbUploadPreview
-              onMeasure={
-                uploadPartKind
-                  ? (size) =>
-                      setPartSize({
-                        widthMm: Math.max(1, Math.round(size.widthMm)),
-                        heightMm: Math.max(1, Math.round(size.heightMm)),
-                        depthMm: Math.max(1, Math.round(size.depthMm)),
-                      })
-                  : undefined
-              }
+              onMeasure={(size) => {
+                setMeasuredSize(size);
+                if (uploadPartKind)
+                  setPartSize({
+                    widthMm: Math.max(1, Math.round(size.widthMm)),
+                    heightMm: Math.max(1, Math.round(size.heightMm)),
+                    depthMm: Math.max(1, Math.round(size.depthMm)),
+                  });
+              }}
               allowFrontProjection={!uploadPartKind}
               assetRole={
                 uploadPartKind
@@ -1326,46 +1360,31 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             {uploadError}
           </p>
         )}
-        {uploadSuccess && (
-          <p
-            className="flex items-center gap-2 rounded-xl bg-ui-selected px-4 py-3 text-sm text-ui-accent"
-            role="status"
-          >
-            <CheckCircle size={16} />
-            {uploadSuccess}
-          </p>
-        )}
       </section>
       <section
         hidden={workspace === "upload"}
         className="space-y-4 rounded-2xl border border-black/10 bg-white p-5"
       >
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <span className="admin-eyebrow">ГАЛ ТОГООНЫ ТУСДАА САН</span>
-            <h2 className="mt-1 text-lg font-semibold">
-              {workspace === "link"
-                ? "Шүүгээний хийц ба солих эд анги"
-                : "Гал тогооны загварын сан"}
-            </h2>
-            <p className="text-sm text-black/55">
-              Дээр оруулсан, боловсруулалт нь дууссан GLB-г хаалга, шургуулга
-              зэрэг хувилбартай нь холбоно.
-            </p>
+        {workspace === "link" && (
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <span className="admin-eyebrow">ШҮҮГЭЭНД ХОЛБОХ</span>
+              <h2 className="mt-1 text-lg font-semibold">
+                Шүүгээний хийц ба солих эд анги
+              </h2>
+              <p className="text-sm text-black/55">
+                Боловсруулалт нь дууссан GLB-г хаалга, шургуулга зэрэг
+                хувилбартай нь холбоно.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => setWorkspace("library")}
+            >
+              Сан руу буцах
+            </button>
           </div>
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => void load()}
-          >
-            <RefreshCw size={15} />
-            Шинэчлэх
-          </button>
-        </div>
-        {error && (
-          <p className="admin-error" role="alert">
-            {error}
-          </p>
         )}
         {workspace === "link" && (
           <>
@@ -1406,22 +1425,24 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                     ))}
                 </select>
               </label>
-              <label className="label">
-                Module
-                <select
-                  className="input mt-1 w-full"
-                  required
-                  value={moduleId}
-                  onChange={(event) => setModuleId(event.target.value)}
-                >
-                  <option value="">Сонгоно уу</option>
-                  {matchingModules.map((module) => (
-                    <option key={module.id} value={module.id}>
-                      {module.code} · {module.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              {matchingModules.length > 1 && (
+                <label className="label">
+                  Module
+                  <select
+                    className="input mt-1 w-full"
+                    required
+                    value={moduleId}
+                    onChange={(event) => setModuleId(event.target.value)}
+                  >
+                    <option value="">Сонгоно уу</option>
+                    {matchingModules.map((module) => (
+                      <option key={module.id} value={module.id}>
+                        {module.code} · {module.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label className="label">
                 Хийцийн хувилбар
                 <select
