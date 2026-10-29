@@ -281,7 +281,7 @@ export function wallCabinetClearance(
     : null;
 }
 export interface PlacementIssue {
-  code: "appliance" | "overlap" | "outside" | "ceiling" | "wall" | "clearance" | "floor" | "opening" | "corner";
+  code: "appliance" | "overlap" | "outside" | "ceiling" | "wall" | "clearance" | "floor" | "opening" | "corner" | "aisle";
   ids: string[];
   message: string;
   severity: "error" | "warning";
@@ -398,6 +398,11 @@ export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
         });
   }
   for (const [index, extra] of (kitchen.extras ?? []).entries()) {
+    if (extra.planningFurniture) {
+      const aisle = { ...extra, width: extra.width + 1800, depth: extra.depth + 1800 };
+      if (kitchen.cabinets.some(c => c.type !== "wall" && cabinetsOverlap(aisle, c)))
+        issues.push({ code: "aisle", ids: [extra.id], message: `${extra.name}: шүүгээ хүртэлх ажлын зай 900 мм-ээс бага байна. Байрлалыг шалгаарай.`, severity: "warning" });
+    }
     for (const obstacle of obstacles) if (cabinetsOverlap(extra, obstacle))
       issues.push({ code: "overlap", ids: [extra.id, obstacle.id], message: obstacle.kind === "door" ? "Тавилга хаалганы нээгдэх зайг хааж байна." : "Тавилга баганатай давхцаж байна.", severity: "error" });
     if (!roomContainsFootprint(kitchen.room, cabinetCorners(extra)))

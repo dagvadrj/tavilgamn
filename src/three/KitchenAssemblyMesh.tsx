@@ -9,6 +9,7 @@ import { useKitchenCatalog } from "@/features/kitchen-planner/hooks/useKitchenCa
 import { KitchenCabinetGLB } from "./KitchenCabinetGLB";
 import { KitchenTops } from "./KitchenTops";
 import { KitchenExtraMesh } from "./KitchenExtraMesh";
+import { KitchenLineLights } from "./KitchenLineLights";
 
 /** Editor and room preview share compatible assets, authored cabinets and fitted surfaces. */
 export function KitchenAssemblyMesh({ kitchen, centered = false, open = false, selectedId, variantModels, materialDefinitions }: {
@@ -34,6 +35,7 @@ export function KitchenAssemblyMesh({ kitchen, centered = false, open = false, s
         variant={cabinet.variantId ? models[cabinet.variantId] : preferredKitchenVariant(moduleCatalog, cabinet)}
         open={Boolean(open && cabinet.id === selectedId)} />
     </group>)}
+    <KitchenLineLights kitchen={kitchen} />
     <KitchenTops kitchen={kitchen} materialDefinitions={materialDefinitions}
       catalogApplianceIds={kitchen.cabinets.filter(c => { const v = c.variantId ? models[c.variantId] : preferredKitchenVariant(moduleCatalog, c); return kitchenVariantFits(v, c); }).map(c => c.id)} />
     {(kitchen.extras ?? []).map((extra) => <group key={extra.id} name={`Extra-${extra.id}`}

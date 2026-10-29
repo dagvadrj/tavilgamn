@@ -12,6 +12,12 @@ export type GlbInspection = {
   assetRole?: "furniture" | "kitchen-part" | "kitchen-assembly";
 };
 export class GlbStandardError extends Error {}
+/** Only unambiguous names can be used to address assembly anchors. */
+export function uniqueGlbNodeNames(names: readonly string[] = []): string[] {
+  const counts = new Map<string, number>();
+  for (const name of names) counts.set(name, (counts.get(name) ?? 0) + 1);
+  return [...counts].flatMap(([name, count]) => count === 1 ? [name] : []);
+}
 type Accessor = { min?: number[]; max?: number[]; type: string; count: number; componentType: number; bufferView?: number; byteOffset?: number; sparse?: unknown };
 type Node = { name?: string; mesh?: number; children?: number[]; matrix?: number[]; translation?: number[]; rotation?: number[]; scale?: number[] };
 type Gltf = {
@@ -115,8 +121,10 @@ export function inspectGlb(bytes: ArrayBuffer): GlbInspection {
     const names = values.map(value => value.name ?? "");
     if (names.some(name => !/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/.test(name)) || new Set(names).size !== names.length) warnings.push(`${kind} нэрийг ASCII, unique, surface зориулалтаар нэрлэнэ.`);
   }
+  const nodeNames = [...visited].flatMap(index => nodes[index].name ? [nodes[index].name!] : []);
+  if (uniqueGlbNodeNames(nodeNames).length !== nodeNames.length) warnings.push("Дотоод node нэрс давхардсан байна. GLB нэмж болно; эд анги холбох цэгт давхардахгүй нэр сонгоно уу.");
   return { standard: GLB_STANDARD.version, bytes: bytes.byteLength, dimensions: { widthMm: size.x * 1000, heightMm: size.y * 1000, depthMm: size.z * 1000 }, min: bounds.min.toArray(), max: bounds.max.toArray(), meshes: placedMeshes, materials: gltf.materials?.length ?? 0, triangles, transformsApplied: applied, bottomCentered, compressed, warnings,
-    nodeNames: nodes.flatMap(node => node.name ? [node.name] : []) };
+    nodeNames };
 }
 
 export function validateCabinetGlb(report: GlbInspection, expected: GlbDimensions, assetRole: GlbInspection["assetRole"] = "furniture") {
@@ -129,6 +137,5 @@ export function validateCabinetGlb(report: GlbInspection, expected: GlbDimension
   }
   if (assetRole !== "kitchen-part" && !report.bottomCentered) errors.push("Origin доод төвд биш. Blender дээр origin/geometry-г засна уу.");
   if (assetRole === "furniture" && !report.transformsApplied) errors.push("Node transform applied биш. Rotation, scale, translation-ийг mesh vertex-д bake хийнэ үү.");
-  if (assetRole !== "furniture" && report.nodeNames && new Set(report.nodeNames).size !== report.nodeNames.length) errors.push("Эд анги холбох GLB node нэрүүд давхардахгүй байна.");
   return errors;
 }

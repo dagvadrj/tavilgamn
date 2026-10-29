@@ -1,13 +1,26 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadSource } = require('./helpers/load-source.cjs');
-const { inspectGlb, validateCabinetGlb } = loadSource('src/lib/glbStandard.ts');
+const { inspectGlb, validateCabinetGlb, uniqueGlbNodeNames } = loadSource('src/lib/glbStandard.ts');
 const { cabinetModuleCode, cabinetVariantCode } = loadSource('src/lib/cabinetCodes.ts');
 const { fixture } = require('./helpers/glb-fixture.cjs');
 test('reads real vertices rather than trusting accessor metadata, in meters with bottom origin', () => {
   const report = inspectGlb(fixture());
   assert.ok(Math.abs(report.dimensions.widthMm-700)<.001); assert.equal(report.bottomCentered,true); assert.equal(report.transformsApplied,true);
   assert.deepEqual(validateCabinetGlb(report,{widthMm:700,heightMm:840,depthMm:600}),[]);
+});
+
+test('imported duplicate node names warn without blocking parts or assemblies; anchors use active unique names', () => {
+  const report = inspectGlb(fixture(d => {
+    d.nodes[0].name = '3DGeom'; d.nodes[0].children = [1, 2, 3];
+    d.nodes.push({name:'3DGeom'}, {name:'Assembly'}, {name:'door_socket'}, {name:'door_socket'});
+  }));
+  assert.deepEqual(report.nodeNames, ['3DGeom', '3DGeom', 'Assembly', 'door_socket']);
+  assert.deepEqual(uniqueGlbNodeNames(report.nodeNames), ['Assembly', 'door_socket']);
+  assert.ok(report.warnings.some(warning => warning.includes('node')));
+  for (const role of ['furniture', 'kitchen-part', 'kitchen-assembly']) {
+    assert.deepEqual(validateCabinetGlb(report, {widthMm:700,heightMm:840,depthMm:600}, role), []);
+  }
 });
 test('rejects truncation, invalid headers, external textures, animation, sparse and NaN positions', () => {
   assert.throws(()=>inspectGlb(fixture().slice(0,24)));

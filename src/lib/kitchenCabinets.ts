@@ -74,6 +74,7 @@ export interface ModularKitchen {
   backsplashMaterialId?: string;
   countertopLayout?: { mode: "manual"; panels: Countertop[] };
   cornerPlan?: import("./kitchenCornerGeometry").KitchenCornerPlan;
+  lineLighting?: import("./kitchenLighting").KitchenLineLighting;
 
   backsplashSettings?: { mode: "full-run" | "manual"; panels: { id: string; width: number; height: number; thickness: number; position: CabinetPose }[] };
 }

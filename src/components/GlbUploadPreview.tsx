@@ -20,6 +20,7 @@ import { createModelLoader } from "@/three/modelLoader";
 import {
   GLB_STANDARD,
   inspectGlb,
+  uniqueGlbNodeNames,
   validateCabinetGlb,
   type GlbDimensions,
   type GlbInspection,
@@ -211,6 +212,7 @@ export default function GlbUploadPreview({
       )
     : [];
   const valid = Boolean(validResult && !issues.length);
+  const anchorNames = uniqueGlbNodeNames(validResult?.report.nodeNames);
   useEffect(() => {
     callback.current(
       validResult && valid && confirmed
@@ -266,11 +268,15 @@ export default function GlbUploadPreview({
             </p>
           )}
           {assetRole !== "furniture" && (
-            <p className="text-xs">
-              Холбох node:{" "}
-              {validResult.report.nodeNames?.join(", ") ||
-                "Нэртэй node байхгүй. Байрлалыг мм-ээр тохируулж болно."}
-            </p>
+            <details className="text-xs">
+              <summary className="cursor-pointer">
+                Холбох боломжтой node ({anchorNames.length})
+              </summary>
+              <p className="mt-1 max-h-32 overflow-y-auto break-words">
+                {anchorNames.join(", ") ||
+                  "Давхардахгүй нэртэй node байхгүй. Байрлалыг мм-ээр тохируулж болно."}
+              </p>
+            </details>
           )}
           {allowFrontProjection && (
             <label className="block text-xs">
