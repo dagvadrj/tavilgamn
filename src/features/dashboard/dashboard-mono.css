@@ -436,6 +436,222 @@
   padding: 24px;
 }
 
+/* Legacy page headings: title and one line of context; the breadcrumb already names the page. */
+
+.dashboard-layout .dashboard-shell.dashboard-mono :is(.admin-page-heading, .dashboard-page-heading) {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-mono :is(.admin-eyebrow, .dashboard-eyebrow, .admin-heading-icon, .dashboard-heading-icon) {
+  display: none;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-mono :is(.admin-page-heading, .dashboard-page-heading) h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-mono :is(.admin-page-heading, .dashboard-page-heading) p {
+  margin: 4px 0 0;
+  color: var(--dashboard-subtle);
+}
+
+.dashboard-layout .dashboard-mono .admin-order-muted {
+  color: var(--dashboard-muted);
+}
+
+/* Filter toolbars: one row of compact controls instead of full-width stacked fields. */
+
+.dashboard-layout .dashboard-shell.dashboard-mono .admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-mono .dashboard-content .admin-toolbar > :is(.admin-search, select, .input) {
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 160px;
+  min-height: 36px;
+  margin: 0;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-mono .dashboard-content .admin-toolbar > .admin-search {
+  flex: 1 1 260px;
+  max-width: 420px;
+}
+
+.dashboard-layout .dashboard-shell.dashboard-mono .dashboard-content .admin-toolbar > :is(button, .btn-ghost) {
+  min-height: 36px;
+}
+
+/* Orders: compact boxes that expand in place; list rows or a grid of cards. */
+
+.dashboard-layout .dashboard-mono .admin-orders-view {
+  margin-left: auto;
+}
+
+.dashboard-layout .dashboard-mono .admin-orders-view button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dashboard-layout .dashboard-mono .admin-orders-compact {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-layout .dashboard-mono .admin-orders-compact.is-grid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  align-items: start;
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact {
+  min-width: 0;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 10px;
+  background: var(--dashboard-bg);
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact[open] {
+  grid-column: 1 / -1;
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact > summary {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 2fr) minmax(0, 1fr) 92px 160px 120px;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 16px;
+  list-style: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact > summary:hover {
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact > summary > * {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact-id,
+.dashboard-layout .dashboard-mono .admin-order-compact time {
+  color: var(--dashboard-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact-items {
+  font-weight: 500;
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact-buyer {
+  color: var(--dashboard-muted);
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact-total {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-layout .dashboard-mono .admin-orders-compact.is-grid .admin-order-compact:not([open]) > summary {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  padding: 14px 16px;
+}
+
+.dashboard-layout .dashboard-mono .admin-orders-compact.is-grid .admin-order-compact:not([open]) .admin-order-compact-items {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  font-size: 14px;
+}
+
+.dashboard-layout .dashboard-mono .admin-orders-compact.is-grid .admin-order-compact:not([open]) .admin-order-compact-buyer {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.dashboard-layout .dashboard-mono .admin-orders-compact.is-grid .admin-order-compact:not([open]) time {
+  grid-column: 2;
+  grid-row: 1;
+  text-align: right;
+}
+
+.dashboard-layout .dashboard-mono .admin-orders-compact.is-grid .admin-order-compact:not([open]) .overview-status {
+  grid-column: 1;
+  grid-row: 4;
+}
+
+.dashboard-layout .dashboard-mono .admin-orders-compact.is-grid .admin-order-compact:not([open]) .admin-order-compact-total {
+  grid-column: 2;
+  grid-row: 3 / span 2;
+  align-self: end;
+  font-size: 15px;
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact > .admin-order {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--dashboard-border);
+  border-radius: 0 0 10px 10px;
+  background: none;
+  box-shadow: none;
+}
+
+.dashboard-layout .dashboard-mono .admin-order-compact > .admin-order > .admin-order-header {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .dashboard-layout .dashboard-mono .admin-orders-compact.is-list .admin-order-compact > summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 2px 12px;
+    padding: 10px 14px;
+  }
+  .dashboard-layout .dashboard-mono .admin-orders-compact.is-list :is(.admin-order-compact-id, .admin-order-compact time) {
+    display: none;
+  }
+  .dashboard-layout .dashboard-mono .admin-orders-compact.is-list .admin-order-compact-buyer {
+    grid-row: 2;
+    font-size: 12px;
+  }
+  .dashboard-layout .dashboard-mono .admin-orders-compact.is-list .overview-status {
+    grid-row: 2;
+    justify-self: end;
+    font-size: 12px;
+  }
+  .dashboard-layout .dashboard-mono .admin-orders-compact.is-list .admin-order-compact-total {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
 /* Command palette */
 
 .dashboard-layout .dashboard-mono .dashboard-command {

@@ -11,6 +11,8 @@ import {
   CreditCard,
   CalendarDays,
   ArrowUpRight,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { useAuth } from "@/store/auth";
 import { authFetch } from "@/lib/authFetch";
@@ -47,9 +49,37 @@ const userStatusTone: Record<OrderStatus, string> = {
 };
 
 const shortOrderId = (id: string) => id.slice(0, 8).toUpperCase();
+const ORDERS_VIEW_KEY = "tavilga:admin:orders-view";
+/** Status by shape: filled = paid, ring = waiting, gray = neutral. */
+const adminStatusTone = (status: OrderStatus) =>
+  status === "pending_payment"
+    ? "pending"
+    : status === "paid" || status === "processing"
+      ? "paid"
+      : status === "cancelled"
+        ? "muted"
+        : "neutral";
 export function OrderHistory({ admin = false }: { admin?: boolean }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
+  const [view, setView] = useState<"list" | "grid">(() => {
+    try {
+      return typeof window !== "undefined" &&
+        window.localStorage.getItem(ORDERS_VIEW_KEY) === "grid"
+        ? "grid"
+        : "list";
+    } catch {
+      return "list";
+    }
+  });
+  const chooseView = (next: "list" | "grid") => {
+    setView(next);
+    try {
+      window.localStorage.setItem(ORDERS_VIEW_KEY, next);
+    } catch {
+      // The choice still applies for this visit.
+    }
+  };
   const userId = useAuth((state) => state.user?.id);
   const [result, setResult] = useState<{
     owner: string;
@@ -129,6 +159,23 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
             <RefreshCw size={15} />
             Шинэчлэх
           </button>
+          <div className="dashboard-segmented admin-orders-view" role="group" aria-label="Харагдах байдал">
+            {(
+              [
+                ["list", "Жагсаалт", List],
+                ["grid", "Grid", LayoutGrid],
+              ] as const
+            ).map(([value, label, Icon]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={view === value}
+                onClick={() => chooseView(value)}
+              >
+                <Icon size={14} aria-hidden="true" /> {label}
+              </button>
+            ))}
+          </div>
         </div>
         {error && (
           <p role="alert" className="admin-error">
@@ -157,9 +204,34 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
                   <p>Хайх үг, төлөв эсвэл хуудсаа өөрчилж үзээрэй.</p>
                 </div>
               ) : (
-                <div className="admin-orders-grid">
+                <div className={`admin-orders-compact is-${view}`}>
                   {visible.map((order) => (
-                    <article key={order.id} className="admin-order">
+                    <details key={order.id} className="admin-order-compact">
+                      <summary>
+                        <span className="admin-order-compact-id">
+                          #{shortOrderId(order.id)}
+                        </span>
+                        <span className="admin-order-compact-items">
+                          {order.items[0]?.name ?? "—"}
+                          {order.items.length > 1 && ` +${order.items.length - 1}`}
+                        </span>
+                        <span className="admin-order-compact-buyer">
+                          {order.delivery.name}
+                        </span>
+                        <time dateTime={order.created_at}>
+                          {formatDateTime(order.created_at).slice(0, 10)}
+                        </time>
+                        <span
+                          className="overview-status"
+                          data-tone={adminStatusTone(order.status)}
+                        >
+                          <i aria-hidden="true" /> {ORDER_STATUS_LABEL[order.status]}
+                        </span>
+                        <strong className="admin-order-compact-total">
+                          {formatPrice(order.total)}
+                        </strong>
+                      </summary>
+                    <article className="admin-order">
                       <header className="admin-order-header">
                         <div>
                           <p className="admin-order-id">Захиалга #{order.id}</p>
@@ -198,7 +270,7 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
                             </h4>
                             <p className="font-medium">{order.delivery.name}</p>
                             <p>{order.delivery.phone}</p>
-                            <p className="text-white">
+                            <p className="admin-order-muted">
                               {order.delivery.address}
                             </p>
                           </div>
@@ -216,7 +288,7 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
                                   <p className="font-medium">
                                     {item.name} × {item.qty}
                                   </p>
-                                  <p className="text-xs text-white">
+                                  <p className="admin-order-muted text-xs">
                                     {item.colorName} · {item.materialName}
                                   </p>
                                 </li>
@@ -267,6 +339,7 @@ export function OrderHistory({ admin = false }: { admin?: boolean }) {
                         />
                       </div>
                     </article>
+                    </details>
                   ))}
                 </div>
               )}
