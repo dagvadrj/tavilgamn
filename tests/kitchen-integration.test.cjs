@@ -530,7 +530,7 @@ test("kitchen admin upload pins the correct category and protects its R2 handoff
   assert.match(completeRoute, /validateCabinetGlb/);
   assert.match(component, /GlbUploadPreview/);
   assert.doesNotMatch(completeRoute, /glb_path: sourcePath/);
-  assert.match(component, /Боловсруулалт дууссаны дараа/);
+  assert.match(component, /Боловсруулалт дуусмагц/);
   const catalog = fs.readFileSync(
     "src/lib/kitchenModuleCatalogServer.ts",
     "utf8",

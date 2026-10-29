@@ -257,8 +257,10 @@ test("admin upload shows only fields for the selected kitchen group", () => {
   const initial = renderToStaticMarkup(
     visible(AdminKitchenModules({ owner: "admin" })),
   );
-  assert.match(initial, /Шүүгээний төрөл/);
+  // Cabinets start from the GLB file; the module is matched from its size.
+  assert.match(initial, /GLB файл/);
   assert.doesNotMatch(initial, /Суурилуулах хэлбэр/);
+  assert.doesNotMatch(initial, /Тохирох module/);
   drafts.set("group", "appliances");
   drafts.set("assetType", "fridge");
   drafts.set("uploadPartKind", "appliance");
