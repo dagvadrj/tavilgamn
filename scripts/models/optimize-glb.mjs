@@ -339,7 +339,7 @@ async function main() {
           "utf8",
         ),
       );
-      if (!validation.delivery?.passed || !validation.preservedGeometry) {
+      if (!validation.delivery?.passed || !(validation.preservedGeometry || validation.bakedSurface)) {
         throw new Error(`${file}: delivery geometry validation has not passed`);
       }
     }
@@ -377,7 +377,7 @@ async function main() {
           "utf8",
         ),
       );
-      if (!validation.delivery?.passed || !validation.preservedGeometry) {
+      if (!validation.delivery?.passed || !(validation.preservedGeometry || validation.bakedSurface)) {
         throw new Error(`${file}: delivery geometry validation has not passed`);
       }
     }

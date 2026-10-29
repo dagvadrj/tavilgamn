@@ -40,7 +40,7 @@ test("single delivery publish clears the old preview reference", async () => {
 
 test("sofa cleanup is never selected for other furniture or kitchen assemblies", async () => {
   const { geometryProfileForModel } = await policy();
-  assert.equal(geometryProfileForModel({ category: "sofa" }), "sofa-surface");
+  assert.equal(geometryProfileForModel({ category: "sofa" }), "bake-surface");
   for (const category of ["kitchen-cabinet", "bed", "table", undefined])
     assert.equal(geometryProfileForModel({ category }), "preserve");
   for (const assetRole of ["kitchen-part", "kitchen-assembly"])

@@ -1,7 +1,7 @@
 import { parseArgs } from "node:util";
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { readFile, readdir, mkdir, writeFile } from "node:fs/promises";
+import { readFile, readdir, mkdir, rm, writeFile } from "node:fs/promises";
 import { readGlb } from "./optimize-glb.mjs";
 import { sofaSurfaceEligibility } from "./delivery-policy.mjs";
 import path from "node:path";
@@ -24,8 +24,8 @@ if (!values.input || !values.output)
   throw new Error(
     "Use npm run models:pipeline -- --input source-folder --output new-output-folder",
   );
-if (!["preserve", "sofa-surface"].includes(values["geometry-profile"]))
-  throw new Error("geometry-profile must be preserve or sofa-surface");
+if (!["preserve", "sofa-surface", "bake-surface"].includes(values["geometry-profile"]))
+  throw new Error("geometry-profile must be preserve, sofa-surface or bake-surface");
 const windowsBlender = ["5.2", "5.0"].map(version =>
   `C:/Program Files/Blender Foundation/Blender ${version}/blender.exe`).find(existsSync);
 const blender =
@@ -72,7 +72,28 @@ try {
     preserveReason = sofaSurfaceEligibility(readGlb(await readFile(path.join(source, inputs[0]))));
     if (preserveReason) profile = "preserve";
   }
-  await run(blender, [
+  // bake-surface: low-poly (~6k) + baked color/normal/roughness. Eligibility
+  // эсвэл quality gate унавал geometry-г хадгалах preserve урсгал руу буцна.
+  let baked = false;
+  if (profile === "bake-surface") {
+    if (inputs.length !== 1) throw new Error("bake-surface processes exactly one source per job");
+    preserveReason = sofaSurfaceEligibility(readGlb(await readFile(path.join(source, inputs[0]))));
+    if (!preserveReason) {
+      try {
+        await run(blender, ["--background", "--factory-startup", "--python-exit-code", "1", "--python",
+          path.join(root, "scripts/models/glb_bake_compress.py"), "--",
+          "--input", path.join(source, inputs[0]),
+          "--output", path.join(output, "geometry"),
+          "--worker", "--normal-size", "1024"]);
+        baked = true;
+      } catch (error) {
+        preserveReason = `bake-surface failed: ${error.message}`;
+        await rm(path.join(output, "geometry"), { recursive: true, force: true });
+      }
+    }
+    if (!baked) profile = "preserve";
+  }
+  if (!baked) await run(blender, [
     "--background",
     "--python-exit-code",
     "1",
