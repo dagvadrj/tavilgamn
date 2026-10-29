@@ -1,6 +1,3 @@
-"use client";
-
-import { RemotePage } from "@/components/RemotePage";
 import type { PageData } from "@/lib/pageData";
 import { PlannerLink as Link } from "@/components/PlannerLink";
 import {
@@ -36,14 +33,6 @@ const layoutLabels: Record<string, string> = {
   u: "U хэлбэр",
   island: "Аралтай",
 };
-
-export function KitchenPageClient({ slug }: { slug: string }) {
-  return (
-    <RemotePage page="kitchen" id={slug} variant="detail">
-      {(data) => <KitchenContent {...data} />}
-    </RemotePage>
-  );
-}
 
 export function KitchenContent({ design }: PageData["kitchen"]) {
   const preferred = kitchenGalleryMedia(design.media)[0];
