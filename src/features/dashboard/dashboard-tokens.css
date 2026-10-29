@@ -45,6 +45,7 @@
   --glass-panel: linear-gradient(140deg, #ffffffb8, #ffffff4d 58%, #ffffff80), var(--dashboard-surface);
   --glass-control: linear-gradient(145deg, #ffffffd1, #ffffff8c);
   --glass-field: #ffffffe0;
+  --glass-chrome: linear-gradient(160deg, #ffffff99, #ffffff40 60%, #ffffff66);
   --glass-chart: #075eaa;
   --glass-glow: #80baff;
   color-scheme: light;
@@ -81,6 +82,7 @@
   --glass-panel: linear-gradient(135deg, #b7d9ff12, #ffffff02 48%, #8cbaff08), var(--dashboard-surface);
   --glass-control: linear-gradient(145deg, #b7d9ff16, #ffffff04);
   --glass-field: #070f2066;
+  --glass-chrome: linear-gradient(160deg, #b7d9ff14, #0a152933 60%, #8cbaff0d);
   --glass-chart: #80baff;
   color-scheme: dark;
 }
@@ -91,6 +93,7 @@
     --glass-panel: var(--dashboard-surface);
     --glass-control: var(--dashboard-elevated);
     --glass-field: var(--dashboard-surface);
+    --glass-chrome: var(--dashboard-surface);
   }
   :root[data-dashboard-theme="dark"] .dashboard-layout {
     --dashboard-surface: #17263b;
