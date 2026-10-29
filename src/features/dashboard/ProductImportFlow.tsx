@@ -56,8 +56,10 @@ export function ProductImportFlow({
   const [summary, setSummary] = useState<Summary | null>(null);
   const [dirty, setDirty] = useState(false);
   const requestId = useRef(crypto.randomUUID());
-  // One stable ID per chunk, so retrying after a network error never imports twice.
-  const chunkIds = useRef<string[]>([]);
+  // Stable ID per set of rows: a retry after a lost response replays instead of
+  // importing twice, and an edited retry is refused by the server, not duplicated.
+  const chunkIds = useRef(new Map<string, string>());
+  const saved = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const existing = useMemo(
     () => new Set(existingNames.map(normalizeProductName)),
@@ -163,7 +165,8 @@ export function ProductImportFlow({
     setFilter("all");
     setDirty(false);
     requestId.current = crypto.randomUUID();
-    chunkIds.current = [];
+    chunkIds.current.clear();
+    saved.current = 0;
   }
   function choose(file: File | undefined) {
     if (!file) return;
@@ -186,7 +189,6 @@ export function ProductImportFlow({
   }
   const edit = (rowNo: number, key: keyof ImportPreviewRow["values"], value: string) => {
     setDirty(true);
-    chunkIds.current = [];
     setRows((current) =>
       current?.map((row) =>
         row.row === rowNo
@@ -208,18 +210,25 @@ export function ProductImportFlow({
     run("commit", async () => {
       if (dirty) throw new Error("Засварласан мөрүүдийг эхлээд «Дахин шалгах» товчоор шалгана уу.");
       if (storePicker && !storeId) throw new Error("Аль дэлгүүрийн нэрийн өмнөөс оруулахаа сонгоно уу.");
-      let added = 0;
-      for (let index = 0; index * IMPORT_CHUNK < ready.length; index++) {
-        setBusy(`commit:${index * IMPORT_CHUNK}`);
-        chunkIds.current[index] ??= crypto.randomUUID();
-        const chunk = ready.slice(index * IMPORT_CHUNK, (index + 1) * IMPORT_CHUNK);
+      for (let start = 0; start < ready.length; start += IMPORT_CHUNK) {
+        setBusy(`commit:${start}`);
+        const chunk = ready.slice(start, start + IMPORT_CHUNK);
+        const key = chunk.map((row) => row.row).join(",");
+        if (!chunkIds.current.has(key)) chunkIds.current.set(key, crypto.randomUUID());
         const result = (await (
-          await send(payload("commit", chunk, chunkIds.current[index]), true)
+          await send(payload("commit", chunk, chunkIds.current.get(key)), true)
         ).json()) as ImportCommitResult;
-        added += result.count;
+        saved.current += result.count;
+        // Saved rows leave the review, so a later retry only sends what is left.
+        const done = new Set(chunk.map((row) => row.row));
+        setRows((current) => current?.filter((row) => !done.has(row.row)) ?? null);
+        onImported();
       }
-      setSummary({ added, skipped: view!.length - ready.length - errorCount, failed: errorCount });
-      onImported();
+      setSummary({
+        added: saved.current,
+        skipped: view!.length - ready.length - errorCount,
+        failed: errorCount,
+      });
     });
 
   if (summary)
