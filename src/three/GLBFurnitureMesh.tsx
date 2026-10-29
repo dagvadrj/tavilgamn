@@ -101,6 +101,10 @@ export interface GLBFurnitureMeshProps {
   cabinetOpening?: "doors" | "drawers";
   /** Admin corrections to the automatically detected fronts. */
   frontMotion?: KitchenFrontMotionMap | null;
+  /** Manual door thickness from the front face (mm); automatic when unset. */
+  frontSlabMm?: number | null;
+  /** Manual handle projection beyond the front face (mm). */
+  frontHandleMm?: number | null;
   /** Reports the detected fronts once the model is shown (admin preview). */
   onFrontsDetected?: (fronts: KitchenDetectedFront[]) => void;
   cabinetAdaptation?: "sink" | "hob" | "oven" | "hood";
@@ -173,6 +177,8 @@ export function GLBFurnitureMesh({
   openAnimation,
   cabinetOpening,
   frontMotion,
+  frontSlabMm,
+  frontHandleMm,
   onFrontsDetected,
   cabinetAdaptation,
 }: GLBFurnitureMeshProps) {
@@ -231,6 +237,8 @@ export function GLBFurnitureMesh({
       preserveHierarchy,
       cabinetOpening,
       frontMotion,
+      frontSlabMm,
+      frontHandleMm,
       cabinetAdaptation,
       enabled,
       base,
@@ -257,6 +265,8 @@ export function GLBFurnitureMesh({
       preserveHierarchy,
       cabinetOpening,
       frontMotion,
+      frontSlabMm,
+      frontHandleMm,
       cabinetAdaptation,
       enabled,
       base,
@@ -286,6 +296,8 @@ export function GLBFurnitureMesh({
       preserveHierarchy,
       cabinetOpening,
       frontMotion,
+      frontSlabMm,
+      frontHandleMm,
       cabinetAdaptation,
       enabled,
       base,
@@ -435,7 +447,7 @@ export function GLBFurnitureMesh({
         if (front || carcass) prepareKitchenTextureCoordinates(cloned.scene);
         configureModelTextureSampling(cloned.scene, gl);
         const motions = cabinetOpening && !cloned.animations?.some(clip => /^(open|opening)$/i.test(clip.name))
-          ? prepareKitchenDoorMotion(cloned.scene, cabinetOpening, frontMotion) : undefined;
+          ? prepareKitchenDoorMotion(cloned.scene, cabinetOpening, frontMotion, frontSlabMm, frontHandleMm) : undefined;
         const next: Display = {
           motions,
           request,

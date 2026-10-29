@@ -85,18 +85,64 @@ export default function AdminKitchenFrontMotion({
   opening,
   value,
   onChange,
+  bands,
+  onBandsChange,
   materials = [],
 }: {
   baseModel: KitchenModelCandidate;
   opening: KitchenOpening;
   value: KitchenFrontMotionMap;
   onChange: (value: KitchenFrontMotionMap) => void;
+  /** mm from the front face; 0 = automatic. */
+  bands: { slabMm: number; handleMm: number };
+  onBandsChange: (value: { slabMm: number; handleMm: number }) => void;
   materials?: KitchenMaterialDefinition[];
 }) {
   const [open, setOpen] = useState(false);
   const [fronts, setFronts] = useState<KitchenDetectedFront[]>([]);
   const [active, setActive] = useState<string | null>(null);
-  const configuration = useMemo(() => ({ frontMotion: value }), [value]);
+  const configuration = useMemo(
+    () => ({
+      frontMotion: value,
+      ...(bands.slabMm ? { frontSlabMm: bands.slabMm } : {}),
+      ...(bands.handleMm ? { frontHandleMm: bands.handleMm } : {}),
+    }),
+    [value, bands],
+  );
+  function bandInput(key: "slabMm" | "handleMm", label: string, min: number) {
+    return (
+      <label className="flex items-center gap-2">
+        {label}
+        <input
+          key={`${key}:${bands[key]}`}
+          type="number"
+          className="input !min-h-8 w-24"
+          min={min}
+          max={100}
+          step={1}
+          placeholder="Автомат"
+          defaultValue={bands[key] || ""}
+          onBlur={(event) => {
+            const mm = Number(event.currentTarget.value);
+            const next =
+              event.currentTarget.value.trim() && mm >= min && mm <= 100
+                ? Math.round(mm)
+                : 0;
+            if (next !== bands[key]) {
+              setActive(null);
+              onBandsChange({ ...bands, [key]: next });
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              event.currentTarget.blur();
+            }
+          }}
+        />
+      </label>
+    );
+  }
   const variant: KitchenCatalogVariant = {
     furnitureModelId: baseModel.id,
     productId: baseModel.productId,
@@ -181,6 +227,14 @@ export default function AdminKitchenFrontMotion({
           </button>
         </span>
       </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-black/5 bg-white px-3 py-2 text-xs">
+        {bandInput("slabMm", "Хаалганы зузаан (мм)", 5)}
+        {bandInput("handleMm", "Бариулын товгор (мм)", 1)}
+        <span className="text-black/45">
+          Нүүрнээс хэмжинэ, хоосон бол автомат. Ж: хаалга −500…−520 бол 20,
+          бариул −520…−525 бол 5.
+        </span>
+      </div>
       <div className="h-80 bg-[#f5f6f7]">
         <Canvas
           key={baseModel.id}
@@ -241,6 +295,7 @@ export default function AdminKitchenFrontMotion({
                       {index + 1}. {frontLabel(front)}
                     </span>
                     <span className="text-black/45">
+                      {front.depthMm} мм ·{" "}
                       {front.handles ? `бариул ${front.handles}` : "бариулгүй"}
                       {front.corrected ? " · зассан" : ""}
                     </span>

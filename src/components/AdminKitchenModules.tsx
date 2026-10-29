@@ -61,8 +61,16 @@ const AdminKitchenFrontMotion = dynamic(
 );
 import {
   parseKitchenFrontMotion,
+  parseKitchenFrontSlab,
   type KitchenFrontMotionMap,
 } from "@/lib/kitchenFrontMotion";
+
+type FrontBands = { slabMm: number; handleMm: number };
+const AUTO_BANDS: FrontBands = { slabMm: 0, handleMm: 0 };
+const frontBands = (configuration: Record<string, unknown>): FrontBands => ({
+  slabMm: parseKitchenFrontSlab(configuration.frontSlabMm) ?? 0,
+  handleMm: parseKitchenFrontSlab(configuration.frontHandleMm, 1) ?? 0,
+});
 import {
   type KitchenCatalogModule,
   type KitchenCatalogVariant,
@@ -306,10 +314,16 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     "frontMotion",
     {},
   );
+  // 0 = automatic; otherwise mm from the front face.
+  const [bands, setBands] = useDraftState<FrontBands>(
+    draftScope,
+    "frontBands",
+    AUTO_BANDS,
+  );
   const [assemblyMode, setAssemblyMode] = useDraftState<"parts" | "authored">(
     draftScope,
     "assemblyMode",
-    "parts",
+    "authored",
   );
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -689,12 +703,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         parseKitchenFrontMotion(linked.variant.configuration.frontMotion)) ||
         {},
     );
+    setBands(linked ? frontBands(linked.variant.configuration) : AUTO_BANDS);
     setAssemblyMode(
       linked?.variant.configuration.assemblyMode === "parts"
         ? "parts"
-        : linked
-          ? "authored"
-          : "parts",
+        : "authored",
     );
     if (linked) {
       setModuleId(linked.module.id);
@@ -884,7 +897,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         setModuleId(uploadedModuleId);
         setAssembly(null);
         setFrontMotion({});
-        setAssemblyMode("parts");
+        setBands(AUTO_BANDS);
+        setAssemblyMode("authored");
         setWorkspace("link");
       } else if (pendingPart) {
         const candidate: KitchenModelCandidate = {
@@ -954,10 +968,13 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                 : assembly?.slots.length
                   ? assembly
                   : null,
-            frontMotion:
-              assemblyMode === "authored" && !assembly?.slots.length
-                ? frontMotion
-                : undefined,
+            ...(assemblyMode === "authored" && !assembly?.slots.length
+              ? {
+                  frontMotion,
+                  frontSlabMm: bands.slabMm || undefined,
+                  frontHandleMm: bands.handleMm || undefined,
+                }
+              : {}),
             assemblyMode,
             sortOrder: 0,
           }),
@@ -975,7 +992,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       setIsDefault(false);
       setAssembly(null);
       setFrontMotion({});
-      setAssemblyMode("parts");
+      setBands(AUTO_BANDS);
+      setAssemblyMode("authored");
       await load();
     } catch (reason) {
       setError(
@@ -1611,11 +1629,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                         )
                       }
                     >
-                      <option value="parts">
-                        Их бие + тусдаа хаалга / шургуулга
-                      </option>
                       <option value="authored">
-                        Бүтэн угсарсан GLB / нарийвчилсан тохиргоо
+                        Хаалгатайгаа нэг GLB · автоматаар танина
+                      </option>
+                      <option value="parts">
+                        Хаалгагүй их бие + тусдаа хаалга / шургуулгын GLB
                       </option>
                     </select>
                   </label>
@@ -1623,7 +1641,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                     Гал тогооны загвар ердийн барааны каталогт орохгүй.{" "}
                     {assemblyMode === "parts"
                       ? `${doorCount} хаалга, ${drawerCount} шургуулгын GLB холбоод угсралтаа шалгана.`
-                      : "GLB дотроо хаалгатай бол давхар эд анги нэмэхгүй."}
+                      : "Хаалга, шургуулга, бариулыг GLB-ээс автоматаар таньж хөдөлгөнө. Буруу танигдсан нүүр дээр дарж засна."}
                   </p>
                 </section>
               )}
@@ -1713,6 +1731,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                       opening={opening}
                       value={frontMotion}
                       onChange={setFrontMotion}
+                      bands={bands}
+                      onBandsChange={setBands}
                       materials={materials}
                     />
                   </div>
@@ -1917,6 +1937,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                                   variant.configuration.frontMotion,
                                 ) ?? {},
                               );
+                              setBands(frontBands(variant.configuration));
                               setAssemblyMode(
                                 variant.configuration.assemblyMode === "parts"
                                   ? "parts"

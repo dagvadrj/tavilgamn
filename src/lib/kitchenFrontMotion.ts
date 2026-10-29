@@ -17,6 +17,18 @@ export const KITCHEN_FRONT_KIND_LABELS: Record<KitchenFrontKind, string> = {
   fixed: "Хөдөлгөөнгүй",
 };
 
+/**
+ * Manual depth bands in mm, measured from the front face: door thickness
+ * backwards (5–100) or handle projection forwards (1–100).
+ */
+export function parseKitchenFrontSlab(
+  value: unknown,
+  min = 5,
+): number | null {
+  const mm = Number(value);
+  return Number.isFinite(mm) && mm >= min && mm <= 100 ? Math.round(mm) : null;
+}
+
 export function parseKitchenFrontMotion(
   value: unknown,
 ): KitchenFrontMotionMap | null {
