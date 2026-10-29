@@ -278,6 +278,9 @@ export function cabinetSetupProblem(
       !(slot.kind === "drawer-front" && model.partKind === "drawer")
     )
       return `${slot.label}: тохирох төрлийн GLB сонгоно уу.`;
+    // A whole cabinet uploaded as a door would swing the entire cabinet open.
+    if (["door", "drawer-front"].includes(slot.kind) && model.depthMm > 80)
+      return `${slot.label}: GLB ${model.depthMm} мм зузаан, бүтэн шүүгээ шиг байна. Шүүгээ хаалгатайгаа нэг GLB бол «Хаалгатайгаа нэг GLB» горимыг сонгоно уу.`;
   }
   return null;
 }

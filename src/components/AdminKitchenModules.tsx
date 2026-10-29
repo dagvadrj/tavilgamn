@@ -309,7 +309,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   const [assemblyMode, setAssemblyMode] = useDraftState<"parts" | "authored">(
     draftScope,
     "assemblyMode",
-    "parts",
+    "authored",
   );
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -692,9 +692,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     setAssemblyMode(
       linked?.variant.configuration.assemblyMode === "parts"
         ? "parts"
-        : linked
-          ? "authored"
-          : "parts",
+        : "authored",
     );
     if (linked) {
       setModuleId(linked.module.id);
@@ -884,7 +882,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         setModuleId(uploadedModuleId);
         setAssembly(null);
         setFrontMotion({});
-        setAssemblyMode("parts");
+        setAssemblyMode("authored");
         setWorkspace("link");
       } else if (pendingPart) {
         const candidate: KitchenModelCandidate = {
@@ -975,7 +973,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       setIsDefault(false);
       setAssembly(null);
       setFrontMotion({});
-      setAssemblyMode("parts");
+      setAssemblyMode("authored");
       await load();
     } catch (reason) {
       setError(
@@ -1611,11 +1609,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                         )
                       }
                     >
-                      <option value="parts">
-                        Их бие + тусдаа хаалга / шургуулга
-                      </option>
                       <option value="authored">
-                        Бүтэн угсарсан GLB / нарийвчилсан тохиргоо
+                        Хаалгатайгаа нэг GLB · автоматаар танина
+                      </option>
+                      <option value="parts">
+                        Хаалгагүй их бие + тусдаа хаалга / шургуулгын GLB
                       </option>
                     </select>
                   </label>
@@ -1623,7 +1621,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                     Гал тогооны загвар ердийн барааны каталогт орохгүй.{" "}
                     {assemblyMode === "parts"
                       ? `${doorCount} хаалга, ${drawerCount} шургуулгын GLB холбоод угсралтаа шалгана.`
-                      : "GLB дотроо хаалгатай бол давхар эд анги нэмэхгүй."}
+                      : "Хаалга, шургуулга, бариулыг GLB-ээс автоматаар таньж хөдөлгөнө. Буруу танигдсан нүүр дээр дарж засна."}
                   </p>
                 </section>
               )}
