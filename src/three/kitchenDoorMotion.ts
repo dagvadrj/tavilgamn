@@ -1,5 +1,4 @@
 import { Box3, Group, Mesh, Vector3 } from "three";
-import { kitchenSurfaceClassifier } from "./kitchenSurfaceClassification";
 import type { KitchenPartMotion } from "./kitchenGlbComposition";
 import type {
   KitchenFrontKind,
@@ -13,26 +12,30 @@ export type KitchenDetectedFront = KitchenPartMotion & {
   hinge?: KitchenHingeSide;
   handles: number;
   corrected: boolean;
+  /** Leaf thickness front to back, for checking a manual slab depth. */
+  depthMm: number;
 };
 
 const HANDLE_NAME = /handle|knob|pull|бариул/i;
 
 /**
- * Finds doors, drawer fronts and their handles in a fully assembled GLB from
- * geometry alone, then adds pivots. Origins are never used: pivots come from
- * each front's bounds. The cached source model stays untouched.
+ * Finds door leaves, drawer fronts and their handles in a fully assembled GLB
+ * from geometry alone, then adds pivots. A leaf may be built from many meshes
+ * (rails, stiles, glass); touching pieces in the front slab are merged into one.
+ * Origins are never used: pivots come from each leaf's bounds. The cached
+ * source model stays untouched.
  */
 export function prepareKitchenDoorMotion(
   root: Group,
   opening: "doors" | "drawers",
   overrides?: KitchenFrontMotionMap | null,
+  slabMm?: number | null,
+  handleMm?: number | null,
 ): KitchenDetectedFront[] {
   root.updateWorldMatrix(true, true);
   const inverse = root.matrixWorld.clone().invert();
-  const classify = kitchenSurfaceClassifier(root);
   const bounds = new Map<Mesh, Box3>();
   const keys = new Map<Mesh, string>();
-  const fronts: Mesh[] = [];
   let index = 0;
   root.traverse((object) => {
     if (!(object instanceof Mesh)) return;
@@ -47,59 +50,110 @@ export function prepareKitchenDoorMotion(
         .clone()
         .applyMatrix4(inverse.clone().multiply(object.matrixWorld)),
     );
-    const material = Array.isArray(object.material)
-      ? object.material[0]
-      : object.material;
-    if (classify(object, material) === "front") fronts.push(object);
   });
-  if (!fronts.length) return [];
+  if (!bounds.size) return [];
   const cabinet = new Box3();
   bounds.forEach((box) => cabinet.union(box));
   const centre = cabinet.getCenter(new Vector3());
   const size = cabinet.getSize(new Vector3());
-
-  // A handle is named as one, or is a small part standing proud of a front.
-  const handles = new Map<Mesh, Mesh[]>();
+  const sizes = new Map(
+    [...bounds].map(([mesh, box]) => [mesh, box.getSize(new Vector3())]),
+  );
+  // The front face is the furthest-forward surface of any part covering at
+  // least 2% of the cabinet front (frame rails count, handle bars do not).
+  let faceZ = -Infinity;
   for (const [mesh, box] of bounds) {
-    if (fronts.includes(mesh)) continue;
-    const part = box.getSize(new Vector3());
-    const at = box.getCenter(new Vector3());
+    const part = sizes.get(mesh)!;
+    if (part.x * part.y >= size.x * size.y * 0.02)
+      faceZ = Math.max(faceZ, box.max.z);
+  }
+  if (!Number.isFinite(faceZ)) faceZ = cabinet.max.z;
+
+  const handleMeshes: Mesh[] = [];
+  const pieces: Mesh[] = [];
+  for (const [mesh, box] of bounds) {
+    const part = sizes.get(mesh)!;
     const name = `${mesh.name} ${(Array.isArray(mesh.material) ? mesh.material : [mesh.material]).map((m) => m.name).join(" ")}`;
-    const named = HANDLE_NAME.test(name);
-    if (!named && (part.x > 0.6 || part.y > 0.6 || part.z > 0.08)) continue;
-    const owner = fronts
-      .filter((front) => {
-        const face = bounds.get(front)!;
-        const proud = box.max.z - face.max.z;
-        return (
-          at.x >= face.min.x - 0.03 &&
-          at.x <= face.max.x + 0.03 &&
-          at.y >= face.min.y - 0.03 &&
-          at.y <= face.max.y + 0.03 &&
-          (named
-            ? at.z >= face.min.z - 0.03
-            : proud >= 0.003 && proud <= 0.08 && box.min.z >= face.min.z)
-        );
-      })
-      .sort(
-        (a, b) =>
-          bounds.get(a)!.distanceToPoint(at) -
-          bounds.get(b)!.distanceToPoint(at),
-      )[0];
+    const small = part.x <= 0.6 && part.y <= 0.6 && part.z <= 0.08;
+    const proud = box.max.z - faceZ;
+    if (
+      handleMm
+        ? proud > 0.0005 && proud <= handleMm / 1000 + 0.001
+        : (HANDLE_NAME.test(name) || (small && proud > 0.004)) &&
+          box.min.z >= faceZ - 0.05
+    )
+      handleMeshes.push(mesh);
+    else if (
+      slabMm
+        ? box.min.z >= faceZ - slabMm / 1000 - 0.001 &&
+          box.max.z >= faceZ - slabMm / 1000
+        : part.z <= 0.06 && box.max.z >= faceZ - 0.03
+    )
+      pieces.push(mesh);
+  }
+
+  // Merge pieces that touch side by side within the same depth band.
+  const parent = pieces.map((_, i) => i);
+  const find = (i: number): number =>
+    parent[i] === i ? i : (parent[i] = find(parent[i]));
+  const gap = 0.0015;
+  for (let a = 0; a < pieces.length; a++)
+    for (let b = a + 1; b < pieces.length; b++) {
+      const p = bounds.get(pieces[a])!,
+        q = bounds.get(pieces[b])!;
+      if (
+        p.min.x <= q.max.x + gap &&
+        q.min.x <= p.max.x + gap &&
+        p.min.y <= q.max.y + gap &&
+        q.min.y <= p.max.y + gap &&
+        p.min.z <= q.max.z + 0.0005 &&
+        q.min.z <= p.max.z + 0.0005
+      )
+        parent[find(a)] = find(b);
+    }
+  const groups = new Map<number, Mesh[]>();
+  pieces.forEach((mesh, i) =>
+    groups.set(find(i), [...(groups.get(find(i)) ?? []), mesh]),
+  );
+  const leaves = [...groups.values()]
+    .map((meshes) => {
+      const box = new Box3();
+      meshes.forEach((mesh) => box.union(bounds.get(mesh)!));
+      return { meshes, box };
+    })
+    .filter(({ box }) => {
+      const leaf = box.getSize(new Vector3());
+      return leaf.x >= size.x * 0.12 && leaf.y >= size.y * 0.12;
+    });
+  if (!leaves.length) return [];
+
+  const handles = new Map<(typeof leaves)[number], Mesh[]>();
+  for (const mesh of handleMeshes) {
+    const at = bounds.get(mesh)!.getCenter(new Vector3());
+    const owner = leaves
+      .filter(
+        ({ box }) =>
+          at.x >= box.min.x - 0.03 &&
+          at.x <= box.max.x + 0.03 &&
+          at.y >= box.min.y - 0.03 &&
+          at.y <= box.max.y + 0.03,
+      )
+      .sort((a, b) => a.box.distanceToPoint(at) - b.box.distanceToPoint(at))[0];
     if (owner) handles.set(owner, [...(handles.get(owner) ?? []), mesh]);
   }
 
   const result: KitchenDetectedFront[] = [];
-  fronts.forEach((front) => {
-    const key = keys.get(front)!;
-    const box = bounds.get(front)!;
+  for (const leaf of leaves) {
+    const { box, meshes } = leaf;
+    const key = meshes
+      .map((mesh) => keys.get(mesh)!)
+      .sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))[0];
     const face = box.getSize(new Vector3());
     const at = box.getCenter(new Vector3());
-    const own = handles.get(front) ?? [];
+    const own = handles.get(leaf) ?? [];
     // Low, wide fronts are drawers; a "doors" variant keeps every front a door.
     const detectedKind: KitchenFrontKind =
-      opening === "drawers" &&
-      (face.y < 0.4 || face.x >= face.y * 1.4)
+      opening === "drawers" && (face.y < 0.4 || face.x >= face.y * 1.4)
         ? "drawer"
         : "door";
     // The hinge sits opposite the handle; without one, beside the cabinet edge.
@@ -116,7 +170,7 @@ export function prepareKitchenDoorMotion(
         ? handleX > at.x
           ? "left"
           : "right"
-        : fronts.length === 1 || at.x < centre.x
+        : leaves.length === 1 || at.x < centre.x
           ? "left"
           : "right";
     const override = overrides?.[key];
@@ -131,7 +185,7 @@ export function prepareKitchenDoorMotion(
       box.min.z,
     );
     root.add(pivot);
-    for (const part of [front, ...own]) {
+    for (const part of [...meshes, ...own]) {
       pivot.attach(part);
       part.userData.kitchenOpeningPart = true;
     }
@@ -142,6 +196,7 @@ export function prepareKitchenDoorMotion(
       hinge,
       handles: own.length,
       corrected: Boolean(override),
+      depthMm: Math.round(face.z * 1000),
       object: pivot,
       motion:
         kind === "drawer"
@@ -151,7 +206,7 @@ export function prepareKitchenDoorMotion(
             : { type: "slide", axis: "z", amount: 0 },
       closedPosition: pivot.position.toArray(),
     });
-  });
+  }
   return result.sort((a, b) => {
     const pa = a.object.position,
       pb = b.object.position;

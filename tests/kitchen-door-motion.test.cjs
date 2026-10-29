@@ -83,3 +83,33 @@ test('admin overrides replace the detected kind and hinge side by mesh key',()=>
  const [fixed]=prepareKitchenDoorMotion(make(),'doors',{[detected.key]:{kind:'fixed'}});
  setKitchenGlbOpen([fixed],1);near(fixed.object.position.z,fixed.closedPosition[2]);assert.equal(fixed.object.rotation.y,0);
 });
+
+test('a framed glass door built from many meshes is one leaf with its handle',()=>{
+ const root=new THREE.Group();
+ box(root,'carcass',[1,.84,.58],[0,.42,0]);
+ const leaf=(x)=>[
+  box(root,'Box.1',[.06,.73,.018],[x-.218,.475,.299]),box(root,'Box.2',[.06,.73,.018],[x+.218,.475,.299]),
+  box(root,'Box.3',[.376,.06,.018],[x,.81,.299]),box(root,'Box.4',[.376,.06,.018],[x,.14,.299]),
+  box(root,'Glass',[.38,.62,.004],[x,.475,.299])];
+ const left=leaf(-.249),right=leaf(.249);
+ box(root,'Cylinder.1',[.012,.15,.03],[-.03,.6,.323]);box(root,'Cylinder.2',[.012,.15,.03],[.03,.6,.323]);
+ const motions=prepareKitchenDoorMotion(root,'doors');
+ assert.equal(motions.length,2);
+ assert.ok(left.every(mesh=>mesh.parent===motions[0].object));assert.ok(right.every(mesh=>mesh.parent===motions[1].object));
+ assert.deepEqual(motions.map(item=>[item.hinge,item.handles]),[['left',1],['right',1]]);
+});
+
+test('manual door and handle depth bands decide what moves',()=>{
+ const make=()=>{const root=new THREE.Group();
+  box(root,'carcass',[.6,.84,.56],[0,.42,0]);
+  // 20 mm door from z .28 to .30, 3 mm handle in front of it, 1 mm trim strip just behind it.
+  const door=box(root,'Plane.1',[.596,.8,.02],[0,.42,.29]);
+  const handle=box(root,'Plane.2',[.02,.3,.003],[-.25,.6,.3015]);
+  const trim=box(root,'Plane.3',[.596,.02,.001],[0,.83,.2745]);
+  return {root,door,handle,trim};};
+ const auto=make(),[a]=prepareKitchenDoorMotion(auto.root,'doors');
+ assert.equal(a.handles,0);
+ const manual=make(),[m]=prepareKitchenDoorMotion(manual.root,'doors',null,20,5);
+ assert.equal(m.handles,1);assert.equal(manual.handle.parent,manual.door.parent);
+ assert.equal(m.hinge,'right');assert.equal(manual.trim.parent,manual.root);assert.equal(m.depthMm,20);
+});

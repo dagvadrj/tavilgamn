@@ -10,7 +10,7 @@ import { getKitchenGlbAssembly, resolveKitchenPartOption, type KitchenGlbAssembl
 import { modelPlacement, modelSizeIssue } from "@/lib/modelPlacement";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import type { KitchenDetectedFront } from "./kitchenDoorMotion";
-import { parseKitchenFrontMotion } from "@/lib/kitchenFrontMotion";
+import { parseKitchenFrontMotion, parseKitchenFrontSlab } from "@/lib/kitchenFrontMotion";
 import {
   acquireModel,
   cloneModel,
@@ -260,6 +260,8 @@ export function KitchenCabinetGLB({ cabinet, variant: candidate, materialDefinit
   const variant = kitchenVariantFits(candidate, cabinet) ? candidate : undefined;
   const assembly = useMemo(() => getKitchenGlbAssembly(variant?.configuration), [variant?.configuration]);
   const frontMotion = useMemo(() => parseKitchenFrontMotion(variant?.configuration.frontMotion), [variant?.configuration]);
+  const frontSlabMm = parseKitchenFrontSlab(variant?.configuration.frontSlabMm);
+  const frontHandleMm = parseKitchenFrontSlab(variant?.configuration.frontHandleMm, 1);
   const frontMaterial = useMemo(() => resolveKitchenPaintMaterial(cabinet.frontMaterialId, materialDefinitions), [cabinet.frontMaterialId, materialDefinitions]);
   const carcassMaterial = useMemo(() => resolveKitchenPaintMaterial(cabinet.carcassMaterialId, materialDefinitions), [cabinet.carcassMaterialId, materialDefinitions]);
   if (cabinet.catalogHousing === 'oven-tower') return <CabinetBody cabinet={cabinet} open={open} materialDefinitions={materialDefinitions} catalogAppliances />;
@@ -280,7 +282,7 @@ export function KitchenCabinetGLB({ cabinet, variant: candidate, materialDefinit
     onError={() => useKitchenAppearanceStatus.getState().fail(cabinet.id)}
     preserveHierarchy preservePhysicalSize strictDimensions frontProjectionMm={variant.frontProjectionMm} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
     cabinetAdaptation={cabinet.catalogAdaptation}
-    open={open} frontMotion={frontMotion} onFrontsDetected={onFrontsDetected} cabinetOpening={cabinet.catalogAdaptation === 'oven' ? undefined : cabinet.catalogAdaptation === 'sink' ? 'doors' : variant.opening === "doors" || variant.opening === "drawers" ? variant.opening : undefined}
+    open={open} frontMotion={frontMotion} frontSlabMm={frontSlabMm} frontHandleMm={frontHandleMm} onFrontsDetected={onFrontsDetected} cabinetOpening={cabinet.catalogAdaptation === 'oven' ? undefined : cabinet.catalogAdaptation === 'sink' ? 'doors' : variant.opening === "doors" || variant.opening === "drawers" ? variant.opening : undefined}
     openAnimation={typeof variant.configuration.openAnimation === "string" ? variant.configuration.openAnimation : undefined} />
   </group>;
 }
