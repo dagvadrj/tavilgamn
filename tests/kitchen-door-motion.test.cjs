@@ -33,9 +33,16 @@ test('existing fronts hinge on their outside edges, handles follow, body and fee
  const restored=new THREE.Box3().setFromObject(root);for(const key of ['min','max'])for(const axis of ['x','y','z'])near(restored[key][axis],closed[key][axis]);
 });
 
+function box(root,name,size,at){const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),new THREE.MeshStandardMaterial());mesh.name=name;mesh.position.fromArray(at);root.add(mesh);return mesh;}
+
 test('drawer fronts slide forward and reopening is reversible without creating replacement geometry',()=>{
- const {root,left}=fixture(),geometry=left.geometry;
+ const root=new THREE.Group();
+ box(root,'carcass',[.6,.84,.58],[0,.42,0]);
+ const left=box(root,'front-a',[.596,.26,.018],[0,.7,.299]);
+ box(root,'front-b',[.596,.26,.018],[0,.42,.299]);
+ const geometry=left.geometry;
  const motions=prepareKitchenDoorMotion(root,'drawers');
+ assert.ok(motions.every(item=>item.kind==='drawer'));
  const z=motions[0].object.position.z;
  setKitchenGlbOpen(motions,.5);assert.ok(motions[0].object.position.z>z);
  setKitchenGlbOpen(motions,0);near(motions[0].object.position.z,z);
@@ -45,4 +52,34 @@ test('drawer fronts slide forward and reopening is reversible without creating r
 test('an indivisible carcass is never animated as if it were a door',()=>{
  const root=new THREE.Group();root.add(new THREE.Mesh(new THREE.BoxGeometry(1,.84,.6),new THREE.MeshStandardMaterial()));
  assert.deepEqual(prepareKitchenDoorMotion(root,'doors'),[]);
+});
+
+test('a mixed cabinet keeps its tall front a door and its low front a drawer',()=>{
+ const root=new THREE.Group();
+ box(root,'carcass',[.6,.84,.58],[0,.42,0]);
+ box(root,'Plane.010',[.596,.18,.018],[0,.74,.299]);
+ box(root,'Plane.011',[.596,.6,.018],[0,.33,.299]);
+ const motions=prepareKitchenDoorMotion(root,'drawers');
+ assert.deepEqual(motions.map(item=>item.kind),['drawer','door']);
+});
+
+test('an unnamed handle near the left edge puts a single door hinge on the right',()=>{
+ const root=new THREE.Group();
+ box(root,'carcass',[.6,.84,.58],[0,.42,0]);
+ const door=box(root,'Plane.001',[.596,.8,.018],[0,.42,.299]);
+ const handle=box(root,'Cylinder.003',[.012,.15,.03],[-.25,.6,.323]);
+ const [front]=prepareKitchenDoorMotion(root,'doors');
+ assert.equal(front.handles,1);assert.equal(handle.parent,door.parent);
+ assert.equal(front.hinge,'right');assert.equal(front.motion.amount,90);
+ near(front.object.position.x,.298);
+});
+
+test('admin overrides replace the detected kind and hinge side by mesh key',()=>{
+ const make=()=>{const root=new THREE.Group();box(root,'carcass',[.6,.84,.58],[0,.42,0]);box(root,'door',[.596,.8,.018],[0,.42,.299]);return root;};
+ const [detected]=prepareKitchenDoorMotion(make(),'doors');
+ assert.equal(detected.hinge,'left');
+ const [right]=prepareKitchenDoorMotion(make(),'doors',{[detected.key]:{kind:'door',hinge:'right'}});
+ assert.equal(right.hinge,'right');assert.ok(right.corrected);
+ const [fixed]=prepareKitchenDoorMotion(make(),'doors',{[detected.key]:{kind:'fixed'}});
+ setKitchenGlbOpen([fixed],1);near(fixed.object.position.z,fixed.closedPosition[2]);assert.equal(fixed.object.rotation.y,0);
 });

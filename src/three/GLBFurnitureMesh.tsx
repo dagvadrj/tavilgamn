@@ -27,7 +27,11 @@ import { reportModelPerformance } from "@/lib/modelPerformance";
 import { registerModelFloorBand } from "./furnitureFloorBand";
 import { modelPlacement, modelSizeIssue } from "@/lib/modelPlacement";
 import { useKitchenOpenAnimation } from "./useKitchenOpenAnimation";
-import { prepareKitchenDoorMotion } from "./kitchenDoorMotion";
+import {
+  prepareKitchenDoorMotion,
+  type KitchenDetectedFront,
+} from "./kitchenDoorMotion";
+import type { KitchenFrontMotionMap } from "@/lib/kitchenFrontMotion";
 import { prepareKitchenApplianceCarcass } from "./kitchenApplianceCarcass";
 import type { KitchenPartMotion } from "./kitchenGlbComposition";
 
@@ -95,6 +99,10 @@ export interface GLBFurnitureMeshProps {
   open?: boolean;
   openAnimation?: string;
   cabinetOpening?: "doors" | "drawers";
+  /** Admin corrections to the automatically detected fronts. */
+  frontMotion?: KitchenFrontMotionMap | null;
+  /** Reports the detected fronts once the model is shown (admin preview). */
+  onFrontsDetected?: (fronts: KitchenDetectedFront[]) => void;
   cabinetAdaptation?: "sink" | "hob" | "oven" | "hood";
 }
 type Display = {
@@ -106,7 +114,7 @@ type Display = {
   requestedAt: number;
   asset: LoadedModel;
   release: () => void;
-  motions?: KitchenPartMotion[];
+  motions?: KitchenPartMotion[] | KitchenDetectedFront[];
 };
 function releaseDisplay(display: Display) {
   const materials = new Set<THREE.Material>();
@@ -164,6 +172,8 @@ export function GLBFurnitureMesh({
   open = false,
   openAnimation,
   cabinetOpening,
+  frontMotion,
+  onFrontsDetected,
   cabinetAdaptation,
 }: GLBFurnitureMeshProps) {
   const { gl } = useThree();
@@ -220,6 +230,7 @@ export function GLBFurnitureMesh({
     () => ({
       preserveHierarchy,
       cabinetOpening,
+      frontMotion,
       cabinetAdaptation,
       enabled,
       base,
@@ -245,6 +256,7 @@ export function GLBFurnitureMesh({
     [
       preserveHierarchy,
       cabinetOpening,
+      frontMotion,
       cabinetAdaptation,
       enabled,
       base,
@@ -273,6 +285,7 @@ export function GLBFurnitureMesh({
     const {
       preserveHierarchy,
       cabinetOpening,
+      frontMotion,
       cabinetAdaptation,
       enabled,
       base,
@@ -422,7 +435,7 @@ export function GLBFurnitureMesh({
         if (front || carcass) prepareKitchenTextureCoordinates(cloned.scene);
         configureModelTextureSampling(cloned.scene, gl);
         const motions = cabinetOpening && !cloned.animations?.some(clip => /^(open|opening)$/i.test(clip.name))
-          ? prepareKitchenDoorMotion(cloned.scene, cabinetOpening) : undefined;
+          ? prepareKitchenDoorMotion(cloned.scene, cabinetOpening, frontMotion) : undefined;
         const next: Display = {
           motions,
           request,
@@ -529,6 +542,16 @@ export function GLBFurnitureMesh({
         : /^(open|opening)$/i.test(animation.name),
     );
   useKitchenOpenAnimation(ready?.asset.scene, openingClip, open, openingClip ? undefined : ready?.motions);
+  const frontsCallback = useRef(onFrontsDetected);
+  frontsCallback.current = onFrontsDetected;
+  const detectedFronts = ready?.motions;
+  useEffect(() => {
+    frontsCallback.current?.(
+      (detectedFronts ?? []).filter(
+        (motion): motion is KitchenDetectedFront => "key" in motion,
+      ),
+    );
+  }, [detectedFronts]);
   const size = ready?.asset.bounds.getSize(new THREE.Vector3());
   const origin = ready?.asset.bounds.getCenter(new THREE.Vector3());
   const valid = size && origin && Math.min(size.x, size.y, size.z) > 1e-9;

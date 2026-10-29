@@ -18,6 +18,11 @@ import {
 } from "@/lib/kitchenGlbAssembly";
 import { toJson } from "@/lib/supabase/json";
 import { normalizeKitchenMaterials } from "@/lib/kitchenMaterials";
+import {
+  KITCHEN_MODULE_FAMILIES,
+  kitchenModuleDefinition,
+  type KitchenModuleFamily,
+} from "@/lib/cabinetCodes";
 
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "private, no-store" };
@@ -234,6 +239,67 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true }, { status: 201, headers });
   } catch (error) {
     return fail(error, "Variant хадгалж чадсангүй.");
+  }
+}
+
+/** Creates (or reuses) a module sized to a measured GLB. */
+export async function PUT(request: NextRequest) {
+  try {
+    const auth = await requireAdmin(request);
+    if (auth.error) return auth.error;
+    const raw = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+    const family = String(raw?.family ?? "") as KitchenModuleFamily;
+    if (!Object.hasOwn(KITCHEN_MODULE_FAMILIES, family))
+      throw new KitchenModuleInputError("Module-ийн төрөл сонгоно уу.");
+    let definition: ReturnType<typeof kitchenModuleDefinition>;
+    try {
+      definition = kitchenModuleDefinition(
+        family,
+        Number(raw?.widthMm),
+        Number(raw?.heightMm),
+        Number(raw?.depthMm),
+      );
+    } catch (reason) {
+      throw new KitchenModuleInputError(
+        reason instanceof Error ? reason.message : "Module хэмжээ буруу байна.",
+      );
+    }
+    const db = getSupabaseAdmin();
+    // Older rows use legacy codes; reuse any module that already has these exact dimensions.
+    const existing = await db
+      .from("kitchen_modules")
+      .select("id,code")
+      .eq("cabinet_type", definition.cabinetType)
+      .eq("width_mm", definition.widthMm)
+      .eq("height_mm", definition.heightMm)
+      .eq("depth_mm", definition.depthMm)
+      .like("code", `${KITCHEN_MODULE_FAMILIES[family].prefix}-%`)
+      .limit(1);
+    if (existing.error) throw existing.error;
+    if (existing.data?.[0]) {
+      await db.from("kitchen_modules").update({ active: true }).eq("id", existing.data[0].id);
+      return NextResponse.json({ ok: true, module: existing.data[0] }, { headers });
+    }
+    const { data, error } = await db
+      .from("kitchen_modules")
+      .upsert(
+        {
+          code: definition.code,
+          name: definition.name,
+          cabinet_type: definition.cabinetType,
+          width_mm: definition.widthMm,
+          height_mm: definition.heightMm,
+          depth_mm: definition.depthMm,
+          active: true,
+        },
+        { onConflict: "code" },
+      )
+      .select("id,code")
+      .single();
+    if (error) throw error;
+    return NextResponse.json({ ok: true, module: data }, { status: 201, headers });
+  } catch (error) {
+    return fail(error, "Module үүсгэж чадсангүй.");
   }
 }
 

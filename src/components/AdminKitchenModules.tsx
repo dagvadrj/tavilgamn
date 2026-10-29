@@ -20,7 +20,11 @@ import {
 import { authFetch } from "@/lib/authFetch";
 import dynamic from "next/dynamic";
 import type { GlbPreviewResult } from "./GlbUploadPreview";
-import { cabinetVariantCode } from "@/lib/cabinetCodes";
+import {
+  cabinetVariantCode,
+  KITCHEN_MODULE_FAMILIES,
+  type KitchenModuleFamily,
+} from "@/lib/cabinetCodes";
 import {
   CABINET_FAMILIES,
   cabinetFamily,
@@ -51,6 +55,14 @@ import {
 const GlbUploadPreview = dynamic(() => import("./GlbUploadPreview"), {
   ssr: false,
 });
+const AdminKitchenFrontMotion = dynamic(
+  () => import("./AdminKitchenFrontMotion"),
+  { ssr: false },
+);
+import {
+  parseKitchenFrontMotion,
+  type KitchenFrontMotionMap,
+} from "@/lib/kitchenFrontMotion";
 import {
   type KitchenCatalogModule,
   type KitchenCatalogVariant,
@@ -241,6 +253,8 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     heightMm: number;
     depthMm: number;
   } | null>(null);
+  const [newModuleFamily, setNewModuleFamily] = useState<KitchenModuleFamily | "">("");
+  const [creatingModule, setCreatingModule] = useState(false);
   const [libraryQuery, setLibraryQuery] = useState("");
   const [libraryGroup, setLibraryGroup] = useState("all");
   const [libraryStatus, setLibraryStatus] = useState("all");
@@ -286,6 +300,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     draftScope,
     "assembly",
     null,
+  );
+  const [frontMotion, setFrontMotion] = useDraftState<KitchenFrontMotionMap>(
+    draftScope,
+    "frontMotion",
+    {},
   );
   const [assemblyMode, setAssemblyMode] = useDraftState<"parts" | "authored">(
     draftScope,
@@ -414,6 +433,49 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   const uploadModule = sizeMatchedModules.find(
     (module) => module.id === uploadModuleId,
   );
+  const guessedModuleFamily: KitchenModuleFamily = !measuredSize
+    ? "base"
+    : measuredSize.heightMm >= 1400
+      ? "tall"
+      : measuredSize.depthMm <= 450
+        ? "wall"
+        : measuredSize.depthMm > 750
+          ? "island"
+          : "base";
+  const moduleFamily = newModuleFamily || guessedModuleFamily;
+
+  async function createMeasuredModule() {
+    if (!measuredSize || creatingModule) return;
+    setCreatingModule(true);
+    setUploadError(null);
+    try {
+      const response = await authFetch(
+        "/api/admin/kitchen-modules",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            family: moduleFamily,
+            widthMm: Math.round(measuredSize.widthMm),
+            heightMm: Math.round(measuredSize.heightMm),
+            depthMm: Math.round(measuredSize.depthMm),
+          }),
+        },
+        owner,
+      );
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.module)
+        throw new Error(data?.error ?? "Module үүсгэж чадсангүй.");
+      await load();
+      setUploadModuleId(data.module.id);
+    } catch (reason) {
+      setUploadError(
+        reason instanceof Error ? reason.message : "Module үүсгэж чадсангүй.",
+      );
+    } finally {
+      setCreatingModule(false);
+    }
+  }
   const upperCabinet = selectedModule?.cabinetType === "wall";
   const setupAssembly = useMemo(
     () =>
@@ -622,6 +684,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
     setAssembly(
       linked ? getKitchenGlbAssembly(linked.variant.configuration) : null,
     );
+    setFrontMotion(
+      (linked &&
+        parseKitchenFrontMotion(linked.variant.configuration.frontMotion)) ||
+        {},
+    );
     setAssemblyMode(
       linked?.variant.configuration.assemblyMode === "parts"
         ? "parts"
@@ -816,6 +883,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
         setModelId(uploadedModelId);
         setModuleId(uploadedModuleId);
         setAssembly(null);
+        setFrontMotion({});
         setAssemblyMode("parts");
         setWorkspace("link");
       } else if (pendingPart) {
@@ -880,7 +948,16 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
             doorCount,
             drawerCount,
             isDefault,
-            assembly: assemblyMode === "parts" ? setupAssembly : assembly,
+            assembly:
+              assemblyMode === "parts"
+                ? setupAssembly
+                : assembly?.slots.length
+                  ? assembly
+                  : null,
+            frontMotion:
+              assemblyMode === "authored" && !assembly?.slots.length
+                ? frontMotion
+                : undefined,
             assemblyMode,
             sortOrder: 0,
           }),
@@ -897,6 +974,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
       setDesignCode("");
       setIsDefault(false);
       setAssembly(null);
+      setFrontMotion({});
       setAssemblyMode("parts");
       await load();
     } catch (reason) {
@@ -1275,12 +1353,45 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                     {uploadModule.depthMm} мм
                   </p>
                 ) : (
-                  <p className="text-sm text-red-600" role="alert">
-                    {Math.round(measuredSize.widthMm)}×
-                    {Math.round(measuredSize.heightMm)}×
-                    {Math.round(measuredSize.depthMm)} мм хэмжээтэй шүүгээний
-                    module олдсонгүй. GLB-ийн хэмжээг шалгана уу.
-                  </p>
+                  <div className="grid gap-2">
+                    <p className="text-sm text-red-600" role="alert">
+                      {Math.round(measuredSize.widthMm)}×
+                      {Math.round(measuredSize.heightMm)}×
+                      {Math.round(measuredSize.depthMm)} мм хэмжээтэй шүүгээний
+                      module бүртгэлгүй байна. Төрлийг сонгоод энэ хэмжээгээр
+                      шинэ module үүсгэнэ үү.
+                    </p>
+                    <div className="flex flex-wrap items-end gap-2">
+                      <label className="label">
+                        Module-ийн төрөл
+                        <select
+                          className="input mt-1"
+                          value={moduleFamily}
+                          onChange={(event) =>
+                            setNewModuleFamily(
+                              event.target.value as KitchenModuleFamily,
+                            )
+                          }
+                        >
+                          {Object.entries(KITCHEN_MODULE_FAMILIES).map(
+                            ([family, spec]) => (
+                              <option key={family} value={family}>
+                                {spec.label} · {spec.range.h.join("–")} мм өндөр
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        disabled={creatingModule}
+                        onClick={() => void createMeasuredModule()}
+                      >
+                        {creatingModule ? "Үүсгэж байна…" : "Module үүсгэх"}
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -1363,6 +1474,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
               file={uploadGlb}
               expected={uploadSize}
               onChange={setPreview}
+              onFix={setUploadGlb}
             />
             <button
               className="btn-primary"
@@ -1592,6 +1704,19 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                   бүтээгдэхүүний хэмжээг шалгана уу.
                 </p>
               )}
+              {selectedModel &&
+                assemblyMode === "authored" &&
+                !assembly?.slots.length && (
+                  <div className="md:col-span-2 xl:col-span-4">
+                    <AdminKitchenFrontMotion
+                      baseModel={selectedModel}
+                      opening={opening}
+                      value={frontMotion}
+                      onChange={setFrontMotion}
+                      materials={materials}
+                    />
+                  </div>
+                )}
               {selectedModel && assemblyMode === "authored" && (
                 <details
                   className="ak-assembly md:col-span-2 xl:col-span-4"
@@ -1786,6 +1911,11 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                               setIsDefault(variant.isDefault);
                               setAssembly(
                                 getKitchenGlbAssembly(variant.configuration),
+                              );
+                              setFrontMotion(
+                                parseKitchenFrontMotion(
+                                  variant.configuration.frontMotion,
+                                ) ?? {},
                               );
                               setAssemblyMode(
                                 variant.configuration.assemblyMode === "parts"

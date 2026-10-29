@@ -9,6 +9,8 @@ import { kitchenVariantFits, type KitchenCatalogVariant } from "@/lib/kitchenMod
 import { getKitchenGlbAssembly, resolveKitchenPartOption, type KitchenGlbAssembly, type KitchenGlbOption } from "@/lib/kitchenGlbAssembly";
 import { modelPlacement, modelSizeIssue } from "@/lib/modelPlacement";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
+import type { KitchenDetectedFront } from "./kitchenDoorMotion";
+import { parseKitchenFrontMotion } from "@/lib/kitchenFrontMotion";
 import {
   acquireModel,
   cloneModel,
@@ -37,6 +39,8 @@ type Props = {
   open?: boolean;
   selected?: boolean;
   materialDefinitions?: Record<string, KitchenMaterialDefinition>;
+  /** Admin preview: receives the fronts detected in a fully assembled GLB. */
+  onFrontsDetected?: (fronts: KitchenDetectedFront[]) => void;
 };
 type AssemblyDisplay = {
   key: string;
@@ -252,16 +256,18 @@ export function MissingKitchenModel({ cabinet, selected }: Props) {
 }
 
 /** Only render the model of the selected product at its catalog dimensions. */
-export function KitchenCabinetGLB({ cabinet, variant: candidate, materialDefinitions, open = false, selected = false }: Props) {
+export function KitchenCabinetGLB({ cabinet, variant: candidate, materialDefinitions, open = false, selected = false, onFrontsDetected }: Props) {
   const variant = kitchenVariantFits(candidate, cabinet) ? candidate : undefined;
   const assembly = useMemo(() => getKitchenGlbAssembly(variant?.configuration), [variant?.configuration]);
+  const frontMotion = useMemo(() => parseKitchenFrontMotion(variant?.configuration.frontMotion), [variant?.configuration]);
   const frontMaterial = useMemo(() => resolveKitchenPaintMaterial(cabinet.frontMaterialId, materialDefinitions), [cabinet.frontMaterialId, materialDefinitions]);
   const carcassMaterial = useMemo(() => resolveKitchenPaintMaterial(cabinet.carcassMaterialId, materialDefinitions), [cabinet.carcassMaterialId, materialDefinitions]);
   if (cabinet.catalogHousing === 'oven-tower') return <CabinetBody cabinet={cabinet} open={open} materialDefinitions={materialDefinitions} catalogAppliances />;
   if (cabinet.catalogHousing === 'fridge-integrated') return <CabinetBody cabinet={{ ...cabinet, opening: 'doors', components: undefined }} open={open} materialDefinitions={materialDefinitions} />;
   if (!variant?.glbFile) return ["hood", "oven", "refrigerator"].includes(cabinet.opening ?? "")
     ? <KitchenCatalogAppliance cabinet={cabinet} /> : <MissingKitchenModel cabinet={cabinet} selected={selected} />;
-  if (assembly) return <AssemblyModel cabinet={cabinet} variant={variant} assembly={assembly} materialDefinitions={materialDefinitions} frontMaterial={frontMaterial} carcassMaterial={carcassMaterial} open={open} selected={selected} />;
+  // An authored GLB without extra parts keeps its own detected door motion.
+  if (assembly?.slots.length) return <AssemblyModel cabinet={cabinet} variant={variant} assembly={assembly} materialDefinitions={materialDefinitions} frontMaterial={frontMaterial} carcassMaterial={carcassMaterial} open={open} selected={selected} />;
   return <group>
     {(cabinet.opening === "hood" || cabinet.catalogAdaptation === "oven") && <KitchenCatalogAppliance cabinet={cabinet} />}
     <GLBFurnitureMesh modelId={variant.furnitureModelId} basePath={`/api/models/files/${variant.furnitureModelId}`}
@@ -274,7 +280,7 @@ export function KitchenCabinetGLB({ cabinet, variant: candidate, materialDefinit
     onError={() => useKitchenAppearanceStatus.getState().fail(cabinet.id)}
     preserveHierarchy preservePhysicalSize strictDimensions frontProjectionMm={variant.frontProjectionMm} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
     cabinetAdaptation={cabinet.catalogAdaptation}
-    open={open} cabinetOpening={cabinet.catalogAdaptation === 'oven' ? undefined : cabinet.catalogAdaptation === 'sink' ? 'doors' : variant.opening === "doors" || variant.opening === "drawers" ? variant.opening : undefined}
+    open={open} frontMotion={frontMotion} onFrontsDetected={onFrontsDetected} cabinetOpening={cabinet.catalogAdaptation === 'oven' ? undefined : cabinet.catalogAdaptation === 'sink' ? 'doors' : variant.opening === "doors" || variant.opening === "drawers" ? variant.opening : undefined}
     openAnimation={typeof variant.configuration.openAnimation === "string" ? variant.configuration.openAnimation : undefined} />
   </group>;
 }

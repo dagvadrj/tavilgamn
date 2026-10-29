@@ -3,6 +3,7 @@ import {
   parseKitchenGlbAssembly,
   type KitchenPartKind,
 } from "./kitchenGlbAssembly";
+import { parseKitchenFrontMotion } from "./kitchenFrontMotion";
 export const KITCHEN_OPENINGS = [
   "doors",
   "drawers",
@@ -253,6 +254,9 @@ export function parseKitchenVariantInput(value: unknown) {
       throw error;
     }
   }
+  const frontMotion = parseKitchenFrontMotion(raw.frontMotion);
+  if (frontMotion && raw.assemblyMode !== "parts")
+    configuration.frontMotion = frontMotion;
   if (raw.assemblyMode === "parts") {
     const assembly = configuration.assembly as
       import("./kitchenGlbAssembly").KitchenGlbAssembly | undefined;

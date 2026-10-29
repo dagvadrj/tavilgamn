@@ -17,6 +17,7 @@ import {
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { createModelLoader } from "@/three/modelLoader";
+import { normalizeGlbOrigin } from "@/lib/glbNormalize";
 import {
   GLB_STANDARD,
   inspectGlb,
@@ -37,6 +38,7 @@ export default function GlbUploadPreview({
   expected,
   onChange,
   onMeasure,
+  onFix,
   allowFrontProjection = false,
   assetRole = "furniture",
 }: {
@@ -44,6 +46,8 @@ export default function GlbUploadPreview({
   expected: GlbDimensions;
   onChange: (value: GlbPreviewResult | null) => void;
   onMeasure?: (size: GlbDimensions) => void;
+  /** Receives an origin/transform-fixed copy of the file. */
+  onFix?: (file: File) => void;
   allowFrontProjection?: boolean;
   assetRole?: GlbInspection["assetRole"];
 }) {
@@ -58,6 +62,8 @@ export default function GlbUploadPreview({
   > | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [fixing, setFixing] = useState(false);
+  const [fixError, setFixError] = useState<string | null>(null);
   const [frontProjectionMm, setFrontProjectionMm] = useState(0);
   useEffect(() => {
     setResult(null);
@@ -213,6 +219,27 @@ export default function GlbUploadPreview({
     : [];
   const valid = Boolean(validResult && !issues.length);
   const anchorNames = uniqueGlbNodeNames(validResult?.report.nodeNames);
+  const fixable = Boolean(
+    onFix &&
+      validResult &&
+      assetRole !== "kitchen-part" &&
+      (!validResult.report.bottomCentered ||
+        (assetRole === "furniture" && !validResult.report.transformsApplied)),
+  );
+  async function fixOrigin() {
+    if (!file || !onFix || fixing) return;
+    setFixing(true);
+    setFixError(null);
+    try {
+      onFix(await normalizeGlbOrigin(file, assetRole === "kitchen-assembly"));
+    } catch (reason) {
+      setFixError(
+        reason instanceof Error ? reason.message : "GLB засаж чадсангүй.",
+      );
+    } finally {
+      setFixing(false);
+    }
+  }
   useEffect(() => {
     callback.current(
       validResult && valid && confirmed
@@ -252,6 +279,27 @@ export default function GlbUploadPreview({
               {issue}
             </p>
           ))}
+          {fixable && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className="btn-secondary"
+                disabled={fixing}
+                onClick={() => void fixOrigin()}
+              >
+                {fixing ? "Засаж байна…" : "Origin, transform-ыг автоматаар засах"}
+              </button>
+              <span className="text-xs text-black/60">
+                Хэмжээ, эргэлтийг өөрчлөхгүй. Зөвхөн доод төв рүү зөөж,
+                transform-ыг vertex-д bake хийнэ.
+              </span>
+            </div>
+          )}
+          {fixError && (
+            <p role="alert" className="text-xs text-red-700">
+              {fixError}
+            </p>
+          )}
           {validResult.report.warnings.map((warning) => (
             <p key={warning} className="text-xs text-black/60">
               {warning}
