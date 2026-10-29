@@ -282,7 +282,7 @@ body:has(.admin-gate) {
     .admin-merchant-commission input
   ) {
   background: var(--dashboard-elevated);
-  border-color: var(--dashboard-border);
+  border-color: var(--dashboard-control-border);
   color: var(--dashboard-ink);
   border-radius: 9px;
 }

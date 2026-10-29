@@ -23,7 +23,7 @@
   min-height: var(--dashboard-control-min-height, var(--merchant-input-height));
   margin: 0;
   padding: 10px 14px;
-  border: 1px solid var(--dashboard-border);
+  border: 1px solid var(--dashboard-control-border);
   border-radius: var(--merchant-input-radius);
   background-color: var(--merchant-input-bg);
   color: var(--dashboard-ink);
@@ -120,7 +120,7 @@
   gap: 8px;
   min-height: var(--merchant-input-height);
   padding: 4px 4px 4px 14px;
-  border: 1px solid var(--dashboard-border);
+  border: 1px solid var(--dashboard-control-border);
   border-radius: var(--merchant-input-radius);
   background: var(--merchant-input-bg);
 }
@@ -179,7 +179,7 @@
   min-width: 0;
   height: var(--merchant-input-height);
   padding: 8px;
-  border: 1px solid var(--dashboard-border);
+  border: 1px solid var(--dashboard-control-border);
   border-radius: var(--merchant-input-radius);
   background: var(--merchant-input-bg);
   cursor: pointer;

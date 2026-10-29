@@ -2,12 +2,12 @@
 
 .dashboard-layout,
 .dashboard-nav-tooltip {
-  --dashboard-bg: #f5f7fb;
-  --dashboard-surface: #ffffff9c;
+  --dashboard-bg: #dfe8f3;
+  --dashboard-surface: #ffffffa8;
   --dashboard-solid: #fff;
-  --dashboard-elevated: #ffffff70;
-  --dashboard-border: #ffffffb3;
-  --dashboard-control-border: #b9c6d6;
+  --dashboard-elevated: #ffffff85;
+  --dashboard-border: #b7c8dc8c;
+  --dashboard-control-border: #9fb1c7;
   --dashboard-ink: #172b4d;
   --dashboard-muted: #607087;
   --dashboard-accent: #075eaa;
@@ -23,8 +23,8 @@
   --dashboard-chart-4: #7c8799;
   --dashboard-tooltip-bg: #11151ef5;
   --dashboard-tooltip-ink: #f5f7fc;
-  --dashboard-shadow: #173d7012;
-  --dashboard-backdrop: radial-gradient(ellipse at 12% 20%, #a9ccee80, transparent 48%), radial-gradient(ellipse at 85% 60%, #c8d7f280, transparent 45%), #e5edf6;
+  --dashboard-shadow: #172b4d14;
+  --dashboard-backdrop: radial-gradient(ellipse at 8% 0%, #8fbdf0d9, transparent 52%), radial-gradient(ellipse at 92% 28%, #b8c9f6d9, transparent 46%), radial-gradient(ellipse at 45% 100%, #a3d4ea99, transparent 55%), #dfe8f3;
   --site-bg: var(--dashboard-bg);
   --site-surface: var(--dashboard-surface);
   --site-hover: var(--dashboard-elevated);
@@ -41,10 +41,10 @@
   --site-muted-rgb: 96 112 135;
   --site-line-rgb: 220 229 239;
   --site-accent-rgb: 7 94 170;
-  --glass-shadow: 0 12px 36px #173d7010, inset 0 1px 0 #ffffffd9, inset 0 -1px 0 #ffffff38;
-  --glass-panel: linear-gradient(135deg, #ffffff66, #ffffff08 55%, #ffffff30), var(--dashboard-surface);
-  --glass-control: linear-gradient(145deg, #ffffff8c, #ffffff26);
-  --glass-field: #ffffff80;
+  --glass-shadow: 0 12px 32px #1e3a6a24, 0 1px 2px #1e3a6a14, inset 0 1px 0 #ffffffeb, inset 0 0 0 1px #ffffff59;
+  --glass-panel: linear-gradient(140deg, #ffffffb8, #ffffff4d 58%, #ffffff80), var(--dashboard-surface);
+  --glass-control: linear-gradient(145deg, #ffffffd1, #ffffff8c);
+  --glass-field: #ffffffe0;
   --glass-chart: #075eaa;
   --glass-glow: #80baff;
   color-scheme: light;
@@ -100,7 +100,7 @@
 /* Overscroll and the auth check render outside the shell; they follow the same theme. */
 
 body:has(.dashboard-layout) {
-  background: #f5f7fb;
+  background: #dfe8f3;
 }
 
 :root[data-dashboard-theme="dark"] body:has(.dashboard-layout) {

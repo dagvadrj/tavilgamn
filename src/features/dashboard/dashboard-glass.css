@@ -279,7 +279,7 @@
   min-width: 0;
   max-width: 100%;
   min-height: 44px;
-  border-color: var(--dashboard-border);
+  border-color: var(--dashboard-control-border);
   border-radius: 10px;
   color: var(--dashboard-ink);
   background: var(--glass-field);
