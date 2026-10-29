@@ -10,8 +10,7 @@ import {
 } from "@/lib/supabase/client";
 import { setCartOwner } from "@/store/cart";
 import { setWishlistOwner } from "@/store/wishlist";
-import { setDesignOwner } from "@/store/designs";
-import { setKitchenOwner } from "@/store/kitchens";
+import { announceLocalDataOwner } from "@/store/localDataOwner";
 
 import { rememberAuthDestination } from "@/lib/authRedirect";
 import { authErrorMessage } from "@/lib/authErrors";
@@ -57,8 +56,7 @@ function setLocalDataOwner(user: SupabaseUser | null) {
 
   setCartOwner(userId);
   setWishlistOwner(userId);
-  setDesignOwner(userId);
-  setKitchenOwner(userId);
+  announceLocalDataOwner(userId);
 }
 
 async function resolveAuthUser(user: SupabaseUser | null) {

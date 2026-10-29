@@ -27,6 +27,41 @@ test("shop and planner shells are structurally separate and public URLs stay unc
     );
 });
 
+test("the root layout, loaded on every page, does not bundle the room or kitchen planners", () => {
+  const resolve = (from, spec) => {
+    const base = spec.startsWith("@/")
+      ? path.join("src", spec.slice(2))
+      : spec.startsWith(".")
+        ? path.join(path.dirname(from), spec)
+        : null;
+    if (!base) return null;
+    for (const ext of ["", ".ts", ".tsx", "/index.ts", "/index.tsx"])
+      if (fs.existsSync(base + ext) && fs.statSync(base + ext).isFile())
+        return path.normalize(base + ext);
+    return null;
+  };
+  const seen = new Set();
+  const visit = (file) => {
+    if (seen.has(file) || !/\.tsx?$/.test(file)) return;
+    seen.add(file);
+    const source = ts.createSourceFile(file, fs.readFileSync(file, "utf8"), ts.ScriptTarget.Latest);
+    for (const node of source.statements) {
+      const typeOnly =
+        (ts.isImportDeclaration(node) && node.importClause?.isTypeOnly) ||
+        (ts.isExportDeclaration(node) && node.isTypeOnly);
+      if ((ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) && node.moduleSpecifier && !typeOnly) {
+        const target = resolve(file, node.moduleSpecifier.text);
+        if (target) visit(target);
+      }
+    }
+  };
+  visit(path.normalize("src/app/layout.tsx"));
+  const heavy = [...seen].filter((file) =>
+    /store[\\/](designs|kitchens)\.ts$|[\\/]three[\\/]|kitchenAssembly|kitchenCabinets/.test(file),
+  );
+  assert.deepEqual(heavy, []);
+});
+
 test("auth initialization is shared across layouts and retries after an outage", async () => {
   let reads = 0,
     listeners = 0,

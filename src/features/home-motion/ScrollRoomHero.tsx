@@ -182,6 +182,7 @@ export function ScrollRoomHero({
           <HybridBackdrop
             phase={tour.phase}
             poster={!displayReady}
+            scene={tour.mounted && !failed}
             customPoster={hero.image || undefined}
             onImageReady={onImageReady}
           />

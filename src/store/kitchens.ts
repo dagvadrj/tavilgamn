@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase/client";
+import { onLocalDataOwner } from "./localDataOwner";
 import { parseKitchen, type SavedKitchen } from "@/lib/kitchenAssembly";
 import type { ModularKitchen } from "@/lib/kitchenCabinets";
 
@@ -105,3 +106,5 @@ export function setKitchenOwner(owner: string | null) {
   generation++; listRequest++;
   useKitchens.setState({ owner, items: [], loading: false, loaded: false, error: "" });
 }
+
+onLocalDataOwner(setKitchenOwner);
