@@ -427,11 +427,11 @@
   outline-offset: 2px;
 }
 
-/* Content */
+/* Content uses the full workspace width; wide boards (delivery, orders) need every column. */
 
 .dashboard-layout .dashboard-shell.dashboard-mono .dashboard-content {
   width: 100%;
-  max-width: 1440px;
+  max-width: none;
   margin: 0;
   padding: 24px;
 }

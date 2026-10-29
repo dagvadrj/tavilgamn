@@ -335,7 +335,11 @@ export function AdminOverview({
               Анхаарах зүйлс <small>{inbox.length}</small>
             </h2>
           </header>
-          {inbox.length ? (
+          {!growth.data && !growth.error && !analytics.data ? (
+            <div className="overview-empty" role="status" aria-label="Ачаалж байна">
+              <span className="overview-skeleton" style={{ width: "70%" }} />
+            </div>
+          ) : inbox.length ? (
             <ul>
               {inbox.map((item, index) => (
                 <li key={item.title} data-extra={index > 1 || undefined}>

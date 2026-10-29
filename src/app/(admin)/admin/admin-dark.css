@@ -34,7 +34,6 @@ body:has(.admin-gate) {
 
 .admin-content.dashboard-content {
   padding: 24px 22px 36px;
-  max-width: 1600px;
 }
 
 .admin-topbar-actions.dashboard-header-actions {
