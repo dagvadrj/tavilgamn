@@ -16,6 +16,19 @@ const nextConfig = {
     ],
   },
   transpilePackages: ["three"],
+  webpack(config, { isServer, webpack }) {
+    if (!isServer) {
+      // @gltf-transform/core lazily imports node:fs/node:path for NodeIO only;
+      // the browser uses WebIO, so strip the scheme and stub the modules.
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(/^node:(fs|path)$/, (resource) => {
+          resource.request = resource.request.replace(/^node:/, "");
+        }),
+      );
+      config.resolve.fallback = { ...config.resolve.fallback, fs: false, path: false };
+    }
+    return config;
+  },
 };
 
 export default (phase) => ({
