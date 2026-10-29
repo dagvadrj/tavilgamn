@@ -3,26 +3,26 @@
 import Link from "next/link";
 import {
   Armchair,
+  BarChart3,
+  Bot,
+  ChevronDown,
+  CookingPot,
+  FileText,
   LayoutDashboard,
+  MapPin,
+  MessageSquare,
+  MessageSquareQuote,
   Package,
+  Search,
+  Settings,
+  ShieldCheck,
   ShoppingBag,
   Store,
-  ArrowUpRight,
-  CookingPot,
-  MessageSquareQuote,
-  Settings,
-  CircleHelp,
-  UserRound,
   Truck,
-  Wallet,
-  ShieldCheck,
-  FileText,
-  BarChart3,
-  MapPin,
-  Users,
-  MessageSquare,
-  Bot,
   Undo2,
+  UserRound,
+  Users,
+  Wallet,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 import type { MerchantLocationTab } from "@/lib/merchantNavigation";
@@ -34,7 +34,7 @@ export const MERCHANT_TABS: {
   label: string;
   icon: typeof LayoutDashboard;
 }[] = [
-  { id: "overview", label: "Ерөнхий тойм", icon: LayoutDashboard },
+  { id: "overview", label: "Тойм", icon: LayoutDashboard },
   { id: "sales", label: "Борлуулалт", icon: BarChart3 },
   { id: "inventory", label: "Нөөц ба бараа", icon: Package },
   { id: "progress", label: "Захиалгын явц", icon: Truck },
@@ -58,12 +58,27 @@ export const MERCHANT_TABS: {
   { id: "profile", label: "Миний бүртгэл", icon: UserRound },
 ];
 
+/** Every merchant page stays reachable; groups follow the monochrome redesign spec. */
+const MERCHANT_NAV_GROUPS: { label?: string; tabs: MerchantTab[] }[] = [
+  { tabs: ["overview", "orders", "products", "delivery"] },
+  { label: "Борлуулалт", tabs: ["sales", "inventory", "progress", "reports", "wallet"] },
+  { label: "Дэлгүүр", tabs: ["store", "activation", "contracts", "branches", "staff", "rooms"] },
+  { label: "Харилцагч", tabs: ["reviews", "returns", "assistant", "quotes", "kitchens"] },
+  { label: "Систем", tabs: ["settings"] },
+];
+const STORE_ONLY: MerchantTab[] = [
+  "sales", "inventory", "progress", "products", "rooms", "orders", "delivery", "kitchens", "quotes", "activation",
+  "wallet", "reports", "contracts", "branches", "staff", "reviews", "assistant", "returns",
+];
+
 export function MerchantSidebar({
   active,
   onChange,
   hasStore,
   storeName,
   userName,
+  email,
+  onSearch,
   open,
   onClose,
   allowedTabs,
@@ -73,50 +88,33 @@ export function MerchantSidebar({
   hasStore: boolean;
   storeName: string;
   userName: string;
+  email?: string;
+  onSearch?: () => void;
   open: boolean;
   onClose: () => void;
   allowedTabs?: MerchantTab[];
 }) {
-  const renderItem = (item: (typeof MERCHANT_TABS)[number]) => {
-    if (allowedTabs && !allowedTabs.includes(item.id)) return null;
+  const renderItem = (id: MerchantTab) => {
+    if (allowedTabs && !allowedTabs.includes(id)) return null;
+    const item = MERCHANT_TABS.find((tab) => tab.id === id)!;
     const Icon = item.icon;
-    const disabled =
-      !hasStore &&
-      [
-        "products",
-        "rooms",
-        "orders",
-        "delivery",
-        "kitchens",
-        "quotes",
-        "activation",
-        "wallet",
-        "reports",
-        "contracts",
-        "branches",
-        "staff",
-        "reviews",
-        "assistant",
-        "returns",
-      ].includes(item.id);
     return (
       <button
-        key={item.id}
+        key={id}
         type="button"
-        disabled={disabled}
+        disabled={!hasStore && STORE_ONLY.includes(id)}
         aria-label={item.label}
-        aria-current={active === item.id ? "page" : undefined}
-        className={`dashboard-nav-button ${active === item.id ? "active" : ""}`}
-        onClick={() => onChange(item.id)}
+        aria-current={active === id ? "page" : undefined}
+        className="dashboard-nav-button"
+        onClick={() => onChange(id)}
       >
         <span className="dashboard-nav-icon">
-          <Icon size={19} strokeWidth={1.7} />
+          <Icon size={16} strokeWidth={1.6} />
         </span>
         <span>{item.label}</span>
       </button>
     );
   };
-
   return (
     <DashboardSidebar
       open={open}
@@ -126,68 +124,56 @@ export function MerchantSidebar({
     >
       <Link
         href="/"
-        className="dashboard-brand merchant-sidebar-brand"
+        className="dashboard-workspace-switch"
         aria-label="tavilga.mn — нүүр хуудас"
       >
-        <span className="dashboard-brand-icon">
-          <Armchair size={22} strokeWidth={1.7} />
+        <span className="dashboard-workspace-mark" aria-hidden="true">
+          {storeName.trim().charAt(0).toUpperCase() || "т"}
         </span>
-        <span className="dashboard-brand-copy">
-          <strong>{storeName}</strong>
-          <small>{userName} · Худалдаа эрхлэгч</small>
-        </span>
+        <strong>{storeName}</strong>
+        <ChevronDown size={14} aria-hidden="true" />
       </Link>
-
+      {onSearch && (
+        <button type="button" className="dashboard-search" onClick={onSearch}>
+          <Search size={15} aria-hidden="true" />
+          <span>Хайх</span>
+          <kbd>⌘K</kbd>
+        </button>
+      )}
       <nav
         className="merchant-sidebar-nav"
         aria-label="Худалдаа эрхлэгчийн цэс"
       >
-        <div className="dashboard-nav-group">
-          <p className="dashboard-nav-label">ДЭЛГҮҮР</p>
-          {MERCHANT_TABS.filter((item) =>
-            [
-              "activation",
-              "wallet",
-              "reports",
-              "contracts",
-              "products",
-              "rooms",
-              "orders",
-              "delivery",
-              "branches",
-              "staff",
-              "reviews",
-              "assistant",
-              "returns",
-            ].includes(item.id),
-          ).map(renderItem)}
-        </div>
-        <div className="dashboard-nav-group">
-          <p className="dashboard-nav-label">ГАЛ ТОГООНЫ MARKETPLACE</p>
-          {MERCHANT_TABS.filter((item) =>
-            ["kitchens", "quotes"].includes(item.id),
-          ).map(renderItem)}
-        </div>
+        {MERCHANT_NAV_GROUPS.map((group) => {
+          const items = group.tabs.map(renderItem).filter(Boolean);
+          if (!items.length) return null;
+          return (
+            <div className="dashboard-nav-group" key={group.label ?? "main"}>
+              {group.label && <p className="dashboard-nav-label">{group.label}</p>}
+              {items}
+            </div>
+          );
+        })}
       </nav>
-
-      <div className="dashboard-sidebar-bottom">
-        <div className="dashboard-sidebar-note">
-          <Store size={19} />
-          <strong>Таны дэлгүүр, нэг дор</strong>
-          <p>Бараа, захиалга болон загваруудаа эндээс удирдаарай.</p>
-        </div>
-        {MERCHANT_TABS.filter((item) =>
-          ["store", "settings", "profile"].includes(item.id),
-        ).map(renderItem)}
-        <Link href="/#contact" className="dashboard-sidebar-link">
-          <CircleHelp size={18} />
-          Тусламж
-        </Link>
-        <Link href="/" className="dashboard-sidebar-link">
-          <ArrowUpRight size={18} />
-          Marketplace руу очих
-        </Link>
-      </div>
+      {(!allowedTabs || allowedTabs.includes("profile")) && (
+        <button
+          type="button"
+          className="dashboard-user"
+          aria-label="Миний бүртгэл"
+          aria-current={active === "profile" ? "page" : undefined}
+          onClick={() => onChange("profile")}
+        >
+          <span className="dashboard-user-avatar" aria-hidden="true">
+            {userName.trim().charAt(0).toUpperCase() || "Х"}
+          </span>
+          <span className="dashboard-user-copy">
+            <strong>{userName}</strong>
+            {email && <small>{email}</small>}
+          </span>
+        </button>
+      )}
     </DashboardSidebar>
   );
 }
+
+export { MERCHANT_NAV_GROUPS };

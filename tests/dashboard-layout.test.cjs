@@ -126,10 +126,12 @@ test("merchant sidebar keeps all operations and settings and disables private st
   const locked = desktopMarkup(
     renderToStaticMarkup(React.createElement(MerchantSidebar, props)),
   );
-  for (const tab of MERCHANT_TABS.filter(tab => !["overview", "sales", "inventory", "progress"].includes(tab.id)))
+  // The sidebar is the only navigation now, so every page is listed there.
+  for (const tab of MERCHANT_TABS)
     assert.ok(locked.includes(tab.label), `Missing ${tab.label}`);
-  assert.equal((locked.match(/disabled=""/g) ?? []).length, 15);
-  assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 0);
+  // 15 store operations plus the sales/inventory/progress views stay locked before registration.
+  assert.equal((locked.match(/disabled=""/g) ?? []).length, 18);
+  assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 1);
   const unlocked = desktopMarkup(
     renderToStaticMarkup(
       React.createElement(MerchantSidebar, { ...props, hasStore: true }),

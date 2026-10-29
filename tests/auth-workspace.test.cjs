@@ -193,7 +193,8 @@ test("dashboard keeps profile in the sidebar without duplicate header controls",
   }
   const { MerchantSidebar } = loadSource("src/components/MerchantSidebar.tsx");
   const sidebar = MerchantSidebar({ active: "overview", hasStore: true, userName: "Test", storeName: "Store", open: false, onClose() {}, onChange: tab => { if (tab === "profile") opens++; } });
-  const profile = elements(sidebar, node => node.type === "button" && node.props.children?.some?.(child => child?.props?.children === "Миний бүртгэл"))[0];
+  // The profile lives in the sidebar's user block, named for assistive tech.
+  const profile = elements(sidebar, node => node.type === "button" && node.props["aria-label"] === "Миний бүртгэл")[0];
   assert.ok(profile);
   profile.props.onClick();
   assert.equal(elements(sidebar, node => node.props.href === "/account").length, 0);
