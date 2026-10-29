@@ -652,6 +652,78 @@
   }
 }
 
+/* Product editor: essentials first, extras in one disclosure, one sticky action bar. */
+
+.dashboard-layout .dashboard-mono .merchant-editor-simple {
+  display: grid;
+  gap: 16px;
+  max-width: 960px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.dashboard-layout .dashboard-mono .merchant-editor-simple > .merchant-form-card {
+  padding: 18px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 10px;
+  background: var(--dashboard-bg);
+  box-shadow: none;
+}
+
+.dashboard-layout .dashboard-mono .merchant-editor-simple h2 {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.dashboard-layout .dashboard-mono .merchant-form-heading h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-layout .dashboard-mono .merchant-form-actionbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 960px;
+  margin-top: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--dashboard-border);
+  background: var(--dashboard-bg);
+}
+
+.dashboard-layout .dashboard-mono .merchant-form-actionbar > span {
+  flex: 1;
+  min-width: 160px;
+  color: var(--dashboard-subtle);
+  font-size: 12px;
+}
+
+.dashboard-layout .dashboard-mono .merchant-form-actionbar > :is(button, .btn-primary, .btn-ghost) {
+  min-height: 40px;
+}
+
+@media (max-width: 767px) {
+  .dashboard-layout .dashboard-mono .merchant-form-actionbar {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+  .dashboard-layout .dashboard-mono .merchant-form-actionbar > span {
+    flex-basis: 100%;
+    order: -1;
+  }
+  .dashboard-layout .dashboard-mono .merchant-form-actionbar > :is(button, .btn-primary, .btn-ghost) {
+    flex: 1;
+    min-height: 44px;
+  }
+}
+
 /* Command palette */
 
 .dashboard-layout .dashboard-mono .dashboard-command {
