@@ -30,7 +30,8 @@ export type SkeletonLayout =
   | "kitchen-detail"
   | "metrics"
   | "board"
-  | "document";
+  | "document"
+  | "hero";
 
 /** Choose the destination's shape. Never infer a large hero for an unknown page. */
 export function PageSkeleton({
@@ -88,7 +89,21 @@ export function PageSkeleton({
               </div>
               <div className="skeleton-block skeleton-button" />
             </>
-          ) : layout === "status" ? null : layout === "room-start" ? (
+          ) : layout === "status" ? null : layout === "hero" ? (
+            // The home page opens on a full-screen photo hero; the placeholder
+            // takes the same space so the hero replaces it without a jump.
+            <div className="skeleton-hero-stage">
+              <div className="skeleton-hero-copy">
+                <div className="skeleton-block skeleton-hero-eyebrow" />
+                <div className="skeleton-block skeleton-hero-title" />
+                <div className="skeleton-block skeleton-hero-title is-short" />
+                <div className="skeleton-hero-actions">
+                  <div className="skeleton-block skeleton-button" />
+                  <div className="skeleton-block skeleton-button" />
+                </div>
+              </div>
+            </div>
+          ) : layout === "room-start" ? (
             <>
               <div className="skeleton-toolbar">
                 <SkeletonLines count={1} />
@@ -130,12 +145,35 @@ export function PageSkeleton({
                 ))}
               </div>
             </div>
-          ) : layout === "detail" || layout === "kitchen-detail" ? (
+          ) : layout === "detail" ? (
+            // Product page geometry: breadcrumb, 4:3 photo with its thumbnail
+            // row, and the summary column (side by side from 1024px).
+            <div className="skeleton-pdp">
+              <div className="skeleton-block skeleton-pdp-crumbs" />
+              <div className="skeleton-pdp-grid">
+                <div>
+                  <div className="skeleton-block skeleton-pdp-viewer" />
+                  <div className="skeleton-pdp-thumbs">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className="skeleton-block" />
+                    ))}
+                  </div>
+                </div>
+                <div className="skeleton-pdp-summary">
+                  <div className="skeleton-block skeleton-pdp-category" />
+                  <div className="skeleton-block skeleton-pdp-title" />
+                  <div className="skeleton-block skeleton-pdp-price" />
+                  <SkeletonFields fields={["Өнгө / Материал", "Тоо хэмжээ"]} />
+                  <div className="skeleton-block skeleton-button" />
+                </div>
+              </div>
+            </div>
+          ) : layout === "kitchen-detail" ? (
             <div className="skeleton-product">
               <div className="skeleton-block skeleton-product-image" />
               <div>
                 <SkeletonLines count={3} />
-                {layout === "detail" ? <SkeletonFields fields={["Өнгө / Материал", "Тоо хэмжээ"]} /> : <SkeletonLines count={4} />}
+                <SkeletonLines count={4} />
                 <div className="skeleton-block skeleton-button" />
               </div>
             </div>

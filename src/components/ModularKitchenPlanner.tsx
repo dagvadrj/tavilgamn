@@ -1638,7 +1638,7 @@ export function ModularKitchenPlanner({
               aria-disabled={!!lockReason || undefined}
               onClick={() => changeStage("design")}
             >
-              Тохижуулах руу
+              Дараах: Тохижуулах
             </button>
           </footer>
         </aside>

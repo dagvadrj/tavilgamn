@@ -8,9 +8,9 @@ import {
   readCachedStoreProductCounts,
 } from "@/lib/publicCatalog";
 import {
-  readPublishedKitchenDesigns,
-  readPublishedKitchenDesignBySlug,
-} from "@/lib/kitchenMarketplaceServer";
+  readCachedKitchenDesigns,
+  readCachedKitchenDesignBySlug,
+} from "@/lib/publicKitchens";
 import { configuredPaymentLabels } from "@/lib/paymentPresentationServer";
 import { hasAvailableStock } from "@/lib/inventory";
 import type { PageData } from "@/lib/pageData";
@@ -70,9 +70,13 @@ export async function GET(
       }
       case "store": {
         if (!id || id.length > 100) return missing();
-        const store = await readCachedDirectoryStore(id);
+        // Both reads are independent; run them together.
+        const [store, catalog] = await Promise.all([
+          readCachedDirectoryStore(id),
+          readCachedProducts(),
+        ]);
         if (!store) return missing();
-        const products = (await readCachedProducts()).filter(
+        const products = catalog.filter(
           (product) =>
             hasAvailableStock(product) && product.storeIds?.includes(store.id),
         );
@@ -93,10 +97,10 @@ export async function GET(
         return json(page, { product, related });
       }
       case "kitchens":
-        return json(page, { designs: await readPublishedKitchenDesigns() });
+        return json(page, { designs: await readCachedKitchenDesigns() });
       case "kitchen": {
         if (!id || id.length > 100) return missing();
-        const design = await readPublishedKitchenDesignBySlug(id);
+        const design = await readCachedKitchenDesignBySlug(id);
         if (!design) return missing();
         return json(page, { design });
       }

@@ -97,7 +97,7 @@ export function RoomAddedList({
           <ul
             ref={list}
             className="room-added-list"
-            aria-label="Нэмсэн тавилга"
+            aria-label="Өрөөнд нэмсэн тавилга"
           >
             {rows.map((row) => (
               <AddedRow

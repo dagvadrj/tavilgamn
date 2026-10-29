@@ -7,7 +7,8 @@ const { renderToStaticMarkup } = require("react-dom/server");
 const { loadSource } = require("./helpers/load-source.cjs");
 
 const h = React.createElement;
-const read = (file) => readFileSync(path.resolve(__dirname, "..", file), "utf8");
+// Windows checkouts with core.autocrlf=true have CRLF; the source slicing below expects "\n".
+const read = (file) => readFileSync(path.resolve(__dirname, "..", file), "utf8").replace(/\r\n/g, "\n");
 const store = (state) => Object.assign((select) => select(state), { getState: () => state, setState() {} });
 const image = { default: (props) => h("img", { src: props.src, alt: props.alt }) };
 const link = { PlannerLink: (props) => h("a", { href: props.href, className: props.className }, props.children) };

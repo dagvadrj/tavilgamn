@@ -68,7 +68,7 @@ export function RoomCartList({
         Сагс бол худалдан авах жагсаалт. «Өрөөнд байрлуулах» нь сагсны тоог
         өөрчлөхгүй.
       </p>
-      <ul className="room-cart-list" aria-label="Сагсалсан тавилга">
+      <ul className="room-cart-list" aria-label="Сагсанд байгаа тавилга">
         {items.map((item) => {
           const product = getProduct(item.productId);
           const merchant = product?.storeIds

@@ -118,9 +118,9 @@ export function RoomPlannerControls({ onCover, roomActive, view, onView, onZoom,
           </div>
         </details>
     </div>
-    {(locked || snap) && <div className="room-navigation-status" role="group" aria-label="Идэвхтэй удирдлага">
+    {(locked || !snap) && <div className="room-navigation-status" role="group" aria-label="Идэвхтэй удирдлага">
         {locked && <button type="button" onClick={onLock}><Lock size={14}/> Камер түгжээтэй · Тайлах</button>}
-        {snap && <button type="button" aria-pressed={snap} onClick={onSnap}><Magnet size={14}/> Хананд тааруулах · Унтраах</button>}
+        {!snap && <button type="button" aria-pressed={snap} onClick={onSnap}><Magnet size={14}/> Хананд тааруулах унтарсан · Асаах</button>}
     </div>}
     <nav className="room-view-dock" ref={dock} aria-label="Өрөө харах, засах">
       <div className="room-view-options" role="group" aria-label="Харах өнцөг" data-planner-tour="room-view">

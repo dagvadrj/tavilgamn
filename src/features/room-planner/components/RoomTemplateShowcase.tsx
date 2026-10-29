@@ -153,6 +153,9 @@ export function RoomTemplateShowcase({
   const storeName = (id: string | null | undefined) =>
     id ? (stores.find((store) => store.id === id)?.name ?? "Дэлгүүр") : "Платформын";
   const groups = cards ? groupTemplates(cards, stores) : [];
+  // No published rooms at all: filters and a «nothing matches» message would
+  // only suggest the visitor did something wrong, so the section stays hidden.
+  if (status === "ready" && !filtered && cards && !cards.length) return null;
 
   return (
     <section

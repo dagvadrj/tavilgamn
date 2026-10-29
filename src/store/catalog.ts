@@ -132,7 +132,19 @@ export function useCatalog() {
   return state;
 }
 
-export const getProduct = (id: string) =>
-  useCatalogStore
-    .getState()
-    .products.find((product) => product.id === id);
+// Planner renders call getProduct per piece and inside catalog filters, so the
+// id index is rebuilt only when the products array itself is replaced.
+let indexedProducts: Product[] | null = null;
+let productIndex = new Map<string, Product>();
+
+export const getProduct = (id: string) => {
+  const { products } = useCatalogStore.getState();
+  if (products !== indexedProducts) {
+    productIndex = new Map();
+    // First match wins, as with Array.find.
+    for (const product of products)
+      if (!productIndex.has(product.id)) productIndex.set(product.id, product);
+    indexedProducts = products;
+  }
+  return productIndex.get(id);
+};

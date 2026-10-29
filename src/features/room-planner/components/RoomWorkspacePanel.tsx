@@ -14,9 +14,9 @@ import type {
 } from "@/features/room-planner/hooks/useRoomPlannerUi";
 
 export const ROOM_PANEL_TABS: { id: RoomPanelTab; label: string }[] = [
-  { id: "add", label: "Тавилга нэмэх" },
-  { id: "added", label: "Нэмсэн тавилга" },
-  { id: "cart", label: "Сагсалсан тавилга" },
+  { id: "add", label: "Тавилга" },
+  { id: "added", label: "Өрөөнд" },
+  { id: "cart", label: "Сагс" },
 ];
 
 const PHONE = "(max-width: 599px)";

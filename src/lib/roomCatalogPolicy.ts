@@ -12,6 +12,38 @@ export const ROOM_CATALOG_CATEGORIES: Record<RoomType, readonly Category[]> = {
     other: CATEGORIES.map(category => category.id),
 };
 export type RoomCatalogScope = "room" | "all";
+export type RoomCatalogFormat = "all" | "photo" | "glb";
+export type RoomCatalogFilterState = {
+    scope: RoomCatalogScope;
+    category: Category | "all";
+    merchant: string;
+    format: RoomCatalogFormat;
+    query: string;
+};
+/**
+ * The view the catalog opens with: furniture for this room from every store.
+ * «Зөвхөн энэ өрөөний тавилга» is this starting point, not something the
+ * visitor chose, so it is not an active filter and clearing filters returns
+ * to it instead of widening the catalog to every room.
+ */
+export const DEFAULT_ROOM_CATALOG_FILTERS: RoomCatalogFilterState = {
+    scope: "room",
+    category: "all",
+    merchant: "all",
+    format: "all",
+    query: "",
+};
+/** How many filters the visitor chose. A store-locked merchant editor's store is not a choice. */
+export function activeRoomCatalogFilters(filters: RoomCatalogFilterState, merchantLocked = false) {
+    const defaults = DEFAULT_ROOM_CATALOG_FILTERS;
+    return [
+        filters.scope !== defaults.scope,
+        filters.category !== defaults.category,
+        !merchantLocked && filters.merchant !== defaults.merchant,
+        filters.format !== defaults.format,
+        !!filters.query.trim(),
+    ].filter(Boolean).length;
+}
 type CatalogEntry = {
     name: string;
     category: Category;

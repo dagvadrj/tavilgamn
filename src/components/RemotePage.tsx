@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { PageSkeleton, type SkeletonVariant } from "./PageSkeleton";
 import { afterPagePaint } from "@/lib/afterPagePaint";
 import type { PageData } from "@/lib/pageData";
+import { PAGE_DATA_TIMEOUT_MS } from "@/lib/pageDataTimeout";
 
 export function RemotePage<K extends keyof PageData>({
   page,
@@ -29,7 +30,13 @@ export function RemotePage<K extends keyof PageData>({
 
   useEffect(() => {
     const controller = new AbortController();
+    let timedOut = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const cancelPaint = afterPagePaint(() => {
+      timer = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, PAGE_DATA_TIMEOUT_MS);
       void (async () => {
         try {
           const response = await fetch(url, {
@@ -50,17 +57,26 @@ export function RemotePage<K extends keyof PageData>({
           }
           setResult({ url, attempt, data });
         } catch {
-          if (!controller.signal.aborted)
+          if (timedOut)
+            setResult({
+              url,
+              attempt,
+              error: "Хариу удаж байна. Холболтоо шалгаад дахин оролдоно уу.",
+            });
+          else if (!controller.signal.aborted)
             setResult({
               url,
               attempt,
               error: "Сүлжээний алдаа гарлаа. Дахин оролдоно уу.",
             });
+        } finally {
+          clearTimeout(timer);
         }
       })();
     });
     return () => {
       cancelPaint();
+      clearTimeout(timer);
       controller.abort();
     };
   }, [url, attempt]);

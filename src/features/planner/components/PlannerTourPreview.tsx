@@ -25,7 +25,7 @@ export function TourPreview({
       <div className="planner-tour-mini-bar">
         <Layers size={12} />
         <i />
-        {kind === "kitchen" ? "KITCHEN PLANNER" : "ROOM PLANNER"}
+        {kind === "kitchen" ? "Гал тогоо" : "Өрөө"}
       </div>
       <ModelDemo kind={kind} scene={scene} paused={paused} onReady={onReady} />
       <div className="planner-tour-real-caption" aria-hidden="true">

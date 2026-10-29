@@ -16,7 +16,7 @@ export function RoomPlannerSignIn() {
       <button
         type="button"
         className="btn-ghost min-h-11"
-        aria-label="Нэвтэрч үргэлжлүүлэх"
+        aria-label="Нэвтрэх — загвараа бүртгэлдээ хадгална"
         onClick={() => {
           try {
             setError("");
@@ -31,7 +31,7 @@ export function RoomPlannerSignIn() {
         }}
       >
         <LogIn size={16} />
-        <span>Нэвтэрч үргэлжлүүлэх</span>
+        <span>Нэвтрэх</span>
       </button>
       {error && (
         <span className="max-w-xs text-xs text-red-700" role="alert">

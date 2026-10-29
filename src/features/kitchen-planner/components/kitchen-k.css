@@ -60,6 +60,8 @@
   }
   & .kitchen-k-project {
     display: grid;
+    /* Lets the name shrink inside the column instead of running under the stepper. */
+    grid-template-columns: minmax(0, 1fr);
     flex: 1 1 auto;
     gap: 1px;
     min-width: 120px;
@@ -106,7 +108,7 @@
     align-items: center;
     gap: 8px;
     width: auto;
-    max-width: 320px;
+    max-width: min(320px, 100%);
     min-height: 32px;
     padding: 0;
     list-style: none;
@@ -120,8 +122,15 @@
     align-items: center;
     gap: 10px;
     min-width: 0;
+    /* The older 120px cap cut the name to «Ми…» while the header had room. */
+    max-width: none;
   }
   & .kitchen-k-project .kitchen-project-visible-name strong {
+    /* The name keeps its width and only the save chip gives way; a shared
+       shrink cut a fitting name by a fraction of a pixel into «…». */
+    flex: 0 0 auto;
+    max-width: 100%;
+    min-width: 0;
     overflow: hidden;
     font-size: 16px;
     font-weight: 650;
@@ -136,6 +145,11 @@
     font-size: 11px;
     font-weight: 500;
     white-space: nowrap;
+    /* The save chip gives way before the project name does. */
+    flex: 0 100 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   & .kitchen-k-project .kitchen-project-visible-name small[data-save-kind="saved"] {
     background: var(--kk-ok-bg);
@@ -354,38 +368,107 @@
     box-shadow: 0 1px 3px #171c241a;
     color: var(--kk-primary);
   }
+  /* Catalog sections scroll in one row; plan tools sit apart below them. */
   & .kitchen-k-tools {
-    display: flex;
+    display: grid;
     flex: none;
-    flex-wrap: wrap;
-    gap: 6px;
+    gap: 8px;
     margin: 0;
-    padding: 12px 16px 4px;
+    padding: 12px 0 4px;
     border: 0;
     background: transparent;
   }
-  & .kitchen-k-tools > button {
+  & .kitchen-k-sections {
+    --kk-fade: 28px;
+    min-width: 0;
+  }
+  /* A soft edge shows there is more to scroll in that direction. */
+  & .kitchen-k-sections[data-fade-start] .kitchen-k-section-row {
+    mask-image: linear-gradient(90deg, transparent, #000 var(--kk-fade));
+  }
+  & .kitchen-k-sections[data-fade-end] .kitchen-k-section-row {
+    mask-image: linear-gradient(90deg, #000 calc(100% - var(--kk-fade)), transparent);
+  }
+  & .kitchen-k-sections[data-fade-start][data-fade-end] .kitchen-k-section-row {
+    mask-image: linear-gradient(90deg, transparent, #000 var(--kk-fade), #000 calc(100% - var(--kk-fade)), transparent);
+  }
+  & .kitchen-k-section-row {
+    position: relative;
+    display: flex;
+    gap: 6px;
+    padding: 4px 16px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: 16px;
+    scrollbar-width: none;
+  }
+  & .kitchen-k-section-row::-webkit-scrollbar {
+    display: none;
+  }
+  & .kitchen-k-section-row > button {
     display: inline-flex;
-    flex-direction: row;
+    flex: none;
     align-items: center;
     gap: 6px;
     width: auto;
     min-width: 0;
     height: auto;
-    min-height: 36px;
-    padding: 0 12px;
+    min-height: 44px;
+    padding: 0 14px;
     border: 1px solid var(--kk-line);
-    border-radius: 18px;
+    border-radius: 22px;
     background: #fff;
     color: var(--kk-ink);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
   }
-  & .kitchen-k-tools > button[aria-pressed="true"] {
+  & .kitchen-k-section-row > button[aria-pressed="true"] {
     border-color: var(--kk-ink);
     background: var(--kk-ink);
     color: #fff;
+  }
+  & .kitchen-k-plan-tools {
+    display: flex;
+    gap: 4px;
+    margin: 0 16px;
+    padding-top: 6px;
+    border-top: 1px solid var(--kk-line);
+  }
+  & .kitchen-k-plan-tools > button {
+    display: inline-flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--kk-muted);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  & .kitchen-k-plan-tools > button:hover {
+    background: var(--kk-tint);
+    color: var(--kk-ink);
+  }
+  & .kitchen-k-plan-tools > button[aria-pressed="true"] {
+    background: var(--kk-tint);
+    color: var(--kk-primary);
+  }
+  & :is(.kitchen-k-section-row, .kitchen-k-plan-tools) > button:focus-visible {
+    outline: 2px solid var(--kk-primary);
+    outline-offset: 2px;
+  }
+  & :is(.kitchen-k-section-row, .kitchen-k-plan-tools) > button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
   /* Stage: everything right of the panel. */
   & :is(.kp-workspace, .kroom-workspace) {
@@ -1355,6 +1438,48 @@
     }
     & .kitchen-k-project {
       min-width: 64px;
+    }
+    /* Phones keep every header action, so the name gets two lines instead of
+       one cut to «Ми…». The 56px header already fits two 13px lines, so the
+       header height and everything below it stay put. */
+    /* Room for the name without dropping an action: the action group is only
+       as wide as its buttons (it was claiming 100% and pushing past the
+       screen), «Дараах» keeps its text without the arrow, and the pencil
+       goes; tapping the name still opens the rename menu. */
+    & .kitchen-k-header {
+      gap: 6px;
+    }
+    & .kitchen-k-header > .kitchen-k-actions {
+      flex: 0 0 auto;
+      width: auto;
+    }
+    & .kitchen-k-header .kitchen-toolbar-continue > svg, & .kitchen-k-project .kitchen-project-menu > summary > svg {
+      display: none;
+    }
+    & .kitchen-k-project {
+      flex: 1 1 0;
+      min-width: 56px;
+    }
+    & .kitchen-k-project .kitchen-project-menu > summary {
+      min-height: 44px;
+    }
+    @media (max-width: 379px) {
+      & .kitchen-k-header {
+        padding-inline: 8px;
+      }
+      & .kitchen-k-header .kitchen-toolbar-continue {
+        padding-inline: 10px;
+      }
+    }
+    & .kitchen-k-project .kitchen-project-visible-name strong {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      font-size: 13px;
+      line-height: 1.2;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
     & .kitchen-k-elevation {
       inset: 124px 12px 72px;

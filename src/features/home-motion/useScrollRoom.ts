@@ -188,6 +188,29 @@ export function useScrollRoom() {
         behavior: reduced ? "instant" : "smooth",
       });
   };
+  // Declared last so the earlier hooks keep their order.
+  // The photo hero is complete on its own; the WebGL scene costs seconds of
+  // main-thread work on phones. Load it once the visitor engages with the page
+  // (or the page has been idle a while), not during the first paint.
+  const [engaged, setEngaged] = useState(false);
+  useEffect(() => {
+    if (engaged) return;
+    const engage = () => setEngaged(true);
+    const events = ["scroll", "wheel", "pointerdown", "touchstart", "keydown"];
+    for (const type of events)
+      window.addEventListener(type, engage, { once: true, passive: true });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const afterLoad = () => {
+      timer = setTimeout(engage, 8000);
+    };
+    if (document.readyState === "complete") afterLoad();
+    else window.addEventListener("load", afterLoad, { once: true });
+    return () => {
+      for (const type of events) window.removeEventListener(type, engage);
+      window.removeEventListener("load", afterLoad);
+      clearTimeout(timer);
+    };
+  }, [engaged]);
   return {
     root,
     stage,
@@ -195,7 +218,7 @@ export function useScrollRoom() {
     phase,
     reduced,
     paused,
-    mounted,
+    mounted: mounted && engaged,
     choose,
     skip,
     toggle: () => setPaused((value) => !value),

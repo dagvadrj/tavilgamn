@@ -23,11 +23,12 @@ export function HybridBackdrop({
         const c = hybridCrop(node.clientWidth, node.clientHeight, room);
         const image = node.children[i]?.firstElementChild as HTMLElement | null;
         if (image)
+          // Offset with a transform: the crop applies after hydration, and moving
+          // left/top then counted as a layout shift of the whole hero (CLS ≈ 0.96).
           Object.assign(image.style, {
             width: `${c.fullWidth * c.scale}px`,
             height: `${c.fullHeight * c.scale}px`,
-            left: `${-c.x * c.scale}px`,
-            top: `${-c.y * c.scale}px`,
+            transform: `translate(${-c.x * c.scale}px, ${-c.y * c.scale}px)`,
           });
       });
     };

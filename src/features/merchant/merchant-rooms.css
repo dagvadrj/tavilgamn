@@ -1,4 +1,5 @@
 /* C2: furnished rooms of one merchant store. */
+
 .merchant-rooms {
   display: grid;
   gap: 16px;

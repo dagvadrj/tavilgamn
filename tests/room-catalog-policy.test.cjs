@@ -47,3 +47,31 @@ test('authored room selection takes priority in every room, all-room browse rema
   assert.equal(catalogEligible(item('legacy sofa', 'sofa'), 'living', 'room'), true);
   assert.equal(catalogEligible(item('legacy sofa', 'sofa'), 'other', 'room'), true);
 });
+
+test('the default room scope is the starting view, not an active filter', () => {
+  const { activeRoomCatalogFilters, DEFAULT_ROOM_CATALOG_FILTERS: defaults } = loadSource('src/lib/roomCatalogPolicy.ts');
+  assert.equal(defaults.scope, 'room');
+  assert.equal(activeRoomCatalogFilters(defaults), 0, 'nothing chosen, nothing to clear');
+  assert.equal(activeRoomCatalogFilters({ ...defaults, query: '   ' }), 0, 'blank search is no filter');
+  assert.equal(activeRoomCatalogFilters({ ...defaults, scope: 'all' }), 1, 'widening to every room is a choice');
+  assert.equal(activeRoomCatalogFilters({ ...defaults, category: 'sofa', query: 'oak', format: 'glb', merchant: 's1' }), 4);
+  assert.equal(activeRoomCatalogFilters({ ...defaults, merchant: 's1' }, true), 0, "a merchant editor's own store is not a choice");
+});
+
+test('«Шүүлтүүр цэвэрлэх» appears only for chosen filters and reset returns to the room scope', () => {
+  const React = require('react');
+  const { renderToStaticMarkup } = require('react-dom/server');
+  const { RoomCatalogFilters } = loadSource('src/features/room-planner/components/RoomCatalogFilters.tsx');
+  const noop = () => {};
+  const props = { categories: [{ id: 'sofa', name: 'Буйдан', count: 2 }], category: 'all', onCategory: noop, scope: 'room', onScope: noop,
+    merchant: 'all', merchants: [], onMerchant: noop, format: 'all', onFormat: noop, sort: 'default', onSort: noop,
+    roomName: 'Зочны өрөө', query: '', onQuery: noop, count: 2, onReset: noop };
+  const render = (extra) => renderToStaticMarkup(React.createElement(RoomCatalogFilters, { ...props, ...extra }));
+  assert.doesNotMatch(render({}), /Шүүлтүүр цэвэрлэх/, 'the default room scope shows no clear button');
+  assert.match(render({ category: 'sofa' }), /Шүүлтүүр цэвэрлэх/);
+  assert.match(render({ scope: 'all' }), /Шүүлтүүр цэвэрлэх/);
+  const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '../src/components/RoomPlanner.tsx'), 'utf8').replace(/\r\n/g, '\n');
+  const reset = source.slice(source.indexOf('const resetCatalogFilters = '), source.indexOf('\n  };', source.indexOf('const resetCatalogFilters = ')));
+  assert.match(reset, /setCatalogScope\(DEFAULT_ROOM_CATALOG_FILTERS\.scope\)/, 'clearing keeps the room scope');
+  assert.doesNotMatch(reset, /setCatalogScope\("all"\)/);
+});

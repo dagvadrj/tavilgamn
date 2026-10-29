@@ -17,6 +17,19 @@ import {
 import { useScrollRoom } from "./useScrollRoom";
 import { HybridBackdrop } from "./HybridBackdrop";
 import { HYBRID_ROOMS } from "./hybridRooms";
+
+/**
+ * The hero tucks under the sticky header by its height, which useScrollRoom
+ * measures after hydration. On slow phones that was seconds after the first
+ * paint, so the whole hero jumped up by the header height (CLS ≈ 0.96). This
+ * runs while the HTML is parsed, before the first paint, and only adds a head
+ * style so React-owned elements keep their server attributes. Streamed content
+ * is still hidden while it is parsed (height 0), so it measures in
+ * requestAnimationFrame, which runs before the paint that reveals it. It does
+ * not check the header is sticky: this page's stylesheet (which makes it
+ * sticky via :has(.scroll-room)) may still be loading at that moment.
+ */
+const HEADER_OFFSET_SCRIPT = `(function(){var n=0;(function f(){var h=document.querySelector(".store-header");if(h&&h.offsetHeight){var s=document.createElement("style");s.textContent=".scroll-room{--room-header-height:"+h.offsetHeight+"px}";document.head.appendChild(s);return}if(++n<600)requestAnimationFrame(f)})()})()`;
 import "./scroll-room.css";
 import "./room-hero-layout.css";
 const Scene = dynamic(() => import("./HybridRoomScene"), { ssr: false });
@@ -160,6 +173,7 @@ export function ScrollRoomHero({
       data-playing={playing}
       aria-label="Өрөөгөөр аялах 3D үзүүлбэр"
     >
+      <script dangerouslySetInnerHTML={{ __html: HEADER_OFFSET_SCRIPT }} />
       <div ref={tour.stage} className="scroll-room-stage">
         <div
           className="scroll-room-scene"

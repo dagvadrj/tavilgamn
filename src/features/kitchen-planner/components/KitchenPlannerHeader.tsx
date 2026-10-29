@@ -17,7 +17,13 @@ import {
   Undo2,
   Redo2,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import type { KitchenSaveStatus } from "@/lib/kitchenSaveStatus";
 import {
   KITCHEN_WORKFLOW_STEPS,
@@ -221,7 +227,13 @@ export function KitchenPlannerHeader({
   );
 }
 
-/** Design-step tool chips, shown in the left panel above the catalog. */
+/** Search, review and dimensions act on the plan; they are not catalog sections. */
+const UTILITY_TOOLS = new Set<KitchenToolbarTool>(["search", "photo", "annotation"]);
+
+/**
+ * Design-step controls in the left panel above the catalog: one scrolling row
+ * of catalog sections, and the plan tools as a separate group below it.
+ */
 export function KitchenDesignTools({
   activeTool,
   annotations,
@@ -233,25 +245,70 @@ export function KitchenDesignTools({
   busy: boolean;
   onTool: (tool: KitchenToolbarTool) => void;
 }) {
-  return (
-    <div
-      className="kitchen-category-tools kitchen-k-tools"
-      role="toolbar"
-      aria-label="Тавилгын үндсэн хэрэгслүүд"
+  const scroller = useRef<HTMLDivElement>(null);
+  const [fade, setFade] = useState({ start: false, end: false });
+  const updateFade = useCallback(() => {
+    const row = scroller.current;
+    if (!row) return;
+    const start = row.scrollLeft > 1;
+    const end = row.scrollLeft + row.clientWidth < row.scrollWidth - 1;
+    setFade((previous) =>
+      previous.start === start && previous.end === end ? previous : { start, end },
+    );
+  }, []);
+  useEffect(() => {
+    const row = scroller.current;
+    if (!row) return;
+    updateFade();
+    const observer = new ResizeObserver(updateFade);
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [updateFade]);
+  // Bring the chosen section into view without scrolling the panel itself.
+  useEffect(() => {
+    const row = scroller.current;
+    const chip = row?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!row || !chip) return;
+    // The row is position: relative, so offsetLeft is measured from its start.
+    const left = chip.offsetLeft;
+    const right = left + chip.offsetWidth;
+    if (left < row.scrollLeft) row.scrollTo({ left: left - 16 });
+    else if (right > row.scrollLeft + row.clientWidth)
+      row.scrollTo({ left: right - row.clientWidth + 16 });
+  }, [activeTool]);
+  const button = ({ id, label, icon: Icon }: (typeof tools)[number]) => (
+    <button
+      key={id}
+      type="button"
+      disabled={busy}
+      data-planner-tour={id === "cabinets" ? "kitchen-catalog" : undefined}
+      aria-pressed={id === "annotation" ? annotations : activeTool === id}
+      onClick={() => onTool(id)}
     >
-      {tools.map(({ id, label, icon: Icon }) => (
-        <button
-          key={id}
-          type="button"
-          disabled={busy}
-          data-planner-tour={id === "cabinets" ? "kitchen-catalog" : undefined}
-          aria-pressed={id === "annotation" ? annotations : activeTool === id}
-          onClick={() => onTool(id)}
+      <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
+      <span>{label}</span>
+    </button>
+  );
+  return (
+    <div className="kitchen-k-tools">
+      <div
+        className="kitchen-k-sections"
+        data-fade-start={fade.start || undefined}
+        data-fade-end={fade.end || undefined}
+      >
+        <div
+          ref={scroller}
+          className="kitchen-k-section-row"
+          role="group"
+          aria-label="Каталогийн ангилал"
+          onScroll={updateFade}
         >
-          <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
-          <span>{label}</span>
-        </button>
-      ))}
+          {tools.filter((tool) => !UTILITY_TOOLS.has(tool.id)).map(button)}
+        </div>
+      </div>
+      <div className="kitchen-k-plan-tools" role="group" aria-label="Хэрэгсэл">
+        {tools.filter((tool) => UTILITY_TOOLS.has(tool.id)).map(button)}
+      </div>
     </div>
   );
 }
