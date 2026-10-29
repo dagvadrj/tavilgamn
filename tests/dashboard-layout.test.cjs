@@ -126,10 +126,12 @@ test("merchant sidebar keeps all operations and settings and disables private st
   const locked = desktopMarkup(
     renderToStaticMarkup(React.createElement(MerchantSidebar, props)),
   );
-  for (const tab of MERCHANT_TABS.filter(tab => !["overview", "sales", "inventory", "progress"].includes(tab.id)))
+  // The sidebar is the only navigation now, so every page is listed there.
+  for (const tab of MERCHANT_TABS)
     assert.ok(locked.includes(tab.label), `Missing ${tab.label}`);
-  assert.equal((locked.match(/disabled=""/g) ?? []).length, 15);
-  assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 0);
+  // 15 store operations plus the sales/inventory/progress views stay locked before registration.
+  assert.equal((locked.match(/disabled=""/g) ?? []).length, 18);
+  assert.equal((locked.match(/aria-current="page"/g) ?? []).length, 1);
   const unlocked = desktopMarkup(
     renderToStaticMarkup(
       React.createElement(MerchantSidebar, { ...props, hasStore: true }),
@@ -206,12 +208,10 @@ test("admin header navigation has working callbacks and exposes matching dialog 
   const calls = [];
   const { AdminHeader } = loadSource("src/components/AdminHeader.tsx");
   const tree = AdminHeader({
-    userName: "Тест админ",
     activeLabel: "Бүтээгдэхүүн",
     menuOpen: true,
-    onProducts: () => calls.push("products"),
-    onSettings: () => calls.push("settings"),
-    onProfile: () => calls.push("profile"),
+    slotRef() {},
+    onSearch: () => calls.push("search"),
     onMessages: () => calls.push("messages"),
     onToggleMenu: () => calls.push("menu"),
   });
@@ -221,10 +221,11 @@ test("admin header navigation has working callbacks and exposes matching dialog 
   const menu = buttons.find((button) => button.props["aria-controls"]);
   assert.equal(menu.props["aria-controls"], "admin-navigation");
   assert.equal(menu.props["aria-expanded"], true);
-  buttons
-    .find((button) => button.props["aria-label"] === "Самбарын тохиргоо")
-    .props.onClick();
-  assert.deepEqual(calls, ["settings"]);
+  for (const label of ["Хайх", "Мессеж"])
+    buttons.find((button) => button.props["aria-label"] === label).props.onClick();
+  assert.deepEqual(calls, ["search", "messages"]);
+  // One date-range control lives in the page, so the header has no tab strip.
+  assert.equal(elements(tree, (node) => node.props?.["aria-current"] === "page")[0].props.children, "Бүтээгдэхүүн");
 });
 
 test("mobile sidebar uses native dialog behavior and restores scroll on close and desktop resize", () => {
@@ -317,11 +318,14 @@ test("mobile sidebar uses native dialog behavior and restores scroll on close an
 
 test("dashboard styles share room surfaces, preserve dark mode and accessible responsive behavior", () => {
   const css = read("src/features/dashboard/dashboard.css");
-  assert.match(css, /--dashboard-bg:\s*var\(--site-bg\)/);
-  assert.match(css, /color-scheme:\s*light/);
-  const theme = read("src/features/dashboard/merchant-theme.css");
-  assert.match(theme, /\[data-theme="dark"\]/);
+  const theme = read("src/features/dashboard/dashboard-tokens.css");
+  assert.match(theme, /--site-bg:\s*var\(--dashboard-bg\)/);
+  assert.match(theme, /color-scheme:\s*light/);
+  assert.match(theme, /:root\[data-dashboard-theme="dark"\]/);
   assert.match(theme, /color-scheme:\s*dark/);
+  // Tokens are defined once; no other dashboard layer redefines the palette.
+  for (const file of ["dashboard.css", "dashboard-v14.css", "dashboard-mono.css", "merchant-theme.css", "dashboard-reference.css"])
+    assert.doesNotMatch(read("src/features/dashboard/" + file), /--dashboard-(bg|ink|surface):/);
   assert.match(css, /:focus-visible/);
   assert.match(css, /prefers-reduced-motion:\s*reduce/);
   assert.match(css, /@media\s*\(max-width:\s*1023px\)/);

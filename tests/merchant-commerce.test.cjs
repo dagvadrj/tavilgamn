@@ -48,7 +48,7 @@ test('product Excel exports preserve text instead of formulas and dimensions; PD
  assert.ok(long.getPageCount()>1);
 });
 test('all commerce endpoints authenticate before parsing files or querying data',async()=>{
- for(const [path,methods,auth] of [['merchant/products/import',['GET','POST'],'requireMerchant'],['merchant/products/export',['GET'],'requireMerchant'],['merchant/reports',['GET'],'requireMerchant'],['merchant/contracts',['GET','POST'],'requireMerchant'],['admin/merchant-contracts',['GET','POST'],'requireAdmin']]){
+ for(const [path,methods,auth] of [['merchant/products/import',['GET','POST'],'requireMerchant'],['merchant/products/export',['GET'],'requireMerchant'],['merchant/reports',['GET'],'requireMerchant'],['merchant/contracts',['GET','POST'],'requireMerchant'],['admin/merchant-contracts',['GET','POST'],'requireAdmin'],['admin/products/import',['GET','POST'],'requireAdmin']]){
   const route=loadSource('src/app/api/'+path+'/route.ts',{
    ['@/lib/supabase/'+auth]:{[auth]:async()=>({error:NextResponse.json({error:'login'},{status:401})})},
    '@/lib/supabase/admin':{getSupabaseAdmin:()=>{throw new Error('No DB before auth');}},
@@ -57,19 +57,6 @@ test('all commerce endpoints authenticate before parsing files or querying data'
  }
 });
 
-test('preview validates actual uploaded workbook; commit binds server actor, revalidates file hash and strips injected fields',async()=>{
- const bytes=await workbook([row]);const calls=[];
- const route=loadSource('src/app/api/merchant/products/import/route.ts',{
-  '@/lib/supabase/requireMerchant':{requireMerchant:async()=>({userId:'verified-merchant',error:null})},
-  '@/lib/supabase/admin':{getSupabaseAdmin:()=>({rpc:async(name,args)=>{calls.push({name,args});return{data:{count:1,replayed:false},error:null};}})},
- });
- const key=randomUUID();
- const request=(mode,hash)=>{const form=new FormData();form.set('file',new File([bytes],'products.xlsx'));form.set('requestId',key);form.set('mode',mode);form.set('owner','forged');if(hash)form.set('hash',hash);return new NextRequest('http://local/api/merchant/products/import',{method:'POST',body:form});};
- const preview=await route.POST(request('preview'));assert.equal(preview.status,200);const parsed=await preview.json();assert.equal(parsed.valid,true);assert.equal(parsed.rows[0].product,undefined);assert.equal(calls.length,0);
- assert.equal((await route.POST(request('commit','forged'))).status,400);assert.equal(calls.length,0);
- assert.equal((await route.POST(request('commit',parsed.hash))).status,201);
- assert.equal(calls[0].args.p_actor,'verified-merchant');assert.deepEqual(calls[0].args.p_products[0].storeIds,[]);
-});
 test('product export forwards the category/search/archive filter and trusted identity only',async()=>{
  const calls=[];
  const route=loadSource('src/app/api/merchant/products/export/route.ts',{

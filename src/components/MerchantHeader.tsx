@@ -1,8 +1,9 @@
 "use client";
 import type { ReactNode } from "react";
 
-import { ChevronRight, House, Menu } from "lucide-react";
+import { ChevronRight, House, Menu, Search } from "lucide-react";
 import { MerchantNotifications } from "./MerchantNotifications";
+import { DashboardThemeToggle } from "@/features/dashboard/DashboardThemeToggle";
 
 /** A location trail replaces the dashboard's large header panel. */
 export function MerchantHeader({
@@ -16,6 +17,9 @@ export function MerchantHeader({
   sidebarOpen,
   onToggleSidebar,
   hideNotifications,
+  slotRef,
+  create,
+  onSearch,
 }: {
   navigation?: ReactNode;
   balances?: ReactNode;
@@ -29,9 +33,13 @@ export function MerchantHeader({
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
   hideNotifications?: boolean;
+  /** Page-owned controls are portalled here, like the admin top bar. */
+  slotRef?: (element: HTMLDivElement | null) => void;
+  create?: ReactNode;
+  onSearch?: () => void;
 }) {
   return (
-    <div className="merchant-location-bar">
+    <div className="merchant-location-bar dashboard-topbar">
       <button
         type="button"
         className="dashboard-menu-toggle"
@@ -42,7 +50,7 @@ export function MerchantHeader({
       >
         <Menu size={20} />
       </button>
-      <nav className="merchant-breadcrumbs" aria-label="Хуудасны зам">
+      <nav className="merchant-breadcrumbs dashboard-breadcrumb" aria-label="Хуудасны зам">
         <ol>
           <li>
             <button
@@ -61,9 +69,22 @@ export function MerchantHeader({
         </ol>
       </nav>
       {navigation}
-      <div className="merchant-header-actions">
+      <div className="dashboard-topbar-slot" ref={slotRef} />
+      <div className="merchant-header-actions dashboard-header-actions">
         {balances}
+        {onSearch && (
+          <button
+            type="button"
+            className="dashboard-icon-button dashboard-mobile-only"
+            aria-label="Хайх"
+            onClick={onSearch}
+          >
+            <Search size={17} />
+          </button>
+        )}
         {!hideNotifications && <MerchantNotifications owner={owner} onKitchens={onKitchens} />}
+        <DashboardThemeToggle owner={owner} role="merchant" />
+        {create}
       </div>
 
     </div>

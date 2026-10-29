@@ -1,81 +1,73 @@
 "use client";
 import type { ReactNode } from "react";
 
-import { Menu, MessageSquare, Package, Settings } from "lucide-react";
+import Link from "next/link";
+import { Bell, ChevronDown, Menu, Search } from "lucide-react";
 
 export function AdminHeader({
-  navigation,
   activeLabel,
-  onProducts,
-  onMessages,
-  onSettings,
+  themeToggle,
+  create,
+  slotRef,
   menuOpen,
   onToggleMenu,
+  onSearch,
+  onMessages,
 }: {
-  navigation?: ReactNode;
-  userName: string;
   activeLabel: string;
-  onProducts: () => void;
-  onMessages: () => void;
-  onSettings: () => void;
-  onProfile: () => void;
+  themeToggle?: ReactNode;
+  create?: ReactNode;
+  /** Page-owned controls (date range, export) are portalled here. */
+  slotRef: (element: HTMLDivElement | null) => void;
   menuOpen: boolean;
   onToggleMenu: () => void;
+  onSearch: () => void;
+  onMessages: () => void;
 }) {
-
   return (
     <header className="admin-topbar dashboard-topbar">
-      <div className="dashboard-header-title">
-        <button
-          type="button"
-          className="dashboard-menu-toggle"
-          aria-label={menuOpen ? "Админ цэс хаах" : "Админ цэс нээх"}
-          aria-expanded={menuOpen}
-          aria-controls="admin-navigation"
-          onClick={onToggleMenu}
-        >
-          <Menu size={20} />
-        </button>
-        <div>
-          <small>АДМИН · УДИРДЛАГЫН САМБАР</small>
-          <strong>{activeLabel}</strong>
-        </div>
-      </div>
-
-      {navigation}
+      <button
+        type="button"
+        className="dashboard-menu-toggle"
+        aria-label={menuOpen ? "Админ цэс хаах" : "Админ цэс нээх"}
+        aria-expanded={menuOpen}
+        aria-controls="admin-navigation"
+        onClick={onToggleMenu}
+      >
+        <Menu size={18} />
+      </button>
+      <Link href="/" className="dashboard-workspace-switch dashboard-mobile-only" aria-label="Тавилга.mn — дэлгүүр рүү очих">
+        <span className="dashboard-workspace-mark" aria-hidden="true">
+          т
+        </span>
+        <strong>Тавилга.mn</strong>
+        <ChevronDown size={14} aria-hidden="true" />
+      </Link>
+      <nav className="dashboard-breadcrumb" aria-label="Хуудасны зам">
+        <span>Тавилга.mn</span>
+        <span aria-hidden="true">/</span>
+        <strong aria-current="page">{activeLabel}</strong>
+      </nav>
+      <div className="dashboard-topbar-slot" ref={slotRef} />
       <div className="admin-topbar-actions dashboard-header-actions">
         <button
           type="button"
-          className="admin-header-search"
-          onClick={onProducts}
-          aria-label="Бүтээгдэхүүн удирдах"
+          className="dashboard-icon-button dashboard-mobile-only"
+          aria-label="Хайх"
+          onClick={onSearch}
         >
-          <Package size={18} strokeWidth={1.7} />
-
-          <span>Бүтээгдэхүүн</span>
+          <Search size={17} />
         </button>
-
         <button
           type="button"
-          className="admin-header-icon"
-          aria-label="Самбарын тохиргоо"
-          title="Самбарын тохиргоо"
-          onClick={onSettings}
-        >
-          <Settings size={19} strokeWidth={1.7} />
-        </button>
-
-        <button
-          type="button"
-          className="admin-header-icon"
-          aria-label="Зурвасууд"
-          title="Ирсэн зурвасууд"
+          className="dashboard-icon-button dashboard-mobile-only"
+          aria-label="Мессеж"
           onClick={onMessages}
         >
-          <MessageSquare size={19} strokeWidth={1.7} />
+          <Bell size={17} />
         </button>
-
-
+        {themeToggle}
+        {create}
       </div>
     </header>
   );

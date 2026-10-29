@@ -1,8 +1,8 @@
 .dashboard-form-section {
   min-width: 0;
-  border: 1px solid var(--dashboard-border, #dbe1e7);
+  border: 1px solid var(--dashboard-border);
   border-radius: 14px;
-  background: var(--dashboard-surface, #fff);
+  background: var(--dashboard-surface);
 }
 
 .dashboard-form-section > summary {
@@ -25,7 +25,7 @@
 
 .dashboard-form-section > summary strong {
   display: block;
-  color: var(--dashboard-ink, #172b3d);
+  color: var(--dashboard-ink);
   font-size: 15px;
   font-weight: 650;
 }
@@ -33,13 +33,13 @@
 .dashboard-form-section > summary small {
   display: block;
   margin-top: 4px;
-  color: var(--dashboard-muted, #718096);
+  color: var(--dashboard-muted);
   font-size: 12px;
   line-height: 1.6;
 }
 
 .dashboard-form-optional {
-  color: var(--dashboard-muted, #718096);
+  color: var(--dashboard-muted);
   font-size: 11px;
 }
 
@@ -60,18 +60,18 @@
 }
 
 .dashboard-form-section > summary:focus-visible {
-  outline: 2px solid var(--dashboard-accent, #0674d7);
+  outline: 2px solid var(--dashboard-accent);
   outline-offset: 3px;
   border-radius: 12px;
 }
 
 .dashboard-shell .dashboard-content :is(input, select, textarea)[aria-invalid="true"],
 .dashboard-shell .dashboard-content :is(input, select, textarea):user-invalid {
-  border-color: #df5858;
+  border-color: var(--dashboard-danger);
 }
 
 .dashboard-form-hint {
-  color: var(--dashboard-muted, #718096);
+  color: var(--dashboard-muted);
   font-size: 13px;
   line-height: 1.7;
 }

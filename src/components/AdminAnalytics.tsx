@@ -136,7 +136,7 @@ function AnalyticsPanel({ owner, section }: { owner: string; section: string }) 
             MARKETPLACE · СҮҮЛИЙН 30 ХОНОГ
           </span>
           <h1>{section === "sales" ? "Борлуулалтын хандлага" : section === "merchant-stats" ? "Дэлгүүрийн статистик" : "Ерөнхий тойм"}</h1>
-          <p>Нийт GMV, шимтгэл болон дэлгүүрүүдийн гүйцэтгэл.</p>
+          <p>Нийт борлуулалт, шимтгэл болон дэлгүүрүүдийн гүйцэтгэл.</p>
         </div>
         <button
           type="button"
@@ -164,7 +164,7 @@ function AnalyticsPanel({ owner, section }: { owner: string; section: string }) 
           <div className="reference-kpis dashboard-compact-kpis">
             <Metric
               icon={TrendingUp}
-              label="Нийт GMV (30 хоног)"
+              label="Нийт борлуулалт (30 хоног)"
               value={result.gmv}
               money
               detail={count(result.paidOrders) + " төлөгдсөн захиалга"}
@@ -179,14 +179,14 @@ function AnalyticsPanel({ owner, section }: { owner: string; section: string }) 
             />
             <Metric
               icon={CircleDollarSign}
-              label="Merchant-д очих цэвэр дүн"
+              label="Дэлгүүрт олгох цэвэр дүн"
               value={result.merchantNet}
               money
               detail={
                 count(result.activeMerchants) +
                 " идэвхтэй дэлгүүр · " +
                 count(result.featuredMerchants) +
-                " Featured"
+                " онцлох"
               }
             />
             <Metric
@@ -204,7 +204,7 @@ function AnalyticsPanel({ owner, section }: { owner: string; section: string }) 
         <div className="admin-panel-heading">
           <div>
             <h2>Захиалгын мэдээлэл</h2>
-            <p>Marketplace-ийн бүх захиалга.</p>
+            <p>Платформын бүх захиалга.</p>
           </div>
           <Package size={21} />
         </div>
@@ -278,7 +278,7 @@ function RevenuePanels({ result }: { result: Analytics }) {
         <header>
           <div>
             <h2 id="admin-split-heading">Борлуулалтын хуваарилалт</h2>
-            <p>GMV → Merchant net + Platform fee</p>
+            <p>Нийт борлуулалт → Дэлгүүрт олгох + Платформын шимтгэл</p>
           </div>
         </header>
         <DashboardDonut

@@ -317,7 +317,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-[data-theme="dark"] .page-skeleton {
+:root[data-dashboard-theme="dark"] .dashboard-layout .page-skeleton {
   --loading-block: #28364e;
   --loading-highlight: #344663;
 }

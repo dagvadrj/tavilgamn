@@ -4,48 +4,6 @@
   width: 100%;
   max-width: none;
   margin: 0;
-  --dashboard-accent: var(--site-accent);
-  --dashboard-on-accent: #fff;
-}
-
-.dashboard-layout .dashboard-themed-shell[data-theme="light"] {
-  --dashboard-bg: var(--site-bg);
-  --dashboard-surface: var(--site-surface);
-  --dashboard-elevated: var(--site-hover);
-  --dashboard-border: var(--site-line);
-  --dashboard-ink: var(--site-ink);
-  --dashboard-muted: var(--site-muted);
-  --dashboard-success: var(--site-success);
-  --dashboard-danger: #dc2626;
-  --dashboard-warning: #a16207;
-  color-scheme: light;
-}
-
-.dashboard-layout .dashboard-themed-shell[data-theme="dark"] {
-  --site-ink-rgb: 248 250 252;
-  --site-muted-rgb: 166 179 199;
-  --site-line-rgb: 41 53 72;
-  --site-accent-rgb: 96 165 250;
-  --site-ink: #f8fafc;
-  --site-muted: #a6b3c7;
-  --site-line: #293548;
-  --site-surface: #111827;
-  --site-bg: #090e18;
-  --site-hover: #1e293b;
-  --site-accent: #60a5fa;
-  --site-success: var(--site-accent);
-  --site-primary: #60a5fa;
-  --site-primary-hover: #93c5fd;
-  --dashboard-bg: #090e18;
-  --dashboard-surface: #111827;
-  --dashboard-elevated: #1e293b;
-  --dashboard-border: #293548;
-  --dashboard-ink: #f8fafc;
-  --dashboard-muted: #a6b3c7;
-  --dashboard-accent: #60a5fa;
-  --dashboard-success: var(--site-accent);
-  --dashboard-on-accent: #081426;
-  color-scheme: dark;
 }
 
 .dashboard-layout .dashboard-themed-shell .dashboard-sidebar,
@@ -53,23 +11,11 @@
   background: var(--dashboard-surface);
 }
 
-.dashboard-themed-shell .dashboard-drawer {
-  --dashboard-bg: inherit;
-  --dashboard-surface: inherit;
-  --dashboard-elevated: inherit;
-  --dashboard-border: inherit;
-  --dashboard-ink: inherit;
-  --dashboard-muted: inherit;
-  --dashboard-accent: inherit;
-  color-scheme: inherit;
-}
-
 .dashboard-layout .dashboard-themed-shell .dashboard-topbar {
   padding-inline: clamp(16px, 2vw, 32px);
 }
 
 .dashboard-layout .dashboard-themed-shell .dashboard-content {
-  max-width: 1680px;
   padding: clamp(20px, 2vw, 32px);
 }
 
@@ -96,7 +42,7 @@
 }
 
 .dashboard-themed-shell.dashboard-shell .reference-bar-track span {
-  background: linear-gradient(90deg, var(--dashboard-accent), color-mix(in srgb, var(--dashboard-accent), #fff 35%));
+  background: linear-gradient(90deg, var(--dashboard-accent), var(--glass-glow));
 }
 
 .dashboard-themed-shell .dashboard-content .btn-primary:hover:not(:disabled) {
@@ -115,19 +61,7 @@
 /* The render workspace follows the selected dashboard theme as well. */
 
 .dashboard-themed-shell .mk-render-layout {
-  --dashboard-bg: inherit;
-  --dashboard-surface: inherit;
-  --dashboard-elevated: inherit;
-  --dashboard-border: inherit;
-  --dashboard-ink: inherit;
-  --dashboard-muted: inherit;
-  --dashboard-accent: inherit;
-  --dashboard-on-accent: inherit;
-  --dashboard-success: inherit;
-  --dashboard-danger: inherit;
-  --dashboard-warning: inherit;
   color: var(--dashboard-ink);
-  color-scheme: inherit;
 }
 
 @media (max-width: 639px) {

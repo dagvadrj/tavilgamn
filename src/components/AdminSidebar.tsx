@@ -2,143 +2,84 @@
 
 import Link from "next/link";
 import {
-  Armchair,
   Box,
-  LayoutDashboard,
-  Layers3,
-  Mail,
-  Package,
-  Settings,
-  Users,
-  Store,
+  ChartColumn,
+  ChevronDown,
   CookingPot,
-  House,
-  ArrowUpRight,
-  CircleHelp,
-  UserRound,
-  ShieldCheck,
   FileText,
+  House,
+  LayoutDashboard,
+  Library,
+  ListOrdered,
+  MessageSquare,
+  Package,
+  Search,
+  Settings,
+  Store,
+  TrendingUp,
+  UserRound,
+  Users,
+  Wallet,
+  Warehouse,
 } from "lucide-react";
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 
 export const ADMIN_TABS = [
-  {
-    id: "dashboard",
-    label: "Ерөнхий тойм",
-    short: "Тойм",
-    icon: LayoutDashboard,
-  },
-  { id: "sales", label: "Борлуулалтын хандлага", short: "Борлуулалт", icon: LayoutDashboard },
-  { id: "merchant-stats", label: "Дэлгүүрийн статистик", short: "Дэлгүүрүүд", icon: Store },
-  {
-    id: "merchants",
-    label: "Дэлгүүрүүд",
-    short: "Дэлгүүр",
-    icon: Store,
-  },
-  {
-    id: "furniture",
-    label: "Бүтээгдэхүүн",
-    short: "Бараа",
-    icon: Box,
-  },
-  {
-    id: "orders",
-    label: "Захиалгууд",
-    short: "Захиалга",
-    icon: Package,
-  },
-  {
-    id: "users",
-    label: "Хэрэглэгчид",
-    short: "Хэрэглэгч",
-    icon: Users,
-  },
-  {
-    id: "messages",
-    label: "Ирсэн зурвас",
-    short: "Зурвас",
-    icon: Mail,
-  },
-  {
-    id: "models",
-    label: "3D загварууд",
-    short: "3D",
-    icon: Layers3,
-  },
-  {
-    id: "kitchens",
-    label: "Гал тогооны загварууд",
-    short: "Гал тогоо",
-    icon: CookingPot,
-  },
-  {
-    id: "merchant-ops",
-    label: "Баталгаажуулалт, хэтэвч",
-    short: "Merchant хяналт",
-    icon: ShieldCheck,
-  },
-  {
-    id: "kitchen-library",
-    label: "Гал тогооны GLB сан",
-    short: "Kitchen GLB",
-    icon: CookingPot,
-  },
-  { id: "homepage", label: "Нүүр хуудас засах", short: "Нүүр хуудас", icon: House },
-  { id: "rooms", label: "Бэлэн өрөөнүүд", short: "Өрөөнүүд", icon: House },
-  { id: "contracts", label: "Merchant гэрээ", short: "Гэрээ", icon: FileText },
-  {
-    id: "settings",
-    label: "Самбарын тохиргоо",
-    short: "Тохиргоо",
-    icon: Settings,
-  },
+  { id: "dashboard", label: "Тойм", short: "Тойм", icon: LayoutDashboard },
+  { id: "sales", label: "Борлуулалт", short: "Борлуулалт", icon: TrendingUp },
+  { id: "merchant-stats", label: "Дэлгүүрийн статистик", short: "Статистик", icon: ChartColumn },
+  { id: "merchants", label: "Дэлгүүрүүд", short: "Дэлгүүр", icon: Store },
+  { id: "furniture", label: "Бүтээгдэхүүн", short: "Бараа", icon: Package },
+  { id: "orders", label: "Захиалга", short: "Захиалга", icon: ListOrdered },
+  { id: "users", label: "Хэрэглэгчид", short: "Хэрэглэгч", icon: Users },
+  { id: "messages", label: "Мессеж", short: "Мессеж", icon: MessageSquare },
+  { id: "models", label: "3D загвар", short: "3D", icon: Box },
+  { id: "kitchens", label: "Гал тогооны загварууд", short: "Гал тогоо", icon: CookingPot },
+  { id: "merchant-ops", label: "Төлбөр, тооцоо", short: "Тооцоо", icon: Wallet },
+  { id: "kitchen-library", label: "Гал тогооны GLB сан", short: "GLB сан", icon: Library },
+  { id: "homepage", label: "Нүүр хуудас", short: "Нүүр хуудас", icon: House },
+  { id: "rooms", label: "Бэлэн өрөөнүүд", short: "Өрөөнүүд", icon: Warehouse },
+  { id: "contracts", label: "Гэрээ", short: "Гэрээ", icon: FileText },
+  { id: "settings", label: "Тохиргоо", short: "Тохиргоо", icon: Settings },
   { id: "profile", label: "Миний бүртгэл", short: "Бүртгэл", icon: UserRound },
 ] as const;
 
 export type AdminTab = (typeof ADMIN_TABS)[number]["id"];
 
+/** Every admin page stays reachable; groups follow the monochrome redesign spec. */
+export const ADMIN_NAV_GROUPS: { label?: string; tabs: AdminTab[] }[] = [
+  { tabs: ["dashboard", "orders", "furniture", "models"] },
+  {
+    label: "Худалдаа",
+    tabs: ["merchants", "merchant-ops", "contracts", "sales", "merchant-stats"],
+  },
+  { label: "Контент", tabs: ["kitchens", "kitchen-library", "rooms", "homepage"] },
+  { label: "Систем", tabs: ["users", "messages", "settings"] },
+];
+
 export function AdminSidebar({
   active,
   onChange,
   userName,
+  email,
+  counts = {},
+  badges = {},
+  onSearch,
   open,
   onClose,
 }: {
   active: AdminTab;
   onChange: (tab: AdminTab) => void;
   userName: string;
+  email?: string;
+  /** Muted totals beside an item. */
+  counts?: Partial<Record<AdminTab, number>>;
+  /** Highlighted counts that need action now. */
+  badges?: Partial<Record<AdminTab, number>>;
+  onSearch?: () => void;
   open: boolean;
   onClose: () => void;
 }) {
-  const groups = [
-    {
-      label: "УДИРДЛАГА",
-      tabs: ADMIN_TABS.filter((item) =>
-        [
-          "merchants",
-          "merchant-ops",
-          "contracts",
-          "furniture",
-          "orders",
-        ].includes(item.id),
-      ),
-    },
-    {
-      label: "ХЭРЭГЛЭГЧ БА КОНТЕНТ",
-      tabs: ADMIN_TABS.filter((item) =>
-        [
-          "users",
-          "messages",
-          "models",
-          "kitchens",
-          "kitchen-library",
-          "rooms",
-          "homepage",
-        ].includes(item.id),
-      ),
-    },
-  ];
   return (
     <DashboardSidebar
       id="admin-navigation"
@@ -148,80 +89,74 @@ export function AdminSidebar({
     >
       <Link
         href="/"
-        className="dashboard-brand"
-        aria-label="tavilga.mn — дэлгүүр рүү очих"
+        className="dashboard-workspace-switch"
+        aria-label="Тавилга.mn — дэлгүүр рүү очих"
       >
-        <span className="dashboard-brand-icon">
-          <Armchair size={22} strokeWidth={1.7} />
+        <span className="dashboard-workspace-mark" aria-hidden="true">
+          т
         </span>
-        <span className="dashboard-brand-copy">
-          <strong>tavilga.mn</strong>
-          <small>{userName} · Админ</small>
-        </span>
+        <strong>Тавилга.mn</strong>
+        <ChevronDown size={14} aria-hidden="true" />
       </Link>
+      {onSearch && (
+        <button type="button" className="dashboard-search" onClick={onSearch}>
+          <Search size={15} aria-hidden="true" />
+          <span>Хайх</span>
+          <kbd>⌘K</kbd>
+        </button>
+      )}
       <nav aria-label="Админ цэс">
-        {groups.map((group) => (
-          <div className="dashboard-nav-group" key={group.label}>
-            <p className="dashboard-nav-label">{group.label}</p>
-            {group.tabs.map((item) => {
+        {ADMIN_NAV_GROUPS.map((group) => (
+          <div className="dashboard-nav-group" key={group.label ?? "main"}>
+            {group.label && (
+              <p className="dashboard-nav-label">{group.label}</p>
+            )}
+            {group.tabs.map((id) => {
+              const item = ADMIN_TABS.find((tab) => tab.id === id)!;
               const Icon = item.icon;
-
+              const badge = badges[id];
+              const count = counts[id];
               return (
                 <button
-                  key={item.id}
+                  key={id}
                   type="button"
                   aria-label={item.label}
-                  aria-current={active === item.id ? "page" : undefined}
+                  aria-current={active === id ? "page" : undefined}
                   className="dashboard-nav-button"
-                  onClick={() => onChange(item.id)}
+                  onClick={() => onChange(id)}
                 >
                   <span className="dashboard-nav-icon">
-                    <Icon size={20} strokeWidth={1.7} />
+                    <Icon size={16} strokeWidth={1.6} />
                   </span>
-
                   <span>{item.label}</span>
+                  {badge ? (
+                    <span className="dashboard-nav-badge">{badge}</span>
+                  ) : count !== undefined ? (
+                    <span className="dashboard-nav-count">
+                      {count.toLocaleString("en-US")}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
           </div>
         ))}
       </nav>
-      <div className="dashboard-sidebar-bottom">
-        <div className="dashboard-sidebar-note">
-          <strong>Marketplace удирдлага</strong>
-          <p>Дэлгүүр, бараа болон захиалгын мэдээллээ нэг дор хянаарай.</p>
-        </div>
-        <button
-          type="button"
-          className="dashboard-nav-button"
-          aria-label="Самбарын тохиргоо"
-          aria-current={active === "settings" ? "page" : undefined}
-          onClick={() => onChange("settings")}
-        >
-          <span className="dashboard-nav-icon">
-            <Settings size={18} />
-          </span>
-          <span>Самбарын тохиргоо</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange("profile")}
-          aria-label="Миний бүртгэл"
-          className={`dashboard-nav-button ${active === "profile" ? "active" : ""}`}
-          aria-current={active === "profile" ? "page" : undefined}
-        >
-          <span className="dashboard-nav-icon"><UserRound size={18} /></span>
-          <span>Миний бүртгэл</span>
-        </button>
-        <Link href="/#contact" className="dashboard-sidebar-link">
-          <CircleHelp size={18} />
-          Тусламж, холбоо барих
-        </Link>
-        <Link href="/" className="dashboard-sidebar-link">
-          <ArrowUpRight size={18} />
-          Дэлгүүр рүү очих
-        </Link>
-      </div>
+      <button
+        type="button"
+        className="dashboard-user"
+        aria-label="Миний бүртгэл"
+        aria-current={active === "profile" ? "page" : undefined}
+        onClick={() => onChange("profile")}
+      >
+        <span className="dashboard-user-avatar" aria-hidden="true">
+          {userName.trim().charAt(0).toUpperCase() || "А"}
+        </span>
+        <span className="dashboard-user-copy">
+          <strong>{userName}</strong>
+          {email && <small>{email}</small>}
+        </span>
+      </button>
     </DashboardSidebar>
   );
 }

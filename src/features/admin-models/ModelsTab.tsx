@@ -682,7 +682,7 @@ export function ModelsTab({
           className={modelSection === "requests" ? "active" : ""}
           onClick={() => setModelSection("requests")}
         >
-          Requests
+          Хүсэлтүүд
         </button>
 
         <button
@@ -690,7 +690,7 @@ export function ModelsTab({
           className={modelSection === "processing" ? "active" : ""}
           onClick={() => setModelSection("processing")}
         >
-          Processing
+          Боловсруулж буй
           <span>{modelCounts.processing}</span>
         </button>
 
@@ -699,7 +699,7 @@ export function ModelsTab({
           className={modelSection === "ready" ? "active" : ""}
           onClick={() => setModelSection("ready")}
         >
-          Ready
+          Бэлэн
           <span>{modelCounts.ready}</span>
         </button>
 
@@ -708,7 +708,7 @@ export function ModelsTab({
           className={modelSection === "error" ? "active" : ""}
           onClick={() => setModelSection("error")}
         >
-          Error
+          Алдаатай
           <span>{modelCounts.error}</span>
         </button>
       </div>
@@ -1183,7 +1183,7 @@ export function ModelsTab({
                           ) : (
                             <FileOutput size={14} />
                           )}
-                          Standard GLB
+                          Стандарт GLB
                         </button>
                       )}
                       {modelStatuses[m.id] && (

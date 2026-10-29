@@ -57,13 +57,18 @@ test('line view renders both real series and donut legend selections toggle with
   assert.equal(h.active(), null);
 });
 
-test('top navigation retains route callbacks and disables store operations before registration', () => {
-  const { DashboardNavigation } = loadSource('src/features/dashboard/DashboardNavigation.tsx');
-  let selected;
-  const tree = DashboardNavigation({ tabs: [{ id: 'overview', label: 'Overview' }, { id: 'products', label: 'Products', disabled: true }], active: 'overview', onChange: id => { selected = id; } });
+test('mobile tab bar routes destinations, opens the menu and shows the action badge', () => {
+  const { DashboardTabBar } = loadSource('src/features/dashboard/DashboardTabBar.tsx');
+  const calls = [];
+  const icon = () => null;
+  const tree = DashboardTabBar({
+    items: [{ id: 'dashboard', label: 'Тойм', icon }, { id: 'orders', label: 'Захиалга', icon }, { id: 'models', label: '3D', icon, badge: 3 }],
+    active: 'dashboard', onChange: id => calls.push(id), create: null, onMenu: () => calls.push('menu'),
+  });
   const buttons = nodes(tree).filter(n => n.type === 'button');
+  assert.equal(buttons.length, 4);
   assert.equal(buttons[0].props['aria-current'], 'page');
-  assert.equal(buttons[1].props.disabled, true);
-  buttons[0].props.onClick();
-  assert.equal(selected, 'overview');
+  for (const button of buttons) button.props.onClick();
+  assert.deepEqual(calls, ['dashboard', 'orders', 'models', 'menu']);
+  assert.ok(nodes(tree).some(n => n.props?.className === 'dashboard-nav-badge' && n.props.children === 3));
 });

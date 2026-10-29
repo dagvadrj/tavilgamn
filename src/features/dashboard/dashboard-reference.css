@@ -1,20 +1,13 @@
 /* Dashboard layout based on the supplied admin/merchant reference. */
 
 .dashboard-layout .dashboard-shell {
-  --dashboard-bg: #090a0c;
-  --dashboard-surface: #111317;
-  --dashboard-elevated: #191c22;
-  --dashboard-border: #262930;
-  --dashboard-ink: #f2f3f5;
-  --dashboard-muted: #9ca0ab;
   grid-template-columns: 248px minmax(0, 1fr);
-  max-width: 1600px;
   margin-inline: auto;
 }
 
 .dashboard-layout .dashboard-sidebar {
   padding: 16px;
-  background: #0d0f12;
+  background: var(--dashboard-surface);
   border-right: 1px solid var(--dashboard-border);
 }
 
@@ -27,7 +20,7 @@
 
 .dashboard-layout .dashboard-brand-icon {
   position: relative;
-  color: #090a0c;
+  color: var(--dashboard-on-accent);
   background: var(--dashboard-accent);
   border-radius: 10px;
 }
@@ -59,7 +52,7 @@
   min-height: 82px;
   padding: 14px 24px;
   border-radius: 0;
-  background: #090a0cf5;
+  background: var(--dashboard-bg);
 }
 
 .dashboard-layout .dashboard-header-title strong {
@@ -95,7 +88,7 @@
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  color: #090a0c;
+  color: var(--dashboard-on-accent);
   background: var(--dashboard-accent);
 }
 
@@ -301,7 +294,7 @@
 
 .dashboard-shell .reference-filters button[aria-pressed="true"] {
   background: var(--dashboard-accent);
-  color: #090a0c;
+  color: var(--dashboard-on-accent);
   font-weight: 700;
 }
 
@@ -370,7 +363,7 @@
 }
 
 .dashboard-shell .reference-merchant-table tr.is-selected {
-  background: #a395ff0b;
+  background: color-mix(in srgb, var(--dashboard-accent) 7%, transparent);
 }
 
 .dashboard-shell .reference-merchant-table td:first-child {
@@ -422,7 +415,7 @@
   height: 40px;
   border-radius: 12px;
   background: var(--dashboard-accent);
-  color: #090a0c;
+  color: var(--dashboard-on-accent);
   font-size: 16px;
   font-weight: 700;
 }
@@ -465,9 +458,9 @@
 }
 
 .dashboard-shell .reference-featured-control .is-featured {
-  border-color: #f59e0b55;
-  background: #f59e0b15;
-  color: #fbbf24;
+  border-color: color-mix(in srgb, var(--dashboard-warning) 35%, transparent);
+  background: color-mix(in srgb, var(--dashboard-warning) 10%, transparent);
+  color: var(--dashboard-warning);
 }
 
 .dashboard-shell .reference-active-control {
@@ -478,7 +471,7 @@
 
 .dashboard-shell .reference-active-control.is-active {
   color: var(--site-primary);
-  background: #26384815;
+  background: color-mix(in srgb, var(--dashboard-success) 10%, transparent);
 }
 
 .dashboard-shell :is(.reference-featured-control, .reference-active-control) input[type="checkbox"] {
@@ -504,7 +497,7 @@
 }
 
 .dashboard-shell .reference-save.is-dirty {
-  color: #090a0c;
+  color: var(--dashboard-on-accent);
   border-color: var(--dashboard-accent);
   background: var(--dashboard-accent);
 }
@@ -732,7 +725,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #8b78ff, #b6aaff);
+  background: linear-gradient(90deg, var(--dashboard-accent), var(--glass-glow));
 }
 
 .dashboard-shell .reference-revenue-bars small {
@@ -874,7 +867,7 @@
   padding: 4px 9px;
   border-radius: 20px;
   color: var(--site-primary);
-  background: #26384815;
+  background: color-mix(in srgb, var(--dashboard-success) 10%, transparent);
   font-size: 11px;
 }
 
@@ -903,12 +896,12 @@
 }
 
 .dashboard-shell .reference-stock-warning > strong {
-  color: #fbbf24;
+  color: var(--dashboard-warning);
 }
 
 .dashboard-shell .reference-stock-warning .reference-kpi-label svg {
-  color: #fbbf24;
-  background: #f59e0b15;
+  color: var(--dashboard-warning);
+  background: color-mix(in srgb, var(--dashboard-warning) 10%, transparent);
 }
 
 .dashboard-shell .reference-inventory-panel {
@@ -993,7 +986,7 @@
 }
 
 .dashboard-shell .reference-inventory-list .is-low-stock {
-  color: #fbbf24;
+  color: var(--dashboard-warning);
 }
 
 .dashboard-shell .reference-inventory-panel footer {
@@ -1243,8 +1236,8 @@
 .dashboard-shell .reference-featured-badge {
   padding: 4px 9px;
   border-radius: 20px;
-  color: #fbbf24;
-  background: #f59e0b15;
+  color: var(--dashboard-warning);
+  background: color-mix(in srgb, var(--dashboard-warning) 10%, transparent);
   font-size: 11px;
 }
 

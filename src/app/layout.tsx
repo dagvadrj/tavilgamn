@@ -38,7 +38,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="mn" className={`${sans.variable} ${display.variable}`}>
+    // The dashboard theme script sets data-dashboard-theme before hydration.
+    <html
+      lang="mn"
+      className={`${sans.variable} ${display.variable}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen flex flex-col">
         <AuthBootstrap />
         <Suspense fallback={null}><PlannerNavigationFeedback /></Suspense>

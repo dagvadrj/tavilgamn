@@ -5,14 +5,16 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   Archive,
+  Download,
+  FileSpreadsheet,
+  ImageOff,
+  Info,
+  MoreHorizontal,
   Package,
   Pencil,
-  Info,
   Plus,
   RefreshCw,
   Search,
-  Upload,
-  Download,
 } from "lucide-react";
 import { CATEGORY_LABEL } from "@/lib/products";
 import { formatPrice } from "@/lib/format";
@@ -22,6 +24,7 @@ import {
   type MerchantProduct,
   blankProduct,
   merchantRequest,
+  missingImage,
 } from "@/features/merchant/merchantApi";
 import { MerchantProductEditor } from "@/features/merchant/MerchantProductEditor";
 import { useMerchantResource } from "./useMerchantResource";
@@ -37,8 +40,13 @@ import dynamic from "next/dynamic";
 import { CATEGORIES } from "@/lib/catalogCategories";
 import { merchantDownload } from "./merchantDownload";
 import "./merchant-commerce.css";
-const MerchantProductImport = dynamic(() =>
-  import("./MerchantProductImport").then((m) => m.MerchantProductImport),
+const ProductImportFlow = dynamic(() =>
+  import("@/features/dashboard/ProductImportFlow").then(
+    (m) => m.ProductImportFlow,
+  ),
+);
+const MerchantMissingImages = dynamic(() =>
+  import("./MerchantMissingImages").then((m) => m.MerchantMissingImages),
 );
 
 export function MerchantProducts({
@@ -61,7 +69,7 @@ export function MerchantProducts({
   const [archiveBusy, setArchiveBusy] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [category, setCategory] = useState("");
-  const [importing, setImporting] = useState(false);
+  const [screen, setScreen] = useState<"list" | "import" | "images">("list");
   const [exportBusy, setExportBusy] = useState("");
   useEffect(() => {
     if (!initialCreate) return;
@@ -72,11 +80,15 @@ export function MerchantProducts({
   const resource = useMerchantResource<{ products: MerchantProduct[] }>(
     owner,
     `/api/merchant/products${includeArchived ? "?archived=1" : ""}`,
-    !editing,
+    !editing && screen === "list",
     60000,
   );
   const products = resource.data?.products ?? [],
     loading = !resource.data && !resource.error;
+  const refreshAll = () => {
+    resource.refresh();
+    void useCatalogStore.getState().refresh(true);
+  };
   if (detailsId)
     return (
       <ProductDetails
@@ -97,16 +109,61 @@ export function MerchantProducts({
         onSave={() => {
           setEditing(null);
           setSaved(true);
-          resource.refresh();
-          void useCatalogStore.getState().refresh(true);
+          refreshAll();
         }}
       />
     );
+  if (screen === "import")
+    return (
+      <ProductImportFlow
+        owner={owner}
+        endpoint="/api/merchant/products/import"
+        existingNames={products.map((product) => product.name)}
+        onImported={refreshAll}
+        onClose={() => setScreen("list")}
+        onMissingImages={() => setScreen("images")}
+      />
+    );
+  if (screen === "images")
+    return (
+      <MerchantMissingImages
+        owner={owner}
+        products={products}
+        onSaved={refreshAll}
+        onClose={() => setScreen("list")}
+      />
+    );
+  const missingImages = products.filter(missingImage).length;
   const filtered = products.filter(
     (product) =>
       (!category || product.category === category) &&
       product.name.toLowerCase().includes(query.trim().toLowerCase()),
   );
+  const exportProducts = async (format: "xlsx" | "pdf") => {
+    setError(null);
+    setExportBusy(format);
+    try {
+      const params = new URLSearchParams({
+        format,
+        category,
+        search: query.trim(),
+      });
+      if (includeArchived) params.set("archived", "1");
+      await merchantDownload(
+        "/api/merchant/products/export?" + params,
+        owner,
+        `baraa-${category || "all"}.${format}`,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Экспорт амжилтгүй боллоо.");
+    } finally {
+      setExportBusy("");
+    }
+  };
+  const startCreate = () => {
+    setSaved(false);
+    setEditing({ product: blankProduct(), create: true });
+  };
   return (
     <section>
       <div className="merchant-section-heading">
@@ -114,36 +171,26 @@ export function MerchantProducts({
           <h2 className="text-2xl">Миний бүтээгдэхүүн</h2>
           <p className="merchant-muted">{products.length} бараа</p>
         </div>
-        <div className="merchant-commerce-toolbar">
-          <button
-            type="button"
-            className="btn-ghost"
-            onClick={() => setImporting(true)}
-          >
-            <Upload size={16} /> Excel импорт
-          </button>
-          <button
-            className="btn-primary"
-            onClick={() => {
-              setSaved(false);
-              setEditing({ product: blankProduct(), create: true });
-            }}
-          >
-            <Plus size={18} />
-            Бараа нэмэх
-          </button>
-        </div>
       </div>
-      {importing && (
-        <MerchantProductImport
-          owner={owner}
-          onClose={() => setImporting(false)}
-          onImported={() => {
-            resource.refresh();
-            void useCatalogStore.getState().refresh(true);
-          }}
-        />
-      )}
+      <div className="dashboard-choice-grid" role="group" aria-label="Бараа нэмэх арга">
+        <button type="button" className="dashboard-choice is-primary" onClick={() => setScreen("import")}>
+          <FileSpreadsheet size={26} aria-hidden="true" />
+          <strong>Excel-ээр оруулах</strong>
+          <small>Олон барааг нэг дор · хамгийн хурдан</small>
+        </button>
+        <button type="button" className="dashboard-choice" onClick={startCreate}>
+          <Plus size={26} aria-hidden="true" />
+          <strong>Нэг бүтээгдэхүүн нэмэх</strong>
+          <small>Зураг, үнэ, хэмжээг гараар бөглөнө</small>
+        </button>
+        {missingImages > 0 && (
+          <button type="button" className="dashboard-choice is-warning" onClick={() => setScreen("images")}>
+            <ImageOff size={26} aria-hidden="true" />
+            <strong>Зураг дутуу · {missingImages}</strong>
+            <small>Олон зургийг нэрээр нь автоматаар холбоно</small>
+          </button>
+        )}
+      </div>
       <div className="merchant-search">
         <Search size={18} />
         <input
@@ -181,78 +228,56 @@ export function MerchantProducts({
             ))}
           </select>
         </label>
-        {(["xlsx", "pdf"] as const).map((format) => (
-          <button
-            key={format}
-            type="button"
-            className="btn-ghost"
-            disabled={!!exportBusy || loading}
-            onClick={async () => {
-              setError(null);
-              setExportBusy(format);
-              try {
-                const params = new URLSearchParams({
-                  format,
-                  category,
-                  search: query.trim(),
-                });
-                if (includeArchived) params.set("archived", "1");
-                await merchantDownload(
-                  "/api/merchant/products/export?" + params,
-                  owner,
-                  `baraa-${category || "all"}.${format}`,
-                );
-              } catch (e) {
-                setError(
-                  e instanceof Error ? e.message : "Экспорт амжилтгүй боллоо.",
-                );
-              } finally {
-                setExportBusy("");
-              }
-            }}
-          >
-            <Download size={16} />
-            {exportBusy === format
-              ? "Үүсгэж байна…"
-              : format === "xlsx"
-                ? "Excel экспорт"
-                : "PDF экспорт"}
-          </button>
-        ))}
-        <span className="merchant-muted">
-          {filtered.length} бараа · Экспорт энэ шүүлтүүрээр гарна
-        </span>
+        <label className="merchant-muted flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={includeArchived}
+            onChange={(event) => setIncludeArchived(event.target.checked)}
+          />
+          Архивласныг харах
+        </label>
+        <details className="dashboard-menu">
+          <summary className="btn-ghost">
+            <Download size={16} /> {exportBusy ? "Үүсгэж байна…" : "Экспорт"}
+          </summary>
+          <div className="dashboard-menu-list">
+            <button type="button" disabled={!!exportBusy || loading} onClick={() => void exportProducts("xlsx")}>
+              Excel ({filtered.length} бараа)
+            </button>
+            <button type="button" disabled={!!exportBusy || loading} onClick={() => void exportProducts("pdf")}>
+              PDF ({filtered.length} бараа)
+            </button>
+          </div>
+        </details>
       </div>
-      <label className="merchant-muted flex items-center gap-2 mb-4">
-        <input
-          type="checkbox"
-          checked={includeArchived}
-          onChange={(event) => setIncludeArchived(event.target.checked)}
-        />
-        Архивласан барааг хамт харах
-      </label>
       {saved && (
         <p className="merchant-success" role="status">
           Бүтээгдэхүүн хадгалагдлаа.
+        </p>
+      )}
+      {(error || resource.error) && (
+        <p className="merchant-error" role="alert">
+          {error || resource.error}
         </p>
       )}
       {loading ? (
         <div className="merchant-state" role="status">
           <StatSkeleton rows={5} />
         </div>
-      ) : error || resource.error ? (
-        <p className="merchant-error" role="alert">
-          {error || resource.error}
-        </p>
       ) : !filtered.length ? (
         <div className="merchant-panel merchant-state">
           <Package size={32} />
-          <h3>{query ? "Бараа олдсонгүй" : "Эхний бүтээгдэхүүнээ нэмээрэй"}</h3>
+          <h3>{query || category ? "Бараа олдсонгүй" : "Эхний бараагаа Excel-ээр оруулъя"}</h3>
           <p>
-            {query
-              ? "Хайх үгээ өөрчилж дахин оролдоорой."
-              : "Барааны зураг, үнэ, хэмжээ, нөөцөө оруулж худалдаагаа эхлүүлээрэй."}
+            {query || category
+              ? "Хайх үг эсвэл ангиллаа өөрчилж дахин оролдоорой."
+              : "Excel загвар татаж бөглөөд, бүх бараагаа нэг дор оруулна."}
           </p>
+          {!query && !category && (
+            <button type="button" className="btn-primary" onClick={() => setScreen("import")}>
+              <FileSpreadsheet size={16} /> Excel template татаж эхлэх
+            </button>
+          )}
         </div>
       ) : (
         <div className="merchant-products">
@@ -280,15 +305,6 @@ export function MerchantProducts({
               </strong>
               <MadeToOrderSwitch owner={owner} product={product} />
               <div className="merchant-product-actions">
-                <ProductQrButton owner={owner} product={product} />
-                <ModelRequestButton
-                  owner={owner}
-                  product={product}
-                  onEdit={() => setEditing({ product, create: false })}
-                />
-                {product.model && !product.archivedAt && (
-                  <MerchantGlbDownload owner={owner} productId={product.id} />
-                )}
                 <button
                   className="btn-ghost"
                   disabled={
@@ -303,57 +319,70 @@ export function MerchantProducts({
                   <Pencil size={15} />
                   Засах
                 </button>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  aria-label={`${product.name} дэлгэрэнгүй`}
-                  onClick={() => setDetailsId(product.id)}
-                >
-                  <Info size={15} /> Дэлгэрэнгүй
-                </button>
-                <button
-                  type="button"
-                  className="btn-ghost"
-                  disabled={archiveBusy === product.id}
-                  aria-label={`${product.name} ${product.archivedAt ? "сэргээх" : "архивлах"}`}
-                  onClick={async () => {
-                    if (
-                      !product.archivedAt &&
-                      !window.confirm(
-                        "Барааг худалдаанаас түр нууж архивлах уу? Зураг, 3D болон захиалгын түүх устахгүй.",
-                      )
-                    )
-                      return;
-                    setArchiveBusy(product.id);
-                    setError(null);
-                    try {
-                      await merchantRequest(
-                        `/api/merchant/products/${encodeURIComponent(product.id)}`,
-                        owner,
-                        {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            archived: !product.archivedAt,
-                          }),
-                        },
-                      );
-                      resource.refresh();
-                      void useCatalogStore.getState().refresh(true);
-                    } catch (reason) {
-                      setError(
-                        reason instanceof Error
-                          ? reason.message
-                          : "Архивлаж чадсангүй.",
-                      );
-                    } finally {
-                      setArchiveBusy(null);
-                    }
-                  }}
-                >
-                  <Archive size={15} />{" "}
-                  {product.archivedAt ? "Сэргээх" : "Архивлах"}
-                </button>
+                <details className="dashboard-menu">
+                  <summary className="btn-ghost" aria-label={`${product.name}: бусад үйлдэл`}>
+                    <MoreHorizontal size={16} />
+                  </summary>
+                  <div className="dashboard-menu-list">
+                    <button
+                      type="button"
+                      aria-label={`${product.name} дэлгэрэнгүй`}
+                      onClick={() => setDetailsId(product.id)}
+                    >
+                      <Info size={15} /> Дэлгэрэнгүй
+                    </button>
+                    <ProductQrButton owner={owner} product={product} />
+                    <ModelRequestButton
+                      owner={owner}
+                      product={product}
+                      onEdit={() => setEditing({ product, create: false })}
+                    />
+                    {product.model && !product.archivedAt && (
+                      <MerchantGlbDownload owner={owner} productId={product.id} />
+                    )}
+                    <button
+                      type="button"
+                      disabled={archiveBusy === product.id}
+                      aria-label={`${product.name} ${product.archivedAt ? "сэргээх" : "архивлах"}`}
+                      onClick={async () => {
+                        if (
+                          !product.archivedAt &&
+                          !window.confirm(
+                            "Барааг худалдаанаас түр нууж архивлах уу? Зураг, 3D болон захиалгын түүх устахгүй.",
+                          )
+                        )
+                          return;
+                        setArchiveBusy(product.id);
+                        setError(null);
+                        try {
+                          await merchantRequest(
+                            `/api/merchant/products/${encodeURIComponent(product.id)}`,
+                            owner,
+                            {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                archived: !product.archivedAt,
+                              }),
+                            },
+                          );
+                          refreshAll();
+                        } catch (reason) {
+                          setError(
+                            reason instanceof Error
+                              ? reason.message
+                              : "Архивлаж чадсангүй.",
+                          );
+                        } finally {
+                          setArchiveBusy(null);
+                        }
+                      }}
+                    >
+                      <Archive size={15} />{" "}
+                      {product.archivedAt ? "Сэргээх" : "Архивлах"}
+                    </button>
+                  </div>
+                </details>
               </div>
             </article>
           ))}

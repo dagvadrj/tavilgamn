@@ -105,7 +105,7 @@ function GrowthReview({ owner }: { owner: string }) {
     <section className="merchant-growth-page">
       <header className="merchant-growth-title">
         <div>
-          <span className="merchant-growth-eyebrow">MERCHANT OPERATIONS</span>
+          <span className="merchant-growth-eyebrow">ТӨЛБӨР, ТООЦОО</span>
           <h1>Баталгаажуулалт, хэтэвч</h1>
           <p>
             Гэрчилгээ, данс, орлого таталт, кредит болон ирсэн 3D файлуудыг
