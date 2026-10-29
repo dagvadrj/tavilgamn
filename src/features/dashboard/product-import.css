@@ -1,0 +1,373 @@
+/* Excel import: three numbered steps, an editable review table and one sticky action bar. */
+
+.product-import {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.product-import-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.product-import-heading h1,
+.product-import-summary h2 {
+  margin: 0;
+  font-size: clamp(22px, 2.4vw, 28px);
+  color: var(--dashboard-ink);
+}
+
+.product-import-heading p {
+  margin: 4px 0 0;
+  color: var(--dashboard-muted);
+}
+
+.product-import-steps {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.product-import-steps > li {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  background: var(--glass-panel, var(--dashboard-surface));
+  box-shadow: var(--glass-shadow, none);
+}
+
+.product-import-steps > li > span {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--dashboard-accent);
+  color: var(--dashboard-on-accent);
+  font-weight: 700;
+}
+
+.product-import-steps > li[data-done] > span {
+  background: var(--dashboard-success);
+}
+
+.product-import-steps > li[data-active] {
+  border-color: var(--dashboard-accent);
+}
+
+.product-import-steps strong {
+  display: block;
+  color: var(--dashboard-ink);
+}
+
+.product-import-steps small {
+  color: var(--dashboard-muted);
+}
+
+.product-import-drop {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 20px 14px;
+  border: 2px dashed var(--dashboard-control-border);
+  border-radius: 14px;
+  color: var(--dashboard-muted);
+  text-align: center;
+}
+
+.product-import-drop[data-dragging] {
+  border-color: var(--dashboard-accent);
+  background: color-mix(in srgb, var(--dashboard-accent) 8%, transparent);
+}
+
+.product-import-drop strong {
+  overflow-wrap: anywhere;
+}
+
+.product-import-error {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--dashboard-danger) 40%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--dashboard-danger) 10%, transparent);
+  color: var(--dashboard-danger);
+}
+
+.product-import-duplicates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--dashboard-ink);
+}
+
+.product-import-duplicates legend {
+  float: left;
+  margin-right: 6px;
+  font-weight: 600;
+}
+
+.product-import-duplicates label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.product-import-review {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.product-import-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.product-import-filters button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 999px;
+  background: var(--glass-control, var(--dashboard-elevated));
+  color: var(--dashboard-ink);
+  cursor: pointer;
+}
+
+.product-import-filters button span {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+  color: var(--dashboard-muted);
+}
+
+.product-import-filters button[aria-pressed="true"] {
+  border-color: var(--dashboard-accent);
+  background: var(--dashboard-accent);
+  color: var(--dashboard-on-accent);
+}
+
+.product-import-filters button[aria-pressed="true"] span {
+  color: inherit;
+}
+
+.product-import-table {
+  max-height: min(62vh, 720px);
+  overflow: auto;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 14px;
+  background: var(--dashboard-surface);
+}
+
+.product-import-table table {
+  width: 100%;
+  min-width: 1080px;
+  border-collapse: collapse;
+}
+
+.product-import-table :is(th, td) {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--dashboard-border);
+  text-align: left;
+  vertical-align: top;
+  color: var(--dashboard-ink);
+}
+
+.product-import-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--dashboard-solid);
+  color: var(--dashboard-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.product-import-table tbody tr:hover {
+  background: color-mix(in srgb, var(--dashboard-accent) 5%, transparent);
+}
+
+.product-import-table tbody tr[data-skipped] {
+  opacity: 0.55;
+}
+
+.product-import-table td small {
+  display: block;
+  max-width: 260px;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--dashboard-muted);
+}
+
+.product-import-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.product-import-table tr[data-status="ok"] .product-import-status {
+  color: var(--dashboard-success);
+}
+
+.product-import-table tr[data-status="warning"] .product-import-status,
+.product-import-table tr[data-status="warning"] td small {
+  color: var(--dashboard-warning);
+}
+
+.product-import-table tr[data-status="error"] .product-import-status,
+.product-import-table tr[data-status="error"] td small {
+  color: var(--dashboard-danger);
+}
+
+.product-import-table tr[data-status="error"] > th {
+  box-shadow: inset 3px 0 0 var(--dashboard-danger);
+}
+
+.product-import-table td :is(input:not([type="checkbox"]), select) {
+  width: 100%;
+  min-width: 90px;
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 1px solid var(--dashboard-control-border);
+  border-radius: 8px;
+  background: var(--glass-field, var(--dashboard-solid));
+  color: var(--dashboard-ink);
+  font: inherit;
+}
+
+.product-import-table td[data-invalid] :is(input, select) {
+  border-color: var(--dashboard-danger);
+  box-shadow: 0 0 0 1px var(--dashboard-danger);
+}
+
+.product-import-table input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--dashboard-accent);
+}
+
+.product-import-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--dashboard-muted);
+}
+
+.product-import-pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--dashboard-muted);
+}
+
+/* One place for the screen's actions, always reachable while scrolling the table. */
+
+.product-import-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 16px;
+  background: var(--glass-chrome, var(--dashboard-surface));
+  box-shadow: var(--glass-shadow, none);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+}
+
+.product-import-bar > span {
+  margin-right: auto;
+  color: var(--dashboard-ink);
+  font-weight: 600;
+}
+
+.product-import-summary {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 32px 20px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 18px;
+  background: var(--glass-panel, var(--dashboard-surface));
+  text-align: center;
+  color: var(--dashboard-success);
+}
+
+.product-import-summary dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 120px));
+  gap: 12px;
+  margin: 0;
+}
+
+.product-import-summary dl > div {
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--dashboard-elevated);
+}
+
+.product-import-summary dt {
+  color: var(--dashboard-muted);
+  font-size: 12px;
+}
+
+.product-import-summary dd {
+  margin: 0;
+  color: var(--dashboard-ink);
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.product-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.product-import :is(.btn-primary, .btn-ghost) {
+  min-height: 44px;
+}
+
+@media (max-width: 900px) {
+  .product-import-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .product-import-heading {
+    flex-direction: column;
+  }
+  .product-import-bar > :is(.btn-primary, .btn-ghost) {
+    flex: 1 1 100%;
+  }
+  .product-import-summary dl {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.product-import-table[data-compact] table {
+  min-width: 0;
+}

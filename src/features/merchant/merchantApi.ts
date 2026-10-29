@@ -130,3 +130,30 @@ export async function merchantRequest<T>(
     return result as T;
   }
 }
+
+/** Uploads one product photo to the merchant's image storage and returns its URL. */
+export async function uploadMerchantImage(file: File, owner: string) {
+  if (
+    !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+    file.size === 0 ||
+    file.size > 3 * 1024 * 1024
+  )
+    throw new Error("JPG, PNG эсвэл WebP зураг сонгоно уу. Хэмжээ 3 MB хүртэл.");
+  const form = new FormData();
+  form.set("file", file);
+  const response = await authFetch(
+    "/api/merchant/images",
+    { method: "POST", body: form },
+    owner,
+  );
+  const data = await response.json().catch(() => null);
+  if (!response.ok || typeof data?.url !== "string")
+    throw new Error(data?.error ?? "Зургийг оруулж чадсангүй.");
+  if (!isOwner(owner)) throw new Error("Merchant нэвтрэлт өөрчлөгдсөн байна.");
+  return data.url as string;
+}
+
+export const PLACEHOLDER_IMAGE = "/image.png";
+export const missingImage = (product: MerchantProduct) =>
+  !product.archivedAt &&
+  (!product.image || product.image === PLACEHOLDER_IMAGE);

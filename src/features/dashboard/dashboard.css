@@ -392,3 +392,123 @@
   outline: 2px solid var(--dashboard-accent);
   outline-offset: 2px;
 }
+
+/* Big, clearly worded entry points: the first thing to do on a screen. */
+
+.dashboard-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.dashboard-choice {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  min-height: 112px;
+  padding: 18px 20px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 18px;
+  background: var(--glass-panel, var(--dashboard-surface));
+  box-shadow: var(--glass-shadow, none);
+  color: var(--dashboard-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.dashboard-choice svg {
+  color: var(--dashboard-accent);
+}
+
+.dashboard-choice strong {
+  font-size: 16px;
+}
+
+.dashboard-choice small {
+  color: var(--dashboard-muted);
+}
+
+.dashboard-choice.is-primary {
+  border-color: var(--dashboard-accent);
+  background: var(--dashboard-accent);
+  color: var(--dashboard-on-accent);
+}
+
+.dashboard-choice.is-primary :is(svg, small) {
+  color: inherit;
+}
+
+.dashboard-choice.is-warning svg {
+  color: var(--dashboard-warning);
+}
+
+.dashboard-choice:hover {
+  border-color: var(--dashboard-accent);
+}
+
+.dashboard-choice:focus-visible {
+  outline: 2px solid var(--dashboard-accent);
+  outline-offset: 3px;
+}
+
+/* Secondary actions live in a small disclosure menu instead of a row of buttons. */
+
+.dashboard-menu {
+  position: relative;
+}
+
+.dashboard-menu > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  justify-content: center;
+  list-style: none;
+  cursor: pointer;
+}
+
+.dashboard-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-menu-list {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 200px;
+  margin-top: 6px;
+  padding: 6px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 14px;
+  background: var(--dashboard-solid);
+  box-shadow: 0 16px 40px var(--dashboard-shadow);
+}
+
+.dashboard-menu-list > :is(button, a),
+.dashboard-menu-list > * > :is(button, a) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--dashboard-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.dashboard-menu-list > :is(button, a):hover:not(:disabled),
+.dashboard-menu-list > * > :is(button, a):hover:not(:disabled) {
+  background: var(--dashboard-elevated);
+}
+
+.dashboard-menu-list :disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

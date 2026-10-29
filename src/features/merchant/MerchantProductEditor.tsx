@@ -12,7 +12,6 @@ import { DashboardFormSection } from "@/features/dashboard/DashboardFormSection"
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Box, ImagePlus, Save, X } from "lucide-react";
-import { authFetch } from "@/lib/authFetch";
 import type { Product } from "@/lib/types";
 import { CATEGORIES } from "@/lib/products";
 import { specificationFields } from "@/lib/productSpecifications";
@@ -20,8 +19,8 @@ import { parseProduct } from "@/lib/catalogValidation";
 import { MAX_STOCK_QUANTITY } from "@/lib/inventory";
 import {
   type MerchantProduct,
-  isOwner,
   merchantRequest,
+  uploadMerchantImage,
 } from "@/features/merchant/merchantApi";
 
 export function MerchantProductEditor({
@@ -75,41 +74,7 @@ export function MerchantProductEditor({
   function field<K extends keyof Product>(key: K, value: Product[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
   }
-  async function uploadImage(file: File) {
-    if (
-      !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-      file.size === 0 ||
-      file.size > 3 * 1024 * 1024
-    ) {
-      throw new Error(
-        "JPG, PNG эсвэл WebP зураг сонгоно уу. Хэмжээ 3 MB хүртэл.",
-      );
-    }
-
-    const form = new FormData();
-    form.set("file", file);
-
-    const response = await authFetch(
-      "/api/merchant/images",
-      {
-        method: "POST",
-        body: form,
-      },
-      owner,
-    );
-
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok || typeof data?.url !== "string") {
-      throw new Error(data?.error ?? "Зургийг оруулж чадсангүй.");
-    }
-
-    if (!isOwner(owner)) {
-      throw new Error("Merchant нэвтрэлт өөрчлөгдсөн байна.");
-    }
-
-    return data.url as string;
-  }
+  const uploadImage = (file: File) => uploadMerchantImage(file, owner);
   return (
     <form
       className="merchant-form-page"

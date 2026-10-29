@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireMerchant } from "@/lib/supabase/requireMerchant";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { CatalogInputError } from "@/lib/catalogValidation";
+import { merchantImportTemplate } from "@/lib/merchantExcel";
+import { documentResponse, commerceError } from "@/lib/merchantCommerceServer";
 import {
-  IMPORT_BYTES,
-  merchantImportTemplate,
-  parseMerchantWorkbook,
-} from "@/lib/merchantExcel";
-import {
-  documentResponse,
-  limitedBody,
-  commerceError,
-} from "@/lib/merchantCommerceServer";
+  importErrorsResponse,
+  importPreview,
+  isImportUpload,
+  previewRow,
+  readImportJson,
+  validProducts,
+} from "@/lib/productImportServer";
 import { merchantHeaders } from "@/lib/merchantServer";
 import { toJson } from "@/lib/supabase/json";
 export const dynamic = "force-dynamic";
@@ -29,63 +29,29 @@ export async function GET(request: NextRequest) {
     return commerceError(error, "Excel загварыг үүсгэж чадсангүй.");
   }
 }
+/** multipart = preview the uploaded file; JSON = commit edited rows or download failed rows. */
 export async function POST(request: NextRequest) {
   try {
     const auth = await requireMerchant(request);
     if (auth.error) return auth.error;
-    const bytes = await limitedBody(request, IMPORT_BYTES + 64000);
-    let form: FormData;
-    try {
-      form = await new Response(bytes, {
-        headers: { "Content-Type": request.headers.get("content-type") ?? "" },
-      }).formData();
-    } catch {
-      throw new CatalogInputError("Excel файлаа дахин сонгоно уу.");
-    }
-    const file = form.get("file"),
-      requestId = form.get("requestId"),
-      mode = form.get("mode");
-    if (
-      !(file instanceof File) ||
-      !/\.xlsx$/i.test(file.name) ||
-      file.size > IMPORT_BYTES ||
-      typeof requestId !== "string" ||
-      !/^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(requestId) ||
-      !["preview", "commit"].includes(String(mode))
-    )
-      throw new CatalogInputError("5 MB хүртэл .xlsx файл сонгоно уу.");
-    const parsed = await parseMerchantWorkbook(
-      new Uint8Array(await file.arrayBuffer()),
-      requestId,
-    );
-    if (mode === "preview")
-      return NextResponse.json(
-        {
-          valid: parsed.valid,
-          rows: parsed.rows.map((row) => ({
-            row: row.row,
-            name: row.name,
-            category: row.category,
-            price: row.price,
-            errors: row.errors,
-          })),
-          hash: parsed.hash,
-        },
-        { headers: { ...merchantHeaders, "X-Merchant-Mutation": "none" } },
-      );
-    if (!parsed.valid)
-      throw new CatalogInputError(
-        "Файлын алдаатай мөрүүдийг зассаны дараа импортлоно уу.",
-      );
-    if (form.get("hash") !== parsed.hash)
-      throw new CatalogInputError("Файл өөрчлөгдсөн байна. Дахин шалгана уу.");
+    if (isImportUpload(request))
+      return NextResponse.json(await importPreview(request), {
+        headers: { ...merchantHeaders, "X-Merchant-Mutation": "none" },
+      });
+    const body = await readImportJson(request);
+    if (body.mode === "errors") return importErrorsResponse(body.rows);
+    if (body.mode === "validate")
+      return NextResponse.json({ rows: body.rows.map(previewRow) }, { headers: { ...merchantHeaders, "X-Merchant-Mutation": "none" } });
+    // A merchant always imports into their own store; the RPC derives it from the actor.
+    if (body.storeId !== undefined)
+      throw new CatalogInputError("Импортын хүсэлт буруу байна.");
     const { data, error } = await getSupabaseAdmin().rpc(
       "import_merchant_products",
       {
         p_actor: auth.userId,
-        p_request: requestId,
-        p_hash: parsed.hash,
-        p_products: toJson(parsed.rows.map((row) => row.product)),
+        p_request: body.requestId,
+        p_hash: body.hash,
+        p_products: toJson(validProducts(body.rows)),
       },
     );
     if (error) throw error;
