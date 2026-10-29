@@ -177,10 +177,10 @@ test('catalog resolves registered part URLs and disables archived part choices',
 test('admin saves model references in existing variant configuration and rejects missing anchors', async () => {
   const { NextRequest } = require('next/server');
   const frameId = '22222222-2222-4333-8444-555555555555';
-  let stored, anchorExists = true;
+  let stored, anchorNames = ['door_socket'];
   const db = {
     from() { return { select() { return this; }, async in() { return { data: [
-      { id: frameId, glb_validation: { nodeNames: anchorExists ? ['door_socket'] : [] } },
+      { id: frameId, glb_validation: { nodeNames: anchorNames } },
       { id, processing_status: 'ready', glb_path: 'door.glb', specifications: { type: 'kitchen-part:door' } },
     ], error: null }; } }; },
     async rpc(name, args) { stored = { name, args }; return { error: null }; },
@@ -195,8 +195,35 @@ test('admin saves model references in existing variant configuration and rejects
   assert.equal(stored.name, 'save_kitchen_module_variant');
   assert.equal(stored.args.p_payload.configuration.assembly.slots[0].options[0].modelId, id);
   assert.equal(stored.args.p_payload.configuration.assembly.slots[0].options[0].glbUrl, undefined);
-  stored = undefined; anchorExists = false;
-  assert.equal((await POST(request())).status, 400); assert.equal(stored, undefined);
+  for (const names of [[], ['door_socket', 'door_socket']]) {
+    stored = undefined; anchorNames = names;
+    assert.equal((await POST(request())).status, 400); assert.equal(stored, undefined);
+  }
+  anchorNames = ['Assembly', 'Assembly', 'door_socket'];
+  assert.equal((await POST(request())).status, 201);
+});
+
+test('worker tolerates repeated CAD group names while auditing unique sockets', async () => {
+  const { fixture } = require('./helpers/glb-fixture.cjs');
+  const fs = require('node:fs/promises'), os = require('node:os'), path = require('node:path');
+  const { readAssemblySockets, verifyAssemblySockets } = await import('../scripts/models/assembly-sockets.mjs');
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'kitchen-duplicate-nodes-'));
+  const source = path.join(dir, 'source.glb'), output = path.join(dir, 'output.glb');
+  const glb = duplicateAnchor => Buffer.from(fixture(d => {
+    d.nodes[0].name='3DGeom'; d.nodes[0].children=[1,2,3,4,5];
+    d.nodes.push({name:'Assembly'}, {name:'Assembly'}, {name:'3DGeom'}, {name:'door_socket',translation:[.2,.8,.3]}, {name:duplicateAnchor?'door_socket':'other_socket'});
+  }));
+  try {
+    await fs.writeFile(source,glb(false)); await fs.writeFile(output,glb(false));
+    const sockets = await readAssemblySockets(source);
+    assert.deepEqual([...sockets.keys()], ['door_socket','other_socket']);
+    await verifyAssemblySockets(source,[output]);
+    await fs.writeFile(output,glb(true));
+    await assert.rejects(verifyAssemblySockets(source,[output]),/lost or moved: door_socket/);
+  } finally {
+    assert.ok(path.resolve(dir).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    await fs.rm(dir,{recursive:true,force:true});
+  }
 });
 
 test('admin rejects inactive or wrong-surface part materials before saving the variant', async () => {

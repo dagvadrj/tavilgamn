@@ -183,10 +183,10 @@ export async function POST(request: NextRequest) {
             typeof report !== "object" ||
             Array.isArray(report) ||
             !Array.isArray(report.nodeNames) ||
-            !report.nodeNames.includes(slot.anchorNode)
+            report.nodeNames.filter((name) => name === slot.anchorNode).length !== 1
           )
             throw new KitchenModuleInputError(
-              `${slot.label}: ${slot.anchorNode} холбох цэг parent GLB-д олдсонгүй. GLB-г нэртэй anchor-тай дахин оруулна уу эсвэл мм байрлал ашиглана уу.`,
+              `${slot.label}: ${slot.anchorNode} холбох цэг parent GLB-д олдсонгүй эсвэл нэр нь давхардсан байна. GLB-г давхардахгүй нэртэй anchor-тай дахин оруулна уу эсвэл мм байрлал ашиглана уу.`,
             );
         }
         if (slot.hideNodes.includes(slot.anchorNode))

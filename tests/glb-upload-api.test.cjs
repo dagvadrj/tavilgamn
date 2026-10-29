@@ -29,6 +29,16 @@ test('upload-complete validates downloaded GLB and queues checksum atomically',a
   assert.equal(s.lastArgs.p_sha256,createHash('sha256').update(s.bytes).digest('hex'));
   assert.equal(s.lastArgs.p_validation.frontConfirmed,true);
 });
+
+test('upload-complete queues imported kitchen parts and assemblies with repeated internal node names',async()=>{
+  const bytes=fixture(d=>{d.nodes[0].name='Assembly';d.nodes[0].children=[1];d.nodes.push({name:'Assembly'});});
+  for(const specifications of [{type:'kitchen-part:appliance'}, {assembly:'authored-nodes'}]) {
+    const {route,stats}=setup({bytes,model:{specifications}});
+    assert.equal((await route.POST(request())).status,200);
+    assert.equal(stats().queued,1);
+    assert.deepEqual(stats().lastArgs.p_validation.nodeNames,['Assembly','Assembly']);
+  }
+});
 test('upload-complete rejects missing actor-owned intent, archive, and missing front confirmation before R2 access',async()=>{
   for (const [options,body,status] of [[{intent:null},{},400],[{model:{archived_at:'2026-10-01'}},{},404],[{},{frontConfirmed:false},400],[{denied:true},{},401]]) {
     const {route,stats}=setup(options);assert.equal((await route.POST(request(body))).status,status);assert.equal(stats().sends,0);assert.equal(stats().queued,0);
