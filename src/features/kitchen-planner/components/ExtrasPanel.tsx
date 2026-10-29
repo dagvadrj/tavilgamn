@@ -62,10 +62,15 @@ export function ExtrasPanel({
       {selected ? (
         <fieldset disabled={disabled} className="km-fields">
           <h2>{selected.name}</h2>
-          {onFocus && <button type="button" onClick={onFocus}>Төхөөрөмж рүү ойртуулах</button>}
+          {onFocus && <button type="button" onClick={onFocus}>{selected.planningFurniture ? "Тавилга руу ойртуулах" : "Төхөөрөмж рүү ойртуулах"}</button>}
           <p>
             {selected.width} × {selected.height} × {selected.depth} мм
           </p>
+          {selected.planningFurniture && <>
+            <DimensionInput label="Өргөн" value={selected.width} min={600} max={3000} onCommit={width => onChange({ ...selected, width: Math.round(width) })} />
+            <DimensionInput label="Гүн" value={selected.depth} min={selected.planningFurniture === "island" ? 600 : 350} max={1400} onCommit={depth => onChange({ ...selected, depth: Math.round(depth) })} />
+            <DimensionInput label="Өндөр" value={selected.height} min={750} max={Math.min(1200, room.height)} onCommit={height => onChange({ ...selected, height: Math.round(height) })} />
+          </>}
           {selected.asset && (
             <DimensionInput
               label="Шалнаас өндөр (Y) · мм"

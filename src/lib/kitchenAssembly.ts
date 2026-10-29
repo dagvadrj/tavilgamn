@@ -27,6 +27,7 @@ import { parseKitchenExtras } from "./kitchenExtras";
 import { parseKitchenSpace } from "./kitchenSpace";
 import { parseKitchenCountertopLayout } from "./kitchenCountertopLayout";
 import { parseKitchenCornerPlan } from "./kitchenCornerGeometry";
+import { parseKitchenLineLighting } from "./kitchenLighting";
 
 export type SavedKitchen = {
   id: string;
@@ -662,6 +663,8 @@ export function parseKitchen(value: unknown, options: { allowEmpty?: boolean } =
   if (countertopLayout) next.countertopLayout = countertopLayout;
   const cornerPlan = parseKitchenCornerPlan(raw.cornerPlan);
   if (cornerPlan) next.cornerPlan = cornerPlan;
+  const lineLighting = parseKitchenLineLighting(raw.lineLighting);
+  if (lineLighting) next.lineLighting = lineLighting;
   const issue = placementIssues(next).find(i => i.severity === "error"); if (issue) throw new Error(issue.message);
   return next;
 }

@@ -33,6 +33,7 @@ import { KitchenTops } from "./KitchenTops";
 import { KitchenCabinetGLB } from "./KitchenCabinetGLB";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { KitchenExtraMesh } from "./KitchenExtraMesh";
+import { KitchenLineLights } from "./KitchenLineLights";
 import { CameraNavigation } from "./CameraNavigation";
 import { KitchenInteriorView } from "./KitchenInteriorView";
 import { KitchenRoomShell } from "./KitchenRoomShell";
@@ -436,6 +437,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
             </group>
           );
         })}
+        <KitchenLineLights kitchen={kitchen} />
         <KitchenTops kitchen={kitchen} materialDefinitions={props.materialDefinitions}
           onSelectCountertop={top => props.onSelectCountertop?.(top.id)}
           onCountertopPointerDown={(event, top) => start(event, top)}

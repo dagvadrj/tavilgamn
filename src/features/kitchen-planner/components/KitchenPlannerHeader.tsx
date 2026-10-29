@@ -8,6 +8,8 @@ import {
   Check,
   CookingPot,
   CornerDownRight,
+  Lightbulb,
+  RectangleHorizontal,
   PanelTop,
   Refrigerator,
   Ruler,
@@ -28,6 +30,8 @@ import { KitchenProjectName } from "./KitchenProjectName";
 import "./kitchen-project-header.css";
 
 export type KitchenToolbarTool =
+  | "lighting"
+  | "island"
   | "corner"
   | "cabinets"
   | "appliances"
@@ -39,6 +43,8 @@ export type KitchenToolbarTool =
 const tools = [
   { id: "cabinets", label: "Шүүгээ", icon: PanelTop },
   { id: "corner", label: "Булан", icon: CornerDownRight },
+  { id: "lighting", label: "Шугаман гэрэл", icon: Lightbulb },
+  { id: "island", label: "Тек / Арал", icon: RectangleHorizontal },
   { id: "appliances", label: "Төхөөрөмж", icon: Refrigerator },
   { id: "dining", label: "Хоолны хэсэг", icon: Armchair },
   { id: "items", label: "Нэмэлт", icon: CookingPot },

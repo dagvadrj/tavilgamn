@@ -2,6 +2,7 @@ import { cabinetLabel, type ModularKitchen } from "./kitchenCabinets";
 import { cabinetCorners, fitCountertops } from "./kitchenPlacement";
 import { fitBacksplashes } from "./kitchenBacksplash";
 import { kitchenCornerGeometry } from "./kitchenCornerGeometry";
+import { kitchenLightStrips } from "./kitchenLighting";
 import { COMPONENT_LABELS, getComponents, getComponentSize } from "./kitchenComponents";
 import { kitchenVariantFits, kitchenVariantFromModule, type KitchenCatalogModule } from "./kitchenModuleCatalog";
 import { getKitchenGlbAssembly, resolveKitchenPartOption, type KitchenGlbSlot } from "./kitchenGlbAssembly";
@@ -70,6 +71,7 @@ export function buildKitchenBom(kitchen:ModularKitchen, modules:KitchenCatalogMo
     dimensions:dims(panel.width,panel.height,panel.thickness),material:kitchen.backsplashMaterialId??"wall-tiles-white",unitPrice:null,included:false});
   for(const panel of kitchenCornerGeometry(kitchen)?.panels??[])items.push({id:panel.id,label:"Булангийн зайны хавтан",quantity:1,unit:"ш",
     dimensions:dims(panel.width,panel.height,panel.thickness),material:panel.cabinet.frontMaterialId??panel.cabinet.carcassMaterialId??panel.cabinet.color,unitPrice:null,included:false});
+  for (const strip of kitchenLightStrips(kitchen)) items.push({ id: strip.id, label: strip.kind === "underCabinet" ? "Дээд шүүгээний шугаман гэрэл" : "Хөлийн шугаман гэрэл", quantity: rounded(strip.length / 1000), unit: "м", dimensions: `${Math.round(strip.length)} мм`, material: kitchen.lineLighting?.tone ?? "warm", unitPrice: null, included: false });
   const billable=items.filter(i=>!i.included),unpricedCount=billable.filter(i=>i.unitPrice===null).length;
   return {items,knownSubtotal:billable.reduce((sum,i)=>sum+(i.unitPrice??0)*i.quantity,0),unpricedCount,complete:unpricedCount===0};
 }

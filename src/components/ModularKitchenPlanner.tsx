@@ -32,6 +32,9 @@ import { KitchenPlanWorkspace } from "@/features/kitchen-planner/components/Kitc
 import { KitchenSelectionPanel } from "@/features/kitchen-planner/components/KitchenSelectionPanel";
 import { KitchenCountertopAppearance } from "@/features/kitchen-planner/components/KitchenCountertopAppearance";
 import { KitchenCornerPanel } from "@/features/kitchen-planner/components/KitchenCornerPanel";
+import { KitchenFeaturesPanel } from "@/features/kitchen-planner/components/KitchenFeaturesPanel";
+import { parseKitchenLineLighting } from "@/lib/kitchenLighting";
+import { placeKitchenPlanningFurniture, type KitchenPlanningFurnitureKind } from "@/lib/kitchenPlanningFurniture";
 import { withKitchenCountertopMaterial } from "@/lib/kitchenCountertopMaterial";
 import { detachKitchenCountertops, updateKitchenCountertop, parseKitchenCountertopLayout } from "@/lib/kitchenCountertopLayout";
 import { KitchenSpaceEditor } from "@/features/kitchen-planner/components/KitchenSpaceEditor";
@@ -156,6 +159,8 @@ const KITCHEN_LAYOUT_OPTIONS = [
   ["double-side", "Хоёр талт"],
 ] as const;
 const KITCHEN_INSPECTOR_LABELS = {
+  lighting: "Шугаман гэрэл",
+  island: "Тек / Арал",
   corner: "Булангийн шийдэл",
   countertop: "Тавцангийн материал",
   materials: "Загвар / Өнгө",
@@ -686,9 +691,20 @@ export function ModularKitchenPlanner({
       extras: design.extras?.map((e) => (e.id === extra.id ? extra : e)),
     });
   }
+  function addPlanningFurniture(kind: KitchenPlanningFurnitureKind, size: { width: number; depth: number; height: number }) {
+    if (busy) return false;
+    const extra = placeKitchenPlanningFurniture(designRef.current, kind, crypto.randomUUID(), size);
+    if (!extra) return false;
+    if (!commit({ ...designRef.current, extras: [...(designRef.current.extras ?? []), extra] })) return false;
+    selectCabinet(extra.id);
+    setWorkspaceView("3d"); setMode("move");
+    setCameraRequest(previous => ({ id: (previous?.id ?? 0) + 1, action: "focus", targetId: extra.id }));
+    setSuccessMessage(`${extra.name} нэмэгдлээ. Чирж байрлуулах эсвэл хэмжээг тохируулаарай.`);
+    return true;
+  }
   function duplicateExtra() {
     if (!selectedExtra || busy) return;
-    if (!selectedExtra.model) {
+    if (!selectedExtra.model && !selectedExtra.planningFurniture) {
       setMessage("Энэ тавилгын 3D загвар хараахан бэлэн болоогүй.");
       return;
     }
@@ -785,6 +801,7 @@ export function ModularKitchenPlanner({
     }
     try {
       parseKitchenSpace(next.room);
+      parseKitchenLineLighting(next.lineLighting);
       parseBacksplashSettings(next.backsplashSettings, next.room);
       parseKitchenCountertopLayout(next.countertopLayout, next);
       parseKitchenExtras(
@@ -1052,7 +1069,10 @@ export function ModularKitchenPlanner({
   }
 
   function openToolbarTool(tool: KitchenToolbarTool) {
-    if (tool === "corner") { setOpen(false); setCatalogOpen(false); setInspector("corner"); setSettingsOpen(true); return; }
+    if (tool === "corner" || tool === "lighting" || tool === "island") {
+      setOpen(false); setSelectedId(null); setCatalogOpen(false); setSuggestionsOpen(false); setSpaceOpen(false); setReviewOpen(false);
+      setInspector(tool); setSettingsOpen(true); setWorkspaceView("3d"); return;
+    }
     setSuggestionsOpen(false);
     if (tool === "photo") {
       changeStage("finish");
@@ -1269,8 +1289,8 @@ export function ModularKitchenPlanner({
             ? catalogCategory === "appliances"
               ? "appliances"
               : "cabinets"
-            : inspector === "corner" && settingsOpen
-              ? "corner"
+            : (inspector === "corner" || inspector === "lighting" || inspector === "island") && settingsOpen
+              ? inspector
             : inspector === "extras" && settingsOpen
               ? extrasTab === "dining"
                 ? "dining"
@@ -1901,7 +1921,9 @@ export function ModularKitchenPlanner({
             onClose={() => setSettingsOpen(false)}
           />
           {settingsOpen && plannerNotice(true)}
-          {inspector === "corner" ? <KitchenCornerPanel kitchen={design} disabled={busy} onClose={() => setSettingsOpen(false)}
+          {inspector === "lighting" || inspector === "island" ? <KitchenFeaturesPanel key={inspector} kitchen={design} section={inspector} disabled={busy}
+            onClose={() => setSettingsOpen(false)} onAdd={addPlanningFurniture}
+            onLighting={lineLighting => { if (!busy) commit({ ...designRef.current, lineLighting }); }} /> : inspector === "corner" ? <KitchenCornerPanel kitchen={design} disabled={busy} onClose={() => setSettingsOpen(false)}
             onApply={next => { if (commit(next)) { setSelectedId(null); setOpen(false); setWorkspaceView("3d"); setMode("orbit"); setSuccessMessage("L булан, зайны хавтан болон тавцан байрлалаа."); } }} /> : inspector === "countertop" ? (
             <KitchenCountertopAppearance kitchen={kitchen} selectedId={selectedId} materials={selectableMaterials}
               disabled={busy} onChange={changeCountertopMaterial}

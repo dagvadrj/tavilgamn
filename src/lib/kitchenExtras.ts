@@ -8,6 +8,7 @@ import type { Category, Material, Product } from "./types";
 import { cabinetCorners, cabinetsOverlap, fitCountertops } from "./kitchenPlacement";
 import { roomContainsFootprint } from "./kitchenRoomOutline";
 import { pcmallAppliance } from "./pcmallAppliances";
+import { validPlanningFurniture, type KitchenPlanningFurnitureKind } from "./kitchenPlanningFurniture";
 import {
   kitchenAsset,
   parseKitchenAsset,
@@ -36,6 +37,7 @@ export type KitchenExtra = {
   material: Material;
   model?: Product["model"];
   asset?: KitchenAsset;
+  planningFurniture?: KitchenPlanningFurnitureKind;
 };
 export function parseKitchenExtras(
   value: unknown,
@@ -75,6 +77,8 @@ export function parseKitchenExtras(
     )
       throw new Error("Нэмэлт тавилгын мэдээлэл буруу байна.");
     ids.add(raw.id);
+    if (raw.planningFurniture !== undefined && (!validPlanningFurniture(raw.planningFurniture, raw) || raw.category !== "dining-table" || raw.model || raw.asset || raw.position.y !== 0))
+      throw new Error("Тек эсвэл арлын хэмжээ буруу байна.");
     const asset =
       raw.asset !== undefined ? parseKitchenAsset(raw.asset) : undefined;
     if (
@@ -120,6 +124,7 @@ export function parseKitchenExtras(
       material: raw.material,
       ...(model ? { model } : {}),
       ...(asset ? { asset } : {}),
+      ...(raw.planningFurniture ? { planningFurniture: raw.planningFurniture } : {}),
     };
   });
 }
