@@ -7,7 +7,14 @@ import { useDraftState } from "@/hooks/useDashboardDraft";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Store as StoreIcon } from "lucide-react";
+import {
+  BarChart3,
+  FileSpreadsheet,
+  RefreshCw,
+  ShoppingBag,
+  Store as StoreIcon,
+  Truck,
+} from "lucide-react";
 import { useAuth } from "@/store/auth";
 import type { Store } from "@/lib/types";
 import {
@@ -421,6 +428,30 @@ function MerchantWorkspace({
         )
       ) : (
         <>
+          {tab === "overview" && (
+            // The first screen answers "what do I do now" with four big actions.
+            <div className="dashboard-choice-grid" role="group" aria-label="Гол үйлдлүүд">
+              {(
+                [
+                  ["products", "Бүтээгдэхүүн оруулах", "Excel-ээр эсвэл нэг нэгээр", FileSpreadsheet],
+                  ["orders", "Захиалга", "Ирсэн захиалгаа баталгаажуулах", ShoppingBag],
+                  ["delivery", "Хүргэлт", "Хүргэлтийн самбар", Truck],
+                  ["reports", "Тайлан", "Борлуулалт, тооцооны тайлан татах", BarChart3],
+                ] as const
+              ).map(([target, title, note, Icon], index) => (
+                <button
+                  key={target}
+                  type="button"
+                  className={index === 0 ? "dashboard-choice is-primary" : "dashboard-choice"}
+                  onClick={() => changeTab(target)}
+                >
+                  <Icon size={24} aria-hidden="true" />
+                  <strong>{title}</strong>
+                  <small>{note}</small>
+                </button>
+              ))}
+            </div>
+          )}
           {["overview", "sales", "inventory", "progress"].includes(tab) && (
             <MerchantOverview
               section={tab}
