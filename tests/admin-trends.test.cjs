@@ -9,8 +9,12 @@ test('admin trends require authorization and keep large monetary amounts exact',
   '@/lib/supabase/requireAdmin':{requireAdmin:async()=>authorized?{userId:'admin'}:{error:new Response('',{status:401})}},
   '@/lib/supabase/admin':{getSupabaseAdmin:()=>({from:()=>query})},
  });
- assert.equal((await GET({})).status,401);assert.equal(reads,0);authorized=true;
- const result=await GET({});assert.equal(result.status,200);const data=await result.json();
+ const req=(query='')=>({nextUrl:new URL('http://local/api/admin/trends'+query)});
+ assert.equal((await GET(req())).status,401);assert.equal(reads,0);authorized=true;
+ for(const bad of ['?days=0','?days=731','?days=1.5','?days=x'])assert.equal((await GET(req(bad))).status,400);
+ assert.equal(reads,0);
+ assert.equal((await (await GET(req('?days=14'))).json()).series.length,14);
+ const result=await GET(req());assert.equal(result.status,200);const data=await result.json();
  assert.equal(data.series.length,90);assert.equal(data.series.at(-1).gross,'9007199254741000');assert.equal(data.series.at(-1).net,'1001');assert.equal(data.series.at(-1).orders,'1');assert.equal(data.series[0].gross,'0');
 });
 test('concurrent imperative reads deduplicate and invalidation discards old responses',async()=>{

@@ -386,7 +386,7 @@
   cursor: pointer;
 }
 
-.dashboard-layout .dashboard-mono .dashboard-segmented button[aria-pressed="true"] {
+.dashboard-layout .dashboard-mono .dashboard-segmented button:is([aria-pressed="true"], [aria-checked="true"]) {
   background: var(--dashboard-elevated);
   color: var(--dashboard-ink);
 }

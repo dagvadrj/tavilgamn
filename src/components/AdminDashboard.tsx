@@ -63,6 +63,9 @@ const ModelsTab = dynamic(
   { loading: () => <PageSkeleton variant="dashboard" layout="list" compact /> },
 );
 import { DashboardSettings } from "@/features/dashboard/DashboardSettings";
+import { AdminOverview } from "@/features/dashboard/AdminOverview";
+import { useAdminResource } from "@/features/dashboard/useAdminResource";
+import { useCatalog } from "@/store/catalog";
 import { AdminHomepageSettings } from "@/features/home-interior/AdminHomepageSettings";
 import { DashboardAccount } from "@/features/dashboard/DashboardAccount";
 import { loginPathForDestination } from "@/lib/authRedirect";
@@ -104,6 +107,11 @@ export function AdminDashboard({
     "admin",
   );
   const handleProductOpened = useCallback(() => setOpenProductId(null), []);
+  const analytics = useAdminResource<{
+    activeMerchants: string;
+    openModelRequests: string;
+  }>(user?.id ?? "guest", "/api/admin/analytics");
+  const catalog = useCatalog();
   useEffect(() => {
     if (!TABS.some((item) => item.id === tab)) setTab("dashboard");
   }, [tab, setTab]);
@@ -170,9 +178,23 @@ export function AdminDashboard({
       email={user.email}
       owner={user.id}
       preferences={preferences}
+      counts={{
+        ...(catalog.ready && {
+          furniture: catalog.products.filter(
+            (product) => product.category !== "kitchen-cabinet",
+          ).length,
+        }),
+        ...(analytics.data && {
+          merchants: Number(analytics.data.activeMerchants),
+        }),
+      }}
+      badges={{ models: Number(analytics.data?.openModelRequests ?? 0) }}
       panelRef={panelRef}
     >
-      {["dashboard", "sales", "merchant-stats"].includes(currentTab) && <AdminAnalytics section={currentTab} />}
+      {currentTab === "dashboard" && (
+        <AdminOverview key={user.id} owner={user.id} onNavigate={selectTab} />
+      )}
+      {["sales", "merchant-stats"].includes(currentTab) && <AdminAnalytics section={currentTab} />}
       {currentTab === "merchant-ops" && <AdminMerchantGrowth />}
       {currentTab === "merchants" && <AdminMerchants />}
 
