@@ -12,11 +12,11 @@ const link = { PlannerLink: (props) => h("a", { href: props.href, className: pro
 
 test("workspace panel: three tabs in list view, Буцах in nested views, label-carrying open button when closed", () => {
   const { RoomWorkspacePanel } = loadSource("src/features/room-planner/components/RoomWorkspacePanel.tsx");
-  const base = { onOpenChange() {}, onTab() {}, onBack() {}, meta: { add: "Каталог", added: "3 өрөөнд", cart: "2 ширхэг" }, children: h("p", null, "content") };
+  const base = { onOpenChange() {}, onTab() {}, onBack() {}, meta: { add: "12 бараа", added: "3 тавилга", cart: "2 ширхэг" }, children: h("p", null, "content") };
   const list = renderToStaticMarkup(h(RoomWorkspacePanel, { ...base, open: true, tab: "added", view: "list" }));
   assert.equal((list.match(/role="tab"/g) ?? []).length, 3);
-  assert.match(list, /aria-selected="true"[^>]*>.*?Нэмсэн тавилга<\/span><small>3 өрөөнд/);
-  assert.match(list, /Сагсалсан тавилга<\/span><small>2 ширхэг/);
+  assert.match(list, /aria-selected="true"[^>]*>.*?Өрөөнд<\/span><small>3 тавилга/);
+  assert.match(list, /Сагс<\/span><small>2 ширхэг/);
   assert.match(list, /aria-label="Самбар хаах — камер хэвээр үлдэнэ"/);
   assert.doesNotMatch(list, /Буцах/);
   const nested = renderToStaticMarkup(h(RoomWorkspacePanel, { ...base, open: true, tab: "added", view: "detail", nestedEyebrow: "Засах", nestedTitle: "Луна #2" }));
@@ -24,7 +24,7 @@ test("workspace panel: three tabs in list view, Буцах in nested views, labe
   assert.match(nested, /Буцах/);
   assert.match(nested, /Луна #2/);
   const closed = renderToStaticMarkup(h(RoomWorkspacePanel, { ...base, open: false, tab: "cart", view: "detail" }));
-  assert.match(closed, /aria-label="Самбар нээх · Сагсалсан тавилга"/);
+  assert.match(closed, /aria-label="Самбар нээх · Сагс"/);
   assert.doesNotMatch(closed, /content/, "a closed panel renders no content");
 });
 

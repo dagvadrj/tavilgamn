@@ -38,10 +38,11 @@ export async function POST(request: NextRequest) {
       return fail("Зураг 3 MB-аас ихгүй байх ёстой.", 413);
     }
 
+    const publicId = `casa-nova/products/${randomUUID()}`;
     const params: Record<string, string> = {
       allowed_formats: "jpg,png,webp",
       overwrite: "false",
-      public_id: `casa-nova/products/${randomUUID()}`,
+      public_id: publicId,
       timestamp: String(Math.floor(Date.now() / 1000)),
     };
     const signature = createHash("sha256")
@@ -64,7 +65,8 @@ export async function POST(request: NextRequest) {
       return fail("Cloudinary рүү зураг оруулж чадсангүй. Тохиргоо болон зургаа шалгана уу.", 502);
     }
     const url = new URL(data.secure_url);
-    if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com") {
+    // Same response checks as the merchant upload: only the object this request signed.
+    if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com" || url.username || url.password || data.public_id !== publicId || !url.pathname.startsWith(`/${cloud}/image/upload/`)) {
       return fail("Зургийн холбоос буруу ирлээ.", 502);
     }
     return NextResponse.json({ url: url.href }, { status: 201, headers });

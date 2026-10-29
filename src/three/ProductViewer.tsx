@@ -1,7 +1,7 @@
 "use client";
 import { Canvas } from "@react-three/fiber";
 import { useCallback, useMemo, useState } from "react";
-import { Box3 } from "three";
+import { Box3, NeutralToneMapping } from "three";
 import { Ruler, RotateCw } from "lucide-react";
 import { ProductMeasurements } from "./ProductMeasurements";
 import { ProductFrame } from "./ProductFrame";
@@ -114,11 +114,16 @@ export function ProductViewer({
           camera={{ position: [3, 2, 13.5], fov: 35 }}
           className="!h-full !w-full"
           frameloop={rotate ? "always" : "demand"}
+          // Neutral keeps authored fabric/leather colours close to the GLB as
+          // authored; the default ACES curve crushed darker materials.
+          gl={{ toneMapping: NeutralToneMapping, toneMappingExposure: 1 }}
         >
           <CanvasDiagnostics scene="product" />
           <color attach="background" args={["#EFE6D6"]} />
-          <ambientLight intensity={0.55} />
-          <directionalLight castShadow intensity={1.1} position={[5, 8, 5]} />
+          <ambientLight intensity={0.8} />
+          <directionalLight castShadow intensity={1.6} position={[5, 8, 5]} />
+          {/* Soft front fill so light fabrics read true to the product photo. */}
+          <directionalLight intensity={0.6} position={[-4, 3, 7]} />
           <ProductAppearance
             color={color}
             material={material}
@@ -147,6 +152,9 @@ export function ProductViewer({
             />
           )}
           <Environment resolution={128}>
+            {/* A warm studio surround: partly metallic scans (leather, piping)
+                otherwise reflect black and read much darker than authored. */}
+            <color attach="background" args={["#c4c4c4"]} />
             <Lightformer
               form="rect"
               intensity={2.5}

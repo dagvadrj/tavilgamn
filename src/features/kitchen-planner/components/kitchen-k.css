@@ -1,0 +1,1517 @@
+/* K shell: compact header, one floating left panel, the stage beside it. Loaded last.
+   The repeated .kitchen-k outranks the legacy chained kitchen selectors without !important. */
+
+.kp-shell.planner-reference.planner-studio.kitchen-reference.kitchen-refined.kitchen-flow.kitchen-glb-workspace.kitchen-ikea-layout.kitchen-simple-workflow.kitchen-k.kitchen-k.kitchen-k.kitchen-k {
+  & {
+    --kk-primary: #075eaa;
+    --kk-ink: #171c24;
+    --kk-muted: #5f6672;
+    --kk-line: #e4e6ea;
+    --kk-canvas: #e9ecef;
+    --kk-tint: #eaf3fc;
+    --kk-warn: #8a4b00;
+    --kk-warn-bg: #fff4e5;
+    --kk-ok: #17603d;
+    --kk-ok-bg: #e7f5ee;
+    --kk-error: #b42318;
+    --kk-error-bg: #fdecec;
+    --kk-header: 64px;
+    --kk-panel: 392px;
+    --kk-shadow: 0 10px 36px #171c241a, 0 0 0 1px #171c240d;
+    background: var(--kk-canvas);
+    color: var(--kk-ink);
+  }
+  & .kitchen-k-header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: var(--kk-header);
+    box-sizing: border-box;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--kk-line);
+    background: #fff;
+  }
+  & .kitchen-k-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--kk-ink);
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  & .kitchen-k-brand > span {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--kk-primary);
+    color: #fff;
+  }
+  & .kitchen-k-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--kk-line);
+  }
+  & .kitchen-k-project {
+    display: grid;
+    /* Lets the name shrink inside the column instead of running under the stepper. */
+    grid-template-columns: minmax(0, 1fr);
+    flex: 1 1 auto;
+    gap: 1px;
+    min-width: 120px;
+  }
+  & .kitchen-k-eyebrow {
+    white-space: nowrap;
+  }
+  & .kitchen-k-project .kitchen-project-visible-name small {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (max-width: 1519px) {
+    & .kitchen-k-next-step {
+      display: none;
+    }
+  }
+  & .kitchen-k-actions > button[aria-label="Ашиглах заавар"] {
+    display: none;
+  }
+  & .kp-preview-bar {
+    position: absolute;
+    inset: auto 84px 24px auto;
+    width: auto;
+    transform: none;
+  }
+  & .kitchen-k-project > div {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+  }
+  & .kitchen-k-project small {
+    color: var(--kk-muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  & .kitchen-k-project .kitchen-project-menu {
+    position: relative;
+  }
+  & .kitchen-k-project .kitchen-project-menu > summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    max-width: min(320px, 100%);
+    min-height: 32px;
+    padding: 0;
+    list-style: none;
+    cursor: pointer;
+  }
+  & .kitchen-k-project .kitchen-project-menu > summary::-webkit-details-marker {
+    display: none;
+  }
+  & .kitchen-k-project .kitchen-project-visible-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    /* The older 120px cap cut the name to «Ми…» while the header had room. */
+    max-width: none;
+  }
+  & .kitchen-k-project .kitchen-project-visible-name strong {
+    /* The name keeps its width and only the save chip gives way; a shared
+       shrink cut a fitting name by a fraction of a pixel into «…». */
+    flex: 0 0 auto;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  & .kitchen-k-project .kitchen-project-visible-name small {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #f1f3f5;
+    color: #3b424c;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    /* The save chip gives way before the project name does. */
+    flex: 0 100 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  & .kitchen-k-project .kitchen-project-visible-name small[data-save-kind="saved"] {
+    background: var(--kk-ok-bg);
+    color: var(--kk-ok);
+  }
+  & .kitchen-k-project .kitchen-project-menu > summary > svg {
+    flex: none;
+    color: var(--kk-muted);
+  }
+  & .kitchen-k-project .kitchen-project-menu > label {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 70;
+    display: grid;
+    gap: 6px;
+    width: 300px;
+    padding: 14px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: var(--kk-shadow);
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  & .kitchen-k-eyebrow {
+    color: var(--kk-muted);
+    font-size: 10.5px;
+    font-weight: 650;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+  }
+  & .kitchen-k-stepper {
+    position: static;
+    display: flex;
+    flex: none;
+    width: auto;
+    max-width: none;
+    overflow: visible;
+    gap: 4px;
+    margin: 0 auto;
+    padding: 4px;
+    border: 0;
+    border-radius: 16px;
+    background: #f1f3f5;
+  }
+  & .kitchen-k-stepper > button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 12px 0 8px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #3b424c;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  & .kitchen-k-stepper > button[aria-current="step"] {
+    background: #fff;
+    box-shadow: 0 1px 3px #171c241a;
+    color: var(--kk-primary);
+  }
+  & .kitchen-k-stepper > button[aria-disabled="true"] {
+    color: #8a9099;
+  }
+  & .kitchen-k-stepper .kitchen-step-number {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #e1e5ea;
+    color: var(--kk-ink);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  & .kitchen-k-stepper > button[aria-current="step"] .kitchen-step-number {
+    background: var(--kk-primary);
+    color: #fff;
+  }
+  & .kitchen-k-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  & .kitchen-k-actions > :is(button, a, details) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  & .kitchen-k-save {
+    flex: none;
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    border: 1px solid #d3d8de;
+    border-radius: 22px;
+    background: #fff;
+    color: var(--kk-ink);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  & .kitchen-k-header .kitchen-toolbar-continue {
+    flex: none;
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 22px;
+    background: var(--kk-primary);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  & .kitchen-k-header .kitchen-toolbar-continue:is(:disabled, [aria-disabled="true"]) {
+    background: #9fb7cf;
+    cursor: not-allowed;
+  }
+  /* One left panel. Catalog, inspector, room, views and step 3–4 all use it. */
+  & :is(.kitchen-k-panel, .kitchen-flow-catalog.is-open, .kp-settings.is-open) {
+    position: fixed;
+    top: calc(var(--kk-header) + 12px);
+    bottom: 12px;
+    left: 12px;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    width: var(--kk-panel);
+    max-width: calc(100vw - 24px);
+    height: auto;
+    max-height: none;
+    margin: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: var(--kk-shadow);
+    transform: none;
+  }
+  & :is(.kitchen-flow-catalog.is-open, .kp-settings.is-open) {
+    overflow-y: auto;
+  }
+  & .kitchen-flow-catalog.is-open > header {
+    padding: 4px 16px 0;
+  }
+  & .kitchen-flow-catalog.is-open > header button {
+    display: none;
+  }
+  & .planner-inspector-backdrop {
+    display: none;
+  }
+  & .kitchen-k-panel-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  & .kitchen-k-panel-foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--kk-line);
+  }
+  & .kitchen-k-panel-foot > span {
+    flex: 1;
+    color: var(--kk-ok);
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  & .kitchen-k-panel-foot > span[data-error] {
+    color: var(--kk-error);
+  }
+  & .kitchen-k-tabs {
+    display: grid;
+    flex: none;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    margin: 12px 12px 0;
+    padding: 4px;
+    border-radius: 16px;
+    background: #f1f3f5;
+  }
+  & .kitchen-k-tabs > button {
+    display: grid;
+    justify-items: center;
+    gap: 1px;
+    min-height: 48px;
+    padding: 6px 4px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #3b424c;
+    cursor: pointer;
+  }
+  & .kitchen-k-tabs > button span {
+    font-size: 12.5px;
+    font-weight: 650;
+  }
+  & .kitchen-k-tabs > button small {
+    color: var(--kk-muted);
+    font-size: 11px;
+  }
+  & .kitchen-k-tabs > button[aria-selected="true"] {
+    background: #fff;
+    box-shadow: 0 1px 3px #171c241a;
+    color: var(--kk-primary);
+  }
+  /* Catalog sections scroll in one row; plan tools sit apart below them. */
+  & .kitchen-k-tools {
+    display: grid;
+    flex: none;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 0 4px;
+    border: 0;
+    background: transparent;
+  }
+  & .kitchen-k-sections {
+    --kk-fade: 28px;
+    min-width: 0;
+  }
+  /* A soft edge shows there is more to scroll in that direction. */
+  & .kitchen-k-sections[data-fade-start] .kitchen-k-section-row {
+    mask-image: linear-gradient(90deg, transparent, #000 var(--kk-fade));
+  }
+  & .kitchen-k-sections[data-fade-end] .kitchen-k-section-row {
+    mask-image: linear-gradient(90deg, #000 calc(100% - var(--kk-fade)), transparent);
+  }
+  & .kitchen-k-sections[data-fade-start][data-fade-end] .kitchen-k-section-row {
+    mask-image: linear-gradient(90deg, transparent, #000 var(--kk-fade), #000 calc(100% - var(--kk-fade)), transparent);
+  }
+  & .kitchen-k-section-row {
+    position: relative;
+    display: flex;
+    gap: 6px;
+    padding: 4px 16px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-padding-inline: 16px;
+    scrollbar-width: none;
+  }
+  & .kitchen-k-section-row::-webkit-scrollbar {
+    display: none;
+  }
+  & .kitchen-k-section-row > button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--kk-line);
+    border-radius: 22px;
+    background: #fff;
+    color: var(--kk-ink);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  & .kitchen-k-section-row > button[aria-pressed="true"] {
+    border-color: var(--kk-ink);
+    background: var(--kk-ink);
+    color: #fff;
+  }
+  & .kitchen-k-plan-tools {
+    display: flex;
+    gap: 4px;
+    margin: 0 16px;
+    padding-top: 6px;
+    border-top: 1px solid var(--kk-line);
+  }
+  & .kitchen-k-plan-tools > button {
+    display: inline-flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--kk-muted);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  & .kitchen-k-plan-tools > button:hover {
+    background: var(--kk-tint);
+    color: var(--kk-ink);
+  }
+  & .kitchen-k-plan-tools > button[aria-pressed="true"] {
+    background: var(--kk-tint);
+    color: var(--kk-primary);
+  }
+  & :is(.kitchen-k-section-row, .kitchen-k-plan-tools) > button:focus-visible {
+    outline: 2px solid var(--kk-primary);
+    outline-offset: 2px;
+  }
+  & :is(.kitchen-k-section-row, .kitchen-k-plan-tools) > button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  /* Stage: everything right of the panel. */
+  & :is(.kp-workspace, .kroom-workspace) {
+    position: fixed;
+    inset: var(--kk-header) 0 0 calc(var(--kk-panel) + 12px);
+    width: auto;
+    height: auto;
+    margin: 0;
+  }
+  & .kroom-setup {
+    position: static;
+  }
+  & .kroom-config, & .kroom-workspace-heading {
+    display: none;
+  }
+  & .kitchen-view-tabs {
+    position: static;
+    display: contents;
+  }
+  & .kitchen-k-viewlabel {
+    position: absolute;
+    top: 14px;
+    left: 22px;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  & .kitchen-k-viewlabel > span {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 0 0 1px #171c240f;
+    font-size: 12.5px;
+    font-weight: 650;
+  }
+  & :is(.kitchen-k-viewlabel, .kitchen-k-views) em {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 12px;
+    background: var(--kk-ok-bg);
+    color: var(--kk-ok);
+    font-size: 11.5px;
+    font-style: normal;
+    font-weight: 600;
+  }
+  & :is(.kitchen-k-viewlabel, .kitchen-k-views) em[data-tag="3d"] {
+    background: var(--kk-tint);
+    color: var(--kk-primary);
+  }
+  & .kitchen-k-toolbar {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    z-index: 7;
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 24px;
+    background: var(--kk-ink);
+    box-shadow: 0 10px 28px #171c2447;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  & .kitchen-k-toolbar > button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 20px;
+    background: transparent;
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  & .kitchen-k-toolbar > button:hover:not(:disabled) {
+    background: #ffffff1f;
+  }
+  & .kitchen-k-toolbar > button[aria-disabled="true"] {
+    color: #ffffff73;
+    cursor: not-allowed;
+  }
+  & .kitchen-k-toolbar > button:focus-visible {
+    outline: 2px solid #a9d1ff;
+    outline-offset: -2px;
+  }
+  & .kitchen-plan-context {
+    display: none;
+  }
+  & .kitchen-k-dock {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    z-index: 6;
+    display: flex;
+    gap: 4px;
+    padding: 5px;
+    border-radius: 28px;
+    background: #fff;
+    box-shadow: 0 8px 26px #171c241f, 0 0 0 1px #171c240d;
+    transform: translateX(-50%);
+  }
+  & .kitchen-k-dock > button {
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 22px;
+    background: transparent;
+    color: var(--kk-ink);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  & .kitchen-k-dock > button[aria-pressed="true"] {
+    background: var(--kk-tint);
+    color: var(--kk-primary);
+  }
+  /* Panel contents. */
+  & :is(.kitchen-k-room, .kitchen-k-step, .kitchen-k-views) {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 16px 20px;
+  }
+  & .kitchen-k-room h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  & .kitchen-k-room h3 small {
+    color: var(--kk-muted);
+    font-weight: 500;
+  }
+  & .kitchen-k-room > section {
+    display: grid;
+    gap: 8px;
+  }
+  & .kitchen-k-room-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  & :is(.kitchen-k-room-head, .kitchen-k-step) > div:first-child {
+    display: grid;
+  }
+  & :is(.kitchen-k-room-head, .kitchen-k-step) > div:first-child > strong {
+    font-size: 17px;
+  }
+  & .kitchen-k-segmented {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--kk-line);
+    border-radius: 12px;
+    background: #fff;
+  }
+  & .kitchen-k-segmented > button {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--kk-ink);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  & .kitchen-k-segmented > button[aria-pressed="true"] {
+    background: var(--kk-ink);
+    color: #fff;
+  }
+  & .kitchen-k-segmented > button:disabled {
+    color: #a3a9b2;
+    cursor: not-allowed;
+  }
+  & .kitchen-k-field {
+    display: grid;
+    gap: 4px;
+  }
+  & .kitchen-k-field > label {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  & .kitchen-k-field > label span {
+    color: var(--kk-muted);
+    font-weight: 500;
+  }
+  & .kitchen-k-field > div {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 12px;
+    border: 1.5px solid var(--kk-line);
+    border-radius: 12px;
+    background: #fff;
+  }
+  & .kitchen-k-field > div[data-invalid] {
+    border-color: var(--kk-error);
+    background: #fff8f7;
+  }
+  & .kitchen-k-field input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--kk-ink);
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  & .kitchen-k-field > div > span {
+    color: var(--kk-muted);
+    font-size: 12.5px;
+  }
+  & .kitchen-k-field:focus-within > div {
+    border-color: var(--kk-primary);
+  }
+  & .kitchen-k-error {
+    color: var(--kk-error);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  & :is(.kitchen-k-muted, .kitchen-k-empty) {
+    margin: 0;
+    color: var(--kk-muted);
+    font-size: 12px;
+  }
+  & :is(.kitchen-k-walls, .kitchen-k-utilities, .kitchen-k-warnings) {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  & :is(.kitchen-k-walls, .kitchen-k-utilities) > li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: #f6f7f9;
+    font-size: 12.5px;
+  }
+  & :is(.kitchen-k-walls, .kitchen-k-utilities) > li > span {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #dfe3e8;
+    color: var(--kk-ink);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  & .kitchen-k-utilities > li > span[data-kind="water"] {
+    background: #2e7dd7;
+    color: #fff;
+  }
+  & .kitchen-k-utilities > li > span[data-kind="power"] {
+    background: #b7791f;
+    color: #fff;
+  }
+  & .kitchen-k-utilities > li > span[data-kind="vent"] {
+    background: #5f6672;
+    color: #fff;
+  }
+  & :is(.kitchen-k-walls, .kitchen-k-utilities) > li > strong {
+    flex: 1;
+  }
+  & :is(.kitchen-k-walls, .kitchen-k-utilities) > li > small {
+    color: var(--kk-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  & .kitchen-k-chiprow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: #f6f7f9;
+    font-size: 13px;
+  }
+  & .kitchen-k-chiprow > span {
+    flex: 1;
+    font-weight: 600;
+  }
+  & :is(.kitchen-k-chiprow button, .kitchen-k-ghost, .kitchen-k-secondary) {
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid #d3d8de;
+    border-radius: 22px;
+    background: #fff;
+    color: var(--kk-ink);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  & .kitchen-k-chiprow button {
+    color: var(--kk-error);
+  }
+  & .kitchen-k-ghost {
+    justify-self: start;
+  }
+  & :is(.kitchen-k-primary, .kitchen-k-ink) {
+    min-height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 22px;
+    background: var(--kk-primary);
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  & .kitchen-k-ink {
+    background: var(--kk-ink);
+  }
+  & .kitchen-k-primary:is(:disabled, [aria-disabled="true"]) {
+    background: #9fb7cf;
+    cursor: not-allowed;
+  }
+  & .kitchen-k-total {
+    display: grid;
+    gap: 4px;
+    padding: 16px;
+    border-radius: 16px;
+    background: #f6f7f9;
+  }
+  & .kitchen-k-total strong {
+    font-size: 28px;
+    font-variant-numeric: tabular-nums;
+  }
+  & .kitchen-k-total small {
+    color: var(--kk-muted);
+    font-size: 12px;
+  }
+  & .kitchen-k-banner {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 14px;
+    border-radius: 16px;
+    background: #f6f7f9;
+    font-size: 12.5px;
+  }
+  & .kitchen-k-banner.is-warn {
+    background: var(--kk-warn-bg);
+    color: #5c3300;
+  }
+  & .kitchen-k-banner.is-warn strong {
+    color: var(--kk-warn);
+  }
+  & .kitchen-k-banner.is-error {
+    background: var(--kk-error-bg);
+    color: #8e1f15;
+  }
+  & .kitchen-k-banner-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  & .kitchen-k-material-head {
+    display: grid;
+    flex: none;
+    gap: 10px;
+    padding: 12px 16px 0;
+  }
+  & .kitchen-k-scope {
+    display: grid;
+    gap: 6px;
+  }
+  & .kitchen-k-scope .kitchen-k-segmented {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  & .kitchen-k-banner ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+  & .kitchen-k-views > button {
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--kk-line);
+    border-radius: 16px;
+    background: #fff;
+    color: var(--kk-ink);
+    text-align: left;
+    cursor: pointer;
+  }
+  & .kitchen-k-views > button[aria-pressed="true"] {
+    border-color: var(--kk-primary);
+    background: #f5f9fd;
+  }
+  & .kitchen-k-views > button > span {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  & .kitchen-k-views > button small {
+    color: var(--kk-muted);
+    font-size: 12px;
+  }
+  & .kitchen-k-selected {
+    display: grid;
+    gap: 2px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: var(--kk-tint);
+  }
+  & .kitchen-k-selected small {
+    color: var(--kk-primary);
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  /* Wall elevation: real data drawn to scale. */
+  & .kitchen-k-elevation {
+    position: absolute;
+    inset: 52px 24px 92px;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+  & .kitchen-k-elevation > .kitchen-k-segmented {
+    justify-self: start;
+  }
+  & .kitchen-k-elevation svg {
+    width: 100%;
+    height: 100%;
+  }
+  & .kitchen-k-elev-wall {
+    fill: #fbfaf8;
+    stroke: #d6dae0;
+    stroke-width: 8;
+  }
+  & .kitchen-k-elev-floor {
+    stroke: var(--kk-ink);
+    stroke-width: 14;
+  }
+  & .kitchen-k-elev-window {
+    fill: #eaf3fc;
+    stroke: #9db9d6;
+    stroke-width: 10;
+  }
+  & .kitchen-k-elev-door {
+    fill: #f3efe8;
+    stroke: #b9b0a2;
+    stroke-width: 10;
+  }
+  & .kitchen-k-elev-piece {
+    stroke: #6b7480;
+    stroke-width: 8;
+  }
+  & .kitchen-k-elev-piece[data-selected] {
+    stroke: var(--kk-primary);
+    stroke-width: 22;
+  }
+  & .kitchen-k-elev-dim {
+    fill: var(--kk-ink);
+    font-size: 90px;
+    font-weight: 650;
+  }
+  & .kitchen-k-elev-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  & .kitchen-k-elev-list button {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--kk-line);
+    border-radius: 18px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  & .kitchen-k-elev-list button[aria-pressed="true"] {
+    border-color: var(--kk-primary);
+    background: var(--kk-tint);
+    color: var(--kk-primary);
+  }
+  /* Steps 3–4: a contents card instead of the stage. */
+  & .kitchen-k-contents {
+    position: fixed;
+    z-index: 50;
+    inset: calc(var(--kk-header) + 12px) 12px 12px calc(var(--kk-panel) + 24px);
+    overflow-y: auto;
+  }
+  & .kitchen-k-card {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    padding: 18px;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 0 0 1px #171c240d;
+  }
+  & .kitchen-k-card :is(h1, h2) {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  & .kitchen-k-bom {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-height: 100%;
+    padding: 0;
+    overflow: hidden;
+  }
+  & .kitchen-k-bom > header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--kk-line);
+  }
+  & .kitchen-k-bom > header > div {
+    flex: 1;
+  }
+  & .kitchen-k-bom h1 {
+    font-size: 20px;
+  }
+  & .kitchen-k-bom > header p {
+    margin: 2px 0 0;
+    color: var(--kk-muted);
+    font-size: 12.5px;
+  }
+  & .kitchen-k-bom > header button {
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--kk-line);
+    border-radius: 18px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  & .kitchen-k-bom > header button[aria-pressed="true"] {
+    border-color: var(--kk-ink);
+    background: var(--kk-ink);
+    color: #fff;
+  }
+  & .kitchen-k-table {
+    flex: 1;
+    overflow: auto;
+  }
+  & .kitchen-k-table > [role="row"] {
+    display: grid;
+    grid-template-columns: minmax(180px, 2.6fr) minmax(110px, 1.1fr) minmax(90px, .9fr) 60px minmax(90px, .8fr) minmax(110px, 1fr) minmax(110px, 1fr);
+    align-items: center;
+    gap: 12px;
+    min-width: 860px;
+    min-height: 46px;
+    padding: 6px 24px;
+    border-bottom: 1px solid #f0f1f3;
+    font-size: 13px;
+  }
+  & .kitchen-k-table > .is-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #f6f7f9;
+    color: var(--kk-muted);
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  & .kitchen-k-table > [role="row"] > :nth-child(n+6) {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  & .kitchen-k-table > [data-source="included"] {
+    background: #fafbfc;
+    color: var(--kk-muted);
+  }
+  & .kitchen-k-table > [data-unpriced] > :nth-child(n+6) {
+    color: var(--kk-warn);
+  }
+  & .kitchen-k-table [role="cell"]:first-child {
+    display: grid;
+    min-width: 0;
+  }
+  & .kitchen-k-table [role="cell"]:first-child strong {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  & .kitchen-k-table small {
+    overflow: hidden;
+    color: var(--kk-muted);
+    font-size: 11.5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  & .kitchen-k-table em {
+    justify-self: start;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #f1f3f5;
+    color: #3b424c;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 650;
+  }
+  & .kitchen-k-table em[data-source="actual"] {
+    background: var(--kk-ok-bg);
+    color: var(--kk-ok);
+  }
+  & .kitchen-k-table em[data-source="computed"] {
+    background: var(--kk-tint);
+    color: var(--kk-primary);
+  }
+  & .kitchen-k-bom > footer {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 14px 24px;
+    border-top: 1px solid var(--kk-line);
+    background: #fbfbfc;
+  }
+  & .kitchen-k-bom > footer > span {
+    flex: 1;
+    color: var(--kk-muted);
+    font-size: 12px;
+  }
+  & .kitchen-k-bom > footer > div {
+    display: grid;
+    text-align: right;
+  }
+  & .kitchen-k-bom > footer small {
+    color: var(--kk-muted);
+    font-size: 11px;
+  }
+  & .kitchen-k-bom > footer strong {
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+  }
+  & .kitchen-k-bom > footer .is-warn :is(small, strong) {
+    color: var(--kk-warn);
+  }
+  & .kitchen-k-handoff {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-content: start;
+  }
+  & .kitchen-k-wide {
+    grid-column: 1 / -1;
+  }
+  & .kitchen-k-handoff > .kitchen-k-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  & .kitchen-k-handoff > .kitchen-k-banner > span {
+    flex: 1;
+    min-width: 220px;
+  }
+  & .kitchen-k-snapshot {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 20px;
+  }
+  & .kitchen-k-snapshot h1 {
+    font-size: 22px;
+  }
+  & .kitchen-k-snapshot-image {
+    display: grid;
+    place-items: center;
+    height: 170px;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--kk-canvas);
+    color: var(--kk-muted);
+    font-size: 12px;
+  }
+  & .kitchen-k-snapshot-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  & .kitchen-k-snapshot dl {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr) 110px minmax(0, 1fr);
+    gap: 6px 12px;
+    margin: 4px 0 0;
+    font-size: 13px;
+  }
+  & .kitchen-k-snapshot dt {
+    color: var(--kk-muted);
+  }
+  & .kitchen-k-snapshot dd {
+    margin: 0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  & .kitchen-k-warn-count {
+    color: var(--kk-warn);
+  }
+  & .kitchen-k-warnings > li {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #fff8ee;
+    color: #5c3300;
+    font-size: 12.5px;
+  }
+  & .kitchen-k-readiness {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  & .kitchen-k-readiness > div {
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #f6f7f9;
+    font-size: 12px;
+  }
+  & .kitchen-k-readiness em {
+    justify-self: start;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--kk-warn-bg);
+    color: var(--kk-warn);
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 650;
+  }
+  & .kitchen-k-readiness em[data-ok="true"] {
+    background: var(--kk-ok-bg);
+    color: var(--kk-ok);
+  }
+  & .kitchen-k-readiness strong {
+    font-size: 13.5px;
+  }
+  & .kitchen-k-readiness span {
+    color: var(--kk-muted);
+  }
+  & .kitchen-k-exports {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  & .kitchen-k-form {
+    display: grid;
+    gap: 10px;
+  }
+  & .kitchen-k-form label {
+    display: grid;
+    gap: 4px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  & .kitchen-k-form input:not([type="checkbox"]) {
+    height: 44px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    border: 1.5px solid var(--kk-line);
+    border-radius: 12px;
+    font-size: 14px;
+  }
+  & .kitchen-k-form input[aria-invalid="true"] {
+    border-color: var(--kk-error);
+  }
+  & .kitchen-k-form fieldset {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  & .kitchen-k-form legend {
+    margin-bottom: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  & .kitchen-k-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  & .kitchen-k-chips > button {
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--kk-line);
+    border-radius: 22px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  & .kitchen-k-chips > button[aria-pressed="true"] {
+    border-color: var(--kk-ink);
+    background: var(--kk-ink);
+    color: #fff;
+  }
+  & .kitchen-k-form .kitchen-k-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-weight: 500;
+  }
+  & .kitchen-k-check input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+  }
+  & .kitchen-k-quote {
+    display: grid;
+    gap: 10px;
+  }
+  /* Responsive: 960–1199 narrower panel; under 960 the stepper takes its own row
+     and the stage is full width; under 600 the panel is a bottom sheet (K8). */
+  @media (min-width: 960px) and (max-width: 1199px) {
+    & {
+      --kk-panel: 360px;
+    }
+  }
+  @media (max-width: 959px) {
+    & {
+      --kk-header: 108px;
+    }
+    & .kitchen-k-header {
+      height: 56px;
+      gap: 8px;
+      padding: 0 12px;
+    }
+    & .kitchen-k-brand {
+      gap: 0;
+      font-size: 0;
+    }
+    & :is(.kitchen-k-divider, .kitchen-k-eyebrow) {
+      display: none;
+    }
+    & .kitchen-k-stepper {
+      position: fixed;
+      top: 56px;
+      right: 0;
+      left: 0;
+      z-index: 60;
+      justify-content: flex-start;
+      height: 52px;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 4px 8px;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--kk-line);
+      border-radius: 0;
+      background: #fff;
+      scrollbar-width: none;
+    }
+    & .kitchen-k-save span {
+      display: none;
+    }
+    & .kitchen-k-save {
+      padding: 0 12px;
+    }
+    & .kitchen-k-project .kitchen-project-visible-name small {
+      display: none;
+    }
+    & :is(.kp-workspace, .kroom-workspace) {
+      left: 0;
+    }
+    & .kitchen-navigation-map {
+      display: none;
+    }
+    & :is(.kitchen-k-panel, .kitchen-flow-catalog.is-open, .kp-settings.is-open) {
+      width: 380px;
+    }
+  }
+  @media (min-width: 600px) and (max-width: 959px) {
+    /* The drawer covers the left of the full-width stage; centre in the rest. */
+    & :is(.kitchen-k-toolbar, .kitchen-k-dock) {
+      left: calc(50% + 166px);
+      max-width: calc(100% - 476px);
+    }
+    & .kp-preview-bar {
+      inset: 70px auto auto 404px;
+    }
+    & :is(.kitchen-k-toolbar, .kitchen-k-dock) > button {
+      padding: 0 10px;
+    }
+    & .kitchen-k-viewlabel {
+      left: 404px;
+    }
+    & .kitchen-k-elevation {
+      left: 404px;
+    }
+  }
+  @media (max-width: 599px) {
+    & :is(.kitchen-k-panel, .kitchen-flow-catalog.is-open, .kp-settings.is-open) {
+      top: auto;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: auto;
+      max-width: none;
+      height: 196px;
+      border-radius: 20px 20px 0 0;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      transition: height .24s ease;
+    }
+    & .kp-settings.is-open {
+      height: 230px;
+    }
+    & :is(.kitchen-k-panel, .kitchen-flow-catalog.is-open, .kp-settings.is-open)[data-sheet-expanded="true"] {
+      height: min(520px, calc(100dvh - var(--kk-header)));
+    }
+    & :is(.kp-workspace, .kroom-workspace) {
+      bottom: 196px;
+    }
+    & .kitchen-k-contents {
+      inset: var(--kk-header) 8px 204px;
+    }
+    & .kitchen-k-viewlabel {
+      display: none;
+    }
+    & .kitchen-k-dock {
+      top: 10px;
+      bottom: auto;
+      max-width: calc(100% - 24px);
+      overflow-x: auto;
+    }
+    & .kitchen-k-dock > button {
+      padding: 0 12px;
+    }
+    & .kitchen-k-toolbar {
+      position: fixed;
+      top: auto;
+      bottom: 240px;
+      max-width: calc(100% - 24px);
+    }
+    &:has([data-sheet-expanded="true"]) .kitchen-k-toolbar {
+      display: none;
+    }
+    & .kitchen-k-toolbar > button {
+      padding: 0 10px;
+    }
+    & .kitchen-k-brand {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    & .kitchen-k-project {
+      min-width: 64px;
+    }
+    /* Phones keep every header action, so the name gets two lines instead of
+       one cut to «Ми…». The 56px header already fits two 13px lines, so the
+       header height and everything below it stay put. */
+    /* Room for the name without dropping an action: the action group is only
+       as wide as its buttons (it was claiming 100% and pushing past the
+       screen), «Дараах» keeps its text without the arrow, and the pencil
+       goes; tapping the name still opens the rename menu. */
+    & .kitchen-k-header {
+      gap: 6px;
+    }
+    & .kitchen-k-header > .kitchen-k-actions {
+      flex: 0 0 auto;
+      width: auto;
+    }
+    & .kitchen-k-header .kitchen-toolbar-continue > svg, & .kitchen-k-project .kitchen-project-menu > summary > svg {
+      display: none;
+    }
+    & .kitchen-k-project {
+      flex: 1 1 0;
+      min-width: 56px;
+    }
+    & .kitchen-k-project .kitchen-project-menu > summary {
+      min-height: 44px;
+    }
+    @media (max-width: 379px) {
+      & .kitchen-k-header {
+        padding-inline: 8px;
+      }
+      & .kitchen-k-header .kitchen-toolbar-continue {
+        padding-inline: 10px;
+      }
+    }
+    & .kitchen-k-project .kitchen-project-visible-name strong {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      font-size: 13px;
+      line-height: 1.2;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    & .kitchen-k-elevation {
+      inset: 124px 12px 72px;
+    }
+    & .kitchen-k-actions > button[aria-label="Дахин хийх"] {
+      display: none;
+    }
+    & .kitchen-k-header .kitchen-toolbar-continue {
+      padding: 0 14px;
+    }
+    & .viewport-controls {
+      top: 70px;
+      right: 8px;
+      bottom: auto;
+      left: auto;
+      flex-direction: column;
+    }
+    & .kp-preview-bar {
+      inset: 70px auto auto 8px;
+    }
+    & :is(.kitchen-k-handoff, .kitchen-k-readiness) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    & .kitchen-k-snapshot {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    & .kitchen-k-snapshot dl {
+      grid-template-columns: 96px minmax(0, 1fr);
+    }
+    & .kitchen-k-bom > footer {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+  }
+}

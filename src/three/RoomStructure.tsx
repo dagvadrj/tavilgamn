@@ -359,8 +359,9 @@ function RoomWallMesh({
           onClick={click}
         >
           <meshStandardMaterial
-            color={selectedWall === id ? "#5aa0cf" : "#eeece5"}
-            roughness={0.7}
+            // Semi-gloss trim reads apart from matte wall paint, as real skirting does.
+            color={selectedWall === id ? "#5aa0cf" : "#f7f6f2"}
+            roughness={0.42}
           />
           {selectedWall === id && <Edges color="#006ab5" raycast={noRaycast} />}
         </RoundedBox>
@@ -766,14 +767,15 @@ function CeilingLamp({
   fixture,
   height,
   span,
-  on,
+  level,
   shadows,
   sourceIntensity,
 }: {
   fixture: CeilingFixture;
   height: number;
   span: number;
-  on: boolean;
+  /** 1 at night or when switched on, a softer daytime level otherwise. */
+  level: number;
   shadows: boolean;
   sourceIntensity?: number;
 }) {
@@ -786,8 +788,8 @@ function CeilingLamp({
     target.updateMatrixWorld();
     invalidate();
   }, [height, target, invalidate]);
-  const intensity = on ? fixture.intensity : 0,
-    lightPower = on ? sourceIntensity ?? fixture.intensity : 0,
+  const intensity = level > 0 ? fixture.intensity : 0,
+    lightPower = (sourceIntensity ?? fixture.intensity) * level,
     kind = fixture.kind ?? "flush",
     drop =
       kind === "pendant"
@@ -988,7 +990,7 @@ export function RoomLighting({
           fixture={fixture}
           height={fixtureMountHeight(design, fixture)}
           span={Math.max(design.width, design.depth)}
-          on={solar.lampsOn}
+          level={solar.lampLevel}
           shadows={fixtureShadows && fixture.id === shadowSource}
           sourceIntensity={powers.get(fixture.id) ?? 0}
         />

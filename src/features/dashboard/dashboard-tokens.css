@@ -1,0 +1,95 @@
+/* The only admin/merchant palette ("Minimal Monochrome"). Dark/light follows <html data-dashboard-theme>, set by an inline script before paint. Monochrome plus one highlight; structure comes from 1px borders, never shadows, gradients or glass. Components use var(--dashboard-*) and never their own hex. */
+
+.dashboard-layout,
+.dashboard-nav-tooltip {
+  --dashboard-bg: #fff;
+  --dashboard-panel: #fafafa;
+  --dashboard-surface: var(--dashboard-bg);
+  --dashboard-solid: var(--dashboard-bg);
+  --dashboard-elevated: #f4f4f4;
+  --dashboard-border: #eaeaea;
+  --dashboard-control-border: #e0e0e0;
+  --dashboard-ink: #0a0a0a;
+  --dashboard-muted: #5f5f5f;
+  --dashboard-subtle: #9a9a9a;
+  /* Primary actions are inverted ink; the highlight marks only "now" and "needs attention". */
+  --dashboard-accent: var(--dashboard-ink);
+  --dashboard-on-accent: var(--dashboard-bg);
+  --dashboard-highlight: #0a0a0a;
+  --dashboard-on-highlight: #fff;
+  --dashboard-bar: #e4e4e4;
+  --dashboard-bar-hover: #c9c9c9;
+  --dashboard-success: var(--dashboard-ink);
+  --dashboard-danger: #b42318;
+  --dashboard-warning: #8a5a00;
+  --dashboard-info: var(--dashboard-ink);
+  --dashboard-overlay: #0a0a0a66;
+  --dashboard-chart-1: var(--dashboard-ink);
+  --dashboard-chart-2: var(--dashboard-bar-hover);
+  --dashboard-chart-3: var(--dashboard-muted);
+  --dashboard-chart-4: var(--dashboard-bar);
+  --dashboard-tooltip-bg: var(--dashboard-ink);
+  --dashboard-tooltip-ink: var(--dashboard-bg);
+  --dashboard-shadow: transparent;
+  --dashboard-backdrop: var(--dashboard-bg);
+  --site-bg: var(--dashboard-bg);
+  --site-surface: var(--dashboard-surface);
+  --site-hover: var(--dashboard-elevated);
+  --site-line: var(--dashboard-border);
+  --site-ink: var(--dashboard-ink);
+  --site-muted: var(--dashboard-muted);
+  --site-accent: var(--dashboard-accent);
+  --site-primary: var(--dashboard-accent);
+  --site-primary-hover: var(--dashboard-muted);
+  --site-success: var(--dashboard-success);
+  --site-danger: var(--dashboard-danger);
+  --site-selected: var(--dashboard-elevated);
+  --site-ink-rgb: 10 10 10;
+  --site-muted-rgb: 95 95 95;
+  --site-line-rgb: 234 234 234;
+  --site-accent-rgb: 10 10 10;
+  /* Legacy glass hooks resolve to flat surfaces so no layer can reintroduce the old look. */
+  --glass-shadow: none;
+  --glass-panel: var(--dashboard-surface);
+  --glass-control: var(--dashboard-bg);
+  --glass-field: var(--dashboard-bg);
+  --glass-chrome: var(--dashboard-panel);
+  --glass-chart: var(--dashboard-ink);
+  --glass-glow: var(--dashboard-bar-hover);
+  color-scheme: light;
+  font-family: var(--font-dashboard), var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: "tnum", "cv11";
+}
+
+:root[data-dashboard-theme="dark"] :is(.dashboard-layout, .dashboard-nav-tooltip) {
+  --dashboard-bg: #0a0a0a;
+  --dashboard-panel: #0f0f0f;
+  --dashboard-elevated: #161616;
+  --dashboard-border: #1f1f1f;
+  --dashboard-control-border: #2a2a2a;
+  --dashboard-ink: #ededed;
+  --dashboard-muted: #a1a1a1;
+  --dashboard-subtle: #666;
+  --dashboard-highlight: #d4ff3a;
+  --dashboard-on-highlight: #0a0a0a;
+  --dashboard-bar: #2e2e2e;
+  --dashboard-bar-hover: #4a4a4a;
+  --dashboard-danger: #ff8a80;
+  --dashboard-warning: #e8c46a;
+  --dashboard-overlay: #000000b3;
+  --site-ink-rgb: 237 237 237;
+  --site-muted-rgb: 161 161 161;
+  --site-line-rgb: 31 31 31;
+  --site-accent-rgb: 237 237 237;
+  color-scheme: dark;
+}
+
+/* Overscroll and the auth check render outside the shell; they follow the same theme. */
+
+body:has(.dashboard-layout) {
+  background: #fff;
+}
+
+:root[data-dashboard-theme="dark"] body:has(.dashboard-layout) {
+  background: #0a0a0a;
+}

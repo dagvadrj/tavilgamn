@@ -143,7 +143,7 @@ function MerchantPanel({ owner }: { owner: string }) {
   const filters: { id: Filter; label: string; total: number }[] = [
     { id: "all", label: "Бүгд", total: merchants.length },
     { id: "active", label: "Идэвхтэй", total: totals.active },
-    { id: "featured", label: "★ Featured", total: totals.featured },
+    { id: "featured", label: "★ Онцлох", total: totals.featured },
     {
       id: "requests",
       label: "3D хүсэлттэй",
@@ -163,8 +163,8 @@ function MerchantPanel({ owner }: { owner: string }) {
           <span className="reference-eyebrow">
             MARKETPLACE · ДЭЛГҮҮРИЙН УДИРДЛАГА
           </span>
-          <h1>Merchant дэлгүүрүүд</h1>
-          <p>Борлуулалт, шимтгэл, Featured болон 3D хүсэлтийг хянах.</p>
+          <h1>Дэлгүүрүүд</h1>
+          <p>Борлуулалт, шимтгэл, онцлох байрлал болон 3D хүсэлтийг хянах.</p>
         </div>
         <button
           type="button"
@@ -179,21 +179,21 @@ function MerchantPanel({ owner }: { owner: string }) {
       <div className="reference-kpis reference-kpis-five">
         <MerchantStat
           icon={Store}
-          label="Нийт Merchant"
+          label="Нийт дэлгүүр"
           value={loading ? null : merchants.length}
           suffix=" дэлгүүр"
-          detail={`${totals.active} идэвхтэй · ${totals.featured} Featured`}
+          detail={`${totals.active} идэвхтэй · ${totals.featured} онцлох`}
         />
         <MerchantStat
           icon={TrendingUp}
-          label="Нийт борлуулалт (GMV)"
+          label="Нийт борлуулалт"
           value={loading ? null : totals.gross.toString()}
           money
           detail="Төлөгдсөн захиалгууд"
         />
         <MerchantStat
           icon={BadgeDollarSign}
-          label="Платформ орлого (Fee)"
+          label="Платформын орлого"
           value={loading ? null : totals.platform.toString()}
           money
           detail={`Цэвэр шилжүүлэг: ${money(totals.net)}`}
@@ -255,7 +255,7 @@ function MerchantPanel({ owner }: { owner: string }) {
       ) : !filtered.length ? (
         <div className="reference-empty">
           <Store size={28} />
-          <strong>Merchant олдсонгүй</strong>
+          <strong>Дэлгүүр олдсонгүй</strong>
         </div>
       ) : (
         <div className="reference-merchant-split">
@@ -270,8 +270,8 @@ function MerchantPanel({ owner }: { owner: string }) {
                     <th scope="col">Дэлгүүр & Байршил</th>
                     <th scope="col">Борлуулалт & Шимтгэл</th>
                     <th scope="col">Бараа / 3D</th>
-                    <th scope="col">Commission (%)</th>
-                    <th scope="col">Featured эрэмбэ</th>
+                    <th scope="col">Шимтгэл (%)</th>
+                    <th scope="col">Онцлох эрэмбэ</th>
                     <th scope="col">Төлөв</th>
                     <th scope="col">Үйлдэл</th>
                   </tr>
@@ -353,7 +353,7 @@ function MerchantEditor({
       commission > 5 ||
       (featured && (!Number.isInteger(featuredRank) || featuredRank < 1))
     ) {
-      setError("Шимтгэл 3–5%, Featured эрэмбэ эерэг бүхэл тоо байна.");
+      setError("Шимтгэл 3–5%, онцлох эрэмбэ эерэг бүхэл тоо байна.");
       return;
     }
     onSaving(merchant.id);
@@ -425,12 +425,12 @@ function MerchantEditor({
           onChange={(event) => setFeatured(event.target.checked)}
         />
         <Star size={13} />
-        Featured
+        Онцлох
       </label>
       {featured && (
         <input
           type="number"
-          aria-label={`${merchant.name} Featured эрэмбэ`}
+          aria-label={`${merchant.name} онцлох эрэмбэ`}
           min={1}
           step={1}
           value={featuredRank}
@@ -473,7 +473,7 @@ function MerchantEditor({
         </header>
         <dl className="reference-inspector-finance">
           <div>
-            <dt>Нийт борлуулалт (GMV)</dt>
+            <dt>Нийт борлуулалт</dt>
             <dd>{money(merchant.grossRevenue)}</dd>
           </div>
           <div>
@@ -487,7 +487,7 @@ function MerchantEditor({
         </dl>
         <div className="reference-commission-slider">
           <label htmlFor={`commission-${merchant.id}`}>
-            Commission тохируулах <strong>{commission.toFixed(1)}%</strong>
+            Шимтгэл тохируулах <strong>{commission.toFixed(1)}%</strong>
           </label>
           <input
             id={`commission-${merchant.id}`}
@@ -559,7 +559,7 @@ function MerchantEditor({
       </td>
       <td>
         <strong>{money(merchant.grossRevenue)}</strong>
-        <small>Fee {money(merchant.platformRevenue)}</small>
+        <small>Шимтгэл {money(merchant.platformRevenue)}</small>
       </td>
       <td>
         <strong>{count(merchant.productCount)} бараа</strong>

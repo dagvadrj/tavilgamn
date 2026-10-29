@@ -160,6 +160,8 @@ def parse_args():
     parser.add_argument("--protect-boundaries", action=argparse.BooleanOptionalAction, default=None,
                         help="Lock geometric open borders; enabled by default in exterior mode")
     parser.add_argument("--low-mesh", type=Path, help="Optional artist/simplifier low GLB for a single-mesh source; checked against source before baking")
+    parser.add_argument("--review-renders", action=argparse.BooleanOptionalAction, default=True,
+                        help="Render original/baked/compressed views for a person to compare; the worker discards them")
     parser.add_argument("--render-size", type=int, default=768)
     parser.add_argument("--render-samples", type=int, default=24)
     installed_node = Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "nodejs/node.exe"
@@ -682,9 +684,11 @@ def main():
             preview_objects=[o for o in bpy.data.objects if o not in previous and o.type=="MESH"]
             if not preview_objects: raise ValueError("Preview read-back failed")
             groups.append(("preview",preview_objects))
-        report["reviewRenders"]=render_review(groups,bounds,args,args.output)
+        # The read-back above is the automatic check; renders only help a reviewer.
+        if args.review_renders:
+            report["reviewRenders"]=render_review(groups,bounds,args,args.output)
         report["deliveryBytes"]=(args.output/"delivery.glb").stat().st_size
-        report["status"]="ready-for-visual-review"
+        report["status"]="ready-for-visual-review" if args.review_renders else "read-back-verified"
     except Exception as error:
         report["status"]="failed"
         report["error"]=str(error)
@@ -694,7 +698,8 @@ def main():
         report_file.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
         if not report["sourceUnchanged"]:
             raise RuntimeError("Source hash changed during processing")
-    print("[complete]",report["deliveryBytes"],"bytes; review required:",args.output,flush=True)
+    print("[complete]",report["deliveryBytes"],"bytes;",
+          f"review required: {args.output}" if args.review_renders else "decoded read-back passed",flush=True)
 
 
 if __name__ == "__main__":

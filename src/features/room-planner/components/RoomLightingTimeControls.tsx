@@ -33,7 +33,7 @@ export function RoomLightingTimeControls({ lighting, ceiling, windowBearing, onC
     </div>
     <RoomSunlightControls lighting={lighting} windowBearing={windowBearing} onChange={onChange} beginEdit={beginEdit} endEdit={endEdit}/>
     <label className="room-auto-light"><input type="checkbox" checked={lighting.autoLights !== false} onChange={event => onChange({ autoLights: event.target.checked })}/><span>Таазны гэрэл автоматаар асаах<small>20:00–06:00 · харанхуйд асна</small></span></label>
-    <div className="room-time-status" role="status"><Lightbulb size={15}/>{solar.lampsOn ? lighting.fixtures.some(f=>f.intensity>0) || coveOn ? coveOn ? "Таазны далд гэрэл асаалттай" : "Таазны гэрэл асаалттай" : "Таазны гэрлийн хүчийг нэмнэ үү" : "Нарны гэрэл · таазны гэрэл унтраалттай"}</div>
+    <div className="room-time-status" role="status"><Lightbulb size={15}/>{solar.lampsOn ? lighting.fixtures.some(f=>f.intensity>0) || coveOn ? coveOn ? "Таазны далд гэрэл асаалттай" : "Таазны гэрэл асаалттай" : "Таазны гэрлийн хүчийг нэмнэ үү" : "Нарны гэрэл · таазны гэрэл бүдэг асаалттай"}</div>
     {showIntensity && <label className="room-light-intensity"><span>Таазны гэрлийн хүч<output>{Math.round(averageIntensity / 40 * 100)}%</output></span><input type="range" aria-label="Таазны гэрлийн хүч" min="0" max="40" step="1" value={averageIntensity} disabled={!lighting.fixtures.length} {...edit} onChange={event => onChange({fixtures:lighting.fixtures.map(fixture=>({...fixture,intensity:Number(event.target.value)}))})}/></label>}
   </div>;
 }

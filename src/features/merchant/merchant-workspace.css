@@ -1,47 +1,9 @@
 /* Merchant-only workspace. Sidebar navigation and admin styling stay independent. */
 
 .dashboard-layout .merchant-app-shell.dashboard-shell {
-  --dashboard-bg: #f5f6f8;
-  --dashboard-surface: #fff;
-  --dashboard-elevated: #f1f3f6;
-  --dashboard-border: #e2e5eb;
-  --dashboard-ink: #17191d;
-  --dashboard-muted: #636b79;
-  --dashboard-accent: #0866e8;
-  --dashboard-success: #0866e8;
-  --dashboard-on-accent: #fff;
-  --merchant-input-bg: #fff;
-  --site-bg: #f5f6f8;
-  --site-surface: #fff;
-  --site-ink: #17191d;
-  --site-muted: #636b79;
-  --site-line: #e2e5eb;
-  --site-hover: #f1f3f6;
-  --site-accent: #0866e8;
-  --site-success: #0866e8;
+  --merchant-input-bg: var(--dashboard-solid);
   background: var(--dashboard-bg);
   color: var(--dashboard-ink);
-}
-
-.dashboard-layout .merchant-app-shell.dashboard-shell[data-theme="dark"] {
-  --dashboard-bg: #101113;
-  --dashboard-surface: #191b1f;
-  --dashboard-elevated: #23262c;
-  --dashboard-border: #32363e;
-  --dashboard-ink: #f5f6f8;
-  --dashboard-muted: #a7adb8;
-  --dashboard-accent: #6aa9ff;
-  --dashboard-success: #6aa9ff;
-  --dashboard-warning: #f0be69;
-  --dashboard-danger: #ff9595;
-  --dashboard-on-accent: #101929;
-  --site-ink: #f5f6f8;
-  --site-muted: #a7adb8;
-  --site-line: #32363e;
-  --site-surface: #191b1f;
-  --site-bg: #101113;
-  --site-hover: #23262c;
-  --site-accent: #6aa9ff;
 }
 
 .dashboard-layout .merchant-app-shell .dashboard-sidebar,
@@ -108,7 +70,6 @@
 }
 
 .dashboard-layout .merchant-app-shell .dashboard-content {
-  max-width: 1600px;
   padding: 12px clamp(20px, 2.4vw, 40px) 40px;
 }
 
@@ -188,7 +149,7 @@
   border-radius: 16px;
   border-color: var(--dashboard-border);
   background: var(--dashboard-surface);
-  box-shadow: 0 2px 4px #00000003;
+  box-shadow: 0 2px 4px var(--dashboard-shadow);
 }
 
 .dashboard-layout .merchant-app-shell .reference-store-banner {
@@ -227,7 +188,7 @@
   border: 1px solid transparent;
   color: var(--dashboard-on-accent);
   background: var(--dashboard-accent);
-  box-shadow: 0 2px 3px #0000000d;
+  box-shadow: 0 2px 3px var(--dashboard-shadow);
 }
 
 .dashboard-layout .merchant-app-shell .btn-ghost {
@@ -452,7 +413,7 @@
 .merchant-app-shell .merchant-sortable-overlay {
   outline: 1px solid var(--dashboard-accent);
   transform: scale(1.025) rotate(-1deg);
-  box-shadow: 0 20px 48px #0003;
+  box-shadow: 0 20px 48px var(--dashboard-shadow);
 }
 
 @media (max-width: 1100px) {

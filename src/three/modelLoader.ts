@@ -10,6 +10,8 @@ import { configureModelCutoutSampling } from "./modelCutoutSampling";
 import { configureModelDefaultMaterials } from "./modelDefaultMaterials";
 import { disposeKitchenTextureCoordinates } from "./kitchenTextureCoordinates";
 import { idleModelCacheBudget, modelResourceBytes, type ModelResourceBytes } from "./modelResources";
+import { enableAcceleratedRaycast, scheduleRaycastTrees } from "./modelRaycast";
+enableAcceleratedRaycast();
 export interface ModelLoadMetrics {
   queuedAt: number;
   startedAt: number;
@@ -101,11 +103,12 @@ export function acquireModel(renderer: THREE.WebGLRenderer, url: string, options
       const discard = () => disposeModel({ scene: gltf.scene } as LoadedModel);
       if (!pending.refs) { discard(); throw new DOMException('Model request no longer has consumers', 'AbortError'); }
       try {
-      configureModelDefaultMaterials(gltf.scene, gltf.parser?.associations);
+      configureModelDefaultMaterials(gltf.scene, gltf.parser?.associations, gltf.parser?.json?.materials);
       configureModelTextureSampling(gltf.scene, renderer);
       configureModelCutoutSampling(gltf.scene, renderer);
       gltf.scene.traverse(object => { if (object instanceof THREE.Mesh) { object.castShadow = object.userData.applianceGlass !== true; object.receiveShadow = true; } });
       if (!gltf.animations.length && !options.preserveHierarchy) instanceRepeatedModules(gltf.scene);
+      scheduleRaycastTrees(gltf.scene);
       gltf.scene.updateMatrixWorld(true);
       let bounds = new THREE.Box3().setFromObject(gltf.scene);
       const authored = gltf.scene.userData.pipelineBounds;

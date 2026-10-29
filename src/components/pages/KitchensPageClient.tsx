@@ -1,6 +1,3 @@
-"use client";
-
-import { RemotePage } from "@/components/RemotePage";
 import type { PageData } from "@/lib/pageData";
 import { PlannerLink as Link } from "@/components/PlannerLink";
 import { ArrowUpRight, CookingPot } from "lucide-react";
@@ -10,14 +7,6 @@ import { DirectoryCard } from "@/components/DirectoryCard";
 import Form from "next/form";
 import { Search, X } from "lucide-react";
 import { kitchenDesignMatchesSearch } from "@/lib/kitchenListingSuggestions";
-
-export function KitchensPageClient({ query }: { query: string }) {
-  return (
-    <RemotePage page="kitchens" variant="catalog">
-      {(data) => <KitchensContent allDesigns={data.designs} query={query} />}
-    </RemotePage>
-  );
-}
 
 export function KitchensContent({
   allDesigns,

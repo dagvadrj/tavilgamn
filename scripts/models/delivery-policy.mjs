@@ -28,7 +28,8 @@ export function deliveryPublishFields(deliveryPath) {
 
 export function geometryProfileForModel(model) {
   return model.category === "sofa" && !["kitchen-part", "kitchen-assembly"].includes(model.glb_validation?.assetRole)
-    ? "sofa-surface" : "preserve";
+    // MODEL_SOFA_PROFILE=sofa-surface бол өмнөх authored-surface урсгал руу буцна.
+    ? (process.env.MODEL_SOFA_PROFILE ?? "bake-surface") : "preserve";
 }
 
 // Conservative eligibility: other assets use geometry-preserving compression.

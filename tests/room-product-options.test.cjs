@@ -7,6 +7,7 @@ const { renderToStaticMarkup } = require("react-dom/server");
 const { loadSource } = require("./helpers/load-source.cjs");
 
 const h = React.createElement;
+// Windows checkouts with core.autocrlf=true have CRLF; the source slicing below expects "\n".
 const read = (file) => readFileSync(path.resolve(__dirname, "..", file), "utf8").replace(/\r\n/g, "\n");
 const store = (state) => Object.assign((select) => select(state), { getState: () => state, setState() {} });
 const image = { default: (props) => h("img", { src: props.src, alt: props.alt }) };
@@ -161,4 +162,128 @@ test("canvas: blue thin frame plus a floor footprint for floor pieces; never ove
   assert.equal((anchor.match(/invalidate\(\)/g) ?? []).length, 1, "one frame on selection so the bar anchors, never a loop");
   const frame = anchor.slice(anchor.indexOf("useFrame("), anchor.indexOf("\n  });", anchor.indexOf("useFrame(")));
   assert.doesNotMatch(frame, /invalidate/, "the frame callback never schedules another frame");
+});
+
+test("D2 store: the visible product is the revert target until the new model is on screen", () => {
+  const { useRoomModelStatus: store } = loadSource("src/store/roomModelStatus.ts");
+  const s = () => store.getState();
+  const a = { instanceId: "p1", productId: "a", x: 1, z: 2, rotation: 0, color: "grey", material: "fabric" };
+  s().set("p1", "ready");
+  s().remember(a);
+  s().begin("p1");
+  assert.equal(s().byInstance.p1, "swapping");
+  s().remember({ ...a, productId: "b" });
+  assert.equal(s().previous.p1.productId, "a", "A→B→C: A is still on screen, so A stays the target");
+  s().swapError("p1");
+  assert.equal(s().byInstance.p1, "ready");
+  assert.equal(s().swapFailed.p1, true);
+  s().retrySwap("p1");
+  assert.equal(s().byInstance.p1, "swapping");
+  assert.equal(s().swapFailed.p1, undefined);
+  assert.equal(s().swapRetries.p1, 1);
+  assert.equal(s().previous.p1.productId, "a", "a retry keeps the revert target");
+  s().set("p1", "ready");
+  assert.equal(s().previous.p1, undefined, "a ready new model forgets the old one");
+  s().remember(a); s().forget("p1");
+  assert.equal(s().previous.p1, undefined);
+  const before = s();
+  s().clear("missing");
+  assert.equal(s(), before, "clearing an unknown piece is a no-op");
+});
+
+test("D2 panel: loading keeps the old model, failure offers retry and revert, swatches carry the surcharge", () => {
+  const state = { byInstance: {}, swapFailed: {}, previous: {}, retrySwap() {} };
+  const mod = loadSource("src/features/room-planner/components/RoomProductOptions.tsx", {
+    "next/image": image,
+    "@/components/PlannerLink": link,
+    "@/store/wishlist": { useWishlist: store({ has: () => false, toggle() {} }) },
+    "@/store/roomModelStatus": { useRoomModelStatus: store(state) },
+  });
+  const status = () => renderToStaticMarkup(h(mod.RoomVariantStatus, { instanceId: "p1", name: "Талст буйдан", onRevert() {} }));
+  assert.equal(status(), "");
+  state.byInstance = { p1: "swapping" };
+  assert.match(status(), /role="status"[^>]*>Талст буйдан ачаалж байна — өмнөх загвар харагдсаар/);
+  state.byInstance = { p1: "ready" }; state.swapFailed = { p1: true };
+  assert.match(status(), /role="alert"[\s\S]*Шинэ хувилбар ачаалагдсангүй — өмнөх загвар хэвээр[\s\S]*Дахин оролдох/);
+  assert.doesNotMatch(status(), /Буцаах/, "nothing to revert to without a snapshot");
+  state.previous = { p1: { instanceId: "p1" } };
+  assert.match(status(), /Буцаах/);
+  assert.equal(mod.swatchLabel({ name: "Хөх хилэн", priceDelta: 120000 }), `Хөх хилэн (+${loadSource("src/lib/format.ts").formatPrice(120000)})`);
+  assert.equal(mod.swatchLabel({ name: "Саарал" }), "Саарал");
+});
+
+test("D2 wiring: price, cart payload and swatch share one variant; replace remembers, revert validates", () => {
+  const source = read("src/components/RoomPlanner.tsx");
+  assert.match(source, /price=\{\s*selectedPiece\.kitchen \|\| selectedDetails\.basePrice <= 0\s*\? null\s*: getPiecePrice\(selectedPiece\)\s*\}/);
+  const cart = source.slice(source.indexOf("const addSelectedToCart = "), source.indexOf("const measurements ="));
+  assert.match(cart, /color: selectedPiece\.color,\s*material: selectedPiece\.material,\s*unitPrice: getPiecePrice\(selectedPiece\)/);
+  assert.match(source, /onReplace=\{\(pieces\) => \{[\s\S]{0,200}useRoomModelStatus\.getState\(\)\.remember\(selectedPiece\);\s*updatePieces\(pieces\);/);
+  const revert = source.slice(source.indexOf("const revertSwap = "), source.indexOf("const openOptions = "));
+  assert.match(revert, /isPlacementValid\(candidate, placement\.pieces, placement\.room\)/);
+  assert.match(revert, /x: piece\.x,\s*z: piece\.z,\s*rotation: piece\.rotation/);
+  const options = read("src/features/room-planner/components/RoomProductOptions.tsx");
+  assert.match(options, /Өнгө солиход сагсанд байгаа бараа өөрчлөгдөхгүй\./);
+  assert.match(read("src/three/FurnitureLoadState.tsx"), /export const SWAP_DIM_OPACITY = 0\.55;/);
+});
+
+test("D3 replace cards: 3D-ready, stock and fit each give an honest reason; imported models get none", () => {
+  const { alternativeFit, RoomProductAlternatives } = loadSource("src/features/room-planner/components/RoomProductAlternatives.tsx", {
+    "next/image": image,
+    "@/lib/roomProductReplacement": {
+      replaceRoomProduct: (piece, p) => (p.id === "wide" ? { pieces: null, error: "Шинэ хэмжээ энэ байрлалд багтахгүй." } : { pieces: [{ ...piece, productId: p.id }], error: null }),
+    },
+  });
+  const piece = { instanceId: "p1", productId: "sofa-a", x: 0, z: 0, rotation: 0, color: "c", material: "m", details: { name: "A", dimensions: { w: 2, d: 1, h: 1 }, category: "sofa" } };
+  const args = [[piece], { id: "r" }, "r", { room: {}, pieces: [piece] }];
+  assert.deepEqual(alternativeFit(piece, product("x", "sofa", { model: undefined }), ...args), { kind: "no-model" });
+  assert.deepEqual(alternativeFit(piece, product("x", "sofa", { stockQuantity: 0 }), ...args), { kind: "no-stock" });
+  assert.deepEqual(alternativeFit(piece, product("wide", "sofa"), ...args), { kind: "blocked", reason: "Шинэ хэмжээ энэ байрлалд багтахгүй." });
+  assert.deepEqual(alternativeFit(piece, product("ok", "sofa"), ...args), { kind: "fits" });
+  const catalog = [product("ok", "sofa"), product("wide", "sofa"), product("nomodel", "sofa", { model: undefined }), product("empty", "sofa", { stockQuantity: 0 }), product("chair", "armchair")];
+  const html = renderToStaticMarkup(h(RoomProductAlternatives, { piece, product: null, products: catalog, pieces: [piece], room: { id: "r" }, roomId: "r", context: { room: {}, pieces: [piece] }, onReplace() {}, onNotice() {} }));
+  assert.match(html, /1 бүтээгдэхүүн энэ байрлалд багтана/);
+  assert.match(html, /Багтахгүй — Шинэ хэмжээ/);
+  assert.match(html, /3D бэлэн биш/);
+  assert.match(html, /Нөөц дууссан/);
+  assert.equal((html.match(/Үүгээр солих/g) ?? []).length, 1, "only a fitting card can be chosen");
+  assert.doesNotMatch(html, />chair</, "another category never appears");
+  const imported = renderToStaticMarkup(h(RoomProductAlternatives, { piece: { ...piece, details: { ...piece.details, category: undefined } }, product: null, products: catalog, pieces: [piece], room: {}, roomId: "r", context: {}, onReplace() {}, onNotice() {} }));
+  assert.match(imported, /ангилал байхгүй тул санал гаргахгүй/);
+});
+
+test("D4 pairing states: loading skeleton, error with retry, an honest rule note, a new-instance action", () => {
+  const { RoomProductPairings } = loadSource("src/features/room-planner/components/RoomProductOptions.tsx", {
+    "next/image": image,
+    "@/components/PlannerLink": link,
+    "@/store/wishlist": { useWishlist: store({ has: () => false, toggle() {} }) },
+    "@/store/roomModelStatus": { useRoomModelStatus: store({ byInstance: {}, swapFailed: {}, previous: {} }) },
+  });
+  const base = { hasSource: true, suggestions: [{ product: product("side", "side-table"), reason: "Буйдан-тай хамт хэрэглэдэг: хажуугийн ширээ" }], onAdd() {} };
+  assert.match(renderToStaticMarkup(h(RoomProductPairings, { ...base, state: "loading" })), /aria-busy="true"/);
+  assert.match(renderToStaticMarkup(h(RoomProductPairings, { ...base, state: "error", onRetry() {} })), /role="alert"[\s\S]*Дахин оролдох/);
+  const ready = renderToStaticMarkup(h(RoomProductPairings, base));
+  assert.match(ready, /Санал · ангиллын дүрмээр \(баталгаатай нийцэл биш\)/);
+  assert.match(ready, /Өрөөнд нэмэх/);
+  assert.doesNotMatch(ready, /Үүгээр солих/, "pairing never reuses the replace action");
+  assert.match(renderToStaticMarkup(h(RoomProductPairings, { ...base, suggestions: [] })), /хослуулах 3D бэлэн бараа одоогоор алга/);
+});
+
+test("D5 phone toolbar: copy, focus and remove move under «Бусад»; replace/pair open the sheet full", () => {
+  const { RoomSelectionToolbar } = loadSource("src/features/room-planner/components/RoomSelectionToolbar.tsx", {
+    "@/store/selectionAnchor": { useSelectionAnchor: Object.assign(() => null, { getState: () => ({ instanceId: null, rect: null }), subscribe: () => () => {} }) },
+  });
+  const actions = [
+    { id: "cart", label: "Сагсанд", icon: null, run() {}, primary: true },
+    { id: "copy", label: "Хуулбарлах", icon: null, run() {}, more: true },
+    { id: "remove", label: "Устгах", menuLabel: "Өрөөнөөс устгах", icon: null, run() {}, more: true },
+  ];
+  const html = renderToStaticMarkup(h(RoomSelectionToolbar, { instanceId: "p", title: "Луна", number: 1, actions, onClose() {} }));
+  assert.match(html, /class="is-more"[^>]*aria-label="Хуулбарлах"/);
+  assert.match(html, /aria-haspopup="menu" aria-expanded="false" aria-label="Бусад үйлдэл"/);
+  const source = read("src/components/RoomPlanner.tsx");
+  assert.match(source, /label: "Хуулбарлах",[\s\S]{0,140}more: true/);
+  assert.match(source, /label: "Устгах",\s*menuLabel: "Өрөөнөөс устгах",[\s\S]{0,140}more: true/);
+  assert.match(source, /label: "Төвлөрүүлэх",\s*menuLabel: "Төвлөрүүлж харах",[\s\S]{0,140}more: true/);
+  assert.match(source, /expandRequest=\{optionsReveal\}/);
+  assert.match(read("src/features/room-planner/components/RoomWorkspacePanel.tsx"), /if \(expandRequest > 0 && isPhone\(\)\) setFull\(true\);/);
 });

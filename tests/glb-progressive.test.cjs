@@ -461,6 +461,31 @@ test("room scene status: sized volume while loading, dimmed previous variant dur
   } finally { run.unmount(); console.error = quiet; }
 });
 
+test("room scene status: a failed swap retries through the store signal without dropping the old model, and offers revert", async () => {
+  const quiet = console.error; console.error = () => {};
+  let swapRetries = 0, reverted = 0;
+  const status = (signal) => ({ floorOffset: 0, onSwapError() {}, onSwapRetry: () => swapRetries++, onRevert: () => reverted++, retrySignal: signal });
+  const run = harness({ selected: true, sceneStatus: status(0) });
+  try {
+    await run.flush(); run.resolve(0); await run.flush();
+    run.updateProps({ glbFile: "variant.glb" }); await run.flush();
+    run.requests[1].reject(new Error("offline")); await run.flush();
+    let state = loadState(run.tree);
+    assert.equal(state.props.swapFailed, true);
+    state.props.onRetry(); state.props.onRevert();
+    assert.deepEqual([swapRetries, reverted], [1, 1], "scene retry goes through the store so the panel agrees");
+    assert.equal(run.requests.length, 2, "the store signal, not the click, starts the next request");
+    run.updateProps({ sceneStatus: status(1) }); await run.flush();
+    assert.equal(run.requests.length, 3, "a bumped signal requests the new file again");
+    state = loadState(run.tree);
+    assert.ok(state.props.model, "the previous model stays attached during the retry");
+    run.resolve(2); await run.flush();
+    state = loadState(run.tree);
+    assert.equal(state.props.phase, "ready");
+    assert.equal(state.props.swapFailed, false);
+  } finally { run.unmount(); console.error = quiet; }
+});
+
 test("room scene status: a first load failure keeps a failed volume with retry and remove", async () => {
   const quiet = console.error; console.error = () => {};
   let errors = 0, swapErrors = 0, retried = 0, removed = 0;

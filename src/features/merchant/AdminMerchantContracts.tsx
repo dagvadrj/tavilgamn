@@ -176,7 +176,7 @@ export function AdminMerchantContracts({ owner }: { owner: string }) {
     <section className="merchant-commerce">
       <div className="merchant-section-heading">
         <div>
-          <h2>Merchant–платформын гэрээ</h2>
+          <h2>Дэлгүүр–платформын гэрээ</h2>
           <p className="merchant-muted">
             Merchant бүрийн гэрээний файлыг тусад нь оруулж нийтэлнэ.
           </p>
@@ -205,7 +205,7 @@ export function AdminMerchantContracts({ owner }: { owner: string }) {
             setError("");
           }}
         >
-          <option value="">Merchant сонгох…</option>
+          <option value="">Дэлгүүр сонгох…</option>
           {merchants.map((m) => (
             <option key={m.id} value={m.id}>
               {m.name}
@@ -403,7 +403,7 @@ export function AdminMerchantContracts({ owner }: { owner: string }) {
               Энэ merchant-д нийтэлсэн гэрээ алга.
             </p>
           )}
-          <h3>Merchant-ийн зөвшөөрлийн бүртгэл</h3>
+          <h3>Дэлгүүрийн зөвшөөрлийн бүртгэл</h3>
           <div
             className="merchant-commerce-table"
             tabIndex={0}

@@ -20,6 +20,7 @@ prisma/dev.db-journal
 .env.*
 !.env.example
 .github/
+.adminmerchantDashboardChange/
 # Keys and certificates
 *.pem
 *.key
@@ -99,6 +100,7 @@ Thumbs.db
 !/docs/home-marketplace-verification.md
 !/docs/shop-the-look.md
 !/docs/product-experience.md
+
 !/docs/catalog-performance.md
 !/docs/dashboard-drafts.md
 !/docs/auth-setup.md

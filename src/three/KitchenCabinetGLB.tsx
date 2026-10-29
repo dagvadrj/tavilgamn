@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Edges, Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { type Group } from "three";
@@ -28,6 +28,8 @@ import { KitchenCatalogAppliance } from "./KitchenCatalogAppliance";
 import { CabinetBody } from "./KitchenCabinetBody";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { resolveKitchenPaintMaterial } from "@/lib/kitchenPaint";
+import { kitchenRetrySubscriber, useKitchenAppearanceStatus } from "@/store/kitchenAppearanceStatus";
+import { SWAP_DIM_OPACITY, setModelOpacity } from "./FurnitureLoadState";
 
 type Props = {
   cabinet: ModularCabinet;
@@ -61,15 +63,30 @@ function AssemblyModel({
   const [display, setDisplay] = useState<AssemblyDisplay | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
+  const retrySignal = useKitchenAppearanceStatus((state) => state.retries[cabinet.id] ?? 0);
+  // K4: the last correct model stays until its replacement is ready, so its
+  // resources are released when replaced or unmounted, not on every change.
+  const owned = useRef<{ display: AssemblyDisplay; dispose: () => void } | null>(null);
+  useEffect(
+    () => () => {
+      owned.current?.dispose();
+      owned.current = null;
+    },
+    [],
+  );
   const selectionsKey = JSON.stringify(cabinet.partSelections ?? {});
   const key = `${variant.furnitureModelId}:${variant.glbFile}:${JSON.stringify(assembly)}:${selectionsKey}:${JSON.stringify(materialDefinitions)}:${JSON.stringify([frontMaterial, carcassMaterial])}:${cabinet.width}:${cabinet.height}:${cabinet.depth}`;
 
   useEffect(() => {
     let cancelled = false;
+    let adopted = false;
     const releases: (() => void)[] = [];
     const clones: LoadedModel[] = [];
+    const dispose = () => {
+      clones.forEach(disposeModelClone);
+      releases.forEach((release) => release());
+    };
     setError(null);
-    setDisplay(null);
     async function load(modelId: string, file: string) {
       const lease = acquireModel(gl, assetUrl(modelId, file), {
         preserveHierarchy: true,
@@ -137,27 +154,41 @@ function AssemblyModel({
         const parts = new Map(entries.flatMap(([id, model]) => model ? [[id, model.scene] as const] : []));
         const placement = modelPlacement(frame.bounds, { w: cabinet.width / 1000, h: cabinet.height / 1000, d: cabinet.depth / 1000 }, true);
         const result = composeKitchenGlb(frame.scene, assembly, selections, parts, placement.position);
-        setDisplay({ key, frame, ...result });
+        const next = { key, frame, ...result };
+        const previous = owned.current;
+        owned.current = { display: next, dispose };
+        adopted = true;
+        setDisplay(next);
+        previous?.dispose();
+        useKitchenAppearanceStatus.getState().ready(cabinet.id);
         invalidate();
       } catch (failure) {
-        if (!cancelled)
-          setError(
-            failure instanceof Error
-              ? failure.message
-              : "3D файл ачаалж чадсангүй.",
-          );
+        if (cancelled) return;
+        setError(
+          failure instanceof Error
+            ? failure.message
+            : "3D файл ачаалж чадсангүй.",
+        );
+        // With a previous model on screen this is a failed material swap.
+        useKitchenAppearanceStatus.getState().fail(cabinet.id);
+        invalidate();
       }
     })();
     return () => {
       cancelled = true;
-      clones.forEach(disposeModelClone);
-      releases.forEach((release) => release());
+      if (!adopted) dispose();
     };
     // key includes all immutable assembly and placement inputs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gl, invalidate, key, retry]);
+  }, [gl, invalidate, key, retry, retrySignal]);
 
   const ready = display?.key === key ? display : null;
+  const pending = !!display && !ready && !error;
+  useEffect(() => {
+    if (!display) return;
+    setModelOpacity(display.root, pending ? SWAP_DIM_OPACITY : null);
+    invalidate();
+  }, [display, pending, invalidate]);
   const clip = assembly.openAnimation
     ? ready?.frame.animations?.find(
         (item) => item.name === assembly.openAnimation,
@@ -169,8 +200,8 @@ function AssemblyModel({
     <group
       userData={{ deliveryPending: !ready, deliveryReady: Boolean(ready) }}
     >
-      {ready && <primitive object={ready.root} dispose={null} />}
-      {selected && !ready && (
+      {display && <primitive object={display.root} dispose={null} />}
+      {selected && !display && (
         <Html
           center
           position={[0, cabinet.height / 1000 + 0.06, 0]}
@@ -237,6 +268,10 @@ export function KitchenCabinetGLB({ cabinet, variant: candidate, materialDefinit
     glbFile={variant.glbFile} selected={selected} showLoadStatus={selected}
     frontMaterial={frontMaterial}
     carcassMaterial={carcassMaterial}
+    retainWhilePending
+    retrySubscribe={kitchenRetrySubscriber(cabinet.id)}
+    onReady={() => useKitchenAppearanceStatus.getState().ready(cabinet.id)}
+    onError={() => useKitchenAppearanceStatus.getState().fail(cabinet.id)}
     preserveHierarchy preservePhysicalSize strictDimensions frontProjectionMm={variant.frontProjectionMm} w={cabinet.width / 1000} h={cabinet.height / 1000} d={cabinet.depth / 1000}
     cabinetAdaptation={cabinet.catalogAdaptation}
     open={open} cabinetOpening={cabinet.catalogAdaptation === 'oven' ? undefined : cabinet.catalogAdaptation === 'sink' ? 'doors' : variant.opening === "doors" || variant.opening === "drawers" ? variant.opening : undefined}

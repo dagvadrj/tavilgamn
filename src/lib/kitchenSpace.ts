@@ -1,7 +1,7 @@
 import { roomWalls, type KitchenRoom, type KitchenSpaceItem } from "./kitchenCabinets";
 import { onRoomSegment, roomContainsFootprint, validateRoomOutline } from "./kitchenRoomOutline";
 
-export const DEFAULT_KITCHEN_WALL_COLOR = "#eeede7";
+export const DEFAULT_KITCHEN_WALL_COLOR = "#d9d8d3";
 
 export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFront" | "items" | "wallColors" | "outline"> {
   const outline = validateRoomOutline(room);

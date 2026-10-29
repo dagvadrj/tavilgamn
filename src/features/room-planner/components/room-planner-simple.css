@@ -115,18 +115,34 @@
   color: #202124;
 }
 
+/* «Хадгалах» is the one filled primary action; «Тойм» is secondary (outline). */
+
 .planner-workspace.planner-reference.room-simple .studio-file-actions .room-summary-button {
   min-height: var(--site-button-height);
   min-width: 102px;
-  background: var(--site-primary);
-  color: white;
+  border: 1px solid var(--site-primary);
+  background: var(--site-surface);
+  color: var(--site-primary);
   gap: 12px;
   padding-inline: 20px;
   font-weight: var(--site-button-weight);
 }
 
-.planner-workspace.planner-reference.room-simple .studio-file-actions .room-summary-button:hover {
-  background: var(--site-primary-hover);
+.planner-workspace.planner-reference.room-simple .studio-file-actions .room-summary-button:hover, .planner-workspace.planner-reference.room-simple .studio-file-actions .room-summary-button[aria-expanded="true"] {
+  background: var(--site-selected);
+  color: var(--site-primary-hover);
+}
+
+.planner-workspace.planner-reference.room-simple .studio-file-actions .room-summary-button:focus-visible {
+  outline: 2px solid var(--site-primary);
+  outline-offset: 2px;
+}
+
+.planner-workspace.planner-reference.room-simple .studio-file-actions .room-summary-button:disabled {
+  border-color: var(--site-line);
+  background: var(--site-surface);
+  color: #6b7480;
+  cursor: not-allowed;
 }
 
 .room-stage-actions {

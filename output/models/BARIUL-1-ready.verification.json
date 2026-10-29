@@ -1,0 +1,46 @@
+{
+  "source": "C:\\Users\\HiTech\\Downloads\\BARIUL 1.glb",
+  "source_sha256": "dda16060e9cf050a23104a46f38d397e3d5a196dcc8e2d92eda3aff94b2a95e0",
+  "output": "C:\\Users\\HiTech\\Desktop\\ProjectN2\\output\\models\\BARIUL-1-ready.glb",
+  "output_sha256": "d88c6e46c78fe2d2a94c0a1a88a3f0d0e02df3f123cb0425ba7336a3b14e2279",
+  "source_mesh_count": 19,
+  "output_mesh_count": 1,
+  "faces": 392,
+  "vertices": 886,
+  "anchor_original_blender_world_m": [
+    1.193521499633789,
+    0.9306485652923584,
+    -0.10127031803131104
+  ],
+  "foot_center_spacing_mm": 99.28274362495502,
+  "gltf_bounds_m": [
+    [
+      -0.05906546115875244,
+      -0.005921453237533569,
+      -7.191047757260094e-10
+    ],
+    [
+      0.059065401554107666,
+      0.005921468138694763,
+      0.030968256294727325
+    ]
+  ],
+  "gltf_dimensions_mm": [
+    118.13086271286011,
+    11.842921376228333,
+    30.9682570138321
+  ],
+  "maximum_geometry_error_m": 6.674406255472048e-08,
+  "output_transform": {
+    "location": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  }
+}

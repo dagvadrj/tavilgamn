@@ -21,6 +21,7 @@ import {
 } from "@/lib/kitchenCabinets";
 import { DEFAULT_FLOOR_MATERIAL } from "@/lib/roomDesign";
 import { DEFAULT_KITCHEN_WALL_COLOR } from "@/lib/kitchenSpace";
+import { KITCHEN_FILL } from "@/lib/kitchenDaylight";
 import { kitchenWallPanels } from "@/lib/kitchenWallPanels";
 import {
   ROOM_SKIRTING_DEPTH,
@@ -114,6 +115,7 @@ function KitchenRoomWall({
             attach="material-0"
             {...finish}
             envMap={paintEnvironment}
+            envMapIntensity={(finish.envMapIntensity ?? 1) * KITCHEN_FILL}
           />
           <meshStandardMaterial
             attach="material-1"
@@ -429,7 +431,7 @@ export function KitchenRoomShell({
             <boxGeometry
               args={[item.width / 1000, room.height / 1000, item.depth / 1000]}
             />
-            <meshStandardMaterial color="#eeede7" roughness={0.8} />
+            <meshStandardMaterial color={DEFAULT_KITCHEN_WALL_COLOR} roughness={0.8} />
           </mesh>
         ))}
     </group>

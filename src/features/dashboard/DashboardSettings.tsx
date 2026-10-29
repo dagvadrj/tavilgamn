@@ -7,6 +7,7 @@ import {
   Settings,
   Sun,
   Moon,
+  Monitor,
   Store,
   UserRound,
   LayoutGrid,
@@ -67,13 +68,14 @@ export function DashboardSettings({
             <div className="dashboard-setting-options">
               {(
                 [
-                  ["light", "Light", "Саарал шилэн панель, хар бичиг", Sun],
                   [
-                    "dark",
-                    "Dark",
-                    "Хар дэвсгэр, утаат шил, цагаан бичиг",
-                    Moon,
+                    "system",
+                    "Системийн",
+                    "Төхөөрөмжийн тохиргоог дагана",
+                    Monitor,
                   ],
+                  ["light", "Гэгээлэг", "Цайвар дэвсгэр, бараан бичиг", Sun],
+                  ["dark", "Харанхуй", "Бараан дэвсгэр, цайвар бичиг", Moon],
                 ] as const
               ).map(([value, label, description, Icon]) => (
                 <label key={value}>

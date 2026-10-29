@@ -52,3 +52,21 @@ export function SkeletonRows({ count = 3 }: { count?: number }) {
     </div>
   );
 }
+/**
+ * Placeholder product cards inside the real `.product-grid`, so columns, gaps
+ * and the square photo match ProductCard and the cards replace it in place.
+ */
+export function SkeletonProductGrid({ count = 4 }: { count?: number }) {
+  return (
+    <div className="product-grid" aria-hidden="true">
+      {Array.from({ length: count }, (_, i) => (
+        <div className="skeleton-product-card" key={i}>
+          <div className="skeleton-block skeleton-product-card-photo" />
+          <div className="skeleton-product-card-body">
+            <SkeletonLines count={3} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

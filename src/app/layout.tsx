@@ -10,6 +10,7 @@ import { PerformanceDiagnosticsLoader } from "@/components/PerformanceDiagnostic
 import { AuthBootstrap } from "@/components/AuthBootstrap";
 import { Suspense } from "react";
 import { PlannerNavigationFeedback } from "@/components/PlannerNavigationFeedback";
+import { NavigationProgress } from "@/components/NavigationProgress";
 
 const sans = Inter({
   subsets: ["latin"],
@@ -37,10 +38,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="mn" className={`${sans.variable} ${display.variable}`}>
+    // The dashboard theme script sets data-dashboard-theme before hydration.
+    <html
+      lang="mn"
+      className={`${sans.variable} ${display.variable}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen flex flex-col">
         <AuthBootstrap />
         <Suspense fallback={null}><PlannerNavigationFeedback /></Suspense>
+        <Suspense fallback={null}><NavigationProgress /></Suspense>
         <a href="#main-content" className="skip-link">Үндсэн агуулга руу очих</a>
         {children}
         <PerformanceDiagnosticsLoader />

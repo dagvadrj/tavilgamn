@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { StorePageClient } from "@/components/pages/StorePageClient";
+import { StorePage } from "@/components/pages/StorePage";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { jsonObject } from "@/lib/supabase/json";
 export const dynamic = "force-dynamic";
@@ -20,6 +20,6 @@ export default async function PublicStore({
   const store = jsonObject(data);
   if (typeof store.storeId !== "string") notFound();
   return (
-    <StorePageClient id={store.storeId} verified={store.verified === true} />
+    <StorePage id={store.storeId} verified={store.verified === true} />
   );
 }

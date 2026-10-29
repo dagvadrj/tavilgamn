@@ -276,29 +276,19 @@ test("planning furniture renders visible physical meshes and all new tools dispa
     ]);
     assert.ok(boxes.every((n) => n.props.args.every((x) => x > 0)));
   }
-  const { KitchenPlannerHeader } = loadSource(
+  const { KitchenDesignTools } = loadSource(
     "src/features/kitchen-planner/components/KitchenPlannerHeader.tsx",
+    { react: { ...React, useRef: () => ({ current: null }), useState: value => [value, () => {}], useCallback: fn => fn, useEffect() {} } },
   );
   const calls = [];
-  const tree = KitchenPlannerHeader({
-    stage: "design",
-    onStage() {},
+  const tree = KitchenDesignTools({
     onTool: (t) => calls.push(t),
     busy: false,
-    canUndo: false,
-    canRedo: false,
-    onUndo() {},
-    onRedo() {},
-    loginHref: "/",
-    name: "Draft",
-    onName() {},
-    subtotal: 0,
-    utilities: null,
     annotations: false,
   });
   for (const label of ["Булан", "Шугаман гэрэл", "Тек / Арал"])
     nodes(tree)
-      .find((n) => n.type === "button" && n.props["aria-label"] === label)
+      .find((n) => n.type === "button" && nodes(n).some(child => child.type === "span" && child.props.children === label))
       .props.onClick();
   assert.deepEqual(calls, ["corner", "lighting", "island"]);
 });

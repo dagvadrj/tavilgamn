@@ -52,11 +52,15 @@ function FurnitureStage(props: HybridSceneProps) {
   const state = useRef({
     progress: props.motion.current.progress,
     focus: 0,
+    // Furniture flying back after the detail view closes; back runs 1 → 0.
+    returning: null as RoomFurniture | null,
+    back: 0,
     initialized: false,
     phase: props.phase,
     opacity: 1,
   });
   const [renderedPhase, setRenderedPhase] = useState(props.phase);
+  const [settling, setSettling] = useState(false);
   const aim = useMemo(() => new THREE.Vector3(), []);
   const eye = useMemo(() => new THREE.Vector3(), []);
   const target = useMemo(() => new THREE.Vector3(), []);
@@ -116,6 +120,9 @@ function FurnitureStage(props: HybridSceneProps) {
     invalidate();
   }, [props.selected, props.phase, props.colors, size, invalidate]);
   useEffect(() => {
+    if (props.selected) setSettling(true);
+  }, [props.selected]);
+  useEffect(() => {
     setDpr(
       Math.min(
         window.devicePixelRatio || 1,
@@ -139,12 +146,33 @@ function FurnitureStage(props: HybridSceneProps) {
       if (s.opacity === 0) {
         s.phase = props.phase;
         s.focus = 0;
+        s.returning = null;
+        s.back = 0;
+        setSettling(false);
         setRenderedPhase(s.phase);
         snap = true;
       }
     } else s.opacity = Math.min(1, s.opacity + delta * 5);
+    if (props.selected) {
+      s.returning = props.selected;
+      s.back = 0;
+    } else if (s.returning && s.back === 0) {
+      // Closing: the room view returns at once so the other furniture never
+      // moves; only the opened piece flies back from the camera to its place.
+      s.focus = 0;
+      s.back = props.reduced ? 0.001 : 1;
+      snap = true;
+    }
     s.progress += (motion.progress - s.progress) * step;
     s.focus += ((props.selected ? 1 : 0) - s.focus) * step;
+    if (s.back > 0) {
+      s.back *= Math.exp(-4.5 * Math.min(delta, 0.1));
+      if (s.back < 0.004) {
+        s.back = 0;
+        s.returning = null;
+        setSettling(false);
+      }
+    }
     const room = HYBRID_ROOMS[s.phase] || HYBRID_ROOMS[0];
     const crop = hybridCrop(size.width, size.height, room);
     const zoom = hybridZoom(s.progress, s.phase);
@@ -190,7 +218,7 @@ function FurnitureStage(props: HybridSceneProps) {
       (size.width > 767 ? viewWidth * 0.12 : 0);
     const focusY =
       (crop.fullHeight - viewHeight) / 2 +
-      (size.width < 768 ? viewHeight * 0.16 : 0);
+      (size.width < 768 ? viewHeight * 0.06 : 0);
     c.setViewOffset(
       crop.fullWidth,
       crop.fullHeight,
@@ -209,9 +237,18 @@ function FurnitureStage(props: HybridSceneProps) {
       for (const f of definition.furniture) {
         const g = groups.current[f.id];
         if (g) {
+          const flying = s.returning === f.id && s.back > 0;
           g.visible =
             definition === room && (!props.selected || props.selected === f.id);
-          g.rotation.y = f.yaw + (props.selected === f.id ? -0.2 * s.focus : 0);
+          g.position.fromArray(f.position);
+          if (flying) g.position.lerp(camera.position, 0.55 * s.back);
+          g.rotation.y =
+            f.yaw +
+            (props.selected === f.id
+              ? -0.2 * s.focus
+              : flying
+                ? -0.2 * s.back
+                : 0);
         }
       }
     const moving =
@@ -219,6 +256,7 @@ function FurnitureStage(props: HybridSceneProps) {
       s.opacity < 1 ||
       Math.abs(motion.progress - s.progress) > 0.00005 ||
       Math.abs((props.selected ? 1 : 0) - s.focus) > 0.0001 ||
+      s.back > 0 ||
       camera.position.distanceToSquared(eye) > 0.000001 ||
       aim.distanceToSquared(target) > 0.000001;
     Object.assign(gl.domElement.dataset, {
@@ -298,7 +336,8 @@ function FurnitureStage(props: HybridSceneProps) {
             />
             {i === renderedPhase &&
               renderedPhase === props.phase &&
-              !props.selected && (
+              !props.selected &&
+              !settling && (
                 <SceneHtml center position={f.hotspot} zIndexRange={[5, 4]}>
                   <button
                     className="scroll-room-hotspot"

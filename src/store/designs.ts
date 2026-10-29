@@ -12,6 +12,7 @@ import type {
   SavedFurniture,
 } from "@/lib/types";
 import { getProduct } from "./catalog";
+import { onLocalDataOwner } from "./localDataOwner";
 import { dimsFor, isPlacementValid } from "@/three/collision";
 import {
   activateDesignRoom,
@@ -766,3 +767,5 @@ export function prepareRoomAuthReturn(): string {
   }
   return `/planner?design=${encodeURIComponent(id)}`;
 }
+
+onLocalDataOwner(setDesignOwner);

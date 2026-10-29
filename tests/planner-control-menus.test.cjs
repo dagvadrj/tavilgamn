@@ -6,7 +6,7 @@ test('room floating menus remain within the viewport and outside the scrolling t
  const menu={open:true,style:{setProperty:(k,v)=>properties.set(k,parseFloat(v))},querySelector:()=>({getBoundingClientRect:()=>({right})})};
  const dock={getBoundingClientRect:()=>({top}),querySelectorAll:()=>[menu,other]};const refs=[{current:dock},{current:null},{current:menu}];
  const {RoomPlannerControls}=loadSource('src/features/room-planner/components/RoomPlannerControls.tsx',{react:{...React,useRef:()=>refs.shift(),useEffect(){},useCallback:fn=>fn}});
- const noop=()=>{};const tree=RoomPlannerControls({view:'dollhouse',onView:noop,onZoom:noop,onRoom:noop,onMaterials:noop,onHelp:noop,dimensions:false,onDimensions:noop,grid:false,onGrid:noop,snap:true,onSnap:noop,locked:false,onLock:noop,expanded:false,onExpand:noop,onRotate:noop});
+ const noop=()=>{};const tree=RoomPlannerControls({view:'dollhouse',onView:noop,onZoom:noop,onRoom:noop,onMaterials:noop,onHelp:noop,dimensions:false,onDimensions:noop,grid:false,onGrid:noop,snap:false,onSnap:noop,locked:false,onLock:noop,expanded:false,onExpand:noop,onRotate:noop});
  const nav=nodes(tree).find(n=>n.type==='nav');assert.ok(!nodes(nav).some(n=>n.props.className==='room-navigation-status'),'active-state actions must not be clipped by toolbar scrolling');assert.ok(nodes(tree).some(n=>n.props.className==='room-navigation-status'));
  const side=nodes(tree).find(n=>n.type==='details'&&n.props.className.includes('room-side-views'));
  side.props.onToggle({currentTarget:menu});assert.equal(other.open,false,'only one dock menu remains open');

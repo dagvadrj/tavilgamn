@@ -206,7 +206,9 @@
   background: var(--site-selected);
 }
 
-.room-builder-templates svg {
+/* Only the shape drawing; the check badge keeps its own icon size. */
+
+.room-builder-templates button > svg {
   width: 86px;
   height: 64px;
   fill: var(--site-hover);

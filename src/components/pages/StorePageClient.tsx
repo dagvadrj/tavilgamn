@@ -1,6 +1,3 @@
-"use client";
-
-import { RemotePage } from "@/components/RemotePage";
 import type { PageData } from "@/lib/pageData";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,20 +6,6 @@ import { ProductCard } from "@/components/ProductCard";
 import { STORE_TYPES } from "@/lib/storeTypes";
 import { CATEGORY_LABEL } from "@/lib/products";
 import { StoreAssistant } from "@/components/StoreFeedback";
-
-export function StorePageClient({
-  id,
-  verified = false,
-}: {
-  id: string;
-  verified?: boolean;
-}) {
-  return (
-    <RemotePage page="store" id={id} variant="catalog">
-      {(data) => <StoreContent {...data} verified={verified} />}
-    </RemotePage>
-  );
-}
 
 export function StoreContent({
   store,

@@ -32,6 +32,28 @@ test('unassigned glTF panels use neutral paint while authored metal and textures
   for (const material of [implicit, authored, textured, named]) material.dispose();
 });
 
+test('authored materials that omit metallicFactor become dielectric; explicit metal stays metal', () => {
+  const scene = new THREE.Group(), geometry = new THREE.BoxGeometry();
+  const fabric = new THREE.MeshStandardMaterial({ metalness: 1, roughness: 1 }); fabric.name = 'Material_0.001'; fabric.map = new THREE.Texture();
+  const legs = fabric.clone(); legs.name = 'Legs';
+  const mapped = fabric.clone(); mapped.name = 'Mapped'; mapped.metalnessMap = new THREE.Texture();
+  for (const material of [fabric, legs, mapped]) scene.add(new THREE.Mesh(geometry, material));
+  const associations = new Map([[fabric, { materials: 0 }], [legs, { materials: 1 }], [mapped, { materials: 2 }]]);
+  const definitions = [
+    { pbrMetallicRoughness: { baseColorTexture: { index: 0 } } },
+    { pbrMetallicRoughness: { metallicFactor: 1 } },
+    { pbrMetallicRoughness: { metallicRoughnessTexture: { index: 1 } } },
+  ];
+  configureModelDefaultMaterials(scene, associations, definitions);
+  assert.equal(fabric.metalness, 0);
+  assert.equal(fabric.roughness, 1, 'only the implicit metal value changes');
+  assert.equal(fabric.userData.plannerImplicitMetalness, true);
+  assert.equal(legs.metalness, 1);
+  assert.equal(mapped.metalness, 1);
+  geometry.dispose(); fabric.map.dispose(); mapped.metalnessMap.dispose();
+  for (const material of [fabric, legs, mapped]) material.dispose();
+});
+
 test('missing parser associations never imply permission to replace an authored material', () => {
   const scene = new THREE.Group(), material = new THREE.MeshStandardMaterial({ metalness: 1, roughness: 1 });
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(), material); scene.add(mesh);

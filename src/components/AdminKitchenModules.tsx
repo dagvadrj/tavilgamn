@@ -40,6 +40,7 @@ import { AdminKitchenCabinetSetup } from "./AdminKitchenCabinetSetup";
 import {
   cabinetSetupAssembly,
   bindCabinetPart,
+  bindFrontHandle,
   cabinetSetupProblem,
 } from "@/lib/kitchenCabinetSetup";
 import {
@@ -385,6 +386,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
   );
   const selectedModule = modules.find((module) => module.id === moduleId);
   const uploadModule = modules.find((module) => module.id === uploadModuleId);
+  const upperCabinet = selectedModule?.cabinetType === "wall";
   const setupAssembly = useMemo(
     () =>
       cabinetSetupAssembly(
@@ -529,26 +531,14 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
 
   function uploadSetupPart(slotId: string, kind: KitchenPartKind) {
     let next = setupAssembly;
+    // The handle slot must exist before upload so the finished GLB binds to it.
     if (kind === "handle" && !next.slots.some((slot) => slot.id === slotId))
-      next = {
-        ...next,
-        slots: [
-          ...next.slots,
-          {
-            id: slotId,
-            label: "Бариул",
-            kind: "handle",
-            parentSlotId: slotId.slice("handle-".length),
-            positionMm: [0, 0, 0],
-            rotationDeg: [0, 0, 0],
-            scale: [1, 1, 1],
-            hideNodes: [],
-            optional: true,
-            defaultOptionId: "default",
-            options: [{ id: "default", label: "Бариул", modelId: "" }],
-          },
-        ],
-      };
+      next = bindFrontHandle(
+        next,
+        slotId.slice("handle-".length),
+        undefined,
+        upperCabinet,
+      );
     setAssembly(next);
     setPendingPart({ slotId, kind });
     chooseGroup("parts");
@@ -1485,6 +1475,7 @@ export function AdminKitchenModules({ owner }: { owner: string }) {
                     baseModel={selectedModel}
                     materials={materials}
                     onUpload={uploadSetupPart}
+                    upper={upperCabinet}
                   />
                 </div>
               )}

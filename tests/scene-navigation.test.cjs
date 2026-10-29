@@ -65,7 +65,7 @@ for (const plan of [false, true]) {
       near(f.camera.position.distanceTo(before), 0);
       assert.equal(transition.advanceCameraTransition(f.camera, f.controls, 12), true);
       near(f.camera.position.distanceTo(before), 0);
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 50; i++) {
         f.controls.update(); transition.advanceCameraTransition(f.camera, f.controls, 1 / 60);
         const projected = f.projected(point); near(projected[0], 630); near(projected[1], 260);
       }
@@ -219,4 +219,28 @@ for(const plan of [false,true])test(`${plan?'plan':'orbit'} smooth pinch accumul
     const projected=f.projected(point);near(projected[0],620);near(projected[1],310);
     const final=f.camera.position.clone();for(let i=0;i<30;i++)f.controls.update();near(f.camera.position.distanceTo(final),0);
   }finally{f.dispose();}
+});
+
+test('wheel zoom glides to a stop after the last tick and fast ticks carry further', () => {
+  const travel = (gapMs) => {
+    const f = fixture(false, true);
+    try {
+      const distance = f.controls.getDistance(), samples = [];
+      f.element.emit('wheel', { clientX: 440, clientY: 370, deltaY: -100, deltaMode: 0, timeStamp: 1000 });
+      f.element.emit('wheel', { clientX: 440, clientY: 370, deltaY: -100, deltaMode: 0, timeStamp: 1000 + gapMs });
+      transition.advanceCameraTransition(f.camera, f.controls, 0);
+      for (let i = 0; i < 50; i++) {
+        f.controls.update(); transition.advanceCameraTransition(f.camera, f.controls, 1 / 60);
+        samples.push(f.controls.getDistance());
+      }
+      const steps = samples.slice(1).map((value, i) => samples[i] - value);
+      return { ratio: samples.at(-1) / distance, steps };
+    } finally { f.dispose(); }
+  };
+  const slow = travel(400), fast = travel(40);
+  near(slow.ratio, Math.exp(-.3));
+  near(fast.ratio, Math.exp(-.15 * (1 + 1.45)));
+  // Still moving a quarter-second after input, each step smaller than the last.
+  assert.ok(slow.steps[15] > 1e-4, 'camera still gliding after 0.25 s');
+  for (let i = 1; i < slow.steps.length; i++) assert.ok(slow.steps[i] <= slow.steps[i - 1] + 1e-9, 'decelerates monotonically');
 });

@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Search, SlidersHorizontal, X, ChevronRight } from "lucide-react";
 import { CATEGORY_LABEL } from "@/lib/products";
-import type { Category } from "@/lib/types";
+import type { Category, Product } from "@/lib/types";
 import { CategoryBrowser } from "./CategoryBrowser";
 import { useCatalog } from "@/store/catalog";
+import { withInitialCatalog } from "@/lib/initialCatalog";
 import { CatalogProducts } from "./CatalogProducts";
 import { getRoomCatalogGroup } from "@/lib/catalogNavigation";
 
@@ -16,7 +17,9 @@ export function CatalogView({
   initialRoom,
   initialOffers,
   initialFacet = "",
+  initialProducts,
 }: {
+  initialProducts?: Product[];
   initialCategory?: Category;
   initialQuery?: string;
   initialSort?: string;
@@ -24,7 +27,7 @@ export function CatalogView({
   initialOffers?: boolean;
   initialFacet?: string;
 }) {
-  const catalog = useCatalog();
+  const catalog = withInitialCatalog(useCatalog(), initialProducts);
   const [facet, setFacet] = useState(initialFacet);
   const room = getRoomCatalogGroup(initialRoom);
   const [query, setQuery] = useState(initialQuery ?? "");
@@ -266,6 +269,7 @@ export function CatalogView({
             initialSort={initialSort}
             initialOffers={resetVersion === 0 && initialOffers}
             onReset={resetFilters}
+            initialProducts={initialProducts}
           />
         </div>
       </div>

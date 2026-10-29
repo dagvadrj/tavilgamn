@@ -173,7 +173,7 @@
 
 .dashboard-setting-options label:has(input:checked) {
   border-color: var(--dashboard-accent);
-  background: #a395ff0c;
+  background: color-mix(in srgb, var(--dashboard-accent) 6%, transparent);
 }
 
 .dashboard-shell .dashboard-setting-options input[type="radio"] {

@@ -21,16 +21,23 @@ const dayKey = (date: Date) =>
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin(request);
   if (auth.error) return auth.error;
+  // Up to two years of days, so a one-year view can compare with the year before.
+  const days = Number(request.nextUrl.searchParams.get("days") ?? 90);
+  if (!Number.isInteger(days) || days < 1 || days > 730)
+    return apiErrorResponse(
+      { error: "Хугацааны урт буруу байна." },
+      { status: 400, headers },
+    );
   try {
     const asOf = new Date();
     const today = dayKey(asOf);
     const start = new Date(`${today}T00:00:00+08:00`);
-    start.setUTCDate(start.getUTCDate() - 89);
+    start.setUTCDate(start.getUTCDate() - (days - 1));
     const buckets = new Map<
       string,
       { date: string; net: bigint; gross: bigint; orders: bigint }
     >();
-    for (let index = 0; index < 90; index++) {
+    for (let index = 0; index < days; index++) {
       const day = new Date(start.getTime() + index * 86400000);
       const date = dayKey(day);
       buckets.set(date, { date, net: 0n, gross: 0n, orders: 0n });
@@ -38,7 +45,7 @@ export async function GET(request: NextRequest) {
     const db = getSupabaseAdmin();
     // Read only the values the chart needs, with deterministic pagination and an explicit cap.
     for (let offset = 0; ; offset += 500) {
-      if (offset >= 20000)
+      if (offset >= 50000)
         throw new Error("Analytics range exceeds read limit");
       const { data, error } = await db
         .from("orders")

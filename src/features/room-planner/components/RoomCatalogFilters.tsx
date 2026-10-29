@@ -2,7 +2,10 @@
 
 import { Search, X } from "lucide-react";
 import type { Category } from "@/lib/types";
-import type { RoomCatalogScope } from "@/lib/roomCatalogPolicy";
+import {
+  activeRoomCatalogFilters,
+  type RoomCatalogScope,
+} from "@/lib/roomCatalogPolicy";
 import type { PlannerCatalogSort } from "@/features/planner/components/PlannerCatalogToolbar";
 import "./room-catalog-filters.css";
 
@@ -46,12 +49,12 @@ export function RoomCatalogFilters({
   /** Merchant editor (C3): only this store's products, no store choice. */
   merchantLocked?: string;
 }) {
+  // The default «this room only» scope is the starting view, not a filter.
   const filtered =
-    scope !== "all" ||
-    category !== "all" ||
-    (!merchantLocked && merchant !== "all") ||
-    format !== "all" ||
-    !!query.trim();
+    activeRoomCatalogFilters(
+      { scope, category, merchant, format, query },
+      !!merchantLocked,
+    ) > 0;
   return (
     <div className="room-catalog-filters">
       <label className="room-catalog-search">

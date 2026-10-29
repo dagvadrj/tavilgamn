@@ -69,6 +69,7 @@ import {
   type RoomView,
 } from "@/features/room-planner/components/RoomPlannerControls";
 import {
+  DEFAULT_ROOM_CATALOG_FILTERS,
   roomPlannerCatalog,
   type RoomCatalogScope,
 } from "@/lib/roomCatalogPolicy";
@@ -113,6 +114,7 @@ import {
 import {
   RoomProductOptions,
   RoomProductPairings,
+  RoomVariantStatus,
   type ProductOptionsMode,
 } from "@/features/room-planner/components/RoomProductOptions";
 import {
@@ -122,7 +124,7 @@ import {
 import { RoomHeaderCounts } from "@/features/room-planner/components/RoomHeaderCounts";
 import { complementaryProducts } from "@/lib/roomProductOptions";
 import { priceFor } from "@/lib/products";
-import { getProduct, useCatalog } from "@/store/catalog";
+import { getProduct, useCatalog, useCatalogStore } from "@/store/catalog";
 import { hasAvailableStock } from "@/lib/inventory";
 import {
   RoomCatalogEmpty,
@@ -233,6 +235,25 @@ const STATIC_PRESETS: CustomInterior[] = [
   },
 ];
 
+const modelThumbnail = (model: DbModelInfo | null | undefined) =>
+  model?.thumbnailFile
+    ? `/api/models/files/${model.fileModelId ?? model.id}/${model.thumbnailFile}`
+    : null;
+
+/** One cart line of a catalog product in a chosen variant. */
+const cartLine = (
+  product: Product,
+  variant: Pick<CartItem, "color" | "material" | "unitPrice">,
+) => ({
+  productId: product.id,
+  name: product.name,
+  image: product.image,
+  ...variant,
+  qty: 1,
+  stockQuantity: product.stockQuantity,
+  madeToOrder: product.madeToOrder,
+});
+
 /** Below 960px the panel is an overlay drawer or sheet, not a column. */
 const narrowPanel = () =>
   typeof window !== "undefined" &&
@@ -306,7 +327,9 @@ function RoomPlannerEditor() {
     kitchenUser = useAuth((state) => state.user);
   const handledKitchen = useRef<string | null>(null);
   const [kitchenOnly, setKitchenOnly] = useState(false);
-  const [catalogScope, setCatalogScope] = useState<RoomCatalogScope>("room");
+  const [catalogScope, setCatalogScope] = useState<RoomCatalogScope>(
+    DEFAULT_ROOM_CATALOG_FILTERS.scope,
+  );
   const [catalogFormat, setCatalogFormat] = useState<"all" | "glb" | "photo">(
     "all",
   );
@@ -516,6 +539,10 @@ function RoomPlannerEditor() {
         .map((product) => getDbModel(product.id))
         .filter((model): model is DbModelInfo => !!model),
     [catalog.products],
+  );
+  const dbModelById = useMemo(
+    () => new Map(dbModels.map((model) => [model.id, model])),
+    [dbModels],
   );
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [cameraRequest, setCameraRequest] = useState<CameraRequest>();
@@ -878,10 +905,20 @@ function RoomPlannerEditor() {
   }, [current, setLeftOpen]);
   const handledShowroom = useRef<string | null>(null);
   const [showroomProduct, setShowroomProduct] = useState<string | null>(null);
+  // Variant chosen on the product page (or a showroom QR) before opening here.
+  const showroomVariant = useRef<{
+    color: string | null;
+    material: string | null;
+    source: string | null;
+  }>({ color: null, material: null, source: null });
   useEffect(() => {
-    setShowroomProduct(
-      new URLSearchParams(window.location.search).get("product"),
-    );
+    const params = new URLSearchParams(window.location.search);
+    showroomVariant.current = {
+      color: params.get("color"),
+      material: params.get("material"),
+      source: params.get("source"),
+    };
+    setShowroomProduct(params.get("product"));
   }, []);
   useEffect(() => {
     if (
@@ -895,18 +932,29 @@ function RoomPlannerEditor() {
       return;
     const product = catalog.products.find((p) => p.id === showroomProduct);
     handledShowroom.current = showroomProduct;
+    const variant = showroomVariant.current;
     if (!product?.model) {
-      setNotice("QR-ийн барааны 3D загвар одоогоор ашиглах боломжгүй байна.");
+      setNotice(
+        variant.source === "showroom"
+          ? "QR-ийн барааны 3D загвар одоогоор ашиглах боломжгүй байна."
+          : "Энэ барааны 3D загвар одоогоор ашиглах боломжгүй байна.",
+      );
       return;
     }
+    const color = product.colors.some((option) => option.id === variant.color)
+      ? variant.color!
+      : product.defaultColor;
+    const material =
+      product.materials.find((option) => option.id === variant.material) ??
+      product.materials[0];
     const result = useDesigns.getState().placeFurniture({
       instanceId: `p_${crypto.randomUUID()}`,
       productId: product.id,
       x: 0,
       z: 0,
       rotation: 0,
-      color: product.defaultColor,
-      material: product.materials[0]?.id ?? "wood",
+      color,
+      material: material?.id ?? "wood",
       placement: product.placement,
       details: {
         name: product.name,
@@ -931,6 +979,8 @@ function RoomPlannerEditor() {
     const url = new URL(window.location.href);
     url.searchParams.delete("product");
     url.searchParams.delete("source");
+    url.searchParams.delete("color");
+    url.searchParams.delete("material");
     window.history.replaceState(window.history.state, "", url);
   }, [
     showroomProduct,
@@ -983,7 +1033,9 @@ function RoomPlannerEditor() {
       <>
         {showroomProduct && (
           <p className="container-page py-3 text-sm" role="status">
-            QR-аар сонгосон бараа:{" "}
+            {showroomVariant.current.source === "showroom"
+              ? "QR-аар сонгосон бараа: "
+              : "Өрөөндөө байрлуулах бараа: "}
             <strong>
               {catalog.products.find((p) => p.id === showroomProduct)?.name ??
                 "Ачаалж байна…"}
@@ -1405,7 +1457,7 @@ function RoomPlannerEditor() {
   const allPresets = STATIC_PRESETS;
 
   const getDbPieceModel = (piece: PlacedFurniture) =>
-    dbModels.find((model) => model.id === (piece.modelId ?? piece.productId));
+    dbModelById.get(piece.modelId ?? piece.productId);
 
   const getPiecePrice = (piece: PlacedFurniture) => {
     const product = getProduct(piece.productId);
@@ -1446,17 +1498,13 @@ function RoomPlannerEditor() {
         skipped++;
         return;
       }
-      const count = addToCart({
-        productId: product.id,
-        name: product.name,
-        image: product.image,
-        color: piece.color,
-        material: piece.material,
-        unitPrice: getPiecePrice(piece),
-        qty: 1,
-        stockQuantity: product.stockQuantity,
-        madeToOrder: product.madeToOrder,
-      });
+      const count = addToCart(
+        cartLine(product, {
+          color: piece.color,
+          material: piece.material,
+          unitPrice: getPiecePrice(piece),
+        }),
+      );
       added += count;
       if (!count) skipped++;
     });
@@ -1480,12 +1528,7 @@ function RoomPlannerEditor() {
     ? getProduct(selectedPiece.productId)
     : null;
 
-  const selectedDbModel = selectedPiece
-    ? dbModels.find(
-        (model) =>
-          model.id === (selectedPiece.modelId ?? selectedPiece.productId),
-      )
-    : null;
+  const selectedDbModel = selectedPiece ? getDbPieceModel(selectedPiece) : null;
 
   const selectedDetails = selectedPiece?.kitchen
     ? {
@@ -1512,6 +1555,16 @@ function RoomPlannerEditor() {
     (placedByProduct.get(piece.modelId ?? piece.productId) ?? []).indexOf(
       piece.instanceId,
     ) + 1;
+  // New delivery jobs no longer render model thumbnails, so a 3D card falls
+  // back to the catalog photo of the product that uses this model.
+  const catalogPhoto = (modelId: string, fileModelId?: string) =>
+    getProduct(modelId)?.image ||
+    catalog.products.find(
+      (product) =>
+        product.model &&
+        (product.model.id === modelId || product.model.id === fileModelId),
+    )?.image ||
+    null;
   const merchantName = (ids?: string[]) =>
     ids?.map((id) => storeNames.get(id)).find(Boolean);
   const catalogMerchants = [...storeNames]
@@ -1520,12 +1573,15 @@ function RoomPlannerEditor() {
     )
     .map(([id, name]) => ({ id, name }))
     .sort((a, b) => a.name.localeCompare(b.name, "mn"));
+  // Clears only what the visitor chose. The scope goes back to the default
+  // «this room only» view; it used to jump to every room, which widened the
+  // catalog instead of undoing the visitor's filters.
   const resetCatalogFilters = () => {
-    setCatalogScope("all");
-    setPaletteCat("all");
-    setQuery("");
-    setCatalogFormat("all");
-    setCatalogMerchant("all");
+    setCatalogScope(DEFAULT_ROOM_CATALOG_FILTERS.scope);
+    setPaletteCat(DEFAULT_ROOM_CATALOG_FILTERS.category);
+    setQuery(DEFAULT_ROOM_CATALOG_FILTERS.query);
+    setCatalogFormat(DEFAULT_ROOM_CATALOG_FILTERS.format);
+    setCatalogMerchant(DEFAULT_ROOM_CATALOG_FILTERS.merchant);
   };
   const addedRows: RoomAddedRow[] = current.pieces.map((piece) => {
     const product = getProduct(piece.productId);
@@ -1555,9 +1611,7 @@ function RoomPlannerEditor() {
       number: pieceNumber(piece),
       image:
         product?.image ||
-        (model?.thumbnailFile
-          ? `/api/models/files/${model.fileModelId ?? model.id}/${model.thumbnailFile}`
-          : null) ||
+        modelThumbnail(model) ||
         piece.details?.image ||
         null,
       meta: [formatFurnitureCm(dims.w, dims.d, dims.h), variant]
@@ -1575,17 +1629,13 @@ function RoomPlannerEditor() {
       setNotice("Энэ барааны өнгө, материалын сонголт бүрэн биш байна.");
       return;
     }
-    const added = addToCart({
-      productId: product.id,
-      name: product.name,
-      image: product.image,
-      color: selection.color.id,
-      material: selection.material.id,
-      unitPrice: selection.unitPrice,
-      qty: 1,
-      stockQuantity: product.stockQuantity,
-      madeToOrder: product.madeToOrder,
-    });
+    const added = addToCart(
+      cartLine(product, {
+        color: selection.color.id,
+        material: selection.material.id,
+        unitPrice: selection.unitPrice,
+      }),
+    );
     showNotice(
       added
         ? `${product.name} сагсанд нэмэгдлээ.`
@@ -1607,17 +1657,13 @@ function RoomPlannerEditor() {
       setNotice("Энэ тавилга дэлгүүрийн бараа биш тул сагслах боломжгүй.");
       return;
     }
-    const added = addToCart({
-      productId: product.id,
-      name: product.name,
-      image: product.image,
-      color: selectedPiece.color,
-      material: selectedPiece.material,
-      unitPrice: getPiecePrice(selectedPiece),
-      qty: 1,
-      stockQuantity: product.stockQuantity,
-      madeToOrder: product.madeToOrder,
-    });
+    const added = addToCart(
+      cartLine(product, {
+        color: selectedPiece.color,
+        material: selectedPiece.material,
+        unitPrice: getPiecePrice(selectedPiece),
+      }),
+    );
     showNotice(
       added
         ? `${product.name} энэ хувилбараар сагсанд нэмэгдлээ.`
@@ -1695,6 +1741,35 @@ function RoomPlannerEditor() {
       ),
     );
   };
+  /**
+   * D2 «Буцаах» after a failed replacement: the previous product returns at
+   * the piece's current pose, validated like any other placement.
+   */
+  const revertSwap = (instanceId: string) => {
+    const status = useRoomModelStatus.getState();
+    const previous = status.previous[instanceId];
+    const piece = current.pieces.find((p) => p.instanceId === instanceId);
+    if (!previous || !piece) return;
+    const candidate: PlacedFurniture = {
+      ...previous,
+      x: piece.x,
+      z: piece.z,
+      rotation: piece.rotation,
+      elevation: piece.elevation,
+      attachment: piece.attachment,
+    };
+    if (!isPlacementValid(candidate, placement.pieces, placement.room)) {
+      setNotice(
+        "Өмнөх бараа одоогийн байрлалд багтахгүй байна. Ctrl+Z ашиглана уу.",
+      );
+      return;
+    }
+    status.forget(instanceId);
+    updatePieces(
+      current.pieces.map((p) => (p.instanceId === instanceId ? candidate : p)),
+    );
+    setNotice("Өмнөх бараа сэргэлээ.");
+  };
   /** «Солих» / «Хослуулах»: the options view with that list brought into view. */
   const openOptions = (mode: ProductOptionsMode) => {
     setOptionsMode(mode);
@@ -1760,18 +1835,23 @@ function RoomPlannerEditor() {
         label: "Хуулбарлах",
         icon: <Copy size={16} />,
         run: duplicateSelected,
+        more: true,
       },
       {
         id: "remove",
         label: "Устгах",
+        menuLabel: "Өрөөнөөс устгах",
         icon: <Trash2 size={16} />,
         run: () => removePiece(id),
+        more: true,
       },
       {
         id: "focus",
         label: "Төвлөрүүлэх",
+        menuLabel: "Төвлөрүүлж харах",
         icon: <Focus size={16} />,
         run: focusSelected,
+        more: true,
       },
     );
   }
@@ -2131,7 +2211,7 @@ function RoomPlannerEditor() {
             onClick={() => openNested("designs")}
           >
             <Layers size={18} />
-            <span>Миний загварууд</span>
+            <span>Загварууд</span>
           </button>
           <button
             type="button"
@@ -2223,15 +2303,17 @@ function RoomPlannerEditor() {
           added: `${current.pieces.length} тавилга`,
           cart: merchantRoom.cover ? "Cover бэлэн" : "Cover сонгоогүй",
         } : {
-          add: kitchenOnly ? "Миний гарнитур" : "Каталог",
-          added: `${current.pieces.length} өрөөнд`,
+          add: kitchenOnly
+            ? "Миний гарнитур"
+            : `${catalogEntries.length} бараа`,
+          added: `${current.pieces.length} тавилга`,
           cart: `${cartItems.reduce((sum, item) => sum + item.qty, 0)} ширхэг`,
         }}
         nestedEyebrow={
           panelView === "detail"
             ? (merchantMode
                 ? { add: "Миний бараа", added: "Байрлуулсан", cart: "Өрөө ба камер" }
-                : { add: "Тавилга нэмэх", added: "Нэмсэн тавилга", cart: "Сагсалсан тавилга" })[panelTab]
+                : { add: "Тавилга", added: "Өрөөнд", cart: "Сагс" })[panelTab]
             : panelView === "room"
               ? "Өрөө ба материал"
               : "Төсөл"
@@ -2249,6 +2331,7 @@ function RoomPlannerEditor() {
                     : (current.roomName ?? "Өрөө")
               : "Миний загварууд"
         }
+        expandRequest={optionsReveal}
         onNestedClose={
           panelView === "detail" && selectedPiece
             ? {
@@ -2608,9 +2691,10 @@ function RoomPlannerEditor() {
                   product={selectedPiece.kitchen ? null : (selectedProduct ?? null)}
                   fallback={{
                     name: selectedDetails.name,
-                    image: selectedDbModel?.thumbnailFile
-                      ? `/api/models/files/${selectedDbModel.fileModelId ?? selectedDbModel.id}/${selectedDbModel.thumbnailFile}`
-                      : (selectedPiece.details?.image ?? null),
+                    image:
+                      modelThumbnail(selectedDbModel) ??
+                      selectedPiece.details?.image ??
+                      null,
                     dimensions: dimsFor(selectedPiece),
                     note: selectedPiece.kitchen
                       ? "Өөрийн гарнитур — үнэ, сагсыг гарнитурын тохиргооноос гаргана."
@@ -2644,6 +2728,13 @@ function RoomPlannerEditor() {
                   mode={optionsMode}
                   onMode={setOptionsMode}
                   revealRecommendations={optionsReveal}
+                  variantStatus={
+                    <RoomVariantStatus
+                      instanceId={selectedPiece.instanceId}
+                      name={selectedDetails.name}
+                      onRevert={() => revertSwap(selectedPiece.instanceId)}
+                    />
+                  }
                   replace={
                     <RoomProductAlternatives
                       key={selectedPiece.instanceId}
@@ -2655,7 +2746,12 @@ function RoomPlannerEditor() {
                       roomId={current.activeRoomId ?? `${current.id}-room-1`}
                       context={placement}
                       storeId={merchantStoreId}
-                      onReplace={updatePieces}
+                      onReplace={(pieces) => {
+                        // The visible product stays the revert target until
+                        // the new model is on screen (D2).
+                        useRoomModelStatus.getState().remember(selectedPiece);
+                        updatePieces(pieces);
+                      }}
                       onNotice={setNotice}
                     />
                   }
@@ -2664,6 +2760,8 @@ function RoomPlannerEditor() {
                       hasSource={!!selectedProduct && !selectedPiece.kitchen}
                       suggestions={complementSuggestions}
                       onAdd={addComplement}
+                      state={catalog.error ? "error" : catalog.loading && !catalog.products.length ? "loading" : "ready"}
+                      onRetry={() => void useCatalogStore.getState().refresh(true)}
                     />
                   }
                 >
@@ -3224,11 +3322,11 @@ function RoomPlannerEditor() {
                         merchant={merchantName(
                           getProduct(entry.item.id)?.storeIds,
                         )}
-                        image={
-                          entry.item.thumbnailFile
-                            ? `/api/models/files/${entry.item.fileModelId ?? entry.item.id}/${entry.item.thumbnailFile}`
-                            : null
-                        }
+                        image={modelThumbnail(entry.item)}
+                        fallbackImage={catalogPhoto(
+                          entry.item.id,
+                          entry.item.fileModelId,
+                        )}
                         dimensions={formatFurnitureCm(
                           entry.item.dimensionsW,
                           entry.item.dimensionsD,
@@ -3898,6 +3996,7 @@ function RoomPlannerEditor() {
             onEditStart={beginEdit}
             onEditEnd={endEdit}
             onRemovePiece={removePiece}
+            onRevertSwap={revertSwap}
             customInterior={
               localUrl
                 ? {

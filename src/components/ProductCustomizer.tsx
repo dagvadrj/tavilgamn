@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   ChevronRight,
   Hand,
+  Ruler,
   Camera,
   Truck,
   ArrowUpRight,
@@ -29,6 +30,7 @@ import { availableStock, quantityLimit, stockLabel } from "@/lib/inventory";
 import { modelDeliveryUrl, prefetchModel } from "@/lib/modelPrefetch";
 import { productOffer } from "@/lib/catalogPresentation";
 import { productGallery } from "@/lib/productGallery";
+import { installmentAmounts } from "@/lib/productExperience";
 import { FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE } from "@/lib/orders";
 import type { Group } from "three";
 import { ProductScaleHUD } from "./ProductScaleHUD";
@@ -71,10 +73,7 @@ export function ProductCustomizer({
   initialView3D?: boolean;
   initialColor?: string;
 }) {
-  const galleryImages = useMemo(
-    () => productGallery(product),
-    [product],
-  );
+  const galleryImages = useMemo(() => productGallery(product), [product]);
   const [color, setColor] = useState(
     product.colors.some((option) => option.id === initialColor)
       ? initialColor!
@@ -147,12 +146,7 @@ export function ProductCustomizer({
   }, [product.promotionEndsAt, offerNow]);
   useEffect(() => {
     if (!product.model || !viewerActive) return;
-    void prefetchModel(
-      modelDeliveryUrl(
-        product.model.id,
-        product.model.file,
-      ),
-    );
+    void prefetchModel(modelDeliveryUrl(product.model.id, product.model.file));
   }, [product.model, viewerActive]);
   useEffect(() => {
     setAdded(false);
@@ -182,6 +176,9 @@ export function ProductCustomizer({
   const offer = productOffer(product, offerNow);
   const selectedMaterial = product.materials.find((m) => m.id === material);
   const colorHex = selectedColor?.hex ?? "#C9A37A";
+  const installment = installmentAmounts(price * qty)[0] ?? 0;
+  // The planner places this exact variant; it ignores unknown options.
+  const plannerHref = `/planner?product=${encodeURIComponent(product.id)}&color=${encodeURIComponent(color)}&material=${encodeURIComponent(material)}&source=product`;
   const handleViewerReady = useCallback(() => {
     setViewerError(false);
     setViewerReady(true);
@@ -242,44 +239,38 @@ export function ProductCustomizer({
       </nav>
       <div className="pdp-main-grid">
         <div className="pdp-media-column">
-          <section className="pdp-gallery-card">
-            <div className="pdp-gallery-toolbar">
-              <h2 className="flex items-center gap-2 text-sm font-medium text-[#111111]">
-                <Box className="h-4 w-4 text-[#2563EB]" aria-hidden="true" />
-                {viewerActive ? "Интерактив 3D загвар" : "Барааны зураг"}
-              </h2>
-              <div
-                className="pdp-view-modes"
-                role="group"
-                aria-label="Бараа харах горим"
+          <section className="pdp-gallery-card" aria-label="Барааны зураг">
+            <div
+              className="pdp-view-modes"
+              role="group"
+              aria-label="Бараа харах горим"
+            >
+              <button
+                type="button"
+                aria-pressed={!viewerActive}
+                onClick={() => {
+                  setViewerActive(false);
+                  setViewerReady(false);
+                  setViewerError(false);
+                }}
               >
-                <button
-                  type="button"
-                  aria-pressed={!viewerActive}
-                  onClick={() => {
-                    setViewerActive(false);
-                    setViewerReady(false);
-                    setViewerError(false);
-                  }}
-                >
-                  <ImageIcon size={14} aria-hidden="true" />
-                  Фото
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={viewerActive}
-                  disabled={!product.model}
-                  title={
-                    !product.model
-                      ? "3D загвар хараахан бэлэн болоогүй"
-                      : undefined
-                  }
-                  onClick={() => setViewerActive(true)}
-                >
-                  <Box size={14} aria-hidden="true" />
-                  3D
-                </button>
-              </div>
+                <ImageIcon size={14} aria-hidden="true" />
+                Фото
+              </button>
+              <button
+                type="button"
+                aria-pressed={viewerActive}
+                disabled={!product.model}
+                title={
+                  !product.model
+                    ? "3D загвар хараахан бэлэн болоогүй"
+                    : undefined
+                }
+                onClick={() => setViewerActive(true)}
+              >
+                <Box size={14} aria-hidden="true" />
+                3D
+              </button>
             </div>
             <div className="product-gallery pdp-hero-image relative overflow-hidden">
               {viewerActive && (
@@ -307,34 +298,20 @@ export function ProductCustomizer({
                   alt={viewerActive ? "" : product.name}
                   fill
                   priority
-                  sizes="(max-width: 1023px) 100vw, 55vw"
+                  sizes="(max-width: 1023px) 100vw, 60vw"
                   className="object-contain"
                 />
-                <div className="pdp-photo-caption">
-                  <p className="text-sm font-medium">
-                    {viewerActive
-                      ? "3D загварыг ачаалж байна…"
-                      : product.model
-                        ? "Өнгө, хэмжээ, загвараа 3D-ээр хараарай"
-                        : "Барааны зураг"}
-                  </p>
-                  {viewerActive && (
+                {viewerActive && (
+                  <div className="pdp-photo-caption" role="status">
+                    <p className="text-sm font-medium">
+                      3D загварыг ачаалж байна…
+                    </p>
                     <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/30">
                       <span className="viewer-loading-bar block h-full w-1/3 rounded-full bg-white" />
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
-              {!viewerActive && product.model && (
-                <button
-                  type="button"
-                  onClick={() => setViewerActive(true)}
-                  className="pdp-photo-3d-entry"
-                >
-                  <Box size={18} aria-hidden="true" />
-                  3D-ээр үзэх
-                </button>
-              )}
               {viewerError && (
                 <p
                   className="pointer-events-none absolute inset-x-4 bottom-4 z-20 rounded-xl bg-white/95 px-4 py-3 text-center text-sm text-[#2563EB] shadow-lg"
@@ -377,147 +354,95 @@ export function ProductCustomizer({
                 }}
                 aria-label={`${index + 1}-р зураг харах`}
                 aria-pressed={!viewerActive && selectedImage === image}
-                className={cn(
-                  "relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border-2 bg-[#F4F4F5] transition sm:h-24 sm:w-28",
-                  !viewerActive && selectedImage === image
-                    ? "border-[#2563EB] shadow-[0_0_0_2px_rgba(66,99,79,.12)]"
-                    : "border-transparent opacity-75 hover:opacity-100",
-                )}
               >
                 <Image
                   src={image}
                   alt=""
                   fill
-                  sizes="112px"
+                  sizes="128px"
                   className="object-cover"
                 />
-                <span className="absolute bottom-1.5 left-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-[#111111]/75 px-1 text-[10px] text-white">
-                  {index + 1}
-                </span>
               </button>
             ))}
-          </div>
-
-          <div className="pdp-viewer-tools">
-            <p role="status">
-              {selectedColor?.name} · {selectedMaterial?.name}
-              <small>
-                {!product.model
-                  ? "Энэ барааны 3D загвар хараахан бэлэн болоогүй."
-                  : viewerActive
-                    ? "Өнгө, материал 3D-д шууд шинэчлэгдэнэ"
-                    : "Өнгө эсвэл материал сонгоод 3D-д үзээрэй"}
-              </small>
-            </p>
-            <button
-              type="button"
-              className="pdp-ar-entry"
-              disabled={!product.model}
-              onClick={openAR}
-              aria-haspopup="dialog"
-            >
-              <Camera size={18} aria-hidden="true" />
-              Камераараа өрөөндөө байрлуулах (AR)
-            </button>
-            {!product.model && (
-              <span className="pdp-ar-unavailable">
-                AR ашиглахад барааны 3D модел шаардлагатай.
-              </span>
+            {product.model && (
+              <button
+                type="button"
+                className="pdp-thumbnail-3d"
+                onClick={() => setViewerActive(true)}
+                aria-label="3D загвараар харах"
+                aria-pressed={viewerActive}
+              >
+                <Box size={22} aria-hidden="true" />
+                <span>3D</span>
+              </button>
             )}
-          </div>
-
-          <div className="pdp-dimensions">
-            <ProductScaleHUD product={product} />
           </div>
         </div>
 
-        <div className="pdp-summary  min-w-0 text-[#111111] [&_button]:focus-visible:outline [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-4 [&_button]:focus-visible:outline-[#2563EB]">
+        <div className="pdp-summary min-w-0 text-[#111111] [&_button]:focus-visible:outline [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-4 [&_button]:focus-visible:outline-[#2563EB]">
           <div className="pdp-product-meta">
-            <span className="pdp-category-label">
+            <Link href={"/catalog/" + product.category}>
               {CATEGORY_LABEL[product.category]}
-            </span>
-            <div
-              className="pdp-stock-indicator "
-              data-low={stock > 0 && stock <= 3}
-              role="status"
-              aria-label={stockLabel(product)}
-            >
-              <span>
-                {product.madeToOrder && stock === 0 ? "Захиалгаар хийнэ · 7–14 хоног" : product.stockQuantity == null ? (
-                  "Нөөц шалгаж байна"
-                ) : stock > 0 ? (
-                  <>
-                    <strong>{stock}</strong> ширхэг бэлэн
-                  </>
-                ) : (
-                  "Нөөц дууссан"
-                )}
-              </span>
-              <span
-                className="pdp-stock-blocks"
-                aria-hidden="true"
-                title="Нэг тэмдэглэгээ = 1 ширхэг, 10 хүртэл"
+            </Link>
+            {product.reviewCount > 0 && (
+              <a
+                href="#product-reviews"
+                onClick={(event) => {
+                  event.preventDefault();
+                  openDetailTab("reviews");
+                }}
               >
-                {Array.from({ length: 10 }, (_, index) => (
-                  <i key={index} data-filled={index < stock} />
-                ))}
-              </span>
-            </div>
+                <Star size={13} aria-hidden="true" />
+                <strong>{product.rating.toFixed(1)}</strong>
+                <span>{product.reviewCount} сэтгэгдэл</span>
+              </a>
+            )}
           </div>
-          <h1 className="mt-4 break-words text-3xl font-semibold leading-[1.18] tracking-[-.03em] sm:text-4xl">
+          <h1 className="mt-3 break-words text-3xl font-semibold leading-[1.18] tracking-[-.03em] sm:text-4xl">
             {product.name}
           </h1>
-          <div className="pdp-rating-row">
-            <div className="pdp-price-card">
-              <p className="text-xs font-medium uppercase tracking-[.1em] text-[#68686F]">
-                Сонголтын үнэ
+          <div className="pdp-price-card">
+            <p className="text-3xl font-semibold tabular-nums text-[#111111]">
+              {formatPrice(price)}
+            </p>
+            {offer.compareAtPrice != null && price === product.basePrice && (
+              <p className="mt-2 flex flex-wrap items-center gap-3 text-sm">
+                <del className="text-[#68686F]">
+                  {formatPrice(offer.compareAtPrice)}
+                </del>
+                {offer.discountPercent && (
+                  <span className="rounded-md bg-[#EFF6FF] px-2 py-1 text-xs font-medium text-[#2563EB]">
+                    −{offer.discountPercent}%
+                  </span>
+                )}
               </p>
-              <p className="mt-1 text-3xl font-semibold tabular-nums text-[#111111]">
-                {formatPrice(price)}
+            )}
+            {offer.label && (
+              <p className="mt-2 text-sm text-[#2563EB]">
+                {offer.label}
+                {price !== product.basePrice && " · үндсэн загварын урамшуулал"}
               </p>
-              {offer.compareAtPrice != null && price === product.basePrice && (
-                <p className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-                  <del className="text-[#68686F]">
-                    {formatPrice(offer.compareAtPrice)}
-                  </del>
-                  {offer.discountPercent && (
-                    <span className="rounded-md bg-[#EFF6FF] px-2 py-1 text-xs font-medium text-[#2563EB]">
-                      −{offer.discountPercent}%
-                    </span>
-                  )}
-                </p>
-              )}
-              {offer.label && (
-                <p className="mt-2 text-sm text-[#2563EB]">
-                  {offer.label}
-                  {price !== product.basePrice &&
-                    " · үндсэн загварын урамшуулал"}
-                </p>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => toggleWish(product.id)}
-              aria-label="Хүслийн жагсаалт"
-              aria-pressed={mounted && inWish}
-              className={cn(
-                "inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm transition",
-                mounted && inWish
-                  ? "border-[#2563EB] bg-[#2563EB]/10 text-[#2563EB]"
-                  : "border-[#111111]/15 hover:bg-[#111111]/5",
-              )}
-            >
-              <Heart
-                className={cn("h-4 w-4", mounted && inWish && "fill-current")}
-                aria-hidden="true"
-              />
-              {mounted && inWish ? "Хадгалсан" : "Хадгалах"}
-            </button>
+            )}
+            {installment > 0 && (
+              <a className="pdp-installment-hint" href="#product-financing">
+                эсвэл 4 төлөлтөөр · {formatPrice(installment)}-аас
+              </a>
+            )}
+          </div>
+
+          <div className="pdp-size-row">
+            <span className="pdp-size-value">
+              <Ruler size={16} aria-hidden="true" />
+              {Math.round(product.dimensions.w * 100)} ×{" "}
+              {Math.round(product.dimensions.d * 100)} ×{" "}
+              {Math.round(product.dimensions.h * 100)} см
+            </span>
+            <ProductScaleHUD product={product} />
           </div>
 
           <fieldset className="pdp-option-group">
-            <legend className="mb-3 flex w-full items-center justify-between gap-3 pr-1 text-sm font-medium">
-              <span className="flex items-center gap-2">Өнгө</span>
+            <legend className="mb-3 flex w-full items-center gap-2 text-sm font-medium">
+              Өнгө:
               <span className="font-normal text-[#68686F]">
                 {selectedColor?.name}
               </span>
@@ -546,12 +471,7 @@ export function ProductCustomizer({
           </fieldset>
 
           <fieldset className="pdp-option-group">
-            <legend className="mb-3 flex w-full items-center justify-between gap-3 pr-1 text-sm font-medium">
-              <span className="flex items-center gap-2">Материал</span>
-              <span className="font-normal text-[#68686F]">
-                {selectedMaterial?.name}
-              </span>
-            </legend>
+            <legend className="mb-3 text-sm font-medium">Материал</legend>
             <div className="pdp-material-choices">
               {product.materials.map((m) => (
                 <button
@@ -571,14 +491,9 @@ export function ProductCustomizer({
           </fieldset>
 
           <div className="product-purchase pdp-purchase-card">
-            <div className="pdp-quantity-row">
-              <div>
-                <p className="flex items-center gap-2 text-sm font-medium">
-                  Тоо ширхэг
-                </p>
-              </div>
+            <div className="pdp-purchase-actions">
               <div
-                className="flex items-center rounded-full border border-[#111111]/15"
+                className="pdp-quantity"
                 role="group"
                 aria-label="Тоо ширхэг"
               >
@@ -587,59 +502,55 @@ export function ProductCustomizer({
                   aria-label="Тоо ширхэг хасах"
                   disabled={qty <= 1 || !product.inStock}
                   onClick={() => setQty((value) => Math.max(1, value - 1))}
-                  className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-[#111111]/5 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <Minus className="h-4 w-4" aria-hidden="true" />
                 </button>
-                <span
-                  className="min-w-8 px-1 text-center text-sm tabular-nums"
-                  aria-live="polite"
-                >
-                  {qty}
-                </span>
+                <span aria-live="polite">{qty}</span>
                 <button
                   type="button"
                   aria-label="Тоо ширхэг нэмэх"
                   disabled={qty >= limit}
                   onClick={() => setQty((value) => Math.min(limit, value + 1))}
-                  className="grid h-11 w-11 place-items-center rounded-full transition hover:bg-[#111111]/5 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   <Plus className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
-            </div>
-            <div
-              className="mt-4 flex flex-wrap items-baseline justify-between gap-2 border-t border-[#111111]/10 pt-4"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <span className="text-sm text-[#68686F]">
-                Нийт · {qty} ширхэг
-              </span>
-              <strong className="text-2xl font-semibold tabular-nums text-[#111111]">
-                {formatPrice(price * qty)}
-              </strong>
-            </div>
-            <div className="pdp-purchase-actions mt-5 flex gap-2">
               <button
                 type="button"
                 onClick={onAdd}
                 disabled={limit < 1 || qty > limit}
-                className="btn-primary flex-1 disabled:cursor-not-allowed disabled:opacity-40"
+                className="btn-primary disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {added ? <Check size={17} /> : <ShoppingBag size={17} />}
-                {added
-                  ? "Дахин нэмэх"
-                  : product.stockQuantity == null
-                    ? "Нөөц шалгаж байна"
-                    : product.inStock
-                      ? "Сагсанд нэмэх"
-                      : "Нөөц дууссан"}
+                <span>
+                  {added
+                    ? "Дахин нэмэх"
+                    : product.stockQuantity == null
+                      ? "Нөөц шалгаж байна"
+                      : product.inStock
+                        ? "Сагсанд нэмэх"
+                        : "Нөөц дууссан"}
+                </span>
+                <span className="pdp-cart-total" aria-live="polite">
+                  {formatPrice(price * qty)}
+                </span>
               </button>
-              <Link href={product.model ? `/planner?product=${encodeURIComponent(product.id)}` : "/planner"} className="pdp-room-link">
-                <Box size={16} aria-hidden="true" />
-                Өрөөнд үзэх
-              </Link>
+              <button
+                type="button"
+                onClick={() => toggleWish(product.id)}
+                aria-label={
+                  mounted && inWish
+                    ? "Хүслийн жагсаалтаас хасах"
+                    : "Хүслийн жагсаалтад хадгалах"
+                }
+                aria-pressed={mounted && inWish}
+                className="pdp-wish"
+              >
+                <Heart
+                  className={cn("h-5 w-5", mounted && inWish && "fill-current")}
+                  aria-hidden="true"
+                />
+              </button>
             </div>
             {stockError && (
               <p role="alert" className="mt-3 text-sm text-red-700">
@@ -672,19 +583,65 @@ export function ProductCustomizer({
               )}
             </div>
           </div>
+
+          <div className="pdp-room-cta">
+            {product.model ? (
+              <Link href={plannerHref} className="pdp-room-link">
+                <Box size={18} aria-hidden="true" />
+                Өрөөндөө байрлуулж үзэх
+              </Link>
+            ) : (
+              <span className="pdp-room-link" aria-disabled="true">
+                <Box size={18} aria-hidden="true" />
+                Өрөөндөө байрлуулж үзэх
+              </span>
+            )}
+            <p>
+              {product.model
+                ? `${selectedColor?.name ?? ""} · ${selectedMaterial?.name ?? ""} сонголтоороо 3D өрөө төлөвлөгчид нэмэгдэнэ.`
+                : "Өрөөнд байрлуулах болон AR ашиглахад барааны 3D модел шаардлагатай."}
+            </p>
+            {product.model && (
+              <button
+                type="button"
+                className="pdp-ar-entry"
+                onClick={openAR}
+                aria-haspopup="dialog"
+              >
+                <Camera size={16} aria-hidden="true" />
+                Камераараа харах (AR)
+              </button>
+            )}
+          </div>
+
+          <ul className="pdp-facts">
+            <li data-low={stock > 0 && stock <= 3}>
+              <span>Нөөц</span>
+              <strong role="status" aria-label={stockLabel(product)}>
+                {product.madeToOrder && stock === 0
+                  ? "Захиалгаар хийнэ · 7–14 хоног"
+                  : product.stockQuantity == null
+                    ? "Нөөц шалгаж байна"
+                    : stock > 0
+                      ? `${stock} ширхэг бэлэн`
+                      : "Нөөц дууссан"}
+              </strong>
+            </li>
+            <li>
+              <span>Хүргэлт</span>
+              <a
+                href="#product-delivery"
+                onClick={(event) => {
+                  event.preventDefault();
+                  openDetailTab("delivery");
+                }}
+              >
+                <Truck size={16} aria-hidden="true" />
+                Нөхцөл харах
+              </a>
+            </li>
+          </ul>
           <ProductFinancingOptions total={price * qty} />
-          <a
-            href="#product-delivery"
-            className="pdp-delivery-link"
-            onClick={(event) => {
-              event.preventDefault();
-              openDetailTab("delivery");
-            }}
-          >
-            <Truck size={18} aria-hidden="true" />
-            <span>Хүргэлт ба захиалгын нөхцөл</span>
-            <ArrowUpRight size={16} aria-hidden="true" />
-          </a>
         </div>
       </div>
       <div id="product-details" className="pdp-details-area">

@@ -24,12 +24,15 @@ export function ProductCard({
   offerCheckedAt,
   flashSale = false,
   imageSizes,
+  priority = false,
 }: {
   product: Product;
   catalogStyle?: boolean;
   offerCheckedAt?: number;
   flashSale?: boolean;
   imageSizes?: string;
+  /** Above-the-fold cards: fetch the photo eagerly as the LCP candidate. */
+  priority?: boolean;
   initialDetailsOpen?: boolean;
 }) {
   const has = useWishlist((s) => s.has(product.id));
@@ -154,6 +157,7 @@ export function ProductCard({
                 fill
                 sizes={sourceWidth > 0 ? `${sourceWidth}px` : sizes}
                 quality={95}
+                priority={priority}
                 onLoad={(event) =>
                   setLoadedPhoto({
                     element: event.currentTarget,

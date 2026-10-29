@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Category } from "@/lib/types";
+import type { Category, Product } from "@/lib/types";
 import { useCatalog } from "@/store/catalog";
+import { withInitialCatalog } from "@/lib/initialCatalog";
 import { CATEGORY_LABEL } from "@/lib/products";
 import { ProductCard } from "./ProductCard";
 import { CatalogStatus } from "./CatalogStatus";
@@ -19,7 +20,9 @@ export function CatalogProducts({
   initialOffers = false,
   onReset,
   facet = "",
+  initialProducts,
 }: {
+  initialProducts?: Product[];
   query: string;
   categories: Category[];
   initialSort?: string;
@@ -27,7 +30,7 @@ export function CatalogProducts({
   onReset?: () => void;
   facet?: string;
 }) {
-  const catalog = useCatalog();
+  const catalog = withInitialCatalog(useCatalog(), initialProducts);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState(initialSort === "new" ? "new" : "featured");
   const [minPrice, setMinPrice] = useState("");
@@ -227,10 +230,11 @@ export function CatalogProducts({
         </div>
       ) : (
         <div className="catalog-results-grid">
-          {filtered.slice((current - 1) * 24, current * 24).map((product) => (
+          {filtered.slice((current - 1) * 24, current * 24).map((product, index) => (
             <ProductCard
               key={product.id}
               product={product}
+              priority={index < 4}
               catalogStyle
               offerCheckedAt={checkedAt}
               imageSizes="(max-width: 767px) 46vw, (max-width: 1023px) 45vw, 26vw"

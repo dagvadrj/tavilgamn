@@ -23,8 +23,17 @@
   height: 100%;
 }
 
+/* No stacking context here: the room photo stays at the back while the 3D
+   furniture canvas rises above the large room title (depth effect). */
+
 .scroll-room-scene {
-  z-index: 0;
+  z-index: auto;
+}
+
+.scroll-room-scene > div:not(.hybrid-backdrop) {
+  position: absolute !important;
+  inset: 0;
+  z-index: 4;
 }
 
 .scroll-room-scene > .hybrid-backdrop {
@@ -49,6 +58,8 @@
 
 .hybrid-photo-frame {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
 }
@@ -92,15 +103,6 @@
   filter: blur(9px) brightness(.65);
 }
 
-.scroll-room[data-detail="true"] .scroll-room-copy {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.scroll-room[data-detail="true"] .scroll-room-copy button, .scroll-room[data-detail="true"] .scroll-room-copy a {
-  pointer-events: none;
-}
-
 .scroll-room-poster {
   object-fit: cover;
 }
@@ -108,157 +110,26 @@
 .scroll-room-shade {
   z-index: 2;
   pointer-events: none;
-  background: linear-gradient(90deg,#090806a6, #09080645 35%,transparent 62%), linear-gradient(0deg,#090806c4,transparent 23%);
-}
-
-.scroll-room-copy {
-  position: absolute;
-  left: clamp(24px,4.8vw,80px);
-  top: 28%;
-  z-index: 6;
-  width: min(600px,44%);
-  pointer-events: none;
-  animation: room-copy-in 500ms ease both;
-}
-
-.scroll-room-copy h1 {
-  margin: 0;
-  color: #fff;
-  font-size: clamp(36px,4.2vw,68px);
-  line-height: 1.13;
-  letter-spacing: -1.9px;
-  font-weight: 650;
-  white-space: pre-line;
-  text-wrap: balance;
-}
-
-.scroll-room-copy > p {
-  max-width: 430px;
-  margin: 28px 0 34px;
-  color: #f0eeeb;
-  font-size: clamp(15px,1.35vw,20px);
-  line-height: 1.6;
-}
-
-.scroll-room-actions {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  pointer-events: auto;
-}
-
-.scroll-room-actions .home-button {
-  min-height: 54px;
-  padding: 16px 28px;
-  border-radius: 4px;
-  background: #075dce;
-  border: 1px solid #075dce;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.scroll-room-actions .home-button-secondary {
-  color: #fff;
-  background: #29251d24;
-  border-color: #ffffffb3;
-  backdrop-filter: blur(5px);
-}
-
-.scroll-room-product-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  margin-top: 14px;
-  color: #e4dfd7;
-  font-size: 12px;
-  pointer-events: auto;
-}
-
-.scroll-room-tools {
-  position: absolute;
-  top: calc(var(--room-header-height) + 18px);
-  right: 26px;
-  display: flex;
-  gap: 8px;
-  z-index: 8;
-}
-
-.scroll-room-tools button {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid #ffffff30;
-  border-radius: 50%;
-  background: #211b1645;
-  color: #eee9e1;
-  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg,#0908069e,transparent 28%), linear-gradient(0deg,#090806c4,transparent 42%);
 }
 
 .scroll-room-footer {
   position: absolute;
-  bottom: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(720px,calc(100% - 64px));
+  right: clamp(20px,4.8vw,80px);
+  bottom: calc(clamp(28px,6vh,64px) + 128px);
   z-index: 8;
-}
-
-.scroll-room-footer nav {
-  display: grid;
-  grid-template-columns: repeat(3,minmax(0,1fr));
-  gap: 24px;
-}
-
-.scroll-room-footer nav button {
-  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  min-height: 72px;
-  padding: 10px 4px 16px;
-  color: #c9c4bc;
-  background: transparent;
-  font-size: 14px;
-  font-weight: 500;
-  border: 0;
-}
-
-.scroll-room-footer nav button span {
-  font-size: 24px;
-  font-weight: 650;
-}
-
-.scroll-room-footer nav button::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  width: 44px;
-  height: 3px;
-  background: transparent;
-  transition: background-color 250ms;
-}
-
-.scroll-room-footer nav button[aria-current] {
-  color: #fff;
-}
-
-.scroll-room-footer nav button[aria-current]::after {
-  background: #2c83ef;
+  align-items: flex-end;
 }
 
 .scroll-room-status {
   display: flex;
-  justify-content: center;
   gap: 12px;
-  min-height: 24px;
-  margin-top: 9px;
-  color: #c7c1b8;
-  font-size: 10px;
-  text-align: center;
+  min-height: 20px;
+  margin-top: 6px;
+  color: #ffffffb3;
+  font-size: 12px;
 }
 
 .scroll-room-status button {
@@ -401,6 +272,14 @@
   top: 0;
 }
 
+/* Sticky from the first paint, not only after hydration adds data-room-tour:
+   the hero offset is measured before paint, so nothing jumps on slow phones. */
+
+.site-ui.shop-shell:has(.scroll-room) .store-header {
+  position: sticky;
+  top: 0;
+}
+
 .site-ui.shop-shell .store-header[data-room-over] {
   background: #1d18127a;
   color: #fff;
@@ -441,75 +320,26 @@
   position: relative;
 }
 
-@keyframes room-copy-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @media (max-width:767px) {
   .scroll-room {
     height: 380svh;
   }
-  .scroll-room-stage {
-    min-height: 0;
-  }
-  .scroll-room-copy {
-    display: none;
-  }
-  .scroll-room-copy h1 {
-    max-width: 350px;
-    font-size: clamp(30px,7.6vw,42px);
-    letter-spacing: -1px;
-  }
-  .scroll-room-copy > p {
-    max-width: 330px;
-    margin: 14px 0 20px;
-    font-size: 13px;
-  }
-  .scroll-room-shade {
-    background: linear-gradient(0deg,#090806bd,transparent 29%);
-  }
-  .scroll-room-actions {
-    gap: 10px;
-  }
-  .scroll-room-actions .home-button {
-    min-height: 46px;
-    padding: 12px 18px;
-    font-size: 12px;
-  }
-  .scroll-room-tools {
-    right: 16px;
-    top: calc(var(--room-header-height) + 12px);
-  }
   .scroll-room-footer {
-    bottom: calc(83px + env(safe-area-inset-bottom,0px));
-    width: calc(100% - 28px);
+    left: 16px;
+    right: 16px;
+    align-items: flex-start;
+    bottom: calc(83px + 206px + env(safe-area-inset-bottom,0px));
   }
-  .scroll-room-footer nav {
-    gap: 10px;
-  }
-  .scroll-room-footer nav button {
-    min-height: 62px;
-    font-size: 11px;
-    gap: 4px;
-  }
-  .scroll-room-footer nav button span {
-    font-size: 19px;
+  .scroll-room-footer .hybrid-item-links {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    margin: 0 0 8px;
   }
   .scroll-room-status {
-    font-size: 9px;
+    font-size: 11px;
   }
   .scroll-room[data-ready='true'] .scroll-room-status {
     display: none;
-  }
-  .shop-shell:has(.store-header[data-room-hidden='true']) .scroll-room-tools {
-    top: 16px;
   }
   .scroll-room-hotspot {
     width: 38px;
@@ -547,30 +377,14 @@
   .scroll-room-detail-actions {
     margin-top: 4px;
   }
-  .scroll-room[data-detail='true'] .scroll-room-copy {
-    visibility: hidden;
-  }
 }
 
 @media (max-height:520px) and (orientation:landscape) {
   .scroll-room-stage {
     min-height: 0;
   }
-  .scroll-room-copy {
-    display: none;
-  }
   .scroll-room-footer {
-    bottom: 76px;
-    width: min(420px,55%);
-    left: 30%;
-  }
-  .scroll-room-footer nav button {
-    min-height: 44px;
-    font-size: 10px;
-    padding: 4px;
-  }
-  .scroll-room-footer nav button span {
-    font-size: 15px;
+    bottom: 140px;
   }
   .scroll-room[data-ready='true'] .scroll-room-status {
     display: none;
@@ -581,16 +395,6 @@
     right: 12px;
     max-height: calc(100% - var(--room-header-height) - 32px);
     padding: 16px;
-  }
-  .scroll-room-tools {
-    top: calc(var(--room-header-height) + 12px);
-    right: 12px;
-  }
-  .shop-shell:has(.store-header[data-room-hidden='true']) .scroll-room-tools {
-    top: 12px;
-  }
-  .shop-shell:has(.store-header[data-room-hidden='true']) .scroll-room-details {
-    max-height: calc(100% - 32px);
   }
 }
 
@@ -608,9 +412,6 @@
   .store-header[data-room-tour='true'] {
     transition: none;
   }
-  .scroll-room-copy {
-    animation: none;
-  }
   .scroll-room-hotspot span {
     transition: none;
   }
@@ -619,10 +420,6 @@
 .site-ui.shop-shell .store-header[data-room-over] .cart-action {
   background: transparent;
   border-color: #ffffff40;
-}
-
-.scroll-room[data-detail="true"] .scroll-room-copy {
-  visibility: hidden;
 }
 
 .site-ui.shop-shell .store-header[data-room-over] .store-search > svg {
@@ -641,12 +438,5 @@
 @media (prefers-reduced-motion: reduce) {
   .scroll-room-scene > div {
     transition: none;
-  }
-}
-
-@media (max-height: 520px) and (orientation: landscape) {
-  .scroll-room[data-detail="true"] .scroll-room-tools {
-    left: 12px;
-    right: auto;
   }
 }
