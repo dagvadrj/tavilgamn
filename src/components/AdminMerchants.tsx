@@ -559,7 +559,7 @@ function MerchantEditor({
       </td>
       <td>
         <strong>{money(merchant.grossRevenue)}</strong>
-        <small>Fee {money(merchant.platformRevenue)}</small>
+        <small>Шимтгэл {money(merchant.platformRevenue)}</small>
       </td>
       <td>
         <strong>{count(merchant.productCount)} бараа</strong>
