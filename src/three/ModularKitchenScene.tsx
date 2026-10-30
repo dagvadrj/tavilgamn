@@ -76,6 +76,8 @@ export interface ModularSceneProps {
 const KITCHEN_WINDOW_SUN = 1.75;
 /** Candela, at the ceiling centre; tuned against the fill so the room shows a direction. */
 const KITCHEN_CEILING_LIGHT = 16;
+/** A dragged item overlapping another shares its wall-snapped faces; a ~1 mm inset stops them z-fighting. */
+const OVERLAP_INSET_SCALE = 0.996;
 
 function CameraFit({ focus, side }: { focus: ReturnType<typeof kitchenEnvelope>; side: [number, number] }) {
   const { camera, size, controls } = useThree();
@@ -137,6 +139,8 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
       .filter((issue) => issue.severity === "error")
       .flatMap((issue) => issue.ids),
   );
+  const dragScale = (id: string) =>
+    dragActive && drag.current?.id === id && invalid.has(id) ? OVERLAP_INSET_SCALE : 1;
   function finish(cancel: boolean) {
     const current = drag.current;
     if (!current) return;
@@ -428,6 +432,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
                 cabinet.position.z / 1000,
               ]}
               rotation={[0, cabinet.position.rotation, 0]}
+              scale={dragScale(cabinet.id)}
               onPointerDown={(event) => start(event, cabinet)}
               onPointerMove={move}
               onPointerUp={(event) => {
@@ -491,6 +496,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
               extra.position.z / 1000,
             ]}
             rotation={[0, extra.position.rotation, 0]}
+            scale={dragScale(extra.id)}
             onPointerDown={(event) => start(event, extra)}
             onPointerMove={move}
             onPointerUp={(event) => {

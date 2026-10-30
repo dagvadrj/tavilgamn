@@ -975,6 +975,7 @@ export function ModularKitchenPlanner({
           ...(base.extras ?? []).filter((e) => e.id !== id).map(footprint),
         ],
         roomWalls(base.room),
+        base.room,
       );
       const next = {
         ...base,

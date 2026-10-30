@@ -97,6 +97,7 @@ export function snapCabinet(
   requested: CabinetPose,
   others: ModularCabinet[],
   walls: KitchenWall[],
+  room?: ModularKitchen["room"],
 ) {
   let position = { ...requested };
   let snappedWall: KitchenWall | undefined;
@@ -225,7 +226,65 @@ export function snapCabinet(
       }
     }
   }
+  const pushed = pushOutOfOverlap({ ...cabinet, position: adjacent }, others, snappedWall, room);
+  if (pushed)
+    return { position: pushed.position, wallId: snappedWall?.id, neighbourId: pushed.neighbourId ?? neighbourId };
   return { position: adjacent, wallId: snappedWall?.id, neighbourId };
+}
+/**
+ * Slide an overlapping drag pose to the nearest free spot beside the items it hits,
+ * so two bodies never share a volume (and coplanar faces never z-fight).
+ * Returns undefined when already free or when no nearby free pose exists.
+ */
+function pushOutOfOverlap(
+  cabinet: ModularCabinet,
+  others: ModularCabinet[],
+  wall: KitchenWall | undefined,
+  room: ModularKitchen["room"] | undefined,
+): { position: CabinetPose; neighbourId?: string } | undefined {
+  const blockers = (pose: CabinetPose) =>
+    others.filter(
+      (other) => other.id !== cabinet.id && cabinetsOverlap({ ...cabinet, position: pose }, other),
+    );
+  if (!blockers(cabinet.position).length) return undefined;
+  const { right, front } = cabinetAxes(cabinet.position.rotation);
+  // Against a wall the item may only slide along it; free-standing it may also step forward/back.
+  const axes = wall ? ([[right, cabinet.width / 2]] as const) : ([[right, cabinet.width / 2], [front, cabinet.depth / 2]] as const);
+  const origin = cabinet.position;
+  let frontier: { position: CabinetPose; neighbourId?: string }[] = [{ position: origin }];
+  let best: { position: CabinetPose; neighbourId?: string } | undefined;
+  let bestDistance = Infinity;
+  // A few rounds resolve a push that lands on the next unit along a run.
+  for (let round = 0; round < 4 && frontier.length; round++) {
+    const next: typeof frontier = [];
+    for (const { position } of frontier)
+      for (const other of blockers(position)) {
+        const otherAxes = cabinetAxes(other.position.rotation);
+        for (const [axis, half] of axes) {
+          const otherHalf =
+            (Math.abs(dot(axis, otherAxes.right)) * other.width +
+              Math.abs(dot(axis, otherAxes.front)) * other.depth) /
+            2;
+          const along = dot(sub(position, other.position), axis);
+          for (const sign of [-1, 1]) {
+            const shift = sign * (half + otherHalf) - along;
+            const candidate = { ...position, x: position.x + axis.x * shift, z: position.z + axis.z * shift };
+            const distance = Math.hypot(candidate.x - origin.x, candidate.z - origin.z);
+            if (distance >= bestDistance) continue;
+            const proposed = { ...cabinet, position: candidate };
+            if (wall && !touchesWall(proposed, wall)) continue;
+            if (room && !roomContainsFootprint(room, cabinetCorners(proposed))) continue;
+            if (blockers(candidate).length) next.push({ position: candidate, neighbourId: other.id });
+            else {
+              best = { position: candidate, neighbourId: other.id };
+              bestDistance = distance;
+            }
+          }
+        }
+      }
+    frontier = next;
+  }
+  return best;
 }
 
 export function resolveElevations(kitchen: ModularKitchen): ModularKitchen {
@@ -734,6 +793,7 @@ export function proposeCabinetMove(
     requested,
     kitchen.cabinets,
     roomWalls(kitchen.room),
+    kitchen.room,
   );
   const next = resolveElevations({
     ...kitchen,
