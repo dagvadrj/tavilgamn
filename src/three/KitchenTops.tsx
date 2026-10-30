@@ -1,9 +1,9 @@
 /** Planned worktops, splashbacks and counter appliances share the manufacturing geometry. */
 "use client";
 import { KitchenCatalogAppliance } from "./KitchenCatalogAppliance";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { ThreeEvent } from "@react-three/fiber";
-import { Path, Shape, type Texture } from "three";
+import { ExtrudeGeometry, Path, Shape, type Texture } from "three";
 import { Edges } from "@react-three/drei";
 import { KITCHEN_WALL_MATERIALS } from "@/lib/kitchenWallMaterials";
 import { kitchenCornerGeometry } from "@/lib/kitchenCornerGeometry";
@@ -25,7 +25,8 @@ import {
   cabinetAxes,
   fitCountertops,
 } from "@/lib/kitchenPlacement";
-import { fitBacksplashes } from "@/lib/kitchenBacksplash";
+import { fitBacksplashes, type BacksplashPanel } from "@/lib/kitchenBacksplash";
+import type { KitchenServicePoint } from "@/lib/kitchenServices";
 import { useKitchenSurfaceTextures } from "./useKitchenSurfaceTextures";
 import { resolveKitchenPaintMaterial } from "@/lib/kitchenPaint";
 type XYZ = [number, number, number];
@@ -312,8 +313,11 @@ export function KitchenTops({
   onSelectCountertop,
   onCountertopPointerDown,
   selectedId,
+  servicePoints = [],
 }: {
   kitchen: ModularKitchen;
+  /** Outlets on the splashback get a real cut-out in the tiles. */
+  servicePoints?: KitchenServicePoint[];
   materialDefinitions?: Record<string, KitchenMaterialDefinition>;
   catalogApplianceIds?: string[];
   onSelectCountertop?: (top: Countertop) => void;
@@ -341,19 +345,14 @@ export function KitchenTops({
         />
       ))}
       {backsplashes.map((panel) => (
-        <FinishedBoard
+        <BacksplashBoard
           key={panel.id}
-          id={panel.id}
-          width={panel.width}
-          height={panel.height}
-          depth={panel.thickness}
+          panel={panel}
+          cutouts={servicePoints}
+          tiles={(kitchen.backsplashMaterialId ?? "wall-tiles-white").startsWith("wall-tiles")}
           onPointerDown={(event) => onBacksplashPointerDown?.(event, panel.id)}
-          position={panel.position}
           materialDefinition={
             resolveKitchenPaintMaterial(kitchen.backsplashMaterialId ?? "wall-tiles-white", { ...Object.fromEntries(KITCHEN_WALL_MATERIALS.map(m => [m.id, m])), ...materialDefinitions })
-          }
-          finish={
-            "matte"
           }
         />
       ))}
@@ -367,6 +366,74 @@ export function KitchenTops({
           <CounterAppliance key={c.id} cabinet={c} kitchen={kitchen} />
         ))}
     </>
+  );
+}
+/** One tile repeat (4 rows of 75 mm brick-laid tiles) in metres. */
+const TILE_REPEAT = 0.3;
+/** Splashback with real openings where outlets are set into the tiles; texture keeps true tile size. */
+function BacksplashBoard({
+  panel,
+  cutouts,
+  tiles,
+  materialDefinition,
+  onPointerDown,
+}: {
+  panel: BacksplashPanel;
+  cutouts: KitchenServicePoint[];
+  tiles: boolean;
+  materialDefinition?: KitchenMaterialDefinition;
+  onPointerDown?: (event: ThreeEvent<PointerEvent>) => void;
+}) {
+  const textures = useKitchenSurfaceTextures(materialDefinition, "matte");
+  const material = FINISHES.find((item) => item.id === "matte")!;
+  const shape = useMemo(() => {
+    const w = panel.width / 1000, h = panel.height / 1000;
+    const s = new Shape();
+    s.moveTo(-w / 2, 0); s.lineTo(w / 2, 0); s.lineTo(w / 2, h); s.lineTo(-w / 2, h); s.closePath();
+    const { right, front } = cabinetAxes(panel.position.rotation);
+    for (const point of cutouts) {
+      if (!point.onBacksplash) continue;
+      const dx = point.x - panel.position.x, dz = point.z - panel.position.z;
+      const along = dx * right.x + dz * right.z, across = dx * front.x + dz * front.z;
+      const y = point.y - panel.position.y;
+      const hw = point.width / 2 + 3, hh = point.height / 2 + 3;
+      if (Math.abs(across) > panel.thickness + 5 || Math.abs(along) + hw > panel.width / 2 || y - hh < 0 || y + hh > panel.height) continue;
+      const hole = new Path();
+      hole.moveTo((along - hw) / 1000, (y - hh) / 1000);
+      hole.lineTo((along - hw) / 1000, (y + hh) / 1000);
+      hole.lineTo((along + hw) / 1000, (y + hh) / 1000);
+      hole.lineTo((along + hw) / 1000, (y - hh) / 1000);
+      hole.closePath();
+      s.holes.push(hole);
+    }
+    return s;
+  }, [panel, cutouts]);
+  const geometry = useMemo(() => {
+    const g = new ExtrudeGeometry(shape, { depth: panel.thickness / 1000, bevelEnabled: false });
+    // Extrude UVs are in metres; scale them so a tile reads at its real size.
+    const uv = g.getAttribute("uv"), scale = tiles ? 1 / TILE_REPEAT : 1;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * scale, uv.getY(i) * scale);
+    uv.needsUpdate = true;
+    return g;
+  }, [shape, panel.thickness, tiles]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <group
+      name={panel.id}
+      onPointerDown={onPointerDown}
+      position={[panel.position.x / 1000, panel.position.y / 1000, panel.position.z / 1000]}
+      rotation={[0, panel.position.rotation, 0]}
+    >
+      <mesh geometry={geometry} position={[0, 0, -panel.thickness / 2000]} castShadow receiveShadow
+        userData={{ sizeMm: [panel.width, panel.height, panel.thickness] }}>
+        <meshStandardMaterial
+          {...textures}
+          color={materialDefinition?.baseColor ?? material.color}
+          roughness={materialDefinition?.roughness ?? material.roughness}
+          metalness={materialDefinition?.metalness ?? 0}
+        />
+      </mesh>
+    </group>
   );
 }
 function FinishedBoard({

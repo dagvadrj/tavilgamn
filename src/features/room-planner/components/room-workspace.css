@@ -2454,3 +2454,13 @@
     display: none;
   }
 }
+
+/* «Зөөх» mode: the pressed action reads as an active state, camera locked. */
+.planner-workspace.planner-reference.room-simple .room-selection-bar > button.is-pressed,
+.planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > button.is-pressed {
+  background: #ffd25e;
+  color: #1f2933;
+}
+.planner-workspace.planner-reference.room-simple .room-selection-bar.is-floating > button.is-pressed:hover {
+  background: #ffdc7f;
+}

@@ -485,6 +485,9 @@ function RoomPlannerEditor() {
     optionsReveal,
     setOptionsReveal,
   } = useRoomPlannerUi();
+  // «Зөөх» mode belongs to one selection; picking another or none ends it.
+  const [moving, setMoving] = useState(false);
+  useEffect(() => { setMoving(false); }, [selected]);
   // The nested views reuse the former inspector sections unchanged.
   const roomDetailsTab =
     panelView === "detail"
@@ -1854,6 +1857,15 @@ function RoomPlannerEditor() {
   const selectionActions: SelectionAction[] = [];
   if (selectedPiece) {
     const id = selectedPiece.instanceId;
+    // Camera stays still while moving; drag the piece, press again to finish.
+    if (roomView !== "interior")
+      selectionActions.push({
+        id: "move",
+        label: moving ? "Болсон" : "Зөөх",
+        icon: moving ? <Check size={16} /> : <Move size={16} />,
+        run: () => setMoving((value) => !value),
+        pressed: moving,
+      });
     if (!merchantMode && selectedProduct && !selectedPiece.kitchen)
       selectionActions.push({
         id: "cart",
@@ -4059,7 +4071,7 @@ function RoomPlannerEditor() {
             onMove={onMove}
             view={view}
             snapEnabled={snapEnabled}
-            locked={locked}
+            locked={locked || moving}
             gridEnabled={gridEnabled}
             showDimensions={showDimensions}
             measurements={measurements}

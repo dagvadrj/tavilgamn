@@ -5,6 +5,7 @@ import {
   createHood,
   createRefrigerator,
   type KitchenLayout,
+  type KitchenRoom,
   type ModularCabinet,
   type ModularKitchen,
 } from "./kitchenCabinets";
@@ -36,12 +37,14 @@ export const DEFAULT_KITCHEN_SUGGESTION: KitchenSuggestionPreferences = {
 export function createSuggestedKitchen(
   preferences: KitchenSuggestionPreferences,
   roomDimensions?: RoomSetupDimensions,
-  options: { fill?: boolean } = {},
+  options: { fill?: boolean; room?: KitchenRoom } = {},
 ): ModularKitchen {
   const kitchen = createUnifiedKitchen();
   if (roomDimensions) {
     kitchen.room = { width: Math.round(roomDimensions.width * 1000), depth: Math.round(roomDimensions.depth * 1000), height: Math.round(roomDimensions.height * 1000) };
   }
+  // The surveyed room (doors, windows, water, vent) steers the arrangement.
+  if (options.room) kitchen.room = { ...options.room };
   const baseOven = kitchen.cabinets.find(
     (cabinet) => cabinet.type === "base" && cabinet.opening === "oven",
   );
@@ -111,7 +114,76 @@ export function createSuggestedKitchen(
       arranged = arrangeKitchen({ ...arranged, cabinets: arranged.cabinets.filter(c => c.id !== candidate.id) }, preferences.layout);
     }
   }
+  arranged = alignToServices(arranged, preferences.layout);
   return preferences.layout === "u" && options.fill !== false ? fillUKitchen(arranged) : arranged;
+}
+
+const isCooker = (c: ModularCabinet) => c.type === "base" && (c.opening === "oven" || c.opening === "hob");
+const pointDistance = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.hypot(a.x - b.x, a.z - b.z);
+
+/**
+ * Score of a finished arrangement against the room's water and vent points and
+ * the usual work rules: the sink by the water, the hob (and its hood) by the
+ * vent, worktop between the two, and the hob off a side wall or a tall unit.
+ */
+export function serviceLayoutCost(kitchen: ModularKitchen) {
+  const items = kitchen.room.items ?? [];
+  const sink = kitchen.cabinets.find(c => c.opening === "sink");
+  const cooker = kitchen.cabinets.find(isCooker);
+  const nearest = (kind: "water" | "vent", at?: ModularCabinet) => {
+    const points = items.filter(item => item.kind === kind);
+    return at && points.length ? Math.min(...points.map(p => pointDistance(at.position, p))) : 0;
+  };
+  let cost = nearest("water", sink) + nearest("vent", cooker);
+  if (sink && cooker) {
+    // Sharing a run, at least one 400 mm+ unit of prep space between them.
+    const same = Math.abs(Math.cos(sink.position.rotation - cooker.position.rotation) - 1) < 1e-6;
+    const gap = pointDistance(sink.position, cooker.position) - (sink.width + cooker.width) / 2;
+    if (same && gap < 400) cost += 1500;
+  }
+  if (cooker) {
+    const { width, depth } = kitchen.room;
+    const along = Math.abs(Math.sin(cooker.position.rotation)) > .5 ? cooker.position.z : cooker.position.x;
+    const extent = Math.abs(Math.sin(cooker.position.rotation)) > .5 ? depth : width;
+    if (Math.min(along, extent - along) - cooker.width / 2 < 300) cost += 1200;
+    for (const tall of kitchen.cabinets.filter(c => c.type === "tall"))
+      if (pointDistance(tall.position, cooker.position) - (tall.width + cooker.width) / 2 < 50 &&
+        Math.abs(Math.cos(tall.position.rotation - cooker.position.rotation) - 1) < 1e-6) cost += 1200;
+  }
+  return cost;
+}
+
+/**
+ * Re-order the sink and the cooker inside the floor runs so they land by the
+ * room's water and vent points. Only those two move; tall units and storage
+ * keep their order, the hood follows the cooker as its upper.
+ */
+export function alignToServices(kitchen: ModularKitchen, layout: SuggestionLayout | KitchenLayout): ModularKitchen {
+  const items = kitchen.room.items ?? [];
+  if (!items.some(item => item.kind === "water" || item.kind === "vent")) return kitchen;
+  const floor = kitchen.cabinets.filter(c => c.type !== "wall");
+  const upper = kitchen.cabinets.filter(c => c.type === "wall");
+  const sink = floor.find(c => c.opening === "sink");
+  const cooker = floor.find(isCooker);
+  if (!sink && !cooker) return kitchen;
+  const rest = floor.filter(c => c !== sink && c !== cooker);
+  const valid = (k: ModularKitchen) => !placementIssues(k).some(issue => issue.severity === "error");
+  let best = kitchen, bestCost = valid(kitchen) ? serviceLayoutCost(kitchen) : Infinity;
+  const slots = rest.length + 1;
+  for (let i = 0; i < (sink ? slots : 1); i++) for (let j = 0; j < slots + (sink ? 1 : 0); j++) {
+    const order = [...rest];
+    if (sink) order.splice(i, 0, sink);
+    if (cooker) order.splice(Math.min(j, order.length), 0, cooker);
+    if (order.every((c, index) => c === floor[index])) continue;
+    const candidate = arrangeKitchen({ ...kitchen, cabinets: [...order, ...upper] }, layout as KitchenLayout);
+    if (!valid(candidate)) continue;
+    // Small tie-break keeps the familiar order when the points don't care.
+    const moved = order.reduce((sum, c, index) => sum + Math.abs(floor.indexOf(c) - index), 0);
+    const cost = serviceLayoutCost(candidate) + moved;
+    if (cost < bestCost - 1) { best = candidate; bestCost = cost; }
+    if (!cooker) break;
+  }
+  return best;
 }
 
 type RunWall = "back" | "left" | "right";

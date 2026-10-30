@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ChevronRight,
   Droplets,
+  Wind,
   Grid2X2,
   Hand,
   MousePointer2,
@@ -219,7 +220,7 @@ export function KitchenSpaceEditor({
     });
     setWall(nextWall);
   }
-  const utilityKinds = ["water", "power"] as const;
+  const utilityKinds = ["water", "power", "vent"] as const;
   return (
     <section className={`kroom-setup kroom-canvas-first ${settingsOpen ? "is-settings-open" : ""}`} aria-label="Өрөөг хэмжих">
       <aside
@@ -388,7 +389,7 @@ export function KitchenSpaceEditor({
             <div className="kroom-utilities">
               {utilityKinds.map((kind) => {
                 const Icon =
-                  kind === "water" ? Droplets : Zap;
+                  kind === "water" ? Droplets : kind === "vent" ? Wind : Zap;
                 const existing = items.filter((i) => i.kind === kind);
                 return (
                   <div key={kind}>
@@ -571,6 +572,7 @@ export function KitchenSpaceEditor({
           <button type="button" className="kroom-paint-open" aria-controls="kroom-paint" disabled={disabled} onClick={openPaint}><PaintBucket size={17} />Ханын будаг</button>
           <button type="button" disabled={disabled} onClick={() => { setPanMode(false); add("water"); }}><Droplets size={17} />{"Ус"}</button>
           <button type="button" disabled={disabled} onClick={() => { setPanMode(false); add("power"); }}><Zap size={17} />{"Цахилгаан"}</button>
+          <button type="button" disabled={disabled} onClick={() => { setPanMode(false); add("vent"); }}><Wind size={17} />{"Агааржуулалт"}</button>
           <span className="kroom-control-divider" />
           <button
             type="button"

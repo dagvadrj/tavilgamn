@@ -1,6 +1,7 @@
 "use client";
 import "@/features/planner/components/planner-catalog-upgrades.css";
 import { KitchenSuggestionWizard } from "./KitchenSuggestionWizard";
+import { KitchenServicesLegend } from "@/features/kitchen-planner/components/KitchenServicesLegend";
 import { KitchenSetupSteps } from "@/features/kitchen-planner/components/KitchenSetupSteps";
 import {
   isKitchenFlowStage,
@@ -133,6 +134,7 @@ import { useAuth } from "@/store/auth";
 import { useCatalog } from "@/store/catalog";
 import { useKitchens } from "@/store/kitchens";
 import {
+  Check,
   ChevronDown,
   ChevronRight,
   Grid2X2,
@@ -142,6 +144,7 @@ import {
   Orbit,
   Copy,
   Moon,
+  Plug,
   Repeat,
   RotateCw,
   Save,
@@ -319,6 +322,7 @@ export function ModularKitchenPlanner({
   const [roomDraftIssues, setRoomDraftIssues] = useState(0);
   const [designTab, setDesignTab] = useState<"catalog" | "materials" | "views">("catalog");
   const [night, setNight] = useState(false);
+  const [services, setServices] = useState(true);
   const [materialScope, setMaterialScope] = useState<KitchenMaterialScope>("selected");
   // K2: the design step always shows one panel; with nothing else open it is
   // the catalog (or the views list the person chose).
@@ -1744,7 +1748,7 @@ export function ModularKitchenPlanner({
       />
       {setupStage && <div className="kitchen-early-steps">
         {setupStage === "equipment" ? <>
-          <KitchenSuggestionWizard roomDimensions={{ width: design.room.width / 1000, depth: design.room.depth / 1000, height: design.room.height / 1000 }} initialPreferences={flowPreferences} onPreferencesChange={setFlowPreferences} onBack={() => changeStage("space")} onSkip={() => changeStage("design")} onComplete={completeEquipment} disabled={busy || catalogLoading} />
+          <KitchenSuggestionWizard roomDimensions={{ width: design.room.width / 1000, depth: design.room.depth / 1000, height: design.room.height / 1000 }} room={design.room} initialPreferences={flowPreferences} onPreferencesChange={setFlowPreferences} onBack={() => changeStage("space")} onSkip={() => changeStage("design")} onComplete={completeEquipment} disabled={busy || catalogLoading} />
           {message && <p className="kitchen-setup-error" role="alert">{message}</p>}
         </> : <KitchenSetupSteps stage={setupStage} kitchen={design} disabled={busy} message={message} onChange={commit} onStage={changeStage} />}
       </div>}
@@ -1937,6 +1941,19 @@ export function ModularKitchenPlanner({
                 // Toolbar presses never start a scene selection or drag.
                 onPointerDown={(event) => event.stopPropagation()}
               >
+                {workspaceView !== "2d" && workspaceView !== "elevation" && workspaceView !== "interior" && (
+                  <button
+                    type="button"
+                    className="kitchen-k-move"
+                    disabled={busy}
+                    aria-pressed={mode === "move"}
+                    title={mode === "move" ? "Зөөж дуусгах" : "Камер хөдлөхгүйгээр чирж зөөх"}
+                    onClick={() => setMode((value) => (value === "move" ? "orbit" : "move"))}
+                  >
+                    {mode === "move" ? <Check size={16} aria-hidden="true" /> : <Move size={16} aria-hidden="true" />}
+                    {mode === "move" ? "Болсон" : "Зөөх"}
+                  </button>
+                )}
                 <button
                   type="button"
                   disabled={busy}
@@ -2011,6 +2028,21 @@ export function ModularKitchenPlanner({
                   <span>{night ? "Өдөр" : "Шөнө"}</span>
                 </button>
               )}
+              {workspaceView !== "2d" && workspaceView !== "elevation" && (
+                <button
+                  type="button"
+                  className="kitchen-services-toggle"
+                  aria-pressed={services}
+                  title={services ? "Холболтын цэгүүдийг нуух" : "Шүүгээний цаана орсон ус, цахилгаан, сорогчийн хоолойг харах"}
+                  onClick={() => setServices((value) => !value)}
+                >
+                  <Plug size={16} aria-hidden="true" />
+                  <span>Холболт</span>
+                </button>
+              )}
+              {services && workspaceView !== "2d" && workspaceView !== "elevation" && !reviewOpen && (
+                <KitchenServicesLegend kitchen={sceneKitchen} />
+              )}
             </div>
             <div className="kp-preview-bar">
               <div
@@ -2076,6 +2108,7 @@ export function ModularKitchenPlanner({
                   mode={saving ? "orbit" : mode}
                   interior={workspaceView === "interior" && !reviewOpen}
                   night={night}
+                  services={services}
                   cameraRequest={cameraRequest}
                   onSelect={selectCabinet}
                   onDeselect={() => {

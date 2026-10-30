@@ -20,6 +20,8 @@ export interface SelectionAction {
   run: () => void;
   disabled?: string;
   primary?: boolean;
+  /** A mode the action toggles (e.g. «Зөөх»). */
+  pressed?: boolean;
   /** D5: on phones this action moves into «Бусад», under `menuLabel`. */
   more?: boolean;
   menuLabel?: string;
@@ -121,7 +123,8 @@ export function RoomSelectionToolbar({
         <button
           key={action.id}
           type="button"
-          className={[action.primary && "is-primary", action.more && "is-more"].filter(Boolean).join(" ") || undefined}
+          className={[action.primary && "is-primary", action.more && "is-more", action.pressed && "is-pressed"].filter(Boolean).join(" ") || undefined}
+          aria-pressed={action.pressed}
           disabled={!!action.disabled}
           title={action.disabled ?? action.label}
           aria-label={action.disabled ? `${action.label} — ${action.disabled}` : action.label}

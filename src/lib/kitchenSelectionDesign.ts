@@ -1,7 +1,7 @@
 import { arrangeKitchen, cloneKitchen, parseKitchen } from "./kitchenAssembly";
 import { CABINET_DEFAULTS, DEFAULT_COUNTERTOP_THICKNESS, DEFAULT_WALL_CLEARANCE, type ModularKitchen } from "./kitchenCabinets";
 import { kitchenVariantFromModule, type KitchenCatalogModule } from "./kitchenModuleCatalog";
-import { createSuggestedKitchen, fillUKitchen, type KitchenSuggestionPreferences } from "./kitchenSuggestions";
+import { alignToServices, createSuggestedKitchen, fillUKitchen, type KitchenSuggestionPreferences } from "./kitchenSuggestions";
 import { furnishKitchenFromCatalog } from "./kitchenCatalogFurnishing";
 import { placementIssues } from "./kitchenPlacement";
 import { findExtraSpace } from "./kitchenExtras";
@@ -13,7 +13,7 @@ export function createKitchenFromSelection(previous: ModularKitchen, preferences
   // swapping first would resize and re-pack the fillers into new gaps.
   let proposed = createSuggestedKitchen(preferences, {
     width: previous.room.width / 1000, depth: previous.room.depth / 1000, height: previous.room.height / 1000,
-  }, { fill: false });
+  }, { fill: false, room: cloneKitchen(previous).room });
   proposed.room = cloneKitchen(previous).room;
   proposed.countertop = { ...previous.countertop };
   proposed.backsplash = previous.backsplash;
@@ -49,7 +49,7 @@ export function createKitchenFromSelection(previous: ModularKitchen, preferences
     const storage = proposed.cabinets.filter(c => ['doors', 'drawers', 'open', undefined].includes(c.opening));
     const remove = storage.find(c => c.type === 'wall') ?? storage.at(-1);
     if (!remove) break;
-    proposed = arrangeKitchen({ ...proposed, cabinets: proposed.cabinets.filter(c => c.id !== remove.id) }, preferences.layout);
+    proposed = alignToServices(arrangeKitchen({ ...proposed, cabinets: proposed.cabinets.filter(c => c.id !== remove.id) }, preferences.layout), preferences.layout);
   }
   throw new Error(`${error} Өрөөний хэмжээ эсвэл байрлалын сонголтоо өөрчилнө үү.`);
 }

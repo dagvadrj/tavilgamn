@@ -31,6 +31,8 @@ import { placementIssues } from "@/lib/kitchenPlacement";
 import { kitchenEnvelope } from "@/lib/kitchenAssembly";
 import { kitchenVariantMatchesRole, type KitchenCatalogVariant } from "@/lib/kitchenModuleCatalog";
 import { KitchenTops } from "./KitchenTops";
+import { KitchenServicePoints } from "./KitchenServicePoints";
+import { planKitchenServices } from "@/lib/kitchenServices";
 import { KitchenCabinetGLB } from "./KitchenCabinetGLB";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { KitchenExtraMesh } from "./KitchenExtraMesh";
@@ -64,6 +66,8 @@ export interface ModularSceneProps {
   interior?: boolean;
   /** Dark room: no sun, the ceiling lamp carries the scene. */
   night?: boolean;
+  /** Show outlets, pipes and the hood duct through cabinets. */
+  services?: boolean;
   cameraRequest?: CameraRequest;
   onSelect: (id: string) => void;
   onSelectCountertop?: (id: string) => void;
@@ -228,7 +232,8 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
       return;
     event.stopPropagation();
     props.onSelect(cabinet.id);
-    if (mode !== "move") return;
+    // First press selects; pressing an already selected unit drags it.
+    if (mode !== "move" && selectedId !== cabinet.id) return;
     cancelCameraTransition(camera as PerspectiveCamera);
     if (controls && "target" in controls) {
       const orbit = controls as unknown as NavigationControls;
@@ -274,6 +279,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
     depth = kitchen.room.depth / 1000;
   const roomHeight = kitchen.room.height / 1000;
   const night = Boolean(props.night);
+  const servicePlan = useMemo(() => planKitchenServices(kitchen), [kitchen]);
   const lighting = plannerLighting(night ? { mode: "evening", timeOfDay: 22, ambient: 0.65, sunlight: 1.8, fixtures: [] } : undefined);
   // Structural inputs only: paint and furniture changes keep the same sun.
   const daylightKey = JSON.stringify({ width: kitchen.room.width, depth: kitchen.room.depth, height: kitchen.room.height, items: kitchen.room.items ?? [] });
@@ -379,7 +385,8 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
       )}
       {!props.interior && (
         <CameraNavigation
-          leftDrag
+          // «Зөөх»: a left drag that misses furniture must not swing the camera.
+          leftDrag={mode !== "move"}
           enabled={!dragActive}
           request={props.cameraRequest}
           bounds={
@@ -489,7 +496,9 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
           );
         })}
         <KitchenLineLights kitchen={kitchen} />
+        <KitchenServicePoints plan={servicePlan} xray={props.services !== false} />
         <KitchenTops kitchen={kitchen} materialDefinitions={props.materialDefinitions}
+          servicePoints={servicePlan.points}
           onSelectCountertop={top => props.onSelectCountertop?.(top.id)}
           onCountertopPointerDown={(event, top) => start(event, top)}
           selectedId={props.selectedId}

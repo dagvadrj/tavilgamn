@@ -1,0 +1,92 @@
+.kitchen-services-toggle {
+  position: absolute;
+  bottom: 22px;
+  left: 112px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  color: var(--ink, #1f2933);
+  background: #fff;
+  box-shadow: 0 0 0 1px #171c240f, 0 2px 8px #17212b14;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.kitchen-services-toggle[aria-pressed="true"] {
+  color: #fff;
+  background: #1f2933;
+}
+.kitchen-services-legend {
+  position: absolute;
+  bottom: 70px;
+  left: 22px;
+  z-index: 6;
+  width: min(320px, calc(100% - 44px));
+  max-height: min(360px, calc(100% - 140px));
+  overflow: auto;
+  border-radius: 14px;
+  background: #fffffff2;
+  box-shadow: 0 0 0 1px #171c240f, 0 6px 20px #17212b1f;
+  font-size: 12px;
+  color: var(--ink, #1f2933);
+}
+.ksl-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px 6px;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+.ksl-head > span { display: grid; gap: 2px; flex: 1; }
+.ksl-head strong { font-size: 13px; }
+.ksl-head small { color: #6b7380; }
+.ksl-head em {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-style: normal;
+  font-weight: 700;
+  color: #9a4b00;
+  background: #fff1dc;
+}
+.ksl-head[aria-expanded="true"] svg:last-child { transform: rotate(180deg); }
+.ksl-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0 12px 10px;
+  list-style: none;
+  color: #4b5563;
+}
+.ksl-keys li { display: inline-flex; align-items: center; gap: 5px; }
+.ksl-keys i { width: 10px; height: 10px; border-radius: 50%; }
+.ksl-keys i.is-duct { width: 16px; height: 6px; border-radius: 3px; background: #b8bec5; }
+.ksl-notes {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px 12px;
+  border-top: 1px solid #eceef1;
+  list-style: none;
+  line-height: 1.45;
+}
+.ksl-notes li { display: flex; gap: 7px; color: #374151; }
+.ksl-notes li > svg { flex: none; margin-top: 2px; color: #6b7380; }
+.ksl-notes li.is-warning > svg { color: #c26a00; }
+@media (max-width: 720px) {
+  .kitchen-services-toggle { left: auto; right: 16px; bottom: 16px; }
+  .kitchen-services-legend { left: 16px; bottom: 62px; width: calc(100% - 32px); }
+}

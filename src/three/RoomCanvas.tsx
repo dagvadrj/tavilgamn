@@ -647,6 +647,7 @@ export function RoomCanvas({
             onRemove={onRemovePiece}
             onRevertSwap={onRevertSwap}
             kitchenMaterials={kitchenMaterials}
+            moving={locked}
           />
         ))}</group>
 
@@ -833,7 +834,10 @@ export function DraggablePiece({
   onRemove,
   onRevertSwap,
   kitchenMaterials,
+  moving = false,
 }: {
+  /** «Зөөх» mode: the camera is locked and every piece drags on first press. */
+  moving?: boolean;
   navigationOnly?: boolean;
   piece: PlacedFurniture;
   allPieces: PlacedFurniture[];
@@ -1164,6 +1168,12 @@ export function DraggablePiece({
         event.stopPropagation();
 
         if (measureMode) {
+          if (event.pointerType !== "touch") onSelect(piece.instanceId);
+          return;
+        }
+        // First press only selects; the camera keeps orbiting from an unselected
+        // piece. A selected piece (or any piece in «Зөөх» mode) drags.
+        if (!selected && !moving) {
           if (event.pointerType !== "touch") onSelect(piece.instanceId);
           return;
         }

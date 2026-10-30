@@ -1,0 +1,260 @@
+/* Kitchen equipment wizard: four photo questions, then a summary. */
+.ks-wizard.kwz {
+  --kwz-ink: #22302a;
+  --kwz-muted: #66706a;
+  --kwz-line: #e3e5de;
+  --kwz-paper: #f6f5f1;
+  --kwz-card: #ffffff;
+  --kwz-accent: #2f5d46;
+  --kwz-accent-soft: #e6efe9;
+  --kwz-warn: #9a5b00;
+  --kwz-warn-soft: #fff3df;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  color: var(--kwz-ink);
+  background: var(--kwz-paper);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+.kwz :is(button, img) { font: inherit; }
+.kwz button { cursor: pointer; }
+.kwz :is(button):focus-visible { outline: 2px solid var(--kwz-accent); outline-offset: 3px; }
+
+.kwz-flow {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--kwz-line);
+  background: var(--kwz-card);
+  overflow-x: auto;
+}
+.kwz-flow button {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--kwz-muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.kwz-flow [aria-current="step"] { background: var(--kwz-accent-soft); color: var(--kwz-accent); font-weight: 650; }
+
+.kwz-top {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px clamp(16px, 4vw, 48px);
+  border-bottom: 1px solid var(--kwz-line);
+  background: color-mix(in srgb, var(--kwz-card) 92%, transparent);
+  backdrop-filter: blur(10px);
+}
+.kwz-back, .kwz-skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--kwz-line);
+  border-radius: 999px;
+  background: var(--kwz-card);
+  color: var(--kwz-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.kwz-count { color: var(--kwz-muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.kwz-steps {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.kwz-steps button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 190px;
+  padding: 6px 12px 6px 6px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: var(--kwz-muted);
+  text-align: left;
+}
+.kwz-steps button:hover { background: #f0f1ec; }
+.kwz-steps span {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--kwz-line);
+  background: var(--kwz-card);
+  font-size: 12px;
+  font-weight: 700;
+}
+.kwz-steps b { display: grid; min-width: 0; font-size: 13px; font-weight: 650; }
+.kwz-steps small { overflow: hidden; color: var(--kwz-muted); font-size: 11.5px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.kwz-steps [data-done] span { border-color: var(--kwz-accent); background: var(--kwz-accent); color: #fff; }
+.kwz-steps [aria-current="step"] { color: var(--kwz-ink); background: var(--kwz-accent-soft); }
+.kwz-steps [aria-current="step"] span { border-color: var(--kwz-accent); color: var(--kwz-accent); }
+
+.kwz-body {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 44px) clamp(16px, 4vw, 48px) 48px;
+  animation: kwz-in .28s ease-out;
+}
+@keyframes kwz-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .kwz-body { animation: none; } }
+.kwz-heading { display: grid; gap: 6px; margin-bottom: 24px; }
+.kwz-heading p { margin: 0; color: var(--kwz-accent); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.kwz-heading h1 { margin: 0; font-size: clamp(24px, 3.2vw, 34px); font-weight: 680; letter-spacing: -.01em; outline: none; }
+.kwz-heading span { color: var(--kwz-muted); font-size: 15px; }
+
+.kwz-choices { display: grid; gap: 16px; grid-template-columns: repeat(var(--kwz-cols, 3), minmax(0, 1fr)); }
+.kwz-choices.is-2 { --kwz-cols: 2; max-width: 900px; }
+.kwz-choices.is-4 { --kwz-cols: 4; }
+.kwz-choices > button, .kwz-summary-grid > button {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border: 1.5px solid var(--kwz-line);
+  border-radius: 18px;
+  background: var(--kwz-card);
+  color: inherit;
+  text-align: left;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.kwz-choices > button:hover, .kwz-summary-grid > button:hover {
+  border-color: #c9cec5;
+  box-shadow: 0 10px 28px #1d2a2214;
+  transform: translateY(-2px);
+}
+.kwz-choices > button.is-selected {
+  border-color: var(--kwz-accent);
+  box-shadow: 0 0 0 3px var(--kwz-accent-soft), 0 10px 28px #1d2a2214;
+}
+.kwz-photo { position: relative; display: block; aspect-ratio: 4 / 3; background: #eceae4; }
+.kwz-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.kwz-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #ffffffb3;
+  color: transparent;
+  box-shadow: 0 2px 8px #0000001f;
+}
+.is-selected .kwz-check { background: var(--kwz-accent); color: #fff; }
+.kwz-badge {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--kwz-accent);
+  color: #fff;
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 650;
+}
+.kwz-badge.is-warning { background: var(--kwz-warn-soft); color: var(--kwz-warn); }
+.kwz-copy { display: grid; gap: 3px; padding: 14px 16px 16px; }
+.kwz-copy strong { font-size: 15.5px; font-weight: 680; }
+.kwz-copy small { color: var(--kwz-muted); font-size: 13px; line-height: 1.45; }
+.kwz-copy u { margin-top: 4px; color: var(--kwz-accent); font-size: 13px; font-weight: 650; text-decoration: none; }
+
+.kwz-hint {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 760px;
+  margin: 20px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--kwz-accent-soft);
+  color: #2b4637;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.kwz-hint > svg { flex: none; margin-top: 2px; }
+.kwz-hint.is-warning { background: var(--kwz-warn-soft); color: var(--kwz-warn); }
+
+.kwz-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+.kwz-next, .kwz-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 650;
+}
+.kwz-next { border: 0; background: var(--kwz-ink); color: #fff; }
+.kwz-next:hover:not(:disabled) { background: #33473d; }
+.kwz-next:disabled { opacity: .55; cursor: progress; }
+.kwz-secondary { border: 1px solid var(--kwz-line); background: var(--kwz-card); color: var(--kwz-ink); }
+
+.kwz-summary-grid { display: grid; gap: 14px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.kwz-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.kwz-facts li {
+  padding: 7px 12px;
+  border: 1px solid var(--kwz-line);
+  border-radius: 999px;
+  background: var(--kwz-card);
+  color: var(--kwz-muted);
+  font-size: 12.5px;
+}
+
+@media (max-width: 1020px) {
+  .kwz-steps small { display: none; }
+  .kwz-choices.is-4, .kwz-summary-grid { --kwz-cols: 2; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .kwz-top { grid-template-columns: auto 1fr; gap: 10px; }
+  .kwz-top .kwz-count, .kwz-top .kwz-skip { display: none; }
+  .kwz-steps { justify-content: flex-end; }
+  .kwz-steps b { display: none; }
+  .kwz-steps button { padding: 4px; }
+  .kwz-steps [aria-current="step"] b { display: grid; }
+  .kwz-choices, .kwz-choices.is-2, .kwz-choices.is-4 { --kwz-cols: 2; gap: 10px; }
+  .kwz-copy { padding: 10px 12px 12px; }
+  .kwz-copy strong { font-size: 14px; }
+  .kwz-copy small { font-size: 12px; }
+  .kwz-badge { left: 8px; bottom: 8px; font-size: 10.5px; }
+  .kwz-actions { position: sticky; bottom: 0; margin: 20px -16px 0; padding: 12px 16px; background: linear-gradient(transparent, var(--kwz-paper) 30%); }
+  .kwz-next { flex: 1; justify-content: center; }
+}
+@media (max-width: 420px) {
+  .kwz-choices.is-2 { --kwz-cols: 1; }
+}
+/* Inside the planner shell the wizard fills the stage, not the viewport. */
+.kitchen-early-steps .ks-wizard.kwz { min-height: 100%; }
+/* Phones: the planner's step tabs are pinned under its masthead; start below them. */
+@media (max-width: 760px) {
+  .kitchen-early-steps .ks-wizard.kwz { padding-top: 56px; }
+  .kitchen-early-steps .kwz-top { top: 56px; }
+}

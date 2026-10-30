@@ -555,6 +555,10 @@
   & .kitchen-k-toolbar > button:hover:not(:disabled) {
     background: #ffffff1f;
   }
+  & .kitchen-k-toolbar > button.kitchen-k-move[aria-pressed="true"] {
+    background: #ffd25e;
+    color: #1f2933;
+  }
   & .kitchen-k-toolbar > button[aria-disabled="true"] {
     color: #ffffff73;
     cursor: not-allowed;

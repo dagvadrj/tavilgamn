@@ -7,19 +7,24 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  CookingPot,
+  Droplets,
+  Info,
+  Sparkles,
+  Wind,
 } from "lucide-react";
 import { KITCHEN_FLOW_STAGES, KITCHEN_FLOW_LABELS, saveKitchenFlowDraft, type KitchenFlowStage } from "@/lib/kitchenFlow";
 import { useAuth } from "@/store/auth";
 import type { RoomSetupDimensions } from "@/lib/roomSetup";
+import type { KitchenRoom } from "@/lib/kitchenCabinets";
 import "./kitchen-planner.css";
-import "@/features/planner/components/planner-entry-theme.css";
+import "./kitchen-wizard.css";
 import { placementIssues } from "@/lib/kitchenPlacement";
 import { parseKitchen } from "@/lib/kitchenAssembly";
 import {
   createSuggestedKitchen,
   DEFAULT_KITCHEN_SUGGESTION,
   type KitchenSuggestionPreferences,
+  type SuggestionLayout,
 } from "@/lib/kitchenSuggestions";
 
 type PreferenceKey = keyof KitchenSuggestionPreferences;
@@ -27,120 +32,56 @@ type Choice = {
   value: string;
   title: string;
   description: string;
-  diagram: string;
+  /** Rendered with the planner itself: the real cabinets, straight from the front. */
+  image: string;
 };
 type Question = {
   key: PreferenceKey;
-  eyebrow: string;
   title: string;
   description: string;
   choices: Choice[];
 };
 
+const photo = (name: string) => `/kitchen-wizard/${name}.webp`;
 const QUESTIONS: Question[] = [
   {
     key: "oven",
-    eyebrow: "1 / 4",
     title: "Зуухаа хаана байрлуулах вэ?",
-    description:
-      "Дараа нь тухайн шүүгээг сонгоод загвар, хэмжээг нь сольж болно.",
+    description: "Дараа нь тухайн шүүгээг сонгоод загвар, хэмжээг нь сольж болно.",
     choices: [
-      {
-        value: "under-worktop",
-        title: "Тавцангийн доор",
-        description: "Плитканы доорх 600 мм шүүгээнд",
-        diagram: "oven-low",
-      },
-      {
-        value: "high-cabinet",
-        title: "Өндөр шүүгээнд",
-        description: "Бэлхүүсний түвшинд ашиглахад эвтэйхэн",
-        diagram: "oven-high",
-      },
+      { value: "under-worktop", title: "Тавцангийн доор", description: "Плитканы доорх 600 мм шүүгээнд", image: photo("oven-low") },
+      { value: "high-cabinet", title: "Өндөр шүүгээнд", description: "Бэлхүүсний түвшинд, бөхийхгүй ашиглана", image: photo("oven-high") },
     ],
   },
   {
     key: "hood",
-    eyebrow: "2 / 4",
     title: "Утаа сорогч хэрэгтэй юу?",
-    description: "Плитканы дээр автоматаар тааруулж байрлуулна.",
+    description: "Плитканы дээр, агааржуулалтын цэг рүү ойртуулж байрлуулна.",
     choices: [
-      {
-        value: "integrated",
-        title: "Шүүгээнд суурилуулсан",
-        description: "Дээд шүүгээний доор далд байрлана",
-        diagram: "hood-integrated",
-      },
-      {
-        value: "wall",
-        title: "Хананд ил",
-        description: "Тусдаа утаа сорогч харагдана",
-        diagram: "hood-wall",
-      },
-      {
-        value: "none",
-        title: "Одоохондоо хэрэггүй",
-        description: "Дараа нь planner дотроос нэмж болно",
-        diagram: "none",
-      },
+      { value: "integrated", title: "Шүүгээнд суурилуулсан", description: "Дээд шүүгээний доор далд байрлана", image: photo("hood-integrated") },
+      { value: "wall", title: "Хананд ил", description: "Яндантай, тусдаа харагдах сорогч", image: photo("hood-wall") },
+      { value: "none", title: "Одоохондоо хэрэггүй", description: "Дараа нь planner дотроос нэмж болно", image: photo("hood-none") },
     ],
   },
   {
     key: "refrigerator",
-    eyebrow: "3 / 4",
     title: "Хөргөгчөө хэрхэн байрлуулах вэ?",
-    description: "Сонголт гарнитурын захад автоматаар орно.",
+    description: "Хөргөгч гарнитурын захад, плиткагаас зайтай орно.",
     choices: [
-      {
-        value: "integrated",
-        title: "Шүүгээнд суурилуулсан",
-        description: "Фасадтай нэг өнгө, нэг шугамтай",
-        diagram: "fridge-integrated",
-      },
-      {
-        value: "freestanding",
-        title: "Тусдаа хөргөгч",
-        description: "Шүүгээнээс тусдаа бие даасан хөргөгч",
-        diagram: "fridge-free",
-      },
-      {
-        value: "none",
-        title: "Одоохондоо хэрэггүй",
-        description: "Дараа нь planner дотроос нэмж болно",
-        diagram: "none",
-      },
+      { value: "integrated", title: "Шүүгээнд суурилуулсан", description: "Фасадтай нэг өнгө, нэг шугамтай", image: photo("fridge-integrated") },
+      { value: "freestanding", title: "Тусдаа хөргөгч", description: "Шүүгээнээс тусдаа бие даасан хөргөгч", image: photo("fridge-free") },
+      { value: "none", title: "Одоохондоо хэрэггүй", description: "Дараа нь planner дотроос нэмж болно", image: photo("fridge-none") },
     ],
   },
   {
     key: "layout",
-    eyebrow: "4 / 4",
-    title: "Гал тогооны үндсэн хэлбэрээ сонгоно уу",
-    description: "Өрөөний хэмжээг planner дотор нарийвчлан өөрчилнө.",
+    title: "Гал тогооны хэлбэрээ сонгоно уу",
+    description: "Таны өрөөнд багтах эсэхийг шалгаж тэмдэглэв.",
     choices: [
-      {
-        value: "straight",
-        title: "I хэлбэр",
-        description: "Нэг ханын дагуу шулуун",
-        diagram: "layout-i",
-      },
-      {
-        value: "l-right",
-        title: "L хэлбэр",
-        description: "Хоёр залгаа ханын дагуу",
-        diagram: "layout-l",
-      },
-      {
-        value: "u",
-        title: "U хэлбэр",
-        description: "Гурван ханын дагуу",
-        diagram: "layout-u",
-      },
-      {
-        value: "double-side",
-        title: "Хоёр талт",
-        description: "Эсрэг хоёр ханын дагуу",
-        diagram: "layout-double",
-      },
+      { value: "straight", title: "I хэлбэр", description: "Нэг ханын дагуу шулуун", image: photo("layout-i") },
+      { value: "l-right", title: "L хэлбэр", description: "Хоёр залгаа ханын дагуу", image: photo("layout-l") },
+      { value: "u", title: "U хэлбэр", description: "Гурван ханын дагуу", image: photo("layout-u") },
+      { value: "double-side", title: "Хоёр талт", description: "Эсрэг хоёр ханын дагуу", image: photo("layout-double") },
     ],
   },
 ];
@@ -149,7 +90,7 @@ const LABELS: Record<PreferenceKey, string> = {
   oven: "Зуух",
   hood: "Утаа сорогч",
   refrigerator: "Хөргөгч",
-  layout: "Байрлал",
+  layout: "Хэлбэр",
 };
 
 function choiceFor(key: PreferenceKey, value: string) {
@@ -158,44 +99,16 @@ function choiceFor(key: PreferenceKey, value: string) {
   );
 }
 
-function SuggestionDiagram({ kind }: { kind: string }) {
-  const layout = kind.startsWith("layout-");
-  const tall = kind === "oven-high" || kind.startsWith("fridge-");
-  const cabinet = (x: number, y: number, w: number, h: number) => <g key={`${x}-${y}`}><rect x={x} y={y} width={w} height={h} fill="#fafaf7" stroke="var(--site-muted)" strokeWidth="2"/><rect x={x + 5} y={y + 5} width={w - 10} height={h - 10} fill="none" stroke="var(--site-line)"/><path d={`M${x + w - 10} ${y + h / 2 - 6}v12`} stroke="var(--site-muted)" strokeWidth="3"/></g>;
-  return (
-    <svg className="ks-choice-illustration" viewBox="0 0 320 230" aria-hidden="true">
-      <rect width="320" height="230" fill="var(--site-hover)"/>
-      {layout ? <g fill="#fff" stroke="var(--site-ink)" strokeWidth="3">
-        {kind === "layout-i" && <rect x="55" y="75" width="210" height="45"/>}
-        {kind === "layout-l" && <path d="M65 55h190v45H110v80H65Z"/>}
-        {kind === "layout-u" && <path d="M55 55h210v125h-45v-80H100v80H55Z"/>}
-        {kind === "layout-double" && <><rect x="60" y="50" width="45" height="135"/><rect x="215" y="50" width="45" height="135"/></>}
-        <rect x="137" y="142" width="45" height="40" fill="none" stroke="var(--site-line)" strokeDasharray="3 4" strokeWidth="1"/>
-      </g> : kind === "none" ? <g stroke="var(--site-muted)" strokeWidth="3"><circle cx="160" cy="108" r="40" fill="none"/><path d="m132 136 56-56"/></g> : <>
-        <path d="M0 193h320v37H0Z" fill="#d9c4a2"/>
-        {cabinet(35, 126, 75, 67)}{cabinet(110, 126, 75, 67)}{cabinet(185, 126, 95, 67)}
-        <rect x="30" y="119" width="255" height="8" fill="#bca17b"/>
-        <rect x="125" y="115" width="49" height="5" rx="2" fill="var(--site-ink)"/>
-        {!tall && kind !== "hood-wall" && <>{cabinet(35, 30, 75, 62)}{cabinet(110, 30, 75, 62)}{cabinet(185, 30, 95, 62)}</>}
-        {kind.startsWith("oven-") && <>
-          {tall && cabinet(185, 20, 85, 173)}
-          <rect x={tall ? 194 : 120} y={tall ? 79 : 134} width="65" height="48" rx="3" fill="var(--site-ink)"/>
-          <rect x={tall ? 201 : 127} y={tall ? 91 : 146} width="51" height="28" fill="var(--site-muted)"/>
-          <path d={tall ? "M202 87h49" : "M128 142h49"} stroke="var(--site-line)" strokeWidth="3"/>
-        </>}
-        {kind === "hood-integrated" && <rect x="114" y="93" width="67" height="9" fill="var(--site-muted)"/>}
-        {kind === "hood-wall" && <g fill="var(--site-muted)"><rect x="138" y="28" width="25" height="49"/><path d="m138 77-33 28h91l-33-28Z"/></g>}
-        {kind.startsWith("fridge-") && <>
-          {cabinet(185, 20, 85, 173)}
-          <rect x="189" y="24" width="77" height="165" fill={kind === "fridge-free" ? "var(--site-muted)" : "#fafaf7"} stroke="var(--site-muted)"/>
-          <path d="M190 139h75M255 75v23M255 151v20" stroke={kind === "fridge-free" ? "var(--site-line)" : "var(--site-muted)"} strokeWidth="3"/>
-        </>}
-      </>}
-    </svg>
-  );
+/** Short shape advice from the room's proportions; only a hint, every option stays selectable. */
+function recommendedLayout(width: number, depth: number): SuggestionLayout {
+  const long = Math.max(width, depth), short = Math.min(width, depth);
+  if (short < 2.2) return "straight";
+  if (long / short >= 1.6 && short >= 2.4) return "double-side";
+  if (short >= 3 && long >= 3.2) return "u";
+  return "l-right";
 }
 
-export function KitchenSuggestionWizard({ roomDimensions, onBack, onSkip, initialPreferences, onPreferencesChange, onComplete, onSetupStage, disabled = false }: { roomDimensions?: RoomSetupDimensions; onBack?: () => void; onSkip?: () => void; initialPreferences?: KitchenSuggestionPreferences; onPreferencesChange?: (preferences: KitchenSuggestionPreferences) => void; onComplete?: (preferences: KitchenSuggestionPreferences) => boolean | void; onSetupStage?: (stage: "room" | "size") => void; disabled?: boolean } = {}) {
+export function KitchenSuggestionWizard({ roomDimensions, room, onBack, onSkip, initialPreferences, onPreferencesChange, onComplete, onSetupStage, disabled = false }: { roomDimensions?: RoomSetupDimensions; /** The surveyed room: water and vent points steer sink and hood. */ room?: KitchenRoom; onBack?: () => void; onSkip?: () => void; initialPreferences?: KitchenSuggestionPreferences; onPreferencesChange?: (preferences: KitchenSuggestionPreferences) => void; onComplete?: (preferences: KitchenSuggestionPreferences) => boolean | void; onSetupStage?: (stage: "room" | "size") => void; disabled?: boolean } = {}) {
   const router = useRouter();
   const user = useAuth((state) => state.user);
   const [step, setStep] = useState(0);
@@ -208,8 +121,32 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack, onSkip, initia
   useEffect(() => { onPreferencesChange?.(preferences); }, [preferences, onPreferencesChange]);
   const summary = step === QUESTIONS.length;
   const question = QUESTIONS[step];
-  const design = useMemo(() => createSuggestedKitchen(preferences, roomDimensions), [preferences, roomDimensions]);
+  // Parents pass a fresh size object every render; plan only when the size changes.
+  const dimsKey = roomDimensions ? [roomDimensions.width, roomDimensions.depth, roomDimensions.height].join("x") : "";
+  const dims = useMemo<RoomSetupDimensions | undefined>(() => {
+    if (!dimsKey) return undefined;
+    const [width, depth, height] = dimsKey.split("x").map(Number);
+    return { width, depth, height };
+  }, [dimsKey]);
+  const surveyed = useMemo(() => room ? { ...room, items: room.items ?? [] } : undefined, [room]);
+  const design = useMemo(() => createSuggestedKitchen(preferences, dims, { room: surveyed }), [preferences, dims, surveyed]);
   const needsAdjustment = placementIssues(design).some(issue => issue.severity === "error");
+  // Which shapes fit this room with the other three answers as they are.
+  const fits = useMemo(() => Object.fromEntries(QUESTIONS[3].choices.map(choice => {
+    if (!dims) return [choice.value, true];
+    const candidate = createSuggestedKitchen({ ...preferences, layout: choice.value as SuggestionLayout }, dims, { room: surveyed });
+    return [choice.value, !placementIssues(candidate).some(issue => issue.severity === "error")];
+  })) as Record<string, boolean>, [preferences, dims, surveyed]);
+  const recommended = roomDimensions ? recommendedLayout(roomDimensions.width, roomDimensions.depth) : null;
+  const water = room?.items?.some(item => item.kind === "water");
+  const vent = room?.items?.some(item => item.kind === "vent");
+  const hint = question?.key === "hood"
+    ? (vent ? { icon: <Wind size={16} />, text: "Агааржуулалтын цэг тэмдэглэсэн тул плитка, сорогчийг түүн рүү ойртуулж байрлуулна." }
+      : { icon: <Info size={16} />, text: "Агааржуулалтын цэг тэмдэглээгүй: сорогч нүүрсэн шүүлтүүрээр ажиллана. Өрөөний алхамд цэгээ нэмбэл хоолойн уртыг тооцно." })
+    : question?.key === "layout" || summary
+      ? (water ? { icon: <Droplets size={16} />, text: "Угаалтуурыг усны цэгийн ойролцоо, плиткаг угаалтуураас 40+ см тавцангийн зайтай байрлуулна." }
+        : { icon: <Info size={16} />, text: "Усны цэг тэмдэглээгүй: угаалтуурыг стандарт байрлалд тавина. Өрөөний алхамд цэгээ нэмбэл түүн рүү ойртуулна." })
+      : null;
 
   function continueToPlanner(stage: KitchenFlowStage = "design") {
     if (disabled) return;
@@ -230,102 +167,129 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack, onSkip, initia
     router.push(href);
   }
 
+  const choose = (key: PreferenceKey, value: string) => setPreferences((current) => ({ ...current, [key]: value }));
+
   return (
-    <main className="ks-wizard planner-entry-theme">
-      {!onComplete && <nav className="ks-flow-steps" aria-label="Гал тогооны алхмууд">
+    <main className="ks-wizard kwz">
+      {!onComplete && <nav className="kwz-flow" aria-label="Гал тогооны алхмууд">
         {KITCHEN_FLOW_STAGES.map((stage, index) => <button type="button" key={stage} aria-current={stage === "equipment" ? "step" : undefined} onClick={() => { if (stage === "room" || stage === "size") { if (onSetupStage) onSetupStage(stage); else onBack?.(); } else if (stage === "equipment") setStep(0); else continueToPlanner(stage); }}>{KITCHEN_FLOW_LABELS[index]}</button>)}
       </nav>}
-      <header className="ks-header">
+      <header className="kwz-top">
         <button
           type="button"
+          className="kwz-back"
           onClick={() => (step > 0 ? setStep(step - 1) : onBack ? onBack() : router.push("/"))}
         >
-          <ArrowLeft size={19} /> {step > 0 ? "Буцах" : onBack ? "Өрөөний сонголт" : "Дэлгүүр"}
+          <ArrowLeft size={18} /> {step > 0 ? "Буцах" : onBack ? "Өрөө" : "Дэлгүүр"}
         </button>
-        <strong>
-          <CookingPot size={21} /> tavilga.mn kitchen
-        </strong>
+        <ol className="kwz-steps" aria-label="Төхөөрөмжийн сонголт">
+          {(Object.keys(LABELS) as PreferenceKey[]).map((key, index) => (
+            <li key={key}>
+              <button type="button" aria-current={step === index ? "step" : undefined} data-done={index < step || summary || undefined} onClick={() => setStep(index)}>
+                <span>{index < step || summary ? <Check size={13} /> : index + 1}</span>
+                <b>{LABELS[key]}<small>{choiceFor(key, preferences[key])?.title}</small></b>
+              </button>
+            </li>
+          ))}
+          <li>
+            <button type="button" aria-current={summary ? "step" : undefined} onClick={() => setStep(QUESTIONS.length)}>
+              <span><Sparkles size={13} /></span><b>Тойм<small>Загвар үүсгэх</small></b>
+            </button>
+          </li>
+        </ol>
         {onSkip
-          ? <button type="button" className="ks-skip" onClick={onSkip}>Шүүгээгээ өөрөө сонгох <ArrowRight size={17} /></button>
-          : <span>Алхам 3 / 7 · {summary ? "Тойм" : question.eyebrow}</span>}
+          ? <button type="button" className="kwz-skip" onClick={onSkip}>Өөрөө угсрах <ArrowRight size={16} /></button>
+          : <span className="kwz-count">{summary ? "Тойм" : `${step + 1} / ${QUESTIONS.length}`}</span>}
       </header>
 
-      <nav className="ks-progress" aria-label="Төхөөрөмжийн сонголт">
-        {(Object.keys(LABELS) as PreferenceKey[]).map((key, index) => <button key={key} type="button" aria-current={step === index ? "step" : undefined} onClick={() => setStep(index)}><span>{index < step ? <Check size={14} /> : index + 1}</span>{LABELS[key]}</button>)}
-      </nav>
       {!summary ? (
-        <section className="ks-question" key={question.key}>
-          <p className="ks-eyebrow">{onSkip ? "УХААЛАГ САНАЛ" : "ГАРНИТУРАА СОНГОЁ"} · {question.eyebrow}</p>
-          <h1 ref={title} tabIndex={-1}>{question.title}</h1>
-          <p className="ks-intro">{question.description}</p>
-          <div
-            className={`ks-choices ${question.choices.length >= 3 ? "has-three" : ""}`}
-          >
+        <section className="kwz-body" key={question.key}>
+          <div className="kwz-heading">
+            <p>{onSkip ? "Ухаалаг санал" : "Гарнитураа сонгоё"} · {step + 1} / {QUESTIONS.length}</p>
+            <h1 ref={title} tabIndex={-1}>{question.title}</h1>
+            <span>{question.description}</span>
+          </div>
+          <div className={`kwz-choices is-${question.choices.length}`} role="radiogroup" aria-label={question.title}>
             {question.choices.map((choice) => {
               const selected = preferences[question.key] === choice.value;
+              const layout = question.key === "layout";
+              const tight = layout && fits[choice.value] === false;
               return (
                 <button
                   type="button"
+                  role="radio"
                   key={choice.value}
                   className={selected ? "is-selected" : ""}
-                  aria-pressed={selected}
-                  onClick={() =>
-                    setPreferences((current) => ({
-                      ...current,
-                      [question.key]: choice.value,
-                    }))
-                  }
+                  aria-checked={selected}
+                  onClick={() => choose(question.key, choice.value)}
+                  onDoubleClick={() => { choose(question.key, choice.value); setStep(step + 1); }}
                 >
-                  <SuggestionDiagram kind={choice.diagram} />
-                  <span className="ks-choice-copy">
+                  <span className="kwz-photo">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- static planner renders */}
+                    <img src={choice.image} alt="" loading={step === 0 ? "eager" : "lazy"} width={720} height={540} />
+                    {layout && recommended === choice.value && <em className="kwz-badge">Таны өрөөнд тохиромжтой</em>}
+                    {tight && <em className="kwz-badge is-warning">Зарим шүүгээ багтахгүй</em>}
+                    <i className="kwz-check" aria-hidden="true"><Check size={16} /></i>
+                  </span>
+                  <span className="kwz-copy">
                     <strong>{choice.title}</strong>
                     <small>{choice.description}</small>
-                  </span>
-                  <span className="ks-check">
-                    <Check size={16} />
                   </span>
                 </button>
               );
             })}
           </div>
-          <button
-            type="button"
-            className="ks-next"
-            onClick={() => setStep(step + 1)}
-          >
-            Үргэлжлүүлэх <ArrowRight size={18} />
-          </button>
+          {hint && <p className="kwz-hint" role="note">{hint.icon}<span>{hint.text}</span></p>}
+          <div className="kwz-actions">
+            {step > 0 && <button type="button" className="kwz-secondary" onClick={() => setStep(step - 1)}><ArrowLeft size={17} /> Буцах</button>}
+            <button
+              type="button"
+              className="kwz-next"
+              onClick={() => setStep(step + 1)}
+            >
+              {step === QUESTIONS.length - 1 ? "Тойм харах" : "Үргэлжлүүлэх"} <ArrowRight size={18} />
+            </button>
+          </div>
         </section>
       ) : (
-        <section className="ks-summary">
-          <p className="ks-eyebrow">{onSkip ? "УХААЛАГ САНАЛ · ТОЙМ" : "АЛХАМ 3 · ТОНОГ ТӨХӨӨРӨМЖИЙН СОНГОЛТ"}</p>
-          <h1 ref={title} tabIndex={-1}>Таны гарнитурын сонголт</h1>
-          <p className="ks-intro">
-            Сонголтоо шалгаад, хүсвэл аль нэгийг нь буцаж өөрчилнө үү.
-          </p>
-          <div className="ks-summary-grid">
+        <section className="kwz-body kwz-summary">
+          <div className="kwz-heading">
+            <p>{onSkip ? "Ухаалаг санал · тойм" : "Алхам 3 · Тоног төхөөрөмж"}</p>
+            <h1 ref={title} tabIndex={-1}>Таны гарнитурын сонголт</h1>
+            <span>Сонголтоо шалгаад, хүсвэл аль нэгийг нь дарж өөрчилнө үү.</span>
+          </div>
+          <div className="kwz-summary-grid">
             {(Object.keys(LABELS) as PreferenceKey[]).map((key, index) => {
               const choice = choiceFor(key, preferences[key]);
               return (
-                <article key={key}>
-                  <div className="ks-summary-visual">
-                    <SuggestionDiagram kind={choice?.diagram ?? "none"} />
-                  </div>
-                  <p>{LABELS[key]}</p>
-                  <h2>{choice?.title}</h2>
-                  <button type="button" onClick={() => setStep(index)}>
-                    Өөрчлөх
-                  </button>
-                </article>
+                <button type="button" key={key} onClick={() => setStep(index)} aria-label={`${LABELS[key]}: ${choice?.title}. Өөрчлөх`}>
+                  <span className="kwz-photo">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- static planner renders */}
+                    <img src={choice?.image} alt="" width={720} height={540} />
+                  </span>
+                  <span className="kwz-copy">
+                    <small>{LABELS[key]}</small>
+                    <strong>{choice?.title}</strong>
+                    <u>Өөрчлөх</u>
+                  </span>
+                </button>
               );
             })}
           </div>
-          {roomDimensions && <p className="ks-intro">Өрөө: {roomDimensions.width} × {roomDimensions.depth} м · {roomDimensions.width * roomDimensions.depth} м²</p>}
-          {needsAdjustment && <p className="ks-intro" role="status">Энэ сонголтын зарим шүүгээ өрөөнд багтахгүй байна. Байрлалаа өөрчилж сонгох эсвэл 3D загвар дээр илүүдэл шүүгээг хасаарай.</p>}
-          <button type="button" className="ks-next" disabled={disabled} onClick={() => continueToPlanner()}>
-            {disabled ? 'Загварын санг ачаалж байна…' : 'Гал тогооны загвар үүсгэх'} <ArrowRight size={18} />
-          </button>
-          {error && <p role="alert" className="ks-intro">{error}</p>}
+          <ul className="kwz-facts">
+            {roomDimensions && <li>Өрөө: {roomDimensions.width} × {roomDimensions.depth} м · {Math.round(roomDimensions.width * roomDimensions.depth * 10) / 10} м²</li>}
+            <li>{water ? "Угаалтуур усны цэгийн ойролцоо байрлана" : "Усны цэг тэмдэглээгүй"}</li>
+            <li>{preferences.hood === "none" ? "Сорогчгүй" : vent ? "Сорогч агааржуулалтын цэг рүү ойртоно" : "Сорогч шүүлтүүрээр ажиллана"}</li>
+            <li>Плитаны 32А тусгай залгуур, тавцангийн залгуурууд автоматаар тооцогдоно</li>
+          </ul>
+          {needsAdjustment && <p className="kwz-hint is-warning" role="status"><Info size={16} /><span>Энэ сонголтын зарим шүүгээ өрөөнд багтахгүй байна. Хэлбэрээ өөрчлөх эсвэл 3D загвар дээр илүүдэл шүүгээг хасаарай.</span></p>}
+          <div className="kwz-actions">
+            <button type="button" className="kwz-secondary" onClick={() => setStep(step - 1)}><ArrowLeft size={17} /> Буцах</button>
+            <button type="button" className="kwz-next" disabled={disabled} onClick={() => continueToPlanner()}>
+              {disabled ? 'Загварын санг ачаалж байна…' : 'Гал тогооны загвар үүсгэх'} <ArrowRight size={18} />
+            </button>
+          </div>
+          {error && <p role="alert" className="kwz-hint is-warning"><Info size={16} /><span>{error}</span></p>}
         </section>
       )}
     </main>
