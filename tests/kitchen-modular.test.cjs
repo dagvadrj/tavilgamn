@@ -339,6 +339,14 @@ test("push-out slides past a run of units to the nearest free spot", () => {
   near(result.kitchen.cabinets.find((c) => c.id === "c").position.x, 1500);
   assert.ok(!result.issues.some((i) => i.code === "overlap"));
 });
+test("a blocked drag stays on the side it came from instead of flipping at the midpoint", () => {
+  const k = kitchen([cabinet("a", 1500), cabinet("b", 2400)]);
+  const pose = { x: 1450, y: 0, z: 300, rotation: 0 };
+  // Without drag history the nearest free side wins.
+  near(proposeCabinetMove(k, "b", pose).kitchen.cabinets.find((c) => c.id === "b").position.x, 900);
+  const previous = k.cabinets.find((c) => c.id === "b").position;
+  near(proposeCabinetMove(k, "b", pose, previous).kitchen.cabinets.find((c) => c.id === "b").position.x, 2100);
+});
 test("move proposals still expose overlap when no free spot exists", () => {
   const k = {
     ...kitchen([cabinet("a", 300), cabinet("b", 900)]),

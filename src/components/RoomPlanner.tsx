@@ -260,6 +260,8 @@ const narrowPanel = () =>
   typeof window.matchMedia === "function" &&
   window.matchMedia("(max-width: 959px)").matches;
 
+const ROOM_EDITOR_OPEN_KEY = "casa-room-editor-open";
+
 export function RoomPlanner() {
   const { initialized, initialize, user } = useAuth();
   useEffect(() => {
@@ -334,7 +336,24 @@ function RoomPlannerEditor() {
   const [catalogFormat, setCatalogFormat] = useState<"all" | "glb" | "photo">(
     "all",
   );
-  const [roomStartOpen, setRoomStartOpen] = useState(true);
+  // Returning to /planner in the same tab reopens the room that was being edited
+  // instead of the start screen.
+  const [roomStartOpen, setRoomStartOpen] = useState(() => {
+    try {
+      return !current || sessionStorage.getItem(ROOM_EDITOR_OPEN_KEY) !== current.id;
+    } catch {
+      return true;
+    }
+  });
+  const currentId = current?.id;
+  useEffect(() => {
+    try {
+      if (!roomStartOpen && currentId) sessionStorage.setItem(ROOM_EDITOR_OPEN_KEY, currentId);
+      else if (roomStartOpen) sessionStorage.removeItem(ROOM_EDITOR_OPEN_KEY);
+    } catch {
+      /* Without session storage the start screen still offers to resume the draft. */
+    }
+  }, [roomStartOpen, currentId]);
   const loadTemplate = useCallback((design: RoomDesign) => {
     useDesigns.getState().importTemplate(design);
     setRoomStartOpen(false);

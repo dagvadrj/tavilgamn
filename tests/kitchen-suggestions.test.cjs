@@ -82,3 +82,24 @@ test("optional appliances can be omitted and the kitchen route starts directly i
   assert.match(editor, /kp-shell/);
   assert.match(editor, /onDeselect/);
 });
+
+test("a suggested U kitchen fills the back wall corner to corner and evens out the sides", () => {
+  for (const [width, depth] of [[3, 3], [3.2, 3.6], [3.5, 3], [4, 4]]) {
+    const k = createSuggestedKitchen(
+      { oven: "under-worktop", hood: "integrated", refrigerator: "integrated", layout: "u" },
+      { width, depth, height: 2.7 },
+    );
+    assert.deepEqual(placementIssues(k).filter((i) => i.severity === "error"), []);
+    const floor = k.cabinets.filter((c) => c.type !== "wall");
+    const back = floor.filter((c) => Math.abs(c.position.rotation) < 0.01);
+    const backLength = back.reduce((sum, c) => sum + c.width, 0);
+    assert.ok(k.room.width - backLength < 150, `back run leaves ${k.room.width - backLength} mm empty in ${width}x${depth}`);
+    const end = (rotation) =>
+      Math.max(...floor.filter((c) => Math.abs(c.position.rotation - rotation) < 0.01).map((c) => c.position.z + c.width / 2));
+    assert.equal(end(Math.PI / 2), end(-Math.PI / 2));
+    // Uppers run along the back wall too, apart from what tall units and the hood take.
+    const backUppers = k.cabinets.filter((c) => c.type === "wall" && Math.abs(c.position.rotation) < 0.01);
+    const upperLength = backUppers.reduce((sum, c) => sum + c.width, 0);
+    assert.ok(k.room.width - upperLength < 300, `back uppers leave ${k.room.width - upperLength} mm empty in ${width}x${depth}`);
+  }
+});

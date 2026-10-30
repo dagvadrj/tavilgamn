@@ -99,6 +99,8 @@ export function snapCabinet(
   others: ModularCabinet[],
   walls: KitchenWall[],
   room?: ModularKitchen["room"],
+  /** Pose shown on the previous drag frame; keeps a blocked item on the side it came from. */
+  previous?: CabinetPose,
 ) {
   let position = { ...requested };
   let snappedWall: KitchenWall | undefined;
@@ -227,7 +229,7 @@ export function snapCabinet(
       }
     }
   }
-  const pushed = pushOutOfOverlap({ ...cabinet, position: adjacent }, others, snappedWall, room);
+  const pushed = pushOutOfOverlap({ ...cabinet, position: adjacent }, others, snappedWall, room, previous);
   if (pushed)
     return { position: pushed.position, wallId: snappedWall?.id, neighbourId: pushed.neighbourId ?? neighbourId };
   return { position: adjacent, wallId: snappedWall?.id, neighbourId };
@@ -235,6 +237,9 @@ export function snapCabinet(
 /**
  * Slide an overlapping drag pose to the nearest free spot beside the items it hits,
  * so two bodies never share a volume (and coplanar faces never z-fight).
+ * While dragging, "nearest" is measured from the previous frame's pose: the item
+ * stays against the side it came from until the pointer itself clears the
+ * blocker, instead of flipping sides at the blocker's midpoint.
  * Returns undefined when already free or when no nearby free pose exists.
  */
 function pushOutOfOverlap(
@@ -242,6 +247,7 @@ function pushOutOfOverlap(
   others: ModularCabinet[],
   wall: KitchenWall | undefined,
   room: ModularKitchen["room"] | undefined,
+  previous?: CabinetPose,
 ): { position: CabinetPose; neighbourId?: string } | undefined {
   const blockers = (pose: CabinetPose) =>
     others.filter(
@@ -252,6 +258,7 @@ function pushOutOfOverlap(
   // Against a wall the item may only slide along it; free-standing it may also step forward/back.
   const axes = wall ? ([[right, cabinet.width / 2]] as const) : ([[right, cabinet.width / 2], [front, cabinet.depth / 2]] as const);
   const origin = cabinet.position;
+  const anchor = previous ?? origin;
   let frontier: { position: CabinetPose; neighbourId?: string }[] = [{ position: origin }];
   let best: { position: CabinetPose; neighbourId?: string } | undefined;
   let bestDistance = Infinity;
@@ -270,7 +277,7 @@ function pushOutOfOverlap(
           for (const sign of [-1, 1]) {
             const shift = sign * (half + otherHalf) - along;
             const candidate = { ...position, x: position.x + axis.x * shift, z: position.z + axis.z * shift };
-            const distance = Math.hypot(candidate.x - origin.x, candidate.z - origin.z);
+            const distance = Math.hypot(candidate.x - anchor.x, candidate.z - anchor.z);
             if (distance >= bestDistance) continue;
             const proposed = { ...cabinet, position: candidate };
             if (wall && !touchesWall(proposed, wall)) continue;
@@ -799,6 +806,7 @@ export function proposeCabinetMove(
   kitchen: ModularKitchen,
   id: string,
   requested: CabinetPose,
+  previous?: CabinetPose,
 ) {
   const cabinet = kitchen.cabinets.find((c) => c.id === id);
   if (!cabinet)
@@ -814,6 +822,7 @@ export function proposeCabinetMove(
     kitchen.cabinets,
     roomWalls(kitchen.room),
     kitchen.room,
+    previous,
   );
   const next = resolveElevations({
     ...kitchen,

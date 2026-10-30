@@ -428,8 +428,16 @@ export function ModularKitchenPlanner({
               `tavilga-kitchen-draft-guest${draftSuffix}`,
             ) ?? localStorage.getItem("tavilga-kitchen-draft-guest"))
           : null;
+        // A plain /kitchen visit resumes the draft last edited in this browser,
+        // even when it was started under a ?draft= token.
+        const lastKey = draftSuffix
+          ? null
+          : localStorage.getItem(`${legacyDraftKey}-last`);
         const raw =
           guestRaw ??
+          (lastKey?.startsWith(legacyDraftKey)
+            ? localStorage.getItem(lastKey)
+            : null) ??
           localStorage.getItem(draftKey) ??
           localStorage.getItem(legacyDraftKey);
         if (!raw && !query.has("design")) setSpaceOpen(true);
@@ -507,6 +515,7 @@ export function ModularKitchenPlanner({
     if (!ready) return;
     try {
       localStorage.setItem(draftKey, draftPayload);
+      localStorage.setItem(`${legacyDraftKey}-last`, draftKey);
       setDraftWrite({
         key: `${draftKey}:${draftPayload}`,
         ok: localStorage.getItem(draftKey) === draftPayload,
@@ -514,7 +523,7 @@ export function ModularKitchenPlanner({
     } catch {
       setDraftWrite({ key: `${draftKey}:${draftPayload}`, ok: false });
     }
-  }, [ready, draftKey, draftPayload]);
+  }, [ready, draftKey, legacyDraftKey, draftPayload]);
   useEffect(() => {
     setSaveFailure("");
   }, [design, name]);
@@ -1001,6 +1010,7 @@ export function ModularKitchenPlanner({
         ],
         roomWalls(base.room),
         base.room,
+        draftRef.current?.extras?.find((e) => e.id === id)?.position,
       );
       const next = {
         ...base,
@@ -1035,7 +1045,12 @@ export function ModularKitchenPlanner({
       setSnapMessage("Ханын хавтан · байрлалыг миллиметрээр тохируулж байна");
       return;
     }
-    const result = proposeCabinetMove(dragBase.current, id, pose);
+    const result = proposeCabinetMove(
+      dragBase.current,
+      id,
+      pose,
+      draftRef.current?.cabinets.find((c) => c.id === id)?.position,
+    );
     const mounted = resolveKitchenHoodMounts(result.kitchen);
     draftRef.current = mounted;
     setPreview(mounted);
