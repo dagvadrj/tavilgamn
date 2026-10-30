@@ -146,6 +146,8 @@ import type {
   RoomOpening,
 } from "@/lib/types";
 import { getRoomGeometry, ROOM_TYPES } from "@/lib/roomGeometry";
+import { roomSetupNumber } from "@/lib/roomSetup";
+import { kitchenFittedRoom } from "@/lib/kitchenRoomFit";
 import { RoomPlacementMap } from "./RoomPlacementMap";
 import { exteriorWindowBearing } from "@/lib/roomSunlight";
 import { fixtureFitsCeiling } from "@/lib/roomCeiling";
@@ -261,6 +263,7 @@ const narrowPanel = () =>
   window.matchMedia("(max-width: 959px)").matches;
 
 const ROOM_EDITOR_OPEN_KEY = "casa-room-editor-open";
+const PLACED_KITCHEN_KEY = "casa-room-placed-kitchen";
 
 export function RoomPlanner() {
   const { initialized, initialize, user } = useAuth();
@@ -694,8 +697,23 @@ function RoomPlannerEditor() {
   }, []);
 
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("kitchen");
-    if (roomStartOpen || !id || handledKitchen.current === id || !current)
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("kitchen");
+    // A marketplace "try in my room" builds a kitchen room sized to the design.
+    const fitRoom = params.get("fitRoom") === "1";
+    // The router can restore a handled ?kitchen= on reload; place it only once.
+    try {
+      if (id && sessionStorage.getItem(PLACED_KITCHEN_KEY) === id)
+        handledKitchen.current = id;
+    } catch {
+      /* Without session storage the in-memory guard still applies. */
+    }
+    if (
+      roomStartOpen ||
+      !id ||
+      handledKitchen.current === id ||
+      (!current && !fitRoom)
+    )
       return;
     if (!kitchenUser) {
       setKitchenOnly(true);
@@ -718,12 +736,24 @@ function RoomPlannerEditor() {
       return;
     }
     handledKitchen.current = id;
+    try {
+      sessionStorage.setItem(PLACED_KITCHEN_KEY, id);
+    } catch {
+      /* See above. */
+    }
+    const room = saved && fitRoom ? kitchenFittedRoom(saved) : null;
+    if (saved && room)
+      useDesigns.getState().createNew("40", saved.name, "kitchen", room);
     const result = saved ? useDesigns.getState().placeKitchen(saved) : null;
     const piece = result?.piece;
     if (piece) {
       setSelected(piece.instanceId);
       showTab("added");
-      setNotice(`Гарнитурыг өрөөнд байрлууллаа. ${result.message}`);
+      setNotice(
+        room
+          ? `Гарнитурт таарсан ${roomSetupNumber(room.width)} × ${roomSetupNumber(room.depth)} м гал тогооны өрөө бэлдлээ. Өөрийн өрөөний хэмжээг «Өрөө ба материал» хэсгээс өөрчилнө үү.`
+          : `Гарнитурыг өрөөнд байрлууллаа. ${result.message}`,
+      );
     } else {
       setNotice(
         saved
@@ -735,6 +765,7 @@ function RoomPlannerEditor() {
     }
     const url = new URL(window.location.href);
     url.searchParams.delete("kitchen");
+    url.searchParams.delete("fitRoom");
     window.history.replaceState(
       window.history.state,
       "",

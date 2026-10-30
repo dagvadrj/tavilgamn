@@ -56,7 +56,7 @@ export function UseKitchenDesignButton({
         );
       }
       const id = encodeURIComponent(body.kitchen.id);
-      const href = target === "room" ? `/planner?kitchen=${id}` : `/kitchen?design=${id}`;
+      const href = target === "room" ? `/planner?kitchen=${id}&fitRoom=1` : `/kitchen?design=${id}`;
       startPlannerNavigation(href);
       router.push(href);
     } catch (reason) {

@@ -2,6 +2,8 @@ import type { KitchenSnapshot } from "./kitchenAssembly";
 import { kitchenRoomPiece } from "./kitchenRoomPiece";
 import type { PlacedFurniture } from "./types";
 import { dimsFor, findFreePlacement, type PlacementRoom } from "@/three/collision";
+import { ROOM_TYPES } from "./roomGeometry";
+import type { RoomSetupDimensions } from "./roomSetup";
 
 export type KitchenRoomFitCode =
   | "fits"
@@ -95,5 +97,21 @@ export function assessKitchenRoomFit(
     code: "footprint",
     placement: null,
     message: "Өрөөний ашиглах өргөн эсвэл урт энэ гарнитурт хүрэлцэхгүй байна.",
+  };
+}
+
+/** Walkway kept free in front of and beside a ready-made kitchen. */
+const KITCHEN_WALKWAY = 1.2;
+const KITCHEN_SIDE_CLEARANCE = 0.6;
+const roundUp = (value: number) => Math.ceil(value * 10 - 1e-6) / 10;
+
+/** A kitchen room just big enough for the design, never smaller than the default kitchen. */
+export function kitchenFittedRoom(saved: KitchenSnapshot): RoomSetupDimensions {
+  const { w, d, h } = dimsFor(kitchenRoomPiece(saved, "kitchen-room-size"));
+  const base = ROOM_TYPES.kitchen;
+  return {
+    width: Math.min(20, Math.max(base.width, roundUp(w + KITCHEN_SIDE_CLEARANCE))),
+    depth: Math.min(20, Math.max(base.depth, roundUp(d + KITCHEN_WALKWAY))),
+    height: Math.min(3, Math.max(2.7, roundUp(h + 0.05))),
   };
 }
