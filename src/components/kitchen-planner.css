@@ -919,6 +919,12 @@
   font-size: 14px;
 }
 
+.ks-header > button.ks-skip {
+  justify-self: end;
+  color: #647168;
+  font-size: 13px;
+}
+
 .ks-header > span {
   justify-self: end;
   color: #647168;

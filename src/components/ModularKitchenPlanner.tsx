@@ -1729,7 +1729,7 @@ export function ModularKitchenPlanner({
       />
       {setupStage && <div className="kitchen-early-steps">
         {setupStage === "equipment" ? <>
-          <KitchenSuggestionWizard roomDimensions={{ width: design.room.width / 1000, depth: design.room.depth / 1000, height: design.room.height / 1000 }} initialPreferences={flowPreferences} onPreferencesChange={setFlowPreferences} onBack={() => changeStage("size")} onComplete={completeEquipment} disabled={busy || catalogLoading} />
+          <KitchenSuggestionWizard roomDimensions={{ width: design.room.width / 1000, depth: design.room.depth / 1000, height: design.room.height / 1000 }} initialPreferences={flowPreferences} onPreferencesChange={setFlowPreferences} onBack={() => changeStage("space")} onSkip={() => changeStage("design")} onComplete={completeEquipment} disabled={busy || catalogLoading} />
           {message && <p className="kitchen-setup-error" role="alert">{message}</p>}
         </> : <KitchenSetupSteps stage={setupStage} kitchen={design} disabled={busy} message={message} onChange={commit} onStage={changeStage} />}
       </div>}
@@ -1754,7 +1754,8 @@ export function ModularKitchenPlanner({
               className="kitchen-k-primary"
               disabled={busy}
               aria-disabled={!!lockReason || undefined}
-              onClick={() => changeStage("design")}
+              // An empty kitchen starts from the smart wizard; an existing one goes straight to editing.
+              onClick={() => changeStage(lockReason || design.cabinets.length ? "design" : "equipment")}
             >
               Дараах: Тохижуулах
             </button>

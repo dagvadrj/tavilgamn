@@ -216,7 +216,7 @@ test("planner copies are stored in the GLB snapshot so open-in-planner clones th
   const server = readFileSync("src/lib/kitchenGlbPlannerServer.ts", "utf8");
   assert.match(server, /parseKitchen\(value\)/);
   const page = readFileSync("src/components/pages/KitchenPageClient.tsx", "utf8");
-  assert.match(page, /design\.plannerReady && \(\s*<UseKitchenDesignButton/);
+  assert.match(page, /design\.plannerReady && \(\s*<li>\s*<UseKitchenDesignButton/);
 });
 
 /** Two 600 mm base carcasses side by side (own sides back to back), each with a door. */

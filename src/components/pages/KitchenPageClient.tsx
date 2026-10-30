@@ -4,9 +4,6 @@ import {
   ArrowLeft,
   ArrowUpRight,
   Check,
-  Clock3,
-  CookingPot,
-  MapPin,
   Ruler,
   ShieldCheck,
   Store,
@@ -70,8 +67,6 @@ export function KitchenContent({ design }: PageData["kitchen"]) {
           poster={design.thumbnailUrl}
         />
         <aside className="kd-summary">
-          <div className="kd-eyebrow">ГАЛ ТОГООНЫ ЗАГВАР</div>
-          <h1>{design.title}</h1>
           <Link
             className="kd-store-link"
             href={`/catalog/stores/${design.storeId}`}
@@ -80,104 +75,61 @@ export function KitchenContent({ design }: PageData["kitchen"]) {
             {design.storeName}
             <ArrowUpRight size={14} />
           </Link>
-          <div className="kd-style-tags">
-            {style && <span>{style}</span>}
-            {layout && <span>{layout}</span>}
-          </div>
+          <h1>{design.title}</h1>
+          {(style || layout) && (
+            <p className="kd-meta">{[style, layout].filter(Boolean).join(" · ")}</p>
+          )}
           <div className="kd-price">
-            <span>
-              {design.pricingMode === "quote"
-                ? "Үнийн санал"
-                : design.pricingMode === "fixed"
-                  ? "Үнэ"
-                  : "Эхлэх үнэ"}
-            </span>
             <strong>{kitchenPriceLabel(design)}</strong>
-            <p>
-              {design.pricingMode === "fixed"
-                ? "Өөрчлөлт оруулбал үнийг дахин тохиролцоно."
-                : "Хэмжээ, материалын сонголтоос хамаарна."}
-            </p>
+            <span>
+              {design.pricingMode === "fixed" ? "Тогтсон үнэ" : design.pricingMode === "quote" ? "Үйлдвэр үнийн санал өгнө" : "Эхлэх үнэ"}
+              {design.leadTimeDays ? ` · ${design.leadTimeDays} хоногт хийнэ` : ""}
+            </span>
           </div>
-          <dl className="kd-facts">
-            <div>
-              <dt>
-                <Ruler size={17} />
-                {design.model ? "Гадна хэмжээ" : "Тохирох өрөө"}
-              </dt>
-              <dd>
-                {design.model
-                  ? `${design.model.widthMm} × ${design.model.depthMm} × ${design.model.heightMm} мм`
-                  : `${design.roomWidthMm} × ${design.roomDepthMm} мм`}
-              </dd>
-            </div>
-            <div>
-              <dt>
-                <CookingPot size={17} />
-                Бүрдэл
-              </dt>
-              <dd>{design.cabinetCount} модуль</dd>
-            </div>
-            <div>
-              <dt>
-                <Clock3 size={17} />
-                Үйлдвэрлэх хугацаа
-              </dt>
-              <dd>
-                {design.leadTimeDays
-                  ? `${design.leadTimeDays} хоног`
-                  : "Тохиролцоно"}
-              </dd>
-            </div>
-            <div>
-              <dt>
-                <ShieldCheck size={17} />
-                Баталгаа
-              </dt>
-              <dd>
-                {design.warrantyMonths
-                  ? `${design.warrantyMonths} сар`
-                  : "Тохиролцоно"}
-              </dd>
-            </div>
-          </dl>
-          <div className="kd-actions">
-            {/* A GLB design opens in the planner through its confirmed modules. */}
+          <p className="kd-quick">
+            <Ruler size={15} />
+            {design.model
+              ? `${design.model.widthMm} × ${design.model.depthMm} мм`
+              : `${design.roomWidthMm} × ${design.roomDepthMm} мм`}
+            <span aria-hidden="true">·</span>
+            {design.cabinetCount} модуль
+          </p>
+          {/* One clear route: try it, see it in your room, then order. */}
+          <ol className="kd-steps">
             {design.plannerReady && (
-              <UseKitchenDesignButton
+              <li>
+                <UseKitchenDesignButton
+                  designId={design.id}
+                  returnPath={`/kitchens/${design.slug}`}
+                />
+              </li>
+            )}
+            {design.plannerReady && (
+              <li>
+                <UseKitchenDesignButton
+                  designId={design.id}
+                  returnPath={`/kitchens/${design.slug}`}
+                  target="room"
+                />
+              </li>
+            )}
+            <li>
+              <KitchenQuoteRequest
                 designId={design.id}
                 returnPath={`/kitchens/${design.slug}`}
+                defaultRoom={{
+                  widthMm: design.roomWidthMm,
+                  depthMm: design.roomDepthMm,
+                  heightMm: Math.max(design.maxHeightMm, 2700),
+                }}
               />
-            )}
-            <KitchenQuoteRequest
-              designId={design.id}
-              returnPath={`/kitchens/${design.slug}`}
-              defaultRoom={{
-                widthMm: design.roomWidthMm,
-                depthMm: design.roomDepthMm,
-                heightMm: Math.max(design.maxHeightMm, 2700),
-              }}
-            />
-          </div>
-          <p className="kd-action-hint">
-            {!design.plannerReady
-              ? "Өрөөнийхөө хэмжээг бичээд үйлдвэрлэгчээс тохируулсан үнийн санал аваарай."
-              : "Өрөөний хэмжээ, өнгө, материалыг өөрчлөн төлөвлөөрэй."}
+            </li>
+          </ol>
+          <p className="kd-service-lines">
+            <Wrench size={14} />
+            {design.installationIncluded ? "Угсралт багтсан" : "Угсралт тусдаа"}
+            {design.warrantyMonths ? <> · <ShieldCheck size={14} /> {design.warrantyMonths} сар баталгаа</> : null}
           </p>
-          <div className="kd-service-lines">
-            <p>
-              <Wrench size={15} />
-              {design.installationIncluded
-                ? "Угсралт үнэд багтсан"
-                : "Угсралтын үнийг тусад нь тохирно"}
-            </p>
-            {design.serviceAreas.length > 0 && (
-              <p>
-                <MapPin size={15} />
-                {design.serviceAreas.join(", ")}
-              </p>
-            )}
-          </div>
         </aside>
       </div>
       <section className="kd-details" aria-label="Загварын дэлгэрэнгүй">
@@ -209,6 +161,26 @@ export function KitchenContent({ design }: PageData["kitchen"]) {
                 {design.roomWidthMm} × {design.roomDepthMm} мм
               </dd>
             </div>
+            {design.model && (
+              <div>
+                <dt>Гадна хэмжээ</dt>
+                <dd>{design.model.widthMm} × {design.model.depthMm} × {design.model.heightMm} мм</dd>
+              </div>
+            )}
+            <div>
+              <dt>Үйлдвэрлэх хугацаа</dt>
+              <dd>{design.leadTimeDays ? `${design.leadTimeDays} хоног` : "Тохиролцоно"}</dd>
+            </div>
+            <div>
+              <dt>Баталгаа</dt>
+              <dd>{design.warrantyMonths ? `${design.warrantyMonths} сар` : "Тохиролцоно"}</dd>
+            </div>
+            {design.serviceAreas.length > 0 && (
+              <div>
+                <dt>Үйлчлэх бүс</dt>
+                <dd>{design.serviceAreas.join(", ")}</dd>
+              </div>
+            )}
           </dl>
           {design.tags.length > 0 && (
             <div className="kd-tags">

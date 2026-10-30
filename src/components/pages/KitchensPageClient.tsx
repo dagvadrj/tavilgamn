@@ -1,6 +1,6 @@
 import type { PageData } from "@/lib/pageData";
 import { PlannerLink as Link } from "@/components/PlannerLink";
-import { ArrowUpRight, CookingPot } from "lucide-react";
+import { CookingPot } from "lucide-react";
 import { kitchenPriceLabel } from "@/lib/kitchenMarketplace";
 import { DirectoryHeading } from "@/components/DirectoryHeading";
 import { DirectoryCard } from "@/components/DirectoryCard";
@@ -18,26 +18,23 @@ export function KitchensContent({
   const designs = allDesigns.filter((design) =>
     kitchenDesignMatchesSearch(design, query),
   );
-  const tags = [...new Set(allDesigns.flatMap((design) => design.tags))].slice(
-    0,
-    12,
-  );
+  // Only tags shared by several designs help people browse; one-off tags are noise.
+  const tagCounts = new Map<string, number>();
+  for (const tag of allDesigns.flatMap((design) => design.tags))
+    tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+  const tags = [...tagCounts]
+    .filter(([, count]) => count > 1)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([tag]) => tag);
   return (
     <div className="shop-container directory-page">
       <DirectoryHeading
         title="Гал тогооны загварууд"
         eyebrow="Таны гэрт тохирох гал тогоо"
-        description="Үйлдвэр, гар урчуудын баталгаажуулсан загваруудыг өрөөний хэмжээ, үнэ, хийх хугацаагаар нь харьцуулаарай."
+        description="Бэлэн загвараа сонгоод 3D-ээр туршиж, өрөөндөө байрлуулж үзээд захиалаарай."
         action={{ href: "/kitchen", label: "Өөрөө төлөвлөх" }}
       />
-      <nav className="directory-filters" aria-label="Гал тогооны сонголт">
-        <Link href="/kitchens" aria-current="page">
-          Бүх загвар · {designs.length}
-        </Link>
-        <Link href="/stores">
-          Үйлдвэр, дэлгүүрүүд <ArrowUpRight size={15} aria-hidden="true" />
-        </Link>
-      </nav>
       <Form
         action="/kitchens"
         className="kitchen-directory-search"
@@ -73,11 +70,10 @@ export function KitchensContent({
           ))}
         </div>
       )}
-      {query && (
-        <p className="kitchen-directory-results">
-          «{query}» · {designs.length} загвар
-        </p>
-      )}
+      <p className="kitchen-directory-results">
+        {query ? `«${query}» · ` : ""}
+        {designs.length} загвар
+      </p>
       {designs.length ? (
         <div className="directory-grid">
           {designs.map((design) => (
@@ -88,11 +84,6 @@ export function KitchensContent({
               image={design.thumbnailUrl}
               badge={design.model ? "Гал тогоо · 3D" : "Гал тогоо"}
               eyebrow={design.storeName}
-              description={
-                design.shortDescription ||
-                design.description ||
-                "Дэлгэрэнгүй мэдээллийг үйлдвэрлэгчээс авна."
-              }
               tags={[
                 `${design.roomWidthMm} × ${design.roomDepthMm} мм`,
                 `${design.cabinetCount} модуль`,

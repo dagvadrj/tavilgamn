@@ -195,7 +195,7 @@ function SuggestionDiagram({ kind }: { kind: string }) {
   );
 }
 
-export function KitchenSuggestionWizard({ roomDimensions, onBack, initialPreferences, onPreferencesChange, onComplete, onSetupStage, disabled = false }: { roomDimensions?: RoomSetupDimensions; onBack?: () => void; initialPreferences?: KitchenSuggestionPreferences; onPreferencesChange?: (preferences: KitchenSuggestionPreferences) => void; onComplete?: (preferences: KitchenSuggestionPreferences) => boolean | void; onSetupStage?: (stage: "room" | "size") => void; disabled?: boolean } = {}) {
+export function KitchenSuggestionWizard({ roomDimensions, onBack, onSkip, initialPreferences, onPreferencesChange, onComplete, onSetupStage, disabled = false }: { roomDimensions?: RoomSetupDimensions; onBack?: () => void; onSkip?: () => void; initialPreferences?: KitchenSuggestionPreferences; onPreferencesChange?: (preferences: KitchenSuggestionPreferences) => void; onComplete?: (preferences: KitchenSuggestionPreferences) => boolean | void; onSetupStage?: (stage: "room" | "size") => void; disabled?: boolean } = {}) {
   const router = useRouter();
   const user = useAuth((state) => state.user);
   const [step, setStep] = useState(0);
@@ -245,7 +245,9 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack, initialPrefere
         <strong>
           <CookingPot size={21} /> tavilga.mn kitchen
         </strong>
-        <span>Алхам 3 / 7 · {summary ? "Тойм" : question.eyebrow}</span>
+        {onSkip
+          ? <button type="button" className="ks-skip" onClick={onSkip}>Шүүгээгээ өөрөө сонгох <ArrowRight size={17} /></button>
+          : <span>Алхам 3 / 7 · {summary ? "Тойм" : question.eyebrow}</span>}
       </header>
 
       <nav className="ks-progress" aria-label="Төхөөрөмжийн сонголт">
@@ -253,7 +255,7 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack, initialPrefere
       </nav>
       {!summary ? (
         <section className="ks-question" key={question.key}>
-          <p className="ks-eyebrow">ГАРНИТУРАА СОНГОЁ · {question.eyebrow}</p>
+          <p className="ks-eyebrow">{onSkip ? "УХААЛАГ САНАЛ" : "ГАРНИТУРАА СОНГОЁ"} · {question.eyebrow}</p>
           <h1 ref={title} tabIndex={-1}>{question.title}</h1>
           <p className="ks-intro">{question.description}</p>
           <div
@@ -296,7 +298,7 @@ export function KitchenSuggestionWizard({ roomDimensions, onBack, initialPrefere
         </section>
       ) : (
         <section className="ks-summary">
-          <p className="ks-eyebrow">АЛХАМ 3 · ТОНОГ ТӨХӨӨРӨМЖИЙН СОНГОЛТ</p>
+          <p className="ks-eyebrow">{onSkip ? "УХААЛАГ САНАЛ · ТОЙМ" : "АЛХАМ 3 · ТОНОГ ТӨХӨӨРӨМЖИЙН СОНГОЛТ"}</p>
           <h1 ref={title} tabIndex={-1}>Таны гарнитурын сонголт</h1>
           <p className="ks-intro">
             Сонголтоо шалгаад, хүсвэл аль нэгийг нь буцаж өөрчилнө үү.

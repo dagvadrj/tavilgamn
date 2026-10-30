@@ -53,7 +53,7 @@ test("kitchen marketplace exposes complete listing details without a duplicate d
   assert.match(detail, /UseKitchenDesignButton/);
   assert.match(
     fs.readFileSync("src/components/UseKitchenDesignButton.tsx", "utf8"),
-    /Өөрийн төсөлд ашиглах/,
+    /Гал тогооны planner-т турших/,
   );
 });
 

@@ -2,7 +2,7 @@
 import { startPlannerNavigation } from "@/lib/plannerNavigation";
 
 import { useEffect, useRef, useState } from "react";
-import { Copy, LoaderCircle } from "lucide-react";
+import { Copy, LoaderCircle, Sofa } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
@@ -10,9 +10,12 @@ import { useAuth } from "@/store/auth";
 export function UseKitchenDesignButton({
   designId,
   returnPath,
+  target = "kitchen",
 }: {
   designId: string;
   returnPath: string;
+  /** "room" copies the design and drops it straight into the user's room plan. */
+  target?: "kitchen" | "room";
 }) {
   const router = useRouter();
   const user = useAuth((state) => state.user);
@@ -52,7 +55,8 @@ export function UseKitchenDesignButton({
           body?.error ?? "Загварыг өөрийн төсөлд хуулж чадсангүй.",
         );
       }
-      const href = `/kitchen?design=${encodeURIComponent(body.kitchen.id)}`;
+      const id = encodeURIComponent(body.kitchen.id);
+      const href = target === "room" ? `/planner?kitchen=${id}` : `/kitchen?design=${id}`;
       startPlannerNavigation(href);
       router.push(href);
     } catch (reason) {
@@ -69,16 +73,18 @@ export function UseKitchenDesignButton({
     <div>
       <button
         type="button"
-        className="btn-primary w-full disabled:cursor-wait disabled:opacity-60"
+        className={`${target === "room" ? "btn-ghost" : "btn-primary"} w-full disabled:cursor-wait disabled:opacity-60`}
         disabled={!initialized || busy}
         onClick={() => void handleUseDesign()}
       >
         {busy ? (
           <LoaderCircle className="animate-spin" size={16} />
+        ) : target === "room" ? (
+          <Sofa size={16} />
         ) : (
           <Copy size={16} />
         )}
-        {busy ? "Төсөл үүсгэж байна…" : "Өөрийн төсөлд ашиглах"}
+        {busy ? "Хуулж байна…" : target === "room" ? "Өрөөндөө байрлуулж үзэх" : "Гал тогооны planner-т турших"}
       </button>
       {error ? (
         <p className="mt-2 text-xs leading-5 text-red-700" role="alert">

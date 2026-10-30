@@ -4,7 +4,7 @@ import { ArrowUpRight, Image as ImageIcon, MapPin } from "lucide-react";
 
 export function DirectoryCard({ href, title, image, badge, eyebrow, description, location, tags, summary, action }: {
   href: string; title: string; image?: string | null; badge: string; eyebrow?: string;
-  description: string; location?: string; tags: string[];
+  description?: string; location?: string; tags: string[];
   summary: { label: string; value: string; note?: string }; action: string;
 }) {
   return <article className="directory-card directory-card-unified">
@@ -18,7 +18,7 @@ export function DirectoryCard({ href, title, image, badge, eyebrow, description,
       {eyebrow && <p className="directory-card-eyebrow">{eyebrow}</p>}
       <h2><Link href={href}>{title}</Link></h2>
       {location && <p className="directory-card-location"><MapPin size={14} aria-hidden="true"/>{location}</p>}
-      <p className="directory-card-description">{description}</p>
+      {description && <p className="directory-card-description">{description}</p>}
       <div className="directory-card-tags">{tags.map(tag => <span key={tag}>{tag}</span>)}</div>
       <div className="directory-card-summary"><div><small>{summary.label}</small><strong>{summary.value}</strong></div>{summary.note && <span>{summary.note}</span>}</div>
       <Link href={href} className="directory-card-cta">{action}<ArrowUpRight size={17} aria-hidden="true"/></Link>

@@ -326,6 +326,7 @@ function RoomPlannerEditor() {
   const kitchenLibrary = useKitchens(),
     kitchenUser = useAuth((state) => state.user);
   const handledKitchen = useRef<string | null>(null);
+  const refreshedForKitchen = useRef<string | null>(null);
   const [kitchenOnly, setKitchenOnly] = useState(false);
   const [catalogScope, setCatalogScope] = useState<RoomCatalogScope>(
     DEFAULT_ROOM_CATALOG_FILTERS.scope,
@@ -689,8 +690,15 @@ function RoomPlannerEditor() {
       if (kitchenLibrary.error) setLeftOpen(true);
       return;
     }
-    handledKitchen.current = id;
+    if (kitchenLibrary.loading) return;
     const saved = kitchenLibrary.items.find((item) => item.id === id);
+    // A marketplace copy made after the list loaded needs one fresh fetch.
+    if (!saved && refreshedForKitchen.current !== id) {
+      refreshedForKitchen.current = id;
+      void kitchenLibrary.refresh();
+      return;
+    }
+    handledKitchen.current = id;
     const result = saved ? useDesigns.getState().placeKitchen(saved) : null;
     const piece = result?.piece;
     if (piece) {
