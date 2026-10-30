@@ -3,7 +3,8 @@ import { hasCooktop, ovenSlot } from "./plitka";
 
 /** Manufacturing dimensions are authored in millimetres. Rendering only converts units. */
 export const PANEL_THICKNESS = 18;
-export const FRONT_GAP = 2;
+/** 2 mm clearance on each side of a front: a 600 mm cabinet gets a 596 mm door. */
+export const FRONT_GAP = 4;
 export const PLINTH_HEIGHT = 80;
 export const DRAWER_SIDE_THICKNESS = 16;
 export const DRAWER_BOTTOM_THICKNESS = 6;
@@ -33,7 +34,7 @@ export interface CabinetDrawer {
   panels: KitchenPanel[];
 }
 const mm = (value: number) => Math.round(value * 1000) / 1000;
-// Keep half-millimicron centres: rounding centres to .001 would alter a 2 mm joint.
+// Keep half-millimicron centres: rounding centres to .001 would alter a front joint.
 const vector = (v: PanelVector): PanelVector => v.map(value => Math.round(value * 1e6) / 1e6) as PanelVector;
 function panel(id: string, name: string, role: PanelRole, size: PanelVector, position: PanelVector): KitchenPanel {
   return { id, name, role, size: size.map(mm) as PanelVector, position: vector(position) };
@@ -66,7 +67,7 @@ export function cabinetCarcassPanels(c: ModularCabinet): KitchenPanel[] {
   }
   return panels;
 }
-/** Actual face dimensions include 1 mm perimeter clearances and 2 mm between neighbours. */
+/** Actual face dimensions include 2 mm perimeter clearances and 4 mm between neighbours. */
 export function cabinetFronts(c: ModularCabinet): CabinetFront[] {
   if (!hasCarcass(c) || c.opening === "open") return [];
   const w = c.width, h = c.height, d = c.depth, toe = c.opening === "hood" ? 80 : cabinetToe(c), slot = ovenSlot(c);

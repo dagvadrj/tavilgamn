@@ -13,11 +13,11 @@ test('displayed component dimensions come from the same authored faces and plint
   const face = cabinetFronts(c)[0], size = getComponentSize(c, getComponents(c).find(p => p.type === 'drawer-front'));
   assert.equal(size.height,face.height); assert.equal(size.width,face.width);
   const corner = { ...createCabinet('base', 'corner',1000), corner:true, cornerSide:'right', doorCount:1 };
-  assert.equal(getComponentSize(corner,getComponents(corner).find(p=>p.type==='door-front')).width,398);
+  assert.equal(getComponentSize(corner,getComponents(corner).find(p=>p.type==='door-front')).width,396);
   assert.equal(getComponentSize(c,getComponents(c).find(p=>p.type==='plinth')).depth,18);
   const hood=createHood('hood','under-cabinet');
   assert.equal(getComponentSize(hood,getComponents(hood).find(p=>p.type==='hood')).height,80);
-  assert.equal(getComponentSize(hood,getComponents(hood).find(p=>p.type==='door-front')).height,658);
+  assert.equal(getComponentSize(hood,getComponents(hood).find(p=>p.type==='door-front')).height,656);
 });
 
 const near = (a, b) => assert.ok(Math.abs(a - b) < 1e-6, `${a} != ${b}`);
@@ -47,7 +47,7 @@ test('carcass, fronts and complete drawer boxes have no intersecting physical pa
   }
 });
 
-test('two and three drawer fronts keep exactly 2 mm joints with ascending opening travel', () => {
+test('two and three drawer fronts keep exactly 4 mm joints (2 mm per side) with ascending opening travel', () => {
   for (const drawerCount of [2, 3]) for (const height of [800, 820, 899, 900]) {
     const c = { ...createCabinet('base', 'drawers'), opening: 'drawers', drawerCount, height };
     const fronts = cabinetFronts(c), drawers = cabinetDrawers(c);
