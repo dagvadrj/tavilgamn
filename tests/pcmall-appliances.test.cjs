@@ -87,7 +87,9 @@ test('seven imports occupy valid separate volumes and survive saved kitchen pars
  assert.equal(restored.extras.length,7);
  for(const extra of restored.extras)assert.ok(pcmallAppliance(extra.productId,extra.model));
  const washer=restored.extras.find(e=>e.asset.type==='washing-machine');assert.equal(washer.height,850);assert.equal(washer.position.y,0);
- const hood=restored.extras.find(e=>e.asset.type==='hood');assert.equal(hood.position.y,1450);
+ const hood=restored.extras.find(e=>e.asset.type==='hood'),host=restored.cabinets.find(c=>c.id===hood.mount.cabinetId);
+ assert.equal(hood.position.y+hood.height,host.position.y);
+ assert.equal(hood.position.z-hood.depth/2,host.position.z-host.depth/2);
 });
 
 test('a forged integrated model cannot bypass component restrictions and countertop imports need an actual top',()=>{

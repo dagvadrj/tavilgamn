@@ -3,6 +3,7 @@ import { PCMALL_APPLIANCES, PCMALL_MODEL_BASE_PATH, pcmallAppliance } from "@/li
 import type { ModularCabinet } from "@/lib/kitchenCabinets";
 import { GLBFurnitureMesh } from "./GLBFurnitureMesh";
 import { ovenSlot } from "@/lib/plitka";
+import { hoodMountPosition } from "@/lib/kitchenHoodMounting";
 
 export function KitchenCatalogAppliance({ cabinet, cooktop = false }: { cabinet: ModularCabinet; cooktop?: boolean }) {
   const type = cooktop ? "cooktop" : cabinet.opening === "refrigerator" ? "fridge" : cabinet.opening;
@@ -11,8 +12,9 @@ export function KitchenCatalogAppliance({ cabinet, cooktop = false }: { cabinet:
   const oven = type === "oven";
   // Local origin is the cabinet floor; a cooktop caller supplies the worktop surface.
   const underCabinet = type === 'hood' && cabinet.hoodMount === 'under-cabinet';
+  const hoodPose = hoodMountPosition({ depth: cabinet.depth, position: { x: 0, y: 0, z: 0, rotation: 0 } }, appliance);
   const y = cooktop ? -(appliance.height - 3) / 1000 : oven ? (cabinet.type === 'tall' ? (ovenSlot(cabinet)?.bottom ?? 900) + 5 : cabinet.height - appliance.height) / 1000 : underCabinet ? -appliance.height / 1000 : 0;
-  const z = oven ? (cabinet.depth - appliance.depth + 24) / 2000 : underCabinet ? (cabinet.depth - appliance.depth) / 2000 : 0;
+  const z = oven ? (cabinet.depth - appliance.depth + 24) / 2000 : underCabinet ? hoodPose.z / 1000 : 0;
   return <group name={`Catalog-appliance-${appliance.type}-${cabinet.id}`}>
     {cabinet.catalogHousing === 'wall-hood' && <mesh castShadow receiveShadow position={[0, (appliance.height + cabinet.height) / 2000, -cabinet.depth / 2000 + .1]}>
       <boxGeometry args={[.18, (cabinet.height - appliance.height) / 1000, .18]} />

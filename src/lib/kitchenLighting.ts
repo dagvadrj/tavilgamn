@@ -53,6 +53,7 @@ export function kitchenLightStrips(
   const settings = kitchen.lineLighting;
   if (!settings) return [];
   const strips: KitchenLightStrip[] = [];
+  const hoodBoxes = new Set(kitchen.extras?.filter(extra => extra.asset?.type === "hood" && extra.mount).map(extra => extra.mount!.cabinetId));
   for (const kind of ["underCabinet", "plinth"] as const) {
     if (!settings[kind]) continue;
     const groups = new Map<
@@ -67,7 +68,7 @@ export function kitchenLightStrips(
     for (const c of kitchen.cabinets) {
       if (
         kind === "underCabinet"
-          ? c.type !== "wall" || c.opening === "hood"
+          ? c.type !== "wall" || c.opening === "hood" || hoodBoxes.has(c.id)
           : c.type !== "base"
       )
         continue;

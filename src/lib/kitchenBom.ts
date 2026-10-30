@@ -64,7 +64,7 @@ export function buildKitchenBom(kitchen:ModularKitchen, modules:KitchenCatalogMo
     }
   }
   for(const extra of kitchen.extras??[])items.push({id:extra.id,label:extra.name,quantity:1,unit:"ш",dimensions:dims(extra.width,extra.height,extra.depth),
-    material:`${extra.material} · ${extra.color}`,unitPrice:price(catalog.get(extra.productId),extra.color),included:false});
+    material:`${extra.material} · ${extra.color}`,unitPrice:price(catalog.get(extra.productId),extra.color),included:false,productId:extra.productId,modelId:extra.model?.id});
   for(const [index,top] of fitCountertops(kitchen).entries())items.push({id:top.id,label:`Тавцан ${index+1}`,quantity:rounded(top.width*top.depth/1e6),unit:"м²",
     dimensions:dims(top.width,top.thickness,top.depth),material:kitchen.countertop.materialId??kitchen.countertop.finish??kitchen.countertop.material,unitPrice:null,included:false});
   for(const [index,panel] of fitBacksplashes(kitchen).entries())items.push({id:panel.id,label:`Ханын хавтан ${index+1}`,quantity:rounded(panel.width*panel.height/1e6),unit:"м²",

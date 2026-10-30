@@ -32,6 +32,7 @@ export function createKitchenFromSelection(previous: ModularKitchen, preferences
       const issue = placementIssues(checked).find(i => i.severity === 'error');
       if (!issue) {
         for (const extra of cloneKitchen(previous).extras ?? []) {
+          if (extra.asset?.type === "hood" && extra.mount) continue; // The new hood answer replaces old mounted equipment.
           const placed = findExtraSpace(checked, extra);
           if (!placed) throw new Error(`${extra.name} байрлуулах зай алга. Өмнөх загвар хадгалагдсан.`);
           checked.extras = [...(checked.extras ?? []), placed];

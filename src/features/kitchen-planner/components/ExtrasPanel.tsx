@@ -62,6 +62,7 @@ export function ExtrasPanel({
       {selected ? (
         <fieldset disabled={disabled} className="km-fields">
           <h2>{selected.name}</h2>
+          {selected.mount && <p>Box-ийн доор холбогдсон. Өндөр, чиглэл нь box-оо дагана. Өөр box-ийн доор чирж шилжүүлээрэй.</p>}
           {onFocus && <button type="button" onClick={onFocus}>{selected.planningFurniture ? "Тавилга руу ойртуулах" : "Төхөөрөмж рүү ойртуулах"}</button>}
           <p>
             {selected.width} × {selected.height} × {selected.depth} мм
@@ -71,7 +72,7 @@ export function ExtrasPanel({
             <DimensionInput label="Гүн" value={selected.depth} min={selected.planningFurniture === "island" ? 600 : 350} max={1400} onCommit={depth => onChange({ ...selected, depth: Math.round(depth) })} />
             <DimensionInput label="Өндөр" value={selected.height} min={750} max={Math.min(1200, room.height)} onCommit={height => onChange({ ...selected, height: Math.round(height) })} />
           </>}
-          {selected.asset && (
+          {selected.asset && !selected.mount && (
             <DimensionInput
               label="Шалнаас өндөр (Y) · мм"
               value={selected.position.y}
@@ -102,6 +103,7 @@ export function ExtrasPanel({
           />
           <button
             type="button"
+            disabled={Boolean(selected.mount)}
             onClick={() =>
               onChange({
                 ...selected,

@@ -50,7 +50,7 @@ export function KitchenHandoffSheet({
 }) {
   const view = useMemo(() => presentKitchenBom(bom), [bom]);
   const items = kitchen.room.items ?? [];
-  const warnings = handoffWarnings({ room: kitchen.room, cabinets: kitchen.cabinets, unpricedCount: view.unpriced.length });
+  const warnings = handoffWarnings({ room: kitchen.room, cabinets: kitchen.cabinets, extras: kitchen.extras, unpricedCount: view.unpriced.length });
   const openings = items.filter((item) => item.kind === "door" || item.kind === "window");
   return (
     <div className="kitchen-k-handoff">

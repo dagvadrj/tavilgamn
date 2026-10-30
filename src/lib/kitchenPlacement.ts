@@ -2,6 +2,7 @@ import { applianceIssue } from "./plitka";
 import { roomContainsFootprint } from "./kitchenRoomOutline";
 import { kitchenCornerGeometry } from "./kitchenCornerGeometry";
 import { kitchenWallPanels } from "./kitchenWallPanels";
+import { hoodFitsCabinet, hoodMountPosition, resolveKitchenHoodMounts, separateKitchenHoods } from "./kitchenHoodMounting";
 import {
   roomWalls,
   type CabinetPose,
@@ -229,8 +230,9 @@ export function snapCabinet(
 }
 
 export function resolveElevations(kitchen: ModularKitchen): ModularKitchen {
+  kitchen = separateKitchenHoods(kitchen);
   const bases = kitchen.cabinets.filter((c) => c.type === "base");
-  return {
+  return resolveKitchenHoodMounts({
     ...kitchen,
     cabinets: kitchen.cabinets.map((cabinet) => {
       if (cabinet.type === "tall")
@@ -256,7 +258,7 @@ export function resolveElevations(kitchen: ModularKitchen): ModularKitchen {
         },
       };
     }),
-  };
+  });
 }
 export function wallCabinetClearance(
   cabinet: ModularCabinet,
@@ -398,6 +400,24 @@ export function placementIssues(kitchen: ModularKitchen): PlacementIssue[] {
         });
   }
   for (const [index, extra] of (kitchen.extras ?? []).entries()) {
+    if (extra.mount) {
+      const host = kitchen.cabinets.find(c => c.id === extra.mount!.cabinetId);
+      if (!host || !hoodFitsCabinet(extra, host))
+        issues.push({ code: "appliance", ids: [extra.id], message: "Сорогч багтах дээд box сонгоно уу. Холбосон box устсан эсвэл хэмжээ нь тохирохгүй байна.", severity: "error" });
+      else {
+        const expected = hoodMountPosition(host, extra);
+        if ((["x", "y", "z", "rotation"] as const).some(key => Math.abs(extra.position[key] - expected[key]) > 1e-5))
+          issues.push({ code: "appliance", ids: [extra.id, host.id], message: "Сорогчийн байрлал box-ийн суулттай таарахгүй байна.", severity: "error" });
+      }
+    }
+    if (extra.asset?.type === "hood") {
+      if (!extra.mount && kitchen.cabinets.some(c => c.type === "wall" && footprintsOverlap(extra, c) &&
+        Math.abs(extra.position.y + extra.height - c.position.y) <= 2))
+        issues.push({ code: "appliance", ids: [extra.id], message: "Сорогчийг багтах, сул дээд box-ийн доор төвлөж холбоно уу.", severity: "error" });
+      const below = kitchen.cabinets.filter(c => c.type === "base" && footprintsOverlap(extra, c));
+      if (below.some(c => extra.position.y - c.position.y - c.height - kitchen.countertop.thickness < 450 - EPS))
+        issues.push({ code: "clearance", ids: [extra.id], message: "Сорогчийн доод тал тавцангаас 450 мм-ээс бага зайтай байна. Box-ийн өндрийг тохируулна уу.", severity: "error" });
+    }
     if (extra.planningFurniture) {
       const aisle = { ...extra, width: extra.width + 1800, depth: extra.depth + 1800 };
       if (kitchen.cabinets.some(c => c.type !== "wall" && cabinetsOverlap(aisle, c)))

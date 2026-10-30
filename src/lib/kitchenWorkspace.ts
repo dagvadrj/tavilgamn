@@ -208,6 +208,7 @@ export function measureFormErrors(form: MeasureForm) {
 export function handoffWarnings(input: {
   room: KitchenRoom;
   cabinets: { id: string; type: string; opening?: string; catalogAdaptation?: string }[];
+  extras?: { asset?: { type: string } }[];
   unpricedCount: number;
 }) {
   const warnings: string[] = [];
@@ -216,7 +217,7 @@ export function handoffWarnings(input: {
     warnings.push("Тавцангийн урт, хэлбэрийг хэмжилтээр батална.");
   if (items.some((item) => item.kind === "window"))
     warnings.push("Цонх нээгдэхэд холигч, дээд шүүгээтэй мөргөлдөх эсэхийг газар дээр нь шалгана.");
-  if (items.some((item) => item.kind === "vent") || input.cabinets.some((cabinet) => cabinet.opening === "hood"))
+  if (items.some((item) => item.kind === "vent") || input.cabinets.some((cabinet) => cabinet.opening === "hood") || input.extras?.some(extra => extra.asset?.type === "hood"))
     warnings.push("Агааржуулалтын хоолойн урт, чиглэлийг хэмжигч тодруулна.");
   if (input.cabinets.some((cabinet) => cabinet.catalogAdaptation === "sink") && !items.some((item) => item.kind === "water"))
     warnings.push("Угаалтуур байгаа ч ус/бохирын цэг тэмдэглэгдээгүй.");

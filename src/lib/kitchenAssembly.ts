@@ -24,6 +24,7 @@ import {
 } from "./kitchenPlacement";
 import { fitBacksplashes, parseBacksplashSettings } from "./kitchenBacksplash";
 import { parseKitchenExtras } from "./kitchenExtras";
+import { resolveKitchenHoodMounts, separateKitchenHoods } from "./kitchenHoodMounting";
 import { parseKitchenSpace } from "./kitchenSpace";
 import { parseKitchenCountertopLayout } from "./kitchenCountertopLayout";
 import { parseKitchenCornerPlan } from "./kitchenCornerGeometry";
@@ -665,6 +666,8 @@ export function parseKitchen(value: unknown, options: { allowEmpty?: boolean } =
   if (cornerPlan) next.cornerPlan = cornerPlan;
   const lineLighting = parseKitchenLineLighting(raw.lineLighting);
   if (lineLighting) next.lineLighting = lineLighting;
-  const issue = placementIssues(next).find(i => i.severity === "error"); if (issue) throw new Error(issue.message);
-  return next;
+  const upgraded = separateKitchenHoods(next);
+  const mounted = upgraded === next ? resolveKitchenHoodMounts(next) : resolveElevations(upgraded);
+  const issue = placementIssues(mounted).find(i => i.severity === "error"); if (issue) throw new Error(issue.message);
+  return mounted;
 }

@@ -5,9 +5,10 @@ import type {
 } from "./kitchenCabinets";
 import { roomWalls } from "./kitchenCabinets";
 import type { Category, Material, Product } from "./types";
-import { cabinetCorners, cabinetsOverlap, fitCountertops } from "./kitchenPlacement";
+import { cabinetCorners, cabinetsOverlap, fitCountertops, placementIssues } from "./kitchenPlacement";
 import { roomContainsFootprint } from "./kitchenRoomOutline";
 import { pcmallAppliance } from "./pcmallAppliances";
+import { snapKitchenHood, type KitchenHoodMount } from "./kitchenHoodMounting";
 import { validPlanningFurniture, type KitchenPlanningFurnitureKind } from "./kitchenPlanningFurniture";
 import {
   kitchenAsset,
@@ -38,6 +39,7 @@ export type KitchenExtra = {
   model?: Product["model"];
   asset?: KitchenAsset;
   planningFurniture?: KitchenPlanningFurnitureKind;
+  mount?: KitchenHoodMount;
 };
 export function parseKitchenExtras(
   value: unknown,
@@ -81,6 +83,10 @@ export function parseKitchenExtras(
       throw new Error("Тек эсвэл арлын хэмжээ буруу байна.");
     const asset =
       raw.asset !== undefined ? parseKitchenAsset(raw.asset) : undefined;
+    if (raw.mount !== undefined && (!raw.mount || typeof raw.mount !== "object" ||
+      raw.mount.kind !== "under-cabinet" || typeof raw.mount.cabinetId !== "string" ||
+      !/^[a-z0-9_-]{1,80}$/i.test(raw.mount.cabinetId) || asset?.type !== "hood"))
+      throw new Error("Сорогчийн box холболт буруу байна.");
     if (
       raw.category === "kitchen-cabinet" &&
       (!asset || (!raw.model || !pcmallAppliance(raw.productId, raw.model)) && (
@@ -124,6 +130,7 @@ export function parseKitchenExtras(
       material: raw.material,
       ...(model ? { model } : {}),
       ...(asset ? { asset } : {}),
+      ...(raw.mount ? { mount: { kind: "under-cabinet" as const, cabinetId: raw.mount.cabinetId } } : {}),
       ...(raw.planningFurniture ? { planningFurniture: raw.planningFurniture } : {}),
     };
   });
@@ -150,7 +157,18 @@ export function extraFromProduct(product: Product, id: string): KitchenExtra {
 export function findExtraSpace(
   kitchen: ModularKitchen,
   extra: KitchenExtra,
+  preferredCabinetId?: string,
 ): KitchenExtra | null {
+  if (extra.asset?.type === "hood") {
+    const boxes = [...kitchen.cabinets].sort((a, b) => Number(b.id === preferredCabinetId) - Number(a.id === preferredCabinetId));
+    for (const box of boxes) {
+      const mounted = snapKitchenHood({ ...kitchen, cabinets: [box] }, extra, extra.position, true);
+      if (mounted && !placementIssues({ ...kitchen, extras: [...(kitchen.extras ?? []).filter(e => e.id !== extra.id), mounted] })
+        .some(issue => issue.severity === "error" && issue.ids.includes(extra.id))) return mounted;
+    }
+  }
+  // A loose or duplicated appliance must never retain a previous box reference.
+  if (extra.mount) { const { mount: _mount, ...loose } = extra; extra = loose; }
   const imported = extra.model ? pcmallAppliance(extra.productId, extra.model) : undefined;
   if (
     !imported && (extra.asset?.installation === "integrated" ||

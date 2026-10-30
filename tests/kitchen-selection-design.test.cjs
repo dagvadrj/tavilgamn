@@ -25,7 +25,11 @@ for(const [width,depth]of[[4000,3000],[3000,2000]])test(`all 72 complete selecti
   const cooker=next.cabinets.find(c=>c.type==='base'&&['hob','oven'].includes(c.opening));
   const hoodBox=next.cabinets.find(c=>c.opening==='hood');
   if(hoodBox){assert.equal(hoodBox.position.rotation,cooker.position.rotation);assert.equal(hoodBox.hoodMount,hood==='integrated'?'under-cabinet':'wall');}
-  if(hood==='integrated'){assert.ok(hoodBox.variantId);assert.equal(hoodBox.catalogAdaptation,'hood');}
+  if(hood==='integrated'){
+   const appliance=next.extras.find(e=>e.asset?.type==='hood'&&e.mount),host=next.cabinets.find(c=>c.id===appliance.mount.cabinetId);
+   assert.ok(host.variantId);assert.equal(host.position.rotation,cooker.position.rotation);
+   assert.equal(appliance.position.y+appliance.height,host.position.y);
+  }
   if(hood==='wall')assert.equal(hoodBox.catalogHousing,'wall-hood');
   const fridge=next.cabinets.find(c=>c.opening==='refrigerator');
   if(refrigerator==='integrated'){assert.equal(fridge.catalogHousing,'fridge-integrated');assert.equal(fridge.applianceProductId,undefined,'never disguise a freestanding product as integrated');}
@@ -50,11 +54,13 @@ test('housing and appliance rendering distinguish concealed hood, exposed hood, 
  const hooks={...React,useMemo:fn=>fn()};const CabinetBody=()=>null,GLBFurnitureMesh=()=>null;
  const {KitchenCabinetGLB}=loadSource('src/three/KitchenCabinetGLB.tsx',{react:hooks,'./KitchenCabinetBody':{CabinetBody},'./GLBFurnitureMesh':{GLBFurnitureMesh}});
  const design=createKitchenFromSelection(createUnifiedKitchen(),{oven:'high-cabinet',hood:'integrated',refrigerator:'integrated',layout:'l-right'},modules);
- const oven=design.cabinets.find(c=>c.opening==='oven'),fridge=design.cabinets.find(c=>c.opening==='refrigerator'),hood=design.cabinets.find(c=>c.opening==='hood');
+ const oven=design.cabinets.find(c=>c.opening==='oven'),fridge=design.cabinets.find(c=>c.opening==='refrigerator'),hood=design.extras.find(e=>e.asset?.type==='hood');
  const tower=KitchenCabinetGLB({cabinet:oven});assert.equal(tower.type,CabinetBody);assert.equal(tower.props.catalogAppliances,true);
  const concealed=KitchenCabinetGLB({cabinet:fridge});assert.equal(concealed.type,CabinetBody);assert.equal(concealed.props.cabinet.opening,'doors');
  const {KitchenCatalogAppliance}=loadSource('src/three/KitchenCatalogAppliance.tsx',{'./GLBFurnitureMesh':{GLBFurnitureMesh}});
- const hoodTree=nodes(KitchenCatalogAppliance({cabinet:hood}));assert.ok(hoodTree.some(n=>n.type==='group'&&n.props.position?.[1]===-.085));
+ const {KitchenExtraMesh}=loadSource('src/three/KitchenExtraMesh.tsx',{'./GLBFurnitureMesh':{GLBFurnitureMesh}});
+ const hoodTree=nodes(KitchenExtraMesh({extra:hood}));assert.ok(hoodTree.some(n=>n.type===GLBFurnitureMesh&&n.props.preservePhysicalSize));
+ const host=design.cabinets.find(c=>c.id===hood.mount.cabinetId);assert.equal(host.position.y-hood.position.y,85);
  const ovenTree=nodes(KitchenCatalogAppliance({cabinet:oven}));assert.ok(ovenTree.some(n=>n.type==='group'&&n.props.position?.[1]===.905));
  const exposed=createKitchenFromSelection(createUnifiedKitchen(),{oven:'under-worktop',hood:'wall',refrigerator:'none',layout:'straight'},modules).cabinets.find(c=>c.opening==='hood');
  assert.ok(nodes(KitchenCatalogAppliance({cabinet:exposed})).some(n=>n.type==='boxGeometry'&&n.props.args[1]>.5));

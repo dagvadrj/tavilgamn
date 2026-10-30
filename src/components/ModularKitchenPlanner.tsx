@@ -20,6 +20,7 @@ import { startPlannerNavigation } from "@/lib/plannerNavigation";
 
 import { ExtrasPanel } from "@/features/kitchen-planner/components/ExtrasPanel";
 import { pcmallAppliance } from "@/lib/pcmallAppliances";
+import { resolveKitchenHoodMounts, snapKitchenHood } from "@/lib/kitchenHoodMounting";
 import "@/features/kitchen-planner/components/kitchen-editor.css";
 import "@/features/kitchen-planner/components/kitchen-flow.css";
 import "@/features/kitchen-planner/components/kitchen-stitch.css";
@@ -714,6 +715,7 @@ export function ModularKitchenPlanner({
     const extra = findExtraSpace(
       design,
       extraFromProduct(product, crypto.randomUUID()),
+      selectedId ?? undefined,
     );
     if (!extra) {
       setMessage(pcmallAppliance(product.id)?.planningPlacement === "countertop"
@@ -728,6 +730,10 @@ export function ModularKitchenPlanner({
     return false;
   }
   function changeExtra(extra: KitchenExtra) {
+    if (extra.asset?.type === "hood") {
+      const { mount: _mount, ...loose } = extra;
+      extra = snapKitchenHood(design, loose) ?? loose;
+    }
     commit({
       ...design,
       extras: design.extras?.map((e) => (e.id === extra.id ? extra : e)),
@@ -960,6 +966,17 @@ export function ModularKitchenPlanner({
     const base = dragBase.current,
       extra = base.extras?.find((e) => e.id === id);
     if (extra) {
+      if (extra.asset?.type === "hood") {
+        const { mount: _mount, ...loose } = extra;
+        const mounted = snapKitchenHood(base, { ...loose, position: pose });
+        if (mounted) {
+          const next = { ...base, extras: base.extras?.map(e => e.id === id ? mounted : e) };
+          draftRef.current = next;
+          setPreview(next);
+          setSnapMessage("Сорогч box-ийн доор төвлөж, өндөр ба гүнд таарлаа");
+          return;
+        }
+      }
       const footprint = (e: KitchenExtra): ModularCabinet => ({
         ...createCabinet("base", e.id),
         width: e.width,
@@ -978,9 +995,11 @@ export function ModularKitchenPlanner({
       );
       const next = {
         ...base,
-        extras: base.extras?.map((e) =>
-          e.id === id ? { ...e, position: result.position } : e,
-        ),
+        extras: base.extras?.map((e) => {
+          if (e.id !== id) return e;
+          const { mount: _mount, ...loose } = e;
+          return { ...loose, position: result.position };
+        }),
       };
       draftRef.current = next;
       setPreview(next);
@@ -1008,8 +1027,9 @@ export function ModularKitchenPlanner({
       return;
     }
     const result = proposeCabinetMove(dragBase.current, id, pose);
-    draftRef.current = result.kitchen;
-    setPreview(result.kitchen);
+    const mounted = resolveKitchenHoodMounts(result.kitchen);
+    draftRef.current = mounted;
+    setPreview(mounted);
     setSnapMessage(
       [
         result.wallId ? "Хананд таарлаа" : "",
@@ -2247,6 +2267,7 @@ export function ModularKitchenPlanner({
                     cabinets: design.cabinets.filter(
                       (c) => c.id !== selected.id,
                     ),
+                    extras: design.extras?.filter(e => e.mount?.cabinetId !== selected.id),
                   })
                 ) {
                   setSelectedId(null);

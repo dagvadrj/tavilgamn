@@ -63,13 +63,14 @@ export function kitchenPreferences(
 ): KitchenSuggestionPreferences {
   const fridge = kitchen.cabinets.find((c) => c.opening === "refrigerator");
   const hood = kitchen.cabinets.find((c) => c.opening === "hood");
+  const separateHood = kitchen.extras?.find(extra => extra.asset?.type === "hood");
   return {
     oven: kitchen.cabinets.some(
       (c) => c.opening === "oven" && c.type === "tall",
     )
       ? "high-cabinet"
       : "under-worktop",
-    hood: hood ? (hood.hoodMount === "wall" ? "wall" : "integrated") : "none",
+    hood: separateHood ? (separateHood.mount ? "integrated" : "wall") : hood ? (hood.hoodMount === "wall" ? "wall" : "integrated") : "none",
     refrigerator: fridge?.refrigeratorInstallation ?? (fridge
       ? fridge.refrigeratorStyle === "side-by-side"
         ? "freestanding"

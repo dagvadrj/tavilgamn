@@ -98,6 +98,8 @@ export function kitchenSuggestionMetrics(design: ModularKitchen, original: Modul
     return points.length ? [Math.min(...points.map(p => distance(c.position,p)))] : [];
   });
   const bom = buildKitchenBom(design, preferences.modules ?? [], preferences.products ?? []);
+  const vents = (design.room.items ?? []).filter(p => p.kind === "vent");
+  if (vents.length) for (const hood of design.extras ?? []) if (hood.asset?.type === "hood") services.push(Math.min(...vents.map(p => distance(hood.position, p))));
   const furniture = bom.items.filter(item => !item.included && item.unit === "ш");
   const unpricedFurniture = furniture.filter(item => item.unitPrice === null).length;
   return {
