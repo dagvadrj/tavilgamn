@@ -204,7 +204,11 @@ test("adjacency works on rotated wall and rejects occupied destination", () => {
     [b, occupied],
     roomWalls(kitchen([]).room),
   );
-  assert.equal(blocked.neighbourId, undefined);
+  assert.notEqual(blocked.neighbourId, "b");
+  assert.ok(
+    !cabinetsOverlap({ ...a, position: blocked.position }, occupied),
+    "an occupied destination pushes the drag to a free side",
+  );
 });
 test("collision allows face contact and stacking but catches rotated intersection", () => {
   const a = cabinet("a", 500),
@@ -314,7 +318,7 @@ test("countertops split at different depths, heights and turns; rotated centre i
     2,
   );
 });
-test("move proposals expose errors for preview without mutating committed state", () => {
+test("move proposals push a dragged cabinet out of overlap without mutating committed state", () => {
   const k = kitchen([cabinet("a", 300), cabinet("b", 900)]),
     before = JSON.stringify(k);
   const result = proposeCabinetMove(k, "b", {
@@ -323,8 +327,25 @@ test("move proposals expose errors for preview without mutating committed state"
     z: 300,
     rotation: 0,
   });
-  assert.ok(result.issues.some((i) => i.code === "overlap"));
+  const b = result.kitchen.cabinets.find((c) => c.id === "b");
+  near(b.position.x, 900);
+  assert.equal(result.neighbourId, "a");
+  assert.ok(!result.issues.some((i) => i.code === "overlap"));
   assert.equal(JSON.stringify(k), before);
+});
+test("push-out slides past a run of units to the nearest free spot", () => {
+  const k = kitchen([cabinet("a", 300), cabinet("b", 900), cabinet("c", 2400)]);
+  const result = proposeCabinetMove(k, "c", { x: 850, y: 0, z: 300, rotation: 0 });
+  near(result.kitchen.cabinets.find((c) => c.id === "c").position.x, 1500);
+  assert.ok(!result.issues.some((i) => i.code === "overlap"));
+});
+test("move proposals still expose overlap when no free spot exists", () => {
+  const k = {
+    ...kitchen([cabinet("a", 300), cabinet("b", 900)]),
+    room: { width: 1000, depth: 3000, height: 2600 },
+  };
+  const result = proposeCabinetMove(k, "b", { x: 350, y: 0, z: 300, rotation: 0 });
+  assert.ok(result.issues.some((i) => i.code === "overlap"));
 });
 test("adding finds valid free positions and reports a full room without altering it", () => {
   let k = createModularKitchen();
