@@ -141,9 +141,11 @@ import {
   Move,
   Orbit,
   Copy,
+  Moon,
   Repeat,
   RotateCw,
   Save,
+  Sun,
   Trash2,
   X,
 } from "lucide-react";
@@ -316,6 +318,7 @@ export function ModularKitchenPlanner({
   /** Invalid drafts in the K1 panel (never saved) plus design-level issues. */
   const [roomDraftIssues, setRoomDraftIssues] = useState(0);
   const [designTab, setDesignTab] = useState<"catalog" | "materials" | "views">("catalog");
+  const [night, setNight] = useState(false);
   const [materialScope, setMaterialScope] = useState<KitchenMaterialScope>("selected");
   // K2: the design step always shows one panel; with nothing else open it is
   // the catalog (or the views list the person chose).
@@ -934,10 +937,15 @@ export function ModularKitchenPlanner({
     setSelectedId(id);
     setOpen(false);
     setCatalogOpen(false);
-    setInspector(
-      designRef.current.extras?.some((extra) => extra.id === id) ? "extras" : "selection",
-    );
-    setSettingsOpen(true);
+    if (designRef.current.extras?.some((extra) => extra.id === id)) {
+      setInspector("extras");
+      setSettingsOpen(true);
+      return;
+    }
+    // Cabinet details replace the view list in the left panel; no floating card over the stage.
+    setInspector("selection");
+    setSettingsOpen(false);
+    setDesignTab("views");
   }
   function start(id: string) {
     if (busy) return;
@@ -1406,7 +1414,9 @@ export function ModularKitchenPlanner({
       {([
         ["catalog", "Каталог", `${kitchen.cabinets.length} модуль`],
         ["materials", "Материал", "Нүүр · тавцан"],
-        ["views", "Харагдац", KITCHEN_VIEW_LABEL[workspaceView]],
+        selected && !materialsTab
+          ? (["views", "Дэлгэрэнгүй", selectedName ?? ""] as const)
+          : (["views", "Харагдац", KITCHEN_VIEW_LABEL[workspaceView]] as const),
       ] as const).map(([id, label, meta]) => (
         <button
           key={id}
@@ -1434,6 +1444,73 @@ export function ModularKitchenPlanner({
       ))}
     </div>
   );
+  /** The selected cabinet's controls: inline in the left panel, or in the materials drawer. */
+  function selectionPanel(initialMode: "overview" | "modify", layout: "drawer" | "detail" = "drawer") {
+    if (!selected) return null;
+    return (
+    <KitchenSelectionPanel
+      key={`${selected.id}:${selected.variantId ?? ""}:${inspector}:${layout}`}
+      layout={layout}
+      cabinet={
+        sceneKitchen.cabinets.find((c) => c.id === selected.id) ??
+        selected
+      }
+      variant={
+        variantModels[
+          sceneKitchen.cabinets.find((c) => c.id === selected.id)
+            ?.variantId ?? ""
+        ]
+      }
+      modules={moduleCatalog}
+      materials={selectableMaterials}
+      onChangeAppearance={changeAppearance}
+      onEditCountertop={editCountertop}
+      disabled={busy}
+      initialMode={inspector === "materials" ? "modify" : "overview"}
+      isOpen={open}
+      onToggleOpen={() => {
+        setOpen((value) => !value);
+        setWorkspaceView("3d");
+        setMode("orbit");
+      }}
+      onZoom={() => {
+        setWorkspaceView("3d");
+        setMode("orbit");
+        setCameraRequest((previous) => ({
+          id: (previous?.id ?? 0) + 1,
+          action: "focus",
+          targetId: selected.id,
+        }));
+      }}
+      onChangeSelections={(partSelections) =>
+        updateCabinet({ partSelections })
+      }
+      onReplace={replaceWithCatalogVariant}
+      products={products.products}
+      onPositionChange={position => updateCabinet({ position })}
+      onDuplicate={duplicateCabinet}
+      onRemove={() => {
+        if (
+          commit({
+            ...design,
+            cabinets: design.cabinets.filter(
+              (c) => c.id !== selected.id,
+            ),
+            extras: design.extras?.filter(e => e.mount?.cabinetId !== selected.id),
+          })
+        ) {
+          setSelectedId(null);
+          setSettingsOpen(false);
+        }
+      }}
+      onClose={() => {
+        setSettingsOpen(false);
+        setSelectedId(null);
+        setOpen(false);
+      }}
+    />
+    );
+  }
   const lockReason =
     spaceOpen && roomDraftIssues
       ? `Өрөөний ${roomDraftIssues} алдааг засаад дараагийн алхам руу орно.`
@@ -1823,7 +1900,9 @@ export function ModularKitchenPlanner({
             <PlannerSheetGrip expanded={sheetExpanded} onExpand={setSheetExpanded} onClose={() => setSheetExpanded(false)} />
             {designTabs}
             <div className="kitchen-k-panel-scroll">
-              <KitchenViewsPanel current={workspaceView} onView={showWorkspaceView} selectedName={selectedName} />
+              {selected
+                ? selectionPanel("overview", "detail")
+                : <KitchenViewsPanel current={workspaceView} onView={showWorkspaceView} selectedName={selectedName} />}
             </div>
           </aside>
         )}
@@ -1904,6 +1983,18 @@ export function ModularKitchenPlanner({
             )}
             <div className="kitchen-view-tabs" data-planner-tour="kitchen-view">
               <KitchenViewDock current={workspaceView} onView={showWorkspaceView} />
+              {workspaceView !== "2d" && workspaceView !== "elevation" && (
+                <button
+                  type="button"
+                  className="kitchen-night-toggle"
+                  aria-pressed={night}
+                  title={night ? "Өдрийн гэрэлтэй болгох" : "Шөнийн горим: таазны гэрлээр харах"}
+                  onClick={() => setNight((value) => !value)}
+                >
+                  {night ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
+                  <span>{night ? "Өдөр" : "Шөнө"}</span>
+                </button>
+              )}
             </div>
             <div className="kp-preview-bar">
               <div
@@ -1968,6 +2059,7 @@ export function ModularKitchenPlanner({
                   selectedId={selectedId}
                   mode={saving ? "orbit" : mode}
                   interior={workspaceView === "interior" && !reviewOpen}
+                  night={night}
                   cameraRequest={cameraRequest}
                   onSelect={selectCabinet}
                   onDeselect={() => {
@@ -2107,7 +2199,7 @@ export function ModularKitchenPlanner({
                 return <li key={`${issue.code}-${index}`}><span>{issue.message}</span>
                   <button type="button" disabled={busy} onClick={() => {
                     if (action.target === "room") { setSpaceOpen(true); return; }
-                    selectCabinet(issue.ids[0]); setInspector("selection"); setSettingsOpen(true);
+                    selectCabinet(issue.ids[0]);
                   }}>{action.label}</button></li>;
               })}
             </ul>}
@@ -2221,66 +2313,7 @@ export function ModularKitchenPlanner({
               onClose={() => setSettingsOpen(false)} />
           ) : selected &&
           (inspector === "selection" || inspector === "materials") ? (
-            <KitchenSelectionPanel
-              key={`${selected.id}:${selected.variantId ?? ""}:${inspector}`}
-              cabinet={
-                sceneKitchen.cabinets.find((c) => c.id === selected.id) ??
-                selected
-              }
-              variant={
-                variantModels[
-                  sceneKitchen.cabinets.find((c) => c.id === selected.id)
-                    ?.variantId ?? ""
-                ]
-              }
-              modules={moduleCatalog}
-              materials={selectableMaterials}
-              onChangeAppearance={changeAppearance}
-              onEditCountertop={editCountertop}
-              disabled={busy}
-              initialMode={inspector === "materials" ? "modify" : "overview"}
-              isOpen={open}
-              onToggleOpen={() => {
-                setOpen((value) => !value);
-                setWorkspaceView("3d");
-                setMode("orbit");
-              }}
-              onZoom={() => {
-                setWorkspaceView("3d");
-                setMode("orbit");
-                setCameraRequest((previous) => ({
-                  id: (previous?.id ?? 0) + 1,
-                  action: "focus",
-                  targetId: selected.id,
-                }));
-              }}
-              onChangeSelections={(partSelections) =>
-                updateCabinet({ partSelections })
-              }
-              onReplace={replaceWithCatalogVariant}
-              products={products.products}
-              onPositionChange={position => updateCabinet({ position })}
-              onDuplicate={duplicateCabinet}
-              onRemove={() => {
-                if (
-                  commit({
-                    ...design,
-                    cabinets: design.cabinets.filter(
-                      (c) => c.id !== selected.id,
-                    ),
-                    extras: design.extras?.filter(e => e.mount?.cabinetId !== selected.id),
-                  })
-                ) {
-                  setSelectedId(null);
-                  setSettingsOpen(false);
-                }
-              }}
-              onClose={() => {
-                setSettingsOpen(false);
-                setSelectedId(null);
-                setOpen(false);
-              }}
-            />
+            selectionPanel(inspector === "materials" ? "modify" : "overview")
           ) : (
             <>
               <div className="kp-settings-head">

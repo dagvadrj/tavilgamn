@@ -40,6 +40,8 @@ export type KitchenSelectionPanelProps = {
   isOpen?: boolean;
   disabled?: boolean;
   initialMode?: PanelMode;
+  /** "detail" sits inline in the left panel; "drawer" is the overlay inspector. */
+  layout?: "drawer" | "detail";
 };
 
 function ProductImage({ url, name, size = "small" }: { url?: string | null; name: string; size?: "small" | "large" }) {
@@ -79,7 +81,7 @@ function PositionField({ label, value, unit, onCommit, disabled, min }: {
 export function KitchenSelectionPanel({
   cabinet, variant, modules, products = [], materials = [], onChangeAppearance, onEditCountertop, onChangeSelections, onReplace, onPositionChange,
   onClose, onDuplicate, onRemove, onZoom, onToggleOpen,
-  isOpen = false, disabled = false, initialMode = "overview",
+  isOpen = false, disabled = false, initialMode = "overview", layout = "drawer",
 }: KitchenSelectionPanelProps) {
   const [view, setView] = useState<PanelView>(initialMode);
   const [slotId, setSlotId] = useState<string | null>(null);
@@ -131,7 +133,7 @@ export function KitchenSelectionPanel({
   const openTitle = hasMotion ? (isOpen ? "Хаалга, шургуулгыг хаах" : "Хаалга, шургуулгыг нээх") :
     "Энэ загвар нээх хөдөлгөөнгүй";
 
-  return <section className="kitchen-selection-panel" data-view={view} aria-label="Тавилгын удирдлага"
+  return <section className="kitchen-selection-panel" data-view={view} data-layout={layout} aria-label="Тавилгын удирдлага"
     onKeyDown={event => { if (event.key === "Escape") { event.stopPropagation(); back(); } }}>
     <div className="ksp-controller">
       <header className="ksp-controller-heading">
@@ -168,7 +170,7 @@ export function KitchenSelectionPanel({
       {cabinet.catalogHousing === 'fridge-integrated' && <p className="ksp-action-hint" role="status">Суурилуулдаг хөргөгчийн box. Тохирох суурилуулдаг төхөөрөмжийн загвар, үнийг тусад нь сонгоно.</p>}
       {!hasMotion && view === "overview" && <p className="ksp-action-hint">Энэ загвар нээх хөдөлгөөнгүй.</p>}
       {(view === "overview" || view === "modify") && <>
-        <div className="ksp-section-heading"><h3>{view === "modify" ? "Хэсэг бүрийг өөрчлөх" : "Тавилгын хэсгүүд"}</h3>{slots.length > 0 && <span>{slots.length}</span>}</div>
+        <div className="ksp-section-heading"><h3>{view === "modify" ? "Хэсэг бүрийг өөрчлөх" : "Сонголтууд"}</h3>{slots.length > 0 && <span>{slots.length}</span>}</div>
         <div className="ksp-option-list">
           <button type="button" className="ksp-option ksp-option--whole" disabled={disabled} onClick={() => navigate("appearance")}>
             <span className="ksp-option-icon"><Paintbrush size={20} /></span>
@@ -178,20 +180,33 @@ export function KitchenSelectionPanel({
             <span className="ksp-option-icon"><Paintbrush size={20} /></span>
             <span className="ksp-option-info"><strong>Бэлэн загвар</strong><span>Тавилгын бэлэн хувилбар</span></span><ChevronRight size={16} />
           </button>
-          {slots.map(slot => {
+        </div>
+        {slots.some(slot => !slot.optional) && <div className="ksp-part-grid" role="list" aria-label="Үндсэн хэсгүүд">
+          {slots.filter(slot => !slot.optional).map(slot => {
             const choice = resolveKitchenPartOption(slot, selections);
-            return <div className="ksp-part-row" key={slot.id}>
-              <button type="button" className="ksp-option" disabled={disabled} onClick={() => navigate("style", slot.id)}>
-                <ProductImage key={choice?.thumbnailUrl} url={choice?.thumbnailUrl} name={choice?.label || slot.label} />
-                <span className="ksp-option-info"><strong>{slot.label}</strong><span>{choice?.label || "Сонгоогүй"}</span>
-                  {choice && (choice.style || choice.color) && <small>{[choice.style, choice.color].filter(Boolean).join(" · ")}</small>}
-                </span><ChevronRight size={15} />
+            return <button type="button" role="listitem" className="ksp-part-tile" key={slot.id} disabled={disabled}
+              onClick={() => navigate("style", slot.id)} title={`${slot.label}: өөр загвар сонгох`}>
+              <ProductImage key={choice?.thumbnailUrl} url={choice?.thumbnailUrl} name={choice?.label || slot.label} size="large" />
+              <span className="ksp-part-tile-label">{slot.label}</span>
+              <strong>{choice?.label || "Сонгоогүй"}</strong>
+              {choice && (choice.style || choice.color) && <small>{[choice.style, choice.color].filter(Boolean).join(" · ")}</small>}
+            </button>;
+          })}
+        </div>}
+        {slots.some(slot => slot.optional) && <div className="ksp-addons" role="group" aria-label="Нэмэлт хэсгүүд">
+          <h3>Нэмэлт</h3>
+          {slots.filter(slot => slot.optional).map(slot => {
+            const choice = resolveKitchenPartOption(slot, selections);
+            return <div className="ksp-addon" key={slot.id}>
+              <button type="button" className="ksp-addon-info" disabled={disabled || !choice} onClick={() => navigate("style", slot.id)}>
+                <strong>{slot.label}</strong><span>{choice ? choice.label : "Ашиглахгүй"}</span>
               </button>
-              {slot.optional && choice && <button type="button" className="ksp-part-remove" title={`${slot.label} хасах`} aria-label={`${slot.label} хасах`} disabled={disabled}
-                onClick={() => onChangeSelections({ ...selections, [slot.id]: "" })}><Trash2 size={15} /></button>}
+              {/* Switching on opens the chooser; switching off drops the part. */}
+              <button type="button" role="switch" aria-checked={Boolean(choice)} className="ksp-switch" aria-label={`${slot.label} ашиглах`} disabled={disabled}
+                onClick={() => choice ? onChangeSelections({ ...selections, [slot.id]: "" }) : navigate("style", slot.id)}><span /></button>
             </div>;
           })}
-        </div>
+        </div>}
         {!slots.length && <p className="ksp-note">Хавтангийн хээ, өнгийг Боксын өнгө / Материал цэсээр солино. Бэлэн загвар цэсээр тавилгын өөр хувилбар сонгоно.</p>}
         {view === "overview" && <button type="button" className="ksp-primary" disabled={disabled} onClick={() => navigate("modify")}><Pencil size={16} />Тавилга өөрчлөх</button>}
         <div className="ksp-dimensions"><h3>Хэмжээ</h3><dl><div><dt>Өргөн</dt><dd>{cabinet.width} мм</dd></div><div><dt>Гүн</dt><dd>{cabinet.depth} мм</dd></div><div><dt>Өндөр</dt><dd>{cabinet.height} мм</dd></div></dl></div>

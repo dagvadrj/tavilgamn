@@ -280,10 +280,13 @@ export function KitchenRoomShell({
   room,
   interior,
   interactionActive,
+  night,
 }: {
   room: KitchenRoom;
   interior?: boolean;
   interactionActive?: boolean;
+  /** No window/ceiling daylight fill: the room is lit by its lamp only. */
+  night?: boolean;
 }) {
   const floorGeometryKey = JSON.stringify([
     room.width,
@@ -396,7 +399,7 @@ export function KitchenRoomShell({
           position={[daylight.offset[0], 0, daylight.offset[1]]}
           rotation={[0, daylight.rotation, 0]}
         >
-          <RoomDaylightFill design={daylight.design} daylight={1} />
+          <RoomDaylightFill design={daylight.design} daylight={night ? 0 : 1} />
         </group>
       </group>
       {walls.map((wall) => (

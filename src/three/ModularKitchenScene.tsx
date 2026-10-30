@@ -43,6 +43,7 @@ import { configurePlannerRenderer } from "./plannerRenderer";
 import { plannerLighting } from "@/lib/plannerLighting";
 import { KITCHEN_FILL, kitchenDaylight } from "@/lib/kitchenDaylight";
 import { ROOM_DAY_BACKDROP } from "@/lib/roomLighting";
+import { KitchenCeilingLamp } from "./KitchenCeilingLamp";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 import { applyCameraPose, cameraPose, cancelCameraTransition } from "@/lib/cameraTransition";
@@ -61,6 +62,8 @@ export interface ModularSceneProps {
   selectedId: string | null;
   mode: "move" | "orbit";
   interior?: boolean;
+  /** Dark room: no sun, the ceiling lamp carries the scene. */
+  night?: boolean;
   cameraRequest?: CameraRequest;
   onSelect: (id: string) => void;
   onSelectCountertop?: (id: string) => void;
@@ -76,6 +79,9 @@ export interface ModularSceneProps {
 const KITCHEN_WINDOW_SUN = 1.75;
 /** Candela, at the ceiling centre; tuned against the fill so the room shows a direction. */
 const KITCHEN_CEILING_LIGHT = 16;
+/** At night the lamp is the only real source, so it is brighter and the backdrop goes dark. */
+const KITCHEN_NIGHT_LAMP = 0.8;
+const KITCHEN_NIGHT_BACKDROP = "#11151c";
 /** A dragged item overlapping another shares its wall-snapped faces; a ~1 mm inset stops them z-fighting. */
 const OVERLAP_INSET_SCALE = 0.996;
 
@@ -267,7 +273,8 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
   const width = kitchen.room.width / 1000,
     depth = kitchen.room.depth / 1000;
   const roomHeight = kitchen.room.height / 1000;
-  const lighting = plannerLighting();
+  const night = Boolean(props.night);
+  const lighting = plannerLighting(night ? { mode: "evening", timeOfDay: 22, ambient: 0.65, sunlight: 1.8, fixtures: [] } : undefined);
   // Structural inputs only: paint and furniture changes keep the same sun.
   const daylightKey = JSON.stringify({ width: kitchen.room.width, depth: kitchen.room.depth, height: kitchen.room.height, items: kitchen.room.items ?? [] });
   const daylight = useMemo(() => kitchenDaylight(JSON.parse(daylightKey)), [daylightKey]);
@@ -302,7 +309,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
       <CanvasDiagnostics scene="modular-kitchen" />
       <PlannerAmbientOcclusion />
       {!props.interior && <CameraFit focus={focus} side={daylight.cameraSide} />}
-      <color attach="background" args={[ROOM_DAY_BACKDROP]} />
+      <color attach="background" args={[night ? KITCHEN_NIGHT_BACKDROP : ROOM_DAY_BACKDROP]} />
       {/* Less uniform fill than the room planner: cabinet sides, plinths and
           the window patch need contrast to read as daylight, not a flat studio. */}
       <PlannerEnvironment daylight={lighting.solar.daylight} scale={KITCHEN_FILL} />
@@ -314,7 +321,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
       <directionalLight
         position={[width / 2, roomHeight * 0.9, depth * 0.85]}
         target={fillTarget}
-        intensity={0.45}
+        intensity={night ? 0.05 : 0.45}
         color="#fffefb"
       />
       {/* One sun through the real window: its frame and mullion shadow the floor. */}
@@ -335,13 +342,14 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
         shadow-bias={-0.0001}
       />
       <primitive object={ceilingLightTarget} />
+      <KitchenCeilingLamp x={width / 2} z={depth / 2} ceiling={roomHeight} lit={night} />
       {/* Ceiling fixture: the walls and roof block the sun in a windowless room,
           so this is what shades the backsplash under wall units and darkens corners. */}
       <spotLight
         castShadow
-        position={[width / 2, roomHeight - 0.06, depth / 2]}
+        position={[width / 2, roomHeight - Math.min(0.55, Math.max(0.2, roomHeight - 2.2)) - 0.08, depth / 2]}
         target={ceilingLightTarget}
-        intensity={KITCHEN_CEILING_LIGHT * (daylight.windowId ? 0.4 : 1)}
+        intensity={KITCHEN_CEILING_LIGHT * (night ? KITCHEN_NIGHT_LAMP : daylight.windowId ? 0.4 : 1)}
         angle={ceilingLightAngle}
         penumbra={1}
         decay={2}
@@ -399,7 +407,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
       {props.interior && (
         <KitchenInteriorView kitchen={kitchen} request={props.cameraRequest} />
       )}
-      <KitchenRoomShell room={kitchen.room} interior={props.interior} interactionActive={dragActive} />
+      <KitchenRoomShell room={kitchen.room} interior={props.interior} interactionActive={dragActive} night={night} />
       <group
         ref={props.exportRoot}
         name="Kitchen"

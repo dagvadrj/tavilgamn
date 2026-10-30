@@ -333,6 +333,167 @@
   background: #fff4f0;
 }
 
+.ksp-part-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ksp-part-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 8px 10px;
+  color: inherit;
+  text-align: left;
+  background: #f7f8fa;
+  border: 1px solid transparent;
+  border-radius: 10px;
+}
+
+.ksp-part-tile:hover:not(:disabled) {
+  background: #fff;
+  border-color: #175ca5;
+}
+
+.ksp-part-tile .ksp-image--large {
+  width: 100%;
+  height: 84px;
+  margin-bottom: 6px;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.ksp-part-tile-label {
+  color: #175ca5;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.ksp-part-tile strong,
+.ksp-part-tile small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ksp-part-tile strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ksp-part-tile small {
+  color: #777;
+  font-size: 10px;
+}
+
+.ksp-addons {
+  margin-top: 16px;
+  padding: 4px 12px;
+  background: #f7f8fa;
+  border-radius: 10px;
+}
+
+.ksp-addons h3 {
+  margin: 8px 0 4px;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.ksp-addon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+}
+
+.ksp-addon + .ksp-addon {
+  border-top: 1px solid #e6e8eb;
+}
+
+.ksp-addon-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 0;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+}
+
+.kitchen-selection-panel .ksp-addon-info:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.ksp-addon-info strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ksp-addon-info span {
+  overflow: hidden;
+  color: #777;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ksp-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 20px;
+  padding: 0;
+  background: #c9ced6;
+  border: 0;
+  border-radius: 999px;
+  transition: background 0.15s;
+}
+
+.ksp-switch span {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px #0003;
+  transition: transform 0.15s;
+}
+
+.ksp-switch[aria-checked="true"] {
+  background: #175ca5;
+}
+
+.ksp-switch[aria-checked="true"] span {
+  transform: translateX(16px);
+}
+
+/* Inline in the left panel: the panel scrolls as one column, actions wrap to two rows. */
+.kitchen-selection-panel[data-layout="detail"] {
+  height: auto;
+}
+
+.kitchen-selection-panel[data-layout="detail"] .ksp-scroll {
+  overflow: visible;
+}
+
+.kitchen-selection-panel[data-layout="detail"] .ksp-actions {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.kitchen-selection-panel[data-layout="detail"][data-view="overview"] .ksp-header {
+  display: none;
+}
+
 .ksp-note {
   margin: 10px 0 18px;
   color: #7c7c7c;
