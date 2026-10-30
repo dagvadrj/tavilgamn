@@ -44,6 +44,12 @@ export function kitchenMarketplaceError(error: unknown, fallback: string) {
       status: 429,
     },
     P0022: { message: "AI render үйлчилгээ түр зогссон байна.", status: 503 },
+    // RPC missing from the schema cache: the GLB design migration is not applied yet.
+    PGRST202: {
+      message: "GLB загварын өгөгдлийн сангийн шинэчлэл (migration) хараахан хийгдээгүй байна.",
+      status: 503,
+    },
+    "22023": { message: "Загварын мэдээлэл буруу байна. Дахин шалгаад оролдоно уу.", status: 400 },
   };
   if (phase4Errors[code])
     return apiErrorResponse(

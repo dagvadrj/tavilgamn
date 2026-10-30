@@ -45,6 +45,12 @@ import {
   kitchenListingSuggestions,
   kitchenListTokens,
 } from "@/lib/kitchenListingSuggestions";
+import { kitchenGlbListingSuggestions } from "@/lib/kitchenDesignGlb";
+import { kitchenGlbPlannerKitchen } from "@/lib/kitchenGlbModules";
+import {
+  KitchenGlbSourceField,
+  type KitchenGlbUpload,
+} from "./KitchenGlbSourceField";
 
 type SavedKitchen = { id: string; name: string; design: unknown };
 type LoadResult = {
@@ -69,6 +75,23 @@ export function MerchantKitchenDesigns({
   const [sourceKitchenId, setSourceKitchenId] = useDraftState(
     draftScope,
     "sourceKitchenId",
+    "",
+  );
+  const [sourceType, setSourceType] = useDraftState<"project" | "glb">(
+    draftScope,
+    "sourceType",
+    "project",
+  );
+  // The prepared upload lives only in this tab; a reload asks for the file again.
+  const [glbUpload, setGlbUpload] = useState<KitchenGlbUpload | null>(null);
+  const [glbLayout, setGlbLayout] = useDraftState(
+    draftScope,
+    "glbLayout",
+    "straight",
+  );
+  const [glbModules, setGlbModules] = useDraftState(
+    draftScope,
+    "glbModules",
     "",
   );
   const [title, setTitle] = useDraftState(draftScope, "title", "");
@@ -124,29 +147,74 @@ export function MerchantKitchenDesigns({
   useEffect(() => {
     if (!createOpen) return;
     createForm.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    createForm.current?.querySelector("select")?.focus({ preventScroll: true });
+    createForm.current
+      ?.querySelector<HTMLElement>('.km-source-switch [aria-pressed="true"]')
+      ?.focus({ preventScroll: true });
   }, [createOpen]);
   const closeCreate = () => {
     setCreateOpen(false);
     createButton.current?.focus();
   };
 
-  const selectedKitchen = kitchens.find((item) => item.id === sourceKitchenId);
+  const isGlb = sourceType === "glb";
+  const selectedKitchen = isGlb
+    ? undefined
+    : kitchens.find((item) => item.id === sourceKitchenId);
+  // Editing the detected modules re-derives the listing, so they are part of the key.
+  const glbModuleKey =
+    glbUpload?.detection.modules
+      .map((item) => `${item.role}:${item.widthMm}:${item.name}`)
+      .join("|") ?? "";
+  const sourceKey = isGlb
+    ? glbUpload
+      ? `glb:${glbUpload.uploadId}:${glbModuleKey}`
+      : ""
+    : sourceKitchenId;
+  const glbHints = useMemo(
+    () =>
+      glbUpload
+        ? kitchenGlbListingSuggestions(
+            glbUpload.info,
+            glbUpload.fileName,
+            style,
+            glbUpload.detection,
+          )
+        : null,
+    [glbUpload, style],
+  );
+  const sourceName = isGlb
+    ? (glbHints?.titles[0] ?? "")
+    : (selectedKitchen?.name ?? "");
   const suggestions = useMemo(
     () =>
-      kitchenListingSuggestions(
-        selectedKitchen?.design,
-        selectedKitchen?.name,
-        style,
-      ),
-    [selectedKitchen?.design, selectedKitchen?.name, style],
+      isGlb
+        ? glbHints
+        : kitchenListingSuggestions(
+            selectedKitchen?.design,
+            selectedKitchen?.name,
+            style,
+          ),
+    [isGlb, glbHints, selectedKitchen?.design, selectedKitchen?.name, style],
   );
+  // Layout follows each upload; the module count follows every module edit.
+  const lastGlbUpload = useRef<string | null>(null);
+  useEffect(() => {
+    if (!glbUpload || !glbHints) return;
+    if (lastGlbUpload.current !== glbUpload.uploadId) {
+      lastGlbUpload.current = glbUpload.uploadId;
+      setGlbLayout(glbHints.layout);
+    }
+    if (glbHints.cabinetCount) setGlbModules(String(glbHints.cabinetCount));
+  }, [glbUpload, glbHints, setGlbLayout, setGlbModules]);
   const lastSource = useRef<{
     id: string;
     name: string;
     materials: string[];
     inclusions: string[];
     exclusions: string[];
+    shortDescription: string;
+    description: string;
+    tags: string[];
   } | null>(null);
   const form: ListingForm = {
     title,
@@ -195,7 +263,7 @@ export function MerchantKitchenDesigns({
     if (
       draftStatus.loading ||
       !suggestions ||
-      lastSource.current?.id === sourceKitchenId
+      lastSource.current?.id === sourceKey
     )
       return;
     const previous = lastSource.current;
@@ -235,50 +303,81 @@ export function MerchantKitchenDesigns({
     );
     if (!previous && !serviceAreas.trim()) setServiceAreas("Улаанбаатар");
     if (!title.trim() || (previous && title === previous.name))
-      setTitle(selectedKitchen?.name ?? "");
+      setTitle(sourceName);
     setMaterials(
       reconcile(materials, previous?.materials ?? [], suggestions.materials),
     );
+    // Texts and tags are filled while empty or still the previous suggestion.
+    const nextShort = suggestions.shortDescriptions[0] ?? "";
+    const nextDescription = suggestions.descriptions[0] ?? "";
+    if (
+      !shortDescription.trim() ||
+      shortDescription === previous?.shortDescription
+    )
+      setShortDescription(nextShort);
+    if (!description.trim() || description === previous?.description)
+      setDescription(nextDescription);
+    setTags(reconcile(tags, previous?.tags ?? [], suggestions.tags));
     lastSource.current = {
-      id: sourceKitchenId,
-      name: selectedKitchen?.name ?? "",
+      id: sourceKey,
+      name: sourceName,
       materials: suggestions.materials,
       inclusions: suggestions.inclusions,
       exclusions: suggestions.exclusions,
+      shortDescription: nextShort,
+      description: nextDescription,
+      tags: suggestions.tags,
     };
   }, [
     draftStatus.loading,
     suggestions,
-    sourceKitchenId,
+    sourceKey,
+    sourceName,
     title,
     materials,
     inclusions,
     exclusions,
     serviceAreas,
-    selectedKitchen?.name,
+    shortDescription,
+    description,
+    tags,
     setInclusions,
     setExclusions,
     setTitle,
     setMaterials,
     setServiceAreas,
+    setShortDescription,
+    setDescription,
+    setTags,
   ]);
-  const load = useCallback(async (force = true) => {
-    setError(null);
-    try {
-      const [marketplace, saved] = await Promise.all([
-        readMerchantResource<LoadResult>(owner, "/api/merchant/kitchen-designs", force),
-        readMerchantResource<{ kitchens: SavedKitchen[] }>(owner, "/api/kitchens", force),
-      ]);
-      setData(marketplace);
-      setKitchens(saved.kitchens);
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Мэдээллийг ачаалж чадсангүй.",
-      );
-    }
-  }, [owner]);
+  const load = useCallback(
+    async (force = true) => {
+      setError(null);
+      try {
+        const [marketplace, saved] = await Promise.all([
+          readMerchantResource<LoadResult>(
+            owner,
+            "/api/merchant/kitchen-designs",
+            force,
+          ),
+          readMerchantResource<{ kitchens: SavedKitchen[] }>(
+            owner,
+            "/api/kitchens",
+            force,
+          ),
+        ]);
+        setData(marketplace);
+        setKitchens(saved.kitchens);
+      } catch (reason) {
+        setError(
+          reason instanceof Error
+            ? reason.message
+            : "Мэдээллийг ачаалж чадсангүй.",
+        );
+      }
+    },
+    [owner],
+  );
 
   useEffect(() => {
     if (!draftStatus.loading && !sourceKitchenId && kitchens[0])
@@ -313,29 +412,96 @@ export function MerchantKitchenDesigns({
     setBusy("create");
     setError(null);
     try {
-      await request("/api/merchant/kitchen-designs", owner, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sourceKitchenId,
-          title,
-          shortDescription,
-          description,
-          style,
-          pricingMode,
-          priceFrom: pricingMode === "quote" ? null : priceFrom || null,
-          priceTo: pricingMode === "from" ? priceTo || null : null,
-          materials: splitList(materials),
-          leadTimeDays: leadTimeDays || null,
-          warrantyMonths: null,
-          installationIncluded,
-          tags: splitList(tags),
-          serviceAreas: splitList(serviceAreas),
-          inclusions: splitList(inclusions),
-          exclusions: splitList(exclusions),
-        }),
-      });
+      if (isGlb && !glbUpload)
+        throw new Error("GLB файлаа оруулж, бэлэн болохыг хүлээнэ үү.");
+      const created = await request<{ designId: string; versionId: string }>(
+        "/api/merchant/kitchen-designs",
+        owner,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...(isGlb && glbUpload
+              ? {
+                  source: "glb",
+                  modelUploadId: glbUpload.uploadId,
+                  layout: glbLayout,
+                  cabinetCount: glbModules || null,
+                  // The confirmed modules become separate, editable planner cabinets.
+                  planner: kitchenGlbPlannerKitchen(
+                    glbUpload.detection.modules,
+                    glbUpload.parts,
+                    {
+                      heightMm: glbUpload.info.heightMm,
+                      layout: glbLayout as "straight",
+                      backsplash: glbUpload.detection.backsplashM2 > 0,
+                      countertopColor: glbUpload.detection.countertopColor,
+                      countertopKind: glbUpload.detection.countertopKind,
+                      appliances: glbUpload.detection.appliances,
+                    },
+                  ),
+                }
+              : { sourceKitchenId }),
+            title,
+            shortDescription,
+            description,
+            style,
+            pricingMode,
+            priceFrom: pricingMode === "quote" ? null : priceFrom || null,
+            priceTo: pricingMode === "from" ? priceTo || null : null,
+            materials: splitList(materials),
+            leadTimeDays: leadTimeDays || null,
+            warrantyMonths: null,
+            installationIncluded,
+            tags: splitList(tags),
+            serviceAreas: splitList(serviceAreas),
+            inclusions: splitList(inclusions),
+            exclusions: splitList(exclusions),
+          }),
+        },
+      );
+      if (isGlb && glbUpload) {
+        // Publication requires a primary thumbnail; the 3D capture is that picture.
+        const media = new FormData();
+        media.set("file", glbUpload.thumbnail);
+        media.set("versionId", created.versionId);
+        media.set("kind", "thumbnail");
+        media.set("isPrimary", "true");
+        media.set("alt", title);
+        await request(
+          `/api/merchant/kitchen-designs/${created.designId}/media`,
+          owner,
+          { method: "POST", body: media },
+        ).catch(() => {
+          setError(
+            "Загвар хадгалагдсан ч нүүр зургийг оруулж чадсангүй. Дэлгэрэнгүй хэсгээс зураг нэмнэ үү.",
+          );
+        });
+        // Other sides, the 3D view and the numbered BOM sheet follow the thumbnail.
+        const bomSheet = await glbUpload.captureBom?.().catch(() => null);
+        const extras = [
+          ...glbUpload.renders.map((file) => ({ file, kind: "render" })),
+          ...(bomSheet ? [{ file: bomSheet, kind: "plan" }] : []),
+        ];
+        for (const extra of extras) {
+          const picture = new FormData();
+          picture.set("file", extra.file);
+          picture.set("versionId", created.versionId);
+          picture.set("kind", extra.kind);
+          picture.set("isPrimary", "false");
+          picture.set("alt", title);
+          await request(
+            `/api/merchant/kitchen-designs/${created.designId}/media`,
+            owner,
+            { method: "POST", body: picture },
+          ).catch(() => null);
+        }
+      }
       void clearDashboardDraft(draftScope);
+      setGlbUpload(null);
+      lastGlbUpload.current = null;
+      setGlbModules("");
+      setGlbLayout("straight");
       lastSource.current = null;
       setTitle("");
       setShortDescription("");
@@ -362,8 +528,7 @@ export function MerchantKitchenDesigns({
     }
   }
 
-  if (!data && !error)
-    return <PageSkeleton compact layout="list" />;
+  if (!data && !error) return <PageSkeleton compact layout="list" />;
   return (
     <section className="space-y-5">
       <div className="merchant-page-heading">
@@ -436,7 +601,10 @@ export function MerchantKitchenDesigns({
                     <button
                       type="submit"
                       className="btn-primary w-fit"
-                      disabled={busy === "create" || !kitchens.length}
+                      disabled={
+                        busy === "create" ||
+                        (isGlb ? !glbUpload : !kitchens.length)
+                      }
                     >
                       {busy === "create" ? (
                         <LoaderCircle className="animate-spin" size={16} />
@@ -455,36 +623,75 @@ export function MerchantKitchenDesigns({
                     </button>
                   </div>
                 </div>
-                <label className="km-source-picker label">
-                  Хадгалсан төсөл
-                  <select
-                    className="input mt-1 w-full"
-                    required
-                    value={sourceKitchenId}
-                    onChange={(e) => setSourceKitchenId(e.target.value)}
+                <div
+                  className="km-source-switch"
+                  role="group"
+                  aria-label="Загварын эх сурвалж"
+                >
+                  <button
+                    type="button"
+                    aria-pressed={!isGlb}
+                    onClick={() => setSourceType("project")}
                   >
-                    <option value="">Сонгоно уу</option>
-                    {kitchens.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {!kitchens.length && (
-                  <p className="km-create-empty">
-                    Хадгалсан 3D төсөл хараахан байхгүй.{" "}
-                    <Link href="/kitchen">
-                      Гал тогоогоо төлөвлөх <ChevronRight size={13} />
-                    </Link>
-                  </p>
+                    <strong>Төлөвлөгчийн төсөл</strong>
+                    Хадгалсан 3D төслөөсөө
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={isGlb}
+                    onClick={() => setSourceType("glb")}
+                  >
+                    <strong>Бэлэн GLB файл</strong>
+                    Бүтэн гал тогоог нэг файлаар
+                  </button>
+                </div>
+                {isGlb ? (
+                  <KitchenGlbSourceField
+                    owner={owner}
+                    upload={glbUpload}
+                    onUpload={setGlbUpload}
+                    layout={glbLayout}
+                    onLayout={setGlbLayout}
+                    cabinetCount={glbModules}
+                    onCabinetCount={setGlbModules}
+                    disabled={!!busy}
+                  />
+                ) : (
+                  <>
+                    <label className="km-source-picker label">
+                      Хадгалсан төсөл
+                      <select
+                        className="input mt-1 w-full"
+                        required
+                        value={sourceKitchenId}
+                        onChange={(e) => setSourceKitchenId(e.target.value)}
+                      >
+                        <option value="">Сонгоно уу</option>
+                        {kitchens.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    {!kitchens.length && (
+                      <p className="km-create-empty">
+                        Хадгалсан 3D төсөл хараахан байхгүй.{" "}
+                        <Link href="/kitchen">
+                          Гал тогоогоо төлөвлөх <ChevronRight size={13} />
+                        </Link>
+                      </p>
+                    )}
+                  </>
                 )}
                 <KitchenListingFields
                   form={form}
                   field={formField}
                   suggestions={suggestions}
                   owner={owner}
-                  source={sourceKitchenId ? { sourceKitchenId } : null}
+                  source={
+                    !isGlb && sourceKitchenId ? { sourceKitchenId } : null
+                  }
                   disabled={!!busy || draftStatus.loading}
                 />
               </form>
@@ -520,6 +727,7 @@ export function MerchantKitchenDesigns({
                   <span className="km-design-title">
                     <strong>{design.title}</strong>
                     <small>
+                      {design.source === "glb" ? "GLB · " : ""}
                       {design.cabinetCount} модуль · {design.roomWidthMm} ×{" "}
                       {design.roomDepthMm} мм
                     </small>

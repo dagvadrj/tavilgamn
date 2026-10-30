@@ -11,7 +11,7 @@ const product = `id name category description basePrice compareAtPrice promotion
   colors { id name hex priceDelta } materials { id name priceDelta } dimensions { w d h }
   inStock madeToOrder stockQuantity isNew isBestSeller modelRequested archivedAt storeIds roomTypes specifications
   model { id file previewFile physicalSize scale } placement { surfaces defaultElevation gap supportSurfaces { id width depth elevation } }`;
-const kitchen = `id storeId storeName slug publicationStatus publishedVersionId versionId versionNo reviewStatus title shortDescription description style layout tags pricingMode priceFrom priceTo materials sourceKitchenId leadTimeDays installationIncluded warrantyMonths serviceAreas inclusions exclusions cabinetCount roomWidthMm roomDepthMm maxHeightMm thumbnailUrl updatedAt`;
+const kitchen = `id storeId storeName slug publicationStatus publishedVersionId versionId versionNo reviewStatus title shortDescription description style layout tags pricingMode priceFrom priceTo materials sourceKitchenId source model { url widthMm depthMm heightMm bytes } plannerReady leadTimeDays installationIncluded warrantyMonths serviceAreas inclusions exclusions cabinetCount roomWidthMm roomDepthMm maxHeightMm thumbnailUrl updatedAt`;
 const usage = `limit used enabled nextResetAt`;
 
 // Existing resource URLs remain stable cache keys during the staged migration.

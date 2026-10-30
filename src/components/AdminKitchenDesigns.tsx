@@ -4,6 +4,7 @@ import { PageSkeleton } from "@/components/PageSkeleton";
 import Image from "next/image";
 import Link from "next/link";
 import { KitchenDesignGallery } from "./KitchenDesignGallery";
+import { KitchenGlbVersionPanel } from "./KitchenGlbVersionPanel";
 import {
   KITCHEN_LAYOUT_LABELS,
   KITCHEN_STYLE_LABELS,
@@ -486,6 +487,7 @@ export function AdminKitchenDesigns({
                   title={design.title}
                   activeMediaId={activeMediaId}
                 />
+                <KitchenGlbVersionPanel design={design} />
                 <p className="mk-muted">Зургийг сонгож, томруулж хараарай.</p>
               </div>
               <aside className="mk-summary">

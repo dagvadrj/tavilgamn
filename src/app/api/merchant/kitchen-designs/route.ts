@@ -1,11 +1,17 @@
 import { toJson } from "@/lib/supabase/json";
 import { NextRequest, NextResponse } from "next/server";
-import { parseKitchenMarketplaceDraft } from "@/lib/kitchenMarketplace";
+import {
+  parseKitchenMarketplaceDraft,
+  parseKitchenMarketplaceGlbDraft,
+} from "@/lib/kitchenMarketplace";
+import { readKitchenDesignUpload } from "@/lib/kitchenDesignModels";
+import { readKitchenGlbPlanner } from "@/lib/kitchenGlbPlannerServer";
 import { kitchenMarketplaceError, kitchenPrivateHeaders } from "@/lib/kitchenMarketplaceHttp";
 import { readMerchantKitchenDesigns } from "@/lib/kitchenMarketplaceServer";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireMerchant } from "@/lib/supabase/requireMerchant";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
@@ -22,7 +28,20 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await requireMerchant(request);
     if (auth.error) return auth.error;
-    const draft = parseKitchenMarketplaceDraft(await request.json().catch(() => null));
+    const body = await request.json().catch(() => null);
+    if (body?.source === "glb") {
+      const glb = parseKitchenMarketplaceGlbDraft(body);
+      const model = await readKitchenDesignUpload(auth.userId, glb.modelUploadId);
+      const { data, error } = await getSupabaseAdmin().rpc("create_kitchen_marketplace_glb_design", {
+        p_actor: auth.userId,
+        p_slug: glb.slug,
+        p_payload: toJson({ ...glb.payload, planner: readKitchenGlbPlanner(body.planner) }),
+        p_model: toJson(model),
+      });
+      if (error) throw error;
+      return NextResponse.json(data, { status: 201, headers: kitchenPrivateHeaders });
+    }
+    const draft = parseKitchenMarketplaceDraft(body);
     const { data, error } = await getSupabaseAdmin().rpc("create_kitchen_marketplace_design", {
       p_actor: auth.userId,
       p_source_id: draft.sourceKitchenId,

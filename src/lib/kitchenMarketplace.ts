@@ -85,6 +85,11 @@ export type KitchenDesignSummary = {
   priceTo: number | null;
   materials: string[];
   sourceKitchenId: string | null;
+  /** "glb" when the merchant uploaded one full-kitchen model instead of a planner project. */
+  source: "project" | "glb";
+  model: KitchenDesignModel | null;
+  /** False only for a GLB design without a planner copy ("open in planner" hidden). */
+  plannerReady: boolean;
   leadTimeDays: number | null;
   installationIncluded: boolean;
   warrantyMonths: number | null;
@@ -103,6 +108,15 @@ export type KitchenDesignSummary = {
   audit: KitchenAuditEvent[];
   updatedAt: string;
   listingSuggestions?: import("./kitchenListingSuggestions").KitchenListingSuggestions | null;
+};
+
+export type KitchenDesignModel = {
+  /** Same-origin GLB stream for this exact version. */
+  url: string;
+  widthMm: number;
+  depthMm: number;
+  heightMm: number;
+  bytes: number;
 };
 
 export class KitchenMarketplaceInputError extends Error {}
@@ -198,6 +212,45 @@ export function parseKitchenMarketplaceDraft(value: unknown) {
   }
   const details = parseKitchenMarketplaceDetails(value);
   return { sourceKitchenId, title: details.title, slug: kitchenDesignSlug(details.title), payload: details.payload };
+}
+
+export const KITCHEN_GLB_LAYOUTS = ["straight", "l-left", "l-right", "double-side"] as const;
+
+function glbShape(value: Record<string, unknown>, optional: boolean) {
+  const layout = value.layout ?? (optional ? null : "straight");
+  if (layout !== null && !(KITCHEN_GLB_LAYOUTS as readonly unknown[]).includes(layout)) {
+    throw new KitchenMarketplaceInputError("Гал тогооны хэлбэр буруу байна.");
+  }
+  const cabinetCount = optionalInteger(value.cabinetCount, "Модулийн тоо", 1, 80);
+  if (cabinetCount === null && !optional) {
+    throw new KitchenMarketplaceInputError("Модулийн тоог 1–80 хооронд оруулна уу.");
+  }
+  return { layout: layout as (typeof KITCHEN_GLB_LAYOUTS)[number] | null, cabinetCount };
+}
+
+/** A design whose source is one uploaded full-kitchen GLB instead of a planner project. */
+export function parseKitchenMarketplaceGlbDraft(value: unknown) {
+  if (!record(value)) throw new KitchenMarketplaceInputError("Загварын мэдээлэл буруу байна.");
+  const modelUploadId = text(value.modelUploadId, "GLB файл", 36);
+  if (!UUID.test(modelUploadId)) throw new KitchenMarketplaceInputError("GLB файлаа дахин оруулна уу.");
+  const shape = glbShape(value, false);
+  const details = parseKitchenMarketplaceDetails(value);
+  return {
+    modelUploadId,
+    title: details.title,
+    slug: kitchenDesignSlug(details.title),
+    payload: { ...details.payload, layout: shape.layout, cabinetCount: shape.cabinetCount },
+  };
+}
+
+export function parseKitchenGlbReplacement(value: unknown) {
+  if (!record(value)) throw new KitchenMarketplaceInputError("GLB солих хүсэлт буруу байна.");
+  const versionId = text(value.versionId, "Version", 36);
+  const modelUploadId = text(value.modelUploadId, "GLB файл", 36);
+  if (!UUID.test(versionId) || !UUID.test(modelUploadId)) {
+    throw new KitchenMarketplaceInputError("Version эсвэл GLB файлын ID буруу байна.");
+  }
+  return { versionId, modelUploadId, ...glbShape(value, true) };
 }
 
 export function parseKitchenMarketplaceVersion(value: unknown) {

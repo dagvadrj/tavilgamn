@@ -534,3 +534,93 @@
     grid-template-columns: 100px minmax(0, 1fr);
   }
 }
+
+/* GLB-sourced designs: photos ⇄ the uploaded kitchen in 3D / AR. */
+
+.kd-stage {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.kd-stage-switch {
+  display: inline-flex;
+  justify-self: start;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--site-line);
+  border-radius: 12px;
+  background: var(--site-bg);
+}
+
+.kd-stage-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 9px;
+  color: var(--site-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.kd-stage-switch button[aria-selected="true"] {
+  background: #fff;
+  color: var(--site-ink);
+  box-shadow: 0 1px 3px #00000014;
+}
+
+.kd-model {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--site-bg);
+}
+
+.kd-model-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.kd-model-edges {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 7px 11px;
+  border-radius: 9px;
+  background: #ffffffed;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.kd-model-status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  color: var(--site-muted);
+  font-size: 13px;
+}
+
+.kd-model-ar {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: var(--site-ink);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kd-model-size {
+  pointer-events: none;
+}

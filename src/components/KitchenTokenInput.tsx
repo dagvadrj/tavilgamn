@@ -84,7 +84,7 @@ export function KitchenTokenInput({
       >
         {suggestions
           .filter((item) => !selected.has(item.toLocaleLowerCase("mn")))
-          .slice(0, 12)
+          .slice(0, 24)
           .map((item) => (
             <button
               key={item}

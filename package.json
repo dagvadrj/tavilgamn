@@ -23,6 +23,7 @@
     "predev": "npm run models:decoders",
     "prebuild": "npm run models:decoders",
     "dev": "next dev --port 3000",
+    "dev:turbo": "next dev --turbopack --port 3000",
     "build": "next build",
     "start": "next start",
     "env:check": "node --env-file-if-exists=.env.local scripts/validate-env.mjs",

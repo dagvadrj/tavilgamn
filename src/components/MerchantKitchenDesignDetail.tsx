@@ -47,6 +47,7 @@ import {
   KITCHEN_STYLE_LABELS,
 } from "@/lib/kitchenListingSuggestions";
 import { KitchenDesignGallery } from "./KitchenDesignGallery";
+import { KitchenGlbVersionPanel } from "./KitchenGlbVersionPanel";
 import {
   MerchantKitchenVersionEditor,
   kitchenListingPayload,
@@ -631,6 +632,12 @@ export function MerchantKitchenDesignDetail({
                       job.inputImageUrl === item.url,
                   )
                 }
+              />
+              <KitchenGlbVersionPanel
+                design={design}
+                owner={owner}
+                editable={openDraft && !busy}
+                onReplaced={() => void load()}
               />
               {openDraft && (
                 <div className="mk-upload-bar">

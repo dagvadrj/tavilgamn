@@ -16,6 +16,15 @@ const nextConfig = {
     ],
   },
   transpilePackages: ["three"],
+  // `npm run dev:turbo`: the same browser stubs as the webpack config below.
+  turbopack: {
+    resolveAlias: {
+      "node:fs": { browser: "./src/lib/emptyNodeModule.ts" },
+      "node:path": { browser: "./src/lib/emptyNodeModule.ts" },
+      fs: { browser: "./src/lib/emptyNodeModule.ts" },
+      path: { browser: "./src/lib/emptyNodeModule.ts" },
+    },
+  },
   webpack(config, { isServer, webpack }) {
     if (!isServer) {
       // @gltf-transform/core lazily imports node:fs/node:path for NodeIO only;

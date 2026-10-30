@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { UseKitchenDesignButton } from "@/components/UseKitchenDesignButton";
 import { KitchenQuoteRequest } from "@/components/KitchenQuoteRequest";
-import { KitchenDesignGallery } from "@/components/KitchenDesignGallery";
+import { KitchenDesignStage } from "@/components/KitchenDesignStage";
 import { kitchenGalleryMedia } from "@/lib/kitchenDesignMedia";
 import { kitchenPriceLabel } from "@/lib/kitchenMarketplace";
 import "@/components/kitchen-design-detail.css";
@@ -62,10 +62,12 @@ export function KitchenContent({ design }: PageData["kitchen"]) {
         <span>Гал тогоо</span>
       </nav>
       <div className="kd-hero">
-        <KitchenDesignGallery
+        <KitchenDesignStage
           key={`${design.versionId}:${preferred?.id}`}
           media={design.media}
           title={design.title}
+          model={design.model}
+          poster={design.thumbnailUrl}
         />
         <aside className="kd-summary">
           <div className="kd-eyebrow">ГАЛ ТОГООНЫ ЗАГВАР</div>
@@ -101,10 +103,12 @@ export function KitchenContent({ design }: PageData["kitchen"]) {
             <div>
               <dt>
                 <Ruler size={17} />
-                Тохирох өрөө
+                {design.model ? "Гадна хэмжээ" : "Тохирох өрөө"}
               </dt>
               <dd>
-                {design.roomWidthMm} × {design.roomDepthMm} мм
+                {design.model
+                  ? `${design.model.widthMm} × ${design.model.depthMm} × ${design.model.heightMm} мм`
+                  : `${design.roomWidthMm} × ${design.roomDepthMm} мм`}
               </dd>
             </div>
             <div>
@@ -138,10 +142,13 @@ export function KitchenContent({ design }: PageData["kitchen"]) {
             </div>
           </dl>
           <div className="kd-actions">
-            <UseKitchenDesignButton
-              designId={design.id}
-              returnPath={`/kitchens/${design.slug}`}
-            />
+            {/* A GLB design opens in the planner through its confirmed modules. */}
+            {design.plannerReady && (
+              <UseKitchenDesignButton
+                designId={design.id}
+                returnPath={`/kitchens/${design.slug}`}
+              />
+            )}
             <KitchenQuoteRequest
               designId={design.id}
               returnPath={`/kitchens/${design.slug}`}
@@ -153,7 +160,9 @@ export function KitchenContent({ design }: PageData["kitchen"]) {
             />
           </div>
           <p className="kd-action-hint">
-            Өрөөний хэмжээ, өнгө, материалыг өөрчлөн төлөвлөөрэй.
+            {!design.plannerReady
+              ? "Өрөөнийхөө хэмжээг бичээд үйлдвэрлэгчээс тохируулсан үнийн санал аваарай."
+              : "Өрөөний хэмжээ, өнгө, материалыг өөрчлөн төлөвлөөрэй."}
           </p>
           <div className="kd-service-lines">
             <p>

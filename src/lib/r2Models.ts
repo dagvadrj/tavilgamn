@@ -11,6 +11,10 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { removeModelFiles } from "@/lib/cloudinaryModels";
 export class R2ModelError extends Error {}
 
+export function r2Config() {
+  return config();
+}
+
 function config() {
   const account = process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;

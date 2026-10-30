@@ -86,7 +86,7 @@ export function KitchensContent({
               href={`/kitchens/${design.slug}`}
               title={design.title}
               image={design.thumbnailUrl}
-              badge="Гал тогоо"
+              badge={design.model ? "Гал тогоо · 3D" : "Гал тогоо"}
               eyebrow={design.storeName}
               description={
                 design.shortDescription ||

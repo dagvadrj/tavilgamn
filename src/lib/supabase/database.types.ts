@@ -1828,6 +1828,25 @@ export type Database = {
         }
         Returns: Json
       }
+      replace_kitchen_marketplace_glb: {
+        Args: {
+          p_actor: string
+          p_design: string
+          p_model: Json
+          p_payload: Json
+          p_version: string
+        }
+        Returns: Json
+      }
+      create_kitchen_marketplace_glb_design: {
+        Args: {
+          p_actor: string
+          p_model: Json
+          p_payload: Json
+          p_slug: string
+        }
+        Returns: Json
+      }
       create_kitchen_quote_request: {
         Args: {
           p_actor: string

@@ -45,7 +45,8 @@ test("kitchen marketplace exposes complete listing details without a duplicate d
   assert.match(admin, /design\.inclusions\.map/);
   assert.match(admin, /design\.exclusions\.map/);
   assert.match(listing, /href=\{`\/kitchens\/\$\{design\.slug\}`\}/);
-  assert.match(detail, /KitchenDesignGallery/);
+  assert.match(detail, /KitchenDesignStage/);
+  assert.match(fs.readFileSync("src/components/KitchenDesignStage.tsx", "utf8"), /<KitchenDesignGallery media={media}/);
   assert.match(fs.readFileSync("src/lib/kitchenDesignMedia.ts", "utf8"), /AI бодит дүрслэл/);
   assert.match(detail, /Үнэд багтсан/);
   assert.match(detail, /Үйлдвэртэй холбогдох/);

@@ -49,7 +49,27 @@ type VersionRow = {
   approved_at: string | null;
   price_to: number | string | null;
   materials: string[];
+  /** design->source / design->model of the snapshot; null for planner projects. */
+  source?: string | null;
+  model?: Record<string, unknown> | null;
+  planner_ready?: string | null;
 };
+
+function versionModel(designId: string, version: VersionRow): KitchenDesignSummary["model"] {
+  const model = version.source === "glb" ? version.model : null;
+  const size = (key: string) => {
+    const value = Number(model?.[key]);
+    return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
+  };
+  if (!model || !size("widthMm")) return null;
+  return {
+    url: `/api/kitchen-designs/${designId}/model/${version.id}.glb`,
+    widthMm: size("widthMm"),
+    depthMm: size("depthMm"),
+    heightMm: size("heightMm"),
+    bytes: size("bytes"),
+  };
+}
 
 async function summaries(
   db: Db,
@@ -250,6 +270,10 @@ async function summaries(
         sourceKitchenId: includePrivateHistory
           ? (design.source_garniture_id ?? null)
           : null,
+        source: version.source === "glb" ? "glb" : "project",
+        model: versionModel(design.id, version),
+        plannerReady:
+          version.source !== "glb" || version.planner_ready === "true",
         leadTimeDays: version.lead_time_days,
         installationIncluded: version.installation_included,
         warrantyMonths: version.warranty_months,
@@ -277,7 +301,7 @@ async function summaries(
 }
 
 const VERSION_FIELDS =
-  "id,design_id,version_no,review_status,title,short_description,description,style,layout,tags,pricing_mode,price_from,price_to,materials,lead_time_days,installation_included,warranty_months,service_areas,inclusions,exclusions,cabinet_count,min_room_width_mm,min_room_depth_mm,max_height_mm,created_at,submitted_at,approved_at";
+  "id,design_id,version_no,review_status,title,short_description,description,style,layout,tags,pricing_mode,price_from,price_to,materials,lead_time_days,installation_included,warranty_months,service_areas,inclusions,exclusions,cabinet_count,min_room_width_mm,min_room_depth_mm,max_height_mm,created_at,submitted_at,approved_at,source:design->>source,model:design->model,planner_ready:design->>plannerReady";
 
 export async function readMerchantKitchenDesigns(
   actor: string,
