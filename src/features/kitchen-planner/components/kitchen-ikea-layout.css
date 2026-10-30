@@ -455,6 +455,23 @@
   & .km-feedback:not(.has-error) {
     display: none;
   }
+  /* Float over the stage: in flow it shrank the canvas and the room jumped mid-drag. */
+  & .kp-preview > .kitchen-placement-actions {
+    position: absolute;
+    top: 56px;
+    left: 16px;
+    z-index: 6;
+    width: min(300px, calc(100% - 32px));
+    max-height: calc(100% - 160px);
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    box-shadow: 0 4px 14px #17212b14;
+  }
+  /* Clear the view tabs pinned to the stage bottom. */
+  & .kp-preview > .km-feedback.has-error {
+    bottom: 64px;
+  }
   & .kitchen-plan-context {
     display: none;
   }
