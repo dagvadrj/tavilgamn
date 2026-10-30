@@ -7,17 +7,27 @@ import { DirectoryCard } from "@/components/DirectoryCard";
 import Form from "next/form";
 import { Search, X } from "lucide-react";
 import { kitchenDesignMatchesSearch } from "@/lib/kitchenListingSuggestions";
+import { sortByRoomMatch, type KitchenBuyerRoom } from "@/lib/kitchenRoomMatch";
+import { KitchenRoomForm } from "@/components/KitchenRoomForm";
 
 export function KitchensContent({
   allDesigns,
   query,
+  room = null,
 }: {
   allDesigns: PageData["kitchens"]["designs"];
   query: string;
+  room?: KitchenBuyerRoom | null;
 }) {
-  const designs = allDesigns.filter((design) =>
+  const found = allDesigns.filter((design) =>
     kitchenDesignMatchesSearch(design, query),
   );
+  const ranked = room
+    ? sortByRoomMatch(found, room)
+    : found.map((design) => ({ design, match: null }));
+  const designs = ranked.map((item) => item.design);
+  const fitting = ranked.filter((item) => item.match?.fits).length;
+  const roomQuery = room ? `w=${room.widthMm}&d=${room.depthMm}` : "";
   // Only tags shared by several designs help people browse; one-off tags are noise.
   const tagCounts = new Map<string, number>();
   for (const tag of allDesigns.flatMap((design) => design.tags))
@@ -50,9 +60,11 @@ export function KitchensContent({
           maxLength={120}
           placeholder="Нэр, материал эсвэл tag-аар хайх…"
         />
+        {room && <input type="hidden" name="w" value={room.widthMm} />}
+        {room && <input type="hidden" name="d" value={room.depthMm} />}
         <button type="submit">Хайх</button>
         {query && (
-          <Link href="/kitchens" aria-label="Хайлт арилгах">
+          <Link href={roomQuery ? `/kitchens?${roomQuery}` : "/kitchens"} aria-label="Хайлт арилгах">
             <X size={16} />
           </Link>
         )}
@@ -62,7 +74,7 @@ export function KitchensContent({
           {tags.map((tag) => (
             <Link
               key={tag}
-              href={`/kitchens?q=${encodeURIComponent(tag)}`}
+              href={`/kitchens?q=${encodeURIComponent(tag)}${roomQuery ? `&${roomQuery}` : ""}`}
               aria-current={query === tag ? "page" : undefined}
             >
               #{tag}
@@ -70,13 +82,15 @@ export function KitchensContent({
           ))}
         </div>
       )}
+      <KitchenRoomForm room={room} query={query} />
       <p className="kitchen-directory-results">
         {query ? `«${query}» · ` : ""}
         {designs.length} загвар
+        {room ? ` · ${fitting} нь таны ${room.widthMm} × ${room.depthMm} мм өрөөнд таарна` : ""}
       </p>
       {designs.length ? (
         <div className="directory-grid">
-          {designs.map((design) => (
+          {ranked.map(({ design, match }) => (
             <DirectoryCard
               key={design.id}
               href={`/kitchens/${design.slug}`}
@@ -96,6 +110,7 @@ export function KitchensContent({
                   : undefined,
               }}
               action="Загвар үзэх"
+              status={match ? { tone: match.fits ? "ok" : "warn", label: match.label } : undefined}
             />
           ))}
         </div>
