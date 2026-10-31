@@ -1550,9 +1550,21 @@
       flex: 1 1 0;
     }
   }
-  /* Desktop: views, scene toggles and camera share one dock at the bottom
-     instead of four floating corners. */
-  @media (min-width: 960px) {
+  /* Narrow desktops keep the floating controls (the joined dock would not
+     fit beside the panel); the banner waits above the view dock. */
+  @media (min-width: 960px) and (max-width: 1279px) {
+    & .kitchen-missing-models {
+      top: auto;
+      bottom: 84px;
+      left: 50%;
+    }
+    & .kitchen-missing-models span {
+      display: none;
+    }
+  }
+  /* Wide desktops: views, scene toggles and camera share one dock at the
+     bottom instead of four floating corners. */
+  @media (min-width: 1280px) {
     & .kitchen-view-tabs {
       position: absolute;
       bottom: 20px;
@@ -1658,9 +1670,19 @@
     & .kp-preview-bar {
       inset: 14px auto auto 20px;
     }
-    /* Clear of the mode switch (left) and the room map (right). */
+    /* The room map draws plain shapes now; a little wider so they read. */
+    & .kitchen-navigation-map {
+      width: 220px;
+    }
+    /* Between the mode switch (left) and the room map (right). */
     & .kitchen-missing-models {
-      max-width: calc(100% - 420px);
+      right: 256px;
+      left: 96px;
+      justify-content: center;
+      width: auto;
+      max-width: none;
+      margin-inline: auto;
+      transform: none;
     }
   }
 }

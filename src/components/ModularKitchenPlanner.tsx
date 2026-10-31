@@ -59,6 +59,8 @@ import { detachKitchenCountertops, updateKitchenCountertop, parseKitchenCountert
 import { KitchenSpaceEditor } from "@/features/kitchen-planner/components/KitchenSpaceEditor";
 import { KitchenStartDialog } from "@/features/kitchen-planner/components/KitchenStartDialog";
 import { Plan } from "@/features/kitchen-planner/components/PlannerPanels";
+import { KitchenMiniMap } from "@/features/kitchen-planner/components/KitchenMiniMap";
+import { createKitchenCameraPoseStore } from "@/lib/kitchenCameraPose";
 import { ProjectReport } from "@/features/kitchen-planner/components/ProjectReport";
 import { VersionHistory } from "@/features/kitchen-planner/components/VersionHistory";
 import { useKitchenCatalog } from "@/features/kitchen-planner/hooks/useKitchenCatalog";
@@ -231,6 +233,7 @@ export function ModularKitchenPlanner({
 }) {
   // The room map starts folded so the scene fills the canvas; it opens on demand.
   const [navigationMapOpen, setNavigationMapOpen] = useState(false);
+  const [cameraPose] = useState(createKitchenCameraPoseStore);
   const [design, setDesign] = useState<ModularKitchen>(() => ({
     ...createUnifiedKitchen(),
     cabinets: [],
@@ -1439,6 +1442,11 @@ export function ModularKitchenPlanner({
   const missingModelCabinets = sceneKitchen.cabinets.filter(
     (c) => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? ""),
   );
+  const missingModelIds = new Set(
+    sceneKitchen.cabinets
+      .filter((c) => !kitchenVariantFits(variantModels[c.variantId ?? ""], c) && !["refrigerator", "hood", "oven"].includes(c.opening ?? ""))
+      .map((c) => c.id),
+  );
   const designTabs = (
     <div className="kitchen-k-tabs" role="tablist" aria-label="Тохижуулах хэсэг" data-count={selected && !materialsTab ? 3 : 2}>
       {([
@@ -2130,6 +2138,7 @@ export function ModularKitchenPlanner({
                   night={night}
                   services={services}
                   cameraRequest={cameraRequest}
+                  cameraPose={navigationMapOpen ? cameraPose : undefined}
                   onSelect={selectCabinet}
                   onDeselect={() => {
                     setSelectedId(null);
@@ -2216,13 +2225,17 @@ export function ModularKitchenPlanner({
                 }
               >
                 <summary>Өрөөний зураг</summary>
-                <Plan
+                <KitchenMiniMap
                   kitchen={kitchen}
                   selectedId={selectedId}
+                  missingIds={missingModelIds}
+                  pose={cameraPose}
                   onSelect={selectCabinet}
-                  readOnly
-                  showMeasurements={false}
-                  showSpaceItems={false}
+                  onView={(side) => {
+                    if (workspaceView !== "3d") setWorkspaceView("3d");
+                    setMode("orbit");
+                    setCameraRequest((previous) => ({ id: (previous?.id ?? 0) + 1, action: side }));
+                  }}
                 />
                 <button type="button" onClick={() => setWorkspaceView("2d")}>
                   2D план нээх

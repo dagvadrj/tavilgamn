@@ -1,0 +1,107 @@
+/* Room map beside the 3D view: plain shapes, the camera marker and side bands. Sizes are in plan mm. */
+
+.kitchen-mini-map {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  margin-inline: auto;
+  background: #f6f7f8;
+}
+
+.kitchen-mini-map .kmm-side {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.kitchen-mini-map .kmm-side:hover {
+  fill: #075eaa1a;
+}
+
+.kitchen-mini-map .kmm-side:focus-visible {
+  fill: #075eaa26;
+  outline: none;
+}
+
+.kitchen-mini-map .kmm-floor {
+  fill: #fff;
+}
+
+.kitchen-mini-map .kmm-walls {
+  fill: none;
+  stroke: #2b313a;
+  stroke-width: 90;
+  stroke-linejoin: miter;
+  pointer-events: none;
+}
+
+.kitchen-mini-map :is(.kmm-window, .kmm-door) {
+  stroke-width: 110;
+  pointer-events: none;
+}
+
+.kitchen-mini-map .kmm-window {
+  stroke: #5aa9e6;
+}
+
+.kitchen-mini-map .kmm-door {
+  stroke: #f6f7f8;
+}
+
+.kitchen-mini-map .kmm-cabinet {
+  fill: #c9cfd6;
+  stroke: #fff;
+  stroke-width: 18;
+  cursor: pointer;
+}
+
+.kitchen-mini-map .kmm-cabinet[data-type="wall"] {
+  fill: #e3e7eb;
+  stroke: #9aa3ad;
+  stroke-dasharray: 40 30;
+}
+
+.kitchen-mini-map .kmm-cabinet[data-state="missing"] {
+  fill: #f5c45e;
+}
+
+.kitchen-mini-map .kmm-cabinet[data-type="wall"][data-state="missing"] {
+  fill: #fbe2a8;
+  stroke: #c98a12;
+}
+
+.kitchen-mini-map .kmm-cabinet[data-state="selected"] {
+  fill: #075eaa;
+  stroke: #fff;
+  stroke-dasharray: none;
+}
+
+.kitchen-mini-map .kmm-cabinet:hover:not([data-state="selected"]) {
+  fill: #9fb8d2;
+}
+
+.kitchen-mini-map .kmm-cabinet:focus-visible {
+  outline: none;
+  stroke: #075eaa;
+  stroke-width: 40;
+}
+
+.kitchen-mini-map .kmm-extra {
+  fill: #d8d2c8;
+  cursor: pointer;
+}
+
+.kitchen-mini-map .kmm-extra[data-state="selected"] {
+  fill: #075eaa;
+}
+
+.kitchen-mini-map .kmm-camera polygon {
+  fill: #075eaa33;
+  stroke: #075eaa;
+  stroke-width: 14;
+}
+
+.kitchen-mini-map .kmm-camera circle {
+  fill: #075eaa;
+  stroke: #fff;
+  stroke-width: 30;
+}

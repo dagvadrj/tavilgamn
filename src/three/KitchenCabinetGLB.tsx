@@ -28,6 +28,8 @@ import { configureModelTextureSampling } from "./modelTextureSampling";
 
 import { KitchenCatalogAppliance } from "./KitchenCatalogAppliance";
 import { CabinetBody } from "./KitchenCabinetBody";
+import { cabinetToe } from "@/lib/kitchenPanels";
+import { placeholderFronts } from "@/lib/kitchenPlaceholderFronts";
 import type { KitchenMaterialDefinition } from "@/lib/kitchenMaterials";
 import { resolveKitchenPaintMaterial } from "@/lib/kitchenPaint";
 import { kitchenRetrySubscriber, useKitchenAppearanceStatus } from "@/store/kitchenAppearanceStatus";
@@ -242,13 +244,35 @@ function AssemblyModel({
   );
 }
 
+/** Front thickness of the placeholder; enough to cast a gap shadow between fronts. */
+const PLACEHOLDER_FRONT_DEPTH = 0.018;
+
+/**
+ * A cabinet without a catalog model: a matte grey box with its door and drawer
+ * split, so the kitchen reads as furniture rather than empty outlines. The grey
+ * keeps it apart from real finishes; it is never exported as delivered.
+ */
 export function MissingKitchenModel({ cabinet, selected }: Props) {
+  const w = cabinet.width / 1000, h = cabinet.height / 1000, d = cabinet.depth / 1000;
+  const toe = cabinetToe(cabinet) / 1000;
+  const fronts = placeholderFronts(cabinet);
+  const body = d - (fronts.length ? PLACEHOLDER_FRONT_DEPTH : 0);
   return <group userData={{ deliveryPending: true, deliveryReady: false, missingCatalogModel: true }}>
-    <mesh position={[0, cabinet.height / 2000, 0]}>
-      <boxGeometry args={[cabinet.width / 1000, cabinet.height / 1000, cabinet.depth / 1000]} />
-      <meshBasicMaterial transparent opacity={0.035} depthWrite={false} color="#64748b" />
-      <Edges color={selected ? "#2563eb" : "#94a3b8"} />
+    <mesh position={[0, toe + (h - toe) / 2, -d / 2 + body / 2]} castShadow receiveShadow>
+      <boxGeometry args={[w, h - toe, body]} />
+      <meshStandardMaterial color="#d5d9de" roughness={0.85} />
+      <Edges color={selected ? "#2563eb" : "#a3abb5"} threshold={20} />
     </mesh>
+    {toe > 0 && <mesh position={[0, toe / 2, -0.03]} receiveShadow>
+      <boxGeometry args={[w, toe, d - 0.06]} />
+      <meshStandardMaterial color="#8d949c" roughness={0.9} />
+    </mesh>}
+    {fronts.map((front, index) => <mesh key={index} castShadow receiveShadow
+      position={[(front.x + front.width / 2) / 1000 - w / 2, (front.y + front.height / 2) / 1000, d / 2 - PLACEHOLDER_FRONT_DEPTH / 2]}>
+      <boxGeometry args={[front.width / 1000, front.height / 1000, PLACEHOLDER_FRONT_DEPTH]} />
+      <meshStandardMaterial color={front.kind === "drawer" ? "#e6e9ec" : "#eceef1"} roughness={0.7} />
+      <Edges color="#a3abb5" threshold={20} />
+    </mesh>)}
     {selected && <Html center position={[0, cabinet.height / 1000 + .06, 0]} zIndexRange={[8, 0]}>
       <span role="status" className="whitespace-nowrap rounded-md bg-white/95 px-3 py-2 text-xs shadow-sm">Тохирох 3D загвар бэлэн биш · Солих цэснээс сонгоорой</span>
     </Html>}

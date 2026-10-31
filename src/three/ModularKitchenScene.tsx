@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Canvas, useThree, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Edges, OrbitControls } from "@react-three/drei";
 import { useCanvasPerformance } from "./canvasPerformance";
 import { CameraMotionPreview } from "./CameraMotionPreview";
@@ -50,6 +50,7 @@ import type { CameraRequest } from "@/lib/plannerCamera";
 import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 import { applyCameraPose, cameraPose, cancelCameraTransition } from "@/lib/cameraTransition";
 import type { NavigationControls } from "@/lib/plannerCamera";
+import type { KitchenCameraPoseStore } from "@/lib/kitchenCameraPose";
 import { CursorNavigation } from "./CursorNavigationBinding";
 import {
   SCENE_NAVIGATION_START,
@@ -69,6 +70,8 @@ export interface ModularSceneProps {
   /** Show outlets, pipes and the hood duct through cabinets. */
   services?: boolean;
   cameraRequest?: CameraRequest;
+  /** Receives where the camera stands and looks, for the room map. */
+  cameraPose?: KitchenCameraPoseStore;
   onSelect: (id: string) => void;
   onSelectCountertop?: (id: string) => void;
   onDeselect?: () => void;
@@ -115,6 +118,23 @@ function CameraFit({ focus, side }: { focus: ReturnType<typeof kitchenEnvelope>;
     camera.lookAt(target);
     camera.updateProjectionMatrix();
   }, [camera, controls, focus, side, size.width, size.height]);
+  return null;
+}
+const poseDirection = new Vector3();
+/** Hands the camera's floor position and heading to the room map. */
+function CameraPoseReporter({ store }: { store: KitchenCameraPoseStore }) {
+  useFrame(({ camera }) => {
+    camera.getWorldDirection(poseDirection);
+    const length = Math.hypot(poseDirection.x, poseDirection.z);
+    // Straight down has no heading; keep the last one.
+    if (length < 0.05) return;
+    store.set({
+      x: camera.position.x * 1000,
+      z: camera.position.z * 1000,
+      dirX: poseDirection.x / length,
+      dirZ: poseDirection.z / length,
+    });
+  });
   return null;
 }
 type CaptureTarget = {
@@ -426,6 +446,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
       {props.interior && (
         <KitchenInteriorView kitchen={kitchen} request={props.cameraRequest} />
       )}
+      {props.cameraPose && <CameraPoseReporter store={props.cameraPose} />}
       <KitchenRoomShell room={kitchen.room} interior={props.interior} interactionActive={dragActive} night={night} />
       <group
         ref={props.exportRoot}
