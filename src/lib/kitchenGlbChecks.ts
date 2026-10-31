@@ -282,6 +282,27 @@ export function kitchenGlbMeasureModules(
     at.set(index, modules.length);
     modules.push(item);
   });
+  // A plinth hides the legs of every floor unit it runs under, so it is
+  // registered with each of them (BOM and click-to-select cover it).
+  const owned = new Set([...excluded, ...modules.flatMap((item) => item.parts)]);
+  for (const part of parts) {
+    if (owned.has(part.id) || !isBoard(part)) continue;
+    const [w, h, d] = size(part.box);
+    if (part.box.min[1] > 20 || h > 160 || Math.min(w, d) > BOARD) continue;
+    const along = w >= d ? 0 : 2;
+    const across = along === 0 ? 2 : 0;
+    for (const cabinet of modules) {
+      if (cabinet.role === "wall") continue;
+      const overlap =
+        Math.min(part.box.max[along], cabinet.box.max[along]) -
+        Math.max(part.box.min[along], cabinet.box.min[along]);
+      const gap = Math.max(
+        cabinet.box.min[across] - part.box.max[across],
+        part.box.min[across] - cabinet.box.max[across],
+      );
+      if (overlap > 50 && gap <= 30) cabinet.parts = [...cabinet.parts, part.id];
+    }
+  }
   return { ...detection, modules };
 }
 
@@ -488,6 +509,7 @@ export type KitchenGlbCategory =
   | "appliance"
   | "light"
   | "curved"
+  | "panel"
   | "other";
 
 export const KITCHEN_GLB_CATEGORY_LABELS: Record<KitchenGlbCategory, string> = {
@@ -498,6 +520,7 @@ export const KITCHEN_GLB_CATEGORY_LABELS: Record<KitchenGlbCategory, string> = {
   appliance: "Техник хэрэгсэл",
   light: "Гэрэл",
   curved: "Муруй хавтан",
+  panel: "Хаалт, цокол хавтан",
   other: "Модульд ороогүй",
 };
 
@@ -509,6 +532,7 @@ export const KITCHEN_GLB_CATEGORY_COLORS: Record<KitchenGlbCategory, string> = {
   appliance: "#a35fdc",
   light: "#f2d34b",
   curved: "#38c3c9",
+  panel: "#c8b08a",
   other: "#e0524f",
 };
 
@@ -523,6 +547,24 @@ export function kitchenGlbLooseBoards(
   const categories = kitchenGlbPartCategories(detection, parts);
   return parts.filter(
     (part) => categories.get(part.id) === "other" && isBoard(part),
+  );
+}
+
+/**
+ * End panels, legs, plinths and the back cladding of a peninsula: thin
+ * floor-standing parts against a cabinet. They finish a run; they are not a
+ * cabinet of their own, so the merchant need not turn them into modules.
+ */
+function finishingPanel(part: KitchenGlbPart, against: readonly KitchenGlbBox[]) {
+  const sides = size(part.box);
+  if (Math.min(...sides) > 100 || part.box.min[1] > 200) return false;
+  return against.some((box) =>
+    [0, 1, 2].every(
+      (axis) =>
+        Math.min(part.box.max[axis], box.max[axis]) -
+          Math.max(part.box.min[axis], box.min[axis]) >=
+        -30,
+    ),
   );
 }
 
@@ -545,6 +587,13 @@ export function kitchenGlbPartCategories(
         part.box.min[axis] >= box.min[axis] - 3 &&
         part.box.max[axis] <= box.max[axis] + 3,
     );
+  // A leg under a worktop overhang finishes the run as much as an end panel.
+  const finished = [
+    ...detection.modules.map((cabinet) => cabinet.box),
+    ...parts
+      .filter((part) => detection.countertopParts?.includes(part.id))
+      .map((part) => part.box),
+  ];
   for (const part of parts) {
     if (result.has(part.id)) continue;
     if (LIGHT.test([part.name, ...part.materials].join(" "))) {
@@ -558,7 +607,9 @@ export function kitchenGlbPartCategories(
     const holder = detection.modules.find((cabinet) =>
       inside(part, cabinet.box),
     );
-    result.set(part.id, holder ? holder.role : "other");
+    if (holder) result.set(part.id, holder.role);
+    else if (finishingPanel(part, finished)) result.set(part.id, "panel");
+    else result.set(part.id, "other");
   }
   return result;
 }

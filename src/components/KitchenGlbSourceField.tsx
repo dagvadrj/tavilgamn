@@ -51,7 +51,10 @@ import {
   type KitchenGlbModuleRole,
   type KitchenGlbPart,
 } from "@/lib/kitchenGlbModules";
-import { kitchenGlbApplianceLines } from "@/lib/kitchenGlbCarcass";
+import {
+  KITCHEN_GLB_APPLIANCE_LABELS,
+  kitchenGlbApplianceLines,
+} from "@/lib/kitchenGlbCarcass";
 import {
   KITCHEN_GLB_CATEGORY_COLORS,
   KITCHEN_GLB_CATEGORY_LABELS,
@@ -131,6 +134,7 @@ const LEGEND: KitchenGlbCategory[] = [
   "appliance",
   "light",
   "curved",
+  "panel",
   "other",
 ];
 
@@ -374,6 +378,12 @@ export function KitchenGlbSourceField({
   }, [selectedParts, previewKey]);
   useEffect(() => {
     if (!categories) return;
+    // Hovering a part outside every module names what it is (a fridge, an end panel).
+    const appliance = new Map(
+      (upload?.detection.appliances ?? []).flatMap((item) =>
+        item.parts.map((id) => [id, KITCHEN_GLB_APPLIANCE_LABELS[item.kind]] as const),
+      ),
+    );
     preview.current?.setCategories(
       new Map(
         [...categories].map(([id, kind]) => [
@@ -381,8 +391,14 @@ export function KitchenGlbSourceField({
           KITCHEN_GLB_CATEGORY_COLORS[kind],
         ]),
       ),
+      new Map(
+        [...categories].map(([id, kind]) => [
+          id,
+          appliance.get(id) ?? KITCHEN_GLB_CATEGORY_LABELS[kind],
+        ]),
+      ),
     );
-  }, [categories, previewKey]);
+  }, [categories, previewKey, upload]);
   useEffect(() => {
     preview.current?.showCategories(showColors);
   }, [showColors, previewKey]);

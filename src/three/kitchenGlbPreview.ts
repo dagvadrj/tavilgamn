@@ -374,6 +374,7 @@ export async function renderKitchenGlbPreview(
   // Colour coding: every part painted by its category (cabinet role, worktop …).
   const tintMaterials = new Map<string, MeshStandardMaterial>();
   let tints: ReadonlyMap<number, string> | null = null;
+  let partLabels: ReadonlyMap<number, string> = new Map();
   function applyTints(on: boolean) {
     for (const [id, meshes] of partMeshes)
       for (const mesh of meshes) {
@@ -654,7 +655,7 @@ export async function renderKitchenGlbPreview(
         tooltip.textContent = `${currentModules.indexOf(cabinet) + 1}. ${cabinet.name} · ${cabinet.widthMm} × ${cabinet.heightMm} × ${cabinet.depthMm} мм`;
       } else if (hit.part !== null && tool !== "measure") {
         const size = partBox(hit.part).getSize(new Vector3());
-        tooltip.textContent = `${tool === "add" ? "Модуль болгох · " : "Модульд ороогүй · "}${mm(size.x)} × ${mm(size.y)} × ${mm(size.z)} мм`;
+        tooltip.textContent = `${tool === "add" ? "Модуль болгох" : (partLabels.get(hit.part) ?? "Модульд ороогүй")} · ${mm(size.x)} × ${mm(size.y)} × ${mm(size.z)} мм`;
       } else if (tool === "measure" && hit.model) {
         const point = snap(hit.model.point, hit.part);
         tooltip.textContent = measureStart
@@ -848,8 +849,9 @@ export async function renderKitchenGlbPreview(
       drawHighlight();
       render();
     },
-    setCategories(colors: ReadonlyMap<number, string>) {
+    setCategories(colors: ReadonlyMap<number, string>, labels: ReadonlyMap<number, string> = new Map()) {
       tints = colors;
+      partLabels = labels;
       applyTints(tinted);
       render();
     },
