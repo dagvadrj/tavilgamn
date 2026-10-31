@@ -237,8 +237,9 @@ export function KitchenPlannerHeader({
 const UTILITY_TOOLS = new Set<KitchenToolbarTool>(["search", "photo", "annotation"]);
 
 /**
- * Design-step controls in the left panel above the catalog: one scrolling row
- * of catalog sections, and the plan tools as a separate group below it.
+ * Design-step catalog sections in the left panel: one scrolling row. Search is
+ * the catalog's own field, dimensions sit on the canvas dock and the review is
+ * the stepper's next step, so the plan tools no longer take a row here.
  */
 export function KitchenDesignTools({
   activeTool,
@@ -311,9 +312,6 @@ export function KitchenDesignTools({
         >
           {tools.filter((tool) => !UTILITY_TOOLS.has(tool.id)).map(button)}
         </div>
-      </div>
-      <div className="kitchen-k-plan-tools" role="group" aria-label="Хэрэгсэл">
-        {tools.filter((tool) => UTILITY_TOOLS.has(tool.id)).map(button)}
       </div>
     </div>
   );

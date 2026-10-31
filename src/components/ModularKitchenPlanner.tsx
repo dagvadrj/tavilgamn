@@ -32,8 +32,6 @@ import {
 import { KitchenModelLibrary } from "@/features/kitchen-planner/components/KitchenModelLibrary";
 import {
   KitchenViewDock,
-  KitchenViewLabel,
-  KitchenViewsPanel,
   type KitchenWorkspaceView,
 } from "@/features/kitchen-planner/components/KitchenViews";
 import { KitchenWallElevation } from "@/features/kitchen-planner/components/KitchenWallElevation";
@@ -148,6 +146,8 @@ import {
   Plug,
   Repeat,
   RotateCw,
+  Ruler,
+  Sparkles,
   Save,
   Sun,
   Trash2,
@@ -187,12 +187,6 @@ const KITCHEN_LAYOUT_OPTIONS = [
   ["u", "U · гурван талт"],
   ["double-side", "Хоёр талт"],
 ] as const;
-const KITCHEN_VIEW_LABEL: Record<KitchenWorkspaceView, string> = {
-  "2d": "2D",
-  "3d": "3D дээрээс",
-  interior: "Дотоод",
-  elevation: "Ханын зураг",
-};
 const KITCHEN_INSPECTOR_LABELS = {
   lighting: "Шугаман гэрэл",
   island: "Тек / Арал",
@@ -235,14 +229,8 @@ export function ModularKitchenPlanner({
   active?: boolean;
   queryString?: string;
 }) {
+  // The room map starts folded so the scene fills the canvas; it opens on demand.
   const [navigationMapOpen, setNavigationMapOpen] = useState(false);
-  useEffect(() => {
-    const wide = window.matchMedia("(min-width: 768px)");
-    const sync = () => setNavigationMapOpen(wide.matches);
-    sync();
-    wide.addEventListener("change", sync);
-    return () => wide.removeEventListener("change", sync);
-  }, []);
   const [design, setDesign] = useState<ModularKitchen>(() => ({
     ...createUnifiedKitchen(),
     cabinets: [],
@@ -323,7 +311,7 @@ export function ModularKitchenPlanner({
   const [roomDraftIssues, setRoomDraftIssues] = useState(0);
   const [designTab, setDesignTab] = useState<"catalog" | "materials" | "views">("catalog");
   const [night, setNight] = useState(false);
-  const [services, setServices] = useState(true);
+  const [services, setServices] = useState(false);
   const [materialScope, setMaterialScope] = useState<KitchenMaterialScope>("selected");
   // K2: the design step always shows one panel; with nothing else open it is
   // the catalog (or the views list the person chose).
@@ -1443,18 +1431,22 @@ export function ModularKitchenPlanner({
             : "items"
         : undefined;
   const materialsTab = settingsOpen && (inspector === "materials" || inspector === "countertop");
-  const shownDesignTab = materialsTab ? "materials" : designTab === "views" && !catalogOpen && !settingsOpen ? "views" : "catalog";
+  // The view switcher lives on the canvas dock, so the third tab exists only as the selection's details.
+  const shownDesignTab = materialsTab ? "materials" : selected && designTab === "views" && !catalogOpen && !settingsOpen ? "views" : "catalog";
   const selectedName = selected
     ? variantModels[selected.variantId ?? ""]?.modelName || cabinetLabel(selected)
     : null;
+  const missingModelCabinets = sceneKitchen.cabinets.filter(
+    (c) => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? ""),
+  );
   const designTabs = (
-    <div className="kitchen-k-tabs" role="tablist" aria-label="Тохижуулах хэсэг">
+    <div className="kitchen-k-tabs" role="tablist" aria-label="Тохижуулах хэсэг" data-count={selected && !materialsTab ? 3 : 2}>
       {([
         ["catalog", "Каталог", `${kitchen.cabinets.length} модуль`],
         ["materials", "Материал", "Нүүр · тавцан"],
-        selected && !materialsTab
-          ? (["views", "Дэлгэрэнгүй", selectedName ?? ""] as const)
-          : (["views", "Харагдац", KITCHEN_VIEW_LABEL[workspaceView]] as const),
+        ...(selected && !materialsTab
+          ? ([["views", "Дэлгэрэнгүй", selectedName ?? ""]] as const)
+          : []),
       ] as const).map(([id, label, meta]) => (
         <button
           key={id}
@@ -1935,13 +1927,11 @@ export function ModularKitchenPlanner({
           </details>
         </aside>
         {!spaceOpen && !reviewOpen && shownDesignTab === "views" && (
-          <aside className="kitchen-k-panel kitchen-k-views-panel" aria-label="Харагдац" data-sheet-expanded={sheetExpanded}>
+          <aside className="kitchen-k-panel kitchen-k-views-panel" aria-label="Сонгосон модулийн дэлгэрэнгүй" data-sheet-expanded={sheetExpanded}>
             <PlannerSheetGrip expanded={sheetExpanded} onExpand={setSheetExpanded} onClose={() => setSheetExpanded(false)} />
             {designTabs}
             <div className="kitchen-k-panel-scroll">
-              {selected
-                ? selectionPanel("overview", "detail")
-                : <KitchenViewsPanel current={workspaceView} onView={showWorkspaceView} selectedName={selectedName} />}
+              {selectionPanel("overview", "detail")}
             </div>
           </aside>
         )}
@@ -1951,7 +1941,6 @@ export function ModularKitchenPlanner({
             aria-label="Модуль шүүгээ байрлуулах"
             data-planner-tour="kitchen-stage"
           >
-            <KitchenViewLabel current={workspaceView} />
             {(selected || selectedExtra) && !reviewOpen && !spaceOpen && (
               <div
                 className="kitchen-k-toolbar"
@@ -2059,6 +2048,30 @@ export function ModularKitchenPlanner({
                   <span>Холболт</span>
                 </button>
               )}
+              {workspaceView === "2d" && (
+                <button
+                  type="button"
+                  className="kitchen-dimensions-toggle"
+                  aria-pressed={annotations}
+                  title={annotations ? "Хэмжээсийн шугамыг нуух" : "Хэмжээсийн шугам харуулах"}
+                  onClick={() => setAnnotations((value) => !value)}
+                >
+                  <Ruler size={16} aria-hidden="true" />
+                  <span>Хэмжээс</span>
+                </button>
+              )}
+              {workspaceView !== "2d" && (
+                <ViewportControls
+                  disabled={busy || !ready}
+                  onAction={(action) => {
+                    setMode("orbit");
+                    setCameraRequest((previous) => ({
+                      id: (previous?.id ?? 0) + 1,
+                      action,
+                    }));
+                  }}
+                />
+              )}
               {services && workspaceView !== "2d" && workspaceView !== "elevation" && !reviewOpen && (
                 <KitchenServicesLegend kitchen={sceneKitchen} />
               )}
@@ -2101,18 +2114,6 @@ export function ModularKitchenPlanner({
                 </button>
               </div>
             </div>
-            {workspaceView !== "2d" && (
-              <ViewportControls
-                disabled={busy || !ready}
-                onAction={(action) => {
-                  setMode("orbit");
-                  setCameraRequest((previous) => ({
-                    id: (previous?.id ?? 0) + 1,
-                    action,
-                  }));
-                }}
-              />
-            )}
             <div
               className={`kp-canvas ${workspaceView === "2d" || workspaceView === "elevation" ? "is-hidden" : ""}`}
             >
@@ -2228,11 +2229,15 @@ export function ModularKitchenPlanner({
                 </button>
               </details>
             )}
-            {!catalogLoading && !catalogError && sceneKitchen.cabinets.some(c => !kitchenVariantFits(variantModels[c.variantId ?? ""], c) && !["refrigerator", "hood", "oven"].includes(c.opening ?? "")) && workspaceView !== "2d" && (
+            {!catalogLoading && !catalogError && sceneKitchen.cabinets.some(c => !kitchenVariantFits(variantModels[c.variantId ?? ""], c) && !["refrigerator", "hood", "oven"].includes(c.opening ?? "")) && workspaceView !== "2d" && !reviewOpen && (
               <div className="kitchen-missing-models" role="status">
-                {sceneKitchen.cabinets.filter(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")).length} шүүгээнд тохирох 3D загвар сонгоно уу. Байрлал нь 2D планд хадгалагдана.
-                <button type="button" onClick={() => { const missing = sceneKitchen.cabinets.find(c => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? "")); if (missing) selectCabinet(missing.id); }}>Тохирох 3D загвар сонгох</button>
-                <button type="button" disabled={busy} onClick={applyCatalogModels}>Сангийн box, төхөөрөмжөөр солих</button>
+                <Sparkles size={18} aria-hidden="true" />
+                <p>
+                  <strong>{missingModelCabinets.length} шүүгээ 3D загваргүй байна</strong>
+                  <span>Одоо хайрцгаар харагдаж байна. Байрлал нь 2D планд хадгалагдсан.</span>
+                </p>
+                <button type="button" className="is-primary" disabled={busy} onClick={applyCatalogModels}>Автоматаар сонгох</button>
+                <button type="button" onClick={() => { const missing = missingModelCabinets[0]; if (missing) selectCabinet(missing.id); }}>Нэг нэгээр сонгох</button>
               </div>
             )}
             <p className="kp-preview-hint" hidden={workspaceView === "2d"}>

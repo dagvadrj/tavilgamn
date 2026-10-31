@@ -429,44 +429,11 @@
     background: var(--kk-ink);
     color: #fff;
   }
-  & .kitchen-k-plan-tools {
-    display: flex;
-    gap: 4px;
-    margin: 0 16px;
-    padding-top: 6px;
-    border-top: 1px solid var(--kk-line);
-  }
-  & .kitchen-k-plan-tools > button {
-    display: inline-flex;
-    flex: 1 1 0;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    min-width: 0;
-    min-height: 44px;
-    padding: 0 8px;
-    border: 0;
-    border-radius: 10px;
-    background: transparent;
-    color: var(--kk-muted);
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    cursor: pointer;
-  }
-  & .kitchen-k-plan-tools > button:hover {
-    background: var(--kk-tint);
-    color: var(--kk-ink);
-  }
-  & .kitchen-k-plan-tools > button[aria-pressed="true"] {
-    background: var(--kk-tint);
-    color: var(--kk-primary);
-  }
-  & :is(.kitchen-k-section-row, .kitchen-k-plan-tools) > button:focus-visible {
+  & .kitchen-k-section-row > button:focus-visible {
     outline: 2px solid var(--kk-primary);
     outline-offset: 2px;
   }
-  & :is(.kitchen-k-section-row, .kitchen-k-plan-tools) > button:disabled {
+  & .kitchen-k-section-row > button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
@@ -487,42 +454,6 @@
   & .kitchen-view-tabs {
     position: static;
     display: contents;
-  }
-  & .kitchen-k-viewlabel {
-    position: absolute;
-    top: 14px;
-    left: 22px;
-    z-index: 6;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  & .kitchen-k-viewlabel > span {
-    display: inline-flex;
-    align-items: center;
-    height: 32px;
-    padding: 0 12px;
-    border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 0 0 1px #171c240f;
-    font-size: 12.5px;
-    font-weight: 650;
-  }
-  & :is(.kitchen-k-viewlabel, .kitchen-k-views) em {
-    display: inline-flex;
-    align-items: center;
-    height: 24px;
-    padding: 0 10px;
-    border-radius: 12px;
-    background: var(--kk-ok-bg);
-    color: var(--kk-ok);
-    font-size: 11.5px;
-    font-style: normal;
-    font-weight: 600;
-  }
-  & :is(.kitchen-k-viewlabel, .kitchen-k-views) em[data-tag="3d"] {
-    background: var(--kk-tint);
-    color: var(--kk-primary);
   }
   & .kitchen-k-toolbar {
     position: absolute;
@@ -600,7 +531,7 @@
     color: var(--kk-primary);
   }
   /* Panel contents. */
-  & :is(.kitchen-k-room, .kitchen-k-step, .kitchen-k-views) {
+  & :is(.kitchen-k-room, .kitchen-k-step) {
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -1380,9 +1311,6 @@
     & :is(.kitchen-k-toolbar, .kitchen-k-dock) > button {
       padding: 0 10px;
     }
-    & .kitchen-k-viewlabel {
-      left: 404px;
-    }
     & .kitchen-k-elevation {
       left: 404px;
     }
@@ -1411,9 +1339,6 @@
     }
     & .kitchen-k-contents {
       inset: var(--kk-header) 8px 204px;
-    }
-    & .kitchen-k-viewlabel {
-      display: none;
     }
     & .kitchen-k-dock {
       top: 10px;
@@ -1516,6 +1441,226 @@
     & .kitchen-k-bom > footer {
       flex-wrap: wrap;
       gap: 12px;
+    }
+  }
+  /* Three tabs only while a module is selected (its details); otherwise two. */
+  & .kitchen-k-tabs[data-count="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* «N шүүгээ 3D загваргүй» leads the stage instead of a corner note. */
+  & .kitchen-missing-models {
+    position: absolute;
+    top: 14px;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    z-index: 7;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: max-content;
+    max-width: calc(100% - 32px);
+    padding: 8px 8px 8px 14px;
+    border: 1px solid #f0d9a8;
+    border-radius: 16px;
+    background: #fff8e8;
+    box-shadow: 0 8px 24px #171c241a;
+    color: var(--kk-ink);
+    transform: translateX(-50%);
+  }
+  & .kitchen-missing-models > svg {
+    flex: none;
+    color: var(--kk-warn);
+  }
+  & .kitchen-missing-models > p {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+  }
+  & .kitchen-missing-models strong {
+    font-size: 14px;
+    font-weight: 650;
+  }
+  & .kitchen-missing-models span {
+    color: var(--kk-muted);
+    font-size: 12px;
+  }
+  & .kitchen-missing-models > button {
+    flex: none;
+    min-height: 40px;
+    margin: 0;
+    padding: 0 14px;
+    border: 1px solid var(--kk-line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--kk-ink);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  & .kitchen-missing-models > button.is-primary {
+    border-color: var(--kk-primary);
+    background: var(--kk-primary);
+    color: #fff;
+  }
+  & .kitchen-missing-models > button:focus-visible {
+    outline: 2px solid var(--kk-primary);
+    outline-offset: 2px;
+  }
+  /* The selected module's toolbar takes the same spot; it wins while shown. */
+  & .kp-preview:has(.kitchen-k-toolbar) .kitchen-missing-models {
+    display: none;
+  }
+  @media (min-width: 600px) and (max-width: 959px) {
+    /* Centred in the stage beside the drawer and above the view dock; the mode
+       switch keeps the top-left. */
+    & .kitchen-missing-models {
+      top: auto;
+      bottom: 84px;
+      left: calc(50% + 166px);
+      flex-wrap: wrap;
+      max-width: calc(100% - 476px);
+    }
+    & .kitchen-missing-models span {
+      display: none;
+    }
+    & .kitchen-missing-models > button {
+      flex: 1 1 0;
+    }
+  }
+  @media (max-width: 599px) {
+    /* Phones keep the camera controls at the top, so the banner sits above the
+       scene toggles at the bottom and drops its second line. */
+    & .kitchen-missing-models {
+      top: auto;
+      bottom: 64px;
+      flex-wrap: wrap;
+      width: calc(100% - 24px);
+      padding: 10px 12px;
+    }
+    & .kitchen-missing-models > p {
+      flex: 1 1 calc(100% - 32px);
+    }
+    & .kitchen-missing-models span {
+      display: none;
+    }
+    & .kitchen-missing-models > button {
+      flex: 1 1 0;
+    }
+  }
+  /* Desktop: views, scene toggles and camera share one dock at the bottom
+     instead of four floating corners. */
+  @media (min-width: 960px) {
+    & .kitchen-view-tabs {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      max-width: calc(100% - 40px);
+      padding: 5px;
+      border-radius: 28px;
+      background: #fff;
+      box-shadow: 0 8px 26px #171c241f, 0 0 0 1px #171c240d;
+      transform: translateX(-50%);
+    }
+    & .kitchen-view-tabs > .kitchen-k-dock {
+      position: static;
+      padding: 0;
+      box-shadow: none;
+      transform: none;
+    }
+    & .kitchen-view-tabs > :is(.kitchen-night-toggle, .kitchen-services-toggle, .kitchen-dimensions-toggle) {
+      position: static;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 44px;
+      height: auto;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 22px;
+      background: transparent;
+      box-shadow: none;
+      color: var(--kk-ink);
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    & .kitchen-view-tabs > :is(.kitchen-night-toggle, .kitchen-services-toggle, .kitchen-dimensions-toggle):hover {
+      background: var(--kk-canvas);
+    }
+    & .kitchen-view-tabs > :is(.kitchen-night-toggle, .kitchen-services-toggle, .kitchen-dimensions-toggle)[aria-pressed="true"] {
+      background: var(--kk-ink);
+      color: #fff;
+    }
+    & .kitchen-view-tabs > :is(.kitchen-night-toggle, .kitchen-services-toggle, .kitchen-dimensions-toggle):focus-visible {
+      outline: 2px solid var(--kk-primary);
+      outline-offset: 2px;
+    }
+    & .kitchen-view-tabs > .viewport-controls {
+      position: static;
+      flex-direction: row;
+      align-items: center;
+      gap: 2px;
+      margin-left: 2px;
+      padding-left: 6px;
+      border-left: 1px solid var(--kk-line);
+    }
+    & .kitchen-view-tabs > .viewport-controls .viewport-zoom {
+      flex-direction: row;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    & .kitchen-view-tabs > .viewport-controls .viewport-zoom button + button {
+      border-top: 0;
+    }
+    & .kitchen-view-tabs > .viewport-controls :is(button, .viewport-more > summary) {
+      min-width: 44px;
+      min-height: 44px;
+      border: 0;
+      border-radius: 22px;
+      background: transparent;
+      box-shadow: none;
+    }
+    & .kitchen-view-tabs > .viewport-controls .viewport-more > summary {
+      flex-direction: row;
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    & .kitchen-view-tabs > .viewport-controls .viewport-more[open] > summary {
+      background: var(--kk-ink);
+      color: #fff;
+    }
+    /* Opens upward from the dock rather than to its left. */
+    & .kitchen-view-tabs > .viewport-controls .viewport-popover {
+      top: auto;
+      right: 0;
+      bottom: calc(100% + 12px);
+      left: auto;
+    }
+    /* Anchored to the dock now, so its height no longer follows the stage. */
+    & .kitchen-view-tabs > .kitchen-services-legend {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 0;
+      max-height: min(360px, 55vh);
+    }
+    /* The mode switch moves from the busy bottom-right to the top-left. */
+    & .kp-preview-bar {
+      inset: 14px auto auto 20px;
+    }
+    /* Clear of the mode switch (left) and the room map (right). */
+    & .kitchen-missing-models {
+      max-width: calc(100% - 420px);
     }
   }
 }
