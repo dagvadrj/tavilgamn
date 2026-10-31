@@ -44,3 +44,37 @@ test('camera pose store notifies only on a visible move', () => {
   store.set({ x: 900, z: 0, dirX: 0, dirZ: 1 });
   assert.equal(calls, 2, 'unsubscribed listeners stay quiet');
 });
+
+const { kitchenFacingSide } = loadSource('src/lib/kitchenCameraPose.ts');
+const { parseKitchenSpace } = loadSource('src/lib/kitchenSpace.ts');
+const { addRoomOpening } = loadSource('src/lib/kitchenOpenings.ts');
+const { createUnifiedKitchen } = loadSource('src/lib/kitchenAssembly.ts');
+
+test('without a window the camera opens in front of the cabinets', () => {
+  assert.equal(kitchenFacingSide([]), null);
+  // Back-wall run faces +z, so the camera stands toward the front of the room.
+  const [x, z] = kitchenFacingSide([{ width: 2400, position: { rotation: 0 } }]);
+  assert.ok(z > 0.7 && Math.abs(Math.hypot(x, z) - 1) < 1e-9);
+  // An L (back run + left run facing +x) opens on its corner.
+  const [lx, lz] = kitchenFacingSide([{ width: 2000, position: { rotation: 0 } }, { width: 2000, position: { rotation: Math.PI / 2 } }]);
+  assert.ok(lx > 0 && lz > 0);
+});
+
+test('floor material is kept when known and rejected otherwise', () => {
+  const room = { width: 3000, depth: 3000, height: 2600 };
+  assert.equal(parseKitchenSpace({ ...room, floorMaterial: 'tile-ceramic' }).floorMaterial, 'tile-ceramic');
+  assert.equal(parseKitchenSpace(room).floorMaterial, undefined);
+  assert.throws(() => parseKitchenSpace({ ...room, floorMaterial: 'carpet-sand' }), /Шалны материал/);
+});
+
+test('one-tap window and door land on a free wall and keep the room valid', () => {
+  const kitchen = createUnifiedKitchen();
+  const withWindow = addRoomOpening(kitchen, 'window', 'w1');
+  assert.ok(withWindow);
+  const window = withWindow.items.find(item => item.id === 'w1');
+  assert.equal(window.kind, 'window');
+  parseKitchenSpace(withWindow);
+  const withDoor = addRoomOpening({ ...kitchen, room: withWindow }, 'door', 'd1');
+  assert.ok(withDoor.items.some(item => item.id === 'd1' && item.kind === 'door'));
+  parseKitchenSpace(withDoor);
+});

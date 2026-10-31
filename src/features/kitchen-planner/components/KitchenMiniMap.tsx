@@ -37,6 +37,7 @@ export function KitchenMiniMap({
   pose,
   onSelect,
   onView,
+  thumbnail = false,
 }: {
   kitchen: ModularKitchen;
   selectedId: string | null;
@@ -46,6 +47,8 @@ export function KitchenMiniMap({
   onSelect: (id: string) => void;
   /** The side the camera should stand on. */
   onView: (side: KitchenMapSide) => void;
+  /** The folded map's preview: same drawing, nothing to press or focus. */
+  thumbnail?: boolean;
 }) {
   const camera = useSyncExternalStore(pose?.subscribe ?? noSubscribe, pose?.get ?? noPose, noPose);
   const { width, depth } = kitchen.room;
@@ -77,12 +80,14 @@ export function KitchenMiniMap({
   return (
     <svg
       className="kitchen-mini-map"
+      data-thumbnail={thumbnail || undefined}
       viewBox={`${box.x} ${box.z} ${box.w} ${box.d}`}
       style={{ aspectRatio: `${box.w} / ${box.d}` }}
-      role="group"
-      aria-label="Өрөөний зураг: шүүгээ сонгох, хананы хажууд дарж тэр ханыг харах"
+      {...(thumbnail
+        ? { "aria-hidden": true, pointerEvents: "none" }
+        : { role: "group", "aria-label": "Өрөөний зураг: шүүгээ сонгох, хананы хажууд дарж тэр ханыг харах" })}
     >
-      {sides.map(([side, x, z, w, h]) => (
+      {!thumbnail && sides.map(([side, x, z, w, h]) => (
         <rect
           key={side}
           className="kmm-side"
@@ -126,12 +131,14 @@ export function KitchenMiniMap({
             data-type={cabinet.type}
             data-state={state}
             points={cabinetCorners(cabinet).map((p) => `${p.x},${p.z}`).join(" ")}
-            role="button"
-            tabIndex={0}
-            aria-label={cabinetLabel(cabinet)}
-            aria-pressed={selectedId === cabinet.id}
-            onClick={() => onSelect(cabinet.id)}
-            onKeyDown={(event) => press(event, () => onSelect(cabinet.id))}
+            {...(!thumbnail && {
+              role: "button",
+              tabIndex: 0,
+              "aria-label": cabinetLabel(cabinet),
+              "aria-pressed": selectedId === cabinet.id,
+              onClick: () => onSelect(cabinet.id),
+              onKeyDown: (event: KeyboardEvent) => press(event, () => onSelect(cabinet.id)),
+            })}
           />
         );
       })}
@@ -141,7 +148,7 @@ export function KitchenMiniMap({
           className="kmm-extra"
           data-state={selectedId === extra.id ? "selected" : undefined}
           points={cabinetCorners(extra).map((p) => `${p.x},${p.z}`).join(" ")}
-          onClick={() => onSelect(extra.id)}
+          onClick={thumbnail ? undefined : () => onSelect(extra.id)}
         />
       ))}
       {marker && (

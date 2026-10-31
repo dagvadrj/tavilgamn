@@ -60,6 +60,7 @@ import { KitchenSpaceEditor } from "@/features/kitchen-planner/components/Kitche
 import { KitchenStartDialog } from "@/features/kitchen-planner/components/KitchenStartDialog";
 import { Plan } from "@/features/kitchen-planner/components/PlannerPanels";
 import { KitchenMiniMap } from "@/features/kitchen-planner/components/KitchenMiniMap";
+import { KitchenRoomFinishes } from "@/features/kitchen-planner/components/KitchenRoomFinishes";
 import { createKitchenCameraPoseStore } from "@/lib/kitchenCameraPose";
 import { ProjectReport } from "@/features/kitchen-planner/components/ProjectReport";
 import { VersionHistory } from "@/features/kitchen-planner/components/VersionHistory";
@@ -2036,6 +2037,7 @@ export function ModularKitchenPlanner({
                 <button
                   type="button"
                   className="kitchen-night-toggle"
+                  aria-label="Шөнийн горим"
                   aria-pressed={night}
                   title={night ? "Өдрийн гэрэлтэй болгох" : "Шөнийн горим: таазны гэрлээр харах"}
                   onClick={() => setNight((value) => !value)}
@@ -2048,6 +2050,7 @@ export function ModularKitchenPlanner({
                 <button
                   type="button"
                   className="kitchen-services-toggle"
+                  aria-label="Холболт"
                   aria-pressed={services}
                   title={services ? "Холболтын цэгүүдийг нуух" : "Шүүгээний цаана орсон ус, цахилгаан, сорогчийн хоолойг харах"}
                   onClick={() => setServices((value) => !value)}
@@ -2056,10 +2059,11 @@ export function ModularKitchenPlanner({
                   <span>Холболт</span>
                 </button>
               )}
-              {workspaceView === "2d" && (
+              {(workspaceView === "2d" || workspaceView === "3d") && (
                 <button
                   type="button"
                   className="kitchen-dimensions-toggle"
+                  aria-label="Хэмжээс"
                   aria-pressed={annotations}
                   title={annotations ? "Хэмжээсийн шугамыг нуух" : "Хэмжээсийн шугам харуулах"}
                   onClick={() => setAnnotations((value) => !value)}
@@ -2137,8 +2141,9 @@ export function ModularKitchenPlanner({
                   interior={workspaceView === "interior" && !reviewOpen}
                   night={night}
                   services={services}
+                  dimensions={annotations}
                   cameraRequest={cameraRequest}
-                  cameraPose={navigationMapOpen ? cameraPose : undefined}
+                  cameraPose={cameraPose}
                   onSelect={selectCabinet}
                   onDeselect={() => {
                     setSelectedId(null);
@@ -2224,8 +2229,21 @@ export function ModularKitchenPlanner({
                   setNavigationMapOpen(event.currentTarget.open)
                 }
               >
-                <summary>Өрөөний зураг</summary>
-                <KitchenMiniMap
+                <summary>
+                  {!navigationMapOpen && (
+                    <KitchenMiniMap
+                      thumbnail
+                      kitchen={kitchen}
+                      selectedId={selectedId}
+                      missingIds={missingModelIds}
+                      pose={cameraPose}
+                      onSelect={selectCabinet}
+                      onView={() => {}}
+                    />
+                  )}
+                  <span>Өрөөний зураг</span>
+                </summary>
+                {navigationMapOpen && <KitchenMiniMap
                   kitchen={kitchen}
                   selectedId={selectedId}
                   missingIds={missingModelIds}
@@ -2236,7 +2254,7 @@ export function ModularKitchenPlanner({
                     setMode("orbit");
                     setCameraRequest((previous) => ({ id: (previous?.id ?? 0) + 1, action: side }));
                   }}
-                />
+                />}
                 <button type="button" onClick={() => setWorkspaceView("2d")}>
                   2D план нээх
                 </button>
@@ -2459,7 +2477,17 @@ export function ModularKitchenPlanner({
                   </button>
                 </section>
               ) : inspector === "materials" ? (
+                <>
+                <KitchenRoomFinishes
+                  room={design.room}
+                  disabled={busy}
+                  onChange={(room) => {
+                    if (!busy) commit({ ...designRef.current, room });
+                  }}
+                  onRoomStep={() => changeStage("space")}
+                />
                 <section className="kitchen-style-selection">
+                  <h3>Шүүгээ</h3>
                   <p>Загвар, өнгийг өөрчлөх шүүгээгээ сонгоно уу.</p>
                   {kitchen.cabinets.map((cabinet) => (
                     <button
@@ -2494,6 +2522,7 @@ export function ModularKitchenPlanner({
                     </button>
                   )}
                 </section>
+                </>
               ) : (
                 <KitchenModelLibrary
                   modules={moduleCatalog}

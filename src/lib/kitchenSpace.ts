@@ -1,9 +1,10 @@
 import { roomWalls, type KitchenRoom, type KitchenSpaceItem } from "./kitchenCabinets";
 import { onRoomSegment, roomContainsFootprint, validateRoomOutline } from "./kitchenRoomOutline";
+import { KITCHEN_FLOOR_MATERIALS } from "./kitchenRoomFinishes";
 
 export const DEFAULT_KITCHEN_WALL_COLOR = "#d9d8d3";
 
-export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFront" | "items" | "wallColors" | "outline"> {
+export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFront" | "items" | "wallColors" | "outline" | "floorMaterial"> {
   const outline = validateRoomOutline(room);
   if (room.openFront !== undefined && typeof room.openFront !== "boolean") throw new Error("Өрөөний хэлбэр буруу байна.");
   let wallColors: KitchenRoom["wallColors"];
@@ -11,7 +12,8 @@ export function parseKitchenSpace(room: KitchenRoom): Pick<KitchenRoom, "openFro
     if (!room.wallColors || typeof room.wallColors !== "object" || Array.isArray(room.wallColors) || Object.entries(room.wallColors).some(([wall, color]) => !["back", "front", "left", "right"].includes(wall) || typeof color !== "string" || !/^#[0-9a-f]{6}$/i.test(color))) throw new Error("Ханын өнгө буруу байна.");
     wallColors = { ...room.wallColors };
   }
-  const appearance = { ...(outline ? {outline} : {}), ...(room.openFront === undefined ? {} : { openFront: room.openFront }), ...(wallColors ? { wallColors } : {}) };
+  if (room.floorMaterial !== undefined && !KITCHEN_FLOOR_MATERIALS.some((material) => material.id === room.floorMaterial)) throw new Error("Шалны материал буруу байна.");
+  const appearance = { ...(outline ? {outline} : {}), ...(room.openFront === undefined ? {} : { openFront: room.openFront }), ...(wallColors ? { wallColors } : {}), ...(room.floorMaterial ? { floorMaterial: room.floorMaterial } : {}) };
   if (room.items === undefined) return appearance;
   if (!Array.isArray(room.items) || room.items.length > 100) throw new Error("Өрөөний элементүүд буруу байна.");
   const ids = new Set<string>();

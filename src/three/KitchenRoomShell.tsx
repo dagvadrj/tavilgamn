@@ -293,7 +293,7 @@ export function KitchenRoomShell({
     room.depth,
     room.outline,
   ]);
-  const structureKey = JSON.stringify({ ...room, wallColors: undefined });
+  const structureKey = JSON.stringify({ ...room, wallColors: undefined, floorMaterial: undefined });
   const structure = useMemo(
     () => JSON.parse(structureKey) as KitchenRoom,
     [structureKey],
@@ -342,8 +342,9 @@ export function KitchenRoomShell({
     return createKitchenFloorGeometry({ width, depth, outline, height: 0 });
   }, [floorGeometryKey]);
   useEffect(() => () => floor.dispose(), [floor]);
+  const floorMaterial = room.floorMaterial ?? DEFAULT_FLOOR_MATERIAL;
   const finish = useRoomMaterial(
-    DEFAULT_FLOOR_MATERIAL,
+    floorMaterial,
     room.width / 1000,
     room.depth / 1000,
     "#c9a37a",
@@ -361,7 +362,7 @@ export function KitchenRoomShell({
         <meshPhysicalMaterial
           attach="material-0"
           {...finish}
-          {...roomFloorFinish(DEFAULT_FLOOR_MATERIAL, finish)}
+          {...roomFloorFinish(floorMaterial, finish)}
         />
         <meshStandardMaterial
           attach="material-1"

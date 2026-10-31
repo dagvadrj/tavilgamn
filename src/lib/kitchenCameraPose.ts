@@ -40,3 +40,22 @@ export function createKitchenCameraPoseStore(): KitchenCameraPoseStore {
 }
 
 export type KitchenMapSide = "front" | "back" | "left" | "right";
+
+/**
+ * Where to open the 3D view in a room without a window: in front of the
+ * cabinets, weighted by width, so the longest run faces the camera and an L
+ * opens on its corner. Turned slightly, as the window view is. Null when there
+ * is nothing to face.
+ */
+export function kitchenFacingSide(cabinets: readonly { width: number; position: { rotation: number } }[]): [number, number] | null {
+  let x = 0, z = 0;
+  for (const cabinet of cabinets) {
+    x += Math.sin(cabinet.position.rotation) * cabinet.width;
+    z += Math.cos(cabinet.position.rotation) * cabinet.width;
+  }
+  const length = Math.hypot(x, z);
+  if (length < 1e-6) return null;
+  const turn = -0.6;
+  const [sx, sz] = [x / length, z / length];
+  return [sx * Math.cos(turn) - sz * Math.sin(turn), sx * Math.sin(turn) + sz * Math.cos(turn)];
+}

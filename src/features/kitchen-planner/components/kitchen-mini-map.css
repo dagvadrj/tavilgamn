@@ -105,3 +105,20 @@
   stroke: #fff;
   stroke-width: 30;
 }
+
+/* Folded: a small preview of the room beside the label, so the map still orients. */
+
+.kitchen-navigation-map > summary:has(.kitchen-mini-map) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+}
+
+.kitchen-mini-map[data-thumbnail] {
+  flex: none;
+  width: 52px;
+  max-height: 64px;
+  margin: 0;
+  border-radius: 6px;
+}

@@ -1292,8 +1292,20 @@
     & :is(.kp-workspace, .kroom-workspace) {
       left: 0;
     }
+    /* Below the mode switch on the left: the right column holds the camera. */
     & .kitchen-navigation-map {
-      display: none;
+      display: block;
+      top: 136px;
+      right: auto;
+      left: 8px;
+      width: auto;
+    }
+    & .kitchen-navigation-map[open] {
+      width: 200px;
+    }
+    /* Short enough to clear the 3D model banner above the scene toggles. */
+    & .kitchen-navigation-map .kitchen-mini-map:not([data-thumbnail]) {
+      max-height: 116px;
     }
     & :is(.kitchen-k-panel, .kitchen-flow-catalog.is-open, .kp-settings.is-open) {
       width: 380px;
@@ -1307,6 +1319,9 @@
     }
     & .kp-preview-bar {
       inset: 70px auto auto 404px;
+    }
+    & .kitchen-navigation-map {
+      left: 404px;
     }
     & :is(.kitchen-k-toolbar, .kitchen-k-dock) > button {
       padding: 0 10px;
@@ -1443,6 +1458,33 @@
       gap: 12px;
     }
   }
+  /* Room step: a room without a window or door is offered both in one tap. */
+  & .kitchen-k-openings-hint {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid #f0d9a8;
+    border-radius: 12px;
+    background: #fff8e8;
+  }
+  & .kitchen-k-openings-hint > p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  & .kitchen-k-openings-hint > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  & .kitchen-k-openings-hint .kitchen-k-ghost {
+    background: #fff;
+  }
+  /* The inspector has no padding of its own, so the legacy -14px pull cut the title. */
+  & .kp-settings > .kp-settings-head {
+    width: auto;
+    margin: 0;
+  }
   /* Three tabs only while a module is selected (its details); otherwise two. */
   & .kitchen-k-tabs[data-count="2"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1550,35 +1592,27 @@
       flex: 1 1 0;
     }
   }
-  /* Narrow desktops keep the floating controls (the joined dock would not
-     fit beside the panel); the banner waits above the view dock. */
-  @media (min-width: 960px) and (max-width: 1279px) {
-    & .kitchen-missing-models {
-      top: auto;
-      bottom: 84px;
-      left: 50%;
-    }
-    & .kitchen-missing-models span {
-      display: none;
-    }
-  }
-  /* Wide desktops: views, scene toggles and camera share one dock at the
-     bottom instead of four floating corners. */
-  @media (min-width: 1280px) {
+  /* Desktop: views and scene toggles share one dock at the bottom instead of
+     floating corners; wide screens add the camera controls to it. Centred
+     without a transform so the camera controls can still be fixed to the
+     viewport on narrower desktops. */
+  @media (min-width: 960px) {
     & .kitchen-view-tabs {
       position: absolute;
+      right: 0;
       bottom: 20px;
-      left: 50%;
+      left: 0;
       z-index: 6;
       display: flex;
       align-items: center;
       gap: 4px;
+      width: max-content;
       max-width: calc(100% - 40px);
+      margin-inline: auto;
       padding: 5px;
       border-radius: 28px;
       background: #fff;
       box-shadow: 0 8px 26px #171c241f, 0 0 0 1px #171c240d;
-      transform: translateX(-50%);
     }
     & .kitchen-view-tabs > .kitchen-k-dock {
       position: static;
@@ -1615,6 +1649,51 @@
       outline: 2px solid var(--kk-primary);
       outline-offset: 2px;
     }
+    /* Anchored to the dock now, so its height no longer follows the stage. */
+    & .kitchen-view-tabs > .kitchen-services-legend {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 0;
+      max-height: min(360px, 55vh);
+    }
+    /* The mode switch moves from the busy bottom-right to the top-left. */
+    & .kp-preview-bar {
+      inset: 14px auto auto 20px;
+    }
+  }
+  /* Narrow desktops: the toggles keep their icons only and the camera
+     controls stay in the top-right column, so the dock fits beside the panel.
+     The 3D model banner waits above the dock. */
+  @media (min-width: 960px) and (max-width: 1279px) {
+    & .kitchen-view-tabs > .kitchen-k-dock > button {
+      padding: 0 12px;
+    }
+    & .kitchen-view-tabs > :is(.kitchen-night-toggle, .kitchen-services-toggle, .kitchen-dimensions-toggle) {
+      justify-content: center;
+      min-width: 44px;
+      padding: 0;
+    }
+    & .kitchen-view-tabs > :is(.kitchen-night-toggle, .kitchen-services-toggle, .kitchen-dimensions-toggle) > span {
+      display: none;
+    }
+    & .kitchen-view-tabs > .viewport-controls {
+      position: fixed;
+      top: calc(var(--kk-header) + 18px);
+      right: 14px;
+      bottom: auto;
+      left: auto;
+    }
+    & .kitchen-missing-models {
+      top: auto;
+      bottom: 84px;
+      left: 50%;
+    }
+    & .kitchen-missing-models span {
+      display: none;
+    }
+  }
+  /* Wide desktops: the camera controls join the dock. */
+  @media (min-width: 1280px) {
     & .kitchen-view-tabs > .viewport-controls {
       position: static;
       flex-direction: row;
@@ -1658,17 +1737,6 @@
       right: 0;
       bottom: calc(100% + 12px);
       left: auto;
-    }
-    /* Anchored to the dock now, so its height no longer follows the stage. */
-    & .kitchen-view-tabs > .kitchen-services-legend {
-      position: absolute;
-      bottom: calc(100% + 10px);
-      left: 0;
-      max-height: min(360px, 55vh);
-    }
-    /* The mode switch moves from the busy bottom-right to the top-left. */
-    & .kp-preview-bar {
-      inset: 14px auto auto 20px;
     }
     /* The room map draws plain shapes now; a little wider so they read. */
     & .kitchen-navigation-map {

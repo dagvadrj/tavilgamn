@@ -46,11 +46,12 @@ import { plannerLighting } from "@/lib/plannerLighting";
 import { KITCHEN_FILL, kitchenDaylight } from "@/lib/kitchenDaylight";
 import { ROOM_DAY_BACKDROP } from "@/lib/roomLighting";
 import { KitchenCeilingLamp } from "./KitchenCeilingLamp";
+import { KitchenRoomGuides } from "./KitchenRoomGuides";
 import type { CameraRequest } from "@/lib/plannerCamera";
 import { PLANNER_CAMERA } from "@/lib/plannerCameraProfile";
 import { applyCameraPose, cameraPose, cancelCameraTransition } from "@/lib/cameraTransition";
 import type { NavigationControls } from "@/lib/plannerCamera";
-import type { KitchenCameraPoseStore } from "@/lib/kitchenCameraPose";
+import { kitchenFacingSide, type KitchenCameraPoseStore } from "@/lib/kitchenCameraPose";
 import { CursorNavigation } from "./CursorNavigationBinding";
 import {
   SCENE_NAVIGATION_START,
@@ -69,6 +70,8 @@ export interface ModularSceneProps {
   night?: boolean;
   /** Show outlets, pipes and the hood duct through cabinets. */
   services?: boolean;
+  /** Wall lengths on the floor beside each wall. */
+  dimensions?: boolean;
   cameraRequest?: CameraRequest;
   /** Receives where the camera stands and looks, for the room map. */
   cameraPose?: KitchenCameraPoseStore;
@@ -311,6 +314,8 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
   // Structural inputs only: paint and furniture changes keep the same sun.
   const daylightKey = JSON.stringify({ width: kitchen.room.width, depth: kitchen.room.depth, height: kitchen.room.height, items: kitchen.room.items ?? [] });
   const daylight = useMemo(() => kitchenDaylight(JSON.parse(daylightKey)), [daylightKey]);
+  // Opens once: facing the window when there is one, otherwise the cabinets.
+  const [openingSide] = useState(() => (daylight.windowId ? null : kitchenFacingSide(kitchen.cabinets)) ?? daylight.cameraSide);
   const sunlightTarget = useMemo(() => {
     const target = new Object3D();
     target.position.set(...daylight.target);
@@ -346,7 +351,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
           [width + 0.05, roomHeight + 0.05, depth + 0.05],
         ]}
       />
-      {!props.interior && <CameraFit focus={focus} side={daylight.cameraSide} />}
+      {!props.interior && <CameraFit focus={focus} side={openingSide} />}
       <color attach="background" args={[night ? KITCHEN_NIGHT_BACKDROP : ROOM_DAY_BACKDROP]} />
       {/* Less uniform fill than the room planner: cabinet sides, plinths and
           the window patch need contrast to read as daylight, not a flat studio. */}
@@ -380,7 +385,11 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
         shadow-bias={-0.0001}
       />
       <primitive object={ceilingLightTarget} />
-      <KitchenCeilingLamp x={width / 2} z={depth / 2} ceiling={roomHeight} lit={night} />
+      {/* The cutaway has no ceiling to hang from, so the fixture shows only at
+          night (as the light's source) or from inside the room. Its light stays. */}
+      {(night || props.interior) && (
+        <KitchenCeilingLamp x={width / 2} z={depth / 2} ceiling={roomHeight} lit={night} />
+      )}
       {/* Ceiling fixture: the walls and roof block the sun in a windowless room,
           so this is what shades the backsplash under wall units and darkens corners. */}
       <spotLight
@@ -447,6 +456,7 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
         <KitchenInteriorView kitchen={kitchen} request={props.cameraRequest} />
       )}
       {props.cameraPose && <CameraPoseReporter store={props.cameraPose} />}
+      <KitchenRoomGuides room={kitchen.room} dimensions={Boolean(props.dimensions) && !props.interior} night={night} />
       <KitchenRoomShell room={kitchen.room} interior={props.interior} interactionActive={dragActive} night={night} />
       <group
         ref={props.exportRoot}

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { KitchenRoom, KitchenSpaceItem, ModularKitchen } from "@/lib/kitchenCabinets";
 import { resizeKitchenRoom } from "@/lib/kitchenSpace";
+import { addRoomOpening } from "@/lib/kitchenOpenings";
 import {
   KITCHEN_ROOM_LIMITS,
   KITCHEN_WALLS,
@@ -78,6 +79,13 @@ export function KitchenRoomPanel({
   };
   const value = (key: string, mm: number) => drafts[key] ?? toUnit(mm, unit);
   const openings = (room.items ?? []).filter((item) => item.kind === "door" || item.kind === "window");
+  const missingOpenings = (["window", "door"] as const).filter((kind) => !openings.some((item) => item.kind === kind));
+  const [openingError, setOpeningError] = useState("");
+  const addOpening = (kind: "window" | "door") => {
+    const next = addRoomOpening(kitchen, kind, `${kind}-${Date.now().toString(36)}`);
+    setOpeningError(next ? "" : `${kind === "window" ? "Цонх" : "Хаалга"} багтах чөлөөтэй хана алга. 2D төлөвлөгөөн дээрээс байрлуулна уу.`);
+    if (next) setRoom(next);
+  };
   const utilities = (room.items ?? []).filter((item) => item.kind in UTILITY);
   const column = (room.items ?? []).find((item) => item.kind === "column");
   const moveOpening = (item: KitchenSpaceItem, patch: { width?: number; offset?: number }) => {
@@ -182,7 +190,23 @@ export function KitchenRoomPanel({
 
       <section aria-label="Нүх">
         <h3>Нүх (цонх, хаалга)</h3>
-        {!openings.length && <p className="kitchen-k-muted">Нүх алга. 2D төлөвлөгөөн дээрээс нэмнэ.</p>}
+        {missingOpenings.length > 0 && (
+          <div className="kitchen-k-openings-hint">
+            <p>
+              {openings.length
+                ? `${missingOpenings[0] === "window" ? "Цонх" : "Хаалга"} алга.`
+                : "Цонх, хаалгаа нэмбэл нарны гэрэл, шүүгээний байрлал бодитой болно."}
+            </p>
+            <div>
+              {missingOpenings.map((kind) => (
+                <button key={kind} type="button" className="kitchen-k-ghost" disabled={disabled} onClick={() => addOpening(kind)}>
+                  + {kind === "window" ? "Цонх нэмэх" : "Хаалга нэмэх"}
+                </button>
+              ))}
+            </div>
+            {openingError && <span role="alert" className="kitchen-k-error">{openingError}</span>}
+          </div>
+        )}
         {openings.map((item) =>
           (["width", "offset"] as const).map((part) => {
             const key = `${item.id}:${part}`;
