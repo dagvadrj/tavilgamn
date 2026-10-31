@@ -589,6 +589,17 @@
   cursor: default;
 }
 
+/* The suggested correction sits under its issue, as a small action. */
+.kg-checks li button.kg-issue-fix {
+  width: auto;
+  margin: 2px 0 2px 11px;
+  padding: 2px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: #1f5fa8;
+  font-weight: 600;
+}
+
 .kg-bom {
   border: 1px solid var(--dashboard-border, var(--site-line));
   border-radius: 10px;

@@ -282,6 +282,34 @@ export function detectKitchenGlbModules(
       });
   }
 
+  // A hob's glass is a slab like the worktop, but a small one set into a
+  // larger worktop slab at the same level.
+  const hobParts = countertopParts.filter((id) => {
+    const hob = parts.find((part) => part.id === id)!;
+    const [w, , d] = size(hob.box);
+    if (Math.max(w, d) < 300 || Math.max(w, d) > 950) return false;
+    return countertopParts.some((other) => {
+      if (other === id) return false;
+      const top = parts.find((part) => part.id === other)!;
+      const [ow, , od] = size(top.box);
+      return (
+        ow * od >= 3 * w * d &&
+        [0, 2].every(
+          (axis) =>
+            hob.box.min[axis] >= top.box.min[axis] - 5 &&
+            hob.box.max[axis] <= top.box.max[axis] + 5,
+        ) &&
+        Math.min(hob.box.max[1], top.box.max[1]) -
+          Math.max(hob.box.min[1], top.box.min[1]) >=
+          -5
+      );
+    });
+  });
+  for (const id of hobParts) {
+    const [w, , d] = size(parts.find((part) => part.id === id)!.box);
+    countertop -= (w * d) / 1e6;
+    countertopParts.splice(countertopParts.indexOf(id), 1);
+  }
   const worktopTop = countertopParts.length
     ? Math.max(
         ...countertopParts.map(
@@ -439,7 +467,9 @@ export function detectKitchenGlbModules(
     }
     for (const span of merged) {
       // Fronts sharing a span are stacked (drawers, upper flap). Two boards
-      // that overlap in height are back-to-back carcass sides, not fronts.
+      // that overlap in height are back-to-back carcass sides, not fronts —
+      // unless they lie in one plane: a glass pane in its frame, a handle
+      // strip or a door exported twice are layers of the same front.
       const sides = span.parts.some((a, index) =>
         span.parts.slice(index + 1).some((b) => {
           const overlap =
@@ -449,7 +479,10 @@ export function detectKitchenGlbModules(
             a.box.max[1] - a.box.min[1],
             b.box.max[1] - b.box.min[1],
           );
-          return overlap > shorter * 0.5;
+          const offset = Math.abs(
+            a.box.min[axis] + a.box.max[axis] - b.box.min[axis] - b.box.max[axis],
+          ) / 2;
+          return overlap > shorter * 0.5 && offset >= 8;
         }),
       );
       if (sides) continue;
@@ -524,6 +557,33 @@ export function detectKitchenGlbModules(
   const named = (part: KitchenGlbPart) =>
     APPLIANCE_WORDS.test([part.name, ...part.materials].join(" "));
   const appliances = detectKitchenGlbAppliances(parts, worktopTop);
+  if (hobParts.length) {
+    const box = kitchenGlbUnion(
+      hobParts.map((id) => parts.find((part) => part.id === id)!.box),
+    );
+    // Already found by name (its glass): the slab is the same hob's body.
+    const known = appliances.find(
+      (item) =>
+        item.kind === "hob" &&
+        [0, 2].every(
+          (axis) =>
+            Math.min(item.box.max[axis], box.max[axis]) -
+              Math.max(item.box.min[axis], box.min[axis]) >
+            0,
+        ),
+    );
+    if (known) {
+      known.parts = [...known.parts, ...hobParts];
+      known.box = kitchenGlbUnion([known.box, box]);
+    } else
+      appliances.push({
+        id: `a${appliances.length + 1}`,
+        kind: "hob",
+        box,
+        parts: hobParts,
+        named: false,
+      });
+  }
   const applianceIds = new Set(appliances.flatMap((item) => item.parts));
   const footprintAll = kitchenGlbUnion([
     footprint,
@@ -561,6 +621,12 @@ export function detectKitchenGlbModules(
     );
     const widest = role === "base" ? 1000 : 900;
     if (inside.length > 1 && width > widest) continue;
+    // A box clearly narrower than the one cabinet around it is its contents
+    // (a bin, a drawer box), not a cabinet of its own.
+    if (inside.length === 1 && width < inside[0].widthMm - 20) {
+      inside[0].parts = [...inside[0].parts, part.id];
+      continue;
+    }
     for (const merged of inside) modules.splice(modules.indexOf(merged), 1);
     modules.push({
       id: "",
@@ -573,6 +639,29 @@ export function detectKitchenGlbModules(
       parts: [part.id, ...inside.flatMap((module) => module.parts)],
       facing: inside[0]?.facing ?? facing,
     });
+  }
+  // A front lying inside a freestanding fridge or dishwasher is that
+  // appliance's door, not a cabinet beside it.
+  const volume = (box: KitchenGlbBox) =>
+    size(box).reduce((product, side) => product * side, 1);
+  for (const item of appliances) {
+    if (item.kind !== "fridge" && item.kind !== "dishwasher") continue;
+    for (const cabinet of [...modules]) {
+      if (cabinet.role === "tall" && volume(cabinet.box) > 1.1 * volume(item.box)) continue;
+      const shared = [0, 1, 2].reduce(
+        (product, axis) =>
+          product *
+          Math.max(
+            0,
+            Math.min(cabinet.box.max[axis], item.box.max[axis]) -
+              Math.max(cabinet.box.min[axis], item.box.min[axis]),
+          ),
+        1,
+      );
+      if (shared < 0.6 * volume(cabinet.box)) continue;
+      modules.splice(modules.indexOf(cabinet), 1);
+      item.parts = [...item.parts, ...cabinet.parts];
+    }
   }
   const order: Record<KitchenGlbModuleRole, number> = {
     base: 0,

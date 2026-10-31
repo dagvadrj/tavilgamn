@@ -7,6 +7,7 @@ import type {
   KitchenReviewHistoryItem,
   KitchenVersionHistoryItem,
 } from "./kitchenMarketplace";
+import { readKitchenGlbSlots } from "./kitchenMarketplace";
 import { getSupabaseAdmin } from "./supabase/admin";
 import { kitchenGalleryMedia } from "./kitchenDesignMedia";
 import { kitchenListingSuggestions } from "./kitchenListingSuggestions";
@@ -68,6 +69,7 @@ function versionModel(designId: string, version: VersionRow): KitchenDesignSumma
     depthMm: size("depthMm"),
     heightMm: size("heightMm"),
     bytes: size("bytes"),
+    slots: readKitchenGlbSlots(model.slots),
   };
 }
 

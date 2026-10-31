@@ -65,6 +65,7 @@ export function KitchenContent({ design }: PageData["kitchen"]) {
           title={design.title}
           model={design.model}
           poster={design.thumbnailUrl}
+          designId={design.id}
         />
         <aside className="kd-summary">
           <Link

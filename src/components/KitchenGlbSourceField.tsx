@@ -61,6 +61,7 @@ import {
   kitchenGlbBom,
   kitchenGlbMergeModules,
   kitchenGlbModuleIssues,
+  kitchenGlbApplyFix,
   kitchenGlbPartCategories,
   type KitchenGlbCategory,
 } from "@/lib/kitchenGlbChecks";
@@ -135,6 +136,7 @@ const LEGEND: KitchenGlbCategory[] = [
   "light",
   "curved",
   "panel",
+  "backsplash",
   "other",
 ];
 
@@ -756,6 +758,18 @@ export function KitchenGlbSourceField({
                           >
                             {item.text}
                           </button>
+                          {item.fix ? (
+                            <button
+                              type="button"
+                              className="kg-issue-fix"
+                              onClick={() => {
+                                updateModules(kitchenGlbApplyFix(modules, item.fix!));
+                                setSelectedIds(item.moduleIds);
+                              }}
+                            >
+                              {item.fix.label}
+                            </button>
+                          ) : null}
                         </li>
                       ))}
                     </ul>

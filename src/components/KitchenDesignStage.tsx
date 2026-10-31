@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Images, LoaderCircle, Smartphone } from "lucide-react";
 import { KitchenDesignGallery } from "@/components/KitchenDesignGallery";
 import { authFetch } from "@/lib/authFetch";
-import type { KitchenDesignModel } from "@/lib/kitchenMarketplace";
+import type { KitchenDesignModel, KitchenGlbSlot } from "@/lib/kitchenMarketplace";
+import {
+  KITCHEN_FINISHES,
+  KITCHEN_SLOT_LABELS,
+  type KitchenFinishChoice,
+  type KitchenFinishOption,
+} from "@/lib/kitchenFinishes";
+import { useKitchenFinishes } from "@/store/kitchenFinishes";
 import type { KitchenDesignMedia } from "@/lib/kitchenDesignMedia";
 import { loadProductModelViewer } from "@/lib/modelViewer";
 import { renderKitchenGlbPreview } from "@/three/kitchenGlbPreview";
@@ -12,6 +19,8 @@ import { renderKitchenGlbPreview } from "@/three/kitchenGlbPreview";
 type Preview = Awaited<ReturnType<typeof renderKitchenGlbPreview>>;
 
 type View = "photos" | "model";
+
+const NO_CHOICE: KitchenFinishChoice = {};
 
 /**
  * Photos and, for GLB-sourced designs, the uploaded kitchen itself in 3D/AR.
@@ -24,6 +33,7 @@ export function KitchenDesignStage({
   poster,
   privateModel = false,
   initialView,
+  designId,
 }: {
   media: KitchenDesignMedia[];
   title: string;
@@ -31,6 +41,8 @@ export function KitchenDesignStage({
   poster?: string | null;
   privateModel?: boolean;
   initialView?: View;
+  /** With it the buyer may restyle the GLB, and the quote form hears of it. */
+  designId?: string;
 }) {
   const [view, setView] = useState<View>(
     initialView ?? (media.length || !model ? "photos" : "model"),
@@ -64,6 +76,7 @@ export function KitchenDesignStage({
           title={title}
           poster={poster}
           privateModel={privateModel}
+          designId={designId}
         />
       )}
     </div>
@@ -74,12 +87,35 @@ export function KitchenModelView({
   model,
   title,
   privateModel,
+  designId,
 }: {
   model: KitchenDesignModel;
   title: string;
   poster?: string | null;
   privateModel: boolean;
+  designId?: string;
 }) {
+  const choose = useKitchenFinishes((state) => state.choose);
+  const choice =
+    useKitchenFinishes((state) => (designId ? state.choices[designId] : undefined)) ?? NO_CHOICE;
+  const slots = model.slots;
+  // Slots the merchant's GLB actually has parts for.
+  const offered = useMemo(
+    () =>
+      slots
+        ? (Object.keys(KITCHEN_SLOT_LABELS) as KitchenGlbSlot[]).filter((slot) => slots[slot].length)
+        : [],
+    [slots],
+  );
+  const looks = useMemo(() => {
+    const result = new Map<number, KitchenFinishOption>();
+    for (const slot of offered) {
+      const option = KITCHEN_FINISHES[slot].find((item) => item.id === choice[slot]);
+      if (option && slots) for (const id of slots[slot]) result.set(id, option);
+    }
+    return result;
+  }, [offered, slots, choice]);
+  const [finishSlot, setFinishSlot] = useState<KitchenGlbSlot | null>(null);
   const stage = useRef<HTMLDivElement>(null);
   const view = useRef<Preview | null>(null);
   const [ready, setReady] = useState(false);
@@ -126,6 +162,9 @@ export function KitchenModelView({
   useEffect(() => {
     view.current?.showEdges(edges);
   }, [edges, ready]);
+  useEffect(() => {
+    view.current?.setFinishes(looks);
+  }, [looks, ready]);
 
   // The orbit view is our own (with board outlines); AR is handed to
   // model-viewer, which places the same public GLB via WebXR / Scene Viewer / Quick Look.
@@ -200,6 +239,54 @@ export function KitchenModelView({
             ? "AR-ыг утас, таблет дээр нээнэ үү"
             : "Өрөөндөө AR-аар харах"}
         </button>
+      )}
+      {ready && designId && offered.length > 0 && (
+        <div className="kd-finishes" aria-label="Материал солих">
+          <div className="kd-finish-slots" role="tablist">
+            {offered.map((slot) => (
+              <button
+                key={slot}
+                type="button"
+                role="tab"
+                aria-selected={finishSlot === slot}
+                onClick={() => setFinishSlot(finishSlot === slot ? null : slot)}
+              >
+                {KITCHEN_SLOT_LABELS[slot].split(" (")[0]}
+                {choice[slot] ? <i aria-hidden="true" /> : null}
+              </button>
+            ))}
+          </div>
+          {finishSlot && (
+            <div
+              className="kd-finish-options"
+              role="radiogroup"
+              aria-label={KITCHEN_SLOT_LABELS[finishSlot]}
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!choice[finishSlot]}
+                className="is-original"
+                onClick={() => choose(designId, { ...choice, [finishSlot]: undefined })}
+              >
+                <span aria-hidden="true" />
+                Анхны
+              </button>
+              {KITCHEN_FINISHES[finishSlot].map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={choice[finishSlot] === option.id}
+                  onClick={() => choose(designId, { ...choice, [finishSlot]: option.id })}
+                >
+                  <span aria-hidden="true" style={{ background: option.color }} />
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
       <span className="kd-gallery-label kd-model-size">
         {model.widthMm.toLocaleString("mn-MN")} ×{" "}

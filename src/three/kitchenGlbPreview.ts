@@ -93,6 +93,12 @@ const mm = (value: number) => Math.round(value * 1000);
  * with editing tools: hover highlight, cabinet boxes, colour coding, dimension
  * lines, a tape measure and pictures for the listing.
  */
+export type KitchenGlbFinishLook = {
+  color: string;
+  roughness: number;
+  metalness: number;
+};
+
 export async function renderKitchenGlbPreview(
   host: HTMLElement,
   source: Blob | ArrayBuffer,
@@ -375,11 +381,28 @@ export async function renderKitchenGlbPreview(
   const tintMaterials = new Map<string, MeshStandardMaterial>();
   let tints: ReadonlyMap<number, string> | null = null;
   let partLabels: ReadonlyMap<number, string> = new Map();
+  // Finishes the buyer chose (fronts, worktop …); category colours win over them.
+  let finishes: ReadonlyMap<number, KitchenGlbFinishLook> = new Map();
   function applyTints(on: boolean) {
     for (const [id, meshes] of partMeshes)
       for (const mesh of meshes) {
         if (!mesh.userData.kgOriginal) mesh.userData.kgOriginal = mesh.material;
         const color = on ? tints?.get(id) : undefined;
+        const finish = color ? undefined : finishes.get(id);
+        if (finish) {
+          const key = `finish:${finish.color}:${finish.roughness}:${finish.metalness}`;
+          let material = tintMaterials.get(key);
+          if (!material) {
+            material = new MeshStandardMaterial({
+              color: finish.color,
+              roughness: finish.roughness,
+              metalness: finish.metalness,
+            });
+            tintMaterials.set(key, material);
+          }
+          mesh.material = material;
+          continue;
+        }
         if (!color) {
           mesh.material = mesh.userData.kgOriginal;
           continue;
@@ -852,6 +875,12 @@ export async function renderKitchenGlbPreview(
     setCategories(colors: ReadonlyMap<number, string>, labels: ReadonlyMap<number, string> = new Map()) {
       tints = colors;
       partLabels = labels;
+      applyTints(tinted);
+      render();
+    },
+    /** Paints parts in a chosen finish; an empty map restores the GLB's own. */
+    setFinishes(next: ReadonlyMap<number, KitchenGlbFinishLook>) {
+      finishes = next;
       applyTints(tinted);
       render();
     },

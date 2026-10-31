@@ -231,6 +231,8 @@ function guessAppliance(
     if (
       bottom >= worktopTop - 350 &&
       bottom < worktopTop &&
+      // The bowl hangs from the worktop: its rim reaches the worktop level.
+      top >= worktopTop - 80 &&
       // A sink bowl hangs below the worktop; its tap may rise well above it.
       top <= worktopTop + 600 &&
       width >= 300 &&
@@ -270,6 +272,8 @@ export function detectKitchenGlbAppliances(
     const [w, h, d] = size(part.box);
     if (named(part)) return true;
     if (isBoard(part) || Math.max(w, h, d) < 150) return false; // boards, handles, hinges
+    // Upright panels up to 40 mm (thick fronts, end panels) are joinery too.
+    if (Math.min(w, d) <= 40 && h >= 80 && Math.max(w, d) >= 150) return false;
     const wall = h >= 1500 && Math.min(w, d) < 320 && Math.max(w, d) > 900;
     return !wall && Math.max(w, d) <= 2000;
   });

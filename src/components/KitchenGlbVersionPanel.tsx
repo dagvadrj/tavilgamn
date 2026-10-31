@@ -9,6 +9,7 @@ import {
   prepareKitchenDesignGlb,
 } from "@/lib/kitchenDesignGlb";
 import { kitchenGlbPlannerKitchen } from "@/lib/kitchenGlbModules";
+import { kitchenGlbMaterialSlots } from "@/lib/kitchenGlbChecks";
 import type { KitchenDesignSummary } from "@/lib/kitchenMarketplace";
 import { renderKitchenGlbPreview } from "@/three/kitchenGlbPreview";
 import { KitchenModelView } from "./KitchenDesignStage";
@@ -185,7 +186,8 @@ function replacementShape(
     countertopKind: detection.countertopKind,
     appliances: detection.appliances,
   });
+  const materialSlots = kitchenGlbMaterialSlots(detection, parts);
   return planner
-    ? { planner, layout: hints.layout, cabinetCount: hints.cabinetCount }
-    : {};
+    ? { planner, layout: hints.layout, cabinetCount: hints.cabinetCount, materialSlots }
+    : { materialSlots };
 }

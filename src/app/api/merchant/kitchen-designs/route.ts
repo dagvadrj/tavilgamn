@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   parseKitchenMarketplaceDraft,
   parseKitchenMarketplaceGlbDraft,
+  readKitchenGlbSlots,
 } from "@/lib/kitchenMarketplace";
 import { readKitchenDesignUpload } from "@/lib/kitchenDesignModels";
 import { readKitchenGlbPlanner } from "@/lib/kitchenGlbPlannerServer";
@@ -32,11 +33,12 @@ export async function POST(request: NextRequest) {
     if (body?.source === "glb") {
       const glb = parseKitchenMarketplaceGlbDraft(body);
       const model = await readKitchenDesignUpload(auth.userId, glb.modelUploadId);
+      const slots = readKitchenGlbSlots(body.materialSlots);
       const { data, error } = await getSupabaseAdmin().rpc("create_kitchen_marketplace_glb_design", {
         p_actor: auth.userId,
         p_slug: glb.slug,
         p_payload: toJson({ ...glb.payload, planner: readKitchenGlbPlanner(body.planner) }),
-        p_model: toJson(model),
+        p_model: toJson(slots ? { ...model, slots } : model),
       });
       if (error) throw error;
       return NextResponse.json(data, { status: 201, headers: kitchenPrivateHeaders });

@@ -586,3 +586,98 @@
 .kd-model-size {
   pointer-events: none;
 }
+
+/* Buyer finish picker over the 3D view: slot tabs, then swatches. */
+.kd-finishes {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+  max-width: min(320px, calc(100% - 140px));
+}
+
+.kd-finish-slots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 11px;
+  background: #ffffffed;
+}
+
+.kd-finish-slots button {
+  position: relative;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.kd-finish-slots button[aria-selected="true"] {
+  background: var(--site-ink);
+  color: #fff;
+}
+
+/* A dot marks a slot whose finish was changed. */
+.kd-finish-slots i {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--site-accent);
+}
+
+.kd-finish-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 6px;
+  border-radius: 11px;
+  background: #ffffffed;
+}
+
+.kd-finish-options button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 12px;
+  text-align: left;
+}
+
+.kd-finish-options button[aria-checked="true"] {
+  border-color: var(--site-accent);
+  background: #fff;
+}
+
+.kd-finish-options span {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgb(0 0 0 / 15%);
+  border-radius: 50%;
+}
+
+/* "Original" shows the merchant's own finish as a split swatch. */
+.kd-finish-options .is-original span {
+  background: linear-gradient(135deg, #fff 50%, #d6d3cc 50%);
+}
+
+@media (max-width: 640px) {
+  .kd-finishes {
+    top: auto;
+    right: 8px;
+    bottom: 64px;
+    left: 8px;
+    max-width: none;
+  }
+}

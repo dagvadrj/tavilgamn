@@ -79,3 +79,66 @@ test("an end panel against a cabinet is a finishing panel, not a loose board", (
   const parts = [board(1, [600, 0, 0], [618, 835, 598])];
   assert.equal(checks.kitchenGlbPartCategories(detection, parts).get(1), "panel");
 });
+
+test("a glass pane in its frame is one front, not two carcass sides", () => {
+  // Two identical boards in one plane (frame + glass) and a door above them.
+  const parts = [
+    board(0, [0, 1440, -22], [600, 1810, -7]),
+    board(1, [0, 1440, -22], [600, 1810, -7]),
+    board(2, [0, 1811, -22], [600, 2340, -2]),
+    board(3, [600, 1440, -22], [1200, 2340, -2]),
+  ];
+  const { modules: found } = modules.detectKitchenGlbModules(parts);
+  const first = found.find((item) => item.parts.includes(0));
+  assert.ok(first, "the framed glass door forms a module");
+  assert.equal(first.role, "wall");
+  assert.equal(first.widthMm, 600);
+});
+
+test("one mesh carrying a whole run's carcass belongs to every cabinet in front of it", () => {
+  const front = (id, x0, x1) => board(id, [x0, 120, -252], [x1, 850, -232]);
+  const parts = [
+    front(0, 0, 600), front(1, 600, 1200), front(3, 1200, 1800),
+    { id: 2, name: "carcass", materials: [], box: { min: [0, 120, -231], max: [1800, 880, 349] } },
+  ];
+  const detection = modules.detectKitchenGlbModules(parts);
+  const measured = checks.kitchenGlbMeasureModules(detection, parts).modules;
+  assert.equal(measured.length, 3);
+  for (const cabinet of measured) {
+    assert.ok(cabinet.parts.includes(2));
+    assert.equal(cabinet.depthMm, 601);
+    assert.equal(cabinet.measured.depth, "carcass");
+  }
+});
+
+test("issue fixes round a front-measured width and mark it as entered", () => {
+  const cabinet = {
+    id: "m1", role: "base", name: "Доод шүүгээ 600", widthMm: 599, heightMm: 850, depthMm: 600, parts: [], facing: "-z",
+    measured: { width: "front", height: "carcass", depth: "carcass" },
+    box: { min: [0, 0, 0], max: [599, 850, 600] },
+  };
+  const detection = { modules: [cabinet], fronts: 1, countertopM2: 0, backsplashM2: 0, countertopParts: [], appliances: [] };
+  const issue = checks.kitchenGlbModuleIssues(detection, []).find((item) => item.fix);
+  assert.equal(issue.fix.label, "600 мм болгох");
+  const [fixed] = checks.kitchenGlbApplyFix([cabinet], issue.fix);
+  assert.equal(fixed.widthMm, 600);
+  assert.equal(fixed.measured.width, "manual");
+});
+
+test("a side panel read as a front is turned to its row's facing", () => {
+  const unit = (id, facing, x0, x1, z0, z1) => ({
+    id, role: "wall", name: id, widthMm: 600, heightMm: 900, depthMm: 330, parts: [], facing,
+    measured: { width: "carcass", height: "carcass", depth: "carcass" },
+    box: { min: [x0, 1440, z0], max: [x1, 2340, z1] },
+  });
+  const detection = {
+    modules: [unit("m1", "-x", -1349, -730, -22, 349), unit("m2", "-z", -729, -130, -21, 309), unit("m3", "-z", -129, 470, -21, 309)],
+    fronts: 3, countertopM2: 0, backsplashM2: 0, countertopParts: [], appliances: [],
+  };
+  const issue = checks.kitchenGlbModuleIssues(detection, []).find((item) => item.fix?.label === "Эгнээний чиглэлд эргүүлэх");
+  assert.deepEqual(issue.moduleIds, ["m1"]);
+  const [turned] = checks.kitchenGlbApplyFix(detection.modules, issue.fix);
+  assert.equal(turned.facing, "-z");
+  assert.equal(turned.widthMm, 619);
+  assert.equal(turned.depthMm, 371);
+});

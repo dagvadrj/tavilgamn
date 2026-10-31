@@ -47,6 +47,7 @@ import {
 } from "@/lib/kitchenListingSuggestions";
 import { kitchenGlbListingSuggestions } from "@/lib/kitchenDesignGlb";
 import { kitchenGlbPlannerKitchen } from "@/lib/kitchenGlbModules";
+import { kitchenGlbMaterialSlots } from "@/lib/kitchenGlbChecks";
 import {
   KitchenGlbSourceField,
   type KitchenGlbUpload,
@@ -427,6 +428,11 @@ export function MerchantKitchenDesigns({
                   modelUploadId: glbUpload.uploadId,
                   layout: glbLayout,
                   cabinetCount: glbModules || null,
+                  // Parts per finish, so buyers can restyle faces, worktop and handles.
+                  materialSlots: kitchenGlbMaterialSlots(
+                    glbUpload.detection,
+                    glbUpload.parts,
+                  ),
                   // The confirmed modules become separate, editable planner cabinets.
                   planner: kitchenGlbPlannerKitchen(
                     glbUpload.detection.modules,

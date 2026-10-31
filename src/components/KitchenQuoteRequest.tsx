@@ -10,6 +10,8 @@ import {
 import { useRouter } from "next/navigation";
 import { authFetch } from "@/lib/authFetch";
 import { useAuth } from "@/store/auth";
+import { useKitchenFinishes } from "@/store/kitchenFinishes";
+import { kitchenFinishSummary } from "@/lib/kitchenFinishes";
 
 type RoomDefaults = { widthMm: number; depthMm: number; heightMm: number };
 
@@ -29,6 +31,10 @@ export function KitchenQuoteRequest({
   disabled?: boolean;
 }) {
   const router = useRouter();
+  // Finishes picked in the design's 3D view travel with the request.
+  const finishes = useKitchenFinishes((state) =>
+    kitchenFinishSummary(state.choices[designId] ?? {}),
+  );
   const user = useAuth((state) => state.user);
   const initialized = useAuth((state) => state.initialized);
   const initialize = useAuth((state) => state.initialize);
@@ -75,7 +81,9 @@ export function KitchenQuoteRequest({
             roomWidthMm: Number(form.get("roomWidthMm")),
             roomDepthMm: Number(form.get("roomDepthMm")),
             roomHeightMm: Number(form.get("roomHeightMm")),
-            message: form.get("message"),
+            message: [finishes && `Сонгосон материал: ${finishes}`, form.get("message")]
+              .filter(Boolean)
+              .join("\n\n"),
           }),
         },
         user.id,
@@ -211,6 +219,11 @@ export function KitchenQuoteRequest({
             </label>
           ))}
         </div>
+        {finishes ? (
+          <p className="rounded-lg bg-black/5 px-3 py-2 text-xs text-black/70">
+            Сонгосон материал: {finishes}
+          </p>
+        ) : null}
         <label className="block text-xs text-black/60">
           Нэмэлт тайлбар
           <textarea

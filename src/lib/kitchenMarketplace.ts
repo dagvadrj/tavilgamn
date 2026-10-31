@@ -117,7 +117,31 @@ export type KitchenDesignModel = {
   depthMm: number;
   heightMm: number;
   bytes: number;
+  /** GLB parts (node extras kgPart) per finish the buyer may change. */
+  slots?: KitchenGlbSlots | null;
 };
+
+export const KITCHEN_GLB_SLOTS = ["front", "carcass", "countertop", "handle"] as const;
+export type KitchenGlbSlot = (typeof KITCHEN_GLB_SLOTS)[number];
+export type KitchenGlbSlots = Record<KitchenGlbSlot, number[]>;
+
+/**
+ * Finish slots sent with a GLB upload. Anything malformed is dropped (the
+ * design then simply offers no finish choice) rather than failing the upload.
+ */
+export function readKitchenGlbSlots(value: unknown): KitchenGlbSlots | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const slots = {} as KitchenGlbSlots;
+  let total = 0;
+  for (const slot of KITCHEN_GLB_SLOTS) {
+    const ids = (value as Record<string, unknown>)[slot] ?? [];
+    if (!Array.isArray(ids) || !ids.every((id) => Number.isInteger(id) && id >= 0 && id < 100_000))
+      return null;
+    slots[slot] = [...new Set(ids as number[])];
+    total += slots[slot].length;
+  }
+  return total > 0 && total <= 3000 ? slots : null;
+}
 
 export class KitchenMarketplaceInputError extends Error {}
 export type KitchenVersionSaveMode = "edit" | "new_version" | "sync_project";
