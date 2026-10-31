@@ -101,6 +101,11 @@ export function KitchenContent({ design }: PageData["kitchen"]) {
                 <UseKitchenDesignButton
                   designId={design.id}
                   returnPath={`/kitchens/${design.slug}`}
+                  footprint={
+                    design.model
+                      ? { widthMm: design.model.widthMm, depthMm: design.model.depthMm, heightMm: design.model.heightMm }
+                      : { widthMm: design.roomWidthMm, depthMm: design.roomDepthMm, heightMm: design.maxHeightMm }
+                  }
                 />
               </li>
             )}

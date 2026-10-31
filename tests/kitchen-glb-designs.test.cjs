@@ -111,11 +111,13 @@ test("GLB drafts need an upload id, a layout and a module count", () => {
   assert.equal(draft.payload.layout, "l-right");
   assert.equal(draft.payload.cabinetCount, 12);
   assert.match(draft.slug, /^davga-kitchen-[0-9a-f]{8}$/);
-  for (const change of [{ modelUploadId: "nope" }, { layout: "u" }, { cabinetCount: null }, { cabinetCount: 81 }])
+  for (const change of [{ modelUploadId: "nope" }, { layout: "island" }, { cabinetCount: null }, { cabinetCount: 81 }])
     assert.throws(
       () => marketplace.parseKitchenMarketplaceGlbDraft({ modelUploadId: id, layout: "straight", cabinetCount: 4, title: "Davga kitchen", ...change }),
       marketplace.KitchenMarketplaceInputError,
     );
+  // Three runs (two walls and a peninsula) are a U.
+  assert.equal(marketplace.parseKitchenMarketplaceGlbDraft({ modelUploadId: id, layout: "u", cabinetCount: 14, title: "Davga kitchen" }).payload.layout, "u");
   const replacement = marketplace.parseKitchenGlbReplacement({ versionId: id, modelUploadId: id });
   assert.equal(replacement.layout, null);
   assert.equal(replacement.cabinetCount, null);

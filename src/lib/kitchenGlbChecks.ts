@@ -40,7 +40,7 @@ const PLAUSIBLE: Record<
   Record<"width" | "height" | "depth", [number, number]>
 > = {
   base: { width: [150, 1200], height: [600, 950], depth: [280, 700] },
-  wall: { width: [150, 1200], height: [250, 1300], depth: [150, 500] },
+  wall: { width: [150, 1200], height: [250, 1800], depth: [150, 500] },
   tall: { width: [150, 1200], height: [1500, 2900], depth: [280, 700] },
 };
 
@@ -182,6 +182,92 @@ export function kitchenGlbMeasureModules(
         depth: "estimated",
       },
     } satisfies KitchenGlbModule;
+  });
+  // A blind corner unit: one door at one end of a wider carcass whose other end
+  // is a fixed blind panel. Read only after every plain unit claimed its body,
+  // so the extra width can only be boards no neighbour owns.
+  const ownedByOthers = (cabinet: KitchenGlbModule) =>
+    new Set(
+      measuredModules.flatMap((item) =>
+        "merge" in item || item === cabinet ? [] : item.parts,
+      ),
+    );
+  const blindCorner = (cabinet: KitchenGlbModule): KitchenGlbModule | null => {
+    if (cabinet.measured?.width !== "front") return null;
+    const own = cabinet.parts
+      .map((id) => byId.get(id))
+      .filter((part): part is KitchenGlbPart => !!part && isBoard(part));
+    const axis = depthAxisOf(cabinet);
+    const along = axis === 0 ? 2 : 0;
+    const frontMin = cabinet.box.min[along];
+    const frontMax = cabinet.box.max[along];
+    const others = ownedByOthers(cabinet);
+    for (const seed of own) {
+      const carcass = kitchenGlbGrowCabinet(seed, parts, excluded);
+      if (!carcass) continue;
+      const body = carcass.parts.filter((id) => {
+        const part = byId.get(id)!;
+        return (
+          !cabinet.parts.includes(id) &&
+          !claimed.has(id) &&
+          !others.has(id) &&
+          // A floor-standing end panel closes the run; it is not the carcass.
+          (cabinet.role === "wall" || part.box.min[1] >= cabinet.box.min[1] + 50)
+        );
+      });
+      if (body.length < 3) continue;
+      const bodyBox = kitchenGlbUnion(body.map((id) => byId.get(id)!.box));
+      const width = bodyBox.max[along] - bodyBox.min[along];
+      const depth = bodyBox.max[axis] - bodyBox.min[axis];
+      const extra = width - (frontMax - frontMin);
+      if (extra < 80 || extra > 700 || width > 1250) continue;
+      if (depth < 120 || depth > 750) continue;
+      const atStart = Math.abs(frontMin - bodyBox.min[along]) <= 40;
+      const atEnd = Math.abs(frontMax - bodyBox.max[along]) <= 40;
+      if (atStart === atEnd) continue;
+      // The blind end must be free floor, not a neighbouring unit.
+      const strip: KitchenGlbBox = {
+        min: [...bodyBox.min],
+        max: [...bodyBox.max],
+      };
+      if (atStart) strip.min[along] = frontMax;
+      else strip.max[along] = frontMin;
+      const blocked = measuredModules.some((item) => {
+        if ("merge" in item || item === cabinet) return false;
+        if ((item.role === "wall") !== (cabinet.role === "wall")) return false;
+        return [0, 2].every(
+          (index) =>
+            Math.min(item.box.max[index], strip.max[index]) -
+              Math.max(item.box.min[index], strip.min[index]) >
+            50,
+        );
+      });
+      if (blocked) continue;
+      for (const id of body) claimed.add(id);
+      const box = kitchenGlbUnion([cabinet.box, bodyBox]);
+      box.min[axis] = Math.min(bodyBox.min[axis], ...own.map((p) => p.box.min[axis]));
+      box.max[axis] = Math.max(bodyBox.max[axis], ...own.map((p) => p.box.max[axis]));
+      const widthMm = round(width);
+      return {
+        ...cabinet,
+        name:
+          cabinet.name === kitchenGlbModuleName(cabinet.role, cabinet.widthMm)
+            ? kitchenGlbModuleName(cabinet.role, widthMm)
+            : cabinet.name,
+        widthMm,
+        heightMm: round(bodyBox.max[1] - bodyBox.min[1]),
+        depthMm: round(depth),
+        box,
+        parts: [...cabinet.parts, ...body],
+        measured: { width: "carcass", height: "carcass", depth: "carcass" },
+      };
+    }
+    return null;
+  };
+  measuredModules.forEach((item, index) => {
+    if ("merge" in item) return;
+    const corner = blindCorner(item);
+    if (corner) measuredModules[index] = corner;
   });
   // Several doors of one one-mesh carcass (a tall unit) are one module.
   const modules: KitchenGlbModule[] = [];

@@ -125,6 +125,7 @@ import {
   placementIssueAction,
   proposeCabinetMove,
   resolveElevations,
+  settleWallCabinets,
   snapCabinet,
 } from "@/lib/kitchenPlacement";
 import { parseKitchenSpace } from "@/lib/kitchenSpace";
@@ -938,6 +939,24 @@ export function ModularKitchenPlanner({
       setMessage(`Сангийн box, төхөөрөмжүүдийг байрлалд таарууллаа.${result.omitted ? ` Бодит өргөнд тааруулж ${result.omitted} илүү жишиг дээд box-ийг хаслаа.` : ''}`);
     }
   }
+  // A fresh marketplace copy may hold measured boxes without catalog models
+  // (a merchant GLB): build it once from library boxes so it looks real.
+  const preparedCopy = useRef("");
+  useEffect(() => {
+    if (!ready || !savedId || !marketplaceSource || catalogLoading || catalogError || !moduleCatalog.length) return;
+    if (preparedCopy.current === savedId) return;
+    preparedCopy.current = savedId;
+    const settled = settleWallCabinets(design);
+    const missing = settled.cabinets.some(c => !kitchenVariantFits(variantModels[c.variantId ?? ""], c) && !["refrigerator", "hood", "oven"].includes(c.opening ?? ""));
+    if (!missing && settled === design) return;
+    const furnished = missing ? furnishKitchenFromCatalog(settled, moduleCatalog, { alignEquipment: true }).design : settled;
+    if (furnished && commit(furnished)) {
+      setSuccessMessage(missing ? "Загварыг сангийн 3D box-оор угсарлаа. Буцаах бол Undo дарна уу." : "Дээд шүүгээний өндрийг тохирох зайд тааруулав.");
+      return;
+    }
+    if (settled !== design) commit(settled);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, savedId, marketplaceSource, catalogLoading, catalogError, moduleCatalog]);
   function selectCabinet(id: string) {
     setSheetExpanded(false);
     if (fitCountertops(kitchen).some(top => top.id === id)) { editCountertop(id); return; }

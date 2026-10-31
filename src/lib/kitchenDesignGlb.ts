@@ -178,19 +178,33 @@ export function kitchenGlbListingSuggestions(
   ).size;
   const modules = detection?.modules ?? [];
   const cabinetCount = modules.length || named;
-  // Runs facing both axes form an L; the side run decides left or right.
-  const alongX = modules.filter((item) => item.facing[1] === "z");
-  const alongZ = modules.filter((item) => !alongX.includes(item));
+  // Floor runs decide the shape: each facing is one run. Three runs (or two
+  // facing each other plus one across) are a U, two facing each other a
+  // double-sided kitchen, two across an L whose side run decides left/right.
+  const floor = modules.filter((item) => item.role !== "wall");
+  const runs = floor.length ? floor : modules;
+  const facings = new Set(runs.map((item) => item.facing));
+  const opposite = (axis: "x" | "z") =>
+    facings.has(`+${axis}`) && facings.has(`-${axis}`);
+  const onAxis = (axis: "x" | "z") =>
+    facings.has(`+${axis}`) || facings.has(`-${axis}`);
+  const alongZ = runs.filter((item) => item.facing[1] === "x");
   const sideX = alongZ.length
     ? alongZ.reduce((sum, item) => sum + item.box.min[0] + item.box.max[0], 0) /
       (2 * alongZ.length)
     : 0;
   const layout = modules.length
-    ? alongX.length && alongZ.length
-      ? sideX < 0
-        ? "l-left"
-        : "l-right"
-      : "straight"
+    ? facings.size >= 3 ||
+      (opposite("z") && onAxis("x")) ||
+      (opposite("x") && onAxis("z"))
+      ? "u"
+      : opposite("z") || opposite("x")
+        ? "double-side"
+        : onAxis("x") && onAxis("z")
+          ? sideX < 0
+            ? "l-left"
+            : "l-right"
+          : "straight"
     : Math.min(info.widthMm, info.depthMm) >= 1500
       ? "l-left"
       : "straight";

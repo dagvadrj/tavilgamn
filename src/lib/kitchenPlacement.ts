@@ -348,6 +348,20 @@ export function wallCabinetClearance(
         )
     : null;
 }
+/**
+ * Hands wall cabinets outside the 450–600 mm counter gap back to automatic
+ * elevation, e.g. a merchant model measured with a taller splashback.
+ */
+export function settleWallCabinets(kitchen: ModularKitchen): ModularKitchen {
+  let changed = false;
+  const cabinets = kitchen.cabinets.map((cabinet) => {
+    const clearance = wallCabinetClearance(cabinet, kitchen);
+    if (clearance === null || (clearance >= 450 - EPS && clearance <= 600 + EPS)) return cabinet;
+    changed = true;
+    return { ...cabinet, autoElevation: true };
+  });
+  return changed ? { ...kitchen, cabinets } : kitchen;
+}
 export interface PlacementIssue {
   code: "appliance" | "overlap" | "outside" | "ceiling" | "wall" | "clearance" | "floor" | "opening" | "corner" | "aisle";
   ids: string[];

@@ -214,7 +214,7 @@ export function parseKitchenMarketplaceDraft(value: unknown) {
   return { sourceKitchenId, title: details.title, slug: kitchenDesignSlug(details.title), payload: details.payload };
 }
 
-export const KITCHEN_GLB_LAYOUTS = ["straight", "l-left", "l-right", "double-side"] as const;
+export const KITCHEN_GLB_LAYOUTS = ["straight", "l-left", "l-right", "u", "double-side"] as const;
 
 function glbShape(value: Record<string, unknown>, optional: boolean) {
   const layout = value.layout ?? (optional ? null : "straight");

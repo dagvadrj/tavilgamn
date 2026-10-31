@@ -128,6 +128,8 @@ export function kitchenGlbRoleOf(
   if (bottom < 600 && top > 1700) return "tall";
   if (top <= 1050) return "base";
   if (bottom >= 1150) return "wall";
+  // A tall upper (open shelving, glass cabinet) standing on the worktop.
+  if (bottom >= 700 && top - bottom >= 1200) return "wall";
   return null;
 }
 
