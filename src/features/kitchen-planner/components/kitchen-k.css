@@ -10,6 +10,16 @@
     --kk-canvas: #e9ecef;
     --kk-tint: #eaf3fc;
     --kk-warn: #8a4b00;
+    /* Type and corner scales for the planner; every size below picks one of these. */
+    --kk-text-xs: 12px;
+    --kk-text-sm: 13px;
+    --kk-text-md: 14px;
+    --kk-text-lg: 16px;
+    --kk-text-xl: 20px;
+    --kk-radius-sm: 8px;
+    --kk-radius-md: 12px;
+    --kk-radius-lg: 16px;
+    --kk-radius-pill: 999px;
     --kk-warn-bg: #fff4e5;
     --kk-ok: #17603d;
     --kk-ok-bg: #e7f5ee;
@@ -39,7 +49,7 @@
     align-items: center;
     gap: 9px;
     color: var(--kk-ink);
-    font-size: 15px;
+    font-size: var(--kk-text-lg);
     font-weight: 700;
     text-decoration: none;
     white-space: nowrap;
@@ -49,7 +59,7 @@
     place-items: center;
     width: 32px;
     height: 32px;
-    border-radius: 10px;
+    border-radius: var(--kk-radius-sm);
     background: var(--kk-primary);
     color: #fff;
   }
@@ -96,7 +106,7 @@
   }
   & .kitchen-k-project small {
     color: var(--kk-muted);
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
@@ -132,17 +142,17 @@
     max-width: 100%;
     min-width: 0;
     overflow: hidden;
-    font-size: 16px;
+    font-size: var(--kk-text-lg);
     font-weight: 650;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
   & .kitchen-k-project .kitchen-project-visible-name small {
     padding: 3px 9px;
-    border-radius: 999px;
+    border-radius: var(--kk-radius-pill);
     background: #f1f3f5;
     color: #3b424c;
-    font-size: 11px;
+    font-size: var(--kk-text-xs);
     font-weight: 500;
     white-space: nowrap;
     /* The save chip gives way before the project name does. */
@@ -154,6 +164,78 @@
   & .kitchen-k-project .kitchen-project-visible-name small[data-save-kind="saved"] {
     background: var(--kk-ok-bg);
     color: var(--kk-ok);
+  }
+  /* Save state as a dot beside the name: green saved, amber pending, red failed. */
+  & .kitchen-k-project .kitchen-project-visible-name small[data-save-kind]:not([data-save-kind="error"]) {
+    flex: none;
+    padding: 0;
+    background: none;
+  }
+  & .kitchen-k-project .kitchen-project-visible-name small[data-save-kind="error"] {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fdecec;
+    color: #a82020;
+  }
+  & .kitchen-save-dot {
+    display: block;
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--kk-radius-pill);
+    background: #d08a12;
+  }
+  & [data-save-kind="saved"] > .kitchen-save-dot {
+    background: var(--kk-ok);
+  }
+  & [data-save-kind="error"] > .kitchen-save-dot {
+    background: #a82020;
+  }
+  & :is([data-save-kind="saving"], [data-save-kind="loading"]) > .kitchen-save-dot {
+    animation: kitchen-save-pulse 1s ease-in-out infinite alternate;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & :is([data-save-kind="saving"], [data-save-kind="loading"]) > .kitchen-save-dot {
+      animation: none;
+    }
+  }
+  /* The price chip: the running estimate, one tap from its breakdown. */
+  & .kitchen-k-price {
+    display: inline-flex;
+    flex: none;
+    /* Header icon buttons are a fixed 44px; this one sizes to its text. */
+    width: auto;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--kk-line);
+    border-radius: var(--kk-radius-pill);
+    background: #fff;
+    color: var(--kk-ink);
+    font-size: var(--kk-text-md);
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  /* Narrow headers keep the project name; the estimate stays in step 3. */
+  @media (max-width: 1279px) {
+    & .kitchen-k-price {
+      display: none;
+    }
+  }
+  & .kitchen-k-price:hover:not(:disabled) {
+    border-color: var(--kk-primary);
+  }
+  & .kitchen-k-price small {
+    padding: 1px 6px;
+    border-radius: var(--kk-radius-pill);
+    background: #fff3d6;
+    color: var(--kk-warn);
+    font-size: var(--kk-text-xs);
+    font-weight: 600;
   }
   & .kitchen-k-project .kitchen-project-menu > summary > svg {
     flex: none;
@@ -168,15 +250,15 @@
     gap: 6px;
     width: 300px;
     padding: 14px;
-    border-radius: 16px;
+    border-radius: var(--kk-radius-lg);
     background: #fff;
     box-shadow: var(--kk-shadow);
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
   }
   & .kitchen-k-eyebrow {
     color: var(--kk-muted);
-    font-size: 10.5px;
+    font-size: var(--kk-text-xs);
     font-weight: 650;
     letter-spacing: .07em;
     text-transform: uppercase;
@@ -192,7 +274,7 @@
     margin: 0 auto;
     padding: 4px;
     border: 0;
-    border-radius: 16px;
+    border-radius: var(--kk-radius-lg);
     background: #f1f3f5;
   }
   & .kitchen-k-stepper > button {
@@ -202,10 +284,10 @@
     min-height: 44px;
     padding: 0 12px 0 8px;
     border: 0;
-    border-radius: 12px;
+    border-radius: var(--kk-radius-md);
     background: transparent;
     color: #3b424c;
-    font-size: 13px;
+    font-size: var(--kk-text-sm);
     font-weight: 600;
     white-space: nowrap;
     cursor: pointer;
@@ -226,7 +308,7 @@
     border-radius: 50%;
     background: #e1e5ea;
     color: var(--kk-ink);
-    font-size: 11px;
+    font-size: var(--kk-text-xs);
     font-weight: 700;
   }
   & .kitchen-k-stepper > button[aria-current="step"] .kitchen-step-number {
@@ -250,10 +332,10 @@
     gap: 8px;
     padding: 0 16px;
     border: 1px solid #d3d8de;
-    border-radius: 22px;
+    border-radius: var(--kk-radius-pill);
     background: #fff;
     color: var(--kk-ink);
-    font-size: 13px;
+    font-size: var(--kk-text-sm);
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
@@ -267,10 +349,10 @@
     min-height: 44px;
     padding: 0 18px;
     border: 0;
-    border-radius: 22px;
+    border-radius: var(--kk-radius-pill);
     background: var(--kk-primary);
     color: #fff;
-    font-size: 14px;
+    font-size: var(--kk-text-md);
     font-weight: 600;
     white-space: nowrap;
     cursor: pointer;
@@ -295,7 +377,7 @@
     margin: 0;
     overflow: hidden;
     border: 0;
-    border-radius: 20px;
+    border-radius: var(--kk-radius-pill);
     background: #fff;
     box-shadow: var(--kk-shadow);
     transform: none;
@@ -327,7 +409,7 @@
   & .kitchen-k-panel-foot > span {
     flex: 1;
     color: var(--kk-ok);
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
   }
   & .kitchen-k-panel-foot > span[data-error] {
@@ -340,7 +422,7 @@
     gap: 4px;
     margin: 12px 12px 0;
     padding: 4px;
-    border-radius: 16px;
+    border-radius: var(--kk-radius-lg);
     background: #f1f3f5;
   }
   & .kitchen-k-tabs > button {
@@ -350,18 +432,18 @@
     min-height: 48px;
     padding: 6px 4px;
     border: 0;
-    border-radius: 12px;
+    border-radius: var(--kk-radius-md);
     background: transparent;
     color: #3b424c;
     cursor: pointer;
   }
   & .kitchen-k-tabs > button span {
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
     font-weight: 650;
   }
   & .kitchen-k-tabs > button small {
     color: var(--kk-muted);
-    font-size: 11px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-tabs > button[aria-selected="true"] {
     background: #fff;
@@ -416,10 +498,10 @@
     min-height: 44px;
     padding: 0 14px;
     border: 1px solid var(--kk-line);
-    border-radius: 22px;
+    border-radius: var(--kk-radius-pill);
     background: #fff;
     color: var(--kk-ink);
-    font-size: 13px;
+    font-size: var(--kk-text-sm);
     font-weight: 600;
     white-space: nowrap;
     cursor: pointer;
@@ -463,7 +545,7 @@
     display: flex;
     gap: 2px;
     padding: 4px;
-    border-radius: 24px;
+    border-radius: var(--kk-radius-pill);
     background: var(--kk-ink);
     box-shadow: 0 10px 28px #171c2447;
     transform: translateX(-50%);
@@ -476,10 +558,10 @@
     min-height: 44px;
     padding: 0 12px;
     border: 0;
-    border-radius: 20px;
+    border-radius: var(--kk-radius-pill);
     background: transparent;
     color: #fff;
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
     cursor: pointer;
   }
@@ -509,7 +591,7 @@
     display: flex;
     gap: 4px;
     padding: 5px;
-    border-radius: 28px;
+    border-radius: var(--kk-radius-pill);
     background: #fff;
     box-shadow: 0 8px 26px #171c241f, 0 0 0 1px #171c240d;
     transform: translateX(-50%);
@@ -518,10 +600,10 @@
     min-height: 44px;
     padding: 0 18px;
     border: 0;
-    border-radius: 22px;
+    border-radius: var(--kk-radius-pill);
     background: transparent;
     color: var(--kk-ink);
-    font-size: 13px;
+    font-size: var(--kk-text-sm);
     font-weight: 600;
     white-space: nowrap;
     cursor: pointer;
@@ -539,7 +621,7 @@
   }
   & .kitchen-k-room h3 {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--kk-text-sm);
     font-weight: 700;
   }
   & .kitchen-k-room h3 small {
@@ -559,24 +641,24 @@
     display: grid;
   }
   & :is(.kitchen-k-room-head, .kitchen-k-step) > div:first-child > strong {
-    font-size: 17px;
+    font-size: var(--kk-text-lg);
   }
   & .kitchen-k-segmented {
     display: flex;
     gap: 2px;
     padding: 3px;
     border: 1px solid var(--kk-line);
-    border-radius: 12px;
+    border-radius: var(--kk-radius-md);
     background: #fff;
   }
   & .kitchen-k-segmented > button {
     min-height: 36px;
     padding: 0 12px;
     border: 0;
-    border-radius: 9px;
+    border-radius: var(--kk-radius-sm);
     background: transparent;
     color: var(--kk-ink);
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
     cursor: pointer;
   }
@@ -596,7 +678,7 @@
     display: flex;
     justify-content: space-between;
     gap: 8px;
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
   }
   & .kitchen-k-field > label span {
@@ -609,7 +691,7 @@
     height: 44px;
     padding: 0 12px;
     border: 1.5px solid var(--kk-line);
-    border-radius: 12px;
+    border-radius: var(--kk-radius-md);
     background: #fff;
   }
   & .kitchen-k-field > div[data-invalid] {
@@ -623,26 +705,26 @@
     outline: none;
     background: transparent;
     color: var(--kk-ink);
-    font-size: 15px;
+    font-size: var(--kk-text-lg);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
   & .kitchen-k-field > div > span {
     color: var(--kk-muted);
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-field:focus-within > div {
     border-color: var(--kk-primary);
   }
   & .kitchen-k-error {
     color: var(--kk-error);
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
   }
   & :is(.kitchen-k-muted, .kitchen-k-empty) {
     margin: 0;
     color: var(--kk-muted);
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
   }
   & :is(.kitchen-k-walls, .kitchen-k-utilities, .kitchen-k-warnings) {
     display: grid;
@@ -657,9 +739,9 @@
     gap: 10px;
     min-height: 40px;
     padding: 4px 10px;
-    border-radius: 12px;
+    border-radius: var(--kk-radius-md);
     background: #f6f7f9;
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
   }
   & :is(.kitchen-k-walls, .kitchen-k-utilities) > li > span {
     display: grid;
@@ -670,7 +752,7 @@
     border-radius: 50%;
     background: #dfe3e8;
     color: var(--kk-ink);
-    font-size: 11px;
+    font-size: var(--kk-text-xs);
     font-weight: 700;
   }
   & .kitchen-k-utilities > li > span[data-kind="water"] {
@@ -697,9 +779,9 @@
     align-items: center;
     gap: 10px;
     padding: 8px 10px;
-    border-radius: 12px;
+    border-radius: var(--kk-radius-md);
     background: #f6f7f9;
-    font-size: 13px;
+    font-size: var(--kk-text-sm);
   }
   & .kitchen-k-chiprow > span {
     flex: 1;
@@ -709,10 +791,10 @@
     min-height: 44px;
     padding: 0 14px;
     border: 1px solid #d3d8de;
-    border-radius: 22px;
+    border-radius: var(--kk-radius-pill);
     background: #fff;
     color: var(--kk-ink);
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
     cursor: pointer;
   }
@@ -726,10 +808,10 @@
     min-height: 44px;
     padding: 0 18px;
     border: 0;
-    border-radius: 22px;
+    border-radius: var(--kk-radius-pill);
     background: var(--kk-primary);
     color: #fff;
-    font-size: 13.5px;
+    font-size: var(--kk-text-sm);
     font-weight: 600;
     cursor: pointer;
   }
@@ -744,7 +826,7 @@
     display: grid;
     gap: 4px;
     padding: 16px;
-    border-radius: 16px;
+    border-radius: var(--kk-radius-lg);
     background: #f6f7f9;
   }
   & .kitchen-k-total strong {
@@ -753,16 +835,16 @@
   }
   & .kitchen-k-total small {
     color: var(--kk-muted);
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-banner {
     display: grid;
     gap: 6px;
     margin: 0;
     padding: 14px;
-    border-radius: 16px;
+    border-radius: var(--kk-radius-lg);
     background: #f6f7f9;
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-banner.is-warn {
     background: var(--kk-warn-bg);
@@ -803,7 +885,7 @@
     gap: 4px;
     padding: 12px 14px;
     border: 1.5px solid var(--kk-line);
-    border-radius: 16px;
+    border-radius: var(--kk-radius-lg);
     background: #fff;
     color: var(--kk-ink);
     text-align: left;
@@ -820,18 +902,18 @@
   }
   & .kitchen-k-views > button small {
     color: var(--kk-muted);
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-selected {
     display: grid;
     gap: 2px;
     padding: 12px 14px;
-    border-radius: 14px;
+    border-radius: var(--kk-radius-md);
     background: var(--kk-tint);
   }
   & .kitchen-k-selected small {
     color: var(--kk-primary);
-    font-size: 11px;
+    font-size: var(--kk-text-xs);
     font-weight: 650;
     letter-spacing: .05em;
     text-transform: uppercase;
@@ -895,9 +977,9 @@
     min-height: 36px;
     padding: 0 12px;
     border: 1px solid var(--kk-line);
-    border-radius: 18px;
+    border-radius: var(--kk-radius-pill);
     background: #fff;
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
     cursor: pointer;
   }
@@ -918,13 +1000,13 @@
     align-content: start;
     gap: 10px;
     padding: 18px;
-    border-radius: 20px;
+    border-radius: var(--kk-radius-pill);
     background: #fff;
     box-shadow: 0 0 0 1px #171c240d;
   }
   & .kitchen-k-card :is(h1, h2) {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--kk-text-lg);
     font-weight: 700;
   }
   & .kitchen-k-bom {
@@ -946,20 +1028,20 @@
     flex: 1;
   }
   & .kitchen-k-bom h1 {
-    font-size: 20px;
+    font-size: var(--kk-text-xl);
   }
   & .kitchen-k-bom > header p {
     margin: 2px 0 0;
     color: var(--kk-muted);
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-bom > header button {
     min-height: 36px;
     padding: 0 12px;
     border: 1px solid var(--kk-line);
-    border-radius: 18px;
+    border-radius: var(--kk-radius-pill);
     background: #fff;
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
     cursor: pointer;
   }
@@ -981,7 +1063,7 @@
     min-height: 46px;
     padding: 6px 24px;
     border-bottom: 1px solid #f0f1f3;
-    font-size: 13px;
+    font-size: var(--kk-text-sm);
   }
   & .kitchen-k-table > .is-head {
     position: sticky;
@@ -989,7 +1071,7 @@
     z-index: 1;
     background: #f6f7f9;
     color: var(--kk-muted);
-    font-size: 11px;
+    font-size: var(--kk-text-xs);
     font-weight: 650;
     letter-spacing: .04em;
     text-transform: uppercase;
@@ -1018,17 +1100,17 @@
   & .kitchen-k-table small {
     overflow: hidden;
     color: var(--kk-muted);
-    font-size: 11.5px;
+    font-size: var(--kk-text-xs);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
   & .kitchen-k-table em {
     justify-self: start;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: var(--kk-radius-sm);
     background: #f1f3f5;
     color: #3b424c;
-    font-size: 11px;
+    font-size: var(--kk-text-xs);
     font-style: normal;
     font-weight: 650;
   }
@@ -1051,7 +1133,7 @@
   & .kitchen-k-bom > footer > span {
     flex: 1;
     color: var(--kk-muted);
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-bom > footer > div {
     display: grid;
@@ -1059,10 +1141,10 @@
   }
   & .kitchen-k-bom > footer small {
     color: var(--kk-muted);
-    font-size: 11px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-bom > footer strong {
-    font-size: 20px;
+    font-size: var(--kk-text-xl);
     font-variant-numeric: tabular-nums;
   }
   & .kitchen-k-bom > footer .is-warn :is(small, strong) {
@@ -1099,10 +1181,10 @@
     place-items: center;
     height: 170px;
     overflow: hidden;
-    border-radius: 14px;
+    border-radius: var(--kk-radius-md);
     background: var(--kk-canvas);
     color: var(--kk-muted);
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-snapshot-image img {
     width: 100%;
@@ -1114,7 +1196,7 @@
     grid-template-columns: 110px minmax(0, 1fr) 110px minmax(0, 1fr);
     gap: 6px 12px;
     margin: 4px 0 0;
-    font-size: 13px;
+    font-size: var(--kk-text-sm);
   }
   & .kitchen-k-snapshot dt {
     color: var(--kk-muted);
@@ -1129,10 +1211,10 @@
   }
   & .kitchen-k-warnings > li {
     padding: 10px 12px;
-    border-radius: 12px;
+    border-radius: var(--kk-radius-md);
     background: #fff8ee;
     color: #5c3300;
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-readiness {
     display: grid;
@@ -1143,17 +1225,17 @@
     display: grid;
     gap: 4px;
     padding: 12px 14px;
-    border-radius: 14px;
+    border-radius: var(--kk-radius-md);
     background: #f6f7f9;
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-k-readiness em {
     justify-self: start;
     padding: 2px 8px;
-    border-radius: 10px;
+    border-radius: var(--kk-radius-sm);
     background: var(--kk-warn-bg);
     color: var(--kk-warn);
-    font-size: 11px;
+    font-size: var(--kk-text-xs);
     font-style: normal;
     font-weight: 650;
   }
@@ -1162,7 +1244,7 @@
     color: var(--kk-ok);
   }
   & .kitchen-k-readiness strong {
-    font-size: 13.5px;
+    font-size: var(--kk-text-sm);
   }
   & .kitchen-k-readiness span {
     color: var(--kk-muted);
@@ -1179,7 +1261,7 @@
   & .kitchen-k-form label {
     display: grid;
     gap: 4px;
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
   }
   & .kitchen-k-form input:not([type="checkbox"]) {
@@ -1187,8 +1269,8 @@
     box-sizing: border-box;
     padding: 0 12px;
     border: 1.5px solid var(--kk-line);
-    border-radius: 12px;
-    font-size: 14px;
+    border-radius: var(--kk-radius-md);
+    font-size: var(--kk-text-md);
   }
   & .kitchen-k-form input[aria-invalid="true"] {
     border-color: var(--kk-error);
@@ -1202,7 +1284,7 @@
   }
   & .kitchen-k-form legend {
     margin-bottom: 6px;
-    font-size: 12.5px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
   }
   & .kitchen-k-chips {
@@ -1214,9 +1296,9 @@
     min-height: 44px;
     padding: 0 14px;
     border: 1px solid var(--kk-line);
-    border-radius: 22px;
+    border-radius: var(--kk-radius-pill);
     background: #fff;
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
     font-weight: 600;
     cursor: pointer;
   }
@@ -1420,7 +1502,7 @@
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 2;
       line-clamp: 2;
-      font-size: 13px;
+      font-size: var(--kk-text-sm);
       line-height: 1.2;
       white-space: normal;
       overflow-wrap: anywhere;
@@ -1464,12 +1546,12 @@
     gap: 10px;
     padding: 12px;
     border: 1px solid #f0d9a8;
-    border-radius: 12px;
+    border-radius: var(--kk-radius-md);
     background: #fff8e8;
   }
   & .kitchen-k-openings-hint > p {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--kk-text-sm);
     line-height: 1.45;
   }
   & .kitchen-k-openings-hint > div {
@@ -1480,10 +1562,237 @@
   & .kitchen-k-openings-hint .kitchen-k-ghost {
     background: #fff;
   }
-  /* The inspector has no padding of its own, so the legacy -14px pull cut the title. */
+  /* The inspector has no padding of its own, so the legacy -14px pull cut the
+     title; the head now carries its own inset and a rule under it. */
   & .kp-settings > .kp-settings-head {
     width: auto;
     margin: 0;
+    padding: 14px 12px 12px 18px;
+    border-bottom: 1px solid var(--kk-line);
+  }
+  & .kp-settings > .kp-settings-head > strong {
+    font-size: var(--kk-text-lg);
+    font-weight: 650;
+  }
+  /* Corner, lighting and island fields: the grid gap spaces them, so the older
+     note and button margins no longer double it; notes read at body size. */
+  & .kitchen-feature-fields {
+    gap: 14px;
+  }
+  & .kitchen-feature-fields > * {
+    margin: 0;
+  }
+  & .kitchen-feature-fields .ksp-note {
+    color: var(--kk-muted);
+    font-size: var(--kk-text-sm);
+    line-height: 1.5;
+  }
+  /* Selected cabinet («Загвар / Өнгө»): readable sizes in place of the 8–11px
+     legacy type, the name once, and material tiles in one scroll. */
+  & .kp-settings .kitchen-k-material-head .kitchen-k-muted {
+    font-size: var(--kk-text-xs);
+  }
+  & .kitchen-selection-panel :is(.ksp-product-code, .ksp-product h3) {
+    display: none;
+  }
+  & .kitchen-selection-panel .ksp-product p {
+    margin: 0;
+    color: var(--kk-muted);
+    font-size: var(--kk-text-sm);
+  }
+  & .kitchen-selection-panel .ksp-product p span {
+    font-size: var(--kk-text-xs);
+  }
+  & .kitchen-selection-panel .ksp-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+  & .kitchen-selection-panel .ksp-action {
+    min-height: 60px;
+    gap: 4px;
+    border: 1px solid var(--kk-line);
+    border-radius: var(--kk-radius-md);
+    background: #fff;
+  }
+  & .kitchen-selection-panel .ksp-action:hover:not(:disabled) {
+    border-color: #9fb8d2;
+    background: var(--kk-tint);
+  }
+  & .kitchen-selection-panel .ksp-action[aria-pressed="true"] {
+    border-color: var(--kk-primary);
+    background: var(--kk-tint);
+    color: var(--kk-primary);
+  }
+  & .kitchen-selection-panel .ksp-action > span {
+    font-size: var(--kk-text-xs);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  & .kitchen-selection-panel .ksp-header h2 {
+    font-size: var(--kk-text-md);
+    font-weight: 650;
+  }
+  & .kitchen-selection-panel :is(.ksp-action-hint, .ksp-note, .ksp-surface-current) {
+    color: var(--kk-muted);
+    font-size: var(--kk-text-xs);
+    line-height: 1.5;
+  }
+  & .kitchen-selection-panel :is(.ksp-section-heading h3, .ksp-surface h4) {
+    font-size: var(--kk-text-sm);
+    font-weight: 650;
+  }
+  & .kitchen-selection-panel .ksp-option {
+    padding: 12px;
+    border: 1px solid var(--kk-line);
+    border-radius: var(--kk-radius-md);
+    background: #fff;
+  }
+  & .kitchen-selection-panel .ksp-option:hover:not(:disabled) {
+    border-color: #9fb8d2;
+    background: #f7fafd;
+  }
+  & .kitchen-selection-panel .ksp-option-info strong {
+    font-size: var(--kk-text-md);
+    font-weight: 600;
+  }
+  & .kitchen-selection-panel .ksp-option-info span {
+    color: var(--kk-muted);
+    font-size: var(--kk-text-xs);
+  }
+  & .kitchen-selection-panel .ksp-option-icon {
+    border-radius: var(--kk-radius-sm);
+  }
+  & .kitchen-selection-panel .ksp-surface-switch {
+    padding: 4px;
+    border-radius: var(--kk-radius-md);
+    background: #f1f3f5;
+  }
+  & .kitchen-selection-panel .ksp-surface-switch > button {
+    min-height: 44px;
+    border-radius: var(--kk-radius-sm);
+    font-size: var(--kk-text-sm);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  /* Material tiles: three square swatches a row, the panel's own scroll only. */
+  & .kitchen-selection-panel .ksp-material-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px 8px;
+    max-height: none;
+    padding: 2px;
+    overflow: visible;
+  }
+  & .kitchen-selection-panel .ksp-material-options button {
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: var(--kk-text-xs);
+    text-align: center;
+  }
+  & .kitchen-selection-panel .ksp-material-swatch {
+    height: auto;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: var(--kk-radius-md);
+    box-shadow: inset 0 0 0 1px #171c241f;
+  }
+  & .kitchen-selection-panel .ksp-material-options button:hover:not(:disabled) .ksp-material-swatch {
+    box-shadow: inset 0 0 0 1px #171c241f, 0 0 0 2px #fff, 0 0 0 3px #9fb8d2;
+  }
+  & .kitchen-selection-panel .ksp-material-options button[aria-pressed="true"] {
+    background: transparent;
+    color: var(--kk-primary);
+    font-weight: 600;
+  }
+  & .kitchen-selection-panel .ksp-material-options button[aria-pressed="true"] .ksp-material-swatch {
+    box-shadow: inset 0 0 0 1px #171c241f, 0 0 0 2px #fff, 0 0 0 4px var(--kk-primary);
+  }
+  & .kitchen-selection-panel .ksp-material-options button:focus-visible {
+    outline: none;
+  }
+  & .kitchen-selection-panel .ksp-material-options button:focus-visible .ksp-material-swatch {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--kk-ink);
+  }
+  & .kitchen-selection-panel .ksp-paint-swatches {
+    grid-template-columns: repeat(auto-fill, 32px);
+    gap: 10px;
+  }
+  & .kitchen-selection-panel .ksp-paint-swatches button[aria-pressed="true"] {
+    outline-color: var(--kk-primary);
+  }
+  /* Catalog grouped by cabinet width. */
+  & .kitchen-width-group {
+    display: grid;
+    gap: 10px;
+  }
+  & .kitchen-width-group + .kitchen-width-group {
+    margin-top: 18px;
+  }
+  & .kitchen-width-group > h3 {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+    color: var(--kk-ink);
+    font-size: var(--kk-text-md);
+    font-weight: 650;
+  }
+  & .kitchen-width-group > h3 > span {
+    color: var(--kk-muted);
+    font-size: var(--kk-text-xs);
+    font-weight: 500;
+  }
+  /* Extras: a white card like the other panels instead of the lilac block. */
+  & .kp-settings .studio-extras-panel {
+    display: grid;
+    gap: 12px;
+    margin: 12px;
+    padding: 16px;
+    border: 1px solid var(--kk-line);
+    border-radius: var(--kk-radius-lg);
+    background: #fff;
+  }
+  & .kp-settings .studio-extras-panel > :is(h2, p) {
+    margin: 0;
+  }
+  & .kp-settings .studio-extras-panel > h2 {
+    font-size: var(--kk-text-lg);
+    font-weight: 650;
+  }
+  & .kp-settings .studio-extras-panel > p {
+    color: var(--kk-muted);
+    font-size: var(--kk-text-sm);
+    line-height: 1.5;
+  }
+  & .kp-settings .studio-extras-tabs {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 4px;
+    border-radius: var(--kk-radius-md);
+    background: #f1f3f5;
+  }
+  & .kp-settings .studio-extras-tabs > button {
+    min-height: 40px;
+    padding: 0 6px;
+    border-radius: var(--kk-radius-sm);
+    color: var(--kk-muted);
+    font-size: var(--kk-text-xs);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  & .kp-settings .studio-extras-tabs > button:is([aria-pressed="true"], [aria-selected="true"]) {
+    background: #fff;
+    box-shadow: 0 1px 3px #171c241f;
+    color: var(--kk-ink);
+  }
+  & .kp-settings .studio-extras-panel .kp-field input {
+    min-height: 44px;
+    border: 1px solid var(--kk-line);
+    border-radius: var(--kk-radius-md);
+    background: #fff;
   }
   /* Three tabs only while a module is selected (its details); otherwise two. */
   & .kitchen-k-tabs[data-count="2"] {
@@ -1504,7 +1813,7 @@
     max-width: calc(100% - 32px);
     padding: 8px 8px 8px 14px;
     border: 1px solid #f0d9a8;
-    border-radius: 16px;
+    border-radius: var(--kk-radius-lg);
     background: #fff8e8;
     box-shadow: 0 8px 24px #171c241a;
     color: var(--kk-ink);
@@ -1521,12 +1830,12 @@
     margin: 0;
   }
   & .kitchen-missing-models strong {
-    font-size: 14px;
+    font-size: var(--kk-text-md);
     font-weight: 650;
   }
   & .kitchen-missing-models span {
     color: var(--kk-muted);
-    font-size: 12px;
+    font-size: var(--kk-text-xs);
   }
   & .kitchen-missing-models > button {
     flex: none;
@@ -1534,10 +1843,10 @@
     margin: 0;
     padding: 0 14px;
     border: 1px solid var(--kk-line);
-    border-radius: 12px;
+    border-radius: var(--kk-radius-md);
     background: #fff;
     color: var(--kk-ink);
-    font-size: 13px;
+    font-size: var(--kk-text-sm);
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
@@ -1610,7 +1919,7 @@
       max-width: calc(100% - 40px);
       margin-inline: auto;
       padding: 5px;
-      border-radius: 28px;
+      border-radius: var(--kk-radius-pill);
       background: #fff;
       box-shadow: 0 8px 26px #171c241f, 0 0 0 1px #171c240d;
     }
@@ -1629,11 +1938,11 @@
       height: auto;
       padding: 0 14px;
       border: 0;
-      border-radius: 22px;
+      border-radius: var(--kk-radius-pill);
       background: transparent;
       box-shadow: none;
       color: var(--kk-ink);
-      font-size: 13px;
+      font-size: var(--kk-text-sm);
       font-weight: 600;
       white-space: nowrap;
       cursor: pointer;
@@ -1659,6 +1968,61 @@
     /* The mode switch moves from the busy bottom-right to the top-left. */
     & .kp-preview-bar {
       inset: 14px auto auto 20px;
+    }
+  }
+  /* Tablets and phones keep the floating toggles; «Хэмжээс» joins them beside
+     «Шөнө» (or in its place in the 2D plan, where there is no night view). */
+  @media (max-width: 959px) {
+    & .kitchen-dimensions-toggle {
+      position: absolute;
+      bottom: 22px;
+      left: 108px;
+      z-index: 6;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: var(--kk-radius-pill);
+      background: #fff;
+      box-shadow: 0 0 0 1px #171c240f, 0 2px 8px #17212b14;
+      color: var(--kk-ink);
+      font-size: var(--kk-text-xs);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    & .kitchen-k-dock + .kitchen-dimensions-toggle {
+      left: 22px;
+    }
+    & .kitchen-dimensions-toggle[aria-pressed="true"] {
+      background: var(--kk-ink);
+      color: #fff;
+    }
+  }
+  /* Phones: the stepper shows every step as a number and names only the
+     current one, so all four fit and stay one tap away; the catalog row fades
+     at its edge to say it scrolls. */
+  @media (max-width: 599px) {
+    & .kitchen-k-stepper {
+      justify-content: space-between;
+      gap: 4px;
+      overflow: hidden;
+    }
+    & .kitchen-k-stepper > button {
+      flex: none;
+      min-width: 44px;
+      padding-inline: 8px;
+    }
+    & .kitchen-k-stepper > button:not([aria-current="step"]) > span:not(.kitchen-step-number) {
+      display: none;
+    }
+    & .kitchen-k-stepper > button[aria-current="step"] {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+    & .kitchen-k-section-row {
+      mask-image: linear-gradient(90deg, #000 82%, transparent);
     }
   }
   /* Narrow desktops: the toggles keep their icons only and the camera
@@ -1717,14 +2081,14 @@
       min-width: 44px;
       min-height: 44px;
       border: 0;
-      border-radius: 22px;
+      border-radius: var(--kk-radius-pill);
       background: transparent;
       box-shadow: none;
     }
     & .kitchen-view-tabs > .viewport-controls .viewport-more > summary {
       flex-direction: row;
       padding: 0 12px;
-      font-size: 13px;
+      font-size: var(--kk-text-sm);
       font-weight: 600;
     }
     & .kitchen-view-tabs > .viewport-controls .viewport-more[open] > summary {
@@ -1752,5 +2116,14 @@
       margin-inline: auto;
       transform: none;
     }
+  }
+}
+
+@keyframes kitchen-save-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.35;
   }
 }

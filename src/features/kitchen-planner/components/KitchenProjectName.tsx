@@ -32,7 +32,12 @@ export function KitchenProjectName({ name, onName, busy, status }: {
     <summary title={status?.detail ?? "Төслийн нэр засах"} aria-label={`Төслийн нэр засах: ${name || "Нэргүй төсөл"}`} aria-disabled={busy}
       onClick={event => { if (busy) event.preventDefault(); }}>
       <span className="kitchen-project-visible-name"><strong title={name || undefined}>{name || "Нэргүй төсөл"}</strong>
-        {status && <small role="status" data-save-kind={status.kind}>{status.label}</small>}
+        {/* A dot carries the state; only a failure keeps its words on screen. The
+            label stays for screen readers and in the tooltip. */}
+        {status && <small role="status" data-save-kind={status.kind} title={status.label}>
+          <span className="kitchen-save-dot" aria-hidden="true" />
+          <span className={status.kind === "error" ? undefined : "sr-only"}>{status.label}</span>
+        </small>}
       </span><Pencil size={14}/>
     </summary>
     <label>Төслийн нэр<input ref={input} value={name} maxLength={100} disabled={busy} onChange={event => onName(event.target.value)}

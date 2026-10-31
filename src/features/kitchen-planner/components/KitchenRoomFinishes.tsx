@@ -36,7 +36,9 @@ export function KitchenRoomFinishes({
     <section className="kitchen-room-finishes" aria-labelledby="kitchen-room-finishes-heading">
       <h3 id="kitchen-room-finishes-heading">Өрөө</h3>
       <fieldset disabled={disabled}>
-        <legend>Шал</legend>
+        <legend>
+          Шал <span>{KITCHEN_FLOOR_MATERIALS.find((material) => material.id === floor)?.label}</span>
+        </legend>
         <div className="krf-swatches" role="radiogroup" aria-label="Шалны материал">
           {KITCHEN_FLOOR_MATERIALS.map((material) => (
             <button
@@ -56,7 +58,9 @@ export function KitchenRoomFinishes({
         </div>
       </fieldset>
       <fieldset disabled={disabled}>
-        <legend>Хана</legend>
+        <legend>
+          Хана <span>{paint ? (KITCHEN_WALL_PAINTS.find((option) => option.color === paint)?.label ?? "Өөр өнгө") : "Хана бүр өөр"}</span>
+        </legend>
         <div className="krf-swatches is-paint" role="radiogroup" aria-label="Бүх ханын өнгө">
           {KITCHEN_WALL_PAINTS.map(({ color, label }) => (
             <button
@@ -73,12 +77,12 @@ export function KitchenRoomFinishes({
               <span className="krf-swatch" style={{ background: color }} aria-hidden="true">
                 {paint === color && <Check size={14} />}
               </span>
-              <small>{label}</small>
+              {/* The chosen paint's name shows in the legend; each circle names itself to assistive tech. */}
+              <span className="sr-only">{label}</span>
             </button>
           ))}
         </div>
         <p className="krf-note">
-          {paint ? "Бүх хананд нэг өнгө." : "Хана тус бүр өөр өнгөтэй."}{" "}
           <button type="button" onClick={onRoomStep}>
             Хана тус бүрээр будах
           </button>

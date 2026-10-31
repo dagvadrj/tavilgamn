@@ -78,3 +78,15 @@ test('one-tap window and door land on a free wall and keep the room valid', () =
   assert.ok(withDoor.items.some(item => item.id === 'd1' && item.kind === 'door'));
   parseKitchenSpace(withDoor);
 });
+
+const { kitchenModelDisplayName, readableModelName } = loadSource('src/lib/kitchenModelNames.ts');
+
+test('catalog names: Cyrillic stays, Latin codes become a readable cabinet name', () => {
+  const module = { name: 'BASE1000mm', cabinetType: 'base', widthMm: 1000 };
+  assert.equal(kitchenModelDisplayName(module, { modelName: 'Шилэн хаалгатай шүүгээ', opening: 'doors', doorCount: 2, drawerCount: 0 }), 'Шилэн хаалгатай шүүгээ');
+  assert.equal(kitchenModelDisplayName(module, { modelName: 'BASE1000mm840mm598mm2h-Z596mm', opening: 'doors', doorCount: 2, drawerCount: 0 }), '1000 мм доод шүүгээ · 2 хаалга');
+  assert.equal(kitchenModelDisplayName({ ...module, cabinetType: 'wall', widthMm: 900 }, { modelName: 'undur box 1,2m', opening: 'open', doorCount: 0, drawerCount: 0 }), '900 мм дээд шүүгээ · задгай');
+  assert.equal(kitchenModelDisplayName(module, { modelName: '', opening: 'drawers', doorCount: 0, drawerCount: 3 }), '1000 мм доод шүүгээ · 3 шургуулга');
+  assert.equal(readableModelName('hajuu zadgai'), undefined);
+  assert.equal(readableModelName(' Дээд шүүгээ '), 'Дээд шүүгээ');
+});

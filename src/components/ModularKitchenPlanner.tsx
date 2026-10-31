@@ -59,6 +59,8 @@ import { detachKitchenCountertops, updateKitchenCountertop, parseKitchenCountert
 import { KitchenSpaceEditor } from "@/features/kitchen-planner/components/KitchenSpaceEditor";
 import { KitchenStartDialog } from "@/features/kitchen-planner/components/KitchenStartDialog";
 import { Plan } from "@/features/kitchen-planner/components/PlannerPanels";
+import Image from "next/image";
+import { readableModelName } from "@/lib/kitchenModelNames";
 import { KitchenMiniMap } from "@/features/kitchen-planner/components/KitchenMiniMap";
 import { KitchenRoomFinishes } from "@/features/kitchen-planner/components/KitchenRoomFinishes";
 import { createKitchenCameraPoseStore } from "@/lib/kitchenCameraPose";
@@ -1438,7 +1440,7 @@ export function ModularKitchenPlanner({
   // The view switcher lives on the canvas dock, so the third tab exists only as the selection's details.
   const shownDesignTab = materialsTab ? "materials" : selected && designTab === "views" && !catalogOpen && !settingsOpen ? "views" : "catalog";
   const selectedName = selected
-    ? variantModels[selected.variantId ?? ""]?.modelName || cabinetLabel(selected)
+    ? readableModelName(variantModels[selected.variantId ?? ""]?.modelName) ?? cabinetLabel(selected)
     : null;
   const missingModelCabinets = sceneKitchen.cabinets.filter(
     (c) => !variantModels[c.variantId ?? ""]?.glbFile && !["refrigerator", "hood"].includes(c.opening ?? ""),
@@ -2386,7 +2388,8 @@ export function ModularKitchenPlanner({
             onClose={() => setSettingsOpen(false)}
           />
           {materialsTab && designTabs}
-          {materialsTab && (
+          {/* Painting notes belong to a chosen cabinet; the overview has its own cards. */}
+          {materialsTab && (selected || inspector !== "materials") && (
             <div className="kitchen-k-material-head">
               {selected && (
                 <KitchenMaterialScopeToggle
@@ -2420,6 +2423,8 @@ export function ModularKitchenPlanner({
             selectionPanel(inspector === "materials" ? "modify" : "overview")
           ) : (
             <>
+              {/* The Materials tab already names this view. */}
+              {inspector !== "materials" && (
               <div className="kp-settings-head">
                 <strong>{KITCHEN_INSPECTOR_LABELS[inspector]}</strong>
                 <button
@@ -2430,6 +2435,7 @@ export function ModularKitchenPlanner({
                   <X size={19} />
                 </button>
               </div>
+              )}
               {inspector === "extras" ? (
                 <ExtrasPanel
                   key={extrasTab}
@@ -2486,29 +2492,38 @@ export function ModularKitchenPlanner({
                   }}
                   onRoomStep={() => changeStage("space")}
                 />
-                <section className="kitchen-style-selection">
-                  <h3>Шүүгээ</h3>
-                  <p>Загвар, өнгийг өөрчлөх шүүгээгээ сонгоно уу.</p>
-                  {kitchen.cabinets.map((cabinet) => (
+                <section className="kitchen-style-selection" aria-labelledby="kitchen-style-heading">
+                  <h3 id="kitchen-style-heading">Шүүгээ</h3>
+                  <p>Нүүр, их биеийн загвар, өнгийг солих шүүгээгээ сонгоно уу. 3D загваргүй шүүгээнд өнгө харагдахгүй.</p>
+                  <ul>
+                  {kitchen.cabinets.map((cabinet) => {
+                    const model = variantModels[cabinet.variantId ?? ""];
+                    return (
+                    <li key={cabinet.id}>
                     <button
                       type="button"
-                      key={cabinet.id}
                       disabled={busy}
                       onClick={() => {
                         setSelectedId(cabinet.id);
                         setOpen(false);
                       }}
                     >
-                      <span>
-                        {variantModels[cabinet.variantId ?? ""]?.modelName ||
-                          cabinetLabel(cabinet)}
+                      <span className="kss-thumb" aria-hidden="true">
+                        {model?.thumbnailUrl ? <Image src={model.thumbnailUrl} alt="" width={40} height={40} unoptimized /> : <span style={{ background: cabinet.color }} />}
                       </span>
-                      <small>
-                        {cabinet.width} × {cabinet.height} × {cabinet.depth} мм
-                      </small>
-                      <ChevronRight size={16} />
+                      <span className="kss-text">
+                        <strong>{readableModelName(model?.modelName) ?? cabinetLabel(cabinet)}</strong>
+                        <small>
+                          {cabinet.width} × {cabinet.height} × {cabinet.depth} мм
+                          {!model?.glbFile && " · 3D загваргүй"}
+                        </small>
+                      </span>
+                      <ChevronRight size={16} aria-hidden="true" />
                     </button>
-                  ))}
+                    </li>
+                    );
+                  })}
+                  </ul>
                   {!kitchen.cabinets.length && (
                     <button
                       type="button"

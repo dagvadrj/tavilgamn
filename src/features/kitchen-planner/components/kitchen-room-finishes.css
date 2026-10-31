@@ -1,21 +1,29 @@
-/* Materials tab «Өрөө»: floor and wall-paint swatches above the cabinet list. */
+/* Materials tab overview: «Өрөө» and «Шүүгээ» as two cards under the tabs. */
 
-.kitchen-room-finishes {
+.kp-settings.kitchen-left-inspector :is(.kitchen-room-finishes, .kitchen-style-selection) {
   display: grid;
   gap: 14px;
-  padding: 16px 18px 18px;
-  border-bottom: 1px solid #e7e9eb;
+  margin: 12px 12px 0;
+  padding: 16px;
+  border: 1px solid var(--kk-line);
+  border-radius: var(--kk-radius-lg);
+  background: #fff;
 }
 
-.kitchen-room-finishes h3 {
+.kp-settings.kitchen-left-inspector .kitchen-style-selection {
+  margin-bottom: 16px;
+}
+
+.kp-settings.kitchen-left-inspector :is(.kitchen-room-finishes, .kitchen-style-selection) h3 {
   margin: 0;
-  font-size: 14px;
+  color: var(--kk-ink);
+  font-size: var(--kk-text-lg);
   font-weight: 650;
 }
 
 .kitchen-room-finishes fieldset {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -23,32 +31,43 @@
 }
 
 .kitchen-room-finishes legend {
-  margin-bottom: 8px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
   padding: 0;
-  color: #5f6672;
-  font-size: 12px;
+  color: var(--kk-ink);
+  font-size: var(--kk-text-sm);
   font-weight: 600;
+}
+
+.kitchen-room-finishes legend > span {
+  color: var(--kk-muted);
+  font-weight: 500;
 }
 
 .krf-swatches {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px 6px;
+  gap: 10px 8px;
 }
 
 .krf-swatches.is-paint {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .krf-swatches > button {
   display: grid;
   justify-items: center;
-  gap: 4px;
+  align-content: start;
+  gap: 6px;
   min-width: 0;
   padding: 0;
   border: 0;
   background: transparent;
-  color: #171c24;
+  color: var(--kk-ink);
   cursor: pointer;
 }
 
@@ -62,20 +81,29 @@
   place-items: center;
   width: 100%;
   aspect-ratio: 1;
-  max-width: 56px;
-  border-radius: 12px;
+  border-radius: var(--kk-radius-md);
   box-shadow: inset 0 0 0 1px #171c241f;
   color: #fff;
+  transition: box-shadow 0.15s ease;
+}
+
+.krf-swatches.is-paint .krf-swatch {
+  width: 36px;
+  border-radius: var(--kk-radius-pill);
 }
 
 .krf-swatch > svg {
   padding: 3px;
-  border-radius: 999px;
-  background: #075eaa;
+  border-radius: var(--kk-radius-pill);
+  background: var(--kk-primary);
+}
+
+.krf-swatches > button:hover:not(:disabled) .krf-swatch {
+  box-shadow: inset 0 0 0 1px #171c241f, 0 0 0 2px #fff, 0 0 0 3px #9fb8d2;
 }
 
 .krf-swatches > button[aria-checked="true"] .krf-swatch {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #075eaa;
+  box-shadow: inset 0 0 0 1px #171c241f, 0 0 0 2px #fff, 0 0 0 4px var(--kk-primary);
 }
 
 .krf-swatches > button:focus-visible {
@@ -83,38 +111,127 @@
 }
 
 .krf-swatches > button:focus-visible .krf-swatch {
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #171c24;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--kk-ink);
 }
 
+/* Two short lines rather than a cut name. */
+
 .krf-swatches small {
+  display: -webkit-box;
   overflow: hidden;
   max-width: 100%;
-  font-size: 11px;
+  font-size: var(--kk-text-xs);
   line-height: 1.25;
   text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .krf-note {
-  margin: 2px 0 0;
-  color: #5f6672;
-  font-size: 12px;
+  margin: 0;
+  color: var(--kk-muted);
+  font-size: var(--kk-text-xs);
 }
 
 .krf-note > button {
   padding: 0;
   border: 0;
   background: none;
-  color: #075eaa;
+  color: var(--kk-primary);
   font: inherit;
   font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
 }
 
-.kitchen-style-selection > h3 {
-  margin: 0 0 6px;
-  font-size: 14px;
-  font-weight: 650;
+.kp-settings.kitchen-left-inspector .kitchen-style-selection > p {
+  margin: -6px 0 0;
+  color: var(--kk-muted);
+  font-size: var(--kk-text-sm);
+  line-height: 1.5;
+}
+
+.kitchen-style-selection > ul {
+  display: grid;
+  margin: 0 -8px;
+  padding: 0;
+  list-style: none;
+}
+
+.kitchen-style-selection > ul > li + li {
+  border-top: 1px solid #eef0f2;
+}
+
+.kitchen-style-selection > ul button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px;
+  border: 0;
+  border-radius: var(--kk-radius-md);
+  background: transparent;
+  color: var(--kk-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.kitchen-style-selection > ul button:hover:not(:disabled) {
+  background: #f3f5f7;
+}
+
+.kitchen-style-selection > ul button:focus-visible {
+  outline: 2px solid var(--kk-primary);
+  outline-offset: -2px;
+}
+
+.kss-thumb {
+  display: grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--kk-radius-sm);
+  background: #f1f3f5;
+}
+
+.kss-thumb > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.kss-thumb > span {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--kk-radius-sm);
+  box-shadow: inset 0 0 0 1px #171c241f;
+}
+
+.kss-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.kss-text strong {
+  overflow: hidden;
+  font-size: var(--kk-text-md);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kss-text small {
+  color: var(--kk-muted);
+  font-size: var(--kk-text-xs);
+}
+
+.kitchen-style-selection > ul button > svg {
+  flex: none;
+  color: #8a919b;
 }

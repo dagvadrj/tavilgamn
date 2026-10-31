@@ -9,6 +9,7 @@ import type {
   KitchenCatalogVariant,
 } from "@/lib/kitchenModuleCatalog";
 import { prefetchModel } from "@/lib/modelPrefetch";
+import { kitchenModelDisplayName } from "@/lib/kitchenModelNames";
 
 import {
   PlannerCatalogToolbar,
@@ -54,7 +55,13 @@ export function KitchenModelLibrary({
       .filter(variant => category !== "appliances" || module.cabinetType === "appliance" || ["oven", "hob", "hood", "refrigerator", "sink"].includes(variant.opening))
       .map(variant => ({ module, variant }))), [modules, category]);
   const filtered = models.filter(({ module, variant }) => (type === "all" || module.cabinetType === type) &&
-    `${module.name} ${module.code} ${variant.modelName} ${variant.glbFile}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+    `${kitchenModelDisplayName(module, variant)} ${module.name} ${module.code} ${variant.modelName} ${variant.glbFile}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  // Width is how a kitchen run is planned, so the list reads 300 → 1000 мм.
+  const groups = [...filtered.reduce((byWidth, item) => {
+    const list = byWidth.get(item.module.widthMm) ?? [];
+    list.push(item);
+    return byWidth.set(item.module.widthMm, list);
+  }, new Map<number, typeof filtered>())].sort(([a], [b]) => a - b);
   return <section className="planner-model-library" data-inspector-section="catalog">
     <div className="planner-inspector-intro"><Box size={20}/><h2>3D загварын сан</h2>
       <p>Доод, дээд, өндөр шүүгээг төрлөөр нь сонгоорой. Дээд шүүгээ хананд, доод шүүгээ шалан дээр байрлана.</p>
@@ -69,12 +76,15 @@ export function KitchenModelLibrary({
     {error && <div className="planner-empty" role="alert"><p>3D загварын санг ачаалж чадсангүй.</p><button type="button" className="planner-secondary-button" onClick={retry}>Дахин оролдох</button></div>}
     {!loading && !error && !filtered.length && <p className="planner-empty">{models.length ? "Хайлтад тохирох загвар олдсонгүй." : "Одоогоор энэ ангилалд GLB загвар алга. Админаас оруулсан загварууд энд харагдана."}</p>}
     {!loading && !error && models.length > 0 && <div className="kitchen-result-count"><span>{filtered.length} загвар</span>{(query || type !== "all") && <button type="button" onClick={() => { setQuery(""); setType("all"); }}>Шүүлтүүр арилгах</button>}</div>}
-    <div className="planner-model-grid">{filtered.map(({ module, variant }) =>
-      <PlannerModelCard key={variant.furnitureModelId} name={variant.modelName || module.name}
+    {groups.map(([width, items]) => <section key={width} className="kitchen-width-group" aria-label={`${width} мм өргөнтэй`}>
+      <h3>{width} мм <span>{items.length}</span></h3>
+      <div className="planner-model-grid">{items.map(({ module, variant }) =>
+      <PlannerModelCard key={variant.furnitureModelId} name={kitchenModelDisplayName(module, variant)}
         detail={variant.assetValidationIssues?.length ? "3D файлын хэмжээ, байрлалыг засах шаардлагатай" : `${TYPES[module.cabinetType]} · ${module.cabinetType === "wall" ? "Хананд, тавцангийн дээр" : module.cabinetType === "appliance" ? "Төхөөрөмж" : "Шалан дээр"}`}
         image={variant.thumbnailUrl} dimensions={`${module.widthMm} × ${module.depthMm} × ${module.heightMm} мм`}
         file={variant.glbFile!} showFile={false} actionLabel="гарнитурт нэмэх" disabled={disabled || Boolean(variant.assetValidationIssues?.length)} onAdd={() => onAdd(module, variant)}
         onPrefetch={() => { const url = variant.previewGlbUrl ?? variant.glbUrl; if (url) void prefetchModel(url); }}/>
-    )}</div>
+      )}</div>
+    </section>)}
   </section>;
 }

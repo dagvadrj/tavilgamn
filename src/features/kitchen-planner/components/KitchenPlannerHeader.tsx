@@ -33,6 +33,7 @@ import {
   type KitchenFlowStage,
 } from "@/lib/kitchenFlow";
 import { KitchenProjectName } from "./KitchenProjectName";
+import { formatPrice } from "@/lib/format";
 import "./kitchen-project-header.css";
 
 export type KitchenToolbarTool =
@@ -88,6 +89,8 @@ export function KitchenPlannerHeader({
   lockReason = null,
   onLocked,
   itemCount = 1,
+  subtotal = 0,
+  unpricedCount = 0,
 }: {
   stage: KitchenFlowStage;
   onStage: (stage: KitchenFlowStage) => void;
@@ -108,12 +111,13 @@ export function KitchenPlannerHeader({
   lockReason?: string | null;
   onLocked?: (reason: string) => void;
   itemCount?: number;
+  /** Known prices of the planned items; rows without a price are counted apart. */
+  subtotal?: number;
+  unpricedCount?: number;
   /** Former second-row props; the design tools now live in the panel. */
   onTool?: (tool: KitchenToolbarTool) => void;
   activeTool?: KitchenToolbarTool;
   annotations?: boolean;
-  subtotal?: number;
-  unpricedCount?: number;
 }) {
   const current = kitchenWorkflowStep(stage);
   const index = KITCHEN_WORKFLOW_STEPS.findIndex((step) => step.id === current);
@@ -175,6 +179,20 @@ export function KitchenPlannerHeader({
         })}
       </nav>
       <div className="kitchen-project-tools kitchen-k-actions">
+        {itemCount > 0 && current !== "space" && (
+          <button
+            type="button"
+            className="kitchen-k-price"
+            aria-label={`${subtotal ? `Урьдчилсан үнэ ${formatPrice(subtotal)}` : "Үнэ тодорхойгүй"}${unpricedCount ? `, ${unpricedCount} мөрийн үнэ ороогүй` : ""}. Үнийн задаргаа нээх`}
+            title={!subtotal ? "Үнэ тодорхойгүй: үнэтэй бүтээгдэхүүн сонгоогүй байна" : unpricedCount ? `${unpricedCount} мөрийн үнэ тодорхойгүй тул ороогүй` : "Үнэтэй бүх мөр орсон"}
+            disabled={busy}
+            onClick={() => go("finish")}
+          >
+            {/* ₮0 would read as free: with nothing priced yet, say so. */}
+            <span>{subtotal ? `≈ ${formatPrice(subtotal)}` : "Үнэ —"}</span>
+            {subtotal > 0 && unpricedCount > 0 && <small>+{unpricedCount}</small>}
+          </button>
+        )}
         {utilities}
         <button
           type="button"

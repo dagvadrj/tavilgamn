@@ -64,7 +64,8 @@ test('the add library exposes real GLBs and omits inactive and specification-onl
     loading: false, error: false, retry() {}, disabled: false, onAdd() {},
   }));
   assert.equal((html.match(/class="planner-model-card"/g) || []).length, 1);
-  assert.match(html, /800 mm cabinet — гарнитурт нэмэх/);
+  // A Latin admin name is shown as a readable Cyrillic cabinet name.
+  assert.match(html, /800 мм доод шүүгээ · 2 хаалга — гарнитурт нэмэх/);
   assert.doesNotMatch(html, /cabinet\.glb/);
   assert.match(html, /800 × 598 × 740 мм/);
 });
