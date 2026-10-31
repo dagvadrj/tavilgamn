@@ -132,11 +132,35 @@ export function Plan({
             strokeWidth="8"
           />
         </pattern>
+        {/* 2.5D: raised wall caps with a soft cast shadow, skirting occlusion, lifted modules. */}
+        <filter id={`${floorPattern}-wall`} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="45" dy="65" stdDeviation="45" floodColor="#2b241c" floodOpacity="0.35" />
+        </filter>
+        <filter id={`${floorPattern}-soft`} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="40" />
+        </filter>
+        <filter id={`${floorPattern}-lift`} x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="22" dy="34" stdDeviation="22" floodColor="#2b241c" floodOpacity="0.3" />
+        </filter>
+        <clipPath id={`${floorPattern}-floor`}>
+          <path d={roomOutlinePath(roomOutline(kitchen.room))} />
+        </clipPath>
       </defs>
+      <path
+        d={roomOutlinePath(roomOutline(kitchen.room))}
+        className="km-room-walls25"
+        filter={`url(#${floorPattern}-wall)`}
+      />
       <path
         d={roomOutlinePath(roomOutline(kitchen.room))}
         className="km-room-outline"
         style={{ fill: `var(--kitchen-plan-floor, url(#${floorPattern}))` }}
+      />
+      <path
+        d={roomOutlinePath(roomOutline(kitchen.room))}
+        className="km-room-skirting25"
+        clipPath={`url(#${floorPattern}-floor)`}
+        filter={`url(#${floorPattern}-soft)`}
       />
       <path
         d={`M0 -130H${kitchen.room.width}M0 -160v60M${kitchen.room.width} -160v60`}
@@ -239,6 +263,7 @@ export function Plan({
               points={cabinetCorners(cabinet)
                 .map((p) => `${p.x},${p.z}`)
                 .join(" ")}
+              filter={`url(#${floorPattern}-lift)`}
               role={readOnly ? undefined : "button"}
               tabIndex={readOnly ? undefined : 0}
               aria-label={`${cabinetLabel(cabinet)}, ${cabinet.width / unitScale} ${unit}`}

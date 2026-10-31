@@ -1,0 +1,143 @@
+.sv25 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.sv25-walls {
+  display: inline-flex;
+  align-self: flex-start;
+  max-width: 100%;
+  overflow-x: auto;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgb(17 17 17 / 0.08);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: 0 10px 24px -14px rgb(0 0 0 / 0.3);
+}
+
+.sv25-walls button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #3d3d3d;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sv25-walls button[aria-pressed="true"] {
+  background: #111;
+  color: #fff;
+}
+
+.sv25-walls button:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 2px;
+}
+
+.sv25-walls svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+}
+
+.sv25-walls svg rect {
+  stroke-width: 1.2;
+  opacity: 0.45;
+}
+
+.sv25-walls svg path {
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.sv25-canvas {
+  flex: 1;
+  width: 100%;
+  min-height: 260px;
+  border-radius: 14px;
+  background: linear-gradient(#f4f3f0, #e9e7e2);
+}
+
+.sv25-wall,
+.sv25-floor,
+.sv25-ceiling {
+  stroke: rgb(0 0 0 / 0.1);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.sv25-target {
+  stroke: rgb(0 0 0 / 0.18);
+}
+
+.sv25-overlay {
+  pointer-events: none;
+}
+
+.sv25-opening {
+  stroke: rgb(0 0 0 / 0.28);
+  stroke-width: 1.5;
+}
+
+.sv25-window {
+  fill-opacity: 0.85;
+}
+
+.sv25-shadows ellipse {
+  fill: rgb(30 24 18 / 0.32);
+}
+
+.sv25-box {
+  stroke: rgb(0 0 0 / 0.22);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: filter 120ms ease;
+}
+
+.sv25-box:hover {
+  filter: brightness(1.05);
+}
+
+.sv25-box[data-selected] {
+  stroke: #1f6feb;
+  stroke-width: 2.5;
+}
+
+.sv25-dim line {
+  stroke: #6b6b6b;
+  stroke-width: 1.2;
+}
+
+.sv25-dim {
+  pointer-events: none;
+}
+
+.sv25-dim text {
+  fill: #222;
+  font-size: 15px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: rgb(255 255 255 / .9);
+  stroke-width: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv25-box {
+    transition: none;
+  }
+}

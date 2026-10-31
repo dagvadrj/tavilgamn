@@ -90,3 +90,19 @@
     padding: 8px;
   }
 }
+
+/* 2.5D side view: the drawing fills the workspace instead of scrolling. */
+.room-side25-workspace {
+  display: flex;
+  overflow: hidden;
+  padding: 14px 18px;
+}
+
+.room-side25-workspace {
+  z-index: 12;
+}
+
+/* The map button floats at the top-left of the workspace. */
+.room-side25-workspace .sv25-walls {
+  align-self: center;
+}

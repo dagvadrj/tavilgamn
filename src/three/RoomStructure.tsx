@@ -902,6 +902,18 @@ function CeilingLamp({
   );
 }
 
+/** Window glass per floor area over every room: how much sky the design admits. */
+function designGlazing(design: RoomDesign) {
+  const rooms = design.rooms?.length ? design.rooms : [design];
+  let glass = 0, floor = 0;
+  for (const room of rooms) {
+    floor += room.width * room.depth;
+    for (const opening of room.openings ?? [])
+      if (opening.kind === "window") glass += opening.width * opening.height;
+  }
+  return floor > 0 ? glass / floor : undefined;
+}
+
 export function RoomLighting({
   design,
   includeSun = true,
@@ -919,7 +931,11 @@ export function RoomLighting({
 }) {
   const lighting = design.lighting,
     solar = solarLighting(lighting);
-  const rig = plannerLighting(lighting);
+  const rig = plannerLighting(lighting, {
+    glazing: designGlazing(design),
+    floorColor: design.floorColor,
+    wallColor: design.wallColor,
+  });
   const target = useMemo(() => new THREE.Object3D(), []);
   const invalidate = useThree((state) => state.invalidate);
   const [centreX, centreZ] = centre;

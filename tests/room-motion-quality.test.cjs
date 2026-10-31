@@ -14,7 +14,7 @@ test("room camera interaction lowers pixel work and restores the configured DPR"
   });
   function render() { effects.length = 0; RoomMotionResolution({ dpr: configuredDpr }); effects[0](); }
   render(); assert.equal(dpr, 1.5);
-  moving = true; render(); assert.equal(dpr, 1.125, "desktop interaction keeps cabinet edges above 1 CSS pixel");
+  moving = true; render(); assert.equal(dpr, 1.5, "desktop interaction keeps its resolution, so the view never blinks");
   moving = false; render(); assert.equal(dpr, 1.5);
   configuredDpr = 1; moving = true; render(); assert.equal(dpr, 0.85, "1x mobile still reduces pixel work"); moving = false; render(); assert.equal(dpr, 1, "mobile cap survives interaction");
   configuredDpr = 0.75; moving = true; render(); assert.equal(dpr, 0.75 * 0.85);
@@ -23,7 +23,7 @@ test("room camera interaction lowers pixel work and restores the configured DPR"
   state.viewport.initialDpr = 0; render(); assert.equal(values.at(-1), 0.4);
   state.viewport.initialDpr = 3; configuredDpr = [1, 2]; moving = false;
   render(); assert.equal(dpr, 2, "high-density displays respect the two-pixel ceiling");
-  moving = true; render(); assert.equal(dpr, 1.25, "high-density interaction remains bounded");
+  moving = true; render(); assert.equal(dpr, 2, "high-density desktop keeps its resolution while moving");
   moving = false; render(); assert.equal(dpr, 2, "full detail returns once motion stops");
   state.viewport.initialDpr = 1; moving = true;
   render(); assert.equal(dpr, 1, "desktop 1x screens keep sharp edges during motion");

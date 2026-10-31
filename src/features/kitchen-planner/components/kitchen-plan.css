@@ -6,6 +6,21 @@
   border-radius: 10px;
 }
 
+/* 2.5D plan: wall caps outside the floor edge, occlusion along the skirting. */
+.km-room-walls25 {
+  fill: none;
+  stroke: #fbfaf7;
+  stroke-width: 220;
+  stroke-linejoin: miter;
+}
+
+.km-room-skirting25 {
+  fill: none;
+  stroke: rgb(40 32 22 / .24);
+  stroke-width: 150;
+  pointer-events: none;
+}
+
 .km-room-outline {
   fill: #efede5;
   stroke: var(--site-muted);

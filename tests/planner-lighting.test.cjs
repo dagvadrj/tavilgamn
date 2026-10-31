@@ -142,3 +142,19 @@ test("daylight only adjusts environment strength while the one-shot IBL capture 
   cleanup();
   assert.equal(scene.environmentIntensity, 0.9);
 });
+
+test("indirect fill follows the room: glazing, finish reflectance and lamps", () => {
+  const noon = { timeOfDay: 12, ambient: 0.65, sunlight: 1.8 };
+  const glazed = plannerLighting(noon, { glazing: 0.18 });
+  const windowless = plannerLighting(noon, { glazing: 0 });
+  assert.ok(windowless.ambientIntensity < glazed.ambientIntensity * 0.6, "a windowless room is darker in its corners");
+  assert.equal(windowless.sunlightIntensity, glazed.sunlightIntensity, "the sun itself does not change");
+  const white = plannerLighting(noon, { wallColor: "#f6f5f2", floorColor: "#e9e4dc" });
+  const dark = plannerLighting(noon, { wallColor: "#3a3633", floorColor: "#4a3426" });
+  assert.ok(dark.hemisphereIntensity < white.hemisphereIntensity, "dark finishes absorb bounce light");
+  assert.notEqual(dark.groundColor, white.groundColor, "ground bounce takes the floor's colour");
+  assert.equal(plannerLighting(noon, { floorColor: "oak" }).groundColor, plannerLighting(noon).groundColor);
+  const night = plannerLighting({ ...noon, timeOfDay: 22 });
+  assert.notEqual(night.ambientColor, "#ffffff", "lamp fill at night is warm");
+  assert.equal(plannerLighting(noon).ambientColor, "#ffffff");
+});

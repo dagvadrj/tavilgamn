@@ -7,7 +7,8 @@ import { RoomLightingTimeControls } from "./RoomLightingTimeControls";
 import { Hand } from "lucide-react";
 import { Image as ImageIcon, Lightbulb, PanelsTopLeft, X, Box, ChevronDown, Camera, Eye, Focus, Grid2X2, HelpCircle, Lock, Magnet, Maximize, Minus, MoreHorizontal, PencilRuler, Plus, RotateCcw, RotateCw, Ruler, Unlock } from "lucide-react";
 
-export type RoomView = "dollhouse" | "top" | "front" | "back" | "left" | "right" | "interior";
+/** «side25» is the drawn 2.5D wall view; the others are 3D camera poses. */
+export type RoomView = "dollhouse" | "top" | "front" | "back" | "left" | "right" | "interior" | "side25";
 const SIDE_VIEWS = [
   ["front", "Урд тал"], ["back", "Ар тал"], ["left", "Зүүн тал"], ["right", "Баруун тал"],
 ] as const;
@@ -143,6 +144,7 @@ export function RoomPlannerControls({ onCover, roomActive, view, onView, onZoom,
             }}>{label}</button>)}
           </div>
         </details>
+        <button type="button" aria-pressed={view === "side25"} title="Ханыг хажуугаас 2.5D-ээр, 4 хананаас сонгож харах" onClick={() => onView("side25")}><PanelsTopLeft size={20}/><span>Хажуу 2.5D</span></button>
         <button type="button" aria-pressed={view === "interior"} onClick={() => onView("interior")}><Camera size={20}/><span>Дотроос</span></button>
       </div>
       {onHandTool && <button type="button" aria-label="Харагдац зөөх" aria-pressed={handTool} aria-keyshortcuts="H" disabled={view === "interior"} title={view === "interior" ? "Гаднаас эсвэл дээрээс харах үед ашиглана" : "Гар · Харагдац зөөх (H) · Буцах: V / Esc"} onClick={onHandTool}><Hand size={20}/><span>Гар</span></button>}

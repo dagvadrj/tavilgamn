@@ -16,7 +16,7 @@ export const KITCHEN_VIEWS: {
   { id: "2d", label: "2D", title: "2D төлөвлөгөө", tag: "Бодит өгөгдөл", body: "Масштабтай план, 600 мм grid, хэмжээсийн шугам." },
   { id: "3d", label: "3D дээрээс", title: "3D · дээрээс", tag: "Three.js", body: "Тааз, ойрын ханыг нээж бүх шүүгээг харуулна." },
   { id: "interior", label: "Дотоод", title: "Дотоод харагдац", tag: "Three.js", body: "Нүдний түвшнээс өрөөн дотор эргэж харна." },
-  { id: "elevation", label: "Ханын зураг", title: "Ханын зураг", tag: "Бодит өгөгдөл", body: "Сонгосон ханын модулиуд, нүх хэмжээтэйгээ." },
+  { id: "elevation", label: "Хажуугаас", title: "Ханын зураг · 2.5D", tag: "Бодит өгөгдөл", body: "4 ханын аль нэгийг хажуугаас 2.5D-ээр: модуль, нүх хэмжээтэйгээ." },
 ];
 
 const view = (id: KitchenWorkspaceView) => KITCHEN_VIEWS.find((item) => item.id === id)!;

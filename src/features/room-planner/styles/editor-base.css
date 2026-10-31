@@ -833,9 +833,41 @@
   vector-effect: non-scaling-stroke;
 }
 
+/* 2.5D plan: raised wall caps, skirting occlusion, lifted furniture. */
+.room-plan-walls25 {
+  fill: none;
+  stroke: #fbfaf7;
+  stroke-linejoin: miter;
+  paint-order: stroke;
+}
+
+/* Outline of the cap: reads as the wall's top edge on a light page. */
+.room-plan-walls25-edge {
+  fill: none;
+  stroke: #b3ab9e;
+  stroke-linejoin: miter;
+}
+
+.room-plan-skirting25 {
+  fill: none;
+  stroke: rgb(40 32 22 / .22);
+  pointer-events: none;
+}
+
+.room-plan-furniture-shadow {
+  fill: rgb(35 28 20 / .3);
+  pointer-events: none;
+}
+
+.room-plan-furniture-top {
+  fill: #fff;
+  fill-opacity: .16;
+  pointer-events: none;
+}
+
 .room-plan-furniture {
   fill: var(--site-accent);
-  fill-opacity: .65;
+  fill-opacity: .82;
   stroke: var(--site-muted);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;

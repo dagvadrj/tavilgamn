@@ -34,8 +34,11 @@ test("backdrop planes can opt out of ambient occlusion", () => {
   assert.equal(occludesKitchen(backdrop), false);
 });
 
-test("motion frames stay on the composer so materials never need a second (tone-mapped) shader variant", () => {
+test("motion frames keep one direct render path, so materials never need a second shader variant", () => {
   const source = require("node:fs").readFileSync("src/three/PlannerAmbientOcclusion.tsx", "utf8");
-  assert.doesNotMatch(source, /gl\.render\(scene, camera\)/, "direct screen renders compile TONE_MAPPING variants mid-drag");
-  assert.match(source, /pipeline\.ao\.enabled = !moving;\s*pipeline\.composer\.render\(\);/);
+  // AO no longer switches between a composer and the screen: the beauty pass
+  // always renders directly and occlusion is gated by a shared uniform.
+  assert.doesNotMatch(source, /EffectComposer/);
+  assert.doesNotMatch(source, /\.enabled = !moving/);
+  assert.match(source, /plannerAoStrength\.value = 1;\s*gl\.render\(scene, camera\);\s*shared\.plannerAoStrength\.value = 0;/);
 });

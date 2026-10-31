@@ -21,11 +21,15 @@ export function RoomMotionResolution({
   const setDpr = useThree(state => state.setDpr);
   const invalidate = useThree(state => state.invalidate);
   const restingDpr = typeof dpr === "number" ? dpr : Math.max(dpr[0], Math.min(dpr[1], initialDpr));
-  // Keep at least one sample per CSS pixel on desktop, so cabinet edges and
-  // handles stay legible while orbiting. Low-end 1x canvases keep a smaller budget.
-  const previewDpr = Math.min(restingDpr, Array.isArray(dpr) || restingDpr > 1
-    ? Math.max(1, Math.min(1.25, restingDpr * 0.75))
-    : Math.max(0.5, restingDpr * 0.85));
+  // Desktop canvases (a DPR range) keep their resolution while orbiting: a
+  // sharpness drop at the start of every gesture and a snap back at its end
+  // reads as the view blinking. Only constrained (fixed-DPR) devices trade a
+  // little sharpness for frame rate.
+  const previewDpr = Array.isArray(dpr)
+    ? restingDpr
+    : Math.min(restingDpr, restingDpr > 1
+      ? Math.max(1, Math.min(1.25, restingDpr * 0.75))
+      : Math.max(0.5, restingDpr * 0.85));
   useEffect(() => {
     if (initialDpr <= 0) return;
     setDpr(moving ? previewDpr : restingDpr);

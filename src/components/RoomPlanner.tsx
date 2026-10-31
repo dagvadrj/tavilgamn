@@ -29,6 +29,7 @@ import {
 } from "@/features/room-planner/components/RoomMeasureUnit";
 import { OpeningQuickEditor } from "@/features/room-planner/components/OpeningQuickEditor";
 import { RoomWallPlan } from "./RoomWallPlan";
+import { RoomSideView25D } from "@/features/room-planner/components/RoomSideView25D";
 import { configureAddedRoom } from "@/lib/addRoomOptions";
 import { newDesignRoom } from "@/lib/roomDesign";
 import dynamic from "next/dynamic";
@@ -3630,7 +3631,7 @@ function RoomPlannerEditor() {
             setRoomView(next);
             setShowStartHint(false);
             setView(next === "top" ? "plan" : "perspective");
-            if (next !== "interior")
+            if (next !== "interior" && next !== "side25")
               setCameraRequest((previous) => ({
                 id: (previous?.id ?? 0) + 1,
                 action: next === "dollhouse" ? "fit" : next,
@@ -3898,6 +3899,11 @@ function RoomPlannerEditor() {
                 : "Тавилга: дарж сонгох, чирж байрлуулах · Хоосон хэсгийг чирж эргүүлэх · Дугуйгаар ойртож өрөөнд орно"}
         </div>
 
+        {roomView === "side25" && (
+          <div className="room-plan-workspace room-side25-workspace">
+            <RoomSideView25D room={current} selectedId={selected} onSelect={setSelected} />
+          </div>
+        )}
         {roomView === "interior" && (
           <RoomTourControls
             design={current}
@@ -3997,7 +4003,7 @@ function RoomPlannerEditor() {
         <div
           className="planner-canvas h-full w-full pt-10 xl:pt-0"
           style={
-            planReady
+            planReady || roomView === "side25"
               ? { opacity: 0, pointerEvents: "none" }
               : roomView === "top"
                 ? { pointerEvents: "none" }

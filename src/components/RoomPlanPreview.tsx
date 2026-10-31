@@ -1,6 +1,6 @@
 "use client";
 import { useRoomMeasureUnit } from "@/features/room-planner/components/RoomMeasureUnit";
-import type { ReactNode, Ref, SVGProps } from "react";
+import { useId, type ReactNode, type Ref, type SVGProps } from "react";
 import type { PlacedFurniture, RoomOpening, RoomShape } from "@/lib/types";
 import {
   getRoomGeometry,
@@ -161,6 +161,12 @@ export function RoomPlanPreview({
   const validOpenings = (room.openings ?? []).filter(
     (opening) => !validateOpening(room, opening),
   );
+  // 2.5D: walls read as raised caps that cast a soft shadow away from the
+  // light (top-left), the floor darkens along the skirting the way AO does in
+  // 3D, and furniture lifts off the floor with a shadow scaled by its height.
+  const uid = useId().replace(/:/g, "");
+  const wall = Math.max(0.12, span * 0.028);
+  const outline = roomPath(room);
   return (
     <figure
       className={`room-measured-plan${editing ? " room-measured-plan-editable" : ""}`}
@@ -184,10 +190,40 @@ export function RoomPlanPreview({
               : undefined
           }
         >
+          <defs>
+            <filter id={`${uid}-wall`} x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx={wall * 0.9} dy={wall * 1.3} stdDeviation={wall * 0.7} floodColor="#2b241c" floodOpacity="0.4" />
+            </filter>
+            <filter id={`${uid}-skirting`} x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation={wall * 0.6} />
+            </filter>
+            <clipPath id={`${uid}-floor`}>
+              <path d={outline} clipRule="evenodd" />
+            </clipPath>
+          </defs>
+          {/* A slightly wider, darker stroke under the cap draws its outer top edge. */}
+          <path
+            className="room-plan-walls25-edge"
+            d={outline}
+            strokeWidth={wall * 2 + span * 0.004}
+            filter={`url(#${uid}-wall)`}
+          />
+          <path
+            className="room-plan-walls25"
+            d={outline}
+            strokeWidth={wall * 2}
+          />
           <path
             className="room-plan-floor"
-            d={roomPath(room)}
+            d={outline}
             fillRule="evenodd"
+          />
+          <path
+            className="room-plan-skirting25"
+            d={outline}
+            strokeWidth={wall * 1.4}
+            clipPath={`url(#${uid}-floor)`}
+            filter={`url(#${uid}-skirting)`}
           />
           {(room.columns ?? []).map((c, i) => (
             <g key={c.id}>
@@ -216,11 +252,36 @@ export function RoomPlanPreview({
                 transform={`translate(${r.cx} ${r.cz}) rotate(${(r.rot * 180) / Math.PI})`}
               >
                 <rect
+                  className="room-plan-furniture-shadow"
+                  x={-r.w / 2}
+                  y={-r.d / 2}
+                  width={r.w}
+                  height={r.d}
+                  rx={Math.min(r.w, r.d) * 0.08}
+                  transform={(() => {
+                    // Taller pieces throw a longer shadow; the light is fixed in screen space.
+                    const lift = Math.min(0.3, 0.04 + dimsFor(piece).h * 0.13);
+                    const angle = r.rot;
+                    const dx = lift * 0.6, dy = lift;
+                    return `translate(${dx * Math.cos(angle) + dy * Math.sin(angle)} ${-dx * Math.sin(angle) + dy * Math.cos(angle)})`;
+                  })()}
+                  filter={`url(#${uid}-skirting)`}
+                />
+                <rect
                   className="room-plan-furniture"
                   x={-r.w / 2}
                   y={-r.d / 2}
                   width={r.w}
                   height={r.d}
+                  rx={Math.min(r.w, r.d) * 0.08}
+                />
+                <rect
+                  className="room-plan-furniture-top"
+                  x={-r.w / 2 + Math.min(r.w, r.d) * 0.08}
+                  y={-r.d / 2 + Math.min(r.w, r.d) * 0.08}
+                  width={Math.max(0, r.w - Math.min(r.w, r.d) * 0.16)}
+                  height={Math.max(0, r.d - Math.min(r.w, r.d) * 0.16)}
+                  rx={Math.min(r.w, r.d) * 0.05}
                 />
                 {j === 0 && (
                   <>

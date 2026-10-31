@@ -280,7 +280,14 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
   const roomHeight = kitchen.room.height / 1000;
   const night = Boolean(props.night);
   const servicePlan = useMemo(() => planKitchenServices(kitchen), [kitchen]);
-  const lighting = plannerLighting(night ? { mode: "evening", timeOfDay: 22, ambient: 0.65, sunlight: 1.8, fixtures: [] } : undefined);
+  const glazing = (kitchen.room.items ?? []).reduce(
+    (sum, item) => sum + (item.kind === "window" ? item.width * (item.height ?? 1200) : 0),
+    0,
+  ) / Math.max(1, kitchen.room.width * kitchen.room.depth);
+  const lighting = plannerLighting(
+    night ? { mode: "evening", timeOfDay: 22, ambient: 0.65, sunlight: 1.8, fixtures: [] } : undefined,
+    { glazing, wallColor: kitchen.room.wallColors?.back },
+  );
   // Structural inputs only: paint and furniture changes keep the same sun.
   const daylightKey = JSON.stringify({ width: kitchen.room.width, depth: kitchen.room.depth, height: kitchen.room.height, items: kitchen.room.items ?? [] });
   const daylight = useMemo(() => kitchenDaylight(JSON.parse(daylightKey)), [daylightKey]);
@@ -313,7 +320,12 @@ function Scene(props: ModularSceneProps & { dpr: number | [number, number]; cont
       <RoomMotionResolution dpr={props.dpr} />
       <PlannerMotionShadows updatingLayout={dragActive || Boolean(props.open)} revision={kitchen} />
       <CanvasDiagnostics scene="modular-kitchen" />
-      <PlannerAmbientOcclusion />
+      <PlannerAmbientOcclusion
+        bounds={[
+          [-0.05, -0.05, -0.05],
+          [width + 0.05, roomHeight + 0.05, depth + 0.05],
+        ]}
+      />
       {!props.interior && <CameraFit focus={focus} side={daylight.cameraSide} />}
       <color attach="background" args={[night ? KITCHEN_NIGHT_BACKDROP : ROOM_DAY_BACKDROP]} />
       {/* Less uniform fill than the room planner: cabinet sides, plinths and
